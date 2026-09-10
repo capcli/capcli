@@ -1,0 +1,298 @@
+# policy.yaml — full-complexity example
+
+> Behavioral permission: what capabilities may **do**. (Structure — sizes, counts, cadence — lives in `governance.yaml`. Zero overlap.) Compiled at boot; bad config = kernel refuses to serve.
+
+```yaml
+# ═══════════════════════════════════════════════════════════════
+# policy.yaml — default-deny behavioral policy, compiled at boot
+# Two enforcement layers: authorizer (C-level floor) + AST (semantic ceiling)
+# ═══════════════════════════════════════════════════════════════
+version: 4
+schema_version: 12                    # triple-lock with schema.yaml + governance.yaml
+governance_version: 7
+default: deny                         # THE anchor. everything below carves exceptions
+
+# ───────────────────────────────────────────────────────────────
+# 1. LAYER 1 — compiled to sqlite3_set_authorizer
+#    granularity: action × table × column. engine-enforced.
+# ───────────────────────────────────────────────────────────────
+authorizer:
+  tables:
+    entities:
+      allow: [read, insert, update, delete]
+      deny_columns_write: [id, created_at, created_by, modified_by]  # system & immutable
+      require_where: [update, delete]          # mirrored at AST layer, defense twice
+    edges:
+      allow: [read, insert]                    # immutable rows by construction
+    secrets:
+      allow: [read]
+      mask_columns: [value]                    # redacted in results, audit, explain
+      deny_for_trust: [draft]                  # unproven code never reads secrets
+    agents:
+      allow: [read]                            # identity managed by kernel commands only
+    claims:
+      allow: [read, insert, delete]            # lease lifecycle via ctx.claim only
+    _audit:
+      allow: [read]                            # mirror is world-state, read-only grant
+    _pending_asks:
+      allow: [read]                            # kernel writes; agents observe
+
+  views:
+    active_orders:
+      allow: [read]
+      exposes: [entities]                      # compile-checked: view may touch only these
+    orders_by_status:
+      allow: [read]
+      exposes: [entities]
+    my_orders:
+      allow: [read]
+      exposes: [entities]
+      scoped: principal                        # refuses to run without --as; kernel binds :principal
+
+  global:
+    attach: deny                               # no side-databases, ever
+    detach: deny
+    drop: deny
+    vacuum: require_trust: pinned              # maintenance only
+    alter: require_trust: reviewed             # schema ops gated by trust
+    pragma: [query_only, foreign_keys]         # whitelist, never blacklist
+    functions:
+      allow: [count, sum, min, max, avg, json_extract, date, strftime]
+      deny: [load_extension, writefile, readfile, fts3_tokenizer]
+    triggers: deny                             # enforcement lives in the gate, not the db
+
+# ───────────────────────────────────────────────────────────────
+# 2. LAYER 2 — AST rules, evaluated before prepare
+#    granularity: statement shape, blast radius, values, intent
+# ───────────────────────────────────────────────────────────────
+query:
+  multi_statement: deny
+  unparseable: deny                            # parser failure fails CLOSED
+  writes_require_intent: true                  # no intent → exit 3, cited in explain
+  intent:
+    min_words: 3
+    blacklist: ["test", "update", "misc", "fix", "...", "stuff"]
+
+  update_delete:
+    require_where: true
+    require_limit: true
+    max_limit: 1000
+    max_rows_affected: 100                     # blast radius cap (trust overlays adjust)
+    deny_patterns:
+      - "UPDATE * SET * WHERE * OR 1=1"
+      - "DELETE FROM * WHERE NOT EXISTS *"
+      - "* WHERE 1=1 *"
+
+  insert:
+    max_rows_per_statement: 500                # chunked beyond this
+
+  select:
+    max_limit: 10000
+    deny_without_limit: false                  # warning only; views carry their own caps
+    masked_columns_redacted: true
+
+  bulk:
+    require_pre_count: true                    # db count before mass ops
+    require_trust: reviewed
+    confirm_above: { rows: 5000 }              # human gate, --reason required
+
+  system_tables:
+    deny_write: [_audit, agents, _pending_asks, _watch_cursors]
+    deny_read: []                              # reads allowed; writes are kernel-internal
+
+# ───────────────────────────────────────────────────────────────
+# 3. TRUST — overlays, inherit downward. one engine, parameterized
+# ───────────────────────────────────────────────────────────────
+trust:
+  draft:
+    max_rows_affected: 10
+    require_where: true
+    audit: full
+    can_read: { secrets: false }
+  reviewed:
+    max_rows_affected: 100
+    audit: full
+  pinned:
+    max_rows_affected: 500
+    audit: summary
+    may_run_unattended: true                   # schedules in prod
+
+# ───────────────────────────────────────────────────────────────
+# 4. RATE & BUDGET — frequency is behavior
+# ───────────────────────────────────────────────────────────────
+rate:
+  writes_per_minute: 60
+  capability_calls_per_minute: 300
+  template_promotions_per_day: 5               # registry-flooding guard
+  denials_alert_threshold: 20                  # sustained denial = agent thrashing, surface it
+
+# ───────────────────────────────────────────────────────────────
+# 5. API — external effects gated STRICTER (pre-call only, no rollback)
+# ───────────────────────────────────────────────────────────────
+api:
+  secrets:
+    exposure: none                             # injected at egress; never env/context/audit
+    grade: memory_encrypted                    # ≥ file-perms required to boot
+  retry:
+    non_idempotent: never                      # double-spend prevention is physics
+    idempotent: { max: 3, backoff: exponential }
+    require_key_persisted_before_egress: true
+  egress:
+    allowlist_from: apis/                      # only imported providers reachable
+    deny_public_ips: true                      # no raw IP targets
+  spend:
+    per_day_usd: 50
+    confirm_above_usd: 10                      # human gate before expensive calls
+    per_call_confirm_usd: 25
+  external_writes:
+    require_intent: true
+    require_trust: reviewed
+    idempotency_key: kernel_minted
+  replay: manual                               # never auto-replayed
+
+# ───────────────────────────────────────────────────────────────
+# 6. HANDS — behavioral rules per hand (counts live in governance)
+# ───────────────────────────────────────────────────────────────
+schedule:
+  require_trust: reviewed                      # drafts can't give themselves a future
+  require_intent: true
+  allowed_capabilities: [routines, views]      # no raw SQL on a timer
+  prod:
+    require_trust: pinned                      # unattended = battle-tested only
+
+watch:
+  require_trust: reviewed                      # bound capability floor
+  require_intent: true
+  webhook:
+    require_signature: true                    # unsigned events rejected at the door
+    allowed_providers: from_apis               # only imported providers may push
+  dispatch:
+    timeout_seconds: 30
+    retry: { max: 3, backoff: exponential }
+    dead_letter: true
+    on_exhaustion: alert                       # never silent loss
+
+serve:
+  min_trust: pinned                            # the strictest door in the system
+  auth_required: true                          # anonymous = nonexistent
+  keys_human_issued: true
+  writes:
+    allow_by_default: false
+    confirm_above: { rows: 10 }
+    require_idempotency: true
+  redact_responses: masked_columns             # secrets.view masks apply to egress too
+
+notify:
+  require_intent: true
+  quiet_hours:
+    timezone: America/New_York
+    deny_between: ["22:00", "07:00"]
+    except: [ask]                              # urgent asks bypass quiet hours
+  ask:
+    on_timeout: fail_closed                    # expired = denied, never "assume yes"
+    on_delivery_failure: fail_closed
+    structured_options_required: true          # no free-text answers
+
+# ───────────────────────────────────────────────────────────────
+# 7. IDENTITY — who may act, and how they're proven
+# ───────────────────────────────────────────────────────────────
+identity:
+  socket_bound: true                           # SO_PEERCRED; --by validated, not trusted
+  self_declaration: deny                       # ids are kernel-issued, never claimed
+  scoped_requires_principal: true              # scoped views/asks refuse without --as
+  revoked_agent: deny_all                      # instant, no grace period
+  kernel_principals: [capcli-cron, capcli-watch, capcli-serve]   # unattended executors
+
+# ───────────────────────────────────────────────────────────────
+# 8. ENV OVERLAYS — same engine, parameterized per world
+# ───────────────────────────────────────────────────────────────
+env:
+  prod:
+    draft_writes: deny                         # unproven code cannot touch prod
+    intent: required                           # reads too? no — writes; reads stay free
+    confirm_above: { rows: 10 }                # tighter thresholds
+    vacuum: deny
+    api: { spend: { per_day_usd: 200 } }
+    serve: { bind: "127.0.0.1" }               # public lives behind a proxy
+  sim:
+    rate: { writes_per_minute: 1000 }          # fast iteration
+    bulk: { require_pre_count: false }
+    api: { base_url_overrides_from: apis/*.sim.yaml }   # sandbox providers
+    notify: { route_to: "#sim-notifications" }
+  dev:
+    bulk: { require_pre_count: false }
+    confirm_above: { rows: 1000 }              # looser: dev is cheap
+
+# ───────────────────────────────────────────────────────────────
+# 9. AUDIT — what gets recorded (the effect's spine)
+# ───────────────────────────────────────────────────────────────
+audit:
+  log:
+    - event                                  # channel.verb naming
+    - env
+    - stage                                  # live | test | replay
+    - agent
+    - session
+    - principal
+    - caused_by
+    - intent
+    - intent_chain
+    - capability
+    - version                                # routine/api config version
+    - policy_decision
+    - rules_matched
+    - rows_affected
+    - result_hash
+    - duration_ms
+    - idempotency_key
+  redact:
+    columns: [secrets.value]
+    params_matching: ["*token*", "*password*", "*secret*"]
+    auth_headers: always
+  retention_days: 90
+  mirror_lag_alert_minutes: 5
+  unauditable_write: deny                      # if the audit sink fails, nothing runs
+
+# ───────────────────────────────────────────────────────────────
+# 10. FAIL-CLOSED CONTRACT — ambiguity resolves toward denial
+# ───────────────────────────────────────────────────────────────
+fail_closed:
+  no_policy: refuse_boot
+  version_mismatch: refuse_boot
+  unparseable_sql: deny
+  authorizer_callback_error: deny
+  ambiguous_read_write_classification: treat_as_write
+  headless_approval: deny
+  missing_principal_on_scoped: deny
+  secret_exposure_detected: kill_and_alert
+```
+
+## Enforcement map — which layer owns which section
+
+| Section | Layer 1 (authorizer) | Layer 2 (AST/gate) |
+|---|---|---|
+| `authorizer.tables/views/global` | ✅ compiled to callback | — |
+| `query.*` | — | ✅ pre-prepare rules |
+| `trust` | column/table denials (`deny_for_trust`) | row caps, audit depth |
+| `api` | egress allowlist (jail-level) | spend, retry, idempotency |
+| `hands` | — | trust floors, intent, confirm gates |
+| `identity` | socket identity pre-gate | principal binding, scoped views |
+| `env` | overlays compiled per world | both layers read env context |
+| `fail_closed` | both | both |
+
+## The policy ↔ governance line
+
+| Question | File |
+|---|---|
+| "May this write touch 500 rows?" | **policy** (behavior) |
+| "May this routine exist at 342 LOC?" | governance (structure) |
+| "May drafts read secrets?" | **policy** |
+| "How many routines may exist?" | governance |
+| "Does a served write need confirmation?" | **policy** |
+| "How many endpoints may be served?" | governance |
+
+Policy gates the **act**; governance gates the **artifact**. Verbs vs nouns — two files, one compile step, zero overlap.
+
+## The principle
+
+> **Every section of this file answers one question: "under what conditions does the gate open?"** And the last section answers the only question that matters when something goes wrong: *"it didn't."* 🔒
