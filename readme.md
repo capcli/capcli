@@ -168,16 +168,16 @@ Everything else remains structurally identical. The enforcement map, anti-decisi
 
 ## Enforcement map reminder
 
-| Section | Gate |
+| Section | Gate Command |
 |---|---|
-| `registry` | `routine new` / register |
-| `routine_shape` | `routine validate` (static + manifest) + runtime (ops/duration/result/drift) |
-| `overrides` | compile-time merge: **effective = min(need, ceiling, override)** |
-| `maintenance` | schedule subsystem + consolidation session runner |
-| `schedule` / `watch` / `serve` / `notify` | hand registration commands |
-| `env` | `env new` / `env remove` / `env doctor` |
-| `backup` | daemon committer + `sys doctor` drift alarm |
-| `denials` | every `governance.deny` event format |
+| `registry` | `routine draft` |
+| `routine_shape` | `routine draft` (static) + `routine prove` (runtime) |
+| `overrides` | `rule apply` (compile-time merge) |
+| `maintenance` | `routine sweep` + `bind cron` |
+| `schedule` / `watch` / `serve` | `bind cron | webhook | endpoint` |
+| `env` | `env new | remove | doctor` |
+| `backup` | `sys backup` + `sys doctor` |
+| `denials` | `sys audit trace --explain` |
 
 ## The principle
 

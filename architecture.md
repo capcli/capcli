@@ -1,5 +1,6 @@
 # capcli.architecture.md *(master — final v2, all decisions integrated)*
 
+> **Update v2.1:** Added §12.5 Harness Skill Boundary (2026-09-12)
 > **capcli — a capability kernel for agent workspaces: SQLite as the world, policy as physics, every effect audited, every capability earned.**
 
 ---
@@ -13,6 +14,7 @@ Three convictions:
 1. **The agent is never trusted.** Enforcement lives in physics and in the kernel — never in prompts, never in "please don't."
 2. **The harness is replaceable.** capcli exposes a governed interface; it doesn't care who is reasoning above it.
 3. **Rules don't constrain. Physics does.** A policy only works if the agent has no physical path around it.
+4. **Intent precedes infrastructure.** The world is built for a goal. Schema, policy, and governance are consequences of intent — never prerequisites.
 
 ---
 
@@ -145,7 +147,7 @@ Every raw write runs inside an explicit transaction.
 Agents batch for token economy. Give them fewer *agent* calls, many *kernel* operations:
 - `require_limit` on UPDATE/DELETE forces chunking
 - Agent writes the loop in Python; kernel enforces sane `max_limit` per chunk
-- Pre-flight `db count` before any mass op — estimate vs. policy cap
+- Pre-flight `db query --count` before any mass op — estimate vs. policy cap
 - Each chunk = own txn, own audit event, resumable from checkpoint
 
 Raw SQL is the **exploration layer**. Routines are the **exploitation layer**. Kill raw SQL and the learning loop never starts.
@@ -174,7 +176,7 @@ Design rules:
 - **Code-hash pinned** — every routine recorded with `version` + `sha256`; hash mismatch on replay → refuse
 - **Governance shape limits** — LOC, tokens, max_ops_per_run, max_duration enforced at five gates
 
-Lifecycle: `new → validate → test (draft) → promote (reviewed → pinned) → retire`, with `stats`, `rollback`, `history`. The harness proposes consolidation; the kernel governs registration.
+Lifecycle: `draft → prove → ship (reviewed → pinned) → retire`, with `sweep`, `stats`, `rollback`. The harness proposes consolidation; the kernel governs registration.
 
 **Data never transits the model:** large results stay in routine scope; only computed summaries cross back to the LLM. Kills token cost and PII leakage into context.
 
@@ -234,6 +236,30 @@ Raw specs are monsters. Import is curated, opt-in, default-deny. Unlisted endpoi
 
 The kernel never infers, never reasons, never does LLM work — it matches, dispatches, delivers, and logs. Intelligence is the harness's job; mechanics is capcli's.
 
+### 12.5 Harness Skill Boundary
+
+capcli does **not** manage, store, validate, or govern harness skills (SKILL.md files).
+Skills live in the harness layer above; routines live in capcli. The boundary is the
+capability registry — clean, auditable, intentionally dumb.
+
+```
+HARNESS SKILL (SKILL.md)          CAPCLI KERNEL
+   │                                  │
+   │  "use capcli run refund_archive" │
+   ├─────────────────────────────────►│  capcli search / inspect / run
+   │                                  │  ↓ gate ↓ audit
+   │  summary result (≤500 tokens)    │  routine executes in sandbox
+   │◄─────────────────────────────────┤
+   │                                  │
+```
+
+- Skills reference capabilities via `capcli search` and `capcli run`. Never raw SQL.
+- capcli has zero visibility into skill content, markdown structure, or agent reasoning.
+- Skill-origin propagation is opt-in via `identity.skill_origin` in policy.yaml.
+- **Anti-decision addition (§21):** No skill storage in the kernel. No SKILL.md parsing.
+  No semantic analysis of harness instructions. Skills are the mind's business;
+  capcli is the nervous system.
+
 ---
 
 ## 13. Trust Ladder × Environment Axis
@@ -275,8 +301,8 @@ Writes require intent; the chain inherits downward: `session goal → routine in
 
 ### Coordination
 Agents coordinate through the world, not direct chat:
-- **Claims:** lease-based locks with TTL (`capcli claim`)
-- **Events:** agents watch each other's effects via audit tail
+- **Claims:** lease-based locks with TTL (`capcli db lock`)
+- **Events:** agents watch each other's effects via `sys audit tail`
 - **Handoffs:** world-state transitions visible to all
 
 ---
@@ -288,16 +314,16 @@ agent runs raw ops                     (exploration)
   → kernel logs every op with intent
   → agent queries the audit mirror     (deterministic views)
   → proposes routine                   (harness writes the file)
-  → validate → test (audit-sampled real params) → promote with stats evidence
+  → draft → prove (audit-sampled real params) → ship with stats evidence
   → future work calls the routine      (exploitation)
 ```
 
 Accumulation is automatic. Consolidation must be scheduled:
 ```
 maintenance window (Sun 03:00)
-  → kernel builds consolidation report (fingerprint similarity, dead, failing)
+  → kernel builds sweep report (fingerprint similarity, dead, failing)
   → harness drafts merges (LLM labor)
-  → validate + test candidates (gate)
+  → draft + prove candidates (gate)
   → human approves (gate)
   → apply: retire originals with provenance pointers, never delete
 ```
@@ -344,24 +370,20 @@ Idempotency keys on every write make retries safe. `result_hash` per event detec
 Shape: `capcli <noun> <verb> [target] [--flags]` — no exceptions.
 Universal flags on all mutating verbs: `--dry-run`, `--json`, `--intent "<why>"`, `--as <principal>`.
 
-```
-run · search · inspect                        (hot path, top-level)
-db query · exec · count · snapshot · restore
-routine new · validate · test · promote · stats · rollback · retire
-consolidate report · propose · apply
-api import · call · reload
-env new · use · list · doctor · merge
-schedule add · fire                             watch add · test · dead-letter
-serve add · openapi · keys                      notify · ask list · resolve
-policy validate · explain · diff                schema show · migrate · import
-audit tail · query · trace · replay · verify
-agent register · revoke                         claim · release
-sys doctor · commit · recover                   jail exec · doctor
-```
+8 nouns. Zero redundancy.
 
-Exit codes are law: `0` ok · `2` policy-denied · `3` validation · `4` runtime · `5` audit-write-failed (= nothing ran).
+-   **run** · search · inspect (hot path)
+-   **db** · query · exec · lock · unlock · snapshot · restore · dump
+-   **routine** · draft · prove · ship · sweep · stats · rollback · retire
+-   **bind** · cron · webhook · endpoint · list · pause · resume · remove · keys
+-   **ping** · notify · ask · list · resolve · expire
+-   **rule** · show · diff · apply · validate (owns schema + policy + governance)
+-   **env** · new · use · list · inspect · doctor · merge · remove
+-   **sys** · audit (tail/trace/query/replay) · agent · doctor · backup · recover · exec
 
-`policy explain` turns denial into a learning signal: agent gets denied → asks why → fixes its own query.
+Exit codes are law: `0` ok · `2` policy-denied · `3` validation · `4` runtime · `5` audit-write-failed.
+
+`sys audit trace --explain` is the single learning signal for denials.
 
 ---
 
@@ -403,6 +425,8 @@ Kernel injects `Authorization` at egress. Tokens never in agent env, never in co
 - **No YAML procedures.** YAML declares; Python executes; JSONL records.
 - **No agent-to-agent chat channels.** Agents coordinate through the world: claims, events, handoffs.
 - **No LLM in the kernel.** Setup is agent intelligence, execution is kernel mechanics, authority is human.
+- **No kernel-generated worlds.** The harness authors schema.yaml from user intent; the kernel gates application. capcli never infers structure from natural language.
+- **No onboarding events.** The audit records real ops, effects, and denials. No synthetic `onboarding.*` event types. Intent is a field on an op, not a standalone event.
 - **No deletion.** Retirement with provenance pointers; rollback un-retires; history only grows.
 
 ---
@@ -416,8 +440,9 @@ Kernel injects `Authorization` at egress. Tokens never in agent env, never in co
 | **Event** | the audit record — exists even when the op is denied |
 | **Routine** | agent-learned composition of ops (Python, hash-pinned) |
 | **Capability** | anything exposed to the agent: db op, routine, api verb, view |
-| **Policy** | what capabilities may do (behavior) |
-| **Governance** | what capabilities may be (structure) |
+| **Rule** | static configuration: schema (shape), policy (behavior), governance (limits) |
+| **Bind** | inbound trigger: cron, webhook, served endpoint |
+| **Ping** | outbound human IO: notify, ask |
 | **Trust** | draft → reviewed → pinned |
 | **Kernel** | the capcli process — the only door in the wall |
 

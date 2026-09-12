@@ -1,17 +1,19 @@
-# capcli-db.architecture.md *(final v3 — primitive-aware, mirror views integrated)*
+# capcli-db.architecture.md *(final v5 — token-optimized schema, CHECK-as-validation, primitive-aware)*
 
-> The database layer of capcli: **SQLite as world-state, policy as physics, raw SQL as the language.**
+> The database layer of capcli: **SQLite as world-state, the agent as world-builder, policy as physics, raw SQL as the language, CHECK as validation.**
 
 ---
 
 ## 1. Scope & Convictions
 
-capcli-db governs every effect on `workspace.db`. Four convictions:
+capcli-db governs every effect on `workspace.db`. Six convictions:
 
 1. **SQLite is not storage behind an app — it is the persistent world-state.**
-2. **Raw SQL is the language.** No ORM, no query builder, no Drizzle. Agents know SQL cold; they hallucinate ORM syntax.
-3. **The agent is never trusted.** Enforcement lives in the SQLite engine and the kernel gate — never in prompts.
-4. **One source of truth: `schema.yaml`.** SQL DDL is what it compiles to, never hand-edited.
+2. **The harness builds the world. The kernel gates it.** During onboarding, the harness authors `schema.yaml` from the user's stated intent. The kernel validates, previews (`--dry-run`), and applies. Creation is the harness's job; permission is the kernel's job; approval is the human's job.
+3. **Raw SQL is the language.** No ORM, no query builder, no Drizzle, no Prisma. Agents know SQL cold; they hallucinate ORM syntax.
+4. **The agent is never trusted at runtime.** Enforcement lives in the SQLite engine and the kernel gate — never in prompts.
+5. **One source of truth: `schema.yaml`.** SQL DDL is what it compiles to, never hand-edited. The agent writes YAML; the kernel generates DDL.
+6. **CHECK is validation.** Content rules live in SQLite CHECK constraints — engine-enforced, SQL-native, one enforcement point. No `validate=` vocabulary.
 
 ---
 
@@ -33,97 +35,415 @@ Every DB effect flows: `intent → kernel → authorizer → AST → SQLite → 
 
 ---
 
-## 3. schema.yaml — the contract
+## 3. schema.yaml — token-optimized, agent-authored
 
-Declarative structure + the semantic layer SQL cannot express:
+**The agent writes this file.** It is not a pre-defined template. The agent decides the domain model and expresses it in dense, token-efficient YAML using native filesystem access in the `dev` worktree.
+
+The kernel's role: expand shorthand at compile time, gate application, enforce at runtime, refuse drift.
+
+### Shorthand expansion rules
+
+| Shorthand | Expands To | Safe Because |
+|---|---|---|
+| `pk` | `{type: integer, pk: true, autoincrement: true}` | Universal convention |
+| `text pk` | `{type: text, pk: true}` | Text PK (e.g., agent IDs) |
+| `text!` | `{type: text, unique: true}` | `!` suffix = unique |
+| `text=val` | `{type: text, default: "val"}` | `=` suffix = default |
+| `int~` | `{type: integer, immutable: true}` | `~` suffix = immutable |
+| `int ref=table.col` | `{type: integer, references: table.col}` | FK inline |
+| `prov: true` | `provenance: true` + auto `created_by`/`modified_by` | Kernel injects system cols |
+| `sens: true` | `sensitive: true` | Table-level masking |
+| `sys: true` | `system: true` + `readonly_grant: true` | System table |
+| `imm_rows: true` | Append-only table | Authorizer denies UPDATE/DELETE |
+| `imm_cols: [...]` | Specific immutable columns | Authorizer denies writes on listed cols |
+| `idx: [col]` | `indexes: [{on: [col]}]` | Single-col index shorthand |
+| `idx: [[a, b]]` | `indexes: [{on: [a, b]}]` | Composite index |
+| `rel:` | Semantic traversal edge | Kernel search index + explain |
+| `chk:` | CHECK constraint array | SQLite engine enforcement |
+| `trig:` | Trigger definition | Policy-gated, explicit SQL |
+| `mask=true` | Column-level redaction | Authorizer + audit redaction |
+
+### Full-complexity example (every DDL feature)
 
 ```yaml
-version: 12                          # lock with policy.yaml or boot refused
+# schema.yaml v5 — full DDL coverage, token-optimized
+version: 5
 engine: sqlite
-database: workspace.db
+db: workspace.db
 
-tables:
-  entities:
-    description: "Core objects — users, orders, docs."
-    provenance: true                 # kernel auto-fills created_by / modified_by
-    columns:
-      id:          { type: integer, pk: true, autoincrement: true }
-      type:        { type: text, required: true, description: "user|order|doc" }
-      ref:         { type: text, unique: true }
-      status:      { type: text, default: "active" }
-      metadata:    { type: json }
-      created_at:  { type: integer, immutable: true }
-      created_by:  { type: text, system: true }    # agent id — auto-filled
-      modified_by: { type: text, system: true }    # agent id — auto-filled
-    indexes:
-      - on: [type, status]
-    relations:
-      edges_out: { to: edges, on: "edges.src = entities.id" }
+customers:
+  desc: Customer profiles with PII
+  prov: true
+  sens: true
+  cols:
+    id: pk
+    email: text!
+    name: text
+    phone: text~
+    tier: text=standard
+    metadata: json
+    created_at: int~
+  idx:
+    - [tier, created_at]
+    - email
+  rel:
+    orders: orders.customer_id = customers.id
+    subscriptions: subscriptions.customer_id = customers.id
+  chk:
+    - "tier IN ('standard','premium','enterprise')"
+    - "email LIKE '%@%'"
 
-  edges:
-    description: "Typed relationships. Append-only."
-    columns:
-      id:   { type: integer, pk: true }
-      src:  { type: integer, references: entities.id }
-      rel:  { type: text }
-      dst:  { type: integer, references: entities.id }
-      created_by: { type: text, system: true }
-    constraints: ["CHECK (src != dst)"]
-    immutable_rows: true
+orders:
+  desc: Transactional order records
+  prov: true
+  cols:
+    id: pk
+    ref: text!
+    customer_id: int ref=customers.id
+    status: text=pending
+    total_cents: int
+    discount_cents: int=0
+    tax_cents: int=0
+    currency: text=USD
+    notes: text
+    metadata: json
+    created_at: int~
+  idx:
+    - [customer_id, status]
+    - [status, created_at]
+    - ref
+  rel:
+    customer: customers.id = orders.customer_id
+    items: order_items.order_id = orders.id
+    payments: payments.order_id = orders.id
+  chk:
+    - "total_cents >= 0"
+    - "discount_cents <= total_cents"
+    - "tax_cents >= 0"
+  trig:
+    validate_total:
+      when: before insert
+      sql: |
+        SELECT RAISE(ABORT, 'total mismatch')
+        WHERE NEW.total_cents != (
+          SELECT COALESCE(SUM(unit_price_cents * quantity), 0)
+          FROM order_items WHERE order_id = NEW.id
+        )
 
-  secrets:
-    sensitive: true
-    columns:
-      id:    { type: integer, pk: true }
-      name:  { type: text, unique: true }
-      value: { type: text, mask: true }
+order_items:
+  desc: Line items per order
+  prov: true
+  imm_rows: true
+  cols:
+    id: pk
+    order_id: int ref=orders.id
+    sku: text ref=inventory.sku
+    quantity: int
+    unit_price_cents: int
+    metadata: json
+  idx:
+    - [order_id]
+    - [sku]
+  chk:
+    - "quantity > 0"
+    - "unit_price_cents >= 0"
 
-  agents:                            # identity is world-state too
-    description: "Kernel-registered agent identities."
-    columns:
-      id:         { type: text, pk: true }         # agt_7f3k
-      name:       { type: text, unique: true }
-      harness:    { type: text }
-      principal:  { type: text, required: true }   # user:alice
-      status:     { type: text, default: "active" }
-    immutable_columns: [id, principal]
+inventory:
+  desc: SKU stock levels
+  prov: true
+  cols:
+    id: pk
+    sku: text!~
+    name: text
+    stock: int=0
+    reorder_point: int=10
+    warehouse: text=DEFAULT
+    last_restocked: int
+  idx:
+    - [warehouse, stock]
+    - sku
+  chk:
+    - "stock >= 0"
+    - "reorder_point >= 0"
+
+payments:
+  desc: Payment transactions
+  prov: true
+  sens: true
+  cols:
+    id: pk
+    order_id: int ref=orders.id
+    provider: text
+    provider_ref: text!
+    amount_cents: int
+    status: text=pending
+    raw_response: json mask=true
+    created_at: int~
+  idx:
+    - [order_id]
+    - provider_ref
+  chk:
+    - "amount_cents > 0"
+    - "status IN ('pending','completed','failed','refunded')"
+
+subscriptions:
+  desc: Recurring billing subscriptions
+  prov: true
+  cols:
+    id: pk
+    customer_id: int ref=customers.id
+    plan: text
+    interval: text=monthly
+    amount_cents: int
+    active: int=1
+    next_billing: int
+    created_at: int~
+  idx:
+    - [customer_id, active]
+    - [next_billing]
+  chk:
+    - "interval IN ('monthly','yearly')"
+    - "amount_cents > 0"
+
+secrets:
+  desc: Kernel-managed secrets
+  sens: true
+  cols:
+    id: pk
+    name: text!~
+    value: text mask=true
+    scope: text=global
+    expires_at: int
+  idx:
+    - name
+    - [scope, expires_at]
+
+agents:
+  desc: Registered agent identities
+  cols:
+    id: text pk
+    name: text!
+    harness: text
+    principal: text!
+    status: text=active
+  imm_cols: [id, principal]
+  idx:
+    - principal
+    - status
+
+_audit:
+  desc: Audit mirror (kernel-managed)
+  sys: true
+  cols:
+    id: pk
+    event: text
+    ts: int
+    env: text
+    agent: text
+    session: text
+    principal: text
+    capability: text
+    intent: text
+    outcome: text
+    duration_ms: int
+    payload: json mask=true
+  idx:
+    - [event, ts]
+    - [agent, ts]
+    - [capability, outcome]
 
 views:
-  active_orders:
-    description: "Orders not yet refunded."
+  pending_orders:
+    desc: Orders awaiting fulfillment
+    exposes: [orders, customers]
     sql: |
-      SELECT id, ref, status FROM entities
-      WHERE type = 'order' AND status != 'refunded'
+      SELECT o.id, o.ref, o.total_cents, c.name as customer_name
+      FROM orders o
+      JOIN customers c ON o.customer_id = c.id
+      WHERE o.status = 'pending'
+      ORDER BY o.created_at DESC
+
+  low_stock_alerts:
+    desc: Inventory below reorder point
+    exposes: [inventory]
+    sql: |
+      SELECT sku, name, stock, reorder_point, warehouse
+      FROM inventory
+      WHERE stock <= reorder_point AND stock > 0
+
+  customer_lifetime_value:
+    desc: Aggregated spend per customer
+    exposes: [customers, orders, payments]
+    scoped: principal
+    sql: |
+      SELECT c.id, c.name, SUM(p.amount_cents) as total_spent
+      FROM customers c
+      JOIN orders o ON o.customer_id = c.id
+      JOIN payments p ON p.order_id = o.id
+      WHERE p.status = 'completed' AND c.id = :principal
+      GROUP BY c.id
 ```
 
-Why YAML and not raw `schema.sql`:
+### Why YAML and not raw `schema.sql`
 
 | Need | SQL DDL | schema.yaml |
 |---|---|---|
-| `mask: true` (redact in results/audit) | no concept | ✅ |
-| `immutable` (policy input) | only via triggers | ✅ |
-| `description` (search index, explain output) | comments, unstructured | ✅ |
-| `relations` (traversal search) | FK = integrity only | ✅ |
-| `provenance` / `system` columns | no concept | ✅ |
+| `mask=true` (redact in results/audit) | no concept | ✅ |
+| `~` / `immutable` (policy input) | only via triggers | ✅ |
+| `desc` (search index, explain output) | comments, unstructured | ✅ |
+| `rel` (traversal search) | FK = integrity only | ✅ |
+| `prov` / `system` columns | no concept | ✅ |
+| Token-optimized for agents | verbose | ✅ ~60% savings |
 | Single source of truth | ✅ if sole artifact | ✅ kernel compiles it |
 
-**The rule:** schema.yaml is justified because the kernel *applies* it. DDL is generated output; hand-editing the DB triggers `schema diff` alarms and `sys doctor` refusal.
+### What the rule layer governs per-column vs what SQLite validates
+
+| Flag | Purpose | Enforcement Layer |
+|---|---|---|
+| `type` | Storage type | SQLite type affinity |
+| `pk` | Primary key | SQLite engine |
+| `!` (unique) | Uniqueness | SQLite UNIQUE constraint |
+| `~` (immutable) | Write-once | **Authorizer denies UPDATE on column** |
+| `=val` (default) | Default value | SQLite DEFAULT |
+| `ref=` | Foreign key | SQLite FK constraint |
+| `mask=true` | Redact on read | **Authorizer + audit redaction** |
+| `system: true` | Kernel auto-fills | **Authorizer denies agent writes** |
+| `chk:` | Content validation | **SQLite CHECK constraint** |
+
+**Shape = capcli. Content = SQLite. No overlap. No dual enforcement.**
 
 ---
 
-## 4. Two-Layer Policy (DB-specific)
+## 4. Schema Evolution — the explicit lifecycle
 
-### Layer 1 — `sqlite3_set_authorizer` (via `node:sqlite`)
+The agent builds the world. The kernel governs its growth. This is not free-form `ALTER TABLE` — it is a governed pipeline.
 
-Engine-enforced at prepare-time. Bypass-proof even if TS code has bugs. Bugs fail toward denial.
+### Step-by-step: agent adds a column
 
-Granularity: **action × table × column.**
+```
+1. AGENT EDITS schema.yaml (native fs, dev worktree)
+   → adds: discount_cents: int=0
+   → bumps: version: 4 → 5
 
-### Layer 2 — SQL AST (node-sql-parser)
+2. AGENT PREVIEW
+   capcli rule apply --type schema --dry-run --env dev
+   → output: exact DDL, snapshot id, reversibility confirmation
+   → exit 0 (plan valid)
 
-Pre-prepare semantic gate: WHERE clauses, LIMIT presence, patterns, values, **intent presence on writes**.
+3. KERNEL GATES
+   capcli rule apply --type schema --env dev
+   → policy check: alter.require_trust = reviewed
+   → agent trust: draft
+   → exit 2: "schema changes require reviewed trust"
 
-Granularity: **statement shape, blast radius, parameters.**
+4. HUMAN/CI REVIEWS
+   → reads the diff (version 4 → 5)
+   → sees: ALTER TABLE orders ADD COLUMN discount_cents INTEGER DEFAULT 0
+   → approves
+
+5. HUMAN SHIPS
+   capcli routine ship schema_v5 --to reviewed --reason "add discount column"
+
+6. AGENT APPLIES
+   capcli rule apply --type schema --env dev --intent "add discount_cents to orders"
+   → snapshot taken
+   → DDL executed in one txn
+   → schema_version bumped
+   → auto-committed to git
+   → audit event written
+
+7. PROD (same pattern, stricter gate)
+   → human merges dev branch into prod
+   → capcli env use prod
+   → capcli rule apply --type schema --intent "add discount_cents to orders"
+   → applied with prod-level confirmations
+```
+
+### What the agent CANNOT do
+
+| Temptation | Result |
+|---|---|
+| `db.exec("ALTER TABLE orders ADD COLUMN hack TEXT")` | **exit 2** — `alter.require_trust: reviewed` |
+| `db.exec("DROP TABLE orders")` | **exit 2** — `drop: deny` (authorizer, unconditional) |
+| Edit `workspace.db` directly | **exit 4** — file perms (chmod 600, daemon-owned) |
+| Skip `schema.yaml`, hand-write DDL | **exit 3** — `rule diff` alarm, `sys doctor` refuses boot |
+| Apply schema to `prod` without merge | **exit 2** — env overlay denies cross-world DDL |
+| Delete a column without snapshot | **exit 2** — migration is snapshot-first, always |
+
+### Migration rules
+
+- **Forward-only.** No down-migrations. Snapshots are the rollback.
+- **Snapshot-first.** Every migration takes a WAL-consistent snapshot before DDL.
+- **Explicit-SQL-shown.** `--dry-run` prints the exact DDL. No surprises.
+- **One transaction.** Failure → auto-restore from snapshot.
+- **Auto-commit.** Every successful migration is a git commit.
+- **Version-locked.** `schema_version` must match `policy.yaml` + `governance.yaml` or boot is refused.
+- **Onboarding is migration.** The first `rule apply` from intent is version 0→1. It follows the exact same snapshot-first, explicit-SQL-shown, one-transaction pipeline as every subsequent migration. No special fast-path for genesis.
+
+---
+
+## 5. Validation — five gates, zero trust
+
+Validation isn't a single step — it's a layered defense that runs at every boundary.
+
+### Gate 1: YAML Syntax (parse-time)
+- Valid YAML structure, no duplicate keys
+- Shorthand expansion succeeds
+- All required fields present (`version`, `engine`, `db`)
+- **Fail → exit 3, cites line + column**
+
+### Gate 2: Semantic Validation (compile-time)
+- All `ref=` targets exist and types match
+- All `rel:` targets exist and columns match types
+- All `idx:` columns exist in parent table
+- All `chk:` expressions parse as valid SQL WHERE clauses
+- All `trig:` SQL bodies parse without error
+- All `views.sql` parse and only reference tables in `exposes:`
+- `scoped: principal` views contain `:principal` bind param
+- `mask=true` only on `text`/`json` columns
+- `imm_cols` entries exist in table
+- No circular `ref=` chains
+- **Fail → exit 3, cites exact rule + location**
+
+### Gate 3: Policy Lock (boot-time)
+- `schema.version` == `policy.schema_version` == `governance.schema_version`
+- Mismatch → **refuse boot, exit 5**
+
+### Gate 4: Live Drift Detection (runtime)
+- `capcli sys doctor` compares compiled YAML vs live DB via PRAGMAs
+- Any divergence → **refuse to serve, exit 4, cites exact drift**
+
+### Gate 5: Migration Safety (apply-time)
+- Snapshot taken before DDL
+- DDL executes in test txn against snapshot
+- Rollback verified, idempotency checked
+- **Fail → auto-restore snapshot, exit 4**
+
+### What validation catches
+
+| Error | Gate | Message |
+|---|---|---|
+| `ref=nonexistent_table.id` | 2 | `orders.customer_id references missing table` |
+| `idx: [missing_col]` | 2 | `index on orders.missing_col: column does not exist` |
+| `mask=true` on `int` column | 2 | `payments.amount_cents: mask only valid on text/json` |
+| View references unlisted table | 2 | `pending_orders.sql touches 'inventory' not in exposes` |
+| Schema v5 + Policy v4 | 3 | `version mismatch: refusing boot` |
+| Live DB has extra column | 4 | `drift: orders.hack_column exists in DB but not schema.yaml` |
+| FK type mismatch | 2 | `orders.customer_id (int) refs customers.id (text)` |
+| Circular ref | 2 | `circular reference: a→b→c→a` |
+| Trigger SQL syntax error | 2 | `orders.validate_total: syntax error` |
+
+---
+
+## 6. Two-Layer Policy (DB-specific)
+
+### Layer 1 — `sqlite3_set_authorizer`
+
+Engine-enforced at prepare-time. Bypass-proof. Granularity: **action × table × column.**
+
+### Layer 2 — SQL AST
+
+Pre-prepare semantic gate. Granularity: **statement shape, blast radius, parameters, intent.**
 
 ```
 SQL text
@@ -132,20 +452,21 @@ SQL text
   → AST rules (require_where, require_limit, max_rows, patterns)
   → sqlite3_set_authorizer (table/column/action, ATTACH, PRAGMA, functions)
   → execute
-  → audit event (agent, session, principal, caused_by, intent chain)
+  → audit event
 ```
 
-**The asymmetry:** authorizer = default-deny floor that can't be bypassed. AST = expressive ceiling. Bypass requires both to fail.
+**Asymmetry:** authorizer = default-deny floor. AST = expressive ceiling. Bypass requires both to fail.
 
 ### DB-relevant policy excerpt
 
 ```yaml
 authorizer:
   tables:
-    entities: { allow: [read, insert, update, delete], deny_columns_write: [id, created_at, created_by, modified_by] }
-    edges:    { allow: [read, insert] }               # immutable rows
-    secrets:  { allow: [read], mask_columns: [value] }
-    agents:   { allow: [read] }                       # identity managed by kernel commands only
+    orders:     { allow: [read, insert, update, delete], deny_columns_write: [id, created_at, created_by, modified_by] }
+    customers:  { allow: [read, insert, update, delete], deny_columns_write: [id, created_by, modified_by] }
+    inventory:  { allow: [read, insert, update], deny_columns_write: [id, sku, created_by, modified_by] }
+    secrets:    { allow: [read], mask_columns: [value] }
+    agents:     { allow: [read] }
   global:
     attach: deny
     pragma: [query_only, foreign_keys]
@@ -163,9 +484,9 @@ query:
 
 ---
 
-## 5. Raw SQL Rules
+## 7. Raw SQL Rules
 
-Raw SQL is **allowed by default** — it's the exploration layer that feeds the learning loop. Guardrails, not prohibitions:
+Raw SQL is **allowed by default** — it's the exploration layer that feeds the learning loop.
 
 | Rule | Enforcement |
 |---|---|
@@ -173,203 +494,145 @@ Raw SQL is **allowed by default** — it's the exploration layer that feeds the 
 | Reads run free | authorizer scope + `max_limit` |
 | `UPDATE`/`DELETE` need `WHERE` | AST |
 | `UPDATE`/`DELETE` need `LIMIT` | AST |
-| Writes need an **intent** (inherited chain accepted) | AST, deny by default |
-| Writes run in explicit transactions | kernel wraps `db exec`; SDK requires `ctx.db.txn()` |
+| Writes need an **intent** | AST, deny by default |
+| Writes run in explicit transactions | kernel wraps; SDK requires `ctx.db.txn()` |
 | DDL gated | `require_trust: reviewed` |
 | `ATTACH` / write-PRAGMAs | authorizer, unconditional deny |
 
 ```python
 # ✅
 ctx.db.execute(
-    "UPDATE entities SET status = :s WHERE id = :id LIMIT 1",
-    {"s": "refunded", "id": 7},
-    intent="mark ORD-8842 refunded")
+    "UPDATE orders SET status = :s WHERE id = :id LIMIT 1",
+    {"s": "fulfilled", "id": 7},
+    intent="mark ORD-8842 fulfilled")
 
 # ❌ rejected: interpolation
-ctx.db.execute(f"UPDATE entities SET status = '{s}' WHERE id = {id}")
+ctx.db.execute(f"UPDATE orders SET status = '{s}' WHERE id = {id}")
 
 # ❌ rejected: no WHERE, no LIMIT
-ctx.db.execute("UPDATE entities SET archived = 1")
+ctx.db.execute("UPDATE orders SET archived = 1")
 ```
 
 **Raw SQL is exploration. Routines are exploitation.** Kill raw SQL and the learning loop never starts.
 
 ---
 
-## 6. Bulk Strategy
+## 8. Bulk Strategy
 
-Agents batch for token economy. Answer: fewer *agent* calls, many *kernel* operations. No `bulk_update()` APIs (that's accidental ORM) — Python loops + `require_limit`:
+Fewer *agent* calls, many *kernel* operations. Python loops + `require_limit`:
 
 ```python
 while True:
     res = ctx.db.execute(
-        "UPDATE entities SET archived = 1 WHERE type = :t AND archived = 0 LIMIT 500",
-        {"t": "temp"},
-        intent="archive stale temp entities")
+        "UPDATE orders SET archived = 1 WHERE status = 'completed' AND archived = 0 LIMIT 500",
+        {},
+        intent="archive completed orders")
     if res.changes < 500:
         break
 ```
 
-- Each chunk = own txn, own audit event, resumable by natural WHERE drift
-- `capcli db count <table> --where` = mandatory pre-flight for mass ops
-- `INSERT ... SELECT` (unchunkable inside SQLite): estimate-before-execute via `count`
-- Bulk writes require trust ≥ `reviewed`; exceeding caps requires `--reason` justification
+- Each chunk = own txn, own audit event, resumable
+- `capcli db query --count` = mandatory pre-flight for mass ops
+- Bulk writes require trust ≥ `reviewed`
 
 ---
 
-## 7. Command Surface — `capcli db`
+## 9. Command Surface — `capcli db`
 
 ```bash
-capcli db query <sql> [-p k=v]... [--limit N] [--json]
+capcli db query <sql> [-p k=v]... [--limit N] [--count] [--json]
 capcli db exec  <sql> [-p k=v]... --intent "..." [--dry-run]
-capcli db count <table> [--where <sql>]
+capcli db lock <table>:<ref> --ttl 10m --reason "..."
+capcli db unlock <target>
 capcli db schema [--table]
-capcli db snapshot
-capcli db restore <snapshot-id> [--dry-run]
-capcli db dump                          # → world.sql (deterministic, git-committed)
-capcli claim <table>:<ref> --ttl 10m --reason "..."   # coordination lease
+capcli db snapshot | restore <id> | dump
 ```
 
-Universal flags apply: `--dry-run`, `--json`, `--intent`, `--as`, `--by <agent-id>`. Exit codes: `0` ok · `2` policy-denied · `3` validation · `4` runtime · `5` audit-failed.
+Exit codes: `0` ok · `2` policy-denied · `3` validation · `4` runtime · `5` audit-failed.
+`db count` is dead. Use `db query --count` or rely on AST-enforced bulk pre-flights.
 
 ---
 
-## 8. The `ctx.db` SDK (routine-side surface)
+## 10. The `ctx.db` SDK
 
 ```python
 ctx.db.query(sql, params) -> list[dict]        # reads; max_limit enforced
 ctx.db.execute(sql, params, intent) -> Result  # writes; WHERE+LIMIT+intent enforced
 ctx.db.txn() -> context manager                # required wrapper for writes
-ctx.db.count(table, where) -> int              # pre-flight
-ctx.claim(target, ttl) -> Claim                # cross-agent coordination
+ctx.db.lock(target, ttl) -> Claim              # cross-agent coordination (replaces ctx.claim)
 ```
 
-Constraints inside the SDK:
-
-- No raw connection object exposed — routines can never reach `sqlite3` directly
+- No raw connection object exposed
 - No `executescript`, no multi-statement
 - Results are plain dicts; `mask` columns arrive redacted
-- `system: true` columns are auto-filled by the kernel (provenance) — routines cannot set or spoof them
-- Large results stay in routine scope — only summaries cross to the model
+- `system: true` columns auto-filled by kernel
+- Large results stay in routine scope
 
 ---
 
-## 9. Identity & Provenance (multi-agent)
-
-Every DB effect carries the full spine:
+## 11. Identity & Provenance
 
 ```
 principal → agent → session → op, with caused_by linking the causal DAG
 ```
 
-- **Agent IDs are kernel-issued** (`capcli agent register`), stored in the `agents` table, bound to socket credentials — never self-declared
-- **Row-level provenance**: `provenance: true` tables get `created_by` / `modified_by` auto-filled with the acting agent id. Six months later the data itself answers "who did this"
-- **Claims**: lease-based exclusivity with TTL so dead agents can't deadlock the world; conflicting claims return the holder's id
-- **Cross-agent routine calls** require the callee to be ≥ `reviewed` — one agent's draft never becomes another's dependency
+- Agent IDs kernel-issued, socket-bound, never self-declared
+- `prov: true` tables get `created_by`/`modified_by` auto-filled
+- Claims: lease-based exclusivity with TTL
+- Cross-agent routine calls require callee ≥ `reviewed`
 
 ---
 
-## 10. Intent Chain
-
-Writes require intent; the chain inherits downward:
+## 12. Intent Chain
 
 ```
 session goal → routine intent → op intent
 ```
 
-- Leaf ops inherit from routine, routines from session; every audit event records the full chain
+- Leaf ops inherit from routine, routines from session
 - Anti-junk: min length, boilerplate blacklist, deny by default
-- `--intent` = purpose (why this action); `--reason` = justification (only for threshold crossings)
+- `--intent` = purpose; `--reason` = justification for threshold crossings
 
 ---
 
-## 11. Audit Mirror & Primitive Views 🔬
+## 13. Audit Mirror & Primitive Views
 
-The JSONL stream is canonical (append-only, git-backed, tamper-evident), but the kernel maintains a **read-only mirror inside workspace.db** so the agent mines its own history with SQL:
-
-```yaml
-tables:
-  _audit:
-    system: true
-    description: "Mirror of the audit stream. Read-only."
-    readonly_grant: true
-```
-
-Beyond raw events, the mirror hosts **primitive-aware views** powering lifecycle, consolidation, and forensics:
+Read-only `_audit` mirror inside workspace.db. Deterministic views:
 
 ```sql
--- view: routine_fingerprints
--- actual primitive sequence executed per routine version
-SELECT routine_version, seq, capability, target, count(*) n
-FROM _audit WHERE event IN ('db.exec','db.query','api.call')
-GROUP BY routine_version, seq, capability, target;
-
--- view: primitive_failures
--- which LEAF fails, not just which routine
-SELECT routine, capability, target, error, count(*) failures
-FROM _audit WHERE outcome != 'success' AND event != 'routine.run'
-GROUP BY routine, capability, target, error;
-
--- view: primitive_cost
--- duration and spend attribution per leaf
-SELECT routine, capability, target,
-       avg(duration_ms) p50, max(duration_ms) p95
-FROM _audit GROUP BY routine, capability, target;
-
--- view: shared_subsequences
--- common primitive n-grams across routines → merge candidates
-SELECT seq_pattern, count(DISTINCT routine_version) routines_seen
-FROM routine_fingerprints GROUP BY seq_pattern HAVING routines_seen > 1;
+-- routine_fingerprints: actual primitive sequence per version
+-- primitive_failures: which LEAF fails
+-- primitive_cost: duration/spend attribution per leaf
+-- shared_subsequences: common primitive n-grams → merge candidates
 ```
 
-All deterministic GROUP BYs. The kernel counts at leaf depth; the harness reasons over it. These views power `consolidate report`, `routine stats --deep`, and `audit trace`.
+All GROUP BYs. Kernel counts at leaf depth; harness reasons over it.
 
 ---
 
-## 12. Durability & Recovery
-
-Three tiers, layered:
+## 14. Durability & Recovery
 
 | Tier | Artifact | Mechanism |
 |---|---|---|
-| Point-in-time | `db snapshot` | WAL-consistent copy + hash + schema_version |
-| Committed history | `db dump` → **world.sql** | deterministic text dump, git-tracked; data history becomes human-readable diffs |
-| Offsite truth | `sys commit --push` | interval + event-triggered (promote, migrate, restore) |
+| Point-in-time | `db snapshot` | WAL-consistent copy + hash |
+| Committed history | `world.sql` | deterministic dump, git-tracked |
+| Offsite truth | `sys backup --push` | interval + event-triggered |
 
-- `db restore` = snapshot-first recovery; `--dry-run` shows the plan
-- `sys recover <commit>` = restore full world-state (db + routines + policy + audit) from git history
-- `audit replay` reconstructs state: events re-applied through the same gate, **current** policy enforced
-- Every event carries `result_hash` — drift detection when replaying onto a diverged world
-- **Worst case** (harness wipes everything): `git clone` + `capcli sys recover` → world restored, audit spine intact
+- `sys recover <commit>` restores full world-state from git
+- `sys audit replay` re-applies events through current policy
+- Worst case: `git clone` + `sys recover` → world restored
 
 ---
 
-## 13. Migrations — deliberately dumb
+## 15. Introspection
 
-No auto-magic. Forward-only, snapshot-first, explicit-SQL-shown:
-
-```
-capcli schema migrate [--dry-run]
-  1. snapshot workspace.db
-  2. diff schema.yaml version N → N+1
-  3. print the exact DDL statements
-  4. --apply runs them in one txn; failure → auto-restore
-  5. auto-commit the transition
-```
-
-Down-migrations, reorder-safe alters, dialect abstraction: **not built.** SQLite + snapshots makes the simple version nearly bulletproof.
+- **YAML → DB**: one-way generation
+- **DB → diff**: PRAGMAs, structured comparison
+- **DB → YAML**: `capcli rule show --type schema` bootstraps from live DB
 
 ---
 
-## 14. Introspection — no DDL parser, ever
-
-- **YAML → DB**: one-way generation. Generating SQL is trivial; parsing is the hard part we skip
-- **DB → diff**: `PRAGMA table_info`, `PRAGMA foreign_key_list`, `PRAGMA index_list` — structured vs structured
-- **DB → YAML**: `capcli schema import <db>` bootstraps from a live DB via PRAGMAs — the zero-to-value adoption path
-
----
-
-## 15. Audit Event Format (DB ops)
+## 16. Audit Event Format
 
 ```json
 {
@@ -378,63 +641,64 @@ Down-migrations, reorder-safe alters, dialect abstraction: **not built.** SQLite
   "env": "prod",
   "stage": "live",
   "agent": "agt_7f3k",
-  "session": "ses_a9",
   "principal": "user:alice",
   "caused_by": "op_000119",
-  "intent": "mark ORD-8842 refunded",
-  "intent_chain": ["process today's refund queue", "refund_and_archive", "mark ORD-8842 refunded"],
+  "intent": "mark ORD-8842 fulfilled",
   "capability": "db.exec",
-  "sql": "UPDATE entities SET status = :s WHERE id = :id LIMIT 1",
-  "params": { "s": "refunded", "id": 7 },
-  "policy": { "decision": "allow", "rules": ["require_where", "require_limit", "intent_present"] },
+  "sql": "UPDATE orders SET status = :s WHERE id = :id LIMIT 1",
+  "params": { "s": "fulfilled", "id": 7 },
+  "policy": { "decision": "allow", "rules": ["require_where", "require_limit"] },
   "rows_affected": 1,
   "result_hash": "sha256:...",
-  "duration_ms": 4,
-  "idempotency_key": "..."
+  "duration_ms": 4
 }
 ```
 
-One command = one event. Three questions answered on every effect: **who, what, why.** Missing any → it doesn't run.
+Schema migration events include `from_version`, `to_version`, `ddl`, `snapshot`.
 
 ---
 
-## 16. Environment Integration
+## 17. Environment Integration
 
-Each `capcli env` is a worktree with its own `workspace.db`:
-
-- `env new sim --seed prod` → snapshot prod → restore into sim → **auto-mask `sensitive` tables/columns**
-- Sim replays prod audit against forked state: real traffic, zero prod secrets
-- Prod's DB is never reachable from sim — different files, different worktrees, different sockets
+- Each env = worktree with own `workspace.db`
+- `env new sim --seed prod` → snapshot + auto-mask sensitive columns
+- Schema migrations travel dev → sim → prod via git merge
 
 ---
 
-## 17. Anti-Decisions
+## 18. Anti-Decisions
 
-- **No ORM.** No SQLAlchemy/Drizzle/Prisma. ORM syntax is hallucination bait; ORMs compile to SQL anyway — a middleman before the same authorizer check
-- **No query-builder APIs.** `bulk_update()`, `cursor()`, `find()` = accidental ORM. Raw SQL + policy covers it
-- **No hand-edited DDL.** schema.yaml is the sole source; `sys doctor` refuses drift
-- **No DDL parser.** PRAGMAs + one-way generation
-- **No down-migrations.** Snapshots are the rollback
-- **No direct connection exposure.** Routines get `ctx.db`, never `sqlite3`
-- **No self-declared identity.** Agent ids are kernel-issued and socket-proven
-- **No raw audit file reads.** Harness could `cat audit/*.jsonl`, but the mirror is the governed path — redaction guaranteed, token cost capped
+- **No ORM.** No SQLAlchemy/Drizzle/Prisma. Hallucination bait.
+- **No query-builder APIs.** Accidental ORM.
+- **No hand-edited DDL.** schema.yaml is SSOT.
+- **No free-form schema changes.** Agent authors YAML; kernel gates application.
+- **No `validate=` keywords.** CHECK constraints are validation. One enforcement point.
+- **No DDL parser.** PRAGMAs + one-way generation.
+- **No down-migrations.** Snapshots are rollback.
+- **No direct connection exposure.** Routines get `ctx.db`, never `sqlite3`.
+- **No self-declared identity.** Kernel-issued, socket-proven.
+- **No pre-defined schemas.** Agent builds the world. Capcli governs its growth.
 
 ---
 
-## 18. Invariants
+## 19. Invariants
 
-1. Every DB effect passes authorizer + AST. No exceptions, no bypass path exists
-2. Every write is transactional, audited, and carries an intent chain; unauditable write = no write
-3. Every `UPDATE`/`DELETE` has `WHERE` and `LIMIT` — physics, not policy
-4. Schema and policy are version-locked; mismatch = no boot
-5. Secrets-table reads are masked in every surface — results, audit, explain
-6. The DB file is daemon-owned; Unix permissions are the outer wall
-7. Every row on provenance tables answers *who changed it*; every event answers *who, what, why*
-8. Where capcli can't gate, it recovers: world.sql + audit-in-git make destruction a reversible event
-9. The audit mirror is read-only; analysis operates at primitive depth via deterministic views
+1. Every DB effect passes authorizer + AST. No bypass path exists.
+2. Every write is transactional, audited, carries intent chain.
+3. Every `UPDATE`/`DELETE` has `WHERE` and `LIMIT` — physics.
+4. Schema and policy are version-locked; mismatch = no boot.
+5. Agent authors `schema.yaml`; kernel compiles, gates, applies. DDL never hand-written.
+6. Content validation = CHECK constraints. Shape governance = capcli flags. No overlap.
+7. Secrets masked in every surface — results, audit, explain.
+8. DB file is daemon-owned; Unix permissions are the outer wall.
+9. Every row on provenance tables answers *who changed it*.
+10. Where capcli can't gate, it recovers: world.sql + audit-in-git.
+11. Audit mirror is read-only; analysis at primitive depth via deterministic views.
+12. Schema evolution is forward-only, snapshot-first, human-gated, fully audited.
+13. Five validation gates; any failure = no execution. No degraded mode.
 
 ---
 
 ## The One-Liner
 
-> **capcli-db: raw SQL through an unbreakable gate — the agent explores freely above the kernel, touches nothing below it, every effect carries its author and its reason, and the whole world is recoverable from history.**
+> **capcli-db: the agent builds the world in dense YAML, the kernel holds the leash with five validation gates and two enforcement layers, CHECK validates content while policy governs shape, raw SQL flows through an unbreakable authorizer, and the whole world is recoverable from git history.**

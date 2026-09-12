@@ -1,20 +1,19 @@
-# capcli-command.architecture.md *(final v2 — primitive-aware)*
+# command.architecture.md *(final v3 — collapsed surface)*
 
-> The entire CLI: **one shape, universal flags, frequency-based depth, exit codes as law.** Small enough to memorize, deep enough that nothing needs escaping.
+> The entire CLI: **8 nouns, universal flags, frequency-based depth, exit codes as law.** Small enough to memorize, deep enough that nothing escapes the gate. Zero redundancy.
 
 ---
 
 ## 1. Design Laws
 
-1. **One shape forever**: `capcli <noun> <verb> [target] [--flags]`. No exceptions. Hot verbs alias-promoted to top level.
-2. **Every mutating verb accepts**: `--dry-run`, `--json`, `--intent "<why>"`, `--as <principal>`. Reads get `--json` + `--as`.
-3. **Everything resolves through the registry** — db ops, routines, api verbs, views are all *capabilities*; `run`/`search`/`inspect` work identically on all.
-4. **Frequency determines depth**: verbs called 1000×/day live top-level; 10×/day get one noun; 1×/week get full noun-verb.
-5. **Output contract**: humans get pretty tables; agents pass `--json` (versioned machine contract). Every output prefixes `[env]` — prod in red.
-6. **Exit codes are law** — scripts and agents branch on them, never parse stdout:
+1.  **One shape forever**: `capcli <noun> <verb> [target] [--flags]`. No exceptions.
+2.  **Every mutating verb accepts**: `--dry-run`, `--json`, `--intent "<why>"`, `--as <principal>`. Reads get `--json` + `--as`.
+3.  **Everything resolves through the registry** — db ops, routines, api verbs, views are all *capabilities*; `run`/`search`/`inspect` work identically on all.
+4.  **Output contract**: humans get pretty tables; agents pass `--json` (versioned machine contract). Every output prefixes `[env]` — prod in red.
+5.  **Exit codes are law** — scripts and agents branch on them, never parse stdout:
 
 | Code | Meaning |
-|---|---|
+| :--- | :--- |
 | `0` | ok |
 | `2` | policy-denied |
 | `3` | validation-failed (incl. governance, missing intent) |
@@ -23,185 +22,97 @@
 
 ---
 
-## 2. Hot Path (top-level)
+## 2. The Surface (8 Nouns)
 
+### `run` — Hot Path
 ```bash
-capcli run <capability> [-p k=v]... [--dry-run] [--intent "..."]
+capcli run <capability> [-p k=v]... [--dry-run] [--intent "..."] [--lock <ref>]
 capcli search <query> [--trust X] [--env X]
 capcli inspect <capability>
 ```
+*Resolution:* exact match → prefix match → semantic search → "did you mean?". Works on routines, api verbs, views.
 
-**Resolution rule for `run`**: exact match → prefix match → semantic search → "did you mean?" with top 3. Works on routines, api verbs, views — one verb, every capability type.
-
----
-
-## 3. `db` — SQL primitives
-
+### `db` — World State
 ```bash
-capcli db query <sql> [-p k=v]... [--limit N]
+capcli db query <sql> [-p k=v]... [--limit N] [--count]
 capcli db exec  <sql> [-p k=v]... --intent "..."        # auto-txn, WHERE+LIMIT enforced
-capcli db count <table> [--where <sql>]                  # bulk pre-flight
+capcli db lock <table>:<ref> --ttl 10m --reason "..."   # cross-agent coordination
+capcli db unlock <target>
 capcli db schema [--table]
-capcli db snapshot
-capcli db restore <snapshot-id> [--dry-run]
-capcli db dump                                           # → world.sql (git-committed)
+capcli db snapshot | restore <id> | dump
 ```
+*Note:* `db count` is dead. Use `db query --count`. Bulk pre-flights are AST-enforced or explicit queries.
 
----
-
-## 4. `routine` — learned procedures
-
+### `routine` — Learned Procedures
 ```bash
-capcli routine new <name> [--reason]                     # duplicate-similarity warned
-capcli routine validate <name>                           # AST + policy + governance + manifest extraction
-capcli routine manifest <name> [--version N]             # view declared primitive sequence
-capcli routine test <name> [-p k=v] [--env sim]          # proves manifest vs fingerprint
-capcli routine promote <name> --to reviewed|pinned [--env X] --reason "..."
-capcli routine stats <name> [--deep]                     # --deep: per-leaf duration/spend/failure
+capcli routine draft <name> [--reason]                   # create + validate + manifest extract
+capcli routine prove <name> [-p k=v] [--env sim]         # test fingerprint vs manifest
+capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."
+capcli routine sweep [--since 30d]                       # consolidate report + propose
+capcli routine stats <name> [--deep]                     # per-leaf cost attribution
 capcli routine rollback <name> --to-version N
 capcli routine retire <name> [--reason]
 ```
 
----
-
-## 5. `consolidate` / `governance` — registry hygiene
-
+### `bind` — Inbound Triggers
 ```bash
-capcli consolidate report [--since 30d]                  # now includes fingerprint clusters
-capcli consolidate propose --cluster <names> --into <name> [--deprecate ...]
-capcli consolidate apply <proposal>                      # human-gated
-capcli consolidate status
-
-capcli governance show                                   # effective limits
-capcli governance validate
-capcli governance limits <routine>
+# Time
+capcli bind cron <name> --run <cap> --cron "..." --intent "..."
+# Async Events
+capcli bind webhook <name> --provider X --event Y --run <cap> --intent "..."
+# Sync Endpoints
+capcli bind endpoint <routine@version> --auth api-key [--rate X]
+# Management
+capcli bind list | inspect | pause | resume | remove <name>
+capcli bind keys issue <name> --principal partner:X      # human-gated
 ```
 
----
-
-## 6. `api` — external capabilities (egress)
-
+### `ping` — Outbound Human IO
 ```bash
-capcli api import <provider> --from apis/<p>.yaml [--dry-run]
-capcli api list <provider>
-capcli api call <provider>.<verb> [-p k=v]... --intent "..." [--idempotency-key <k>]
-capcli api call <provider>.<verb> --verify-key <k>       # what actually landed?
-capcli api reload <provider>                             # re-import + secret rotation
+capcli ping notify <principal> <message> --channel X --intent "..."
+capcli ping ask <principal> <question> --options a,b,c [--timeout 60m] --intent "..."
+capcli ping list [--pending] | resolve <ask-id> --choice X | expire <ask-id>
 ```
 
----
+### `rule` — Static Configuration
+```bash
+capcli rule show [--type schema|policy|governance]
+capcli rule diff [--git]                                 # vs HEAD or live DB
+capcli rule apply [--type schema] [--dry-run]            # migrate / reload
+capcli rule validate                                     # compile all layers; bad = no boot
+```
+*Note:* Schema migrations, policy reloads, and governance checks live here. One noun for all static truth.
 
-## 7. `env` — switchable worlds
-
+### `env` — Switchable Worlds
 ```bash
 capcli env new <name> [--seed prod] [--from-branch X]
 capcli env use <name>                                    # atomic switch
-capcli env list                                          # current marked, drift flags
-capcli env inspect <name>
-capcli env doctor                                        # unmerged routines, secret leaks, stale sim
+capcli env list | inspect | doctor
 capcli env merge <name> --into prod
 capcli env remove <name>                                 # prod: multi-flag gated
 ```
 
----
-
-## 8. `schedule` / `watch` / `serve` / `notify` / `ask` — the hands
-
+### `sys` — Kernel & Audit
 ```bash
-# schedule — time
-capcli schedule add <name> --run <cap> --cron "..." --intent "..." [-p k=v]
-capcli schedule list | inspect <name> | pause | resume | remove
-capcli schedule fire <name> [--dry-run]
+# Audit & Forensics
+capcli sys audit tail [--follow] [--capability X] [--since 1h]
+capcli sys audit trace <op-id> [--explain]               # causal DAG + denial reason
+capcli sys audit query <sql> [-p k=v]                    # SQL against _audit mirror
+capcli sys audit replay --from <ts|event-id> [--dry-run]
 
-# watch — inbound events (async)
-capcli watch add <name> --provider X --event Y --match <jsonpath> \
-    --run <cap> --map k=<jsonpath>... --intent "..."
-capcli watch list | inspect | test <name> --payload '{...}' | pause | resume | remove
-capcli watch replay <event-id> [--dry-run]
-capcli watch dead-letter list | inspect | replay | purge
-
-# serve — inbound requests (sync)
-capcli serve add <routine@version> --auth api-key [--rate X] [--allow-writes]
-capcli serve list | openapi [--routine X] | remove
-capcli serve keys issue <name> --principal partner:X     # human-gated
-capcli serve keys revoke <key-id>
-
-# notify + ask — humans
-capcli notify <principal> <message> --channel X --intent "..."
-capcli ask <principal> <question> --options a,b,c [--timeout 60m] --intent "..."
-capcli ask list [--pending] | resolve <ask-id> --choice X | expire <ask-id>
+# Identity & Health
+capcli sys agent register | list | revoke
+capcli sys doctor                                        # boundaries, perms, drift
+capcli sys backup [--push] | recover <commit>
+capcli sys exec <cmd> [--sandbox]                        # jailed execution
 ```
 
 ---
 
-## 9. `policy` / `schema` — governance contracts
-
-```bash
-capcli policy validate                                   # compile both layers; bad = no boot
-capcli policy explain <sql|capability>                   # the WHY — the learning signal
-capcli policy diff                                       # vs git HEAD
-
-capcli schema show [--table]
-capcli schema diff                                       # YAML vs live (PRAGMAs, no parser)
-capcli schema migrate [--dry-run]                        # snapshot-first, forward-only
-capcli schema import <db>                                # bootstrap: live DB → schema.yaml
-```
-
----
-
-## 10. `audit` — the event stream
-
-```bash
-capcli audit tail [--follow] [--capability X] [--principal X] [--agent X] [--since 1h] [--denied]
-capcli audit show <event-id>
-capcli audit query <sql> [-p k=v]                        # SQL against _audit mirror + primitive views
-capcli audit sample --capability X [--limit N]           # real-param extraction for tests
-capcli audit verify [--git]                              # hash chain + git tamper check
-capcli audit replay --from <ts|event-id|prod> [--dry-run] [--skip-external]
-capcli audit trace <op-id>                               # causal DAG walk
-```
-
-Mirror views queryable via `audit query`: `routine_fingerprints`, `primitive_failures`, `primitive_cost`, `shared_subsequences`.
-
----
-
-## 11. `agent` / `claim` — identity & coordination
-
-```bash
-capcli agent register <name> --harness X --as <principal>
-capcli agent list [--active]
-capcli agent revoke <agent-id>
-
-capcli claim <table>:<ref> --ttl 10m --reason "..."
-capcli claim release <target>
-capcli claim list
-```
-
-`--by <agent-id>` is universal on mutating verbs — validated against socket identity, never trusted from args.
-
----
-
-## 12. `sys` / `jail` — kernel health & physics
-
-```bash
-capcli sys doctor                                        # boundaries, perms, config compile, drift
-capcli sys status                                        # version, schema_version, registry size, env
-
-capcli sys snapshot                                      # dump db + stage world
-capcli sys commit [--push]                               # manual backup commit
-capcli sys recover <commit> [--dry-run]                  # restore world-state from history
-capcli sys backup-status                                 # last commit, last push, drift
-
-capcli jail exec <cmd>                                   # bwrap/podman: net-none, ro binds
-capcli jail doctor                                       # is the physics actually in place?
-```
-
----
-
-## 13. Universal Flags
+## 3. Universal Flags
 
 | Flag | Applies to | Meaning |
-|---|---|---|
+| :--- | :--- | :--- |
 | `--dry-run` | all mutating verbs | full pipeline, zero effects — policy evaluated, plan returned |
 | `--json` | everything | machine contract (versioned); agents always use it |
 | `--intent "<why>"` | writes | mandatory; anti-junk validated; inherited chains accepted |
@@ -209,51 +120,51 @@ capcli jail doctor                                       # is the physics actual
 | `--as <principal>` | everything | who this is ultimately for; scoped views require it |
 | `--by <agent-id>` | mutating | acting identity; socket-verified |
 | `--env <name>` | cross-world ops | explicit world targeting (default: current) |
+| `--lock <ref>` | `run` | lease-based exclusivity with TTL |
+| `--sandbox` | `sys exec` | bwrap/podman: net-none, ro binds |
 
 ---
 
-## 14. Verb Census
+## 4. The Agent's Daily Surface
 
-| Depth | Count | Examples |
-|---|---|---|
-| Top-level | 3 | `run`, `search`, `inspect` |
-| Nouns | 17 | db, routine, consolidate, governance, api, env, schedule, watch, serve, notify, ask, policy, schema, audit, agent, claim, sys, jail |
-| Total verbs | ~100 | one audit event type each |
-
----
-
-## 15. What the Surface Refuses to Grow
-
-- **No `config set`** — config is files + git + review; no CLI write-path (agent self-grant hole)
-- **No `db delete`/`db update` specials** — `db exec` + policy is the gate; special verbs invite special bypasses
-- **No `--verbose`** — `audit tail` is the verbosity knob
-- **No interactive modes** — the kernel serves agents and scripts; approvals live in the harness
-- **No `--force`** — exceptions are overrides in governance.yaml, committed and reviewed
-- **One event per verb** — if a command can't be one audit event, it's two commands
-
----
-
-## 16. The Agent's Daily Surface
-
-Everything above exists, but a working agent lives in ~10 commands:
+A working agent lives in ~8 commands:
 
 ```bash
-capcli search "..."                 # discover
-capcli inspect <cap>                # understand
-capcli run <cap> -p ... --intent    # act
-capcli db query "..."               # read the world
-capcli db exec "..." --intent       # change the world
-capcli policy explain "..."         # learn from denial
-capcli audit trace <op-id>          # understand consequences
-capcli routine manifest <name>      # see declared primitives
-capcli routine stats <name> --deep  # per-leaf cost attribution
-capcli routine new/validate/test    # consolidate what it learned
+capcli search "..."                 # [harness] discover capabilities
+capcli inspect <cap>                # [harness] understand params/manifest
+capcli run <cap> -p ... --intent    # [harness] primary skill→routine bridge
+capcli db query "..."               # [harness] read the world (always first)
+capcli db exec "..." --intent       # [human] ⚠ skills must NEVER instruct direct db exec
+capcli <any-mutating> --dry-run     # [harness] mandatory before first real effect
+capcli sys audit trace <id> --explain # [harness] learn from denial
+capcli routine stats <name> --deep  # [harness] per-leaf cost attribution
+capcli rule show --type policy      # [harness] understand constraints
 ```
 
-The other ~90 verbs are governance, lifecycle, and recovery — touched occasionally, available always.
+**Caller tag legend:**
+-   `[harness]` — safe for skill-authored agent invocation
+-   `[human]` — requires human/CI approval
+-   `[both]` — context-dependent; skills may use read-only variants
+
+---
+
+## 5. What the Surface Refuses to Grow
+
+-   **No `config set`** — config is files + git + review; no CLI write-path
+-   **No `db count`** — `db query --count` or AST-enforced pre-flight
+-   **No `claim` noun** — `db lock` or `run --lock`
+-   **No `jail` noun** — `sys exec --sandbox`
+-   **No `policy explain`** — `sys audit trace --explain` is the single source of truth
+-   **No separate config nouns** — `rule` owns schema, policy, governance
+-   **No separate trigger nouns** — `bind` owns cron, webhook, endpoint
+-   **No `--verbose`** — `sys audit tail` is the verbosity knob
+-   **No interactive modes** — approvals live in the harness
+-   **No onboarding wizards** — the CLI returns exit codes and JSON; the harness renders approval dialogs, intent capture, and progression UI
+-   **No `--force`** — exceptions are overrides in governance.yaml
+-   **One event per verb** — if a command can't be one audit event, it's two commands
 
 ---
 
 ## The One-Liner
 
-> **One shape, universal flags, exit codes as law, and a registry that flattens everything into `run` — the command surface is small enough to memorize, deep enough that nothing escapes the gate, and honest enough that every verb is an audit event.**
+> **8 nouns, universal flags, exit codes as law, and a registry that flattens everything into `run` — the command surface is small enough to memorize, deep enough that nothing escapes the gate, and honest enough that every verb is an audit event.**

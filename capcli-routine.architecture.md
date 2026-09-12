@@ -1,5 +1,6 @@
 # capcli-routine.architecture.md *(final v3 — primitive-aware, fully integrated)*
 
+> **Update v3.1:** Added §9.5 Harness Skill Invocation Pattern (2026-09-12)
 > The procedure layer of capcli: **Python as the composition language, learned at runtime, governed like everything else.**
 
 ---
@@ -94,13 +95,12 @@ HTTP, raw SQL, Python logic — one callable. Every leaf effect still crosses th
 ctx.db.query(sql, params) -> list[dict]
 ctx.db.execute(sql, params, intent) -> Result
 ctx.db.txn() -> context manager
-ctx.db.count(table, where) -> int
+ctx.db.lock(target, ttl) -> Claim              # cross-agent coordination
 ctx.api.call(verb, params, intent) -> dict
 ctx.api.verify(verb, key) -> dict
-ctx.schedule.add(...) / ctx.schedule.remove(...)
-ctx.notify(principal, message, channel, intent)
-ctx.ask(principal, question, options, timeout, intent) -> Answer
-ctx.claim(target, ttl) -> Claim
+ctx.bind.cron(...) / ctx.bind.webhook(...) / ctx.bind.endpoint(...)   # inbound triggers
+ctx.ping.notify(principal, message, channel, intent)
+ctx.ping.ask(principal, question, options, timeout, intent) -> Answer
 ctx.log(msg) -> None                     # structured, audited
 ctx.params -> dict                       # validated against Param declarations
 ```
@@ -108,7 +108,7 @@ ctx.params -> dict                       # validated against Param declarations
 Design rules:
 
 - **`ctx` injection, never module imports.** The kernel passes `ctx` into the sandbox. Zero import surface to police; no `import requests`, no `import os`, no raw `sqlite3`.
-- **AST-validated before execution.** Subprocess, HTTP clients, filesystem escapes — rejected at `validate` time, not at call time.
+- **AST-validated before execution.** Subprocess, HTTP clients, filesystem escapes — rejected at `draft` time, not at call time.
 - **`Param` declarations are the interface.** Typed, documented, validated at the gate; what `capcli inspect` shows and what the agent reads before reuse.
 - **Large results stay in routine scope.** Only computed summaries cross to the model (capped by `max_result_tokens`). Token discipline and PII containment in one rule.
 
@@ -120,9 +120,9 @@ Design rules:
 
 ```
 capcli run (agent/human)  ─┐
-schedule fire              ─┼─→  routine runs  ─→  effects + audit events
-watch dispatch (webhook)   ─┤
-ask resume (human reply)   ─┘
+bind cron fire             ─┼─→  routine runs  ─→  effects + audit events
+bind webhook dispatch      ─┤
+ping ask resume (reply)    ─┘
 ```
 
 ### Inside: strictly sequential, no reactivity
@@ -134,7 +134,7 @@ ask resume (human reply)   ─┘
 | Long-lived subscriptions | Transaction semantics — when does the txn close? |
 | Parallel event branches | Blast-radius accounting — `max_ops_per_run` uncountable |
 
-**The rule:** *events trigger routines; routines never consume events.* Continuous reaction = a **watch binding** (declared, governed). Waiting = one structured `ctx.ask` suspension. **Routine = transaction-shaped story; events start stories, they don't flow through them.**
+**The rule:** *events trigger routines; routines never consume events.* Continuous reaction = a **bind webhook** (declared, governed). Waiting = one structured `ctx.ping.ask` suspension. **Routine = transaction-shaped story; events start stories, they don't flow through them.**
 
 ---
 
@@ -144,10 +144,10 @@ A routine is a story, but maintenance reads it word by word. This mechanism clos
 
 ### Declared Manifest (Static)
 
-At `validate` time, the AST pass extracts the **primitive manifest** — the exact sequence of `ctx.*` calls the routine declares it will make. Stored with the version.
+At `draft` time, the AST pass extracts the **primitive manifest** — the exact sequence of `ctx.*` calls the routine declares it will make. Stored with the version.
 
 ```yaml
-# extracted at validate, stored with version 17
+# extracted at draft, stored with version 17
 manifest:
   - api.call: stripe.get_charge
   - db.query: entities (read)
@@ -227,7 +227,7 @@ routine_shape:                    # defaults for every routine file
 ```
 
 - **Effective limit = min(declared need, governance ceiling, override).** A routine may ask for less, never more
-- **Enforcement bites at five gates:** register (registry caps) → validate (shape + manifest) → runtime (ops/duration/result/drift) → monitor (dead/failing) → consolidation (scheduled subtraction)
+- **Enforcement bites at five gates:** register (registry caps) → draft (shape + manifest) → runtime (ops/duration/result/drift) → monitor (dead/failing) → sweep (scheduled subtraction)
 - Denial cites the exact number; exceptions are git-tracked overrides, never `--force`
 - Governance is never runtime-editable — a routine cannot loosen its own cage
 
@@ -253,6 +253,48 @@ def weekly_cleanup(ctx, params):
 - Callee's trust governs its effects; intent chains propagate via `caused_by`
 - Multi-agent collisions: semantic similarity check at creation → near-duplicate → **merge or fork**, human-gated. Never silent duplication
 
+### 9.5 Harness Skill Invocation Pattern
+
+Harness skills (SKILL.md) invoke routines through a strict three-step protocol.
+This is the canonical pattern that all skill authors must follow.
+
+```
+Step 1: DISCOVER     capcli search "refund" --json
+Step 2: INSPECT      capcli inspect refund_and_archive --json
+Step 3: INVOKE       capcli run refund_and_archive \
+                        -p order_id=ORD-8842 \
+                        --intent "refund customer ORD-8842 per skill refund-workflow"
+```
+
+**Parameter mapping:** Skill frontmatter parameters map 1:1 to routine `Param` declarations.
+Type mismatches fail at the gate with exit code 3. Skills must inspect before invoking.
+
+**Result handling:** Routine return values stay in kernel scope. Only the computed summary
+(capped by `max_result_tokens`) crosses back into skill context. Large datasets never
+enter the LLM context window. Skills must design for summary-shaped outputs.
+
+**Intent chain:** Skills must pass meaningful `--intent` strings. The intent propagates
+downward: `skill intent → routine intent → op intent`. Boilerplate intents ("test", "fix")
+are denied by policy. Skill name is recorded via `triggered_by_skill` audit field when
+`identity.skill_origin.allow_propagation` is enabled.
+
+**Anti-patterns (skills must NEVER instruct agents to):**
+- Write raw SQL directly (`capcli db exec` is `[human]`-tagged)
+- Call `capcli routine ship` / `capcli routine draft` (consolidation is human-gated)
+- Read secrets or masked columns (policy denies at authorizer level)
+- Bypass `capcli run` by constructing HTTP calls or filesystem access
+- Cache routine results across sessions (state lives in workspace.db, not skill memory)
+- Propose routines without evidence (routines are drafted only after ≥3 identical primitive sequences appear in the audit mirror)
+- Self-promote during onboarding (draft → prove in sim → ship requires human/CI gate, always)
+
+**Skill author checklist:**
+1. ✅ Uses only `[harness]`-tagged commands from command.architecture.md §4
+2. ✅ Inspects before invoking (params validated at gate, not guessed)
+3. ✅ Passes specific, non-boilerplate `--intent`
+4. ✅ Designs for summary-shaped outputs (≤500 tokens default)
+5. ✅ Never references file paths, credentials, or raw SQL in skill body
+6. ✅ References capabilities by name, not by implementation detail
+
 ---
 
 ## 10. The Learning Loop — log-driven, primitive-deep
@@ -262,12 +304,12 @@ agent runs raw ops                     (exploration)
   → kernel logs every op with intent
   → agent queries the audit mirror     (deterministic views: op_frequency, shared_subsequences)
   → proposes routine                   (harness writes the file)
-  → validate (emits manifest) → test (proves fingerprint) → promote with stats evidence
+  → draft (emits manifest) → prove (proves fingerprint) → ship with stats evidence
   → future work calls the routine      (exploitation)
 ```
 
 - The audit mirror is the training data: repeated intent patterns + frequent op bigrams → candidates
-- **Search-first enforced:** `routine new`/`validate` show near-duplicates; reuse or justify with `--reason`
+- **Search-first enforced:** `routine draft` shows near-duplicates; reuse or justify with `--reason`
 - Failures are teaching data: `policy.deny` patterns = what the agent doesn't yet know how to do right
 - Consolidation uses `shared_subsequences` view: common primitive n-grams across routines → kernel proposes extracting a common sub-routine, deterministically
 
@@ -298,7 +340,7 @@ Routines execute in a jailed subprocess:
 
 - **Network: none** — all HTTP goes through `ctx.api` → kernel egress
 - **Filesystem: read-only workspace + tmpfs scratch**
-- **No subprocess, no os, no raw sqlite3** — AST-rejected at validate, runtime-rejected by jail
+- **No subprocess, no os, no raw sqlite3** — AST-rejected at draft, runtime-rejected by jail
 - **Socket to the kernel is the only capability** — computation free, authority zero
 - Tiers: `bwrap --unshare-net` (Linux) · Podman `--network none` (portable) · gVisor/Firecracker (multi-tenant)
 - Runtime budgets enforced: op #51 aborts (`limit_exceeded` event), watchdog kills past duration, results truncated with `truncated: true`
@@ -330,7 +372,7 @@ One parent event + one event per leaf op, linked by `caused_by`:
 }
 ```
 
-`capcli audit trace <op-id>` walks any leaf effect up through routine → session goal. Every corrupted row answers: which routine, which version, which world, which agent, why.
+`capcli sys audit trace <op-id>` walks any leaf effect up through routine → session goal. Every corrupted row answers: which routine, which version, which world, which agent, why.
 
 ---
 
@@ -348,18 +390,17 @@ Routines are git-tracked Python:
 ## 15. Commands
 
 ```bash
-capcli routine new <name> [--reason]
-capcli routine validate <name>                     # emits manifest
-capcli routine manifest <name> [--version N]       # view declared primitives
-capcli routine test <name> [-p k=v] [--env sim]    # proves manifest vs fingerprint
-capcli routine promote <name> --to reviewed|pinned [--env X] --reason "..."
-capcli routine stats <name> [--deep]               # --deep: per-leaf duration/spend/failure
+capcli routine draft <name> [--reason]
+capcli routine prove <name> [-p k=v] [--env sim]
+capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."
+capcli routine sweep [--since 30d]
+capcli routine stats <name> [--deep]
 capcli routine rollback <name> --to-version N
 capcli routine retire <name> [--reason]
-capcli consolidate report | propose | apply | status
-capcli governance show | validate | limits <routine>
-capcli audit sample --capability X                 # test-param extraction
-capcli audit trace <op-id>                         # primitive forensics
+capcli rule show --type governance                  # effective limits
+capcli rule validate                                # compile all layers
+capcli sys audit sample --capability X
+capcli sys audit trace <op-id>
 ```
 
 ---
@@ -376,6 +417,7 @@ capcli audit trace <op-id>                         # primitive forensics
 - **No ungoverned shape.** LOC/tokens/params/ops caps enforced at five gates; exceptions as reviewable commits
 - **No routine-level-only analysis.** Maintenance operates at primitive depth via manifests and fingerprints
 - **No deletion.** Retirement with provenance pointers; the history graph only grows
+- **No synthetic learning.** Routines are born from audited primitive repetition, not generated from user intent. The harness observes the audit mirror; the kernel gates registration.
 
 ---
 

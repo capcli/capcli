@@ -15,23 +15,22 @@ Companions: `capcli-routine.architecture.md` (anatomy & execution), `capcli-env.
 ## 2. The Stage Map
 
 ```
-        new ──> validate ──> test ──> promote ──> live ──> monitor
-         │         │           │         │          │         │
-       scaffold   AST+policy  sandbox   human/CI   pinned    stats+decay
-       (harness   + manifest  runs in   gate       service      │
-        fs)       extraction  sim/dev                          ▼
-                                                     consolidate / rollback / retire
+        draft ──> prove ──> ship ──> live ──> monitor
+         │         │           │         │         │
+       scaffold   AST+policy  human/CI   pinned   stats+decay
+       (harness   + manifest  gate      service     │
+        fs)       extraction  sim/dev               ▼
+                                                     sweep / rollback / retire
 ```
 
 | Stage | What happens | Who gates |
 |---|---|---|
-| **new** | File scaffolded in `routines/` via harness native fs | nobody (creation is ungated) |
-| **validate** | AST + policy + governance shape + **primitive manifest extraction**, zero execution | kernel |
-| **test** | Real execution at draft trust with sample params; **fingerprint vs manifest proof** | kernel (env-scoped) |
-| **promote** | draft → reviewed → pinned | **human/CI** — never the agent |
+| **draft** | File scaffolded in `routines/` via harness native fs | nobody (creation is ungated) |
+| **prove** | AST + policy + governance shape + **primitive manifest extraction**, zero execution, then real execution at draft trust with sample params; **fingerprint vs manifest proof** | kernel (env-scoped) |
+| **ship** | draft → reviewed → pinned | **human/CI** — never the agent |
 | **live** | Registered capability; callable via `capcli run` | policy gate per call |
 | **monitor** | Stats, success rate, usage tracked continuously | kernel (evidence only) |
-| **consolidate** | Merge/dedupe proposals from maintenance cycle | human |
+| **sweep** | Merge/dedupe proposals from maintenance cycle | human |
 | **rollback** | Revert to prior version | agent may propose; pinned requires human |
 | **retire** | Removed from callable surface; kept with provenance | auto for decay, human for merges |
 
@@ -41,20 +40,20 @@ Companions: `capcli-routine.architecture.md` (anatomy & execution), `capcli-env.
 
 ## 3. Stage Details
 
-### new — birth is ungated
+### draft — birth is ungated
 ```bash
 # harness writes routines/refund_and_archive.py with native fs
-capcli routine new refund_and_archive      # optional scaffold helper
+capcli routine draft refund_and_archive      # scaffold + validate + manifest extract
 # ⚠ near-duplicate exists: get_orders_status (similarity 0.91)
 #   reuse it, or justify: --reason "..."
 ```
 Duplicate-similarity check at birth slows bloat before it starts.
 
-### validate — the first gate (now emits manifest)
+### prove — the first gate (manifest + fingerprint proof)
 ```bash
-capcli routine validate refund_and_archive
+capcli routine prove refund_and_archive -p order_id=ORD-8842
 ```
-Checks, zero execution:
+Checks, then real execution, scoped environment:
 - AST: no `subprocess`, `os`, raw `sqlite3`, HTTP clients
 - Params: `Param` declarations typed and documented
 - Policy: every primitive the routine calls is *reachable* at its declared trust
@@ -63,7 +62,7 @@ Checks, zero execution:
 - **Manifest extraction:** AST walks the `ctx.*` calls and records the declared primitive sequence:
 
 ```yaml
-# stored with the version at validate time
+# stored with the version at draft time
 refund_and_archive@17:
   manifest:
     - api.call: stripe.get_charge
@@ -73,23 +72,19 @@ refund_and_archive@17:
   estimated_cost_class: [2× http, 2× write]
 ```
 
+- Runs at `draft` trust regardless of declared trust — proving never grants power
+- **Defaults to sim/dev env**; proving against prod requires explicit `--env prod --reason`
+- Params come from `capcli sys audit sample` — real historical values, not invented fixtures
+- Full audit, tagged `stage: prove`
+- **Fingerprint proof:** after execution, the runtime fingerprint (actual leaf ops executed) is compared against the declared manifest. Divergence = warning (conditional branch taken, or undeclared op attempted). Proving proves the declaration, not just "it didn't crash."
+
 The routine now *declares what it will touch* before it ever runs.
 
-### test — real execution, scoped environment, fingerprint proof
-```bash
-capcli routine test refund_and_archive -p order_id=ORD-8842
-```
-- Runs at `draft` trust regardless of declared trust — testing never grants power
-- **Defaults to sim/dev env**; testing against prod requires explicit `--env prod --reason`
-- Params come from `capcli audit sample` — real historical values, not invented fixtures
-- Full audit, tagged `stage: test`
-- **Fingerprint proof:** after execution, the runtime fingerprint (actual leaf ops executed) is compared against the declared manifest. Divergence = warning (conditional branch taken, or undeclared op attempted). Testing proves the declaration, not just "it didn't crash."
-
-### promote — evidence up, authority down
+### ship — evidence up, authority down
 ```bash
 capcli db query "SELECT * FROM routine_stats WHERE capability = 'refund_and_archive'"
 # runs: 31, success_rate: 0.97, p95: 640ms
-capcli routine promote refund_and_archive --to reviewed \
+capcli routine ship refund_and_archive --to reviewed \
     --reason "97% success over 31 sim runs; replaces 3-op sequence seen 47×"
 ```
 - Agent gathers evidence from the audit mirror; **human/CI approves**
@@ -101,7 +96,7 @@ Callable via `capcli run`, `ctx` composition, schedules, watches. Every call cro
 
 ### monitor → decay — the counter-force
 ```bash
-capcli consolidate report          # dead, failing, duplicate signals
+capcli routine sweep                       # dead, failing, duplicate signals
 capcli routine rollback refund_and_archive --to-version 16
 capcli routine retire find_orders_by_status --reason "merged into orders_by_status"
 ```
@@ -160,7 +155,7 @@ A sim run and a prod run of the same routine get **different keys**. Rehearsal c
 ```bash
 capcli env use sim
 capcli run refund_and_archive -p order_id=ORD-8842   # full primitive DAG executes
-capcli audit tail --routine refund_and_archive        # inspect every leaf
+capcli sys audit tail --routine refund_and_archive        # inspect every leaf
 capcli env use prod
 capcli run refund_and_archive -p order_id=ORD-8842   # now with confidence
 ```
@@ -189,7 +184,7 @@ capcli db query "
 
 ```bash
 capcli env use sim
-capcli audit replay --from prod --since 7d
+capcli sys audit replay --from prod --since 7d
 ```
 
 Prod's actual primitive streams re-execute in sim: every leaf op re-runs against forked state, **current policy enforced**, external primitives marked `replay: manual`. A routine version is validated against *what really happened*, and the audit mirror shows where the new version's primitives diverge from history's.
@@ -199,7 +194,7 @@ Prod's actual primitive streams re-execute in sim: every leaf op re-runs against
 When a live run fails, the spine localizes it to the exact leaf:
 
 ```bash
-capcli audit trace op_000123
+capcli sys audit trace op_000123
 # → refund_and_archive@17 (prod)
 #    ├─ api.call stripe.get_charge     ✓ 310ms
 #    ├─ api.call stripe.refund_charge  ✗ policy-denied: spend cap exceeded
@@ -254,17 +249,15 @@ refund_and_archive:
 ## 7. Full Command Census
 
 ```bash
-capcli routine new <name> [--reason]
-capcli routine validate <name>                     # emits manifest
-capcli routine manifest <name> [--version N]       # view declared primitives
-capcli routine test <name> [-p k=v] [--env sim]    # proves manifest vs fingerprint
-capcli routine promote <name> --to reviewed|pinned [--env X] --reason "..."
-capcli routine stats <name> [--deep]               # --deep: per-leaf duration/spend/failure
+capcli routine draft <name> [--reason]              # create + validate + manifest extract
+capcli routine prove <name> [-p k=v] [--env sim]    # proves manifest vs fingerprint
+capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."
+capcli routine sweep [--since 30d]                  # consolidate report + propose
+capcli routine stats <name> [--deep]                # per-leaf duration/spend/failure
 capcli routine rollback <name> --to-version N
 capcli routine retire <name> [--reason]
-capcli consolidate report | propose | apply | status
-capcli audit sample --capability X                 # test-param extraction
-capcli audit trace <op-id>                         # primitive forensics
+capcli sys audit sample --capability X              # test-param extraction
+capcli sys audit trace <op-id>                      # primitive forensics
 ```
 
 ---
@@ -283,14 +276,14 @@ capcli audit trace <op-id>                         # primitive forensics
 
 ## 9. Invariants
 
-1. Every routine passes new → validate → test → promote; no stage may be skipped
+1. Every routine passes draft → prove → ship; no stage may be skipped
 2. Every transition is an audit event with agent, principal, intent/reason
-3. Testing executes at draft trust in sim/dev; prod promotion requires merge + pin
-4. Validate extracts the primitive manifest; test proves it against the runtime fingerprint
+3. Proving executes at draft trust in sim/dev; prod shipping requires merge + pin
+4. Prove extracts the primitive manifest; prove runs prove it against the runtime fingerprint
 5. Every primitive event carries `env` + `stage`; execution fingerprints are per-world
 6. Idempotency keys are env-scoped; no key ever spans worlds
 7. Rehearsal (sim) and service (prod) are the same code path in different worlds — provable, diffable, replayable
-8. Decay and consolidation run on schedule; accumulation never outpaces subtraction for long
+8. Decay and sweep run on schedule; accumulation never outpaces subtraction for long
 9. Manifest drift at runtime is a governed anomaly, never silently accepted
 
 ---

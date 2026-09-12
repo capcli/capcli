@@ -1,5 +1,6 @@
 # policy.yaml — full-complexity example
 
+> **Update v4.1:** Added identity.skill_origin section (2026-09-12)
 > Behavioral permission: what capabilities may **do**. (Structure — sizes, counts, cadence — lives in `governance.yaml`. Zero overlap.) Compiled at boot; bad config = kernel refuses to serve.
 
 ```yaml
@@ -31,7 +32,7 @@ authorizer:
     agents:
       allow: [read]                            # identity managed by kernel commands only
     claims:
-      allow: [read, insert, delete]            # lease lifecycle via ctx.claim only
+      allow: [read, insert, delete]            # lease lifecycle via db lock only
     _audit:
       allow: [read]                            # mirror is world-state, read-only grant
     _pending_asks:
@@ -92,7 +93,7 @@ query:
     masked_columns_redacted: true
 
   bulk:
-    require_pre_count: true                    # db count before mass ops
+    require_pre_count: true                    # db query --count before mass ops
     require_trust: reviewed
     confirm_above: { rows: 5000 }              # human gate, --reason required
 
@@ -202,6 +203,15 @@ identity:
   scoped_requires_principal: true              # scoped views/asks refuse without --as
   revoked_agent: deny_all                      # instant, no grace period
   kernel_principals: [capcli-cron, capcli-watch, capcli-serve]   # unattended executors
+
+  skill_origin:                                # harness skill provenance propagation
+    allow_propagation: true                    # harness may pass triggering skill name
+    max_length: 64                             # matches SKILL.md open standard name spec
+    format: "lowercase-hyphens"                # lowercase letters, numbers, hyphens only
+    audit_field: triggered_by_skill            # recorded in every leaf event
+    deny_patterns: ["*..*", "*/*", "* *"]      # no traversal, no paths, no spaces
+    on_invalid: strip_and_warn                 # malformed → drop field, log warning, don't deny
+    # Skills cannot grant authority. This is metadata only — trust still comes from principal + agent.
 
 # ───────────────────────────────────────────────────────────────
 # 8. ENV OVERLAYS — same engine, parameterized per world
