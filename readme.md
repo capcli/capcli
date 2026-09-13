@@ -85,6 +85,33 @@ schedule:
   dead_schedule_disable: true         # bound routine retired → auto-disable loudly
 
 # ───────────────────────────────────────────────────────────────
+# 5.5 API — the catalog has dimensions
+# ───────────────────────────────────────────────────────────────
+api:
+  max_providers: 10
+  max_verbs_per_provider: 500            # full catalog fits
+  max_active_per_provider: 50            # active surface stays small
+  require_description: true              # unsearchable = unregistrable
+  sync:
+    min_interval_hours: 24               # no hourly hammering of provider URLs
+    max_catalog_size_mb: 10              # compiled catalog stays lean
+    auto_deprecate_removed: true         # upstream removal → deprecated state
+  activation:
+    max_activations_per_hour: 10         # no rapid-fire activation
+    require_intent: true
+  decay:
+    dead_after_days: 30                  # unused active verb → retire candidate
+    dormant_never_expires: true          # dormant verbs stay forever (discoverability)
+  versions:
+    max_versions_kept: 10
+  search:
+    max_results: 20
+    fuzzy_threshold: 2                   # Levenshtein distance for fuzzy match
+    semantic_min_relevance: 0.6
+  serve_overlay:
+    min_trust_for_served_api: pinned     # served endpoints calling APIs need pin
+
+# ───────────────────────────────────────────────────────────────
 # 6. WATCH — ears with limits
 # ───────────────────────────────────────────────────────────────
 watch:

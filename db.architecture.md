@@ -287,6 +287,39 @@ _api_quota:
   chk:
     - "remaining >= -1"                          # -1 = unknown (no headers received yet)
 
+_api_catalog:
+  desc: Full API verb catalog — all imported verbs, all states (kernel-managed)
+  sys: true
+  imm_cols: [provider, verb]
+  cols:
+    id: pk
+    provider: text!
+    verb: text!
+    method: text
+    path: text
+    params_schema: json
+    idempotent: int=0
+    cost_class: text=read
+    state: text=dormant
+    trust: text=draft
+    description: text
+    activated_at: int
+    activated_by: text
+    retired_at: int
+    spec_hash: text
+    synced_at: int
+    version: int=1
+  idx:
+    - [provider, state]
+    - [provider, verb]
+    - [state, trust]
+    - [description]
+  chk:
+    - "state IN ('dormant','active','deprecated','retired')"
+    - "trust IN ('draft','reviewed','pinned')"
+    - "cost_class IN ('read','write')"
+    - "method IN ('GET','POST','PUT','DELETE','PATCH')"
+
 views:
   pending_orders:
     desc: Orders awaiting fulfillment
@@ -490,7 +523,20 @@ SQL text
   → audit event
 ```
 
-**Asymmetry:** authorizer = default-deny floor. AST = expressive ceiling. Bypass requires both to fail.
+**Layer boundaries and completeness:**
+The two layers cover different, non-overlapping surfaces. The authorizer checks action × table × column. The AST checks WHERE, LIMIT, blast radius, patterns. A parser bug in node-sql-parser does NOT get caught by the authorizer because the authorizer doesn't check what the parser checks.
+
+Therefore, a third verification exists between them:
+
+### Layer 1.5: Prepare-time cross-check
+After AST passes but before execution, run `sqlite3_prepare_v2` in a dry-run transaction. SQLite's own C parser is the ground truth.
+- If prepare fails → deny.
+- If statement type from prepare contradicts AST classification (e.g., AST says SELECT but prepare sees UPDATE opcodes) → deny.
+- node-sql-parser version is pinned and fuzz-tested against SQLite's test corpus. Parse failure = deny, never pass-through.
+- Every parse logged as `ast_parse: {ok, node_count, statement_type}` in the audit event.
+- For write statements: cross-check AST classification against SQLite `EXPLAIN` output. If AST says read-only but `EXPLAIN` shows `OpenWrite` → deny.
+
+**Asymmetry:** authorizer = default-deny floor (bypass-proof). AST = expressive ceiling (semantic). Prepare-time = ground-truth cross-check. Bypass requires all three to fail simultaneously.
 
 ### DB-relevant policy excerpt
 
@@ -718,6 +764,39 @@ All GROUP BYs. Kernel counts at leaf depth; harness reasons over it.
   "duration_ms": 4
 }
 ```
+
+```json
+{
+  "event": "api.sync",
+  "ts": "2026-09-12T10:00:00Z",
+  "provider": "stripe",
+  "source_url": "https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json",
+  "spec_hash": "sha256:b7c1...",
+  "added": 3,
+  "removed": 1,
+  "changed": 2,
+  "unchanged": 394,
+  "env": "dev",
+  "agent": "agt_7f3k",
+  "principal": "user:alice",
+  "duration_ms": 1240
+}
+```
+
+```json
+{
+  "event": "api.activate",
+  "ts": "2026-09-12T10:05:00Z",
+  "provider": "stripe",
+  "verb": "refund_charge",
+  "state_from": "dormant",
+  "state_to": "active",
+  "trust": "draft",
+  "intent": "refund workflow needs charge refund capability",
+  "env": "dev",
+  "agent": "agt_7f3k",
+  "principal": "user:alice"
+}
 
 Schema migration events include `from_version`, `to_version`, `ddl`, `snapshot`.
 

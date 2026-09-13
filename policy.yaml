@@ -141,6 +141,15 @@ api:
   egress:
     allowlist_from: apis/                      # only imported providers reachable
     deny_public_ips: true                      # no raw IP targets
+    dormant_verbs: deny                        # dormant verbs are not callable, period
+  sync:
+    require_url: true                          # sync must have a source URL
+    require_interval: true                     # no one-shot-only syncs
+    spec_hash_verified: true                   # compiled catalog must match fetched hash
+  activation:
+    require_intent: true                       # activation without intent → exit 3
+    start_trust: draft                         # every activated verb starts at draft
+    require_sim_prove_before_ship: true        # no ship without sim evidence
   spend:
     per_day_usd: 50
     confirm_above_usd: 10                      # human gate before expensive calls
@@ -168,6 +177,10 @@ api:
     require_trust: reviewed
     idempotency_key: kernel_minted
   replay: manual                               # never auto-replayed
+  search:
+    log_all_queries: true                        # every search is an audit event
+    log_dormant_discovery: true                  # agent found a dormant verb → logged
+    gap_threshold: 3                             # searched N times, never invoked → gap signal
 
 # ───────────────────────────────────────────────────────────────
 # 6. HANDS — behavioral rules per hand (counts live in governance)

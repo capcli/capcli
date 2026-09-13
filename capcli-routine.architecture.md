@@ -11,7 +11,8 @@ Routines are how the agent turns repeated raw operations into reusable, callable
 
 1. **Procedures are code, not config.** The moment a representation needs sequencing, branching, retries, or composition — it's Python. We do not invent a language inside YAML.
 2. **Raw SQL is exploration; routines are exploitation.** The learning loop: raw ops → repeated patterns → consolidated routine → pinned capability. Kill raw SQL and the loop never starts; kill routines and nothing is ever learned.
-3. **The sandbox isolates computation, never authority.** A routine can compute anything inside its jail, but every effect — SQL, HTTP, schedule, notify, claims — round-trips through the kernel gate.
+3. **The sandbox IS the enforcement boundary. AST validation is a lint.** Python AST checking catches common mistakes (subprocess, os, raw sqlite3) but cannot catch `exec()`, `eval()`, dynamic imports, or metaprogramming. It creates false confidence if treated as a gate. The jail (bwrap, seccomp-bpf, no network, read-only fs) is the only real protection. AST is defense-in-depth, not a gate.
+   A routine can compute anything inside its jail, but every effect — SQL, HTTP, schedule, notify, claims — round-trips through the kernel gate.
 4. **A routine is a governed artifact.** Versioned, hash-pinned, trust-leveled, size-capped, decayed, consolidated. It earns its place; it doesn't accumulate.
 5. **Event-driven at the edges, imperative at the core.** Events start routines; routines never consume events.
 
@@ -25,6 +26,7 @@ Routines are how the agent turns repeated raw operations into reusable, callable
 | Granularity | Single effect | Multiple effects, one purpose |
 | Lives as | Command / SDK call | Python file in `routines/` |
 | Trust | Inherits from channel | Own ladder: draft → reviewed → pinned |
+| API verbs | N/A | Imported via sync, activated via gate, same trust ladder |
 | Versioned | No — it's a call | Yes — version + code_hash |
 | Learned | No — fixed primitives | **Yes** — born from repeated op patterns |
 
@@ -340,10 +342,12 @@ Routines execute in a jailed subprocess:
 
 - **Network: none** — all HTTP goes through `ctx.api` → kernel egress
 - **Filesystem: read-only workspace + tmpfs scratch**
-- **No subprocess, no os, no raw sqlite3** — AST-rejected at draft, runtime-rejected by jail
+- **No subprocess, no os, no raw sqlite3** — AST flags at draft (lint), jail blocks at runtime (enforcement)
 - **Socket to the kernel is the only capability** — computation free, authority zero
 - Tiers: `bwrap --unshare-net` (Linux) · Podman `--network none` (portable) · gVisor/Firecracker (multi-tenant)
+- **Syscall filter: seccomp-bpf** inside the jail. Even if Python escapes AST detection via `exec()`/`eval()`/dynamic import, the process cannot open sockets, fork, or write outside allowed paths. The jail's syscall permissions ARE the source of truth; the AST deny-list is derived from them, not maintained separately.
 - Runtime budgets enforced: op #51 aborts (`limit_exceeded` event), watchdog kills past duration, results truncated with `truncated: true`
+- **v2 path: WASM routines.** WASM has no `exec`, no `eval`, no dynamic imports, no filesystem without explicit grants. Capability model is structural. Python routines become the power-user escape hatch; WASM becomes the default.
 
 ---
 
@@ -418,6 +422,7 @@ capcli sys audit trace <op-id>
 - **No routine-level-only analysis.** Maintenance operates at primitive depth via manifests and fingerprints
 - **No deletion.** Retirement with provenance pointers; the history graph only grows
 - **No synthetic learning.** Routines are born from audited primitive repetition, not generated from user intent. The harness observes the audit mirror; the kernel gates registration.
+- **No pre-selected API imports.** Sync pulls the full catalog. Activation gates what's callable. The library is permanent; the active shelf is earned.
 
 ---
 

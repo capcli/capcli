@@ -8,7 +8,7 @@
 
 This document defines the routine lifecycle: the states a routine passes through, the gates at each transition, and how the **atomic primitives** (individual `db.exec`, `api.call` leaf ops) leverage environments so a routine can be *proven* before it's *trusted*.
 
-Companions: `capcli-routine.architecture.md` (anatomy & execution), `capcli-env.architecture.md` (worlds).
+Companions: `capcli-routine.architecture.md` (anatomy & execution), `capcli-env.architecture.md` (worlds). API verbs follow the same lifecycle (dormant → activate → prove → ship → live → retire) with the same trust ladder and human gates. See `architecture.md` §11.
 
 ---
 
@@ -87,9 +87,38 @@ capcli db query "SELECT * FROM routine_stats WHERE capability = 'refund_and_arch
 capcli routine ship refund_and_archive --to reviewed \
     --reason "97% success over 31 sim runs; replaces 3-op sequence seen 47×"
 ```
-- Agent gathers evidence from the audit mirror; **human/CI approves**
+- Agent gathers evidence from the audit mirror; **human/CI approves promotion to pinned**
 - **Evidence block includes manifest diff vs previous version**: promotion review sees "v18 adds `api.call X`" without reading the raw diff
 - Prod promotion additionally requires merge from the routine's dev/sim branch
+
+### Auto-promotion: draft → reviewed (low-risk only)
+Human attention is the bottleneck. Mechanical verification should not require a human.
+Auto-promotion from draft to reviewed is permitted when ALL thresholds are met:
+
+| Condition | Threshold |
+|---|---|
+| `sim_runs` | ≥ 10 |
+| `success_rate` | ≥ 0.95 |
+| `manifest_match_rate` | 1.0 |
+| `policy_denials` | 0 |
+| `fingerprint_drift_events` | 0 |
+
+- Logged as `event: routine.auto_promoted` with `from: draft, to: reviewed, evidence: {...}`.
+- Human can veto retroactively: `capcli routine rollback <name> --to-trust draft`.
+- **reviewed → pinned is ALWAYS human-gated.** Pinned means relaxed caps and unattended prod execution. That decision is never automated.
+- Promotion queues: `capcli routine ship --queue`. Human reviews in batches. Governance sets `max_promotion_queue_age_hours: 48`; stale queues alarm via `sys doctor`.
+
+### Promotion Queue Mechanics
+The trust ladder creates a human bottleneck at scale. Queues convert per-routine review into batch review.
+
+- **Queue command:** `capcli routine ship <name> --to reviewed --queue`. Routine enters pending state. Not promoted. Not callable at new trust level.
+- **Batch review:** `capcli routine pending` shows all queued promotions with evidence summaries (sim runs, success rate, manifest diff). Human approves/rejects in bulk.
+- **SLA enforcement:** Governance sets `max_promotion_queue_age_hours: 48`. If a routine sits in queue past SLA, `sys doctor` emits `promotion.sla_breached` warning. Kernel does NOT auto-promote on timeout — it nags.
+- **CI-driven promotion:** A pipeline runs `routine prove --env sim`, checks evidence thresholds, and calls `routine ship --to reviewed --by ci:github-actions --queue`. The authority gate is the CI config (reviewed like code), not a human clicking approve per routine.
+- **Audit trail:** Queue entry = `event: routine.queued`. Approval = `event: routine.promoted` with `via: queue_batch_<id>`. Rejection = `event: routine.promotion_rejected` with reason.
+- **Veto window:** After batch approval, routines enter a 1-hour veto window before trust actually changes. Any principal can `capcli routine rollback <name> --to-trust draft` during this window without needing override authority.
+
+This keeps the authority gate intact while removing the human from the hot path for mechanical draft→reviewed transitions.
 
 ### live — governed service
 Callable via `capcli run`, `ctx` composition, schedules, watches. Every call crosses the gate; trust level sets caps. Runtime fingerprint continuously compared to manifest — drift triggers `governance.anomaly`.

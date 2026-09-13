@@ -553,6 +553,24 @@ capcli sys audit query "
 
 When a pattern repeats 3+ times, the harness proposes a routine. The kernel gates registration. The harness writes Python. The kernel governs execution.
 
+### Stage 6.5 — API discovery and activation
+
+The harness discovers available API verbs through the catalog:
+
+```bash
+capcli api catalog stripe --state dormant --json
+capcli search "refund" --provider stripe --include-dormant --json
+```
+
+When the harness finds a dormant verb it needs, it proposes activation:
+
+```bash
+capcli api activate stripe.refund_charge \
+  --intent "refund workflow needs charge refund capability" --json
+```
+
+The harness learns: activation is gated. Dormant verbs are discoverable but not callable. The human approves activation. The harness never self-activates.
+
 ### Stage 7 — Prove before trust
 
 ```bash

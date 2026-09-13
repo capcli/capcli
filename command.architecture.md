@@ -1,6 +1,6 @@
 # command.architecture.md *(final v3 — collapsed surface)*
 
-> The entire CLI: **8 nouns, universal flags, frequency-based depth, exit codes as law.** Small enough to memorize, deep enough that nothing escapes the gate. Zero redundancy.
+> The entire CLI: **9 nouns, universal flags, frequency-based depth, exit codes as law.** Small enough to memorize, deep enough that nothing escapes the gate. Zero redundancy.
 
 ---
 
@@ -23,10 +23,10 @@
 ### CLI Framework
 
 `citty` (unjs) — nested subcommands, typed args, auto `--help`.
-Maps directly to the 8-noun surface:
+Maps directly to the 9-noun surface:
 
 ```
-main → run, db, routine, bind, ping, rule, env, sys
+main → run, db, routine, api, bind, ping, rule, env, sys
 db   → query, exec, lock, unlock, snapshot, restore, dump, schema
 ```
 
@@ -36,7 +36,7 @@ Each subcommand defines required/optional args with types.
 
 ---
 
-## 2. The Surface (8 Nouns)
+## 2. The Surface (9 Nouns)
 
 ### `run` — Hot Path
 ```bash
@@ -125,6 +125,28 @@ capcli routine rollback <name> --to-version N
 capcli routine retire <name> [--reason]
 ```
 
+### `api` — External API Lifecycle
+
+```bash
+capcli api sync <provider> --from <url> [--interval 7d] [--dry-run]
+capcli api diff <provider>                                   # spec drift since last sync
+capcli api catalog <provider> [--state dormant|active|deprecated|retired]
+capcli api activate <provider.verb> --intent "..."           # dormant → active (gate)
+capcli api prove <provider.verb> [-p k=v] [--env sim]       # sandbox execution
+capcli api ship <provider.verb> --to reviewed|pinned --reason "..."
+capcli api stats <provider> [--deep] [--summary]            # per-verb or rollup
+capcli api retire <provider.verb> [--reason]
+capcli api deactivate <provider.verb> [--reason]            # active → dormant
+capcli api rollback <provider.verb> --to-version N
+capcli api list [--provider X] [--state X]
+```
+
+*Sync* pulls the full catalog from URL. Every verb enters as `state: dormant`. No `--pick`.
+*Activate* is the gate — dormant verbs become callable at `trust: draft`.
+*Prove* executes against sandbox (`base_url` overlay from `apis/<provider>.sim.yaml`).
+*Ship* is human-gated. Same trust ladder as routines.
+*Stats* returns usage, reliability, cost, quota burn, provenance per verb.
+
 ### `bind` — Inbound Triggers
 ```bash
 # Time
@@ -137,6 +159,21 @@ capcli bind endpoint <routine@version> --auth api-key [--rate X]
 capcli bind list | inspect | pause | resume | remove <name>
 capcli bind keys issue <name> --principal partner:X      # human-gated
 ```
+
+### Serve Lifecycle Split
+`bind endpoint` registers a served endpoint. It does NOT start an HTTP server. The CLI configures; a daemon serves.
+
+- **Registration (CLI):** `capcli bind endpoint <routine@version>` writes the endpoint config to workspace.db. Returns exit 0. No listener started.
+- **Serving (Daemon):** `capcli sys serve --start` starts the HTTP listener (`Bun.serve()` or companion process). Reads endpoint configs from DB. Enforces same policy gates as `run`.
+- **Lifecycle:** `capcli sys serve --stop | --restart | --status`. Governed by systemd/supervisord/docker in production.
+- **Health check:** `capcli bind endpoint <name> --health` returns 200 if live, 503 if not. `sys doctor` checks all endpoints.
+- **Request-level audit:** Every HTTP request to a serve endpoint generates an audit event:
+  ```json
+  {"event": "serve.request", "endpoint": "order_status", "routine": "get_order@12", "api_key_id": "key_abc", "principal": "partner:stripe", "params": {"id": "ORD-001"}, "response_status": 200, "duration_ms": 42}
+  ```
+  This closes the audit gap between CLI invocations (which are audited) and HTTP requests (which were not).
+
+The architecture separates registration (CLI, synchronous, exit codes) from serving (daemon, persistent, concurrent). The kernel governs both identically.
 
 ### `ping` — Outbound Human IO
 ```bash
@@ -210,6 +247,10 @@ capcli <any-mutating> --dry-run     # [harness] mandatory before first real effe
 capcli sys audit trace <id> --explain # [harness] learn from denial
 capcli routine stats <name> --deep  # [harness] per-leaf cost attribution
 capcli rule show --type policy      # [harness] understand constraints
+capcli api catalog stripe --state dormant  # [harness] discover available verbs
+capcli api activate stripe.X --intent "..." # [harness] propose activation (human gates)
+capcli api stats stripe.X --deep           # [harness] per-verb cost attribution
+capcli search gaps --since 7d              # [harness] find unresolved searches
 ```
 
 **Caller tag legend:**
@@ -232,10 +273,13 @@ capcli rule show --type policy      # [harness] understand constraints
 -   **No interactive modes** — approvals live in the harness
 -   **No onboarding wizards** — the CLI returns exit codes and JSON; the harness renders approval dialogs, intent capture, and progression UI
 -   **No `--force`** — exceptions are overrides in governance.yaml
+-   **No `api import --pick`** — sync pulls everything; activation gates what's callable
+-   **No `api create`** — verbs come from OpenAPI sync, never hand-authored
+-   **No `api call`** — invocation is `ctx.api.call` inside routines or `run`; no direct CLI egress
 -   **One event per verb** — if a command can't be one audit event, it's two commands
 
 ---
 
 ## The One-Liner
 
-> **8 nouns, universal flags, exit codes as law, and a registry that flattens everything into `run` — the command surface is small enough to memorize, deep enough that nothing escapes the gate, and honest enough that every verb is an audit event.**
+> **9 nouns, universal flags, exit codes as law, and a registry that flattens everything into `run` — the command surface is small enough to memorize, deep enough that nothing escapes the gate, and honest enough that every verb is an audit event.**

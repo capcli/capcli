@@ -7,7 +7,7 @@
 
 ## 1. Core Philosophy
 
-capcli is not an agent framework, not an ORM, not a wrapper. It is a **kernel**: a governed boundary through which an agent harness (Claude Code, Codex, Hermes, OpenClaw, custom) affects and observes a workspace.
+capcli is not an agent framework, not an ORM, not a wrapper. It is a **policy gateway**: a governed boundary through which an agent harness (Claude Code, Codex, Hermes, OpenClaw, custom) affects and observes a workspace. The word "gateway" is deliberate — it sits between the agent and the world, checks, forwards, and logs. It does not reason, schedule intelligence, or absorb every concern. If a feature requires capcli to *reason*, it belongs in the harness.
 
 Three convictions:
 
@@ -128,6 +128,18 @@ One registry, one `search` surface, one trust ladder, one audit format. The agen
 
 Registry fronted by **progressive disclosure**: at scale the agent gets one `cap search` meta-tool, not a dump of every capability. Base context stays constant whether there are 10 or 10,000.
 
+API verbs follow the same surface. Sync pulls the full catalog; dormant verbs are searchable but not callable. Search resolution is five stages — exact → prefix → fuzzy → semantic → did-you-mean — ranked by relevance. Every search query logged as `event: capability.search` with query, filters, results, and invocation. Search gaps (searched but never invoked) surface as consolidation signals for both routines and API verbs.
+
+### Search Ceiling & Harness-Side Intelligence
+"No LLM in the kernel" applies to **enforcement and execution**. It does not mean search must be keyword-only forever. But semantic intelligence belongs in the harness, not the gate.
+
+- **Kernel search (deterministic):** Exact match → prefix match → structured filters. `capcli search "refund" --trust pinned --env prod --max-ops 10`. Filters are deterministic. Kernel returns candidates.
+- **Harness search (semantic):** The harness computes embeddings for routine descriptions, stores them in a side table (`_capability_embeddings`). `capcli search --semantic "handle customer refunds"` queries this table. The kernel serves the vectors; the harness ranks them.
+- **Search analytics:** Every `search` query logged as `event: capability.search` with query text, filters used, results returned, and which capability was ultimately invoked. Audit mirror reveals search gaps: "agents search 'invoice' 20 times but never invoke." This is a consolidation signal.
+- **Principle:** "No LLM in enforcement. LLM-assisted discovery is the harness's job, with kernel-provided indexes." The kernel is a lookup table with fast filters. The harness is the ranking engine.
+
+At 300 routines (the hard cap), keyword search returns noise. Structured filters narrow the set. Semantic ranking orders it. The kernel owns the first two. The harness owns the third.
+
 ---
 
 ## 8. Raw SQL & Bulk Operations
@@ -202,7 +214,7 @@ Audit mirror views power this deterministically: `routine_fingerprints`, `primit
 
 ---
 
-## 11. External APIs — same gate, different channel
+## 11. External APIs — full catalog, gradual activation
 
 External effects are governed identically — but HTTP is not SQL:
 
@@ -218,10 +230,94 @@ Therefore:
 - **No auto-retry on non-idempotent calls.** Retry only with kernel-generated idempotency key persisted *before* first attempt
 - **Replay records mark external effects `replay: manual`** — never auto-replayed
 
-### Lean OpenAPI import
-Raw specs are monsters. Import is curated, opt-in, default-deny. Unlisted endpoints don't exist. Kernel injects secrets at egress; agent never sees tokens.
+### Sync — import everything
+
+APIs update constantly. Import is not a one-shot file upload. It is a scheduled URL sync.
+
+```bash
+capcli api sync stripe \
+  --from https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json \
+  --interval 7d
+```
+
+The kernel fetches the raw OpenAPI spec, parses ALL endpoints, and compiles `apis/<provider>.yaml`. Every verb enters as `state: dormant`. No `--pick`. No pre-selection. Import is free; activation is gated.
+
+The harness never reads the raw spec. The kernel fetches, parses, compiles.
+
+### The catalog model
+
+Every imported verb has a state:
+
+```
+synced (dormant) ──> active ──> retired
+       │                │            │
+  exists in catalog  callable via   provenance kept
+  searchable with    ctx.api.call   rollback un-retires
+  --include-dormant
+  NOT callable
+```
+
+Additionally: `deprecated` — upstream removed it, loud state, never silent deletion.
+
+**Dormant ≠ invisible.** Dormant = exists, searchable, inspectable, but not callable. The agent can find it, read its params, propose activation — but can't call it.
+
+**Dormant never expires.** Only active verbs decay. The full surface is permanent. The active surface is earned.
+
+### Regular sync
+
+Sync is scheduled, not one-shot. Every `sync_interval`:
+1. Kernel fetches URL
+2. Diffs against current catalog by `spec_hash`
+3. New endpoints → added as `state: dormant`
+4. Removed endpoints → marked `state: deprecated` (never deleted)
+5. Changed params/paths → version bump, diff recorded
+6. Audit event: `event: api.sync` with added/removed/changed counts
+
+### Activation — the gate
+
+```bash
+capcli api activate stripe.refund_charge \
+  --intent "refund workflow needs charge refund capability"
+```
+
+Kernel validates the verb exists, checks governance caps (`max_active_per_provider`), activates at `trust: draft`, records the event. The verb becomes callable.
+
+Activation is the gate, not import. Same law as routines: the file exists, but it can't run until proven and shipped.
+
+### Prove, ship, live, retire
+
+Same lifecycle as routines. Activated verbs prove in sim (sandbox `base_url` overlay), ship by human gate, live with quota tracking, decay on schedule, retire with provenance.
+
+### Lean catalog format
+
+`apis/<provider>.yaml` is kernel-compiled, not hand-authored:
+
+```yaml
+provider: stripe
+version: 3
+source_url: https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json
+spec_hash: sha256:a4f2...
+synced_at: "2026-09-12T10:00:00Z"
+sync_interval: 7d
+auth:
+  type: bearer
+  secret_ref: STRIPE_SECRET_KEY        # kernel-held, never in env/context
+
+capabilities:
+  get_charge:
+    method: GET
+    path: /charges/{id}
+    params: { id: { type: string, required: true } }
+    idempotent: true
+    cost_class: read
+    state: dormant
+    trust: draft
+    description: "Retrieve a single charge by ID"
+  # ... all other verbs ...
+```
 
 ### Live quota tracking
+
 Static spend caps (`per_day_usd`) are the floor. External systems return **dynamic** remaining quota in response headers (`X-RateLimit-Remaining`, `Retry-After`). The kernel:
 1. **Extracts** declared headers from every API response (deterministic string match, no LLM)
 2. **Stores** live state in `_api_quota` (system table, kernel-written, agent-readable)
@@ -231,6 +327,14 @@ Static spend caps (`per_day_usd`) are the floor. External systems return **dynam
 6. **Falls back**: providers without standard headers get kernel-counted sliding windows
 
 A 429 is a design failure, not a runtime surprise. The gate denies before the call, not after it.
+
+### Search gaps as API signals
+
+```bash
+capcli search gaps --since 7d
+```
+
+Searched but never invoked = missing capability. The kernel surfaces it. The harness proposes activation. The human approves. Same consolidation signal as routines.
 
 ---
 
@@ -306,6 +410,21 @@ principal (user:alice) → agent (agt_7f3k) → session (ses_a9) → op (op_001)
 
 ### Intent chain
 Writes require intent; the chain inherits downward: `session goal → routine intent → op intent`.
+
+> **Intent is audit metadata, not a security gate.**
+> A sufficiently motivated or confused agent can generate syntactically valid, semantically hollow intents.
+> The kernel verifies the *shape* of the intent (length, blacklist). It cannot verify the *truth* of the intent.
+> Actual enforcement comes from what the kernel *can* physically verify: table, column, row count, blast radius, trust level, env.
+>
+> Implementation:
+> - `--intent` remains mandatory for writes (documentation value is real).
+> - Every audit event records an `intent_quality` heuristic: word overlap with SQL targets, parameter references, specificity score.
+> - Low quality → audit flag (`intent_quality: low`), not denial.
+> - High-stakes writes (prod, >100 rows, external API) additionally require `--reason` routed through a human review gate.
+> - The human verifies the why. The kernel verifies the what.
+>
+> This prevents intent from becoming security theater while preserving its value as a causal spine for learning and audit.
+
 - Leaf ops inherit from routine, routines from session; every audit event records the full chain
 - Anti-junk: min length, boilerplate blacklist, deny by default
 - `--intent` = purpose; `--reason` = justification (only for threshold crossings)
@@ -315,6 +434,23 @@ Agents coordinate through the world, not direct chat:
 - **Claims:** lease-based locks with TTL (`capcli db lock`)
 - **Events:** agents watch each other's effects via `sys audit tail`
 - **Handoffs:** world-state transitions visible to all
+
+### Multi-Agent Scope (v1 vs v2)
+capcli v1 is **single-agent with multi-principal**. The identity hierarchy supports multiple humans overseeing one agent. True multi-agent (multiple concurrent agents writing to the same world) is v2.
+
+v1 constraints:
+- **Concurrency limit:** Governance `max_concurrent_agents: 1`. Second agent attempting simultaneous write access receives exit 2 with message: "concurrent agents not supported in v1. serialize through single agent or upgrade."
+- **Claims are advisory, not mandatory.** SQLite serializes writers natively via `BEGIN IMMEDIATE`. Claims prevent logical conflicts, not physical races.
+- **No dependency graph yet.** Cross-agent routine calls work but impact analysis (retiring Y breaks X→Y→Z) is manual.
+- **Polling only.** `sys audit tail` is polling. No pub/sub event streaming until v2.
+
+v2 requirements (not implemented):
+- Replace lease claims with `BEGIN IMMEDIATE` transaction isolation as primary writer serialization.
+- Add event streaming: `capcli sys audit stream --follow --capability X` via Unix socket. Agents subscribe, don't poll.
+- Add dependency tracking: `_routine_deps` table. `routine retire Y` checks dependents and warns.
+- Add write throughput monitoring: `sys doctor` reports lock contention. Average write wait >50ms → governance suggests splitting workloads across environments.
+
+Don't let users discover multi-agent gaps through race conditions. Scope it explicitly. Fail loud, not corrupt.
 
 ---
 
@@ -345,12 +481,18 @@ maintenance window (Sun 03:00)
 
 The harness has native fs/exec — capcli doesn't pretend to gate them. Instead: recovery.
 
-- **Auto-commit:** interval + event-triggered commits of `world.sql` (deterministic DB dump), audit logs, configs → pushed to git remote
-- **Audit in git:** append-only JSONL in version control = tamper-evidence for free
-- **Restore:** `capcli sys recover <commit>` restores full world-state from history
-- Worst case (harness wipes everything): `git clone` + `sys recover` → world restored, audit spine intact
+Git is the developer experience. It is NOT a backup system. `git push --force` overwrites history. Anyone with push access can rewrite it. Repos grow linearly (~35K commits/year at 15-min intervals). Tamper-evidence requires an append-only store, not a mutable VCS.
 
-Destruction becomes a reversible event.
+- **Auto-commit:** interval + event-triggered commits of `world.sql`, audit logs, configs → pushed to git remote. This is the DX layer.
+- **Secondary backup target:** S3/GCS/B2 with object versioning enabled. `sys backup --push` pushes to git AND object storage. Object storage is append-only by design. This is the recovery guarantee.
+- **Hash chain verification:** Each JSONL audit line includes `prev_hash: sha256:<previous_line_hash>`. Tampering with any line breaks the chain. Governance `hash_chain_verify: "0 4 * * *"` validates daily. This is real tamper-evidence, independent of git history.
+- **Backup verification:** `sys doctor` verifies the last pushed backup by downloading and comparing `world.sql` hash. `backup.last_verified_at` tracked. Stale >24h → alarm.
+- **Recovery indexes:** `capcli sys recover --list` shows last N recovery points with timestamps, schema versions, audit counts. Human picks by time, not commit hash.
+- **Git retention policy:** Governance `backup.git_max_age_days: 90`. Older commits squashed/pruned from working repo. Full history lives in object storage. Git stays lean; archive stays complete.
+- **Restore:** `capcli sys recover <commit|timestamp>` restores full world-state.
+- Worst case (harness wipes everything): `git clone` + `sys recover` OR pull from object storage → world restored, audit spine intact, hash chain verified.
+
+Destruction becomes a reversible event. But reversibility requires two independent stores, not one mutable VCS.
 
 ---
 
@@ -381,9 +523,10 @@ Idempotency keys on every write make retries safe. `result_hash` per event detec
 Shape: `capcli <noun> <verb> [target] [--flags]` — no exceptions.
 Universal flags on all mutating verbs: `--dry-run`, `--json`, `--intent "<why>"`, `--as <principal>`.
 
-8 nouns. Zero redundancy.
+9 nouns. Zero redundancy.
 
 -   **run** · search · inspect (hot path)
+-   **api** · sync · diff · catalog · activate · prove · ship · stats · retire · deactivate · rollback · list
 -   **db** · query · exec · lock · unlock · snapshot · restore · dump
 -   **routine** · draft · prove · ship · sweep · stats · rollback · retire
 -   **bind** · cron · webhook · endpoint · list · pause · resume · remove · keys
@@ -424,6 +567,16 @@ Kernel injects `Authorization` at egress. Tokens never in agent env, never in co
 - Ambiguous read/write classification → **errs toward write**
 - Headless/crashed approval → **denied**
 
+### Degraded modes (human-supervised only)
+Fail-closed is the default. There is no *automatic* degraded mode. But operators have documented, audited escape hatches:
+
+- **Recovery mode:** `CAPCLI_RECOVERY=1 capcli sys recover`. Loads ONLY schema + audit sink. No policy enforcement, no routines, no serve. Only `db query`, `db dump`, `sys audit tail`, `sys backup`. Requires physical env var. Logged as `event: recovery_mode_entered`.
+- **Boot diagnostic:** `capcli sys doctor --boot-check`. Runs all boot validations without starting the daemon. Prints exact failure location. Fixes the circular dependency where the kernel won't start to tell you why it won't start.
+- **Config pre-commit:** `capcli rule validate` runs in CI before config reaches the daemon. Catches YAML errors before they kill the service.
+- **Audit disk exhaustion:** Reserved audit partition (separate disk or guaranteed tmpfs). If audit write fails, kernel enters read-only mode instead of full denial. Reads continue. Writes queue in memory with 5-minute TTL before hard denial. Gives ops time to fix the disk.
+
+These are break-glass paths. Every use is an audit event. They exist so a config typo doesn't become a 3 AM outage with no recovery path.
+
 ---
 
 ## 21. Anti-Decisions (what capcli refuses to be)
@@ -439,6 +592,9 @@ Kernel injects `Authorization` at egress. Tokens never in agent env, never in co
 - **No kernel-generated worlds.** The harness authors schema.yaml from user intent; the kernel gates application. capcli never infers structure from natural language.
 - **No onboarding events.** The audit records real ops, effects, and denials. No synthetic `onboarding.*` event types. Intent is a field on an op, not a standalone event.
 - **No deletion.** Retirement with provenance pointers; rollback un-retires; history only grows.
+- **No pre-selected API imports.** `api sync` pulls the full catalog. No `--pick`. Filtering happens at activation, not import.
+- **No dormant expiry.** Dormant API verbs never decay. The full surface is permanent; only the active shelf is earned.
+- **No hand-authored `apis/*.yaml`.** The kernel compiles the catalog from the OpenAPI spec. The harness proposes; the kernel gates; the human approves.
 
 ---
 
@@ -466,6 +622,10 @@ yaml (YAML parse). 4 npm deps + 1 Rust crate. Everything else is Bun built-in.
 | **Ping** | outbound human IO: notify, ask |
 | **Trust** | draft → reviewed → pinned |
 | **Kernel** | the capcli process — the only door in the wall |
+| **Sync** | scheduled URL pull of an OpenAPI spec → full catalog compilation |
+| **Catalog** | the complete set of imported API verbs, all states, permanent |
+| **Dormant** | imported, searchable, inspectable, not callable |
+| **Activation** | the gate that moves a verb from dormant to callable |
 
 Eight words, zero overlap. If a ninth is needed, one of these was wrong.
 
@@ -473,4 +633,4 @@ Eight words, zero overlap. If a ninth is needed, one of these was wrong.
 
 ## 23. The One-Liner
 
-> **capcli — a capability kernel for agent workspaces: SQLite as the world, policy as physics, every effect audited, every capability earned. The harness is the mind; capcli is the nervous system — and if the mind goes rogue, git history puts the world back.**
+> **capcli — a capability kernel for agent workspaces: SQLite as the world, policy as physics, every effect audited, every capability earned. Sync pulls everything; activation gates what's callable. The harness is the mind; capcli is the nervous system — and if the mind goes rogue, git history puts the world back.**
