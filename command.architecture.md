@@ -20,6 +20,20 @@
 | `4` | runtime-error |
 | `5` | audit-write-failed (= nothing ran) |
 
+### CLI Framework
+
+`citty` (unjs) — nested subcommands, typed args, auto `--help`.
+Maps directly to the 8-noun surface:
+
+```
+main → run, db, routine, bind, ping, rule, env, sys
+db   → query, exec, lock, unlock, snapshot, restore, dump, schema
+```
+
+Each subcommand defines required/optional args with types.
+`--intent` is `required: true` on all write verbs.
+`--dry-run`, `--json`, `--as` are universal flags.
+
 ---
 
 ## 2. The Surface (8 Nouns)
@@ -31,6 +45,63 @@ capcli search <query> [--trust X] [--env X]
 capcli inspect <capability>
 ```
 *Resolution:* exact match → prefix match → semantic search → "did you mean?". Works on routines, api verbs, views.
+
+#### `inspect` output contract (`--json`)
+
+Discovery without cost awareness is invitation to denial. `inspect` returns the full cost envelope in one JSON blob. The agent makes go/no-go from this alone — no second round-trip.
+
+```json
+{
+  "capability": "refund_and_archive",
+  "version": 17,
+  "trust": "reviewed",
+  "env": "prod",
+  "manifest": [
+    {"seq": 1, "primitive": "api.call", "target": "stripe.get_charge"},
+    {"seq": 2, "primitive": "db.query", "target": "entities", "access": "read"},
+    {"seq": 3, "primitive": "api.call", "target": "stripe.refund_charge"},
+    {"seq": 4, "primitive": "db.txn", "children": [
+      {"primitive": "db.exec", "target": "entities", "access": "update"}
+    ]}
+  ],
+  "cost_envelope": {
+    "tokens": {
+      "file_size": 840,
+      "max_result_tokens": 500,
+      "params_schema_bytes": 120
+    },
+    "duration": { "max_seconds": 300, "p50_ms": 410, "p95_ms": 640 },
+    "api": {
+      "calls_per_run": 2,
+      "providers": ["stripe.get_charge", "stripe.refund_charge"],
+      "live_quota": {
+        "stripe": {
+          "limit": 100, "remaining": 42,
+          "reset_at": "2026-01-15T14:30:00Z",
+          "status": "ok"
+        }
+      },
+      "static_spend": { "daily_budget_usd": 50.0, "remaining_usd": 37.6 }
+    },
+    "db": { "writes_per_run": 2, "reads_per_run": 1, "max_rows_affected": 100 },
+    "concurrency": { "max_ops_per_run": 50, "active_claims_on_target": 0 },
+    "frequency": { "calls_last_hour": 3, "calls_per_minute_limit": 300 },
+    "success": { "total_runs": 31, "success_rate": 0.97, "manifest_match_rate": 1.0 }
+  },
+  "budget_status": {
+    "can_invoke_now": true,
+    "blocking_reasons": [],
+    "warnings": []
+  }
+}
+```
+
+**Rules:**
+- `live_quota` sourced from `_api_quota` table (kernel-updated from response headers)
+- `budget_status.can_invoke_now` is the pre-flight verdict; `false` + `blocking_reasons` = don't call
+- `warnings` are non-blocking (e.g., remaining below `warn_at_remaining`)
+- All numbers are live at inspect-time, not cached
+- Exit 0 always (inspect is a read); denial happens at `run`, not here
 
 ### `db` — World State
 ```bash

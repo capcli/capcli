@@ -62,6 +62,21 @@ The kernel's role: expand shorthand at compile time, gate application, enforce a
 | `chk:` | CHECK constraint array | SQLite engine enforcement |
 | `trig:` | Trigger definition | Policy-gated, explicit SQL |
 | `mask=true` | Column-level redaction | Authorizer + audit redaction |
+| `seed: [...]` | Initial rows applied with schema | Kernel INSERTs at rule apply; not agent runtime |
+
+### Seed data
+Tables may declare initial rows that ride with the schema migration:
+```yaml
+orders:
+  cols: ...
+  seed:
+    - { ref: "ORD-001", status: "pending", total_cents: 4200 }
+    - { ref: "ORD-002", status: "pending", total_cents: 1800 }
+```
+- Applied by the kernel during `capcli rule apply --type schema`, inside the same DDL txn
+- Capped at 50 rows per table (onboarding-scale, not bulk loading)
+- Audited as part of the `rule.apply` event (`seed_rows: N`)
+- The world is born populated. The agent does not bulk-insert at draft trust to populate it.
 
 ### Full-complexity example (every DDL feature)
 
@@ -251,6 +266,26 @@ _audit:
     - [event, ts]
     - [agent, ts]
     - [capability, outcome]
+
+_api_quota:
+  desc: Live external API quota state (kernel-managed, updated from response headers)
+  sys: true
+  cols:
+    id: pk
+    provider: text!
+    scope_key: text                              # api_key hash or endpoint path
+    env: text!
+    limit_total: int
+    remaining: int
+    reset_at: int                                # unix epoch
+    retry_after_s: int
+    last_updated: int
+    last_op: text                                # op_id that updated this row
+  idx:
+    - [provider, env]
+    - [provider, scope_key, env]
+  chk:
+    - "remaining >= -1"                          # -1 = unknown (no headers received yet)
 
 views:
   pending_orders:
@@ -481,6 +516,36 @@ query:
   select:        { max_limit: 10000 }
   bulk:          { require_pre_count: true, require_trust_for_bulk: reviewed }
 ```
+
+## Implementation Binding
+
+The two enforcement layers map to two runtimes:
+
+| Layer | Runtime | Binding | Bypass-proof? |
+|---|---|---|---|
+| L1: Authorizer floor | Rust (rusqlite via napi-rs) | `conn.authorizer(Some(closure))` | Yes — C-level, runs inside `sqlite3_prepare_v2` |
+| L2: AST ceiling | TypeScript | `node-sql-parser` (sqlite dialect) | No — but runs before L1; rejected SQL never reaches prepare |
+
+policy.yaml's `authorizer` section compiles into Rust match arms at boot:
+
+```rust
+conn.authorizer(Some(move |action: AuthAction| {
+    match action {
+        AuthAction::Attach { .. } => AuthResult::Deny,
+        AuthAction::DropTable { .. } => AuthResult::Deny,
+        AuthAction::Update { table_name, column_name, .. } => {
+            // compiled from policy.yaml authorizer.tables
+            if deny_columns_write.contains(&column_name) { AuthResult::Deny }
+            else { AuthResult::Ok }
+        }
+        _ => AuthResult::Ok,
+    }
+}));
+```
+
+The agent never touches SQLite directly. `workspace.db` is `chmod 600`,
+owned by the daemon user. All access flows through the kernel, through
+both layers, in order. See `stack.md` for full binding details.
 
 ---
 

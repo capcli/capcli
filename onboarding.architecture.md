@@ -306,6 +306,38 @@ The user sees the causal spine: principal, agent, env, intent, policy decision, 
 
 **Chunk taught: Capability + Audit.** Two chunks in one experience, because they arrive together.
 
+### Stage 5.5 — Seed loop (bulk introduction)
+The world has one row. Real work needs many. The harness introduces the loop pattern:
+```python
+# The harness shows this pattern; the agent executes it
+orders_to_seed = [
+    {"ref": f"ORD-{i:03d}", "status": "pending", "total_cents": i * 100}
+    for i in range(1, 51)
+]
+
+for chunk in [orders_to_seed[i:i+10] for i in range(0, len(orders_to_seed), 10)]:
+    with ctx.db.txn():
+        for row in chunk:
+            ctx.db.execute(
+                "INSERT INTO orders (ref, status, total_cents) VALUES (:ref, :status, :tc)",
+                {"ref": row["ref"], "status": row["status"], "tc": row["total_cents"]},
+                intent=f"seed {row['ref']}")
+```
+Output:
+```text
+[dev] ok — 50 rows seeded across 5 transactions
+audit events: op_000005 .. op_000054
+each INSERT: WHERE enforced, LIMIT enforced, intent recorded
+```
+Then:
+```bash
+capcli db query "SELECT count(*) FROM orders" --json
+# → {"count": 50}
+```
+**Chunk taught: Bulk = many small governed writes in a loop.** Not one giant statement. The kernel enforces per-iteration caps. The agent learns the pattern during onboarding and it works forever.
+
+**Emotional target: capability.** The agent can populate a world without fighting the gate. The gate shapes bulk into audited chunks; it doesn't block it.
+
 ### Stage 6 — Recovery proof
 
 ```bash

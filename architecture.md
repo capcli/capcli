@@ -221,6 +221,17 @@ Therefore:
 ### Lean OpenAPI import
 Raw specs are monsters. Import is curated, opt-in, default-deny. Unlisted endpoints don't exist. Kernel injects secrets at egress; agent never sees tokens.
 
+### Live quota tracking
+Static spend caps (`per_day_usd`) are the floor. External systems return **dynamic** remaining quota in response headers (`X-RateLimit-Remaining`, `Retry-After`). The kernel:
+1. **Extracts** declared headers from every API response (deterministic string match, no LLM)
+2. **Stores** live state in `_api_quota` (system table, kernel-written, agent-readable)
+3. **Enforces pre-call**: remaining ≤ `deny_at_remaining` → exit 2 *before* egress, not 429 after
+4. **Shows in `inspect`**: agent sees live remaining, reset time, and budget status before invoking
+5. **Scopes per env**: sim quota and prod quota are independent rows; rehearsal never burns prod limits
+6. **Falls back**: providers without standard headers get kernel-counted sliding windows
+
+A 429 is a design failure, not a runtime surprise. The gate denies before the call, not after it.
+
 ---
 
 ## 12. The Hands
@@ -428,6 +439,16 @@ Kernel injects `Authorization` at egress. Tokens never in agent env, never in co
 - **No kernel-generated worlds.** The harness authors schema.yaml from user intent; the kernel gates application. capcli never infers structure from natural language.
 - **No onboarding events.** The audit records real ops, effects, and denials. No synthetic `onboarding.*` event types. Intent is a field on an op, not a standalone event.
 - **No deletion.** Retirement with provenance pointers; rollback un-retires; history only grows.
+
+---
+
+## Implementation Stack
+
+Architecture is binding-agnostic. Implementation choices live in `stack.md`.
+
+Summary: Bun runtime, rusqlite via napi-rs (native C-level authorizer),
+node-sql-parser (AST gate), citty (CLI), valibot (config validation),
+yaml (YAML parse). 4 npm deps + 1 Rust crate. Everything else is Bun built-in.
 
 ---
 

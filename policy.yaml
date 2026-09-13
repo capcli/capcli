@@ -145,6 +145,24 @@ api:
     per_day_usd: 50
     confirm_above_usd: 10                      # human gate before expensive calls
     per_call_confirm_usd: 25
+  rate_limit:                                    # live quota from provider responses
+    extract:                                     # header names → _api_quota columns
+      limit: "X-RateLimit-Limit"
+      remaining: "X-RateLimit-Remaining"
+      reset_at: "X-RateLimit-Reset"             # unix epoch
+      retry_after: "Retry-After"                # seconds
+    scope: per_key                               # per_key | per_endpoint | per_provider
+    deny_at_remaining: 0                         # pre-call gate: remaining ≤ this → exit 2
+    warn_at_remaining: 5                         # inspect shows warning, does not block
+    stale_after_seconds: 3600                    # row older than this → fall through to static spend
+    fallback:                                    # providers without standard headers
+      type: sliding_window                       # kernel counts locally
+      window_seconds: 60
+      max_calls: 300
+    audit:
+      record_before_after: true                  # quota_before/quota_after on every api.call event
+      denial_cites_remaining: true               # exit 2 message includes remaining + reset_at
+    env_scoped: true                             # sim and prod track independently
   external_writes:
     require_intent: true
     require_trust: reviewed
@@ -232,6 +250,12 @@ env:
   dev:
     bulk: { require_pre_count: false }
     confirm_above: { rows: 1000 }              # looser: dev is cheap
+    trust_overlay:                               # draft relaxation for onboarding seeding
+      draft:
+        max_rows_affected: 100                   # 10× looser than prod draft (10)
+        max_insert_per_statement: 200            # seed-sized inserts allowed
+        # UPDATE/DELETE still require WHERE + LIMIT — physics unchanged
+        # prod draft stays at 10. this overlay is dev-only.
 
 # ───────────────────────────────────────────────────────────────
 # 9. AUDIT — what gets recorded (the effect's spine)
