@@ -12,6 +12,7 @@
 | Authorizer (L1) | `conn.authorizer(Some(closure))` — native C-level | AST-only enforcement |
 | AST gate (L2) | `node-sql-parser` (sqlite dialect) | hand-rolled regex |
 | CLI framework | `citty` (unjs) | commander, yargs |
+| SDK package | `@capcli/sdk` (npm) | — |
 | YAML parse | `yaml` (eemeli) | js-yaml |
 | Config validation | `valibot` | zod, ajv |
 
@@ -65,6 +66,9 @@ bun build src/cli.ts --outdir dist   # → dist/cli.js
 
 # Test
 bun test
+
+# SDK package (white-label capable, see sdk.architecture.md)
+cd sdk && bun build src/index.ts --outdir dist --target node
 ```
 
 ## Dependency Count

@@ -112,7 +112,8 @@ The **kernel** validates and gates. The **human** approves.
 
 ```
 USER states intent
-  → HARNESS drafts schema.yaml + minimal policy overlay
+  → HARNESS drafts schema.yaml (world tables only) + minimal policy overlay
+  → system-schema.yaml already present (kernel-owned, read-only, agent-visible)
   → capcli rule apply --dry-run --env dev    (kernel shows the plan)
   → HUMAN approves                           (harness renders approval UI)
   → capcli rule apply --env dev --intent "onboarding world"
@@ -201,9 +202,11 @@ Output:
 ```text
 [dev] schema plan (dry-run)
 
-Tables to create:
+World tables to create (schema.yaml):
   orders (5 columns, 2 indexes)
   refunds (5 columns, 1 index)
+System tables already present (system-schema.yaml, kernel-owned):
+  _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents
 
 Capabilities to register:
   db.query orders
@@ -338,6 +341,8 @@ capcli db query "SELECT count(*) FROM orders" --json
 
 **Emotional target: capability.** The agent can populate a world without fighting the gate. The gate shapes bulk into audited chunks; it doesn't block it.
 
+**Budget awareness:** The seed loop teaches the agent that ops are counted. 50 inserts = 50 ops consumed from the session budget. The agent sees the budget frame in audit output. Composition (calling routines that call routines) will cascade these counters — the cage tightens downward, never widens.
+
 ### Stage 6 — Recovery proof
 
 ```bash
@@ -416,6 +421,22 @@ Env: sim
 ```
 
 **The user learns: raw SQL is exploration. Routines are exploitation.**
+
+If the routine includes an API verb that cannot be simulated (no sandbox), the prove output shows the gap:
+
+```text
+[sim] prove complete
+Manifest:
+  1. db.query filings (read)              ✓ executed
+  2. api.call gov.file_tax_return         ⊘ SKIPPED (sim_mode: prod-only)
+  3. db.exec filings (update)             ✓ executed
+
+Runtime fingerprint: 2/3 primitives matched
+Warning: gov.file_tax_return cannot be proven in sim.
+         First 3 prod calls will require human approval.
+```
+
+**The user learns: some walls are real. The system labels them honestly instead of pretending they don't exist.**
 
 ### Stage 9 — Promotion with evidence
 
@@ -854,6 +875,7 @@ The brain learns better when the material is relevant to the user's goal. The ha
 - **No static welcome tour.** Onboarding content is generated from the user's stated intent.
 - **No all-commands-at-once.** The daily surface is 4 commands: `search`, `inspect`, `run`, `db query`. Everything else appears contextually.
 - **No unclosed loops.** If onboarding opens a possibility ("you can ship this later"), it must return to close it.
+- **No agent-authored system tables.** System tables are kernel-owned. The harness authors world tables only. The agent reads system-schema.yaml for discovery but never edits it.
 
 ---
 
@@ -869,6 +891,7 @@ The brain learns better when the material is relevant to the user's goal. The ha
 8. Deletion is a state transition with backup confirmation. Return is context reinstatement with recovery.
 9. Onboarding content is generated from the user's intent, never shipped as a fixed template.
 10. No interactive prompts in capcli. The kernel returns exit codes and JSON. The harness renders the human interface.
+11. The harness authors schema.yaml (world tables). system-schema.yaml is kernel-owned, agent-readable, never agent-editable. Onboarding never touches system schema.
 
 ---
 

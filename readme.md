@@ -9,8 +9,9 @@
 # Compiled by kernel; never runtime-editable; exceptions = git commits.
 # ═══════════════════════════════════════════════════════════════
 version: 8
-schema_version: 12                    # mismatch → kernel refuses boot
-policy_version: 4                     # triple-lock across all config
+schema_version: 12                    # world schema — mismatch → kernel refuses boot
+system_schema_version: 3              # system tables — mismatch → kernel refuses boot
+policy_version: 4                     # quad-lock across all config
 
 # ───────────────────────────────────────────────────────────────
 # 1. REGISTRY — the shelves have dimensions
@@ -38,6 +39,16 @@ routine_shape:
     max_duration_seconds: 300         # sandbox watchdog kill
     max_result_tokens: 500            # summary cap crossing to the model
     max_txn_statements: 10            # one transaction stays one thought
+    composition:
+      budget_inheritance: min          # child effective = min(declared, parent_remaining)
+      ops_cascade: true                # child ops consume from parent's pool
+      duration_cascade: true           # child time consumes from parent's clock
+      spend_scope: session             # spend is session-level, not per-routine
+      rate_scope: session              # rate is session-level, not per-routine
+      rows_scope: trust_session        # rows per trust level per session
+      result_tokens_scope: routine     # each routine caps its own output independently
+      max_nesting_depth: 5             # composition depth hygiene
+      budget_exhaustion: deny          # exhausted budget = exit 2, never silent truncation
   versions:
     max_versions_kept: 25             # provenance graph stays navigable
     max_rollback_depth: 5
@@ -108,6 +119,16 @@ api:
     max_results: 20
     fuzzy_threshold: 2                   # Levenshtein distance for fuzzy match
     semantic_min_relevance: 0.6
+  sim_mode:
+    default: sandbox                     # if apis/<provider>.sim.yaml exists
+    fallback: dry-run                    # if no sim.yaml and no explicit sim_mode declared
+    require_declaration_for_prod_only: true  # prod-only must be explicit, never inferred
+  prod_first_calls:
+    require_human_approval: true
+    max_unapproved_calls: 3              # first 3 calls need human sign-off
+    approval_window_hours: 24            # approval expires after 24h
+    audit_field: first_prod_call
+    apply_to: [skip, prod-only]          # only un-simulated verbs get training wheels
   serve_overlay:
     min_trust_for_served_api: pinned     # served endpoints calling APIs need pin
 
@@ -182,6 +203,25 @@ denials:
   log_all: true                       # every governance.deny is an audit event
   blacklist_intents: ["test", "update", "misc", "fix", "..."]
   min_intent_words: 3
+  budget_denial_cites_level: true     # "routine B (frame_004) exhausted ops: 20/20"
+  budget_denial_cites_remaining: true # shows remaining at blocking level
+  budget_denial_cites_ancestors: true # shows parent/session remaining for context
+
+# ───────────────────────────────────────────────────────────────
+# 12. SCHEMA — two files, two owners, one DDL
+# ───────────────────────────────────────────────────────────────
+schema:
+  world:
+    max_tables: 100                     # agent-authored tables
+    max_columns_per_table: 30
+    max_indexes_per_table: 10
+    max_views: 50
+    require_description: true           # unsearchable = unregistrable
+  system:
+    agent_readable: true                # agent can read system-schema.yaml
+    agent_writable: false               # file permission denies write
+    kernel_upgrade_only: true           # only kernel releases modify it
+    require_hash_verify: true           # boot verifies file hash against kernel version
 ```
 
 ## What changed from v1

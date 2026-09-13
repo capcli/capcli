@@ -73,7 +73,15 @@ refund_and_archive@17:
 ```
 
 - Runs at `draft` trust regardless of declared trust — proving never grants power
+- System tables (`_audit`, `_api_quota`, `_budget_frames`) are readable during prove for evidence gathering. Agent never writes to them. Definitions live in `system-schema.yaml` (kernel-owned, read-only).
 - **Defaults to sim/dev env**; proving against prod requires explicit `--env prod --reason`
+- **Sim-mode aware:** each API verb in the manifest declares `sim_mode`. Prove adapts:
+  - `sandbox` verbs call sandbox URL
+  - `mock` verbs return fixtures (no HTTP)
+  - `dry-run` verbs validate params only (no HTTP)
+  - `skip` verbs are excluded; routine proves without them
+  - `prod-only` verbs are excluded AND authorizer denies in sim/dev
+- **Partial manifest match:** when verbs are skipped, prove reports "3/4 primitives matched." The gap is visible. Ship evidence shows exactly what wasn't proven.
 - Params come from `capcli sys audit sample` — real historical values, not invented fixtures
 - Full audit, tagged `stage: prove`
 - **Fingerprint proof:** after execution, the runtime fingerprint (actual leaf ops executed) is compared against the declared manifest. Divergence = warning (conditional branch taken, or undeclared op attempted). Proving proves the declaration, not just "it didn't crash."
@@ -89,6 +97,7 @@ capcli routine ship refund_and_archive --to reviewed \
 ```
 - Agent gathers evidence from the audit mirror; **human/CI approves promotion to pinned**
 - **Evidence block includes manifest diff vs previous version**: promotion review sees "v18 adds `api.call X`" without reading the raw diff
+- **Evidence block includes sim gaps**: if any verb was `skip` or `prod-only`, the evidence shows: "sim proved 3/4 verbs. 1 verb (gov.file_tax_return) was prod-only. First 3 prod calls require human approval." The human sees the gap before granting authority.
 - Prod promotion additionally requires merge from the routine's dev/sim branch
 
 ### Auto-promotion: draft → reviewed (low-risk only)
@@ -122,6 +131,8 @@ This keeps the authority gate intact while removing the human from the hot path 
 
 ### live — governed service
 Callable via `capcli run`, `ctx` composition, schedules, watches. Every call crosses the gate; trust level sets caps. Runtime fingerprint continuously compared to manifest — drift triggers `governance.anomaly`.
+
+Every invocation pushes a **budget frame** onto the call stack. The frame tracks ops consumed, duration elapsed, spend incurred, rows affected. Child routines inherit the tightest constraint: `min(declared, parent_remaining)`. Session-level counters (spend, rate, rows) never reset via composition. Budget exhaustion = clean exit 2 with the exact frame, dimension, and remaining cited.
 
 ### monitor → decay — the counter-force
 ```bash
@@ -190,7 +201,12 @@ capcli run refund_and_archive -p order_id=ORD-8842   # now with confidence
 ```
 
 - `db.*` primitives execute against sim's forked state — real schema, masked data
-- `api.*` primitives hit **sandbox providers** (env overlay swaps `base_url`)
+- `api.*` primitives adapt to `sim_mode`:
+  - `sandbox` — hit sandbox providers (env overlay swaps `base_url`)
+  - `mock` — kernel returns canned fixture from `apis/*.mock.yaml` (no HTTP)
+  - `dry-run` — kernel validates params and policy, returns `simulated: true` (no HTTP)
+  - `skip` — excluded from execution; routine proves without this verb
+  - `prod-only` — authorizer denies execution in sim/dev; verb is excluded
 - `schedule`/`notify` primitives fire in the sim world: notifications route to `#sim-notifications` via overlay
 
 The routine's primitives don't know or care which world they're in. Prove the code in a world that costs nothing.
@@ -253,6 +269,7 @@ The routine's *actual* behavior is diffable against its *declared* behavior, per
 | Manifest | static declaration extracted at validate; drift detected at runtime |
 | Replay | history re-executes per env; externals confirmed manually |
 | Forensics | failures localize to leaf ops within their world |
+| Sim mode | each verb declares how it behaves in sim; prove adapts; gaps are visible |
 
 ---
 
@@ -300,6 +317,8 @@ capcli sys audit trace <op-id>                      # primitive forensics
 - **No deletion.** Retirement with pointers; rollback un-retires. The history graph only grows
 - **No routine-level-only lifecycle.** Primitives are first-class citizens of the lifecycle — env, stage, key, manifest, and fingerprint at the leaf
 - **No silent manifest drift.** Undeclared ops trigger anomalies, not silent acceptance
+- **No pretending external systems are simulatable.** Verbs without sandboxes declare sim_mode. Prove reports the gap. Ship shows what wasn't proven. The cage labels the wall
+- **No budget bypass via composition.** Session-level counters don't reset when routines call sub-routines. The cage tightens downward, never widens
 
 ---
 
@@ -314,6 +333,8 @@ capcli sys audit trace <op-id>                      # primitive forensics
 7. Rehearsal (sim) and service (prod) are the same code path in different worlds — provable, diffable, replayable
 8. Decay and sweep run on schedule; accumulation never outpaces subtraction for long
 9. Manifest drift at runtime is a governed anomaly, never silently accepted
+10. Budget cascades downward; child effective = min(declared, parent_remaining); denial cites the exact frame, dimension, and remaining
+11. Sim mode is per-verb; prove adapts; gaps are visible in evidence; first prod calls of un-simulated verbs require human approval
 
 ---
 

@@ -105,6 +105,11 @@ ctx.ping.notify(principal, message, channel, intent)
 ctx.ping.ask(principal, question, options, timeout, intent) -> Answer
 ctx.log(msg) -> None                     # structured, audited
 ctx.params -> dict                       # validated against Param declarations
+
+# System schema discovery (read-only)
+# Routines can query _audit, _api_quota via ctx.db.query (authorizer allows read)
+# System table definitions visible via capcli rule show --type system-schema
+# Routines never write to system tables. Authorizer denies. File perms deny.
 ```
 
 Design rules:
@@ -156,6 +161,11 @@ manifest:
   - api.call: stripe.refund_charge
   - db.txn: [db.exec:entities(update), db.exec:edges(insert)]
 estimated_cost_class: [2× http, 2× write]
+sim_modes:
+  stripe.get_charge: sandbox
+  stripe.refund_charge: sandbox
+  # verbs with sim_mode: skip or prod-only are flagged here
+  # prove will report partial manifest match for these
 ```
 
 The routine now *declares what it will touch* before it ever runs.
@@ -228,7 +238,8 @@ routine_shape:                    # defaults for every routine file
   manifest_drift: anomaly         # undeclared ops trigger governance event
 ```
 
-- **Effective limit = min(declared need, governance ceiling, override).** A routine may ask for less, never more
+- **Effective limit = min(declared need, governance ceiling, override, parent_remaining).** A routine may ask for less, never more — and never more than its caller has left
+- **Budget cascades through composition.** Child ops consume from parent's pool. Child time consumes from parent's clock. Spend, rate, and rows are session-scoped — composition never resets these counters
 - **Enforcement bites at five gates:** register (registry caps) → draft (shape + manifest) → runtime (ops/duration/result/drift) → monitor (dead/failing) → sweep (scheduled subtraction)
 - Denial cites the exact number; exceptions are git-tracked overrides, never `--force`
 - Governance is never runtime-editable — a routine cannot loosen its own cage
@@ -253,6 +264,9 @@ def weekly_cleanup(ctx, params):
 
 - Higher-order composition, arbitrarily deep; the kernel gates **every leaf effect** regardless of stack depth
 - Callee's trust governs its effects; intent chains propagate via `caused_by`
+- **Budget cascades downward.** Every routine invocation pushes a budget frame. The child's effective limit = min(declared, parent_remaining). The kernel enforces the tightest constraint at every level. Denial cites the exact frame, dimension, and remaining
+- **Sim mode cascades through composition.** If a child routine calls a `prod-only` verb, the parent's sim prove excludes that verb. The gap propagates upward. Ship evidence at every level shows what wasn't proven
+- **Session-scoped counters don't reset.** Spend, rate, and rows are per-session. Splitting into sub-routines doesn't bypass them. The cage gets tighter as you go deeper, never wider
 - Multi-agent collisions: semantic similarity check at creation → near-duplicate → **merge or fork**, human-gated. Never silent duplication
 
 ### 9.5 Harness Skill Invocation Pattern
@@ -376,6 +390,8 @@ One parent event + one event per leaf op, linked by `caused_by`:
 }
 ```
 
+Every routine invocation pushes a **budget frame** (see `_budget_frames` system table). The frame records declared limits, consumed resources, and outcome. Frame push/pop are audit events. Budget exhaustion is a cited denial: exact frame, exact dimension, exact remaining. The parent sees the child's consumption before and after. The session sees the aggregate.
+
 `capcli sys audit trace <op-id>` walks any leaf effect up through routine → session goal. Every corrupted row answers: which routine, which version, which world, which agent, why.
 
 ---
@@ -423,6 +439,8 @@ capcli sys audit trace <op-id>
 - **No deletion.** Retirement with provenance pointers; the history graph only grows
 - **No synthetic learning.** Routines are born from audited primitive repetition, not generated from user intent. The harness observes the audit mirror; the kernel gates registration.
 - **No pre-selected API imports.** Sync pulls the full catalog. Activation gates what's callable. The library is permanent; the active shelf is earned.
+- **No budget bypass via composition.** Session-level counters (spend, rate, rows) don't reset when routines call sub-routines. Splitting is not escaping. The cage tightens downward
+- **No pretending external systems are simulatable.** Verbs without sandboxes declare sim_mode. Prove reports the gap honestly. Ship evidence shows what wasn't proven. First prod calls of un-simulated verbs get human training wheels
 
 ---
 
@@ -438,6 +456,8 @@ capcli sys audit trace <op-id>
 8. The registry consolidates, never duplicates; subtracts on schedule, never deletes
 9. What routines may *do* is policy; what they may *be* is governance — two files, zero overlap
 10. Manifest drift at runtime is a governed anomaly, never silently accepted
+11. Budget cascades downward through composition; the child inherits the tightest constraint from every ancestor; denial cites the exact frame and remaining
+12. Sim mode is per-verb; prove adapts; manifest match reflects reality (3/4 = 0.75, not 1.0); the audit is honest about what was real and what was rehearsed
 
 ---
 

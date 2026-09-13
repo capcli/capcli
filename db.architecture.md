@@ -12,7 +12,7 @@ capcli-db governs every effect on `workspace.db`. Six convictions:
 2. **The harness builds the world. The kernel gates it.** During onboarding, the harness authors `schema.yaml` from the user's stated intent. The kernel validates, previews (`--dry-run`), and applies. Creation is the harness's job; permission is the kernel's job; approval is the human's job.
 3. **Raw SQL is the language.** No ORM, no query builder, no Drizzle, no Prisma. Agents know SQL cold; they hallucinate ORM syntax.
 4. **The agent is never trusted at runtime.** Enforcement lives in the SQLite engine and the kernel gate — never in prompts.
-5. **One source of truth: `schema.yaml`.** SQL DDL is what it compiles to, never hand-edited. The agent writes YAML; the kernel generates DDL.
+5. **Two sources of truth, one compiled DDL.** `schema.yaml` (agent-authored world tables) and `system-schema.yaml` (kernel-owned system tables) compile to one DDL in `workspace.db`. The agent reads both but only edits `schema.yaml`. The kernel generates DDL from both. SQL DDL is never hand-edited.
 6. **CHECK is validation.** Content rules live in SQLite CHECK constraints — engine-enforced, SQL-native, one enforcement point. No `validate=` vocabulary.
 
 ---
@@ -35,9 +35,160 @@ Every DB effect flows: `intent → kernel → authorizer → AST → SQLite → 
 
 ---
 
-## 3. schema.yaml — token-optimized, agent-authored
+## 3. Dual Schema — system-schema.yaml + schema.yaml
 
-**The agent writes this file.** It is not a pre-defined template. The agent decides the domain model and expresses it in dense, token-efficient YAML using native filesystem access in the `dev` worktree.
+Two files, two owners, one compiled DDL.
+
+### system-schema.yaml — kernel-owned, agent-readable, never agent-editable
+
+Contains all system tables: `_audit`, `_api_quota`, `_api_catalog`, `_budget_frames`, `secrets`, `agents`. The kernel upgrades this file during kernel releases. The agent can read it (discoverability) but never edit it. File permissions enforce read-only for the agent user.
+
+```yaml
+# system-schema.yaml — kernel-owned, version-locked to kernel
+# Agent reads this. Agent never edits it. Kernel upgrades it.
+version: 3
+kernel_version: 8
+
+_audit:
+  desc: Audit mirror (kernel-managed)
+  sys: true
+  imm_rows: true
+  cols:
+    id: pk
+    event: text
+    ts: int
+    env: text
+    agent: text
+    session: text
+    principal: text
+    capability: text
+    intent: text
+    outcome: text
+    duration_ms: int
+    payload: json mask=true
+  idx:
+    - [event, ts]
+    - [agent, ts]
+    - [capability, outcome]
+
+_api_quota:
+  desc: Live external API quota state (kernel-managed)
+  sys: true
+  cols:
+    id: pk
+    provider: text!
+    scope_key: text
+    env: text!
+    limit_total: int
+    remaining: int
+    reset_at: int
+    retry_after_s: int
+    last_updated: int
+    last_op: text
+  idx:
+    - [provider, env]
+    - [provider, scope_key, env]
+  chk:
+    - "remaining >= -1"
+
+_api_catalog:
+  desc: Full API verb catalog — all imported verbs, all states
+  sys: true
+  imm_cols: [provider, verb]
+  cols:
+    id: pk
+    provider: text!
+    verb: text!
+    method: text
+    path: text
+    params_schema: json
+    idempotent: int=0
+    cost_class: text=read
+    state: text=dormant
+    trust: text=draft
+    description: text
+    activated_at: int
+    activated_by: text
+    sim_mode: text=sandbox
+    prod_first_calls_remaining: int=0
+    mock_fixture_path: text
+    retired_at: int
+    spec_hash: text
+    synced_at: int
+    version: int=1
+  idx:
+    - [provider, state]
+    - [provider, verb]
+    - [state, trust]
+  chk:
+    - "state IN ('dormant','active','deprecated','retired')"
+    - "trust IN ('draft','reviewed','pinned')"
+    - "sim_mode IN ('sandbox','mock','dry-run','skip','prod-only')"
+    - "prod_first_calls_remaining >= 0"
+
+_budget_frames:
+  desc: Budget tracking per routine invocation frame
+  sys: true
+  cols:
+    id: pk
+    frame_id: text!
+    routine: text!
+    version: int
+    parent_frame: text
+    session: text!
+    env: text!
+    declared_max_ops: int
+    declared_max_duration_ms: int
+    consumed_ops: int=0
+    consumed_duration_ms: int=0
+    consumed_spend_usd: int=0
+    consumed_rows: int=0
+    consumed_api_calls: int=0
+    created_at: int
+    closed_at: int
+    outcome: text
+  idx:
+    - [session, env]
+    - [routine, version]
+    - [parent_frame]
+  chk:
+    - "consumed_ops >= 0"
+    - "outcome IN ('active','success','exhausted','denied','error')"
+
+secrets:
+  desc: Kernel-managed secrets
+  sys: true
+  sens: true
+  cols:
+    id: pk
+    name: text!~
+    value: text mask=true
+    scope: text=global
+    expires_at: int
+  idx:
+    - name
+    - [scope, expires_at]
+
+agents:
+  desc: Registered agent identities
+  sys: true
+  cols:
+    id: text pk
+    name: text!
+    harness: text
+    principal: text!
+    status: text=active
+  imm_cols: [id, principal]
+  idx:
+    - principal
+    - status
+```
+
+### schema.yaml — agent-authored, kernel-gated
+
+**The agent writes this file.** It is not a pre-defined template. The agent decides the domain model and expresses it in dense, token-efficient YAML using native filesystem access in the `dev` worktree. The kernel validates, gates, and applies.
+
+The agent can read `system-schema.yaml` to discover system table structure (e.g., to build views referencing `_audit`), but cannot modify it. Cross-file view references (`exposes: [_audit]`) are compile-checked against `system-schema.yaml`.
 
 The kernel's role: expand shorthand at compile time, gate application, enforce at runtime, refuse drift.
 
@@ -220,72 +371,9 @@ subscriptions:
     - "interval IN ('monthly','yearly')"
     - "amount_cents > 0"
 
-secrets:
-  desc: Kernel-managed secrets
-  sens: true
-  cols:
-    id: pk
-    name: text!~
-    value: text mask=true
-    scope: text=global
-    expires_at: int
-  idx:
-    - name
-    - [scope, expires_at]
-
-agents:
-  desc: Registered agent identities
-  cols:
-    id: text pk
-    name: text!
-    harness: text
-    principal: text!
-    status: text=active
-  imm_cols: [id, principal]
-  idx:
-    - principal
-    - status
-
-_audit:
-  desc: Audit mirror (kernel-managed)
-  sys: true
-  cols:
-    id: pk
-    event: text
-    ts: int
-    env: text
-    agent: text
-    session: text
-    principal: text
-    capability: text
-    intent: text
-    outcome: text
-    duration_ms: int
-    payload: json mask=true
-  idx:
-    - [event, ts]
-    - [agent, ts]
-    - [capability, outcome]
-
-_api_quota:
-  desc: Live external API quota state (kernel-managed, updated from response headers)
-  sys: true
-  cols:
-    id: pk
-    provider: text!
-    scope_key: text                              # api_key hash or endpoint path
-    env: text!
-    limit_total: int
-    remaining: int
-    reset_at: int                                # unix epoch
-    retry_after_s: int
-    last_updated: int
-    last_op: text                                # op_id that updated this row
-  idx:
-    - [provider, env]
-    - [provider, scope_key, env]
-  chk:
-    - "remaining >= -1"                          # -1 = unknown (no headers received yet)
+# System tables (secrets, agents, _audit, _api_quota, _api_catalog, _budget_frames)
+# live in system-schema.yaml. They are kernel-owned, agent-readable, never agent-editable.
+# See system-schema.yaml for definitions.
 
 _api_catalog:
   desc: Full API verb catalog — all imported verbs, all states (kernel-managed)
@@ -305,6 +393,9 @@ _api_catalog:
     description: text
     activated_at: int
     activated_by: text
+    sim_mode: text=sandbox
+    prod_first_calls_remaining: int=0
+    mock_fixture_path: text
     retired_at: int
     spec_hash: text
     synced_at: int
@@ -317,8 +408,40 @@ _api_catalog:
   chk:
     - "state IN ('dormant','active','deprecated','retired')"
     - "trust IN ('draft','reviewed','pinned')"
+    - "sim_mode IN ('sandbox','mock','dry-run','skip','prod-only')"
+    - "prod_first_calls_remaining >= 0"
     - "cost_class IN ('read','write')"
     - "method IN ('GET','POST','PUT','DELETE','PATCH')"
+
+_budget_frames:
+  desc: Budget tracking per routine invocation frame (kernel-managed)
+  sys: true
+  cols:
+    id: pk
+    frame_id: text!
+    routine: text!
+    version: int
+    parent_frame: text
+    session: text!
+    env: text!
+    declared_max_ops: int
+    declared_max_duration_ms: int
+    consumed_ops: int=0
+    consumed_duration_ms: int=0
+    consumed_spend_usd: int=0
+    consumed_rows: int=0
+    consumed_api_calls: int=0
+    created_at: int
+    closed_at: int
+    outcome: text
+  idx:
+    - [session, env]
+    - [routine, version]
+    - [parent_frame]
+  chk:
+    - "consumed_ops >= 0"
+    - "consumed_duration_ms >= 0"
+    - "outcome IN ('active','success','exhausted','denied','error')"
 
 views:
   pending_orders:
@@ -384,12 +507,14 @@ views:
 
 ## 4. Schema Evolution — the explicit lifecycle
 
-The agent builds the world. The kernel governs its growth. This is not free-form `ALTER TABLE` — it is a governed pipeline.
+The agent builds the world in `schema.yaml`. The kernel governs its growth. `system-schema.yaml` evolves with kernel releases — the agent never touches it. This is not free-form `ALTER TABLE` — it is a governed pipeline.
 
 ### Step-by-step: agent adds a column
 
 ```
 1. AGENT EDITS schema.yaml (native fs, dev worktree)
+   ⚠ Agent CANNOT edit system-schema.yaml. File permissions deny write.
+   If the agent needs a new system table, it proposes via the harness; the kernel decides.
    → adds: discount_cents: int=0
    → bumps: version: 4 → 5
 
@@ -434,6 +559,8 @@ The agent builds the world. The kernel governs its growth. This is not free-form
 | `db.exec("ALTER TABLE orders ADD COLUMN hack TEXT")` | **exit 2** — `alter.require_trust: reviewed` |
 | `db.exec("DROP TABLE orders")` | **exit 2** — `drop: deny` (authorizer, unconditional) |
 | Edit `workspace.db` directly | **exit 4** — file perms (chmod 600, daemon-owned) |
+| Edit `system-schema.yaml` | **exit 4** — file perms (read-only for agent user). Kernel upgrades only. |
+| Apply system-schema changes via `rule apply` | **exit 2** — agent cannot trigger system schema application |
 | Skip `schema.yaml`, hand-write DDL | **exit 3** — `rule diff` alarm, `sys doctor` refuses boot |
 | Apply schema to `prod` without merge | **exit 2** — env overlay denies cross-world DDL |
 | Delete a column without snapshot | **exit 2** — migration is snapshot-first, always |
@@ -473,9 +600,10 @@ Validation isn't a single step — it's a layered defense that runs at every bou
 - No circular `ref=` chains
 - **Fail → exit 3, cites exact rule + location**
 
-### Gate 3: Policy Lock (boot-time)
-- `schema.version` == `policy.schema_version` == `governance.schema_version`
-- Mismatch → **refuse boot, exit 5**
+### Gate 3: Quad-Lock (boot-time)
+- `schema.yaml.version` == `governance.schema_version` == `policy.schema_version`
+- `system-schema.yaml.version` == `governance.system_schema_version` == `policy.system_schema_version`
+- Any mismatch → **refuse boot, exit 5**
 
 ### Gate 4: Live Drift Detection (runtime)
 - `capcli sys doctor` compares compiled YAML vs live DB via PRAGMAs
@@ -496,6 +624,7 @@ Validation isn't a single step — it's a layered defense that runs at every bou
 | `mask=true` on `int` column | 2 | `payments.amount_cents: mask only valid on text/json` |
 | View references unlisted table | 2 | `pending_orders.sql touches 'inventory' not in exposes` |
 | Schema v5 + Policy v4 | 3 | `version mismatch: refusing boot` |
+| system-schema v3 + governance.system_schema_version v2 | 3 | `system schema version mismatch: refusing boot` |
 | Live DB has extra column | 4 | `drift: orders.hack_column exists in DB but not schema.yaml` |
 | FK type mismatch | 2 | `orders.customer_id (int) refs customers.id (text)` |
 | Circular ref | 2 | `circular reference: a→b→c→a` |
@@ -797,6 +926,110 @@ All GROUP BYs. Kernel counts at leaf depth; harness reasons over it.
   "agent": "agt_7f3k",
   "principal": "user:alice"
 }
+```
+
+```json
+{
+  "event": "api.call",
+  "ts": "2026-09-12T08:30:05Z",
+  "env": "sim",
+  "stage": "prove",
+  "agent": "agt_7f3k",
+  "session": "ses_a9",
+  "principal": "user:alice",
+  "capability": "api.call",
+  "target": "gov.file_tax_return",
+  "sim_mode": "prod-only",
+  "http_called": false,
+  "fixture_used": false,
+  "outcome": "skipped",
+  "reason": "sim_mode: prod-only — cannot execute outside prod",
+  "routine": "process_filing@3",
+  "intent": "prove process_filing in sim"
+}
+```
+
+```json
+{
+  "event": "api.call",
+  "ts": "2026-09-12T08:30:06Z",
+  "env": "sim",
+  "stage": "prove",
+  "agent": "agt_7f3k",
+  "session": "ses_a9",
+  "principal": "user:alice",
+  "capability": "api.call",
+  "target": "hw.notify_device",
+  "sim_mode": "mock",
+  "http_called": false,
+  "fixture_used": true,
+  "fixture_path": "apis/hardware.mock.yaml",
+  "outcome": "success",
+  "routine": "device_check@2",
+  "intent": "prove device_check in sim"
+}
+```
+
+```json
+{
+  "event": "api.first_prod_call",
+  "ts": "2026-09-13T10:00:00Z",
+  "env": "prod",
+  "stage": "live",
+  "agent": "agt_7f3k",
+  "session": "ses_b2",
+  "principal": "user:alice",
+  "capability": "api.call",
+  "target": "gov.file_tax_return",
+  "sim_mode": "prod-only",
+  "prod_call_number": 1,
+  "prod_first_calls_remaining": 2,
+  "human_approved": true,
+  "approved_by": "user:alice",
+  "outcome": "success",
+  "routine": "process_filing@3",
+  "intent": "file tax return for CASE-442"
+}
+```
+
+```json
+{
+  "event": "budget.frame_push",
+  "ts": "2026-09-12T08:30:00Z",
+  "frame_id": "frame_003",
+  "routine": "refund_and_archive@17",
+  "parent_frame": "frame_002",
+  "session": "ses_a9",
+  "env": "prod",
+  "declared": { "max_ops": 50, "max_duration_seconds": 300 },
+  "inherited_remaining": { "ops": 38, "duration_ms": 254800, "spend_usd": 41.60 }
+}
+```
+
+```json
+{
+  "event": "budget.frame_pop",
+  "ts": "2026-09-12T08:30:01Z",
+  "frame_id": "frame_003",
+  "routine": "refund_and_archive@17",
+  "consumed": { "ops": 4, "duration_ms": 1200, "spend_usd": 0.80 },
+  "returned_to_parent": { "ops": 34, "duration_ms": 253600, "spend_usd": 40.80 }
+}
+```
+
+```json
+{
+  "event": "budget.exhausted",
+  "ts": "2026-09-12T08:30:02Z",
+  "frame_id": "frame_005",
+  "routine": "archive_old_orders@3",
+  "blocking_level": "routine B (frame_004)",
+  "dimension": "ops",
+  "declared": 20,
+  "consumed": 20,
+  "attempted_op": "db.exec",
+  "exit_code": 2
+}
 
 Schema migration events include `from_version`, `to_version`, `ddl`, `snapshot`.
 
@@ -822,6 +1055,9 @@ Schema migration events include `from_version`, `to_version`, `ddl`, `snapshot`.
 - **No direct connection exposure.** Routines get `ctx.db`, never `sqlite3`.
 - **No self-declared identity.** Kernel-issued, socket-proven.
 - **No pre-defined schemas.** Agent builds the world. Capcli governs its growth.
+- **No single-file mixed-ownership schema.** World tables and system tables live in separate files. The boundary is structural, not a `sys: true` flag.
+- **No agent edits to system-schema.yaml.** Read-only by file permission. Kernel upgrades only.
+- **No `sys: true` as the only boundary.** The flag still exists for authorizer routing, but the structural separation (separate files) is the primary boundary.
 
 ---
 
@@ -840,6 +1076,9 @@ Schema migration events include `from_version`, `to_version`, `ddl`, `snapshot`.
 11. Audit mirror is read-only; analysis at primitive depth via deterministic views.
 12. Schema evolution is forward-only, snapshot-first, human-gated, fully audited.
 13. Five validation gates; any failure = no execution. No degraded mode.
+14. Two schema files, two owners, one compiled DDL. Agent edits `schema.yaml`; kernel owns `system-schema.yaml`. Both readable by agent; system is read-only.
+15. Quad-lock at boot: schema_version + system_schema_version + policy_version + governance_version. Any mismatch = refuse boot.
+16. Kernel upgrades update `system-schema.yaml` without touching `schema.yaml`. Agent world is never affected by kernel releases.
 
 ---
 

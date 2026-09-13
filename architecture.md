@@ -64,7 +64,8 @@ The agent cannot reach SQLite or the network directly:
 
 ```
 workspace/
-├── schema.yaml              # declarative structure (version-locked)
+├── schema.yaml              # agent-authored world tables + views (version-locked)
+├── system-schema.yaml       # kernel-owned system tables (read-only for agent, version-locked)
 ├── policy.yaml              # behavioral permission (default: deny)
 ├── governance.yaml          # structural limits (sizes, counts, cadence)
 ├── apis/
@@ -86,7 +87,7 @@ SQLite is not "the database behind the app." It is the persistent world-state.
 
 - WAL mode, periodic snapshots, audit-log replay for reconstruction
 - `state(t) = fold(events[0..t])` — the audit log is the replay source
-- Schema lives in `schema.yaml`, version-locked to policy
+- Schema lives in two files: `schema.yaml` (agent-authored world tables) and `system-schema.yaml` (kernel-owned system tables). Both are readable by the agent. `system-schema.yaml` is read-only — the agent can see system table definitions but never edit them. Both compile to one DDL in `workspace.db`. Version-locked to policy and governance (quad-lock).
 - Single-writer serialization is the multi-agent arbiter
 
 ---
@@ -108,7 +109,7 @@ Evaluated before prepare. Full semantic view — WHERE clauses, LIMIT, patterns,
 | **policy.yaml** | What capabilities may *do* (behavior) | row caps, write denials, spend limits, trust requirements, intent mandates |
 | **governance.yaml** | What capabilities may *be* (structure) | LOC/tokens per file, max routines, ops per run, maintenance cadence |
 
-Both compiled at boot. Bad config → kernel refuses to serve. No degraded mode.
+Both compiled at boot. Bad config → kernel refuses to serve. No degraded mode. Schema, system-schema, policy, and governance are quad-locked: any version mismatch → refuse boot.
 
 ---
 
@@ -257,6 +258,20 @@ synced (dormant) ──> active ──> retired
   NOT callable
 ```
 
+### Sim mode — external systems are not always simulatable
+
+The env axis (dev → sim → prod) applies to the world (SQLite state). External systems exist outside the world. Some have sandboxes. Some don't. Each verb declares how it behaves in sim:
+
+| `sim_mode` | Sim behavior | Prod behavior |
+|---|---|---|
+| `sandbox` | Calls sandbox URL via `apis/*.sim.yaml` overlay | Calls prod URL |
+| `mock` | Kernel returns canned fixture from `apis/*.mock.yaml`. No HTTP. | Calls prod URL |
+| `dry-run` | Validates params, checks policy, checks quota. No HTTP. Returns `simulated: true`. | Calls prod URL |
+| `skip` | Excluded from sim prove. Routine proves without it. | Calls prod URL. Extra gates. |
+| `prod-only` | Excluded AND cannot be called in sim/dev. Authorizer denies. | Calls prod URL. Extra gates. |
+
+The world is always simulatable. External systems are not. The architecture handles both.
+
 Additionally: `deprecated` — upstream removed it, loud state, never silent deletion.
 
 **Dormant ≠ invisible.** Dormant = exists, searchable, inspectable, but not callable. The agent can find it, read its params, propose activation — but can't call it.
@@ -286,7 +301,20 @@ Activation is the gate, not import. Same law as routines: the file exists, but i
 
 ### Prove, ship, live, retire
 
-Same lifecycle as routines. Activated verbs prove in sim (sandbox `base_url` overlay), ship by human gate, live with quota tracking, decay on schedule, retire with provenance.
+Same lifecycle as routines. Activated verbs prove in sim, ship by human gate, live with quota tracking, decay on schedule, retire with provenance.
+
+Prove adapts to `sim_mode`:
+- `sandbox` verbs execute against sandbox URL
+- `mock` verbs execute against recorded fixtures (no HTTP)
+- `dry-run` verbs validate params and policy only (no HTTP)
+- `skip` verbs are excluded from sim prove
+- `prod-only` verbs are excluded AND cannot execute in sim/dev
+
+The prove reports partial manifest match when verbs are skipped: "3/4 primitives matched. 1 skipped (sim_mode: prod-only)." The gap is visible, never hidden.
+
+Ship evidence shows the gap explicitly. Routines with un-simulated verbs require human acknowledgment of what wasn't proven.
+
+First N prod calls of `skip` or `prod-only` verbs require human approval. After N approved calls, the verb graduates to normal governance. The training wheels come off.
 
 ### Lean catalog format
 
@@ -314,6 +342,12 @@ capabilities:
     trust: draft
     description: "Retrieve a single charge by ID"
   # ... all other verbs ...
+  # sim_mode per verb (default: sandbox if apis/<provider>.sim.yaml exists)
+  #   sandbox  — provider has test env, use it
+  #   mock     — no sandbox, use recorded fixture from apis/<provider>.mock.yaml
+  #   dry-run  — no sandbox, validate params only, no HTTP
+  #   skip     — no sandbox, exclude from sim prove
+  #   prod-only— cannot run outside prod, authorizer denies in sim/dev
 ```
 
 ### Live quota tracking
@@ -335,6 +369,23 @@ capcli search gaps --since 7d
 ```
 
 Searched but never invoked = missing capability. The kernel surfaces it. The harness proposes activation. The human approves. Same consolidation signal as routines.
+
+### Budget Cascade Through Composition
+
+Budgets flow downward. The child inherits the tightest constraint from every ancestor.
+
+| Dimension | Scope | Cascades? |
+|---|---|---|
+| Ops | per-routine + session | ✓ child consumes from parent's pool |
+| Duration | per-routine + session | ✓ child time consumes from parent's clock |
+| Spend | per-session | ✓ one pool, no bypass via splitting |
+| Rows affected | per-trust-level per-session | ✓ one pool per trust level |
+| Rate | per-session | ✓ writes_per_minute applies to entire session |
+| Result tokens | per-routine | ✗ each routine caps its own output independently |
+
+Effective limit at any level = `min(declared, parent_remaining)`. The kernel enforces the tightest constraint at every frame. Denial cites the exact frame, dimension, and remaining.
+
+Composition never resets session-level counters. Splitting a 100-op routine into 10×10-op sub-routines doesn't bypass the 50-op session ceiling. The cage gets tighter as you go deeper, never wider.
 
 ---
 
@@ -561,7 +612,7 @@ Kernel injects `Authorization` at egress. Tokens never in agent env, never in co
 ## 20. Fail-Closed Contract
 
 - No valid policy → **no boot**
-- Schema/policy version mismatch → **no boot**
+- Schema/system-schema/policy/governance version mismatch → **no boot** (quad-lock)
 - Write can't be audited → **it doesn't run**
 - Scoped capability without principal → **refused**
 - Ambiguous read/write classification → **errs toward write**
@@ -595,6 +646,12 @@ These are break-glass paths. Every use is an audit event. They exist so a config
 - **No pre-selected API imports.** `api sync` pulls the full catalog. No `--pick`. Filtering happens at activation, not import.
 - **No dormant expiry.** Dormant API verbs never decay. The full surface is permanent; only the active shelf is earned.
 - **No hand-authored `apis/*.yaml`.** The kernel compiles the catalog from the OpenAPI spec. The harness proposes; the kernel gates; the human approves.
+- **No budget bypass via composition.** Session-level counters (spend, rate, rows) don't reset when routines call sub-routines. Splitting is not escaping.
+- **No silent budget exhaustion.** Budget denial cites the exact frame, dimension, and remaining. No "something failed." Exactly which budget, at which level.
+- **No partial execution past budget.** If budget hits mid-routine, the routine fails cleanly. No half-executed side effects.
+- **No hand-edited system-schema.yaml.** The agent reads it but never writes it. Kernel upgrades update it. The boundary is structural (separate files), not flag-based.
+- **No single-file mixed-ownership schema.** World tables and system tables live in separate files with separate owners, separate versions, separate lifecycles.
+- **No pretending external systems are simulatable.** Verbs without sandboxes declare `sim_mode: skip` or `prod-only`. Prove reports the gap. Ship shows what wasn't proven. The audit is honest about what was real and what was rehearsed.
 
 ---
 
@@ -605,6 +662,9 @@ Architecture is binding-agnostic. Implementation choices live in `stack.md`.
 Summary: Bun runtime, rusqlite via napi-rs (native C-level authorizer),
 node-sql-parser (AST gate), citty (CLI), valibot (config validation),
 yaml (YAML parse). 4 npm deps + 1 Rust crate. Everything else is Bun built-in.
+
+The kernel is also importable as an npm package (`@capcli/sdk`).
+Embedder-facing SDK docs live outside the workspace. See `sdk.architecture.md` in the SDK package.
 
 ---
 
@@ -626,6 +686,14 @@ yaml (YAML parse). 4 npm deps + 1 Rust crate. Everything else is Bun built-in.
 | **Catalog** | the complete set of imported API verbs, all states, permanent |
 | **Dormant** | imported, searchable, inspectable, not callable |
 | **Activation** | the gate that moves a verb from dormant to callable |
+| **Budget frame** | per-routine-invocation budget tracking pushed onto the call stack |
+| **Cascade** | budget flows downward; child effective = min(declared, parent_remaining) |
+| **System schema** | kernel-owned table definitions (`_audit`, `_api_quota`, `secrets`, `agents`); readable by agent, never editable |
+| **World schema** | agent-authored table definitions (`orders`, `customers`, views); kernel-gated |
+| **Quad-lock** | schema_version + system_schema_version + policy_version + governance_version must all match at boot |
+| **Sim mode** | per-verb declaration of how an API verb behaves in sim: sandbox, mock, dry-run, skip, or prod-only |
+| **Mock fixture** | recorded response in `apis/*.mock.yaml` served by kernel during sim when no sandbox exists |
+| **Prod-only** | verb that physically cannot execute outside prod; authorizer denies in sim/dev |
 
 Eight words, zero overlap. If a ninth is needed, one of these was wrong.
 

@@ -9,7 +9,8 @@
 # Two enforcement layers: authorizer (C-level floor) + AST (semantic ceiling)
 # ═══════════════════════════════════════════════════════════════
 version: 4
-schema_version: 12                    # triple-lock with schema.yaml + governance.yaml
+schema_version: 12                    # world schema — quad-lock
+system_schema_version: 3              # system tables — quad-lock
 governance_version: 7
 default: deny                         # THE anchor. everything below carves exceptions
 
@@ -35,6 +36,9 @@ authorizer:
       allow: [read, insert, delete]            # lease lifecycle via db lock only
     _audit:
       allow: [read]                            # mirror is world-state, read-only grant
+    _system_schema:
+      allow: [read]                            # agent reads system-schema.yaml definitions
+      deny: [insert, update, delete]           # never agent-writable
     _pending_asks:
       allow: [read]                            # kernel writes; agents observe
 
@@ -128,6 +132,29 @@ rate:
   denials_alert_threshold: 20                  # sustained denial = agent thrashing, surface it
 
 # ───────────────────────────────────────────────────────────────
+# 4.5 BUDGET CASCADE — limits flow downward through composition
+# ───────────────────────────────────────────────────────────────
+budget:
+  cascade: true                        # budgets flow downward through composition
+  inheritance: min                     # child effective = min(declared, parent_remaining)
+  denial_cites_level: true             # exit 2 names which frame blocked
+  denial_cites_remaining: true         # shows remaining at blocking level
+  denial_cites_ancestors: true         # shows parent/session remaining for context
+  overage_behavior: deny               # no partial execution past budget
+  partial_result_on_exhaustion: false  # if budget hits mid-routine, routine fails cleanly
+  budget_frame_audit: true             # every frame push/pop is an audit event
+  session_scoped:                      # these counters never reset via composition
+    - spend_usd
+    - writes_per_minute
+    - capability_calls_per_minute
+    - rows_affected
+  routine_scoped_cascade:              # these cascade per-routine
+    - ops
+    - duration_ms
+  routine_scoped_independent:          # these are per-routine, no cascade
+    - result_tokens
+
+# ───────────────────────────────────────────────────────────────
 # 5. API — external effects gated STRICTER (pre-call only, no rollback)
 # ───────────────────────────────────────────────────────────────
 api:
@@ -150,6 +177,14 @@ api:
     require_intent: true                       # activation without intent → exit 3
     start_trust: draft                         # every activated verb starts at draft
     require_sim_prove_before_ship: true        # no ship without sim evidence
+  sim_mode:
+    enforce_prod_only: true              # prod-only verbs denied in sim/dev by authorizer
+    mock_fixture_required: true          # mock verbs must have apis/<provider>.mock.yaml
+    dry_run_returns_simulated: true      # dry-run verbs return { simulated: true }
+    skip_reports_gap: true               # skipped verbs produce manifest gap warning
+  prod_first_calls:
+    enforce: true                        # first N calls of skip/prod-only verbs need human approval
+    denial_cites_approval_needed: true   # exit 2 message: "first prod call, human approval required"
   spend:
     per_day_usd: 50
     confirm_above_usd: 10                      # human gate before expensive calls
@@ -258,7 +293,10 @@ env:
   sim:
     rate: { writes_per_minute: 1000 }          # fast iteration
     bulk: { require_pre_count: false }
-    api: { base_url_overrides_from: apis/*.sim.yaml }   # sandbox providers
+    api:
+      base_url_overrides_from: apis/*.sim.yaml
+      mock_fixtures_from: apis/*.mock.yaml
+      deny_sim_mode: [prod-only]           # prod-only verbs physically denied in sim
     notify: { route_to: "#sim-notifications" }
   dev:
     bulk: { require_pre_count: false }
@@ -292,6 +330,9 @@ audit:
     - result_hash
     - duration_ms
     - idempotency_key
+    - sim_mode                               # sandbox | mock | dry-run | skip | prod-only | real
+    - fixture_used                           # true if mock fixture served
+    - http_called                            # false for dry-run and mock
   redact:
     columns: [secrets.value]
     params_matching: ["*token*", "*password*", "*secret*"]
@@ -305,7 +346,8 @@ audit:
 # ───────────────────────────────────────────────────────────────
 fail_closed:
   no_policy: refuse_boot
-  version_mismatch: refuse_boot
+  version_mismatch: refuse_boot            # quad-lock: schema + system-schema + policy + governance
+  system_schema_hash_mismatch: refuse_boot # kernel integrity check
   unparseable_sql: deny
   authorizer_callback_error: deny
   ambiguous_read_write_classification: treat_as_write

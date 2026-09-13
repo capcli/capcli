@@ -81,17 +81,57 @@ Discovery without cost awareness is invitation to denial. `inspect` returns the 
           "status": "ok"
         }
       },
-      "static_spend": { "daily_budget_usd": 50.0, "remaining_usd": 37.6 }
+      "static_spend": { "daily_budget_usd": 50.0, "remaining_usd": 37.6 },
+      "sim_mode": {
+        "stripe.get_charge": "sandbox",
+        "stripe.refund_charge": "sandbox",
+        "gov.file_tax_return": "prod-only",
+        "hw.notify_device": "mock"
+      },
+      "prove_status": {
+        "total_verbs": 4,
+        "provable_in_sim": 3,
+        "skipped": 1,
+        "skipped_verbs": [
+          {
+            "verb": "gov.file_tax_return",
+            "sim_mode": "prod-only",
+            "reason": "government API has no test environment",
+            "first_prod_calls_require_approval": 3
+          }
+        ]
+      }
     },
     "db": { "writes_per_run": 2, "reads_per_run": 1, "max_rows_affected": 100 },
     "concurrency": { "max_ops_per_run": 50, "active_claims_on_target": 0 },
     "frequency": { "calls_last_hour": 3, "calls_per_minute_limit": 300 },
-    "success": { "total_runs": 31, "success_rate": 0.97, "manifest_match_rate": 1.0 }
+    "success": { "total_runs": 31, "success_rate": 0.97, "manifest_match_rate": 1.0 },
+    "composition": {
+      "max_nesting_depth": 3,
+      "child_routines": ["archive_old_orders@3", "notify_team@1"],
+      "budget_inheritance": "min",
+      "effective_limits": {
+        "max_ops": "min(50, session_remaining)",
+        "max_duration_seconds": "min(300, session_remaining)",
+        "spend_usd": "session_pool",
+        "rate": "session_pool"
+      }
+    }
   },
   "budget_status": {
     "can_invoke_now": true,
     "blocking_reasons": [],
-    "warnings": []
+    "warnings": [],
+    "sim_gaps": [
+      "gov.file_tax_return is prod-only: cannot be proven in sim. First 3 prod calls require human approval."
+    ],
+    "cascade": {
+      "session_ops_remaining": 488,
+      "session_duration_remaining_ms": 555000,
+      "session_spend_remaining_usd": 37.6,
+      "session_rate_remaining": 287,
+      "tightest_constraint": null
+    }
   }
 }
 ```
@@ -143,7 +183,13 @@ capcli api list [--provider X] [--state X]
 
 *Sync* pulls the full catalog from URL. Every verb enters as `state: dormant`. No `--pick`.
 *Activate* is the gate — dormant verbs become callable at `trust: draft`.
-*Prove* executes against sandbox (`base_url` overlay from `apis/<provider>.sim.yaml`).
+*Prove* adapts to each verb's `sim_mode`:
+- `sandbox` — executes against sandbox URL (`apis/<provider>.sim.yaml` overlay)
+- `mock` — returns canned fixture from `apis/<provider>.mock.yaml`, no HTTP
+- `dry-run` — validates params and policy, no HTTP, returns `simulated: true`
+- `skip` — excluded from prove, routine proves without it
+- `prod-only` — excluded AND authorizer denies execution in sim/dev
+Prove reports partial manifest match when verbs are skipped. The gap is visible.
 *Ship* is human-gated. Same trust ladder as routines.
 *Stats* returns usage, reliability, cost, quota burn, provenance per verb.
 
@@ -184,12 +230,14 @@ capcli ping list [--pending] | resolve <ask-id> --choice X | expire <ask-id>
 
 ### `rule` — Static Configuration
 ```bash
-capcli rule show [--type schema|policy|governance]
-capcli rule diff [--git]                                 # vs HEAD or live DB
-capcli rule apply [--type schema] [--dry-run]            # migrate / reload
-capcli rule validate                                     # compile all layers; bad = no boot
+capcli rule show [--type schema|system-schema|policy|governance]
+capcli rule diff [--git] [--type schema|system-schema]   # vs HEAD or live DB
+capcli rule apply [--type schema] [--dry-run]            # world schema only; agent-triggered
+capcli rule validate                                     # compile all layers; quad-lock; bad = no boot
 ```
 *Note:* Schema migrations, policy reloads, and governance checks live here. One noun for all static truth.
+
+*Note:* `rule apply --type schema` applies `schema.yaml` (world tables). `system-schema.yaml` is applied at boot or kernel upgrade only — agent cannot trigger it. `rule show --type system-schema` is a read; agent can inspect system table definitions.
 
 ### `env` — Switchable Worlds
 ```bash
@@ -276,6 +324,12 @@ capcli search gaps --since 7d              # [harness] find unresolved searches
 -   **No `api import --pick`** — sync pulls everything; activation gates what's callable
 -   **No `api create`** — verbs come from OpenAPI sync, never hand-authored
 -   **No `api call`** — invocation is `ctx.api.call` inside routines or `run`; no direct CLI egress
+-   **No `budget` noun** — budget info lives in `inspect` cost_envelope and denial messages; no separate budget command
+-   **No `--override-budget`** — budget exceptions are governance overrides, never flags
+-   **No `rule apply --type system-schema`** — system schema is kernel-upgraded, never agent-triggered
+-   **No `schema edit`** — agent edits schema.yaml via native fs; no CLI write-path for config
+-   **No `api simulate`** — sim behavior is declared per-verb via `sim_mode`; no separate simulation command
+-   **No `--force-prod`** — `prod-only` verbs are physically denied in sim/dev by the authorizer; no flag overrides this
 -   **One event per verb** — if a command can't be one audit event, it's two commands
 
 ---
