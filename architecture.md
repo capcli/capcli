@@ -12,7 +12,7 @@ capcli is not an agent framework, not an ORM, not a wrapper. It is a **policy ga
 Three convictions:
 
 1. **The agent is never trusted.** Enforcement lives in physics and in the kernel — never in prompts, never in "please don't."
-2. **The harness is replaceable.** capcli exposes a governed interface; it doesn't care who is reasoning above it.
+2. **The harness is replaceable.** capcli exposes a governed interface; it doesn't care who is reasoning above it. Two harness types consume the same contract: the agent harness (reasons, proposes, executes) and the human harness (observes, approves, recovers). See `pwa.architecture.md`.
 3. **Rules don't constrain. Physics does.** A policy only works if the agent has no physical path around it.
 4. **Intent precedes infrastructure.** The world is built for a goal. Schema, policy, and governance are consequences of intent — never prerequisites.
 
@@ -41,6 +41,9 @@ AGENT HARNESS  (Claude Code / Codex / Hermes / OpenClaw / custom)
    │  intent, reasoning, learning, consolidation
    ▼
 CAPCLI KERNEL ──── policy.yaml + governance.yaml ──── audit/ (append-only)
+   ▲
+HUMAN HARNESS  (PWA — governed world browser)
+   │  observe, approve, answer, recover
    │
    ├── db.*        → SQLite SSOT    (C-level authorizer + AST gate)
    ├── routine.*   → Python sandbox (jail: net-none, socket-only)
@@ -402,11 +405,17 @@ Composition never resets session-level counters. Splitting a 100-op routine into
 
 The kernel never infers, never reasons, never does LLM work — it matches, dispatches, delivers, and logs. Intelligence is the harness's job; mechanics is capcli's.
 
-### 12.5 Harness Skill Boundary
+### 12.5 Harness Boundaries (Skills & PWA)
 
 capcli does **not** manage, store, validate, or govern harness skills (SKILL.md files).
 Skills live in the harness layer above; routines live in capcli. The boundary is the
 capability registry — clean, auditable, intentionally dumb.
+
+The PWA (human harness) is likewise not a kernel component. It is a **client** of the
+kernel, living outside the workspace, communicating exclusively via `@capcli/sdk`.
+It renders kernel JSON. It never gates, never enforces, never audits independently.
+It never writes to system tables. It never creates routines, schemas, or policies.
+It approves, observes, and recovers. See `pwa.architecture.md`.
 
 ```
 HARNESS SKILL (SKILL.md)          CAPCLI KERNEL
@@ -650,6 +659,7 @@ These are break-glass paths. Every use is an audit event. They exist so a config
 - **No silent budget exhaustion.** Budget denial cites the exact frame, dimension, and remaining. No "something failed." Exactly which budget, at which level.
 - **No partial execution past budget.** If budget hits mid-routine, the routine fails cleanly. No half-executed side effects.
 - **No hand-edited system-schema.yaml.** The agent reads it but never writes it. Kernel upgrades update it. The boundary is structural (separate files), not flag-based.
+- **No PWA as kernel component.** The PWA is a client, not a component. It lives outside the workspace, communicates via SDK, renders kernel JSON. It never gates, never enforces, never writes to system tables. It approves, observes, recovers.
 - **No single-file mixed-ownership schema.** World tables and system tables live in separate files with separate owners, separate versions, separate lifecycles.
 - **No pretending external systems are simulatable.** Verbs without sandboxes declare `sim_mode: skip` or `prod-only`. Prove reports the gap. Ship shows what wasn't proven. The audit is honest about what was real and what was rehearsed.
 
@@ -691,6 +701,7 @@ Embedder-facing SDK docs live outside the workspace. See `sdk.architecture.md` i
 | **System schema** | kernel-owned table definitions (`_audit`, `_api_quota`, `secrets`, `agents`); readable by agent, never editable |
 | **World schema** | agent-authored table definitions (`orders`, `customers`, views); kernel-gated |
 | **Quad-lock** | schema_version + system_schema_version + policy_version + governance_version must all match at boot |
+| **Human harness** | The PWA — the human-facing client that observes, approves, answers, and recovers. Renders kernel JSON via SDK. Never reasons, never creates. |
 | **Sim mode** | per-verb declaration of how an API verb behaves in sim: sandbox, mock, dry-run, skip, or prod-only |
 | **Mock fixture** | recorded response in `apis/*.mock.yaml` served by kernel during sim when no sandbox exists |
 | **Prod-only** | verb that physically cannot execute outside prod; authorizer denies in sim/dev |

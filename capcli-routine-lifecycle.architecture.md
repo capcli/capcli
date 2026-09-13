@@ -121,11 +121,11 @@ Auto-promotion from draft to reviewed is permitted when ALL thresholds are met:
 The trust ladder creates a human bottleneck at scale. Queues convert per-routine review into batch review.
 
 - **Queue command:** `capcli routine ship <name> --to reviewed --queue`. Routine enters pending state. Not promoted. Not callable at new trust level.
-- **Batch review:** `capcli routine pending` shows all queued promotions with evidence summaries (sim runs, success rate, manifest diff). Human approves/rejects in bulk.
+- **Batch review:** `capcli routine pending` shows all queued promotions with evidence summaries (sim runs, success rate, manifest diff). Human approves/rejects in bulk. The PWA renders these as approval cards with evidence blocks, manifest diffs, and approve/reject buttons.
 - **SLA enforcement:** Governance sets `max_promotion_queue_age_hours: 48`. If a routine sits in queue past SLA, `sys doctor` emits `promotion.sla_breached` warning. Kernel does NOT auto-promote on timeout — it nags.
 - **CI-driven promotion:** A pipeline runs `routine prove --env sim`, checks evidence thresholds, and calls `routine ship --to reviewed --by ci:github-actions --queue`. The authority gate is the CI config (reviewed like code), not a human clicking approve per routine.
 - **Audit trail:** Queue entry = `event: routine.queued`. Approval = `event: routine.promoted` with `via: queue_batch_<id>`. Rejection = `event: routine.promotion_rejected` with reason.
-- **Veto window:** After batch approval, routines enter a 1-hour veto window before trust actually changes. Any principal can `capcli routine rollback <name> --to-trust draft` during this window without needing override authority.
+- **Veto window:** After batch approval, routines enter a 1-hour veto window before trust actually changes. Any principal can `capcli routine rollback <name> --to-trust draft` during this window without needing override authority. The PWA renders the veto window as a countdown with a veto button.
 
 This keeps the authority gate intact while removing the human from the hot path for mechanical draft→reviewed transitions.
 

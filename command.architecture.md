@@ -9,7 +9,7 @@
 1.  **One shape forever**: `capcli <noun> <verb> [target] [--flags]`. No exceptions.
 2.  **Every mutating verb accepts**: `--dry-run`, `--json`, `--intent "<why>"`, `--as <principal>`. Reads get `--json` + `--as`.
 3.  **Everything resolves through the registry** — db ops, routines, api verbs, views are all *capabilities*; `run`/`search`/`inspect` work identically on all.
-4.  **Output contract**: humans get pretty tables; agents pass `--json` (versioned machine contract). Every output prefixes `[env]` — prod in red.
+4.  **Output contract**: humans get pretty tables; agents pass `--json` (versioned machine contract); the PWA consumes `--json` via SDK and renders it as drillable trees. Every output prefixes `[env]` — prod in red.
 5.  **Exit codes are law** — scripts and agents branch on them, never parse stdout:
 
 | Code | Meaning |
@@ -303,7 +303,7 @@ capcli search gaps --since 7d              # [harness] find unresolved searches
 
 **Caller tag legend:**
 -   `[harness]` — safe for skill-authored agent invocation
--   `[human]` — requires human/CI approval
+-   `[human]` — requires human/CI approval; PWA renders these as approval cards
 -   `[both]` — context-dependent; skills may use read-only variants
 
 ---
@@ -318,8 +318,8 @@ capcli search gaps --since 7d              # [harness] find unresolved searches
 -   **No separate config nouns** — `rule` owns schema, policy, governance
 -   **No separate trigger nouns** — `bind` owns cron, webhook, endpoint
 -   **No `--verbose`** — `sys audit tail` is the verbosity knob
--   **No interactive modes** — approvals live in the harness
--   **No onboarding wizards** — the CLI returns exit codes and JSON; the harness renders approval dialogs, intent capture, and progression UI
+-   **No interactive modes** — approvals live in the harness; the PWA renders them as approval cards via SDK
+-   **No onboarding wizards** — the CLI returns exit codes and JSON; the harness renders approval dialogs, intent capture, and progression UI; the PWA renders onboarding outputs as drillable views
 -   **No `--force`** — exceptions are overrides in governance.yaml
 -   **No `api import --pick`** — sync pulls everything; activation gates what's callable
 -   **No `api create`** — verbs come from OpenAPI sync, never hand-authored

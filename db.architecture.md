@@ -9,7 +9,7 @@
 capcli-db governs every effect on `workspace.db`. Six convictions:
 
 1. **SQLite is not storage behind an app — it is the persistent world-state.**
-2. **The harness builds the world. The kernel gates it.** During onboarding, the harness authors `schema.yaml` from the user's stated intent. The kernel validates, previews (`--dry-run`), and applies. Creation is the harness's job; permission is the kernel's job; approval is the human's job.
+2. **The harness builds the world. The kernel gates it.** During onboarding, the harness authors `schema.yaml` from the user's stated intent. The kernel validates, previews (`--dry-run`), and applies. Creation is the harness's job; permission is the kernel's job; approval is the human's job — rendered by the PWA as governed views, approval cards, and drillable tables.
 3. **Raw SQL is the language.** No ORM, no query builder, no Drizzle, no Prisma. Agents know SQL cold; they hallucinate ORM syntax.
 4. **The agent is never trusted at runtime.** Enforcement lives in the SQLite engine and the kernel gate — never in prompts.
 5. **Two sources of truth, one compiled DDL.** `schema.yaml` (agent-authored world tables) and `system-schema.yaml` (kernel-owned system tables) compile to one DDL in `workspace.db`. The agent reads both but only edits `schema.yaml`. The kernel generates DDL from both. SQL DDL is never hand-edited.
@@ -789,6 +789,9 @@ capcli db snapshot | restore <id> | dump
 ```
 
 Exit codes: `0` ok · `2` policy-denied · `3` validation · `4` runtime · `5` audit-failed.
+
+The PWA consumes `db query` and `db exec` via SDK (`kernel.db.query()`, `kernel.db.exec()`). It renders results as drillable tables with masked columns, CHECK constraints, and provenance footers. It never accesses SQLite directly. See `pwa.architecture.md` §4 Layer 1.
+
 `db count` is dead. Use `db query --count` or rely on AST-enforced bulk pre-flights.
 
 ---

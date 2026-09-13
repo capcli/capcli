@@ -11,7 +11,7 @@ Onboarding is not a tutorial. It is a **competence loop**: the shortest path fro
 Five convictions:
 
 1. **Intent first, infrastructure second.** The user arrives with a goal, not a schema. The world is built *for* that goal. Schema, policy, and governance are consequences of intent — never prerequisites.
-2. **The harness builds the world. The kernel gates it. The human approves it.** capcli never infers, never generates, never reasons about what the user wants. The harness authors `schema.yaml`; the kernel validates and applies; the human signs off. Onboarding follows this division exactly.
+2. **The harness builds the world. The kernel gates it. The human approves it.** capcli never infers, never generates, never reasons about what the user wants. The harness authors `schema.yaml`; the kernel validates and applies; the human signs off — through the PWA, the human-facing harness that renders kernel JSON as approval cards, observation views, and recovery consoles. Onboarding follows this division exactly.
 3. **The first denial is a feature, not a failure.** A designed, explained, bounded denial teaches more than ten successful reads. It converts threat-response into pattern-learning. The gate is physics, not punishment.
 4. **Recovery proof before power.** The user must see that the world can be restored *before* they trust the world with real mutations. Reversibility is the prerequisite for exploration.
 5. **Deletion is a state transition. Return is memory restoration.** Nothing is destroyed. Nothing is lost. Leaving is safe; coming back is instant. This is not UX polish — it is the psychological foundation that makes adoption possible.
@@ -112,10 +112,9 @@ The **kernel** validates and gates. The **human** approves.
 
 ```
 USER states intent
-  → HARNESS drafts schema.yaml (world tables only) + minimal policy overlay
-  → system-schema.yaml already present (kernel-owned, read-only, agent-visible)
+  → HARNESS drafts schema.yaml + minimal policy overlay
   → capcli rule apply --dry-run --env dev    (kernel shows the plan)
-  → HUMAN approves                           (harness renders approval UI)
+  → HUMAN approves                           (PWA renders approval card via SDK)
   → capcli rule apply --env dev --intent "onboarding world"
   → snapshot taken, DDL applied, audit written, auto-committed
 ```
@@ -202,11 +201,9 @@ Output:
 ```text
 [dev] schema plan (dry-run)
 
-World tables to create (schema.yaml):
+Tables to create:
   orders (5 columns, 2 indexes)
   refunds (5 columns, 1 index)
-System tables already present (system-schema.yaml, kernel-owned):
-  _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents
 
 Capabilities to register:
   db.query orders
@@ -309,40 +306,6 @@ The user sees the causal spine: principal, agent, env, intent, policy decision, 
 
 **Chunk taught: Capability + Audit.** Two chunks in one experience, because they arrive together.
 
-### Stage 5.5 — Seed loop (bulk introduction)
-The world has one row. Real work needs many. The harness introduces the loop pattern:
-```python
-# The harness shows this pattern; the agent executes it
-orders_to_seed = [
-    {"ref": f"ORD-{i:03d}", "status": "pending", "total_cents": i * 100}
-    for i in range(1, 51)
-]
-
-for chunk in [orders_to_seed[i:i+10] for i in range(0, len(orders_to_seed), 10)]:
-    with ctx.db.txn():
-        for row in chunk:
-            ctx.db.execute(
-                "INSERT INTO orders (ref, status, total_cents) VALUES (:ref, :status, :tc)",
-                {"ref": row["ref"], "status": row["status"], "tc": row["total_cents"]},
-                intent=f"seed {row['ref']}")
-```
-Output:
-```text
-[dev] ok — 50 rows seeded across 5 transactions
-audit events: op_000005 .. op_000054
-each INSERT: WHERE enforced, LIMIT enforced, intent recorded
-```
-Then:
-```bash
-capcli db query "SELECT count(*) FROM orders" --json
-# → {"count": 50}
-```
-**Chunk taught: Bulk = many small governed writes in a loop.** Not one giant statement. The kernel enforces per-iteration caps. The agent learns the pattern during onboarding and it works forever.
-
-**Emotional target: capability.** The agent can populate a world without fighting the gate. The gate shapes bulk into audited chunks; it doesn't block it.
-
-**Budget awareness:** The seed loop teaches the agent that ops are counted. 50 inserts = 50 ops consumed from the session budget. The agent sees the budget frame in audit output. Composition (calling routines that call routines) will cascade these counters — the cage tightens downward, never widens.
-
 ### Stage 6 — Recovery proof
 
 ```bash
@@ -421,22 +384,6 @@ Env: sim
 ```
 
 **The user learns: raw SQL is exploration. Routines are exploitation.**
-
-If the routine includes an API verb that cannot be simulated (no sandbox), the prove output shows the gap:
-
-```text
-[sim] prove complete
-Manifest:
-  1. db.query filings (read)              ✓ executed
-  2. api.call gov.file_tax_return         ⊘ SKIPPED (sim_mode: prod-only)
-  3. db.exec filings (update)             ✓ executed
-
-Runtime fingerprint: 2/3 primitives matched
-Warning: gov.file_tax_return cannot be proven in sim.
-         First 3 prod calls will require human approval.
-```
-
-**The user learns: some walls are real. The system labels them honestly instead of pretending they don't exist.**
 
 ### Stage 9 — Promotion with evidence
 
@@ -573,24 +520,6 @@ capcli sys audit query "
 ```
 
 When a pattern repeats 3+ times, the harness proposes a routine. The kernel gates registration. The harness writes Python. The kernel governs execution.
-
-### Stage 6.5 — API discovery and activation
-
-The harness discovers available API verbs through the catalog:
-
-```bash
-capcli api catalog stripe --state dormant --json
-capcli search "refund" --provider stripe --include-dormant --json
-```
-
-When the harness finds a dormant verb it needs, it proposes activation:
-
-```bash
-capcli api activate stripe.refund_charge \
-  --intent "refund workflow needs charge refund capability" --json
-```
-
-The harness learns: activation is gated. Dormant verbs are discoverable but not callable. The human approves activation. The harness never self-activates.
 
 ### Stage 7 — Prove before trust
 
@@ -799,7 +728,7 @@ Onboarding is complete when both human and harness have experienced every item.
 |---|---|---|
 | 1 | I stated an intent | harness log |
 | 2 | I saw a proposed world | `rule apply --dry-run` output |
-| 3 | I approved it safely | `rule apply` audit event |
+| 3 | I approved it safely | `rule apply` audit event; PWA approval card rendered |
 | 4 | I saw a governed effect | `sys audit trace` on a successful write |
 | 5 | I saw a denial explained | `sys audit trace --explain` on exit 2 |
 | 6 | I recovered from a change | `db restore` or `sys recover` output |
@@ -875,7 +804,6 @@ The brain learns better when the material is relevant to the user's goal. The ha
 - **No static welcome tour.** Onboarding content is generated from the user's stated intent.
 - **No all-commands-at-once.** The daily surface is 4 commands: `search`, `inspect`, `run`, `db query`. Everything else appears contextually.
 - **No unclosed loops.** If onboarding opens a possibility ("you can ship this later"), it must return to close it.
-- **No agent-authored system tables.** System tables are kernel-owned. The harness authors world tables only. The agent reads system-schema.yaml for discovery but never edits it.
 
 ---
 
@@ -891,7 +819,6 @@ The brain learns better when the material is relevant to the user's goal. The ha
 8. Deletion is a state transition with backup confirmation. Return is context reinstatement with recovery.
 9. Onboarding content is generated from the user's intent, never shipped as a fixed template.
 10. No interactive prompts in capcli. The kernel returns exit codes and JSON. The harness renders the human interface.
-11. The harness authors schema.yaml (world tables). system-schema.yaml is kernel-owned, agent-readable, never agent-editable. Onboarding never touches system schema.
 
 ---
 

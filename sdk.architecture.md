@@ -39,7 +39,7 @@ const kernel = createKernel(config)
 ## What Never Changes
 
 - Exit codes (0/2/3/4/5)
-- JSON output contract
+- JSON output contract (request-response and streaming)
 - Audit event format
 - System table names
 - Config file names
@@ -55,7 +55,8 @@ kernel.db.exec(sql, params, intent)
 kernel.routine.prove(name, params, env)
 kernel.search(query, filters)
 kernel.inspect(capability)
-kernel.audit.tail(filters)
+kernel.audit.tail(filters)                       // one-shot snapshot
+kernel.audit.tail(filters, { follow: true })     // streaming (WebSocket/SSE) — PWA real-time
 kernel.audit.trace(opId)
 ```
 
@@ -68,3 +69,8 @@ White-labeling is not documented in workspace architecture docs.
 It is not visible in `--help`, `sys doctor`, or governance.
 It exists only in SDK types and SDK docs.
 Embedders discover it through TypeScript intellisense, not capcli docs.
+
+The PWA (human harness) is the primary SDK consumer for human-facing surfaces.
+It uses the same `createKernel()` entry point, the same `{ exit, json, text }`
+contract, the same exit codes. Brand config applies to PWA rendering.
+See `pwa.architecture.md`.

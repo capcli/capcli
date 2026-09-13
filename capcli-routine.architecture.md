@@ -295,13 +295,13 @@ are denied by policy. Skill name is recorded via `triggered_by_skill` audit fiel
 `identity.skill_origin.allow_propagation` is enabled.
 
 **Anti-patterns (skills must NEVER instruct agents to):**
-- Write raw SQL directly (`capcli db exec` is `[human]`-tagged)
-- Call `capcli routine ship` / `capcli routine draft` (consolidation is human-gated)
-- Read secrets or masked columns (policy denies at authorizer level)
+- Write raw SQL directly (`capcli db exec` is `[human]`-tagged; the PWA renders these as governed write forms)
+- Call `capcli routine ship` / `capcli routine draft` (consolidation is human-gated; the PWA renders promotion queues)
+- Read secrets or masked columns (policy denies at authorizer level; the PWA renders masked columns as locked cells)
 - Bypass `capcli run` by constructing HTTP calls or filesystem access
 - Cache routine results across sessions (state lives in workspace.db, not skill memory)
 - Propose routines without evidence (routines are drafted only after ≥3 identical primitive sequences appear in the audit mirror)
-- Self-promote during onboarding (draft → prove in sim → ship requires human/CI gate, always)
+- Self-promote during onboarding (draft → prove in sim → ship requires human/CI gate, always; the PWA renders the approval card)
 
 **Skill author checklist:**
 1. ✅ Uses only `[harness]`-tagged commands from command.architecture.md §4
