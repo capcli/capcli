@@ -45,6 +45,7 @@
         - sim_mode, http_called, fixture_used, fixture_path
         - outcome skipped carries the reason
           - "sim_mode: prod-only — cannot execute outside prod"
+          - recorded even though no HTTP fired (http_called: false)
       - api.first_prod_call payload
         - prod_call_number, prod_first_calls_remaining
         - human_approved, approved_by
@@ -60,14 +61,14 @@
       - `sys audit tail [--follow] [--capability X] [--since 1h]` — live and filtered stream
       - `sys audit trace <op-id> [--explain]` — causal walk plus denial reason
       - `sys audit query <sql> [-p k=v]` — SQL directly against the `_audit` mirror
-      - `sys audit replay --from <ts|event-id> [--dry-run]` — re-execution through current policy
-        - `--dry-run` shows the re-execution plan and applies no effects
+      - `sys audit replay --from <ts|event-id> [--dry-run]` — re-execution through current policy; --dry-run applies nothing
       - Verbosity knob: no `--verbose` flag exists — `sys audit tail` is the verbosity control
     - Integrity and degradation
       - Reserved audit partition: on write failure kernel enters read-only mode, writes queue 5-min TTL
       - Hash chain
         - Per-line `prev_hash: sha256:<previous_line_hash>`
           - Tampering any line breaks every later hash — tamper evidence without git
+          - Files are append-only; no line is ever rewritten in place
         - hash_chain_verify cron "0 4 * * *" validates daily: path `artifacts/governance.yaml` maintenance.audits
         - Verification commands and backup checks: see recovery.md#Hash-chains
       - Backups include audit logs; degraded modes audited: see recovery.md#Git-integration
@@ -122,6 +123,7 @@
     - Forensic views
       - primitive_failures
         - which leaf failed, grouped by routine_version and seq
+        - localization entry: feed the failing op id to `sys audit trace`
       - primitive_cost
         - per-leaf duration and spend attribution
         - feeds `routine stats --deep`: see time.md#Stage-details
@@ -147,8 +149,7 @@
       - Retirement keeps provenance pointers, deletion never happens: see time.md#Versioning-&-provenance
       - max_versions_kept 25 keeps graphs navigable: path `artifacts/governance.yaml` versions
     - Replay invariants
-      - Replay re-applies current policy, not historical
-        - A demoted routine cannot resurrect old permissions
+      - Replay re-applies current policy, not historical — a demoted routine cannot resurrect old permissions
       - Replayable requires the unedited file: see recovery.md#Hash-chains
       - External effects never auto-replayed — records mark them replay: manual
       - Idempotency keys on every write make retries safe; keys are env-scoped: see space.md#Primitive-scoping
