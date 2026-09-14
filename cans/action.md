@@ -6,15 +6,32 @@
       - Views are read-only lenses, principal-scoped
       - One registry, one `search` surface, one audit format — agent never knows which channel an invocation used
       - run/search/inspect work identically on all kinds — registry flattens everything into `run`
+      - Kind anatomy differs, contract does not: params in, gated effect out, leaf events recorded
+      - Search resolves routines, api verbs, views — db ops skip the registry, gated inline
       - Trust ladder spans the whole registry: see trust.md#The-ladder
+    - Capability record
+      - Every record: kind, name, version, trust, env — description is the searchable text
+      - Routine records carry code_hash + manifest_hash; api verbs carry provider + spec_hash
+      - promoted_through recorded on the record — the promotion journey is provenance
+      - inspect renders the record as one JSON blob: manifest, cost envelope, budget status
+      - cost_envelope: tokens, duration p50/p95, api quota, db writes, concurrency, success rate
     - Search surface
       - Five-stage resolution: see physics.md#Search-ceiling
       - Kernel search deterministic: exact, prefix, structured filters (`--trust pinned --env prod`)
+      - Resolution stages
+        - Exact: id match short-circuits resolution at zero ranking cost
+        - Prefix: name completion — `refund_` finds refund_and_archive
+        - Fuzzy: edit-distance over names and descriptions — typo-tolerant
+        - Semantic: ranking computed harness-side over description embeddings
+        - Did-you-mean: no hits → nearest candidates proposed, never empty silence
+      - Stages cascade — each fires only when the earlier stage misses
       - At the 300-routine cap keyword search returns noise: filters narrow, semantic ranks
       - Ceiling rationale and kernel/harness split: see physics.md#Search-ceiling
     - Search analytics
       - capability.search event anatomy: see effect.md#Audit-spine
       - Search gaps: searched-never-invoked = missing capability; `capcli search gaps --since 7d`
+      - Zero-result queries rank first as gaps — activation or authoring candidates
+      - Low search→invoke conversion flags bad descriptions, not just missing verbs
       - Gaps are consolidation signals for routines and API verbs alike: see time.md#Learning-loop
       - Progressive disclosure: one `cap search` meta-tool; base context constant at 10 or 10,000
     - Registry caps
@@ -22,6 +39,7 @@
       - soft_cap 200: sys doctor nags, consolidation urged; max_per_agent_draft 30 anti-flood
       - creation_rate 10 per hour — no rapid-fire generation
       - require_description: unsearchable = unregistrable; description ≤ 60 tokens
+      - Caps bite at gate commands — `routine draft` / `api activate`, never file creation
   - Routines
     - Procedure layer
       - Python files in `routines/` — sequencing, branching, retries, composition demand code
@@ -33,7 +51,18 @@
     - Anatomy
       - `@routine(name, trust, idempotent, description, limits)` — identity declared before first run
       - idempotent must be declared before retries are allowed
-      - Example refund_and_archive.py: get_charge → query entities → refund_charge (intent) → txn UPDATE LIMIT 1
+      - Decorator fields
+        - name: registry id; trust: ladder start — draft, reviewed, pinned
+        - idempotent: false until proven — retry legality hangs on it
+        - description: min 5 words — feeds search and near-duplicate detection
+        - limits: declared need — may ask for less, never more than the ceiling
+      - refund_and_archive.py, line by line
+        - `order_id: Param[str]` — typed param, gate-validated, shown by inspect
+        - `ctx.api.call("stripe.get_charge")` — HTTP read; kernel injects secrets + idempotency key
+        - `ctx.db.query("SELECT ... WHERE ref = :ref")` — raw SQL read via authorizer + AST
+        - `ctx.api.call("stripe.refund_charge", intent=...)` — HTTP write: pre-call policy, spend caps
+        - `with ctx.db.txn(): ctx.db.execute("UPDATE ... LIMIT 1")` — txn-wrapped, intent recorded
+        - `return {"refund_id", "entities"}` — summary-sized result only
       - HTTP + raw SQL + Python logic in one callable; every leaf effect still crosses the gate
       - declared limits ask for less, never more than the governance ceiling
     - Registration
@@ -44,29 +73,56 @@
     - Sandbox execution
       - Jailed subprocess: network none, filesystem read-only workspace + tmpfs scratch
       - Socket to the kernel is the only capability — computation free, authority zero
-      - No subprocess, no os, no raw sqlite3: AST flags at draft (lint), jail blocks at runtime (enforcement)
-      - AST is a lint, the jail is the boundary: exec/eval/dynamic imports evade AST, not seccomp-bpf
-      - seccomp-bpf syscall filter: AST deny-list derived from jail syscalls, never maintained separately
-      - Tiers: bwrap --unshare-net (Linux), Podman --network none (portable), gVisor/Firecracker (multi-tenant)
-      - Runtime budgets: op #51 aborts (limit_exceeded event), watchdog kills past duration, `truncated: true`
+      - Stack, layer by layer
+        - Network: none
+          - Jail unshares the network namespace — socket creation fails outright
+          - Egress path
+            - ctx.api rides the one kernel socket — the jail's sole door
+            - Secrets injected at call time; never visible in routine scope
+            - Policy and quota checked pre-call at the egress boundary
+        - Filesystem: read-only workspace + tmpfs scratch
+          - Workspace bind-mounted read-only; /scratch wiped at exit
+          - Writes outside scratch fail at the syscall level, not the lint level
+        - Syscalls: seccomp-bpf filter
+          - The jail's syscall set is the source of truth — AST deny-list derived from it
+          - Derived, never maintained separately — one config, two enforcers
+          - exec/eval/dynamic imports evade AST, not seccomp-bpf
+        - Isolation tiers
+          - bwrap --unshare-net — Linux default tier
+          - Podman --network none — portable tier
+          - gVisor / Firecracker — multi-tenant tier, kernel boundary below the OS
+      - Defense in depth: AST lint at draft, jail enforcement at runtime — independent layers
+      - No subprocess, no os, no raw sqlite3 — flagged at draft, blocked at runtime
+      - Runtime budgets
+        - op #51 aborts mid-run — limit_exceeded event cites the exact counter
+        - Watchdog kills past max_duration_seconds — partial effects stay audited
+        - Oversized results return `truncated: true` — never silently dropped
       - `sys exec <cmd> --sandbox` — governed jailed execution outside routines
-      - v2 path: WASM routines — no exec/eval/dynamic imports/fs without grants; Python becomes escape hatch
+      - v2 path: WASM routines — no exec/eval/dynamic imports, no fs without grants
+      - WASM capability model is structural; Python becomes the escape hatch — TBD kernel timeline
       - World-scoping of execution: see space.md#Environment-axis
     - Event-drivenness
-      - Four starters: `capcli run` (agent/human), bind cron fire, bind webhook dispatch, ping ask resume
+      - Four starters
+        - `capcli run` — agent or human invokes a capability directly
+        - bind cron fire — time trigger from the daemon scheduler
+        - bind webhook dispatch — provider event arrives, dispatches the bound capability
+        - ping ask resume — human reply to a suspended ctx.ping.ask continues the routine
       - Inside: strictly sequential — no ctx.on handlers, no reactive streams, no subscriptions, no parallel branches
       - Callbacks destroy traceability (effect order ≠ code order) and replay determinism (DAG stops being a DAG)
       - Also destroyed: transaction semantics (when does txn close?) and blast-radius accounting (ops uncountable)
       - Rule: events trigger routines; routines never consume events
       - Continuous reaction = a declared bind webhook; waiting = one structured ctx.ping.ask suspension
+      - Routine = transaction-shaped story; events start stories, they never flow through them
     - Composition
       - Routines are Python modules importing each other; composition arbitrarily deep, every leaf gated
       - weekly_cleanup.py: query stale entities LIMIT 100, loop calls refund_and_archive per row
       - Callee trust governs its effects; intent chains propagate via caused_by
+      - Shape bounds on the graph: max_routine_imports 3, max_nesting_depth 5: path `artifacts/governance.yaml`
+      - Session counters never reset across composition — spend, rate, rows stay session-scoped
+      - The cage tightens downward: each child frame can only subtract headroom, never add
       - Budget cascades: child effective = min(declared, parent_remaining): see budget.md#Cascade
       - Sim mode cascades: child prod-only verb leaves a visible gap in parent prove: see space.md#Rehearsal-&-sim
       - Near-duplicate across agents: merge or fork, human-gated, never silent duplication
-      - Shape hygiene: max_routine_imports 3, max_nesting_depth 5: path `artifacts/governance.yaml`
     - Shape governance
       - Governance = what routines may be; policy = what they may do — two files, zero overlap
       - Shape caps: loc 5–150, tokens 50–2000, params max 8, description min 5 words
@@ -81,7 +137,7 @@
       - DISCOVER `capcli search "..." --json` → INSPECT `capcli inspect <cap> --json` → INVOKE `capcli run -p k=v --intent`
       - Param mapping: skill frontmatter ↔ Param declarations 1:1; mismatch exits 3 at the gate
       - Results: only the computed summary crosses back into skill context — design for summary-shaped outputs
-      - Intent: skills pass specific non-boilerplate --intent; skill name recorded as triggered_by_skill
+      - Intent flows skill → routine → op; boilerplate denied; skill recorded as triggered_by_skill
       - Anti-patterns: never raw SQL ([human]-tagged), never routine ship/draft, never secrets or masked columns
       - Anti-patterns: never bypass run via HTTP/fs, never cache results across sessions, never self-promote
       - Propose only with evidence: ≥3 identical primitive sequences in the audit mirror
