@@ -1,0 +1,70 @@
+- Budget
+  - Frames
+    - Every routine invocation pushes a budget frame onto the call stack
+    - Frame tracks ops consumed, duration elapsed, spend incurred, rows affected
+    - `sys.budget.service.ts` in `@capcli/kernel` owns frame push/pop and cascade enforcement
+    - Record
+      - `_budget_frames` system table, kernel-managed — schema: see world.md#Dual schema
+      - Frame fields: frame_id, routine, version, parent_frame, session, env
+      - Counters: declared_max_ops/duration_ms, consumed ops/duration_ms/spend_usd/rows/api_calls
+      - Indexed by [session, env], [routine, version], [parent_frame]
+      - Outcome chk-constrained: active, success, exhausted, denied, error
+    - Events
+      - budget.frame_push logs declared limits plus inherited_remaining per dimension
+      - budget.frame_pop logs consumed plus returned_to_parent — parent sees child consumption
+      - Frame push/pop are audit events
+      - Tailable live via `sys audit tail --follow`
+    - PWA Layer 5 frame tree — frames, cascades, consumption, exhaustion, pools: see interface.md#PWA layers
+  - Cascade
+    - Law
+      - Child effective limit = min(declared, parent_remaining) — tightest constraint at every frame
+      - Session-level counters never reset through composition; splitting is not escaping
+      - 100-op routine split into 10x10 sub-routines still hits the 50-op session ceiling
+      - The cage tightens downward, never widens
+    - Dimensions
+      - Ops: per-routine plus session — child consumes from parent's pool
+      - Duration: per-routine plus session — child time consumes parent's clock
+      - Spend: per-session — one pool, no bypass via splitting
+      - Rows affected: per-trust-level per-session — one pool per trust level
+      - Rate: per-session — writes_per_minute applies to entire session
+      - Result tokens: per-routine only — each routine caps its own output, does not cascade
+    - Config
+      - budget_inheritance: min, ops_cascade: true, duration_cascade: true (artifacts/governance.yaml)
+      - Scopes: spend_scope session, rate_scope session, rows_scope trust_session (artifacts/governance.yaml)
+      - max_nesting_depth: 5 caps composition depth (artifacts/governance.yaml)
+      - `inspect` cost_envelope.composition: effective_limits = min(50, session_remaining)
+      - Denial UX: budget_denial_cites_level, cites_remaining, cites_ancestors (artifacts/governance.yaml)
+  - Quotas
+    - Live quota
+      - Kernel extracts declared headers (X-RateLimit-Remaining, Retry-After) from every API response
+      - Stored in `_api_quota` system table — kernel-written, agent-readable
+      - Pre-call enforcement: remaining <= deny_at_remaining → exit 2 before egress, not 429 after
+      - A 429 is a design failure, not a runtime surprise — the gate denies before the call
+      - `inspect` shows live remaining, reset_at, budget status before invoking — live, not cached
+      - Fallback: providers without standard headers get kernel-counted sliding windows
+      - Per-env rows: sim and prod quotas independent — rehearsal never burns prod limits
+      - Static per_day_usd spend caps are the floor under dynamic quota
+    - Governance caps
+      - Registry: max_routines 300 hard, soft_cap 200 nags, max_per_agent_draft 30 (artifacts/governance.yaml)
+      - Creation rate: per_hour 10 — no rapid-fire generation (artifacts/governance.yaml)
+      - Cadence: max_activations_per_hour 10, sync min_interval_hours 24 (artifacts/governance.yaml)
+      - Schedule/watch cadence: cron min_interval_minutes 5, webhook events_per_minute 100 (artifacts/governance.yaml)
+      - Session budgets: consolidation max_session_minutes 30, max_proposals_per_session 10 (artifacts/governance.yaml)
+    - Output caps
+      - max_result_tokens 500 per routine — summaries crossing to the model truncate
+      - serve response max_result_tokens 500 — inherited routine cap (artifacts/governance.yaml)
+      - notify message_max_tokens 300 — notifications are summaries, not essays
+      - ask question_max_tokens 100, max_options 5 (artifacts/governance.yaml)
+  - Exhaustion
+    - budget.exhausted event: frame_id, dimension, declared, consumed, attempted_op, exit_code 2
+    - Denial cites exact frame, dimension, remaining — "routine B (frame_004) exhausted ops: 20/20"
+    - Ancestors cited for context — parent/session remaining shown at blocking level (artifacts/governance.yaml)
+    - Every budget denial is a governance.deny audit event — denials.log_all (artifacts/governance.yaml)
+    - budget_exhaustion: deny — exit 2, never silent truncation (artifacts/governance.yaml)
+    - No partial execution past budget — routine fails cleanly, no half-executed side effects
+    - Runtime: op #51 aborts (limit_exceeded), watchdog kills past 300s, results truncated: true
+    - No `budget` noun, no `--override-budget` — info lives in `inspect` cost_envelope and denials
+    - Budget exceptions are governance overrides (git commits), never CLI flags
+    - budget_status.can_invoke_now is the pre-flight verdict; false + blocking_reasons → don't call
+    - Warnings are non-blocking — remaining below warn_at_remaining
+    - Spend-cap forensics localize to the leaf op; fix the policy, not the routine: see effect.md#Failure forensics
