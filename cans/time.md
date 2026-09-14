@@ -42,8 +42,7 @@
         - Per-verb sim_mode adaptation: see space.md#Rehearsal-&-sim
     - ship — evidence up, authority down: see trust.md#Gates-&-promotion
       - `capcli db query "SELECT * FROM routine_stats WHERE capability = 'refund_and_archive'"`
-        - Evidence: see trust.md#Evidence
-          - Numbers come from the audit mirror, not agent self-report
+        - Evidence: see trust.md#Evidence — Numbers come from the audit mirror, not agent self-report
       - `capcli routine ship refund_and_archive --to reviewed`
         - with `--reason "97% success over 31 sim runs; replaces 3-op sequence seen 47×"`
         - Prod promotion additionally requires merge: see trust.md#Gates-&-promotion

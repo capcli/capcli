@@ -63,8 +63,7 @@
         - sim_runs ≥ 10
         - success_rate ≥ 0.95
         - manifest_match_rate 1.0
-          - Partial 3/4 = 0.75 fails here — the gap goes to the human queue
-            - The evidence names which verb skipped and why
+          - Partial 3/4 = 0.75 fails here — the gap goes to the human queue — The evidence names which verb skipped and why
         - policy_denials 0
         - fingerprint_drift_events 0
         - Thresholds are conjunction: one miss routes the routine to the human queue

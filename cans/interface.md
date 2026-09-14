@@ -493,8 +493,7 @@
             - capabilities to register: queries, governed execs, the draft routine
             - snapshot id, reversible: yes, no effects applied
         - Human approves — PWA approval card; the kernel has no [Y/n]
-        - `rule apply --env dev --intent "..."` applies the world
-          - Snapshot taken, DDL applied, audit written, auto-committed
+        - `rule apply --env dev --intent "..."` applies the world — Snapshot taken, DDL applied, audit written, auto-committed
       - Audit honesty
         - No `onboarding.*` event types — the audit records real operations
         - First events: rule.apply, db.query count 0, denied db.exec, allowed db.exec

@@ -30,12 +30,9 @@
       - allow_propagation
         - harness may pass the triggering skill name on invocations
         - format lowercase-hyphens, max_length 64
-      - triggered_by_skill
-        - audit_field recorded on every leaf event: see physics.md#Harness-boundaries
-      - deny_patterns
-        - reject traversal, path separators, spaces in skill names
-      - on_invalid strip_and_warn
-        - malformed name dropped with warning, never a denial
+      - triggered_by_skill — audit_field recorded on every leaf event: see physics.md#Harness-boundaries
+      - deny_patterns — reject traversal, path separators, spaces in skill names
+      - on_invalid strip_and_warn — malformed name dropped with warning, never a denial
       - Skills cannot grant authority — metadata only; trust still comes from principal + agent
       - PWA Layer 10 renders identity cards, revoke buttons, skill origin panel: see interface.md#PWA-layers
     - Multi-agent scope
@@ -78,8 +75,7 @@
       - v1 agents poll via `sys audit tail`; v2 subscribes via Unix socket stream
       - PWA session token from kernel; `--as` maps to session: see interface.md#SDK-contract
     - Socket boundary
-      - All access kernel-mediated: see overview.md#Mental-model
-        - socket or CLI invocation; no direct SQLite, no direct network
+      - All access kernel-mediated: see overview.md#Mental-model — socket or CLI invocation; no direct SQLite, no direct network
       - `workspace.db` daemon-owned chmod 600; credentials never in agent env
       - Sandbox capability door: computation free, authority zero: see action.md#Routines
       - Kernel upgrades never touch agent identity rows — imm_cols lock id + principal
@@ -99,14 +95,12 @@
       - Memory-decrypted at boot; never persisted to agent-visible surfaces
       - Expiry tracked per secret; rotation is a scheduled human act, not agent work
     - Egress injection
-      - Kernel injects Authorization at egress
-        - tokens never in agent env, context, or audit output
+      - Kernel injects Authorization at egress — tokens never in agent env, context, or audit output
       - API catalogs store secret_ref (e.g. STRIPE_SECRET_KEY) — kernel-held reference, never the value
       - Grades of unavailable: memory-decrypted + injected at boundary is the shippable minimum
       - Isolation ladder: creds+perms → egress allowlist → network jail → gVisor/Firecracker: see physics.md#No-other-door
     - Masking discipline
-      - Secrets masked in every surface
-        - results, audit, explain — no exceptions
+      - Secrets masked in every surface — results, audit, explain — no exceptions
       - Skills must never read secrets or masked columns; authorizer denies: see action.md#Routines
       - PWA renders masked columns as locked cells, value always ████: see interface.md#PWA-layers
       - Trust receipt proves "0 secrets exposed": see trust.md#Trust-receipts
