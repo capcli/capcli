@@ -6,7 +6,7 @@ This spec describes **capcli**: a governed agent kernel where agents author, a k
 ## The 13 canonical files
 
 - overview.md — what capcli is: philosophy, mental model, kernel stance
-- world.md — what exists: SQLite SSOT, dual schema, tables, rows, validation gates
+- world.md — what exists: see space.md#Environment-axis
 - physics.md — what is allowed: two-layer policy, fail-closed, raw SQL rules
 - effect.md — what happened: audit spine, causal DAG, JSONL ground truth
 - agent.md — who acts: principal → agent → session → op identity hierarchy
@@ -15,7 +15,7 @@ This spec describes **capcli**: a governed agent kernel where agents author, a k
 - space.md — where things happen: dev → sim → prod, worktrees, drift
 - trust.md — earned authority: draft → reviewed → pinned ladder and gates
 - budget.md — what resources exist: frames, cascades, quotas
-- recovery.md — how to undo: snapshots, git, hash chains, restore
+- recovery.md — how to undo: see world.md#SQLite-as-SSOT
 - interface.md — how humans and agents touch the world: CLI, SDK, PWA, onboarding
 - assembly.md — how the kernel is built: monorepo, packages, naming, tests
 

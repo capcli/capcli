@@ -1,5 +1,5 @@
 - Action
-<!-- ref-by: _adr/001-governance-yaml-v2.md, agent.md, assembly.md, effect.md, interface.md, overview.md, recovery.md, time.md, trust.md, world.md -->
+<!-- ref-by: _adr/001-governance-yaml-v2.md, agent.md, assembly.md, budget.md, effect.md, interface.md, overview.md, physics.md, recovery.md, space.md, time.md, trust.md, world.md -->
   - Capability registry
     - Unifying concept
       - Everything the agent can effect is a capability: db op, routine, api verb, view
@@ -43,7 +43,7 @@
   - Routines
     - Procedure layer
       - Python files in `routines/` — sequencing, branching, retries, composition demand code
-      - YAML declares, Python executes, JSONL records: see overview.md#Mental-model
+      - The three-surface law: see overview.md#Mental-model
       - Raw SQL is exploration, routines are exploitation — learned at runtime from audited repetition
       - Op = one atomic capability call (unversioned); routine = learned composition (version + code_hash)
       - Naming precision: Op = invocation through the gate, Effect = world change, Event = audit record
@@ -177,7 +177,7 @@
   - The ctx contract
     - Context surface
       - ctx.db.query(sql, params) → list[dict]; ctx.db.execute(sql, params, intent) → Result
-      - ctx.db.txn() — context manager; writes auto-txn, WHERE+LIMIT enforced: see physics.md#Raw-SQL-rules
+      - ctx.db.txn() — context manager; guard rails: see physics.md#Raw-SQL-rules
       - ctx.db.lock(target, ttl) → Claim — cross-agent lease: see agent.md#Coordination
       - ctx.api.call(verb, params, intent) → dict; ctx.api.verify(verb, key) → dict
       - ctx.api.call kernel guards
@@ -247,7 +247,7 @@
     - Why it matters
       - Consolidation merges by fingerprint similarity, not Python text: see time.md#Consolidation
       - Regression: v17→v18 adding a leaf op is flagged automatically during promotion review: see trust.md#Evidence
-      - Cost attribution: per-leaf duration/spend — "this routine is 90% one HTTP call"
+      - Cost attribution: see time.md#Stage-map
       - Drift detection: runtime diverges from manifest → `governance.anomaly` event
       - Testing: proof of declaration vs execution, not "didn't crash"
     - Mirror views
@@ -280,7 +280,7 @@
     - Regular sync
       - Every sync_interval: fetch URL, diff against catalog by spec_hash
       - New endpoints → dormant; removed → deprecated; changed params/paths → version bump + diff recorded
-      - api.sync audit event carries added/removed/changed/unchanged counts: see effect.md#Audit-spine
+      - api.sync event payload: see effect.md#Audit-spine
       - `api diff <provider>` — inspect spec drift on demand, between scheduled syncs
       - Cadence governed: min_interval_hours 24, max_catalog_size_mb 10: path `artifacts/governance.yaml` api.sync
     - Activation gate

@@ -1,5 +1,5 @@
 - Budget
-<!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, time.md, world.md -->
+<!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, time.md, trust.md, world.md -->
   - Frames
     - Lifecycle
       - Every routine invocation pushes a budget frame onto the call stack

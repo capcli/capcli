@@ -1,5 +1,5 @@
 - Agent
-<!-- ref-by: action.md, effect.md, interface.md, overview.md, physics.md, world.md -->
+<!-- ref-by: action.md, effect.md, interface.md, overview.md, physics.md, trust.md, world.md -->
   - Identity hierarchy
     - Chain
       - principal → agent → session → op; ids kernel-issued, stored in `workspace.db`, never self-declared
@@ -17,7 +17,7 @@
     - Agent registry
       - `agents` system table
         - columns: id pk, name unique, harness, principal, status=active
-        - imm_cols [id, principal] — kernel upgrades never rewrite identity
+        - imm_cols [id, principal]: see world.md#Dual-schema
         - indexed by principal and by status
       - Agent access read-only; identity managed by kernel commands only: see world.md#Dual-schema
       - `sys agent register | list | revoke`
@@ -65,8 +65,8 @@
         - parameter references in the intent string
         - specificity score
         - low quality → audit flag `intent_quality: low`, not denial — prevents security theater
-      - High-stakes writes (prod, >100 rows, external API) route `--reason` through human review: see trust.md#Human-authority
-      - Human verifies the why, kernel the what: see overview.md#Trust-and-authority
+      - High-stakes writes route --reason through human review: see trust.md#Human-authority
+      - Authority split: see overview.md#Mental-model
     - Anti-junk
       - min_intent_words 3; blacklist "test", "update", "misc", "fix": path `artifacts/governance.yaml` denials
       - Deny by default: junk or missing intent never passes the gate
@@ -78,7 +78,7 @@
       - v1 agents poll via `sys audit tail`; v2 subscribes via Unix socket stream
       - PWA session token from kernel; `--as` maps to session: see interface.md#SDK-contract
     - Socket boundary
-      - All agent access flows through the kernel
+      - All access kernel-mediated: see overview.md#Mental-model
         - socket or CLI invocation; no direct SQLite, no direct network
       - `workspace.db` daemon-owned chmod 600; credentials never in agent env
       - Sandbox capability door: computation free, authority zero: see action.md#Routines
@@ -92,7 +92,7 @@
     - Storage
       - `secrets` system table
         - columns: name unique, value, scope=global, expires_at
-          - value mask=true — column-level redaction at the authorizer
+          - value mask=true — column-level redaction at the auth…: see physics.md#Two-layer-enforcement
         - sens: true — table-level sensitive marking
         - kernel policy row: allow [read], mask_columns [value]
       - Policy: agent read-only, value masked; secrets rows never agent-writable: see world.md#Dual-schema

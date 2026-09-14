@@ -1,5 +1,5 @@
 - Overview
-<!-- ref-by: agent.md -->
+<!-- ref-by: action.md, agent.md, physics.md, trust.md -->
   - What capcli is
     - Policy gateway
       - Governed boundary through which an agent harness affects and observes a workspace
@@ -51,7 +51,7 @@
       - Capability registry: see action.md#Capability-registry
     - Experience — what happened
       - Append-only JSONL event stream
-      - Exists even when the op is denied
+      - Exists even when the op is denied: see effect.md#Audit-spine
       - Audit spine: see effect.md#Audit-spine
     - Format law
       - YAML declares, Python executes, JSONL records
@@ -79,12 +79,12 @@
       - The agent never knows or cares which channel an invocation uses
       - Activation is the gate; full surface permanent, active surface earned: see action.md#Capability-registry
     - Explore, then exploit
-      - Raw SQL is the exploration layer; routines are the exploitation layer
+      - Raw SQL is the exploration layer; routines are the e…: see action.md#Routines
       - Routines are procedural memory: atoms composed into molecules, governed at every leaf
       - Routines born free but run gated: proven in sim, promoted by evidence, pinned by merge: see time.md#Stage-map
     - Trust and authority
-      - Trust ladder draft → reviewed → pinned over env axis dev → sim → prod
-      - Self-promotion impossible; promotion is a human/CI-gated command
+      - Trust ladder draft → reviewed → pinned over env axis…: see trust.md#The-ladder
+      - Self-promotion impossible; promotion is a human/CI-g…: see trust.md#Gates-&-promotion
       - The human verifies the why; the kernel verifies the what
       - The ladder: see trust.md#The-ladder
     - Small surface, deep gate
@@ -98,7 +98,7 @@
       - Where the gate cannot reach, recovery does: see recovery.md#Destruction-as-transition
     - Refusals (anti-decisions)
       - No ORM, no custom query builders, no YAML procedures, no `default: allow`
-      - No deletion: retirement with provenance pointers; rollback un-retires; history only grows
+      - No deletion: see action.md#Capability-registry
       - No LLM in the kernel, no kernel-generated worlds, no hand-edited system-schema.yaml
   - Doc map
     - World (SQLite SSOT, dual schema, gates): see world.md#SQLite-as-SSOT

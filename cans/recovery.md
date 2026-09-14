@@ -1,5 +1,5 @@
 - Recovery
-<!-- ref-by: agent.md, effect.md, interface.md, overview.md, time.md, world.md -->
+<!-- ref-by: agent.md, effect.md, interface.md, overview.md, physics.md, space.md, time.md, world.md -->
   - Snapshots
     - Mechanics
       - Point-in-time tier: `db snapshot` = WAL-consistent copy plus hash (db.architecture.md §14)
@@ -39,7 +39,7 @@
       - Linking
         - Each JSONL audit line carries prev_hash: sha256:<previous_line_hash>
         - Tampering with any line breaks every link after it
-        - result_hash per event detects drift between recorded and actual outcomes
+        - result_hash drift detection: see effect.md#Audit-spine
         - Real tamper-evidence, independent of git history
       - Sink
         - sys.audit.service.ts owns the JSONL sink, _audit mirror, and hash chain

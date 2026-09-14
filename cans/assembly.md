@@ -128,6 +128,7 @@
       - Hooks: kernel.call (SDK wrapper, exit mapping), audit.poll, quota.poll 30s, approval.poll 2m
     - @capcli/native
       - Rust crate `capcli_db` — napi 2, napi-derive 2, rusqlite 0.31 bundled, cdylib
+      - Crate files: Cargo.toml, build.rs, src/lib.rs (napi entry), db.*.rs modules
       - One module per native function: db.open, db.authorizer, db.query, db.execute
       - Plus db.snapshot (VACUUM INTO), db.restore, db.types bridges; lib.rs is the napi entry
       - Exposes exactly six functions: open, set_authorizer, query, execute, snapshot, restore

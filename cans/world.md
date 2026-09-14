@@ -1,5 +1,5 @@
 - World
-<!-- ref-by: action.md, agent.md, budget.md, effect.md, interface.md, overview.md, physics.md -->
+<!-- ref-by: action.md, agent.md, budget.md, effect.md, interface.md, overview.md, physics.md, recovery.md -->
   - SQLite as SSOT
     - Storage trinity
       - workspace.db
@@ -100,8 +100,8 @@
           - scope text=global; expires_at int; idx: name, [scope, expires_at]
           - Value masked in every surface: see agent.md#Secrets
         - agents
-          - id text pk, name text!, harness, principal text!, status text=active
-          - imm_cols: [id, principal] — kernel upgrades never rewrite identity
+          - id text pk, name text!, harness, principal text!, st…: see agent.md#Identity-hierarchy
+          - imm_cols: [id, principal] — kernel upgrades never rewrite id
           - idx: principal, status
           - Registered identities: see agent.md#Identity-hierarchy
       - Cross-file wiring
@@ -216,7 +216,7 @@
       - Onboarding is migration: first rule apply from intent is version 0→1, same pipeline, no fast-path
       - Migration events record from_version, to_version, ddl, snapshot: see time.md#Versioning-&-provenance
     - Travel and drift
-      - Migrations travel dev → sim → prod via git merge
+      - Migrations travel dev → sim → prod via git merge: see space.md#Rehearsal-&-sim
       - Each env holds its own workspace.db: see space.md#Environment-axis
       - sys doctor re-checks drift in every env at runtime; gates at every apply
   - Validation gates
@@ -290,12 +290,12 @@
         - select max_limit 10000 enforced: see physics.md#Raw-SQL-rules
       - Writes
         - capcli db exec <sql> [-p k=v] --intent "..." [--dry-run]
-        - Auto-txn; WHERE+LIMIT enforced; intent mandatory
+        - db exec guard rails: see physics.md#Raw-SQL-rules
         - --dry-run prints the plan without executing
       - Coordination
         - capcli db lock <table>:<ref> --ttl 10m --reason "..."; db unlock <target>
-        - Lease claims with TTL; cross-agent handoffs ride the world: see agent.md#Coordination
-        - Claims are advisory; SQLite BEGIN IMMEDIATE serializes writers
+        - Lease claims: see agent.md#Coordination
+        - Claims advisory: SQLite serializes writers: see agent.md#Coordination
       - State
         - capcli db schema [--table] — compiled DDL view
         - capcli db snapshot | restore <id> | dump

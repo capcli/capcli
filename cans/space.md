@@ -1,5 +1,5 @@
 - Space
-<!-- ref-by: action.md, effect.md, interface.md, overview.md, time.md, world.md -->
+<!-- ref-by: action.md, assembly.md, effect.md, interface.md, overview.md, physics.md, recovery.md, time.md, trust.md, world.md -->
   - Environment axis
     - World roles
       - dev: birthplace — draft routines live here; experimentation is cheap
@@ -106,21 +106,21 @@
       - stale_sim_after_days 14: sim data too old vs prod → re-seed nag (artifacts/governance.yaml)
       - `sys doctor` checks boundaries, perms, drift
     - Anti-decisions
-      - No silent manifest drift: undeclared ops trigger anomalies, never silent acceptance
+      - No silent manifest drift: see action.md#Capability-registry
       - No pretending external systems are simulatable: verbs without sandboxes declare sim_mode
       - No cross-env key reuse: idempotency namespaces are world-local
   - env command
     - World lifecycle
       - `capcli env new <name> [--seed prod] [--from-branch X]` creates a world
       - `env new sim --seed prod` → snapshot + auto-mask sensitive columns
-      - `capcli env remove <name>` — prod removal multi-flag gated
+      - capcli env remove <name>` — prod removal multi-flag …: see interface.md#CLI-surface
         - Prod removal demands `--confirm-backup` plus `--confirm-prod`
     - World ops
       - `capcli env use <name>` — atomic switch
-      - `--env <name>` flag for cross-world ops; explicit targeting, default current world
-      - `capcli env list | inspect | doctor` — worlds, drift, unmerged routines
+      - env <name>` flag for cross-world ops; explicit targe…: see interface.md#CLI-surface
+      - capcli env list | inspect | doctor` — worlds, drift,…: see interface.md#CLI-surface
       - `[env]` output prefix, prod rendered red: see interface.md#CLI-surface
     - Merge path
-      - `capcli env merge <name> --into prod` — promotion travels by git merge
+      - capcli env merge <name> --into prod` — promotion tra…: see trust.md#Gates-&-promotion
       - Prod promotion merge requirement: see trust.md#Gates-&-promotion
       - `env doctor` + `env merge` keep promotion explicit and drift loud

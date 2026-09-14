@@ -1,5 +1,5 @@
 - Interface
-<!-- ref-by: agent.md, budget.md, effect.md, overview.md, physics.md, recovery.md, space.md, trust.md, world.md -->
+<!-- ref-by: action.md, agent.md, assembly.md, budget.md, effect.md, overview.md, physics.md, recovery.md, space.md, trust.md, world.md -->
   - CLI surface
     - Design laws
       - Shape law
@@ -44,15 +44,15 @@
         - api envelope
           - calls_per_run, providers, live_quota per provider from _api_quota
           - static_spend: daily_budget_usd vs remaining_usd
-          - sim_mode per verb: sandbox, mock, dry-run, skip, prod-only
+          - sim_mode per verb: see space.md#Rehearsal-&-sim
           - prove_status
             - total_verbs vs provable_in_sim; skips are visible, never hidden
             - skipped verb record: verb, sim_mode, reason, first_prod_calls_require_approval
             - gov.file_tax_return: prod-only, no test env, first 3 prod calls gated
         - composition: nesting depth, child_routines, budget_inheritance min, effective limits
         - budget_status
-          - can_invoke_now is the pre-flight verdict; blocking_reasons when false
-          - warnings are non-blocking — e.g. remaining below warn_at_remaining
+          - can_invoke_now pre-flight: see budget.md#Exhaustion
+          - warnings non-blocking: see budget.md#Quotas
           - sim_gaps name prod-only verbs and their approval requirements
           - cascade: session ops, duration, spend, rate remaining; tightest_constraint
       - inspect behavior
@@ -112,7 +112,7 @@
       - `ping list [--pending]` — open asks and notifications
       - `ping resolve <ask-id> --choice X` — the kernel resumes the blocked routine
       - `ping expire <ask-id>` — retires stale questions
-      - `ping ask` blocks fail-closed on crashed approval — headless is denied
+      - ping ask` blocks fail-closed on crashed approval — h…: see physics.md#Fail-closed-stance
       - Asks are audited like any op — the answer is an audit event
     - `rule` noun — static configuration
       - `rule show [--type schema|system-schema|policy|governance]` — one noun, four layers
@@ -122,7 +122,7 @@
       - system-schema applies at boot or kernel upgrade only — the agent cannot trigger it
       - `rule show --type system-schema` is a read — system table definitions inspectable
     - `env` noun — switchable worlds
-      - `env new <name> --seed prod [--from-branch X]` — snapshot + auto-mask sensitive columns
+      - `env new <name> --seed prod [--from-branch X]`: see space.md#env-command
       - `env use <name>` — atomic switch
       - `env list | inspect | doctor` — worlds, drift, unmerged routines
       - `env merge <name> --into prod` — promotion travels by git merge
@@ -343,7 +343,7 @@
       - Layer 10 Identity
         - Principal cards: agents, sessions today, approvals granted, revoke all
         - Agent cards: routines authored, denials this week, instant revoke, skill_origin
-        - Kernel principals: capcli-cron, capcli-watch, capcli-serve
+        - Kernel principals: see agent.md#Identity-hierarchy
         - Identity depth: see agent.md#Identity-hierarchy
     - Navigation model
       - One connected graph rendered as nested trees — everything connects
@@ -472,7 +472,7 @@
         - Relatedness: the system explains itself — denials cite rules, effects cite intents
       - Errorless learning
         - Reads before writes; `--dry-run` before real execution
-        - dev before sim before prod; draft before reviewed before pinned
+        - dev before sim before prod; draft before reviewed be…: see trust.md#The-ladder
         - Small LIMIT before bulk; each stage removes one constraint
       - Trust calibration
         - Calibrated trust: knows what the agent can do, cannot do, why, and how to verify

@@ -1,5 +1,5 @@
 - Effect
-<!-- ref-by: action.md, budget.md, interface.md, overview.md, physics.md, recovery.md, trust.md, world.md -->
+<!-- ref-by: action.md, budget.md, interface.md, overview.md, physics.md, recovery.md, space.md, trust.md, world.md -->
   - Audit spine
     - Ground truth
       - Three stores: state = `workspace.db`, procedure = Python + YAML, experience = JSONL audit log
@@ -27,7 +27,7 @@
     - Kernel event payloads
       - db.exec payload
         - sql text + params dict recorded verbatim
-          - UPDATE orders SET status=:s WHERE id=:id LIMIT 1
+          - Recorded op form: parameterized UPDATE with LIMIT: see physics.md#Raw-SQL-rules
           - params: {s: "fulfilled", id: 7}
         - policy decision, matched rules, rows_affected, result_hash
         - duration_ms 4 closes the record
@@ -36,7 +36,7 @@
         - triggered_by: run | cron | webhook | ask resume
         - outcome, ops count, duration_ms close the parent record
       - api.sync payload
-        - provider, source_url, spec_hash
+        - api.sync payload fields: see action.md#External-APIs
         - counts: added, removed, changed, unchanged
       - api.activate payload
         - provider, verb, state_from dormant → state_to active, trust
@@ -125,7 +125,7 @@
         - which leaf failed, grouped by routine_version and seq
         - localization entry: feed the failing op id to `sys audit trace`
       - primitive_cost
-        - per-leaf duration and spend attribution
+        - per-leaf duration and spend attribution: see action.md#Capability-registry
         - feeds `routine stats --deep`: see time.md#Stage-details
       - Prove params sampled from real audit history: see time.md#Stage-details
       - Fingerprint views: see action.md#Manifests-&-fingerprints
@@ -146,7 +146,7 @@
       - Versions record code_hash + manifest_hash + created_by + promoted_by
       - promoted_through: [dev, sim, prod] — the journey recorded on the version
       - consolidated_from: [a@12, b@7] merge links; rollback un-retires; history only grows
-      - Retirement keeps provenance pointers, deletion never happens: see time.md#Versioning-&-provenance
+      - Retirement semantics: see time.md#Versioning-&-provenance
       - max_versions_kept 25 keeps graphs navigable: path `artifacts/governance.yaml` versions
     - Replay invariants
       - Replay re-applies current policy, not historical — a demoted routine cannot resurrect old permissions

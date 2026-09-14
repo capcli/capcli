@@ -1,5 +1,5 @@
 - Time
-<!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, physics.md, recovery.md, trust.md, world.md -->
+<!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, physics.md, recovery.md, space.md, trust.md, world.md -->
   - Stage map
     - Pipeline: draft → prove → ship → live → monitor, ending in sweep / rollback / retire
       - sweep: merge/dedupe proposals from the maintenance cycle; human gated
@@ -40,9 +40,9 @@
         - Defaults to sim/dev; proving against prod requires explicit `--env prod --reason`
         - Params come from `capcli sys audit sample`: real historical values, not invented fixtures
         - Per-verb sim_mode adaptation: see space.md#Rehearsal-&-sim
-    - ship — evidence up, authority down
+    - ship — evidence up, authority down: see trust.md#Gates-&-promotion
       - `capcli db query "SELECT * FROM routine_stats WHERE capability = 'refund_and_archive'"`
-        - Evidence: runs: 31, success_rate: 0.97, p95: 640ms
+        - Evidence: see trust.md#Evidence
           - Numbers come from the audit mirror, not agent self-report
       - `capcli routine ship refund_and_archive --to reviewed`
         - with `--reason "97% success over 31 sim runs; replaces 3-op sequence seen 47×"`
@@ -74,7 +74,7 @@
       - Unused 30d → retire candidate; success < 0.7 → rollback candidate
       - Retirement keeps provenance pointers; deletion never happens
     - command census
-      - `routine draft <name> [--reason]` — scaffold, validate, manifest extract
+      - routine draft <name> [--reason]` — scaffold, validat…: see action.md#Capability-registry
       - `routine prove <name> [-p k=v] [--env sim]` — manifest vs fingerprint proof
       - `routine ship <name> --to reviewed|pinned [--env X] --reason "..."` — evidence up
       - `routine sweep [--since 30d]` — consolidation report + merge/dedupe proposals
@@ -107,7 +107,7 @@
     - Harness drafts merges (LLM labor) → validate + test candidates (gate) → human approves (gate)
     - Apply: retire originals with provenance pointers, never delete
     - Merges are links: `consolidated_from: [a@12, b@7]`; rollback of a bad merge = un-retire
-    - Consolidation labor is budgeted: max_session_minutes 30, max_proposals_per_session 10 (artifacts/governance.yaml)
+    - Consolidation labor budgeted: see budget.md#Quotas
     - merge_requires_human always; auto_retire_dead false — propose, never auto-destroy (artifacts/governance.yaml)
     - The registry stays a library because subtraction runs on schedule; consolidates, never duplicates
   - Schedule & maintenance

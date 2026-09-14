@@ -1,5 +1,5 @@
 - Trust
-<!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, space.md, time.md -->
+<!-- ref-by: action.md, agent.md, budget.md, effect.md, interface.md, overview.md, physics.md, space.md, time.md, world.md -->
   - The ladder
     - Rungs
       - draft: agent-learned, unproven; tight caps, full audit; max_rows_affected 10
@@ -32,10 +32,10 @@
       - Served endpoints floor: min_trust pinned, require_version_pin — non-negotiable (artifacts/governance.yaml)
       - Demotion is always cheaper than promotion: veto, decay, sweep never need a human gate
     - Human authority
-      - `[human]`-tagged commands (raw `capcli db exec`) demand human/CI approval; PWA renders approval cards
+      - [human]`-tagged commands (raw `capcli db exec`) dema…: see interface.md#PWA-layers
         - raw `capcli db exec` is the escape hatch — gated, audited, never silently allowed
       - Evidence is agent work; authority is human work
-      - The human verifies the why; the kernel verifies the what
+      - Authority split: see overview.md#Mental-model
       - High-stakes writes (prod, >100 rows, external API) route `--reason` through human review
         - prod: every prod write crosses a human gate — no volume too small to name
         - >100 rows: matches the reviewed cap — bulk is never casual work
@@ -54,7 +54,7 @@
     - Five enforcement gates
       - register: registry caps — max_routines 300 hard, soft_cap 200 nags, max_per_agent_draft 30 (artifacts/governance.yaml)
         - soft_cap 200 is a nag, not a wall: growth pressure routes to consolidation, not refusal
-      - creation_rate per_hour 10: no rapid-fire generation (artifacts/governance.yaml)
+      - creation_rate per_hour 10: see action.md#Capability-registry
       - draft: shape + manifest; runtime: ops/duration/result/drift; monitor: dead/failing; sweep: subtraction
         - Each gate cites its measured value at denial (artifacts/governance.yaml denials section)
       - A routine cannot loosen its own cage: see physics.md#Two-layer-enforcement
@@ -79,7 +79,7 @@
       - Authority gate stays intact while the human leaves the hot path for mechanical transitions
       - SLA breach alarms and 1-hour veto countdown: see time.md#Stage-details
     - API activation gate
-      - `capcli api activate <provider.verb> --intent "..."`: dormant → active at trust draft
+      - capcli api activate <provider.verb> --intent "...": see interface.md#CLI-surface
       - Active verbs inherit draft caps: full audit, max_rows_affected 10 — unproven is unproven
       - Verb specifics: see action.md#External-APIs
   - Evidence
@@ -98,19 +98,20 @@
       - Un-simulated verbs fall back to dry-run, never silent live behavior (artifacts/governance.yaml)
       - max_unapproved_calls 3, approval_window_hours 24: training wheels for un-simulated verbs (artifacts/governance.yaml)
         - apply_to [skip, prod-only]: simulated verbs never need training wheels
-          - prod-only must be declared explicit, never inferred (artifacts/governance.yaml)
+          - prod-only must be declared explicit, never inferred …: see space.md#Environment-axis
             - An inferred prod-only would hide exactly the gap evidence exists to show
         - After 3 approved prod calls the verb graduates to normal governance
           - Each first prod call is audited under `first_prod_call`
     - Cost evidence
-      - `capcli routine stats <name> [--deep]`: per-leaf attribution — see time.md#Stage-details
+      - Attribution queries: see time.md#Stage-details
       - Cost attribution example: "this routine is 90% one HTTP call" → optimization target
       - p95 duration and spend per leaf drive optimization: see action.md#Manifests-&-fingerprints
       - Ship evidence carries measured stats — runs, success_rate, p95 — never agent estimates
+        - Worked example: runs: 31, success_rate: 0.97, p95: 640ms — the measured ship evidence
     - Provenance evidence
       - No silent edits: every change is a new hash-pinned version; replay verifies the hash
         - The version record carries who and how: created_by, promoted_by, promoted_through
-      - Every transition is an audit event with agent, principal, intent/reason
+      - Every transition is an audit event with agent, princ…: see agent.md#Intent-chain
       - Prove params: real historical values from `capcli sys audit sample` — see time.md#Stage-details
   - Overrides
     - Exception model
@@ -119,7 +120,7 @@
         - The commit is the review artifact: blame, diff, revert all work
       - Compiled at boot; config changes go through files + `rule apply`, no CLI write-path
     - Precedence
-      - Effective limit = min(declared need, governance ceiling, override, parent_remaining)
+      - Effective limit min() law: see budget.md#Cascade
         - declared need: the routine's ask — may be less than allowed, never more
         - governance ceiling: routine_shape limits, cited by number at denial
         - override: the approved exception value from a governance commit
@@ -130,7 +131,7 @@
       - A routine may ask for less, never more — and never more than its caller has left
     - Flag bans
       - No `--force`: exceptions are overrides in governance.yaml
-      - No `--override-budget`: budget exceptions are governance overrides, never flags
+      - No `--override-budget: see interface.md#Universal-flags
       - No `--force-prod`: prod-only verbs are physically denied in sim/dev by the authorizer
         - Denial is structural — the authorizer refuses, not a convention
       - Denials cite the measured value and suggest: "split it, or propose an override": see effect.md#Denials

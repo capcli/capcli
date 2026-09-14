@@ -1,5 +1,5 @@
 - Physics
-<!-- ref-by: action.md, interface.md, overview.md, world.md -->
+<!-- ref-by: action.md, agent.md, budget.md, effect.md, interface.md, overview.md, space.md, trust.md, world.md -->
   - Two-layer enforcement
     - Layer 1: sqlite3_set_authorizer
       - Engine-enforced at prepare-time, C-level, inside sqlite3_prepare_v2
@@ -27,13 +27,13 @@
           - claims: allow [read, insert, delete] — lease lifecycle via db lock only
           - _audit: allow [read] — mirror is world-state, read-only grant
           - _system_schema: allow [read], deny [insert, update, delete]
-        - views: read-only lenses, principal-scoped
+        - views: see action.md#Capability-registry
           - active_orders + orders_by_status: exposes [entities], compile-checked
           - my_orders: scoped principal — refuses to run without --as
           - kernel binds :principal into the view query itself
         - global: unconditional floors, no per-table exceptions
           - attach deny, detach deny, drop deny
-          - vacuum require_trust pinned; alter require_trust reviewed
+          - alter require_trust reviewed: see trust.md#Trust-receipts
           - triggers deny — enforcement lives in the gate, not the db
           - pragma whitelist, never blacklist
           - functions: allow + deny lists compiled in
@@ -113,7 +113,7 @@
         - "How many routines may exist?" = governance
         - "Does a served write need confirmation?" = policy
         - "How many endpoints may be served?" = governance
-      - Policy gates the act; governance gates the artifact — verbs vs nouns, one compile step
+      - Both layers compile once at boot — verbs vs nouns: see overview.md#Core-philosophy
     - Enforcement map (artifacts/policy.yaml)
       - authorizer.tables/views/global → Layer 1 compiled callback
       - query.* → Layer 2 pre-prepare rules
@@ -121,7 +121,7 @@
       - api: L1 egress allowlist, jail-level + L2 spend, retry, idempotency
       - hands: L2 trust floors, intent, confirm gates
       - identity: L1 socket identity pre-gate + L2 principal binding, scoped views
-      - env: overlays compiled per world; both layers read env context
+      - env: see space.md#env-command
       - fail_closed: both layers
   - Fail-closed stance
     - `default: deny` is the anchor; everything below carves exceptions (artifacts/policy.yaml)
@@ -145,7 +145,7 @@
     - Denial UX: cite measured value, suggest remediation, log all: see effect.md#Denials
     - No automatic degraded mode
       - Fail-closed is the default; operators get documented, audited escape hatches
-      - Every break-glass use is an audit event
+      - Every break-glass use is an audit event: see recovery.md#Snapshots
       - Exist so a config typo is not a 3 AM outage with no recovery path
     - Break-glass paths
       - Recovery-mode mechanics: see recovery.md#Restore-path
@@ -261,6 +261,6 @@
       - Misconfiguration must be loud
       - Credentials never in agent env; memory-decrypted, injected at egress: see agent.md#Secrets
     - Kernel neutrality
-      - The kernel never infers, never reasons, never does LLM work
-      - It matches, dispatches, delivers, logs
+      - The kernel never infers, never reasons, never does L…: see overview.md#What-capcli-is
+      - It matches, dispatches, delivers, logs: see overview.md#What-capcli-is
       - Philosophy home: see overview.md#Core-philosophy
