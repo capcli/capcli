@@ -3,48 +3,74 @@
   - Identity hierarchy
     - Chain
       - principal → agent → session → op; ids kernel-issued, stored in `workspace.db`, never self-declared
+      - principal — human or kernel authority holder (user:alice, partner:stripe)
+      - agent — the registered harness instance doing the work (agt_7f3k)
+      - session — the engagement scope (ses_a9) every event, frame, and claim names
+      - op — the single invocation (op_001); the leaf the causal DAG links
+      - Causal spine on every run: env, stage, agent, principal, intent chain, caused_by — no exceptions
+      - Lifecycle transitions record agent, principal, intent/reason on every audit event
       - Socket proof: SO_PEERCRED binds credentials; `--by <agent-id>` is validated, not trusted
+        - `--by` is the acting identity on mutating verbs — verified against socket peer creds
       - `--as <principal>` marks who an action is ultimately for; scoped views refuse without it
       - No self-declared identity — kernel-issued, socket-proven (anti-decision)
       - Kernel never infers identity from behavior — the hierarchy is data, bound at connection time
     - Agent registry
-      - `agents` system table: id, name, harness, principal, status=active; imm_cols [id, principal]
+      - `agents` system table
+        - columns: id pk, name unique, harness, principal, status=active
+        - imm_cols [id, principal] — kernel upgrades never rewrite identity
+        - indexed by principal and by status
       - Agent access read-only; identity managed by kernel commands only: see world.md#Dual-schema
-      - `sys agent register | list | revoke`; revocation instant, no grace period (revoked_agent: deny_all)
+      - `sys agent register | list | revoke`
+        - revoke ends access instantly — no grace period (revoked_agent: deny_all)
+        - identity rows are never agent-writable
       - Kernel principals: capcli-cron → schedules, capcli-watch → webhooks, capcli-serve → endpoints
       - Offboarding revokes agents before env removal — access dies first: see recovery.md#Destruction-as-transition
     - Skill origin (policy v4.1)
       - Source: `artifacts/policy.yaml` identity.skill_origin — harness skill provenance propagation
-      - allow_propagation: harness may pass triggering skill name; format lowercase-hyphens, max_length 64
-      - audit_field triggered_by_skill recorded on every leaf event; deny_patterns block traversal/paths/spaces
-      - on_invalid strip_and_warn: malformed name dropped with warning, never a denial
+      - allow_propagation
+        - harness may pass the triggering skill name on invocations
+        - format lowercase-hyphens, max_length 64
+      - triggered_by_skill
+        - audit_field recorded on every leaf event: see physics.md#Harness-boundaries
+      - deny_patterns
+        - reject traversal, path separators, spaces in skill names
+      - on_invalid strip_and_warn
+        - malformed name dropped with warning, never a denial
       - Skills cannot grant authority — metadata only; trust still comes from principal + agent
       - PWA Layer 10 renders identity cards, revoke buttons, skill origin panel: see interface.md#PWA-layers
     - Multi-agent scope
       - v1 = single-agent with multi-principal: many humans supervise one agent; true multi-agent is v2
-      - max_concurrent_agents 1: second simultaneous writer exits 2 "concurrent agents not supported in v1"
+      - max_concurrent_agents 1
+        - second simultaneous writer exits 2: "concurrent agents not supported in v1"
+        - serialize through single agent or upgrade
       - Fail loud, not corrupt: scope gaps explicitly, never let users discover them via race conditions
       - v2 path: `sys audit stream --follow --capability X` — Unix socket subscribe instead of polling
-      - v2 path: `_routine_deps` dependency tracking; write-wait > 50ms → sys doctor suggests splitting workloads
+      - v2 path: `_routine_deps` dependency tracking
+        - routine retire checks dependents before removal
+        - write-wait > 50ms → sys doctor suggests splitting workloads
       - Cross-agent routine calls require callee ≥ reviewed: see trust.md#The-ladder
   - Intent chain
     - Chain shape
-      - session goal → routine intent → op intent; leaf ops inherit, routines inherit from session
+      - session goal → routine intent → op intent
+        - leaf ops inherit from routine; routines inherit from session
+        - skills pass skill intent downward: skill → routine → op: see action.md#Routines
       - Every audit event records the full chain — the causal spine for learning and audit
       - `--intent` mandatory on all write verbs; missing intent = exit 3
-      - Skills pass skill intent downward: skill → routine → op: see action.md#Routines
+      - `--intent` accepted as inherited chains, not just fresh strings
     - Metadata, not gate
       - Intent is audit metadata, not a security gate — kernel verifies shape (length, blacklist), never truth
       - Physical enforcement: table, column, row count, blast radius, trust level, env — what kernel can verify
-      - `intent_quality` heuristic: word overlap with SQL targets, parameter references, specificity score
-      - Low quality → audit flag `intent_quality: low`, not denial — prevents security theater
-      - High-stakes writes (prod, >100 rows, external API) also require `--reason` via human review gate
-      - The human verifies the why; the kernel verifies the what
+      - `intent_quality` heuristic
+        - word overlap with SQL targets
+        - parameter references in the intent string
+        - specificity score
+        - low quality → audit flag `intent_quality: low`, not denial — prevents security theater
+      - High-stakes writes (prod, >100 rows, external API) route `--reason` through human review: see trust.md#Human-authority
+      - Human verifies the why, kernel the what: see overview.md#Trust-and-authority
     - Anti-junk
       - min_intent_words 3; blacklist "test", "update", "misc", "fix": path `artifacts/governance.yaml` denials
       - Deny by default: junk or missing intent never passes the gate
-      - `--intent` = purpose; `--reason` = justification for threshold crossings (bulk, overrides, promotions)
-      - `--intent` accepted as inherited chains, not just fresh strings
+      - `--reason` = justification for threshold crossings (bulk, overrides, promotions): see interface.md#Universal-flags
   - Sessions and sockets
     - Session identity
       - session id (ses_a9) rides every event, budget frame, and claim
@@ -52,35 +78,44 @@
       - v1 agents poll via `sys audit tail`; v2 subscribes via Unix socket stream
       - PWA session token from kernel; `--as` maps to session: see interface.md#SDK-contract
     - Socket boundary
-      - All agent access flows through the kernel — socket or CLI invocation; no direct SQLite, no direct network
+      - All agent access flows through the kernel
+        - socket or CLI invocation; no direct SQLite, no direct network
       - `workspace.db` daemon-owned chmod 600; credentials never in agent env
-      - Sandbox socket is the only capability door: computation free, authority zero: see action.md#Routines
+      - Sandbox capability door: computation free, authority zero: see action.md#Routines
       - Kernel upgrades never touch agent identity rows — imm_cols lock id + principal
     - Session economics
       - Spend, rate, rows counters are session-scoped, never reset by composition: see budget.md#Cascade
       - Every invocation pushes a budget frame inheriting session remaining: see budget.md#Frames
-      - Consolidation labor is session-budgeted: max_session_minutes 30: see time.md#Schedule-&_maintenance
+      - Consolidation labor is session-budgeted: max_session_minutes 30: see time.md#Schedule-&-maintenance
       - Session visibility: PWA budget view shows remaining ops, duration, spend live: see interface.md#PWA-layers
   - Secrets
     - Storage
-      - `secrets` system table: name unique, value mask=true, scope=global, expires_at; sens: true
+      - `secrets` system table
+        - columns: name unique, value, scope=global, expires_at
+          - value mask=true — column-level redaction at the authorizer
+        - sens: true — table-level sensitive marking
+        - kernel policy row: allow [read], mask_columns [value]
       - Policy: agent read-only, value masked; secrets rows never agent-writable: see world.md#Dual-schema
       - Memory-decrypted at boot; never persisted to agent-visible surfaces
       - Expiry tracked per secret; rotation is a scheduled human act, not agent work
     - Egress injection
-      - Kernel injects Authorization at egress; tokens never in agent env, context, or audit output
+      - Kernel injects Authorization at egress
+        - tokens never in agent env, context, or audit output
       - API catalogs store secret_ref (e.g. STRIPE_SECRET_KEY) — kernel-held reference, never the value
       - Grades of unavailable: memory-decrypted + injected at boundary is the shippable minimum
-      - Isolation ladder: creds+perms → egress allowlist → network jail → gVisor/Firecracker for untrusted agents
+      - Isolation ladder: creds+perms → egress allowlist → network jail → gVisor/Firecracker: see physics.md#No-other-door
     - Masking discipline
-      - Secrets masked in every surface — results, audit, explain
+      - Secrets masked in every surface
+        - results, audit, explain — no exceptions
       - Skills must never read secrets or masked columns; authorizer denies: see action.md#Routines
       - PWA renders masked columns as locked cells, value always ████: see interface.md#PWA-layers
       - Trust receipt proves "0 secrets exposed": see trust.md#Trust-receipts
   - Coordination
     - Through the world
       - Agents coordinate through the world, never direct chat: claims, events, handoffs
-      - Claims: lease-based locks with TTL — `db lock <table>:<ref> --ttl 10m`, `run --lock <ref>`
+      - Claims
+        - lease-based locks with TTL
+        - `db lock <table>:<ref> --ttl 10m`, `run --lock <ref>`
       - Claims advisory in v1: SQLite BEGIN IMMEDIATE serializes physical writers
       - Events: agents watch each other's effects via `sys audit tail`
       - Handoffs: world-state transitions visible to all agents
@@ -90,7 +125,7 @@
       - Concurrent writers serialize through one agent (max_concurrent_agents 1) — serialize or upgrade
       - Claims prevent logical conflicts, not physical races — SQLite remains the arbiter
     - Human and agent harness
-      - Agent harness reasons, proposes, executes; human harness observes, approves, recovers
-      - Kernel never reasons, never does LLM work — matches, dispatches, delivers, logs
+      - Agent harness reasons, proposes, executes; human harness observes, approves, recovers: see overview.md#One-contract,-two-harnesses
+      - Kernel never reasons, never does LLM work — matches, dispatches, delivers, logs: see overview.md#Capability-kernel
       - Both harnesses consume the same governed contract: see overview.md#Mental-model
       - PWA is a client, never a component: no gates, no enforcement, no system-table writes

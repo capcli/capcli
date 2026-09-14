@@ -1,7 +1,7 @@
 structure:
   node_length: { min: 3, max: 120 }
   siblings: { min: 3, max: 12 }
-  depth: { min: 4, max: 7 }
+  depth: { min: 5, max: 7 }
   single_child_collapse: true
   empty_nodes: false
 
