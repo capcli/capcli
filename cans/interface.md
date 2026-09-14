@@ -459,54 +459,149 @@
       - Recovery proof before power — reversibility is the prerequisite for exploration
       - Deletion is a state transition; return is memory restoration: see recovery.md#Destruction-as-transition
     - Neuroscience principles
-      - Reward prediction error: deny → explain → succeed → audit-trace beats instant success
-      - First denial must come before the first successful write — both visible in the audit
-      - Cognitive load: working memory holds ~4 chunks — never expose more than four concepts at once
-      - Five chunks, one at a time: World, Gate, Capability, Audit, Recovery
-      - Self-determination: autonomy (I chose the intent), competence (real visible wins), relatedness (it explains itself)
-      - Errorless learning: reads before writes, `--dry-run` first, dev → sim → prod, draft → reviewed → pinned
-      - Each stage removes one constraint — the learner never faces all constraints simultaneously
-      - Trust calibration: five experiences — allowed read, denied write, governed write, recovery, promotion gate
-      - Endowment effect: the user co-creates schema; tables carry the user's domain language, not templates
-      - Zeigarnik effect: every opened loop must close — "you proved this routine 12 times, ready to ship?"
-      - Episodic memory: the return flow answers where was I, what was I doing, what changed, what is safe next
+      - Reward prediction error
+        - deny → explain → succeed → audit-trace beats instant success
+        - The first denial must come before the first successful write — both visible in audit
+      - Cognitive load limits
+        - Working memory holds ~4 chunks — never expose more than four concepts at once
+        - Five chunks, one at a time: World, Gate, Capability, Audit, Recovery
+        - Each chunk introduced by: first query, first denial, first run, first trace, first restore
+      - Self-determination theory
+        - Autonomy: "I chose the intent" — user declares, harness proposes, human approves
+        - Competence: early wins must be real, visible, and auditable
+        - Relatedness: the system explains itself — denials cite rules, effects cite intents
+      - Errorless learning
+        - Reads before writes; `--dry-run` before real execution
+        - dev before sim before prod; draft before reviewed before pinned
+        - Small LIMIT before bulk; each stage removes one constraint
+      - Trust calibration
+        - Calibrated trust: knows what the agent can do, cannot do, why, and how to verify
+        - Five experiences: allowed read, denied write, governed write, recovery, promotion gate
+      - Endowment effect: the user co-creates schema; tables carry the user's domain language
+      - Zeigarnik effect: every opened loop must close — "proved 12 times, ready to ship?"
+      - Episodic memory: the return answers where was I, what changed, what is safe next
     - Intent-first law
-      - The first object in a workspace is an intent, not a table — no blank dashboard, no empty database
-      - Harness drafts schema.yaml plus a minimal policy overlay from the stated intent
-      - Kernel previews via `rule apply --dry-run`; human approves; apply takes snapshot, audits, auto-commits
-      - The kernel never infers schema from natural language
-      - Content is generated per intent — refunds world differs from inventory world
-      - No `onboarding.*` audit events — the audit records real ops from the first rule.apply
+      - The first object rule
+        - The first object in a workspace is an intent, not a table
+        - No empty world, no configure-everything-first
+        - Content is generated per intent — a refunds world differs from an inventory world
+      - Proposal pipeline
+        - Harness drafts schema.yaml plus a minimal policy overlay from the stated intent
+        - `rule apply --type schema --dry-run --env dev` — the kernel shows the plan
+          - Plan preview
+            - tables to create with column and index counts
+            - capabilities to register: queries, governed execs, the draft routine
+            - snapshot id, reversible: yes, no effects applied
+        - Human approves — PWA approval card; the kernel has no [Y/n]
+        - `rule apply --env dev --intent "..."` applies the world
+          - Snapshot taken, DDL applied, audit written, auto-committed
+      - Audit honesty
+        - No `onboarding.*` event types — the audit records real operations
+        - First events: rule.apply, db.query count 0, denied db.exec, allowed db.exec
+        - Stage evidence is always a queryable audit event
+      - Kernel limits
+        - The kernel never infers schema from natural language
+        - The harness authors, the kernel gates, the human decides
+        - The kernel never generates onboarding content — it gates and renders
     - Human journey (stages 0-10)
-      - S0 install and verify: `sys doctor` boundary checklist — perms, versions, sandbox, no creds leaked
-      - S1 intent capture: one question — "what do you want your agent to do?"; no jargon
-      - S2 minimal world proposal: `rule apply --dry-run` preview — tables, capabilities, reversible
-      - S3 first safe read: `db query` count 0 — world exists, empty, observable (chunk: World)
-      - S4 designed denial: unbounded UPDATE → exit 2 require_where plus trace --explain (chunk: Gate)
-      - S4 is scripted, not accidental — the most important stage
-      - S5 first governed write: bounded UPDATE exit 0 plus audit trace spine (chunks: Capability + Audit)
-      - S6 recovery proof: snapshot, mutate, restore snap_onboarding_002: see recovery.md#Restore-path
-      - S7 capability discovery: search → inspect → run --dry-run — the daily loop
-      - S8 routine formation: draft + prove in sim — manifest matched, runtime fingerprint
-      - S9 promotion with evidence: stats --deep + ship --to reviewed: see trust.md#Gates-&-promotion
-      - S10 trust receipt: `sys doctor --report` — audited ops, denials explained, recovery tested
+      - S0 install and verify
+        - `sys doctor` boundary checklist — perms, versions, sandbox, no creds leaked
+        - Failures render specific and actionable — with the fix command
+        - Emotional target: safe — 15 seconds, not a lecture
+      - S1 intent capture
+        - One question: "what do you want your agent to do?"
+        - Examples offered: refunds, inventory alerts, nightly cleanup, webhook dispatch
+        - No jargon — no "principal", no "trust ladder" — just intent
+      - S2 minimal world proposal
+        - `rule apply --type schema --dry-run --env dev` — tables, capabilities, reversible
+        - Harness renders the approval dialog; the kernel returns exit codes
+        - Output shows the snapshot id and "no effects applied"
+      - S3 first safe read
+        - `db query "SELECT count(*) FROM orders"` → count 0, exit 0
+        - The world exists, empty, observable (chunk: World)
+        - Reads are safe — the user observes without fear
+      - S4 designed denial
+        - Unbounded UPDATE → exit 2 require_where — rule cited, layer named, effect none
+        - `sys audit trace op_000003 --explain` — lesson: unbounded writes impossible
+        - Scripted, not accidental — the most important stage (chunk: Gate)
+      - S5 first governed write
+        - Bounded UPDATE exit 0 — rows_affected 1, audit id, snapshot reference
+        - `sys audit trace` shows the causal spine (chunks: Capability + Audit)
+        - Power exercised inside the gate — the pattern for every later write
+      - S6 recovery proof
+        - snapshot → mutate → restore snap_onboarding_002
+        - Mistakes are reversible; the world comes back (chunk: Recovery)
+        - Or the full git path: backup --push, sys recover: see recovery.md#Restore-path
+      - S7 capability discovery
+        - search → inspect → run --dry-run — the daily loop
+        - Four commands are the whole working surface
+        - Discovery teaches the registry: everything runnable is a capability
+      - S8 routine formation
+        - "You ran this pattern 3 times" — the harness proposes a routine
+        - `routine draft` + `prove --env sim` — manifest matched, runtime fingerprint
+        - Raw SQL was exploration; the routine is exploitation
+      - S9 promotion with evidence
+        - stats --deep: 12 runs, success 1.00, manifest matched
+        - `ship --to reviewed --reason "..."` — evidence-based promotion
+        - The harness renders approval; the human grants authority: see trust.md#Gates-&-promotion
+      - S10 trust receipt
+        - `sys doctor --report` — audited ops, denials explained, recovery tested
+        - Every line is evidence from the audit, not a claim
+        - The advocacy artifact — shareable with teammates
     - Harness journey (stages 0-7)
-      - H0 read the machine contract: `sys doctor --json`, `env list --json`, `rule show --json`
-      - H1 discover, don't guess: search + inspect --json — never guess tables, verbs, params, rules
-      - H2 dry-run before effect: `run --dry-run --json` — errorless learning for machines
-      - H3 first read: `db query --json` — cheap model-building without risk
-      - H4 first governed write: `db exec --json` — exit code, decision, rows, audit event id
-      - H5 learn from denial: `sys audit trace --explain --json` — denial is training data, never retry blindly
-      - H6 routine formation: audit query GROUP BY finds a pattern 3+ occurrences → propose routine
-      - H7 prove before trust: `prove --env sim --json` — the harness never self-promotes
+      - H0 read the machine contract
+        - `sys doctor --json`, `env list --json`, `rule show --json`
+        - Learns env, policy/schema/governance versions, boundaries, health
+        - No world yet — contract only
+      - H1 discover, don't guess
+        - search + inspect --json — never guess tables, verbs, params, rules
+        - Learns params, trust, manifest, limits, intent requirements
+        - Discovery is commands, not docs scraping
+      - H2 dry-run before effect
+        - `run --dry-run --json` — what would happen, which rules apply
+        - Validates params and intent sufficiency before any effect
+        - Errorless learning for machines
+      - H3 first read
+        - `db query --json` — cheap model-building without risk
+        - Reads build the world model — no side effects
+        - Column shapes come from `db schema`, never guesses
+      - H4 first governed write
+        - `db exec --json` — exit code, policy decision, rows, audit event id
+        - Success and denial are both structured outcomes — never stdout parsing
+        - The audit event id is the handle for H5 learning
+      - H5 learn from denial
+        - `sys audit trace --explain --json` — denial is training data, never retry blindly
+        - Adjusts: add intent, add WHERE/LIMIT, use sim, use a routine
+        - Every retry carries a change — blind retries are the anti-pattern
+      - H6 routine formation
+        - Audit query GROUP BY finds a pattern 3+ occurrences → propose routine
+        - Kernel gates registration; the harness writes Python
+        - The proposal carries the audit evidence that justified it
+      - H7 prove before trust
+        - `prove --env sim --json` — manifest matched or drifted, runtime cost
+        - The harness never self-promotes — human/CI grants trust
+        - Evidence first, then the promotion proposal
     - Shared competence loop
-      - Sequence: intent → minimal world → safe read → dry-run → designed denial → small write → recovery drill
-      - Then: discovery → routine proposal → sim prove → human-approved promotion → trust receipt
-      - Teaches the human: safety, control, evidence, reversibility
-      - Teaches the harness: contract, boundaries, capability, feedback
-      - 10-minute timeline: doctor 0:00, intent 0:15, world 1:30, denial 3:00, write 4:00, recover 5:00, receipt 10:00
-      - Milestones: human 7 (stated intent → recovered → promoted with evidence); harness 9 (contract → proved in sim)
-      - Metrics: first governed effect <5 min, first denial <7 min, first recovery <10 min; sim success >0.9
+      - Sequence
+        - intent → minimal world → safe read → dry-run → designed denial → small write → recovery drill
+        - Then: discovery → routine proposal → sim prove → human-approved promotion → trust receipt
+        - Human and harness traverse the same loop — understanding vs contract
+      - What it teaches
+        - Human: safety, control, evidence, reversibility
+        - Harness: contract, boundaries, capability, feedback
+        - Both: the gate is physics, not punishment
+      - 10-minute timeline
+        - doctor 0:00, intent 0:15, world 1:30, denial 3:00, write 4:00, recover 5:00
+        - search 6:00, routine prove 7:00, stats 8:30, trust receipt 10:00
+        - No lecture, no giant YAML, no fear
+      - Milestones
+        - Human 7: stated intent → saw world → approved → governed effect → recovered → promoted
+        - Harness 9: contract → discovered → dry-ran → governed write → learned → proved in sim
+        - Onboarding completes when both sides have experienced every item
+      - Metrics
+        - First governed effect <5 min, first denial <7 min, first recovery <10 min
+        - User can answer "what just happened?" from audit output — 100%
+        - Harness: json-only decisions, no blind retries, sim success >0.9 before promotion
       - Every stage ends with a visible, auditable result — no stage ends with "trust me"
     - PWA rendering of journeys
       - Stage outputs render as kernel artifacts: doctor checklist, preview card, denial teaching card, restore flow
