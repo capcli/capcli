@@ -2,98 +2,210 @@
 <!-- ref-by: agent.md, budget.md, effect.md, overview.md, physics.md, recovery.md, space.md, trust.md, world.md -->
   - CLI surface
     - Design laws
-      - One shape forever: `capcli <noun> <verb> [target] [--flags]` — no exceptions
-      - Everything resolves through the registry — db ops, routines, api verbs, views are capabilities
-      - `run`/`search`/`inspect` work identically on all capability kinds
-      - Output contract: humans get tables, agents pass `--json`, PWA renders `--json` via SDK
-      - [env] output prefix on every command: see space.md#env-command
-      - Exit codes are law: 0 ok, 2 policy-denied, 3 validation, 4 runtime, 5 audit-write-failed
-      - Exit 5 means nothing ran; scripts branch on codes, never parse stdout
-      - Built on `citty` (unjs): nested subcommands, typed args, auto `--help`
-      - `--intent` is `required: true` on all write verbs
-      - Command tree maps 1:1 to the nine nouns
+      - Shape law
+        - One shape forever: `capcli <noun> <verb> [target] [--flags]` — no exceptions
+        - Command tree maps 1:1 to the nine nouns: run, db, routine, api, bind, ping, rule, env, sys
+        - Built on `citty` (unjs): nested subcommands, typed args, auto `--help`
+        - Each subcommand declares required and optional args with types
+      - Registry law
+        - Everything resolves through the registry — db ops, routines, api verbs, views are capabilities
+        - `run`/`search`/`inspect` work identically on all capability kinds
+        - One registry serves CLI, SDK, and PWA — no second resolution path
+      - Output contract
+        - Humans get tables; agents pass `--json`; PWA renders `--json` via SDK
+        - `--json` is the versioned machine contract — stable shape per verb
+        - [env] output prefix on every command: see space.md#env-command
+      - Exit code law
+        - 0 ok — the effect ran and the audit event was written
+        - 2 policy-denied — the gate refused; nothing was mutated
+        - 3 validation-failed — bad params, governance breach, missing intent
+        - 4 runtime-error — the effect was attempted and failed mid-run
+        - 5 audit-write-failed — nothing ran; the spine refuses unrecorded work
+        - Scripts and agents branch on codes, never parse stdout
+      - Intent mandate
+        - `--intent` is `required: true` on all write verbs
+        - Anti-junk validated — a junk intent is a validation failure (exit 3)
+        - Inherited chains accepted — leaf ops inherit routine and session intent
     - `run` noun — hot path
-      - Verbs: `run <capability> [-p k=v]`, `search <query>`, `inspect <capability>`
-      - Search resolution ladder: see physics.md#Search-ceiling
-      - `inspect` returns the full cost envelope in one JSON blob — go/no-go, no second round-trip
-      - cost_envelope: tokens, duration p50/p95, live_quota, static_spend, db rows, frequency, success
-      - Also exposes composition (nesting depth, child routines) and budget_status.cascade remainder
-      - `inspect` is a read: exit 0 always — denial happens at `run`, not here
+      - Verbs and flags
+        - `run <capability> [-p k=v]` — the primary skill-to-routine bridge
+        - `run` accepts `--dry-run`, `--intent`, `--lock <ref>`, `--json`, `--as`, `--by`
+        - `search <query> [--trust X] [--env X] [--max-ops N]` — deterministic filters
+        - `inspect <capability>` — the full cost envelope in one JSON blob
+        - Search resolution ladder: see physics.md#Search-ceiling
+      - inspect cost envelope
+        - Go/no-go from one response — no second round-trip; numbers live at inspect-time
+        - tokens: file_size, max_result_tokens, params_schema_bytes
+        - duration: max_seconds 300, p50_ms, p95_ms from the audit mirror
+        - db: writes_per_run, reads_per_run, max_rows_affected
+        - concurrency: max_ops_per_run 50, active_claims_on_target
+        - frequency: calls_last_hour vs calls_per_minute_limit
+        - success: total_runs, success_rate, manifest_match_rate
+        - api envelope
+          - calls_per_run, providers, live_quota per provider from _api_quota
+          - static_spend: daily_budget_usd vs remaining_usd
+          - sim_mode per verb: sandbox, mock, dry-run, skip, prod-only
+          - prove_status
+            - total_verbs vs provable_in_sim; skips are visible, never hidden
+            - skipped verb record: verb, sim_mode, reason, first_prod_calls_require_approval
+            - gov.file_tax_return: prod-only, no test env, first 3 prod calls gated
+        - composition: nesting depth, child_routines, budget_inheritance min, effective limits
+        - budget_status
+          - can_invoke_now is the pre-flight verdict; blocking_reasons when false
+          - warnings are non-blocking — e.g. remaining below warn_at_remaining
+          - sim_gaps name prod-only verbs and their approval requirements
+          - cascade: session ops, duration, spend, rate remaining; tightest_constraint
+      - inspect behavior
+        - `inspect` is a read: exit 0 always — denial happens at `run`, not here
+        - Discovery without cost awareness invites denial — inspect first, run second
+        - The envelope powers go/no-go in agents, harnesses, and the PWA
     - `db` noun — world state
-      - Verbs: query, exec, lock, unlock, schema, snapshot, restore, dump
-      - `db exec` auto-txn, WHERE+LIMIT enforced; `db lock` = TTL lease for cross-agent claims
+      - `db query <sql> [-p k=v] [--limit N] [--count]` — the read path, always first
+      - `db exec <sql> -p k=v --intent "..."` — auto-txn, WHERE+LIMIT enforced
+      - `db lock <table>:<ref> --ttl 10m --reason "..."` — TTL lease for cross-agent claims
+      - `db unlock <target>` — release the claim
+      - `db schema [--table]` — DDL, CHECK constraints, provenance
+      - `db snapshot | restore <id> | dump` — mechanics: see recovery.md#Snapshots
       - `db count` is dead — `db query --count` or AST-enforced pre-flight
-      - Snapshot/restore mechanics: see recovery.md#Snapshots
     - `routine` noun — learned procedures
-      - Verbs: draft, prove, ship, sweep, stats, rollback, retire
-      - `prove` tests runtime fingerprint vs declared manifest: see action.md#Manifests-&-fingerprints
-      - `sweep` builds the consolidation report: see time.md#Consolidation
-      - `stats --deep` per-leaf attribution: see time.md#Stage-details
+      - `routine draft <name> [--reason]` — create + validate + manifest extract
+      - `routine prove <name> [-p k=v] [--env sim]` — fingerprint vs manifest: see action.md#Manifests-&-fingerprints
+      - `routine ship <name> --to reviewed|pinned [--env X] --reason "..."` — human-gated
+      - `routine sweep [--since 30d]` — consolidation report: see time.md#Consolidation
+      - `routine stats <name> [--deep]` — per-leaf attribution: see time.md#Stage-details
+      - `routine rollback <name> --to-version N` — instant, audited
+      - `routine retire <name> [--reason]` — uncallable; history and provenance kept
       - Lifecycle stage depth: see time.md#Stage-details
     - `api` noun — external lifecycle
-      - Verbs: sync, diff, catalog, activate, prove, ship, stats, retire, deactivate, rollback, list
-      - `sync` pulls the full catalog from URL — every verb enters dormant, no `--pick`
-      - `activate` is the gate: dormant → active at trust draft
-      - `prove` adapts to sim_mode — sandbox, mock, dry-run, skip, prod-only: see space.md#Rehearsal-&-sim
-      - `stats` returns usage, reliability, cost, quota burn, provenance per verb
+      - `api sync <provider> --from <url> [--interval 7d] [--dry-run]` — scheduled, full catalog
+      - `api diff <provider>` — spec drift since the last sync
+      - `api catalog <provider> [--state dormant|active|deprecated|retired]`
+      - `api activate <provider.verb> --intent "..."` — dormant → active at trust draft
+      - `api prove <provider.verb> [-p k=v] [--env sim]` — adapts to sim_mode: see space.md#Rehearsal-&-sim
+      - `api ship <provider.verb> --to reviewed|pinned --reason "..."` — same ladder as routines
+      - `api stats <provider> [--deep] [--summary]` — per-verb or rollup
+      - `api retire | deactivate <provider.verb> [--reason]` — deactivate returns to dormant
+      - `api rollback <provider.verb> --to-version N`; `api list [--provider X] [--state X]`
     - `bind` noun — inbound triggers
-      - Verbs: cron, webhook, endpoint, list, inspect, pause, resume, remove, keys
-      - `bind keys issue` is human-gated; endpoint bindings pin exact routine@version
-      - Trigger domain depth: see action.md#Bindings
-      - Serve lifecycle split: `bind endpoint` only registers config in workspace.db, exit 0, no listener
-      - `sys serve --start | --stop | --restart | --status`: the daemon (Bun.serve()) does the serving
-      - Health: `bind endpoint <name> --health` → 200 live, 503 not; `sys doctor` checks all endpoints
-      - Every HTTP request emits a serve.request audit event — closes the CLI-vs-HTTP audit gap
+      - Verbs
+        - `bind cron <name> --run <cap> --cron "..." --intent "..."` — time trigger
+        - `bind webhook <name> --provider X --event Y --run <cap> --intent "..."` — async event
+        - `bind endpoint <routine@version> --auth api-key [--rate X]` — sync endpoint
+        - `bind list | inspect | pause | resume | remove <name>` — management
+        - `bind keys issue <name> --principal partner:X` — human-gated
+        - Endpoint bindings pin the exact routine@version
+        - Trigger domain depth: see action.md#Bindings
+      - Serve lifecycle split
+        - Register: `bind endpoint` writes endpoint config to workspace.db — exit 0, no listener
+        - Serve: `sys serve --start` launches the listener — Bun.serve() or companion process
+        - The daemon reads endpoint configs from DB; enforces the same policy gates as `run`
+        - Lifecycle: `sys serve --stop | --restart | --status`; prod under systemd/supervisord
+        - Split is architectural: the CLI configures synchronously, the daemon serves persistently
+        - Health: `bind endpoint <name> --health` → 200 live, 503 not; `sys doctor` checks all
+      - Request audit
+        - Every HTTP request emits a serve.request audit event
+        - Event carries endpoint, routine, api_key_id, principal, response_status, duration
+        - Closes the audit gap between CLI invocations and HTTP requests
     - `ping` noun — outbound human IO
-      - Verbs: notify, ask, list, resolve, expire
-      - `ping ask` carries --options and --timeout; kernel blocks fail-closed on crashed approval
-      - `ping list --pending` / `resolve <ask-id> --choice X` drive the answer loop
-      - `ping expire <ask-id>` retires stale questions; asks are audited like any op
+      - `ping notify <principal> <message> --channel X --intent "..."` — one-way notice
+      - `ping ask <principal> <question> --options a,b,c [--timeout 60m] --intent "..."`
+      - `ping list [--pending]` — open asks and notifications
+      - `ping resolve <ask-id> --choice X` — the kernel resumes the blocked routine
+      - `ping expire <ask-id>` — retires stale questions
+      - `ping ask` blocks fail-closed on crashed approval — headless is denied
+      - Asks are audited like any op — the answer is an audit event
     - `rule` noun — static configuration
-      - Verbs: show, diff, apply, validate — one noun for schema, system-schema, policy, governance
-      - `rule apply --type schema` is world tables only; system-schema applies at boot or kernel upgrade
-      - `rule show --type system-schema` is a read — the agent can inspect system table definitions
-      - `rule validate` compiles all layers plus quad-lock; bad config = no boot: see physics.md#Fail-closed-stance
+      - `rule show [--type schema|system-schema|policy|governance]` — one noun, four layers
+      - `rule diff [--git] [--type schema|system-schema]` — vs HEAD or the live DB
+      - `rule apply [--type schema] [--dry-run]` — world tables only, agent-triggered
+      - `rule validate` — compiles all layers plus quad-lock: see physics.md#Fail-closed-stance
+      - system-schema applies at boot or kernel upgrade only — the agent cannot trigger it
+      - `rule show --type system-schema` is a read — system table definitions inspectable
     - `env` noun — switchable worlds
-      - Verbs: new, use, list, inspect, doctor, merge, remove
-      - `env new <name> --seed prod [--from-branch X]`; `env use` is an atomic switch
-      - `env remove prod` is multi-flag gated
+      - `env new <name> --seed prod [--from-branch X]` — snapshot + auto-mask sensitive columns
+      - `env use <name>` — atomic switch
+      - `env list | inspect | doctor` — worlds, drift, unmerged routines
+      - `env merge <name> --into prod` — promotion travels by git merge
+      - `env remove <name>` — prod removal multi-flag gated
       - Axis and worktree depth: see space.md#env-command
     - `sys` noun — kernel and audit
-      - audit tail/trace/query/replay — `trace --explain` is the single denial learning signal: see effect.md#Audit-spine
-      - agent register/list/revoke: see agent.md#Identity-hierarchy
-      - doctor (boundaries, perms, drift), backup --push, recover <commit>: see recovery.md#Restore-path
+      - `sys audit tail [--follow] [--capability X] [--since 1h]` — live and filtered stream
+      - `sys audit trace <op-id> [--explain]` — causal DAG + denial reason: see effect.md#Audit-spine
+      - `sys audit query <sql> [-p k=v]` — SQL against the _audit mirror
+      - `sys audit replay --from <ts|event-id> [--dry-run]` — re-run from a point
+      - `sys agent register | list | revoke`: see agent.md#Identity-hierarchy
+      - `sys doctor` — boundaries, perms, drift; refuses to serve on broken boundaries
+      - `sys backup [--push] | recover <commit>`: see recovery.md#Restore-path
       - `sys exec <cmd> --sandbox` — jailed execution, the only jail surface
+      - `sys serve --start | --stop | --restart | --status` — the HTTP daemon
     - Daily surface
-      - A working agent lives in ~8 commands
-      - The loop: search → inspect → run → trace; reads always first (`db query`)
-      - `--dry-run` mandatory before first real effect
-      - Caller tags: [harness] safe for skills, [human] needs human/CI, [both] context-dependent
-      - `db exec` direct instruction is [human] — skills must never instruct it
-      - Discovery extras: `api catalog --state dormant`, `search gaps --since 7d`
+      - The loop
+        - A working agent lives in ~8 commands
+        - The loop: search → inspect → run → trace; reads always first (`db query`)
+        - `--dry-run` mandatory before first real effect
+        - `db exec` direct instruction is [human] — skills must never instruct it
+      - Discovery extras
+        - `api catalog --state dormant` — find not-yet-callable verbs
+        - `search gaps --since 7d` — find unresolved searches
+        - `api stats stripe.X --deep` — per-verb cost attribution
+        - `rule show --type policy` — read the constraints in force
+      - Caller tags
+        - [harness] — safe for skill-authored agent invocation
+        - [human] — requires human/CI approval; PWA renders as approval cards
+        - [both] — context-dependent; skills may use read-only variants
     - Refusals
-      - `config set`: refused — config is files + git + review, no CLI write-path
-      - `db count`: dead — `db query --count` or AST-enforced pre-flight
-      - `claim` noun: refused — `db lock` or `run --lock`; `jail` noun: `sys exec --sandbox`
-      - `budget` noun, `--override-budget`, `--force`: refused — exceptions are governance overrides
-      - `api import --pick`: refused: see action.md#External-APIs
-      - `api create`: refused — verbs come from OpenAPI sync; `api call`: use `run` or ctx
-      - `api simulate`: refused — sim behavior declared per-verb via sim_mode
-      - `--force-prod`: refused: see physics.md#Two-layer-enforcement
-      - `policy explain`, `--verbose`: refused — `sys audit trace --explain` and `sys audit tail` cover both
-      - Interactive modes, onboarding wizards: refused — approvals render in harness and PWA
-      - `rule apply --type system-schema`: refused — kernel upgrades own it
-      - One event per verb: if a command can't be one audit event, it's two commands
+      - Config write-paths refused
+        - `config set`: refused — config is files + git + review, no CLI write-path
+        - `rule apply --type system-schema`: refused — kernel upgrades own it
+        - `schema edit`: refused — schema.yaml is agent-edited on the fs, no CLI path
+      - Dead and replaced verbs
+        - `db count`: dead — `db query --count` or AST-enforced pre-flight
+        - `claim` noun: refused — `db lock` or `run --lock`; `jail` noun: `sys exec --sandbox`
+        - `policy explain`, `--verbose`: refused — `sys audit trace --explain` and `sys audit tail`
+        - `api call`: refused — invocation is `run` or `ctx.api.call`
+        - `budget` noun: refused — budget info lives in inspect cost_envelope and denials
+      - Override flags refused
+        - `--force`: refused — exceptions are governance overrides, never flags
+        - `--override-budget`: refused — budget exceptions live in governance
+        - `--force-prod`: refused: see physics.md#Two-layer-enforcement
+      - API surface limits
+        - `api import --pick`: refused: see action.md#External-APIs
+        - `api create`: refused — verbs come from OpenAPI sync
+        - `api simulate`: refused — sim behavior declared per-verb via sim_mode
+      - UX and meta refusals
+        - Interactive modes, onboarding wizards: refused — approvals render in harness and PWA
+        - One event per verb: if a command can't be one audit event, it's two commands
+        - No separate config or trigger nouns — `rule` and `bind` own their domains
   - Universal flags
-    - `--dry-run`: all mutating verbs — full pipeline, zero effects; policy evaluated, plan returned
-    - `--json`: everything — versioned machine contract; agents always use it
-    - `--intent "<why>"`: writes — mandatory, anti-junk validated, inherited chains accepted
-    - `--reason "<why>"`: threshold crossings: see trust.md#The-ladder
-    - `--as <principal>`: everything — who this is ultimately for; scoped views require it
-    - `--by <agent-id>`: mutating — acting identity, socket-verified: see agent.md#Identity-hierarchy
-    - `--env <name>`: cross-world ops — explicit world targeting: see space.md#Environment-axis
-    - `--lock <ref>`: `run` — lease-based exclusivity with TTL
-    - `--sandbox`: `sys exec` — bwrap/podman, net-none, ro binds
+    - Every verb
+      - `--json`
+        - Versioned machine contract — stable shape per verb
+        - Agents and the PWA always pass it; humans get tables by default
+      - `--as <principal>`
+        - Who this run is ultimately for
+        - Scoped views require it — rows are principal-bound
+      - `--env <name>`
+        - Cross-world ops — explicit targeting, default current: see space.md#Environment-axis
+        - Policy overlays compile per world; both enforcement layers read env context
+    - Mutating verbs
+      - `--dry-run`
+        - Full pipeline, zero effects — policy evaluated, plan returned
+        - Mandatory before the first real effect on any capability
+      - `--intent "<why>"`
+        - Mandatory on writes — anti-junk validated
+        - Inherited chains accepted — leaf ops inherit routine intent
+      - `--reason "<why>"` — threshold crossings: see trust.md#The-ladder
+      - `--by <agent-id>`
+        - Acting identity — socket-verified: see agent.md#Identity-hierarchy
+        - Pairs with `--as`: `--by` acts, `--as` says who it is for
+    - Scoped commands
+      - `--lock <ref>`
+        - `run` only — lease-based exclusivity with TTL
+        - Expired leases release; `db lock` is the table-level form
+      - `--sandbox`
+        - `sys exec` only — bwrap/podman: net-none, ro binds
+        - The only jail surface — no standalone `jail` noun
+      - The nine are the whole set — flags never grow per-noun
   - SDK contract
     - Entry
       - `import { createKernel } from '@capcli/sdk'` — `createKernel({ workspace, brand })`
