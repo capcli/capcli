@@ -8,24 +8,24 @@
       - Kernel never infers identity from behavior — the hierarchy is data, bound at connection time
     - Agent registry
       - `agents` system table: id, name, harness, principal, status=active; imm_cols [id, principal]
-      - Agent access read-only; identity managed by kernel commands only: see world.md#Dual_schema
+      - Agent access read-only; identity managed by kernel commands only: see world.md#Dual-schema
       - `sys agent register | list | revoke`; revocation instant, no grace period (revoked_agent: deny_all)
       - Kernel principals: capcli-cron → schedules, capcli-watch → webhooks, capcli-serve → endpoints
-      - Offboarding revokes agents before env removal — access dies first: see recovery.md#Destruction_as_transition
+      - Offboarding revokes agents before env removal — access dies first: see recovery.md#Destruction-as-transition
     - Skill origin (policy v4.1)
       - Source: `artifacts/policy.yaml` identity.skill_origin — harness skill provenance propagation
       - allow_propagation: harness may pass triggering skill name; format lowercase-hyphens, max_length 64
       - audit_field triggered_by_skill recorded on every leaf event; deny_patterns block traversal/paths/spaces
       - on_invalid strip_and_warn: malformed name dropped with warning, never a denial
       - Skills cannot grant authority — metadata only; trust still comes from principal + agent
-      - PWA Layer 10 renders identity cards, revoke buttons, skill origin panel: see interface.md#PWA_layers
+      - PWA Layer 10 renders identity cards, revoke buttons, skill origin panel: see interface.md#PWA-layers
     - Multi-agent scope
       - v1 = single-agent with multi-principal: many humans supervise one agent; true multi-agent is v2
       - max_concurrent_agents 1: second simultaneous writer exits 2 "concurrent agents not supported in v1"
       - Fail loud, not corrupt: scope gaps explicitly, never let users discover them via race conditions
       - v2 path: `sys audit stream --follow --capability X` — Unix socket subscribe instead of polling
       - v2 path: `_routine_deps` dependency tracking; write-wait > 50ms → sys doctor suggests splitting workloads
-      - Cross-agent routine calls require callee ≥ reviewed: see trust.md#The_ladder
+      - Cross-agent routine calls require callee ≥ reviewed: see trust.md#The-ladder
   - Intent chain
     - Chain shape
       - session goal → routine intent → op intent; leaf ops inherit, routines inherit from session
@@ -49,7 +49,7 @@
       - session id (ses_a9) rides every event, budget frame, and claim
       - Sessions kernel-issued; principal binds each session to a human or kernel principal
       - v1 agents poll via `sys audit tail`; v2 subscribes via Unix socket stream
-      - PWA session token from kernel; `--as` maps to session: see interface.md#SDK_contract
+      - PWA session token from kernel; `--as` maps to session: see interface.md#SDK-contract
     - Socket boundary
       - All agent access flows through the kernel — socket or CLI invocation; no direct SQLite, no direct network
       - `workspace.db` daemon-owned chmod 600; credentials never in agent env
@@ -58,12 +58,12 @@
     - Session economics
       - Spend, rate, rows counters are session-scoped, never reset by composition: see budget.md#Cascade
       - Every invocation pushes a budget frame inheriting session remaining: see budget.md#Frames
-      - Consolidation labor is session-budgeted: max_session_minutes 30: see time.md#Schedule_&_maintenance
-      - Session visibility: PWA budget view shows remaining ops, duration, spend live: see interface.md#PWA_layers
+      - Consolidation labor is session-budgeted: max_session_minutes 30: see time.md#Schedule-&_maintenance
+      - Session visibility: PWA budget view shows remaining ops, duration, spend live: see interface.md#PWA-layers
   - Secrets
     - Storage
       - `secrets` system table: name unique, value mask=true, scope=global, expires_at; sens: true
-      - Policy: agent read-only, value masked; secrets rows never agent-writable: see world.md#Dual_schema
+      - Policy: agent read-only, value masked; secrets rows never agent-writable: see world.md#Dual-schema
       - Memory-decrypted at boot; never persisted to agent-visible surfaces
       - Expiry tracked per secret; rotation is a scheduled human act, not agent work
     - Egress injection
@@ -74,8 +74,8 @@
     - Masking discipline
       - Secrets masked in every surface — results, audit, explain
       - Skills must never read secrets or masked columns; authorizer denies: see action.md#Routines
-      - PWA renders masked columns as locked cells, value always ████: see interface.md#PWA_layers
-      - Trust receipt proves "0 secrets exposed": see trust.md#Trust_receipts
+      - PWA renders masked columns as locked cells, value always ████: see interface.md#PWA-layers
+      - Trust receipt proves "0 secrets exposed": see trust.md#Trust-receipts
   - Coordination
     - Through the world
       - Agents coordinate through the world, never direct chat: claims, events, handoffs
@@ -91,5 +91,5 @@
     - Human and agent harness
       - Agent harness reasons, proposes, executes; human harness observes, approves, recovers
       - Kernel never reasons, never does LLM work — matches, dispatches, delivers, logs
-      - Both harnesses consume the same governed contract: see overview.md#Mental_model
+      - Both harnesses consume the same governed contract: see overview.md#Mental-model
       - PWA is a client, never a component: no gates, no enforcement, no system-table writes

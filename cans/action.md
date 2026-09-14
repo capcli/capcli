@@ -5,18 +5,18 @@
       - Views are read-only lenses, principal-scoped
       - One registry, one `search` surface, one audit format — agent never knows which channel an invocation used
       - run/search/inspect work identically on all kinds — registry flattens everything into `run`
-      - Trust ladder spans the whole registry: see trust.md#The_ladder
+      - Trust ladder spans the whole registry: see trust.md#The-ladder
     - Search surface
       - Resolution: exact → prefix → fuzzy → semantic → did-you-mean, ranked by relevance
       - Kernel search deterministic: exact, prefix, structured filters (`--trust pinned --env prod`)
       - Harness search semantic: embeddings side table `_capability_embeddings`; kernel serves vectors, harness ranks
       - Kernel = lookup table with fast filters; harness = ranking engine — no LLM in the kernel
       - At the 300-routine cap keyword search returns noise: filters narrow, semantic ranks
-      - Ceiling rationale and kernel/harness split: see physics.md#Search_ceiling
+      - Ceiling rationale and kernel/harness split: see physics.md#Search-ceiling
     - Search analytics
       - Every search logged as capability.search event: query, filters, results, final invocation
       - Search gaps: searched-never-invoked = missing capability; `capcli search gaps --since 7d`
-      - Gaps are consolidation signals for routines and API verbs alike: see time.md#Learning_loop
+      - Gaps are consolidation signals for routines and API verbs alike: see time.md#Learning-loop
       - Progressive disclosure: one `cap search` meta-tool; base context constant at 10 or 10,000
     - Registry caps
       - Source: `artifacts/governance.yaml` registry — max_routines 300 hard cap, register refuses past it
@@ -52,7 +52,7 @@
       - Runtime budgets: op #51 aborts (limit_exceeded event), watchdog kills past duration, `truncated: true`
       - `sys exec <cmd> --sandbox` — governed jailed execution outside routines
       - v2 path: WASM routines — no exec/eval/dynamic imports/fs without grants; Python becomes escape hatch
-      - World-scoping of execution: see space.md#Environment_axis
+      - World-scoping of execution: see space.md#Environment-axis
     - Event-drivenness
       - Four starters: `capcli run` (agent/human), bind cron fire, bind webhook dispatch, ping ask resume
       - Inside: strictly sequential — no ctx.on handlers, no reactive streams, no subscriptions, no parallel branches
@@ -65,7 +65,7 @@
       - weekly_cleanup.py: query stale entities LIMIT 100, loop calls refund_and_archive per row
       - Callee trust governs its effects; intent chains propagate via caused_by
       - Budget cascades: child effective = min(declared, parent_remaining): see budget.md#Cascade
-      - Sim mode cascades: child prod-only verb leaves a visible gap in parent prove: see space.md#Rehearsal_&_sim
+      - Sim mode cascades: child prod-only verb leaves a visible gap in parent prove: see space.md#Rehearsal-&-sim
       - Near-duplicate across agents: merge or fork, human-gated, never silent duplication
       - Shape hygiene: max_routine_imports 3, max_nesting_depth 5: path `artifacts/governance.yaml`
     - Shape governance
@@ -90,7 +90,7 @@
       - routine draft <name> [--reason] · prove <name> [-p k=v] [--env sim] · ship --to reviewed|pinned --reason
       - routine sweep [--since 30d] · stats <name> [--deep] · rollback --to-version N · retire [--reason]
       - rule show --type governance (effective limits); rule validate (compile all layers)
-      - Stage gates and transitions: see time.md#Stage_map
+      - Stage gates and transitions: see time.md#Stage-map
       - Sweep mechanics and subtraction rhythm: see time.md#Consolidation
     - Anti-decisions
       - No YAML procedures — control flow inside YAML is the rejected smell
@@ -118,7 +118,7 @@
   - The ctx contract
     - Context surface
       - ctx.db.query(sql, params) → list[dict]; ctx.db.execute(sql, params, intent) → Result
-      - ctx.db.txn() — context manager; writes auto-txn, WHERE+LIMIT enforced: see physics.md#Raw_SQL_rules
+      - ctx.db.txn() — context manager; writes auto-txn, WHERE+LIMIT enforced: see physics.md#Raw-SQL-rules
       - ctx.db.lock(target, ttl) → Claim — cross-agent lease: see agent.md#Coordination
       - ctx.api.call(verb, params, intent) → dict; ctx.api.verify(verb, key) → dict
       - ctx.bind.cron / ctx.bind.webhook / ctx.bind.endpoint — a routine declares its own inbound triggers
@@ -129,7 +129,7 @@
       - No import requests, no import os, no raw sqlite3 — the kernel passes ctx into the sandbox
       - AST-validated before execution: subprocess, HTTP clients, filesystem escapes rejected at draft time
       - Param declarations are the interface: typed, documented, gate-validated — what inspect shows
-      - Intent chains: routine intent inherits session goal; ctx calls carry intent: see agent.md#Intent_chain
+      - Intent chains: routine intent inherits session goal; ctx calls carry intent: see agent.md#Intent-chain
     - Data discipline
       - Large results stay in routine scope; only computed summaries cross back to the model
       - max_result_tokens 500 — token discipline and PII containment in one rule
@@ -139,13 +139,13 @@
       - Routines read `_audit`, `_api_quota` via ctx.db.query — authorizer allows read
       - Definitions visible via `capcli rule show --type system-schema`
       - Routines never write system tables: authorizer denies, file perms deny
-      - Two-file ownership boundary: see world.md#Dual_schema
+      - Two-file ownership boundary: see world.md#Dual-schema
   - Manifests & fingerprints
     - Declared manifest (static)
       - AST extracts the exact ctx.* call sequence at draft; stored with the version
       - Example @17: api.call get_charge · db.query entities read · api.call refund_charge · db.txn 2× db.exec
       - estimated_cost_class: [2× http, 2× write] — declared cost before first execution
-      - sim_modes recorded per verb; skip/prod-only verbs flagged for partial prove: see space.md#Rehearsal_&_sim
+      - sim_modes recorded per verb; skip/prod-only verbs flagged for partial prove: see space.md#Rehearsal-&-sim
       - manifest_hash stored beside code_hash in the version record
     - Runtime fingerprint (dynamic)
       - Aggregated from the audit mirror: the actual leaf-op sequence that executed
@@ -163,7 +163,7 @@
       - routine_fingerprints, primitive_failures, primitive_cost, shared_subsequences — pure GROUP BYs
       - Kernel counts at leaf depth; harness and human reason over finer evidence
       - No LLM in the kernel — extraction and aggregation fully deterministic
-      - Failure views for debugging: see effect.md#Failure_forensics
+      - Failure views for debugging: see effect.md#Failure-forensics
       - shared_subsequences → common n-grams as merge candidates: see time.md#Consolidation
   - External APIs
     - HTTP is not SQL
@@ -188,7 +188,7 @@
     - Regular sync
       - Every sync_interval: fetch URL, diff against catalog by spec_hash
       - New endpoints → dormant; removed → deprecated; changed params/paths → version bump + diff recorded
-      - api.sync audit event carries added/removed/changed/unchanged counts: see effect.md#Audit_spine
+      - api.sync audit event carries added/removed/changed/unchanged counts: see effect.md#Audit-spine
       - Cadence governed: min_interval_hours 24, max_catalog_size_mb 10: path `artifacts/governance.yaml` api.sync
     - Activation gate
       - `capcli api activate stripe.refund_charge --intent "..."` — dormant becomes callable
@@ -196,9 +196,9 @@
       - Activation is the gate, not import: file exists, cannot run until proven and shipped
       - max_activations_per_hour 10, require_intent: true: path `artifacts/governance.yaml` api.activation
     - Lifecycle parity
-      - Prove, ship, live, retire — same ladder and gates as routines: see time.md#Stage_map
+      - Prove, ship, live, retire — same ladder and gates as routines: see time.md#Stage-map
       - api prove/ship/stats/retire/deactivate/rollback mirror the routine verbs
-      - Prove adapts per sim_mode: sandbox, mock, dry-run, skip, prod-only: see space.md#Rehearsal_&_sim
+      - Prove adapts per sim_mode: sandbox, mock, dry-run, skip, prod-only: see space.md#Rehearsal-&-sim
       - First prod calls of un-simulated verbs need human approval (max_unapproved_calls 3)
     - Lean catalog format
       - Kernel-compiled, not hand-authored: provider, version, source_url, spec_hash, synced_at, sync_interval
@@ -217,7 +217,7 @@
     - Search gaps
       - `capcli search gaps --since 7d` — searched-never-invoked = missing capability
       - Kernel surfaces the gap; harness proposes activation; human approves
-      - Same consolidation signal as routines: see time.md#Learning_loop
+      - Same consolidation signal as routines: see time.md#Learning-loop
       - Dormant catalog makes gaps actionable: the verb often exists, just unactivated
   - Bindings
     - Trigger kinds
@@ -239,7 +239,7 @@
       - Lifecycle: sys serve --stop | --restart | --status; systemd/supervisord/docker govern in production
       - Health: `bind endpoint <name> --health` → 200 live / 503; sys doctor checks all endpoints
       - serve.request fields: endpoint, routine@version, api_key_id, principal partner:stripe, response_status
-      - Every HTTP request generates a serve.request audit event — closes the CLI-vs-HTTP gap: see effect.md#Audit_spine
+      - Every HTTP request generates a serve.request audit event — closes the CLI-vs-HTTP gap: see effect.md#Audit-spine
     - Endpoint governance
       - Floors: min_trust pinned, require_version_pin — serve order_status@12, never a moving target
       - allow_writes_default false — inbound writes cost explicit opt-in
