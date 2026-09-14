@@ -125,7 +125,7 @@
       - Concurrent writers serialize through one agent (max_concurrent_agents 1) — serialize or upgrade
       - Claims prevent logical conflicts, not physical races — SQLite remains the arbiter
     - Human and agent harness
-      - Agent harness reasons, proposes, executes; human harness observes, approves, recovers: see overview.md#One-contract,-two-harnesses
+      - Agent harness reasons, proposes, executes; human observes + approves: see overview.md#One-contract,-two-harnesses
       - Kernel never reasons, never does LLM work — matches, dispatches, delivers, logs: see overview.md#Capability-kernel
       - Both harnesses consume the same governed contract: see overview.md#Mental-model
       - PWA is a client, never a component: no gates, no enforcement, no system-table writes
