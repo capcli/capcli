@@ -1,13 +1,16 @@
 - Recovery
   - Snapshots
-    - Point-in-time tier: `db snapshot` = WAL-consistent copy plus hash (db.architecture.md §14)
-    - Snapshot-first migrations: every DDL takes a WAL-consistent snapshot before execution
-    - Delete a column without snapshot = exit 2 — migration is snapshot-first, always
-    - Failed migration auto-restores from its snapshot inside one transaction, exit 4
-    - `db restore <id>` reverses any point-in-time state
-    - `sys recover --list` shows last N recovery points: timestamp, schema version, audit count
-    - Human picks by time, not commit hash
-    - Migration approvals carry snapshot ids (snap_migration_004) with rollback preview: see interface.md#PWA-layers
+    - Mechanics
+      - Point-in-time tier: `db snapshot` = WAL-consistent copy plus hash (db.architecture.md §14)
+      - Snapshot-first migrations: every DDL takes a WAL-consistent snapshot before execution
+      - Delete a column without snapshot = exit 2 — migration is snapshot-first, always
+      - Failed migration auto-restores from its snapshot inside one transaction, exit 4
+      - `db restore <id>` reverses any point-in-time state
+    - Indexes
+      - `sys recover --list` shows last N recovery points: timestamp, schema version, audit count
+      - Human picks by time, not commit hash
+      - Snapshot ids are named: snap_onboarding_001, snap_migration_004, snap_auto_*
+      - Migration approvals carry snapshot ids (snap_migration_004) with rollback preview: see interface.md#PWA-layers
   - Git integration
     - Git is DX, not backup: `git push --force` rewrites history; tamper-evidence needs an append-only store
     - Auto-commit: interval plus event-triggered commits of world.sql, audit logs, configs → remote
@@ -22,34 +25,46 @@
     - Governance overrides are commits too — exceptions reviewed like code
     - readme.md enforcement map: backup section → `sys backup` + `sys doctor`
   - Hash chains
-    - Each JSONL audit line carries prev_hash: sha256:<previous_line_hash> — tampering breaks the chain
-    - Real tamper-evidence, independent of git history
-    - hash_chain_verify "0 4 * * *" — daily integrity validation (artifacts/governance.yaml)
-    - Backup verification: `sys doctor` downloads last pushed backup, compares world.sql hash
-    - backup.last_verified_at tracked — stale >24h → alarm
-    - require_hash_verify: boot verifies system-schema file hash against kernel version (artifacts/governance.yaml)
-    - Sink owner: `sys.audit.service.ts` — JSONL sink plus _audit mirror plus hash chain
-    - Replay re-verifies code_hash — edited file is not a replayable record: see time.md#Versioning-&-provenance
+    - Chain
+      - Each JSONL audit line carries prev_hash: sha256:<previous_line_hash> — tampering breaks the chain
+      - Real tamper-evidence, independent of git history
+      - hash_chain_verify "0 4 * * *" — daily integrity validation (artifacts/governance.yaml)
+      - result_hash per event detects drift between recorded and actual outcomes
+    - Verification
+      - `sys doctor` downloads the last pushed backup and compares world.sql hash
+      - backup.last_verified_at tracked — stale >24h → alarm
+      - require_hash_verify: boot verifies system-schema file hash against kernel version (artifacts/governance.yaml)
+      - Sink owner: `sys.audit.service.ts` — JSONL sink plus _audit mirror plus hash chain
+      - Replay re-verifies code_hash — edited file is not a replayable record: see time.md#Versioning-&-provenance
   - Restore path
-    - Durability tiers: point-in-time `db snapshot`, committed history world.sql, offsite `sys backup --push`
-    - `sys recover <commit|timestamp>` restores full world-state from git
-    - `sys audit replay` re-applies events through current policy — demotion never resurrects old permissions
-    - Recovery mode: CAPCLI_RECOVERY=1 loads only schema + audit sink — no policy, routines, or serve
-    - Recovery mode allows only db query/dump, sys audit tail, sys backup; logged recovery_mode_entered
-    - Worst case — harness wipes everything: `git clone` + `sys recover`, or pull from object storage
-    - After worst case: world restored, audit spine intact, hash chain verified
-    - Boot diagnostic: `sys doctor --boot-check` validates boot without starting the daemon
-    - Onboarding Stage 6 proof: `db snapshot` → snap_onboarding_002, mutate, `db restore` — mistakes are reversible
-    - Re-entry: recover, then context reinstatement — where am I, what was I doing, what changed, what is safe next
-    - e2e recovery.worst.case: wipe → clone → recover journey test
+    - Tiers
+      - Durability: point-in-time `db snapshot`, committed history world.sql, offsite `sys backup --push`
+      - `sys recover <commit|timestamp>` restores full world-state from git
+      - `sys audit replay` re-applies events through current policy — demotion never resurrects permissions
+      - world.sql is the deterministic dump — git-tracked, the recoverable artifact
+    - Degraded paths
+      - Recovery mode: CAPCLI_RECOVERY=1 loads only schema + audit sink — no policy, routines, or serve
+      - Recovery mode allows only db query/dump, sys audit tail, sys backup; logged recovery_mode_entered
+      - Boot diagnostic: `sys doctor --boot-check` validates boot without starting the daemon
+    - Worst case
+      - Harness wipes everything: `git clone` + `sys recover`, or pull from object storage
+      - After worst case: world restored, audit spine intact, hash chain verified
+      - e2e recovery.worst.case: wipe → clone → recover journey test
+    - Re-entry
+      - Onboarding Stage 6 proof: `db snapshot` → snap_onboarding_002, mutate, `db restore` — reversible
+      - Recover, then context reinstatement: where am I, what was I doing, what changed, what is safe next
   - Destruction as transition
-    - Deletion is a state transition; return is memory restoration — nothing destroyed, nothing lost
-    - Retirement: no longer callable, history and provenance kept, rollback un-retires: see action.md#Routines
-    - Offboarding sequence: env inspect + `sys doctor --report`, then `sys backup --push`
-    - Then revoke: `sys agent revoke`; pause and remove binds; `db dump` → final-world.sql
-    - Then `env remove dev`, `env remove sim`, `env remove prod --confirm-backup --confirm-prod`
-    - Prod removal: prod_removal_flags 2 — two explicit confirm flags (artifacts/governance.yaml)
-    - Harness renders the recovery command before removal: `git clone <remote>` + `sys recover <commit>`
-    - Emotional message: closing a chapter, not erasing memory
-    - PWA Layer 8 undo console: snapshots, rollbacks, git points, hash verify: see interface.md#PWA-layers
-    - Forensics localize failures to leaf ops — rollback is primitive-informed: see effect.md#Failure-forensics
+    - Philosophy
+      - Deletion is a state transition; return is memory restoration — nothing destroyed, nothing lost
+      - Retirement: no longer callable, history and provenance kept, rollback un-retires: see action.md#Routines
+      - PWA Layer 8 undo console: snapshots, rollbacks, git points, hash verify: see interface.md#PWA-layers
+      - Forensics localize failures to leaf ops — rollback is primitive-informed: see effect.md#Failure-forensics
+    - Offboarding sequence
+      - Show what exists: `env inspect prod`, `sys doctor --report`
+      - Final backup: `sys backup --push`
+      - Revoke: `sys agent list`, `sys agent revoke agt_7f3k`; pause and remove binds
+      - Dump state: `db dump` → final-world.sql
+      - Remove: `env remove dev`, `env remove sim`, `env remove prod --confirm-backup --confirm-prod`
+      - Prod removal: prod_removal_flags 2 — two explicit confirm flags (artifacts/governance.yaml)
+      - Harness renders the recovery command first: `git clone <remote>` + `sys recover <commit>`
+      - Emotional message: closing a chapter, not erasing memory
