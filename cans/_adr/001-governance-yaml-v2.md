@@ -1,0 +1,50 @@
+- Status: accepted
+- Date: 2026-09-14
+- Decided by: capcli maintainers — governance.yaml final v2, primitive-aware
+- Supersedes: governance.yaml v1
+- Context
+  - Source: readme.md "What changed from v1" changelog; full v2 file at artifacts/governance.yaml
+  - v1 consolidation clustered on code text only: maintenance.consolidation.duplicate_similarity 0.85
+  - Routines with identical primitive sequences but different code text escaped near-duplicate detection
+  - Declared manifests existed, but undeclared primitives executing at runtime were silently accepted
+  - Constraint: v2 keeps the enforcement map, anti-decisions, and command surface structurally identical
+- Decision
+  - routine_shape.manifest_drift: anomaly
+    - Undeclared primitives executing at runtime trigger a governed event, not silent acceptance
+    - Runtime fingerprint diverging from the declared manifest becomes visible evidence, not noise
+    - Feeds the manifest match_rate already surfaced by inspect and prove
+  - maintenance.consolidation.fingerprint_similarity: 0.90
+    - Consolidation clusters by primitive sequence identity, not just code text similarity
+    - Identical primitive sequences = merge candidates, alongside duplicate_similarity 0.85
+    - Merge proposals stay human-gated; similarity only nominates candidates
+  - Everything else remains structurally identical to v1
+- Alternatives considered
+  - manifest_drift: deny — abort any run executing an undeclared primitive
+    - Rejected: drift is consolidation and promotion evidence, not always a stop condition
+  - Reuse duplicate_similarity 0.85 for fingerprint clustering
+    - Rejected: primitive-sequence identity is stronger evidence; 0.90 keeps human review human-sized
+  - Keep v1 behavior: no drift signal, code-text similarity only
+    - Rejected: silent acceptance hides drift; code-text similarity misses behavioral duplicates
+- Consequences
+  - Undeclared primitives surface as governance events consumed by routine sweep and promotion review
+  - Merge candidates gain a behavioral signal alongside code-text similarity
+  - Human merge approval unchanged: merge_requires_human true; auto_retire_dead stays false
+  - Manifest anatomy and fingerprint views: see action.md#Manifests-&-fingerprints
+  - Enforcement map carries forward unchanged
+    - registry → capcli routine draft
+      - max_routines 300 hard cap, soft_cap 200 nags, max_per_agent_draft 30
+      - creation_rate per_hour 10; require_description true — unsearchable = unregistrable
+    - routine_shape → routine draft (static) + routine prove (runtime)
+      - loc 5–150, tokens 50–2000, params max 8, max_ops_per_run 50, manifest_drift anomaly
+    - overrides → capcli rule apply (compile-time merge)
+      - large_migration, weekly_report, order_status — declared need, approved by human commit
+    - maintenance → routine sweep + bind cron
+      - consolidation schedule "0 3 * * 0", fingerprint_similarity 0.90, duplicate_similarity 0.85
+    - schedule / watch / serve → bind cron | webhook | endpoint
+      - min_interval_minutes 5, min_trust pinned, key_rotation_days 90
+    - env → env new | remove | doctor
+      - max_worktrees 5, prod_removal_flags 2, sim_seed_masking enforce
+    - backup → sys backup + sys doctor
+      - interval_minutes 15, max_drift_minutes 30, trigger_on promote/migrate/import/register/restore
+    - denials → sys audit trace --explain
+      - cite_measured_value, suggest_remediation, log_all, budget denial cites level/remaining
