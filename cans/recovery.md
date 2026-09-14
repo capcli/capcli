@@ -46,13 +46,17 @@
       - Recovery mode: CAPCLI_RECOVERY=1 loads only schema + audit sink — no policy, routines, or serve
       - Recovery mode allows only db query/dump, sys audit tail, sys backup; logged recovery_mode_entered
       - Boot diagnostic: `sys doctor --boot-check` validates boot without starting the daemon
+      - Break-glass paths: every use is an audit event — a config typo is never a 3 AM dead end
     - Worst case
       - Harness wipes everything: `git clone` + `sys recover`, or pull from object storage
       - After worst case: world restored, audit spine intact, hash chain verified
       - e2e recovery.worst.case: wipe → clone → recover journey test
+      - PWA simulate recovery: dry-run the restore in a temp env first
     - Re-entry
       - Onboarding Stage 6 proof: `db snapshot` → snap_onboarding_002, mutate, `db restore` — reversible
       - Recover, then context reinstatement: where am I, what was I doing, what changed, what is safe next
+      - Recovery output: world.sql restored, audit chain verified, workspace.db rebuilt, status ready
+      - Harness re-entry reads: sys audit tail --since 24h, routine stats, sys doctor, rule show — all --json
   - Destruction as transition
     - Philosophy
       - Deletion is a state transition; return is memory restoration — nothing destroyed, nothing lost
