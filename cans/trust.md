@@ -24,6 +24,7 @@
       - Ship stage: evidence up, authority down — agent gathers evidence, human/CI approves promotion
       - `capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."`
       - Prod needs merge from the dev/sim branch + pin sign-off; draft writes denied in prod outright
+      - Onboarding gate metric: sim success rate > 0.9 before any prod promotion
     - Five enforcement gates
       - register: registry caps — max_routines 300 hard, soft_cap 200 nags, max_per_agent_draft 30 (artifacts/governance.yaml)
       - creation_rate per_hour 10: no rapid-fire generation (artifacts/governance.yaml)
