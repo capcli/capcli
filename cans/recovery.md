@@ -7,7 +7,7 @@
     - `db restore <id>` reverses any point-in-time state
     - `sys recover --list` shows last N recovery points: timestamp, schema version, audit count
     - Human picks by time, not commit hash
-    - Migration approvals carry snapshot ids (snap_migration_004) with rollback preview: see interface.md#PWA layers
+    - Migration approvals carry snapshot ids (snap_migration_004) with rollback preview: see interface.md#PWA-layers
   - Git integration
     - Git is DX, not backup: `git push --force` rewrites history; tamper-evidence needs an append-only store
     - Auto-commit: interval plus event-triggered commits of world.sql, audit logs, configs → remote
@@ -29,7 +29,7 @@
     - backup.last_verified_at tracked — stale >24h → alarm
     - require_hash_verify: boot verifies system-schema file hash against kernel version (artifacts/governance.yaml)
     - Sink owner: `sys.audit.service.ts` — JSONL sink plus _audit mirror plus hash chain
-    - Replay re-verifies code_hash — edited file is not a replayable record: see time.md#Versioning & provenance
+    - Replay re-verifies code_hash — edited file is not a replayable record: see time.md#Versioning-&-provenance
   - Restore path
     - Durability tiers: point-in-time `db snapshot`, committed history world.sql, offsite `sys backup --push`
     - `sys recover <commit|timestamp>` restores full world-state from git
@@ -51,5 +51,5 @@
     - Prod removal: prod_removal_flags 2 — two explicit confirm flags (artifacts/governance.yaml)
     - Harness renders the recovery command before removal: `git clone <remote>` + `sys recover <commit>`
     - Emotional message: closing a chapter, not erasing memory
-    - PWA Layer 8 undo console: snapshots, rollbacks, git points, hash verify: see interface.md#PWA layers
-    - Forensics localize failures to leaf ops — rollback is primitive-informed: see effect.md#Failure forensics
+    - PWA Layer 8 undo console: snapshots, rollbacks, git points, hash verify: see interface.md#PWA-layers
+    - Forensics localize failures to leaf ops — rollback is primitive-informed: see effect.md#Failure-forensics

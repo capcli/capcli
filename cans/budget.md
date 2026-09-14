@@ -4,7 +4,7 @@
     - Frame tracks ops consumed, duration elapsed, spend incurred, rows affected
     - `sys.budget.service.ts` in `@capcli/kernel` owns frame push/pop and cascade enforcement
     - Record
-      - `_budget_frames` system table, kernel-managed — schema: see world.md#Dual schema
+      - `_budget_frames` system table, kernel-managed — schema: see world.md#Dual-schema
       - Frame fields: frame_id, routine, version, parent_frame, session, env
       - Counters: declared_max_ops/duration_ms, consumed ops/duration_ms/spend_usd/rows/api_calls
       - Indexed by [session, env], [routine, version], [parent_frame]
@@ -14,7 +14,7 @@
       - budget.frame_pop logs consumed plus returned_to_parent — parent sees child consumption
       - Frame push/pop are audit events
       - Tailable live via `sys audit tail --follow`
-    - PWA Layer 5 frame tree — frames, cascades, consumption, exhaustion, pools: see interface.md#PWA layers
+    - PWA Layer 5 frame tree — frames, cascades, consumption, exhaustion, pools: see interface.md#PWA-layers
   - Cascade
     - Law
       - Child effective limit = min(declared, parent_remaining) — tightest constraint at every frame
@@ -67,4 +67,4 @@
     - Budget exceptions are governance overrides (git commits), never CLI flags
     - budget_status.can_invoke_now is the pre-flight verdict; false + blocking_reasons → don't call
     - Warnings are non-blocking — remaining below warn_at_remaining
-    - Spend-cap forensics localize to the leaf op; fix the policy, not the routine: see effect.md#Failure forensics
+    - Spend-cap forensics localize to the leaf op; fix the policy, not the routine: see effect.md#Failure-forensics
