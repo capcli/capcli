@@ -11,7 +11,7 @@
     - retire: removed from callable surface, provenance kept; auto for decay, human for merges
     - Asymmetry: creation is free, registration and execution are gated; kernel only asks if a run is allowed
     - Invariants: every routine passes draft → prove → ship, no stage skipped; every transition audited
-    - API verbs ride the same lifecycle with the same ladder and human gates: see action.md#External APIs
+    - API verbs ride the same lifecycle with the same ladder and human gates: see action.md#External-APIs
   - Stage details
     - draft — birth ungated
       - `capcli routine draft refund_and_archive` scaffolds, validates, extracts manifest via harness fs
@@ -30,7 +30,7 @@
       - Partial manifest match: skipped verbs report "3/4 primitives matched"; the gap is visible, never hidden
       - Params come from `capcli sys audit sample`: real historical values, not invented fixtures
       - Fingerprint proof: runtime leaf ops vs declared manifest; divergence = warning (branch taken, undeclared op)
-      - Manifest anatomy and mirror views: see action.md#Manifests & fingerprints
+      - Manifest anatomy and mirror views: see action.md#Manifests-&-fingerprints
     - ship — evidence up, authority down
       - `capcli db query "SELECT * FROM routine_stats WHERE capability = 'refund_and_archive'"`
       - Evidence: runs: 31, success_rate: 0.97, p95: 640ms
@@ -41,7 +41,7 @@
       - Prod promotion additionally requires merge from the routine's dev/sim branch
     - auto-promotion draft → reviewed
       - Low-risk only; mechanical verification should not require a human
-      - All thresholds must hold: see trust.md#Gates & promotion
+      - All thresholds must hold: see trust.md#Gates-&-promotion
       - Logged `event: routine.auto_promoted` with from/to/evidence
       - Retroactive human veto: `capcli routine rollback <name> --to-trust draft`
       - reviewed → pinned is ALWAYS human-gated: relaxed caps and unattended prod are never automated
@@ -105,9 +105,9 @@
     - dead_schedule_disable: bound routine retired → schedule auto-disabled loudly (artifacts/governance.yaml)
     - Decay: dead_after_days 30, fail_threshold 0.7, stale_sim_after_days 14 re-seed nag (artifacts/governance.yaml)
     - Audit mirror freshness SLA: mirror_lag_max_minutes 5, JSONL → `_audit` (artifacts/governance.yaml)
-    - hash_chain_verify "0 4 * * *" — daily tamper-evidence sweep: see recovery.md#Hash chains
+    - hash_chain_verify "0 4 * * *" — daily tamper-evidence sweep: see recovery.md#Hash-chains
     - API sync is scheduled, not one-shot: min_interval_hours 24, no hammering provider URLs (artifacts/governance.yaml)
-    - Backup auto-commit every 15 minutes + on promote/migrate/register triggers: see recovery.md#Git integration
+    - Backup auto-commit every 15 minutes + on promote/migrate/register triggers: see recovery.md#Git-integration
   - Versioning & provenance
     - Version record: `refund_and_archive` version 17, code_hash sha256:9d2e..., manifest_hash sha256:a1b2...
     - created_by agt_7f3k, promoted_by user:alice, promoted_through [dev, sim, prod] — the journey is recorded

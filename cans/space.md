@@ -4,7 +4,7 @@
       - dev: birthplace — draft routines live here; experimentation is cheap
       - sim: proving ground — seeded from prod (masked); replay real history against the routine
       - prod: destination — draft writes denied; only reviewed/pinned + merged code runs
-      - Trust rides the same ladder as worlds — draft+dev, reviewed+sim, pinned+prod: see trust.md#The ladder
+      - Trust rides the same ladder as worlds — draft+dev, reviewed+sim, pinned+prod: see trust.md#The-ladder
     - Travel rule
       - A routine does not just earn trust — it travels dev → sim → prod
       - Promotion commands carry `--env`; reaching prod = merge + pin sign-off, never a runtime promotion
@@ -22,7 +22,7 @@
     - World proposal
       - Onboarding drafts the minimal world from user intent in the dev worktree
       - `capcli rule apply --type schema --dry-run --env dev` previews the plan; no effects applied
-      - Human approves; world tables carry the user's domain language: see interface.md#Onboarding journeys
+      - Human approves; world tables carry the user's domain language: see interface.md#Onboarding-journeys
       - The world is born from intent — never from an empty template
   - Primitive scoping
     - Event identity
@@ -105,5 +105,5 @@
       - Every output prefixes `[env]` — prod in red
     - Merge path
       - `capcli env merge <name> --into prod` — promotion travels by git merge
-      - Prod promotion additionally requires merge from the routine's dev/sim branch: see trust.md#Gates & promotion
+      - Prod promotion additionally requires merge from the routine's dev/sim branch: see trust.md#Gates-&-promotion
       - `env doctor` + `env merge` keep promotion explicit and drift loud

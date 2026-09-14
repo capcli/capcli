@@ -1,0 +1,94 @@
+- Trust
+  - The ladder
+    - Rungs
+      - draft: agent-learned, unproven; tight caps, full audit; max_rows_affected 10
+      - reviewed: human/CI sign-off granted; max_rows_affected 100, full audit
+      - pinned: proven track record; relaxed caps, summary audit; max_rows_affected 500
+    - Two axes
+      - Trust and environment are two axes of one ladder: draft+dev, reviewed+sim, pinned+prod
+      - Overlays, not separate policies — one engine parameterized by trust level and world
+      - The journey is provenance: promoted_through [dev, sim, prod]: see time.md#Versioning-&-provenance
+    - Ladder rules
+      - Self-promotion is impossible: promotion is a human/CI-gated command
+      - Cross-agent routine calls require callee ≥ reviewed; one agent's draft never becomes another's dependency
+      - Trust ascends only through human/CI gates; decay and consolidation move it down on schedule
+      - API verbs climb the same ladder: activation lands at trust draft
+      - Served endpoints floor: min_trust pinned, require_version_pin — non-negotiable (artifacts/governance.yaml)
+    - Human authority
+      - `[human]`-tagged commands (raw `capcli db exec`) demand human/CI approval; PWA renders approval cards
+      - Evidence is agent work; authority is human work
+      - The human verifies the why; the kernel verifies the what
+      - High-stakes writes (prod, >100 rows, external API) route `--reason` through human review
+  - Gates & promotion
+    - Ship gate
+      - Ship stage: evidence up, authority down — agent gathers evidence, human/CI approves promotion
+      - `capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."`
+      - Prod needs merge from the dev/sim branch + pin sign-off; draft writes denied in prod outright
+    - Five enforcement gates
+      - register: registry caps — max_routines 300 hard, soft_cap 200 nags, max_per_agent_draft 30 (artifacts/governance.yaml)
+      - creation_rate per_hour 10: no rapid-fire generation (artifacts/governance.yaml)
+      - draft: shape + manifest; runtime: ops/duration/result/drift; monitor: dead/failing; sweep: subtraction
+      - A routine cannot loosen its own cage — governance is never runtime-editable
+    - Auto-promotion
+      - draft → reviewed, low-risk only, when ALL thresholds hold: sim_runs ≥ 10, success_rate ≥ 0.95
+      - Plus manifest_match_rate 1.0, policy_denials 0, fingerprint_drift_events 0
+      - reviewed → pinned is ALWAYS human-gated: relaxed caps + unattended prod are never automated
+    - Promotion queue
+      - Queues convert per-routine review into batch review — the human bottleneck at scale
+      - `capcli routine pending` shows queued promotions with evidence summaries; bulk approve/reject
+      - Authority gate stays intact while the human leaves the hot path for mechanical transitions
+      - Queue SLA alarms via `sys doctor`; timeout never promotes — it nags
+      - Veto window after batch approval: any principal can demote without override authority
+    - API activation gate
+      - Activation is the gate, not import: dormant verbs are searchable, inspectable, not callable
+      - `capcli api activate <provider.verb> --intent "..."` activates at trust draft, governance-capped
+      - Import is free; filtering happens at activation, never import
+      - Dormant never expires; only active verbs decay — the full surface is permanent
+      - Verb specifics: see action.md#External-APIs
+  - Evidence
+    - Manifest evidence
+      - Evidence block includes manifest diff vs previous version: "v18 adds `api.call X`" — no raw diff
+      - manifest_match reflects reality: 3/4 = 0.75, not 1.0 — honest about real vs rehearsed
+      - Fingerprint vs manifest: proving proves the declaration, not just "it didn't crash"
+    - Sim gaps
+      - Evidence text: "sim proved 3/4 verbs. gov.file_tax_return was prod-only. First 3 prod calls require human approval"
+      - The human sees the gap before granting authority
+      - max_unapproved_calls 3, approval_window_hours 24: training wheels for un-simulated verbs (artifacts/governance.yaml)
+      - After N approved prod calls the verb graduates to normal governance
+    - Cost evidence
+      - `capcli routine stats <name> [--deep]`: per-leaf duration/spend/failure attribution
+      - Cost attribution example: "this routine is 90% one HTTP call" → optimization target
+      - p95 duration and spend per leaf drive optimization: see action.md#Manifests-&-fingerprints
+    - Provenance evidence
+      - Prove params come from `capcli sys audit sample`: real historical values, not invented fixtures
+      - Every transition is an audit event with agent, principal, intent/reason
+      - Every version hash-pinned; replay verifies the hash; promotion paths are recorded
+  - Overrides
+    - Exception model
+      - Overrides are reviewable exceptions, never `--force` (artifacts/governance.yaml OVERRIDES)
+      - Exceptions are git commits — declared need approved by a human commit, reviewed like code
+      - Compiled at boot; config changes go through files + `rule apply`, no CLI write-path
+    - Precedence
+      - Effective limit = min(declared need, governance ceiling, override, parent_remaining)
+      - Overrides can tighten, not only loosen: served endpoints get stricter latency ceilings
+      - A routine may ask for less, never more — and never more than its caller has left
+    - Flag bans
+      - No `--force`: exceptions are overrides in governance.yaml
+      - No `--override-budget`: budget exceptions are governance overrides, never flags
+      - No `--force-prod`: prod-only verbs are physically denied in sim/dev by the authorizer
+      - Denials cite the measured value and suggest: "split it, or propose an override": see effect.md#Denials
+  - Trust receipts
+    - The receipt
+      - `capcli sys doctor --report` renders the workspace trust receipt
+      - Lines: 23 operations audited, 2 denied before execution (explained), 0 unaudited writes
+      - Lines: 2 snapshots created, 1 routine proven in sim, 1 routine promoted to reviewed
+      - Lines: 0 secrets exposed, backup pushed 2 minutes ago, recovery tested successfully
+    - Reading the receipt
+      - Every effect was bounded, explained, and recoverable — the receipt proves it in one view
+      - Denials before execution are shown as teaching, not failure
+      - 0 unaudited writes certifies the audit spine stayed closed: see effect.md#Audit-spine
+    - Advocacy
+      - Shareable artifact: "The agent did real work. Every effect was bounded, explained, and recoverable."
+      - Authority is earned through evidence and granted by humans — never faith
+      - Onboarding Stage 9 promotion-with-evidence precedes the Stage 10 receipt: see interface.md#Onboarding-journeys
+      - PWA renders the receipt as a shareable card: see interface.md#PWA-layers
