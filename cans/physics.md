@@ -4,17 +4,72 @@
     - Layer 1: sqlite3_set_authorizer
       - Engine-enforced at prepare-time, C-level, inside sqlite3_prepare_v2
       - Bypass-proof even if TS code has bugs; bugs fail toward denial
-      - Granularity: action × table × column
+      - Granularity: action × table × column — fires on every prepared statement
+      - Scope: what the callback intercepts
+        - Table reads and writes, per-table allow lists
+        - Schema changes: drop, alter, vacuum — gated or denied
+        - ATTACH/DETACH — unconditional deny, no side-databases
+        - PRAGMA — whitelist only, never blacklist
+        - Function calls — allow + deny lists compiled in
+        - Trigger definitions — denied at the engine door
       - Compiled from artifacts/policy.yaml `authorizer` section into Rust match arms at boot
+        - tables: allow lists + deny_columns_write per table
+          - entities
+            - allow [read, insert, update, delete] — full CRUD
+            - deny_columns_write [id, created_at, created_by, modified_by] — system & immutable
+            - require_where [update, delete] — mirrored at AST layer, defense twice
+          - edges: allow [read, insert] — immutable rows by construction
+          - secrets
+            - allow [read]
+            - mask_columns [value] — redacted in results, audit, explain
+            - deny_for_trust [draft] — unproven code never reads secrets
+          - agents: allow [read] — identity managed by kernel commands only
+          - claims: allow [read, insert, delete] — lease lifecycle via db lock only
+          - _audit: allow [read] — mirror is world-state, read-only grant
+          - _system_schema: allow [read], deny [insert, update, delete]
+        - views: read-only lenses, principal-scoped
+          - active_orders + orders_by_status: exposes [entities], compile-checked
+          - my_orders: scoped principal — refuses to run without --as
+          - kernel binds :principal into the view query itself
+        - global: unconditional floors, no per-table exceptions
+          - attach deny, detach deny, drop deny
+          - vacuum require_trust pinned; alter require_trust reviewed
+          - triggers deny — enforcement lives in the gate, not the db
+          - pragma whitelist [query_only, foreign_keys]
+          - functions allow [count, sum, min, max, avg, json_extract, date, strftime]
     - Layer 2: SQL AST check
       - Evaluated before prepare; full semantic view
-      - Checks WHERE clauses, LIMIT, patterns, values, intent presence
-      - Granularity: statement shape, blast radius, parameters
       - node-sql-parser (sqlite dialect), version pinned, fuzz-tested against SQLite test corpus
+      - Granularity: statement shape, blast radius, parameters, intent presence
+      - Named checks, in gate order
+        - Intent gate
+          - writes_require_intent true — no intent → exit 3, cited in explain
+          - min_words 3 — one-word intents rejected
+          - blacklist [test, update, misc, fix, "...", "stuff"] — junk intents rejected
+        - Structural rules
+          - multi_statement deny — one statement per call
+          - unparseable deny — parser failure fails closed
+          - update/delete require_where + require_limit, max_limit 1000
+        - Row caps
+          - select
+            - max_limit 10000
+            - deny_without_limit false — missing LIMIT on SELECT warns only
+            - masked_columns_redacted true — masked values redacted in results
+          - insert max_rows_per_statement 500 — chunked beyond this
+          - update/delete max_rows_affected 100 base blast radius
+          - trust overlays: draft 10, reviewed 100, pinned 500
+        - Deny patterns
+          - "UPDATE * SET * WHERE * OR 1=1"
+          - "DELETE FROM * WHERE NOT EXISTS *"
+          - "* WHERE 1=1 *"
     - Layer 1.5: prepare-time cross-check
       - After AST passes, sqlite3_prepare_v2 dry-run in a txn; SQLite C parser is ground truth
       - Prepare fails → deny; statement type contradicts AST classification → deny
       - For writes: cross-check AST classification vs SQLite EXPLAIN; OpenWrite shown → deny
+      - Why a third layer exists
+        - The two layers cover different, non-overlapping surfaces
+        - Authorizer checks action×table×column; AST checks WHERE/LIMIT/patterns
+        - A node-sql-parser bug is invisible to the authorizer — different surface
       - Parse failure = deny, never pass-through
       - Every parse logged as ast_parse {ok, node_count, statement_type} in the audit event
     - Asymmetry
@@ -30,17 +85,35 @@
       - Execute → audit event
     - Implementation binding
       - L1 floor: Rust, rusqlite via napi-rs, conn.authorizer(Some(closure)) — bypass-proof
-      - L2 ceiling: TypeScript node-sql-parser; runs before L1, rejected SQL never reaches prepare
+        - C-level, runs inside sqlite3_prepare_v2
+        - match AuthAction: Attach → Deny, DropTable → Deny
+        - Update arm checks compiled deny_columns_write per table
+      - L2 ceiling: TypeScript node-sql-parser
+        - runs before L1 in the gate pipeline
+        - rejected SQL never reaches prepare
+        - not bypass-proof alone — the L1 floor sits beneath
       - The agent never touches SQLite directly; all access flows through both layers, in order
       - Runtime wiring of both layers: see assembly.md#Packages
     - Policy vs governance
-      - policy.yaml (artifacts/policy.yaml): what capabilities may do — row caps, write denials, spend
-      - Also policy: trust requirements, intent mandates — behavior, never structure
-      - governance.yaml (artifacts/governance.yaml): what capabilities may be — LOC/tokens, max routines, cadence
-      - Governance is never runtime-editable — a routine cannot loosen its own cage
+      - policy.yaml (artifacts/policy.yaml): what capabilities may do
+        - row caps, write denials, spend limits
+        - trust requirements, intent mandates
+        - behavior, never structure
+      - governance.yaml (artifacts/governance.yaml): what capabilities may be
+        - LOC/tokens per file, max routines
+        - ops per run, maintenance cadence
+        - structure, never behavior
+        - never runtime-editable — a routine cannot loosen its own cage
       - Both compiled at boot; bad config → kernel refuses to serve; no degraded mode
       - Quad-locked with both schema files: version mismatch → refuse boot: see world.md#Validation-gates
-      - "May this write touch 500 rows?" = policy; "May this routine exist at 342 LOC?" = governance
+      - The policy ↔ governance line
+        - "May this write touch 500 rows?" = policy
+        - "May this routine exist at 342 LOC?" = governance
+        - "May drafts read secrets?" = policy
+        - "How many routines may exist?" = governance
+        - "Does a served write need confirmation?" = policy
+        - "How many endpoints may be served?" = governance
+      - Policy gates the act; governance gates the artifact — verbs vs nouns, one compile step
     - Enforcement map (artifacts/policy.yaml)
       - authorizer.tables/views/global → Layer 1 compiled callback
       - query.* → Layer 2 pre-prepare rules
