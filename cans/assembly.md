@@ -71,6 +71,8 @@
       - Components: ui.dag, ui.diff, ui.denial, ui.masked, ui.quadlock, ui.confirm — governed renderers
     - @capcli/native
       - Rust crate `capcli_db` — napi 2, napi-derive 2, rusqlite 0.31 bundled, cdylib
+      - Crate layout: Cargo.toml, build.rs, lib.rs (napi entry), db.open.rs, db.authorizer.rs, db.query.rs
+      - Plus db.execute.rs, db.snapshot.rs — one module per native function
       - `napi build --release` → capcli_db.node
       - Exposes exactly six functions: open, set_authorizer, query, execute, snapshot, restore
       - db.authorizer.rs builds the set_authorizer closure from compiled policy
