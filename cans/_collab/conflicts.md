@@ -20,3 +20,11 @@ Task ID: 6-a (physics.md dedup+deepen)
 - dups-action.json idx41 (Pre-call deny before egress, keeper=physics.md): keeper line landed in physics.md Fail-closed stance > Runtime denials: "Pre-call enforcement: remaining ≤ deny_at_remaining → exit 2 before egress, not 429 after" (0e66e41). budget.md:42 keeps its variant. Confirmed.
 - dups-world-physics.json idx4 (Exit codes are law, keeper=physics.md): physics.md retains the exit-code law line and deepened it with per-code children; interface.md:10 trim is the interface owner's action per the record note (already flagged there).
 - dups-world-physics.json idx13 (Intelligence is the harness's job → overview.md#Core-philosophy): physics.md Kernel neutrality now ends in that see: leaf; overview.md#Core-philosophy anchor verified to exist.
+
+---
+Task ID: 6-b (trust.md dedup+deepen)
+- dups-time-space-trust rec3 (hash-pinned line, keeper=time.md) vs dups-action idx53 (keeper=trust.md): conflicting keepers across passes. Kept a reworded "No silent edits: every change is a new hash-pinned version; replay verifies the hash" at trust.md#Evidence because action.md:159 + action.md:169 point there. time.md#Versioning-&-provenance stays canonical for the version walk. Action owner: consider retargeting action.md:169 to time.md if they prefer strict single-home.
+- dups-action idx43 ("The human verifies the why; the kernel verifies the what"): keeper=overview.md but the line lives at agent.md:42 and trust.md:21. Kept in trust.md for now; overview owner should land the canonical copy, then agent/trust can see:.
+- dups-action idx25 ("cannot loosen its own cage"): keeper=physics.md (physics.md:106 has it; action.md:138 already sees physics.md#Two-layer-enforcement). Converted trust.md's copy to "see physics.md#Two-layer-enforcement" per keeper rule.
+- dups-action idx22 vs dups-time-space-trust rec62 (min() precedence line): conflicting keepers (budget.md vs trust.md). Kept in trust.md#Overrides→Precedence per 6-b task content list ("min() precedence" is trust content); budget.md:46 pointer targets trust.md#Overrides, budget.md#Cascade still owns cascade mechanics.
+- Promotion queue mechanics (48h SLA, promotion.sla_breached, CI --by, veto countdown) are canonical in time.md#Stage-details (5-c); trust.md#Promotion-queue keeps the authority angle + one see: — no dup re-added.
