@@ -1,0 +1,115 @@
+- Overview
+<!-- ref-by: agent.md -->
+  - What capcli is
+    - Policy gateway
+      - Governed boundary through which an agent harness affects and observes a workspace
+      - Sits between agent and world: checks, forwards, logs
+      - Not an agent framework, not an ORM, not a wrapper — the word gateway is deliberate
+      - Never reasons, never schedules intelligence; features needing reasoning belong in the harness
+    - Capability kernel
+      - SQLite as the world, policy as physics, every effect audited, every capability earned
+      - Sync pulls everything; activation gates what is callable
+      - The harness is the mind; capcli is the nervous system
+      - If the mind goes rogue, git history puts the world back: see recovery.md#Git-integration
+    - One contract, two harnesses
+      - Agent harness: reasons, proposes, executes — Claude Code, Codex, Hermes, OpenClaw, custom
+      - Human harness: observes, approves, answers, recovers
+      - PWA = governed world browser, kernel client via `@capcli/sdk`: see interface.md#PWA-layers
+  - Core philosophy
+    - Agent is never trusted
+      - Enforcement lives in physics and in the kernel
+      - Never in prompts, never in "please don't"
+      - Gate opens only under explicit conditions (artifacts/policy.yaml `default: deny`)
+    - Harness is replaceable
+      - Governed interface, indifferent to who reasons above it
+      - Two harness types consume the same contract
+      - Skills, CLIs, PWAs attach without kernel changes
+    - Rules don't constrain, physics does
+      - A policy works only if the agent has no physical path around it
+      - Unbounded writes are physically impossible, not discouraged
+      - Designed denials teach: layer, rule, fix, zero effect: see effect.md#Denials
+    - Intent precedes infrastructure
+      - The world is built for a goal
+      - Schema, policy, governance are consequences of intent, never prerequisites
+      - Onboarding starts from one user intent, not a template: see interface.md#Onboarding-journeys
+    - Kernel mechanics
+      - The kernel matches, dispatches, delivers, logs — never infers, never reasons, no LLM
+      - Intelligence is the harness's job; mechanics is capcli's
+      - capcli never infers structure from natural language
+    - Governance line
+      - Policy gates the act, governance gates the artifact — verbs vs nouns
+      - Behavior (rows, writes, spend) lives in artifacts/policy.yaml; zero overlap
+      - Structure (sizes, counts, cadence, budgets) lives in artifacts/governance.yaml
+  - Mental model
+    - State — what exists
+      - World data in SQLite `workspace.db`
+      - Agent-authored tables, kernel-owned system tables
+      - SQLite SSOT: see world.md#SQLite-as-SSOT
+    - Procedure — what the agent learned to do
+      - Routines and capabilities: Python + YAML config
+      - Every `ctx` call round-trips the kernel gate: see action.md#The-ctx-contract
+      - Capability registry: see action.md#Capability-registry
+    - Experience — what happened
+      - Append-only JSONL event stream
+      - Exists even when the op is denied
+      - Audit spine: see effect.md#Audit-spine
+    - Format law
+      - YAML declares, Python executes, JSONL records
+      - YAML is a config format, not a procedure format
+      - Sequencing, branching, retries, or composition turn representation into code
+      - No programming language invented inside YAML
+    - Topology
+      - Three effect channels out, four hands coming in
+      - One gate, one audit stream, one trust ladder
+      - Outbound
+        - db.* → SQLite SSOT through authorizer + AST gate: see physics.md#Two-layer-enforcement
+        - routine.* → Python sandbox, jail: net-none, socket-only
+        - api.* → HTTP egress, kernel-owned secrets injected at boundary
+      - Inbound hands
+        - schedule.* → time; watch.* → inbound events; serve.* → governed endpoints
+        - notify/ask → humans: voice, blocking questions, fail-closed waits
+        - Agent never reaches SQLite or network directly; all access flows through the kernel
+  - Design stance
+    - Fail-closed and gated
+      - No valid policy, no boot; ambiguity resolves toward denial
+      - The agent builds the world; the kernel holds the leash: five validation gates, two layers
+      - Fail-closed stance: see physics.md#Fail-closed-stance
+    - Earned capability
+      - One registry, one search, one trust ladder, one audit format
+      - The agent never knows or cares which channel an invocation uses
+      - Activation is the gate; full surface permanent, active surface earned: see action.md#Capability-registry
+    - Explore, then exploit
+      - Raw SQL is the exploration layer; routines are the exploitation layer
+      - Routines are procedural memory: atoms composed into molecules, governed at every leaf
+      - Routines born free but run gated: proven in sim, promoted by evidence, pinned by merge: see time.md#Stage-map
+    - Trust and authority
+      - Trust ladder draft → reviewed → pinned over env axis dev → sim → prod
+      - Self-promotion impossible; promotion is a human/CI-gated command
+      - The human verifies the why; the kernel verifies the what
+      - The ladder: see trust.md#The-ladder
+    - Small surface, deep gate
+      - 9 nouns, universal flags, exit codes as law; registry flattens all effects into run
+      - Nothing escapes the gate; every verb is an audit event
+      - Implementation binding-agnostic: one Bun monorepo, five sealed packages, six native functions
+      - CLI surface: see interface.md#CLI-surface
+    - Recoverable world
+      - Destruction becomes a reversible event; reversibility needs two independent stores
+      - Snapshots plus audit-in-git make deletion recoverable, not catastrophic
+      - Where the gate cannot reach, recovery does: see recovery.md#Destruction-as-transition
+    - Refusals (anti-decisions)
+      - No ORM, no custom query builders, no YAML procedures, no `default: allow`
+      - No deletion: retirement with provenance pointers; rollback un-retires; history only grows
+      - No LLM in the kernel, no kernel-generated worlds, no hand-edited system-schema.yaml
+  - Doc map
+    - World (SQLite SSOT, dual schema, gates): see world.md#SQLite-as-SSOT
+    - Physics (two-layer enforcement, fail-closed, raw SQL): see physics.md#Two-layer-enforcement
+    - Effect (audit spine, causal DAG, denials, forensics): see effect.md#Audit-spine
+    - Agent (identity hierarchy, intent chain, sessions, secrets): see agent.md#Identity-hierarchy
+    - Action (capability registry, routines, ctx, manifests): see action.md#Capability-registry
+    - Time (stage map, learning loop, consolidation, schedule): see time.md#Stage-map
+    - Space (env axis, primitive scoping, rehearsal, drift): see space.md#Environment-axis
+    - Trust (the ladder, gates & promotion, evidence, overrides): see trust.md#The-ladder
+    - Budget (frames, cascade, quotas, exhaustion): see budget.md#Frames
+    - Recovery (snapshots, git, hash chains, restore): see recovery.md#Snapshots
+    - Interface (CLI surface, flags, SDK, PWA layers, journeys): see interface.md#CLI-surface
+    - Assembly (monorepo, naming law, packages, tests, deps): see assembly.md#Monorepo-layout

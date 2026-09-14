@@ -1,0 +1,161 @@
+- Physics
+<!-- ref-by: action.md, interface.md, overview.md, world.md -->
+  - Two-layer enforcement
+    - Layer 1: sqlite3_set_authorizer
+      - Engine-enforced at prepare-time, C-level, inside sqlite3_prepare_v2
+      - Bypass-proof even if TS code has bugs; bugs fail toward denial
+      - Granularity: action × table × column
+      - Compiled from artifacts/policy.yaml `authorizer` section into Rust match arms at boot
+    - Layer 2: SQL AST check
+      - Evaluated before prepare; full semantic view
+      - Checks WHERE clauses, LIMIT, patterns, values, intent presence
+      - Granularity: statement shape, blast radius, parameters
+      - node-sql-parser (sqlite dialect), version pinned, fuzz-tested against SQLite test corpus
+    - Layer 1.5: prepare-time cross-check
+      - After AST passes, sqlite3_prepare_v2 dry-run in a txn; SQLite C parser is ground truth
+      - Prepare fails → deny; statement type contradicts AST classification → deny
+      - For writes: cross-check AST classification vs SQLite EXPLAIN; OpenWrite shown → deny
+      - Parse failure = deny, never pass-through
+      - Every parse logged as ast_parse {ok, node_count, statement_type} in the audit event
+    - Asymmetry
+      - Authorizer = default-deny floor, cannot be bypassed
+      - AST = expressive ceiling, semantic
+      - Prepare-time cross-check = ground truth
+      - Bypass requires all three to fail simultaneously
+    - Gate pipeline order
+      - Intent check: writes without intent → deny
+      - AST parse: reject multi-statement, unparseable
+      - AST rules: require_where, require_limit, max_rows, patterns
+      - sqlite3_set_authorizer: table/column/action, ATTACH, PRAGMA, functions
+      - Execute → audit event
+    - Implementation binding
+      - L1 floor: Rust, rusqlite via napi-rs, conn.authorizer(Some(closure)) — bypass-proof
+      - L2 ceiling: TypeScript node-sql-parser; runs before L1, rejected SQL never reaches prepare
+      - The agent never touches SQLite directly; all access flows through both layers, in order
+      - Runtime wiring of both layers: see assembly.md#Packages
+    - Policy vs governance
+      - policy.yaml (artifacts/policy.yaml): what capabilities may do — row caps, write denials, spend
+      - Also policy: trust requirements, intent mandates — behavior, never structure
+      - governance.yaml (artifacts/governance.yaml): what capabilities may be — LOC/tokens, max routines, cadence
+      - Both compiled at boot; bad config → kernel refuses to serve; no degraded mode
+      - Quad-locked with both schema files: version mismatch → refuse boot: see world.md#Validation-gates
+      - "May this write touch 500 rows?" = policy; "May this routine exist at 342 LOC?" = governance
+    - Enforcement map (artifacts/policy.yaml)
+      - authorizer.tables/views/global → Layer 1 compiled callback
+      - query.* → Layer 2 pre-prepare rules
+      - trust: L1 column/table denials (deny_for_trust) + L2 row caps, audit depth
+      - api: L1 egress allowlist, jail-level + L2 spend, retry, idempotency
+      - hands: L2 trust floors, intent, confirm gates
+      - identity: L1 socket identity pre-gate + L2 principal binding, scoped views
+      - env: overlays compiled per world; both layers read env context
+      - fail_closed: both layers
+  - Fail-closed stance
+    - `default: deny` is the anchor; everything below carves exceptions (artifacts/policy.yaml)
+    - Boot refusals
+      - No valid policy → no boot
+      - Quad-lock version mismatch → no boot
+      - system_schema hash mismatch → refuse boot
+    - Runtime denials
+      - Unparseable SQL → deny; authorizer callback error → deny
+      - Ambiguous read/write classification → treat as write
+      - Headless or crashed approval → denied
+      - Scoped capability without principal → refused
+      - Write can't be audited → it doesn't run (unauditable_write: deny)
+      - Secret exposure detected → kill_and_alert
+    - Exit codes are law: 0 ok, 2 policy-denied, 3 validation, 4 runtime, 5 audit-write-failed
+    - Denial UX: cite measured value, suggest remediation, log all: see effect.md#Denials
+    - No automatic degraded mode
+      - Fail-closed is the default; operators get documented, audited escape hatches
+      - Every break-glass use is an audit event
+      - Exist so a config typo is not a 3 AM outage with no recovery path
+    - Break-glass paths
+      - Recovery mode: CAPCLI_RECOVERY=1 capcli sys recover — loads only schema + audit sink
+      - Recovery mode allows only db query, db dump, sys audit tail, sys backup; logged recovery_mode_entered
+      - Boot diagnostic: capcli sys doctor --boot-check — all boot validations, no daemon, prints exact failure
+      - Config pre-commit: capcli rule validate in CI catches YAML errors before they kill the service
+      - Audit disk exhaustion: reserved partition; read-only mode, writes queue 5-minute TTL, then hard denial
+  - Raw SQL rules
+    - Allowed by default
+      - Raw SQL is the default primitive; the kernel exists so raw SQL is safe, not to forbid it
+      - Raw SQL is exploration, routines are exploitation; kill it and learning never starts: see time.md#Learning-loop
+      - No ORM: Drizzle/Prisma/SQLAlchemy compile to SQL anyway, before the same authorizer check
+      - No custom query-builder APIs: bulk_update(), cursor() = accidental ORM
+    - Statement rules
+      - Parameterized only — API enforces bound params; string interpolation rejected structurally
+      - Reads nearly free: authorizer scope + select max_limit 10000; missing LIMIT on SELECT warns only
+      - Writes capped: require_where + require_limit (update/delete max_limit 1000) + explicit transaction
+      - Writes need intent: writes_require_intent, deny by default
+      - INSERT max_rows_per_statement 500; chunked beyond this
+      - Blast radius: max_rows_affected 100 base; trust overlays draft 10, reviewed 100, pinned 500
+      - Every raw write runs in an explicit transaction; kernel wraps, SDK requires ctx.db.txn()
+      - Multi-statement denied; no executescript; no raw connection object
+    - Hard denials
+      - DDL gated: alter require_trust reviewed; VACUUM require_trust pinned, denied in prod
+      - Triggers denied at runtime: enforcement lives in the gate, not the db; schema trig: is kernel-compiled
+      - ATTACH / PRAGMA writes: never — authorizer unconditional deny; PRAGMA whitelist [query_only, foreign_keys]
+      - Function deny list: load_extension, writefile, readfile, fts3_tokenizer
+      - Deny patterns: "UPDATE * SET * WHERE * OR 1=1", "DELETE FROM * WHERE NOT EXISTS *", "* WHERE 1=1 *"
+      - System tables deny_write: _audit, agents, _pending_asks, _watch_cursors; reads allowed, writes kernel-internal
+  - Bulk operations
+    - Agents batch for token economy: fewer agent calls, many kernel operations
+    - require_limit on UPDATE/DELETE forces chunking; agent writes the loop, kernel enforces max_limit per chunk
+    - Pre-flight capcli db query --count before any mass op — estimate vs policy cap (require_pre_count)
+    - Each chunk = own txn, own audit event, resumable from checkpoint
+    - Bulk writes require trust ≥ reviewed (require_trust_for_bulk)
+    - confirm_above rows 5000 → human gate, --reason required (artifacts/policy.yaml bulk)
+    - dev/sim overlay: bulk require_pre_count false — worlds stay cheap to learn in
+    - No bulk_update()-style conveniences: Python loops + require_limit policy cover bulk safely
+    - Large-migration overrides (900s, 200 ops) live in governance (artifacts/governance.yaml)
+    - `db count` is dead: see world.md#Command-surface-db
+  - Search ceiling
+    - "No LLM in the kernel" applies to enforcement and execution, not to search forever
+    - Kernel search deterministic
+      - Exact match → prefix match → structured filters
+      - capcli search "refund" --trust pinned --env prod --max-ops 10; filters are deterministic
+      - Kernel returns candidates
+    - Harness search semantic
+      - Harness computes embeddings for routine descriptions into side table _capability_embeddings
+      - capcli search --semantic "handle customer refunds" queries this table
+      - Kernel serves the vectors; harness ranks them
+    - Five-stage resolution: exact → prefix → fuzzy → semantic → did-you-mean, ranked by relevance
+    - Every search query logged as event: capability.search — query, filters, results, invocation
+    - Search analytics
+      - Audit mirror reveals gaps: "agents search 'invoice' 20 times but never invoke"
+      - Searched but never invoked = missing capability; kernel surfaces, harness proposes, human approves
+      - capcli search gaps --since 7d; gap_threshold 3 (artifacts/policy.yaml api.search)
+      - Same consolidation signal for routines and API verbs: see time.md#Consolidation
+    - At 300 routines (governance max_routines cap, artifacts/governance.yaml) keyword search returns noise
+    - Structured filters narrow the set; semantic ranking orders it; kernel owns first two, harness third
+    - Principle: no LLM in enforcement; LLM-assisted discovery is the harness's job, with kernel-provided indexes
+    - The kernel is a lookup table with fast filters; the harness is the ranking engine
+  - Harness boundaries
+    - Skills (SKILL.md)
+      - capcli does not manage, store, validate, or govern harness skills
+      - Skills live in the harness layer above; routines live in capcli
+      - Boundary is the capability registry — clean, auditable, intentionally dumb
+      - Skills reference capabilities via capcli search and capcli run; never raw SQL
+      - Zero visibility into skill content, markdown structure, or agent reasoning
+      - No skill storage, no SKILL.md parsing, no semantic analysis of harness instructions
+      - Skills are the mind's business; capcli is the nervous system
+      - skill_origin provenance (added v4.1)
+        - Opt-in via identity.skill_origin in artifacts/policy.yaml
+        - allow_propagation true; harness may pass the triggering skill name
+        - max_length 64, format lowercase-hyphens; deny_patterns reject traversal, paths, spaces
+        - audit_field triggered_by_skill recorded on every leaf event
+        - on_invalid strip_and_warn — malformed field dropped, warning logged, not denied
+        - Skills cannot grant authority; metadata only — trust comes from principal + agent
+    - PWA is a client, not a component
+      - Lives outside the workspace, communicates exclusively via @capcli/sdk
+      - Renders kernel JSON; never gates, never enforces, never audits independently
+      - Never writes to system tables; never creates routines, schemas, or policies
+      - Approves, observes, recovers: see interface.md#PWA-layers
+    - No other door
+      - The gate is only real if there is no other path into the world
+      - Isolation tiers: credentials isolation, egress allowlist, network jail, gVisor/Firecracker
+      - sys doctor refuses to serve on broken boundaries: shared user, wrong DB perms, missing jail
+      - Misconfiguration must be loud
+      - Credentials never in agent env; memory-decrypted, injected at egress: see agent.md#Secrets
+    - Kernel neutrality
+      - The kernel never infers, never reasons, never does LLM work
+      - It matches, dispatches, delivers, logs
+      - Intelligence is the harness's job; mechanics is capcli's

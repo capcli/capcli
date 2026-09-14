@@ -1,0 +1,71 @@
+structure:
+  node_length: { min: 3, max: 120 }
+  siblings: { min: 3, max: 12 }
+  depth: { min: 4, max: 7 }
+  single_child_collapse: true
+  empty_nodes: false
+
+style:
+  prefer: nested
+  force_nested_above: 6
+  force_sibling_below: 3
+  shared_prefix_detection: true
+
+content:
+  tbd_allowed: true
+  max_tbd_per_file: 5
+
+references:
+  mode: pointer
+  back_pointers: true
+  orphan_check: true
+  duplicate_home_check: true
+
+redundancy:
+  enabled: true
+  word_frequency_threshold: 12
+  phrase_overlap_threshold: 0.7
+  cross_file_threshold: 2
+  stopwords: [the, a, an, of, to, in, for, and, or, with, must, shall, requires, capcli, kernel, agent, agents, routine, routines, policy, governance, audit, capability, capabilities, budget, trust, world, frame, frames, env, environment, prod, sim, stage, gate, gates, spec, session, intent, human, yaml, schema, write, writes, read, reads, node, nodes, file, files]
+  synonyms:
+    - [postgres, postgresql, pg]
+    - [auth, authentication, sign-in, signin]
+    - [api, endpoint, route]
+    - [frontend, client, ui]
+    - [db, database, storage]
+    - [capability, action, verb]
+    - [environment, env, world]
+    - [routine, procedure, script]
+    - [spec, cans, outline]
+    - [write, writes, writing, written]
+    - [read, reads, reading]
+    - [list, lists, listed, listing]
+    - [appear, appears, appeared]
+    - [queue, queues, queued]
+    - [revert, reverts, reverted]
+    - [populate, populates, populated]
+    - [preserve, preserves, preserved]
+    - [draft, drafts, drafted]
+    - [stay, stays, stayed]
+    - [grant, grants, granted]
+    - [scaffold, scaffolds, scaffolded]
+    - [cost, costs, costed]
+    - [fork, forks, forked]
+    - [mark, marks, marked]
+    - [end, ends, ending, ended]
+    - [feed, feeds, feeding]
+    - [sync, syncs, synced]
+    - [promote, promotes, promoted]
+    - [deny, denies, denied]
+    - [allow, allows, allowed]
+    - [trust, trusted, trusting]
+
+token_budget:
+  enabled: true
+  default_limit: 4096
+  estimate_chars_per_token: 3.5
+  warn_threshold: 0.8
+
+overflow:
+  max_node_chars: 200
+  force_file_for: [code_block, table, diagram]
