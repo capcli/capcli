@@ -9,7 +9,7 @@
         - Table reads and writes, per-table allow lists
         - Schema changes: drop, alter, vacuum — gated or denied
         - ATTACH/DETACH — unconditional deny, no side-databases
-        - PRAGMA — whitelist only, never blacklist
+        - PRAGMA — only whitelisted names pass
         - Function calls — allow + deny lists compiled in
         - Trigger definitions — denied at the engine door
       - Compiled from artifacts/policy.yaml `authorizer` section into Rust match arms at boot
@@ -35,8 +35,8 @@
           - attach deny, detach deny, drop deny
           - vacuum require_trust pinned; alter require_trust reviewed
           - triggers deny — enforcement lives in the gate, not the db
-          - pragma whitelist [query_only, foreign_keys]
-          - functions allow [count, sum, min, max, avg, json_extract, date, strftime]
+          - pragma whitelist, never blacklist
+          - functions: allow + deny lists compiled in
     - Layer 2: SQL AST check
       - Evaluated before prepare; full semantic view
       - node-sql-parser (sqlite dialect), version pinned, fuzz-tested against SQLite test corpus
@@ -128,7 +128,7 @@
     - Boot refusals
       - No valid policy → no boot
       - Quad-lock version mismatch → no boot
-      - system_schema hash mismatch → refuse boot
+      - system_schema hash mismatch → refuse boot — kernel integrity check
     - Runtime denials
       - Unparseable SQL → deny; authorizer callback error → deny
       - Ambiguous read/write classification → treat as write
@@ -138,6 +138,10 @@
       - Secret exposure detected → kill_and_alert
       - Pre-call enforcement: remaining ≤ deny_at_remaining → exit 2 before egress, not 429 after
     - Exit codes are law: 0 ok, 2 policy-denied, 3 validation, 4 runtime, 5 audit-write-failed
+      - 2 policy-denied — a gate refused; denial cites the matched rule
+      - 3 validation — intent missing/short or malformed request, pre-flight
+      - 4 runtime — execution failed after gates passed
+      - 5 audit-write-failed — write refused because the audit sink failed
     - Denial UX: cite measured value, suggest remediation, log all: see effect.md#Denials
     - No automatic degraded mode
       - Fail-closed is the default; operators get documented, audited escape hatches
@@ -145,7 +149,10 @@
       - Exist so a config typo is not a 3 AM outage with no recovery path
     - Break-glass paths
       - Recovery-mode mechanics: see recovery.md#Restore-path
-      - Boot diagnostic: capcli sys doctor --boot-check — all boot validations, no daemon, prints exact failure
+      - Boot diagnostic: capcli sys doctor --boot-check — boot validations, no daemon
+        - runs the same checks boot runs: policy, quad-lock, system_schema hash
+        - prints exact failure location
+        - breaks the circle: kernel won't start to tell you why it won't start
       - Config pre-commit: capcli rule validate in CI catches YAML errors before they kill the service
       - Audit sink saturation behavior: see effect.md#Audit-spine
   - Raw SQL rules
@@ -156,41 +163,64 @@
       - No custom query-builder APIs: bulk_update(), cursor() = accidental ORM
     - Statement rules
       - Parameterized only — API enforces bound params; string interpolation rejected structurally
+        - ✅ bound params + intent: UPDATE orders SET status = :s WHERE id = :id LIMIT 1
+        - ❌ rejected: f-string interpolation injects values into SQL text
+        - ❌ rejected: UPDATE orders SET archived = 1 — no WHERE, no LIMIT
       - Reads nearly free: authorizer scope + select max_limit 10000; missing LIMIT on SELECT warns only
-      - Writes capped: require_where + require_limit (update/delete max_limit 1000) + explicit transaction
+      - Writes capped: require_where + require_limit, update/delete max_limit 1000
       - Writes need intent: writes_require_intent, deny by default
-      - INSERT max_rows_per_statement 500; chunked beyond this
-      - Blast radius: max_rows_affected 100 base; trust overlays draft 10, reviewed 100, pinned 500
       - Every raw write runs in an explicit transaction; kernel wraps, SDK requires ctx.db.txn()
       - Multi-statement denied; no executescript; no raw connection object
     - Hard denials
-      - DDL gated: alter require_trust reviewed; VACUUM require_trust pinned, denied in prod
-      - Triggers denied at runtime: enforcement lives in the gate, not the db; schema trig: is kernel-compiled
+      - DDL gated
+        - alter require_trust reviewed
+        - VACUUM require_trust pinned
+        - prod overlay: vacuum deny outright (artifacts/policy.yaml env.prod)
+        - dev overlay relaxes row caps, never physics: WHERE + LIMIT unchanged
+      - Triggers denied at runtime: enforcement lives in the gate, not the db; schema trig: kernel-compiled
       - ATTACH / PRAGMA writes: never — authorizer unconditional deny; PRAGMA whitelist [query_only, foreign_keys]
-      - Function deny list: load_extension, writefile, readfile, fts3_tokenizer
-      - Deny patterns: "UPDATE * SET * WHERE * OR 1=1", "DELETE FROM * WHERE NOT EXISTS *", "* WHERE 1=1 *"
-      - System tables deny_write: _audit, agents, _pending_asks, _watch_cursors; reads allowed, writes kernel-internal
+      - Function calls: deny + allow lists at the authorizer
+        - deny [load_extension, writefile, readfile, fts3_tokenizer]
+        - allow [count, sum, min, max, avg, json_extract, date, strftime]
+        - compiled from artifacts/policy.yaml global.functions at boot
+      - System tables deny_write: _audit, agents, _pending_asks, _watch_cursors
+        - deny_read [] — reads allowed
+        - writes are kernel-internal only
+        - _system_schema: agent-readable, never agent-writable
   - Bulk operations
     - Agents batch for token economy: fewer agent calls, many kernel operations
-    - require_limit on UPDATE/DELETE forces chunking; agent writes the loop, kernel enforces max_limit per chunk
-    - Pre-flight capcli db query --count before any mass op — estimate vs policy cap (require_pre_count)
-    - Each chunk = own txn, own audit event, resumable from checkpoint
-    - Bulk writes require trust ≥ reviewed (require_trust_for_bulk)
-    - confirm_above rows 5000 → human gate, --reason required (artifacts/policy.yaml bulk)
-    - dev/sim overlay: bulk require_pre_count false — worlds stay cheap to learn in
-    - No bulk_update()-style conveniences: Python loops + require_limit policy cover bulk safely
-    - Large-migration overrides (900s, 200 ops) live in governance (artifacts/governance.yaml)
-    - `db count` is dead: see world.md#Command-surface-db
+    - Chunking semantics
+      - require_limit on UPDATE/DELETE forces chunking
+      - agent writes the loop, kernel enforces max_limit per chunk
+        - plain Python while-loop over ctx.db.execute
+        - pattern: UPDATE … SET … WHERE … LIMIT 500, loop until changes < limit
+        - every chunk re-enters the full gate pipeline — no bulk bypass
+      - each chunk = own txn, own audit event, resumable from checkpoint
+    - Pre-flight estimate
+      - capcli db query --count before any mass op — estimate vs policy cap
+      - require_pre_count true (artifacts/policy.yaml query.bulk)
+      - dev/sim overlay: require_pre_count false — worlds stay cheap to learn in
+    - Trust + confirmation gates
+      - bulk writes require trust ≥ reviewed (require_trust_for_bulk)
+      - confirm_above rows 5000 → human gate, --reason required
+      - prod overlay confirm_above rows 10 — far tighter than default
+    - Anti-convenience
+      - No bulk_update()-style conveniences: Python loops + require_limit cover bulk safely
+      - Large-migration overrides (900s, 200 ops) live in governance (artifacts/governance.yaml)
+      - `db count` is dead: see world.md#Command-surface-db
   - Search ceiling
     - "No LLM in the kernel" applies to enforcement and execution, not to search forever
     - Kernel search deterministic
       - Exact match → prefix match → structured filters
       - capcli search "refund" --trust pinned --env prod --max-ops 10; filters are deterministic
-      - Kernel returns candidates
+      - Kernel returns candidates; it never ranks semantically
     - Harness search semantic
-      - Harness computes embeddings for routine descriptions into side table _capability_embeddings
-      - capcli search --semantic "handle customer refunds" queries this table
-      - Kernel serves the vectors; harness ranks them
+      - Harness computes embeddings for routine descriptions
+        - stored in side table _capability_embeddings
+        - capcli search --semantic "handle customer refunds" queries this table
+        - kernel serves the vectors; harness ranks them
+      - Semantic intelligence belongs in the harness, not the gate
+      - kernel never embeds, never ranks — it stores and serves
     - Five-stage resolution: exact → prefix → fuzzy → semantic → did-you-mean, ranked by relevance
     - Search analytics
       - Event logging and gap flow: see action.md#Capability-registry
@@ -206,6 +236,13 @@
       - Skills live in the harness layer above; routines live in capcli
       - Boundary is the capability registry — clean, auditable, intentionally dumb
       - Skills reference capabilities via capcli search and capcli run; never raw SQL
+      - Skill ↔ kernel interaction
+        - Skill asks: "use capcli run refund_archive"
+        - Kernel path
+          - capcli search / inspect / run
+          - every path crosses the same gate, then audits
+          - routine executes jailed in its sandbox
+        - Return: summary result ≤500 tokens
       - Zero visibility into skill content, markdown structure, or agent reasoning
       - No skill storage, no SKILL.md parsing, no semantic analysis of harness instructions
       - Skill-origin provenance spec: see agent.md#Identity-hierarchy
@@ -215,7 +252,11 @@
       - Approves, observes, recovers: see interface.md#PWA-layers
     - No other door
       - The gate is only real if there is no other path into the world
-      - Isolation tiers: credentials isolation, egress allowlist, network jail, gVisor/Firecracker
+      - Isolation tiers
+        - credentials isolation
+        - egress allowlist — only imported providers reachable
+        - network jail
+        - gVisor/Firecracker — strongest tier
       - sys doctor refuses to serve on broken boundaries: shared user, wrong DB perms, missing jail
       - Misconfiguration must be loud
       - Credentials never in agent env; memory-decrypted, injected at egress: see agent.md#Secrets
