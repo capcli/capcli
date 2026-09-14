@@ -164,6 +164,7 @@
       - Audit tail: WebSocket/SSE real-time; budget frames push/pop real-time
       - Near-real-time polls: _api_quota 30s, pending asks 30s
       - Periodic polls: routine stats 5m, search gaps 1h, env drift 15m, backup status 15m, approvals 2m
+      - Real-time data comes from the kernel — never caches stale state past its TTL
       - Hash chain: daily verify per governance schedule
     - Mini ERP
       - Governed views render as dashboard cards — orders, revenue, low stock, routine health, budget
@@ -265,6 +266,7 @@
       - 10-minute timeline: doctor 0:00, intent 0:15, world 1:30, denial 3:00, write 4:00, recover 5:00, receipt 10:00
       - Milestones: human 7 (stated intent → recovered → promoted with evidence); harness 9 (contract → proved in sim)
       - Metrics: first governed effect <5 min, first denial <7 min, first recovery <10 min; sim success >0.9
+      - Every stage ends with a visible, auditable result — no stage ends with "trust me"
     - PWA rendering of journeys
       - Stage outputs render as kernel artifacts: doctor checklist, preview card, denial teaching card, restore flow
       - S7 renders as a three-step wizard; S8 as side-by-side manifest vs fingerprint
