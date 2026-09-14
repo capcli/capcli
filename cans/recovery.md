@@ -11,7 +11,6 @@
   - Git integration
     - Git is DX, not backup: `git push --force` rewrites history; tamper-evidence needs an append-only store
     - Auto-commit: interval plus event-triggered commits of world.sql, audit logs, configs → remote
-    - Growth: ~35K commits/year at 15-minute intervals — history must stay lean
     - Offsite target: S3/GCS/B2 with object versioning — append-only by design; the recovery guarantee
     - `sys backup --push` pushes to git AND object storage — two independent stores
     - backup section: interval_minutes 15, max_drift_minutes 30 alarms, include_audit (artifacts/governance.yaml)
