@@ -8,14 +8,12 @@
       - run/search/inspect work identically on all kinds — registry flattens everything into `run`
       - Trust ladder spans the whole registry: see trust.md#The-ladder
     - Search surface
-      - Resolution: exact → prefix → fuzzy → semantic → did-you-mean, ranked by relevance
+      - Five-stage resolution: see physics.md#Search-ceiling
       - Kernel search deterministic: exact, prefix, structured filters (`--trust pinned --env prod`)
-      - Harness search semantic: embeddings side table `_capability_embeddings`; kernel serves vectors, harness ranks
-      - Kernel = lookup table with fast filters; harness = ranking engine — no LLM in the kernel
       - At the 300-routine cap keyword search returns noise: filters narrow, semantic ranks
       - Ceiling rationale and kernel/harness split: see physics.md#Search-ceiling
     - Search analytics
-      - Every search logged as capability.search event: query, filters, results, final invocation
+      - capability.search event anatomy: see effect.md#Audit-spine
       - Search gaps: searched-never-invoked = missing capability; `capcli search gaps --since 7d`
       - Gaps are consolidation signals for routines and API verbs alike: see time.md#Learning-loop
       - Progressive disclosure: one `cap search` meta-tool; base context constant at 10 or 10,000
@@ -27,7 +25,7 @@
   - Routines
     - Procedure layer
       - Python files in `routines/` — sequencing, branching, retries, composition demand code
-      - No language invented inside YAML: YAML declares, Python executes, JSONL records
+      - YAML declares, Python executes, JSONL records: see overview.md#Mental-model
       - Raw SQL is exploration, routines are exploitation — learned at runtime from audited repetition
       - Op = one atomic capability call (unversioned); routine = learned composition (version + code_hash)
       - Naming precision: Op = invocation through the gate, Effect = world change, Event = audit record
@@ -40,7 +38,7 @@
       - declared limits ask for less, never more than the governance ceiling
     - Registration
       - `routine draft <name>` = scaffold + validate + manifest extract; file creation free, registration gated
-      - Near-duplicate check at birth: similarity 0.91 vs get_orders_status → reuse it or justify `--reason`
+      - Near-duplicate check at birth: see space.md#Primitive-scoping
       - Caps bite at `routine draft` — the registry gate command under `- Capability registry`
       - Rules live in `artifacts/governance.yaml` registry — cited, never copied here
     - Sandbox execution
@@ -74,10 +72,10 @@
       - Shape caps: loc 5–150, tokens 50–2000, params max 8, description min 5 words
       - Runtime caps: max_ops_per_run 50, max_duration_seconds 300, max_result_tokens 500, max_txn_statements 10
       - manifest_drift: anomaly — undeclared ops trigger a governed event, never silent acceptance
-      - Effective limit = min(declared need, governance ceiling, override, parent_remaining)
+      - Effective limit min()-cascade: see budget.md#Cascade
       - Five gates: register → draft (shape+manifest) → runtime (ops/duration/result/drift) → monitor → sweep
       - Denial cites the exact number; exceptions are git-tracked overrides, never --force
-      - Never runtime-editable: a routine cannot loosen its own cage
+      - Never runtime-editable: see physics.md#Two-layer-enforcement
       - Source: `artifacts/governance.yaml` routine_shape — defaults every file must satisfy
     - Skill invocation protocol
       - DISCOVER `capcli search "..." --json` → INSPECT `capcli inspect <cap> --json` → INVOKE `capcli run -p k=v --intent`
@@ -96,9 +94,9 @@
     - Anti-decisions
       - No YAML procedures — control flow inside YAML is the rejected smell
       - No module imports for authority — ctx injection only; the jail's sole door is the socket
-      - No self-promotion — evidence is agent work, authority is human work
+      - No self-promotion: see trust.md#The-ladder
       - No event-driven cores — no callbacks, subscriptions, reactive streams inside routines
-      - No silent edits — hash-pinned versions; change = new version
+      - No silent edits — change is a new version: see trust.md#Evidence
       - No immortal routines — decay and consolidation are mandatory rhythms
       - No bulk_update() conveniences — convenience APIs become an accidental ORM
       - No ungoverned shape — caps at five gates; exceptions as reviewable commits
@@ -108,11 +106,11 @@
     - Invariants
       - Validated (AST + policy + governance shape) before execution; sandboxed while executing
       - Every effect crosses the kernel gate — no exceptions, no depth discount
-      - Every version hash-pinned; replay verifies the hash; promotion paths recorded
+      - Hash-pinned versions, replay, promotion paths: see trust.md#Evidence
       - Validate extracts the manifest; runtime fingerprint proves or contradicts it
-      - Trust up via human/CI gates only; decay and consolidation move it down on schedule
+      - Trust ascends via gates only: see trust.md#The-ladder
       - Event-driven at the edges, imperative at the core — stories, not listeners
-      - Every run carries the causal spine: env, stage, agent, principal, intent chain, caused_by
+      - Causal spine on every run: see agent.md#Intent-chain
       - Registry consolidates, never duplicates; subtracts on schedule, never deletes
       - Manifest drift is a governed anomaly, never silently accepted
       - Sim mode is per-verb; manifest match reflects reality (3/4 = 0.75, not 1.0)
@@ -172,7 +170,6 @@
       - No transactions, no rollback; retry risks double-spend; replay re-execution ≠ same result
       - Pre-call policy only: once the request leaves, it's gone — external writes gated stricter than SQL
       - No auto-retry on non-idempotent calls; retry only with kernel-generated idempotency key persisted first
-      - Replay records mark external effects replay: manual — never auto-replayed: see effect.md#Provenance
     - Sync import
       - `capcli api sync stripe --from <openapi-url> --interval 7d` — scheduled URL sync, not one-shot upload
       - Kernel fetches the raw OpenAPI spec, parses ALL endpoints, compiles `apis/<provider>.yaml`
@@ -209,14 +206,11 @@
     - Live quota tracking
       - Static per_day_usd caps are the floor; headers are dynamic truth (X-RateLimit-Remaining, Retry-After)
       - Kernel extracts declared headers deterministically, stores in `_api_quota` (kernel-written, agent-readable)
-      - Pre-call enforcement: remaining ≤ deny_at_remaining → exit 2 before egress, not 429 after
+      - Pre-call deny before egress: see physics.md#Fail-closed-stance
       - inspect shows live remaining, reset time, budget status before invoking — numbers live, not cached
-      - Quota rows scoped per env: sim and prod independent — rehearsal never burns prod limits
-      - Providers without standard headers: kernel-counted sliding windows
-      - A 429 is a design failure: the gate denies before the call, not after
       - Quota ownership and headers: see budget.md#Quotas
     - Search gaps
-      - `capcli search gaps --since 7d` — searched-never-invoked = missing capability
+      - The `search gaps` command: see interface.md#CLI-surface
       - Kernel surfaces the gap; harness proposes activation; human approves
       - Same consolidation signal as routines: see time.md#Learning-loop
       - Dormant catalog makes gaps actionable: the verb often exists, just unactivated
@@ -230,17 +224,17 @@
     - Management
       - bind list | inspect | pause | resume | remove <name>
       - bind keys issue <name> --principal partner:X — human-gated
-      - Retired bound routine → schedule auto-disabled loudly (dead_schedule_disable)
+      - dead_schedule_disable on retirement: see time.md#Schedule-&-maintenance
       - Limits: path `artifacts/governance.yaml` schedule + watch — max_active 20/50, min_interval_minutes 5
       - Webhook guard: max_payload_bytes 65536, 100 events/min; poll min_interval_minutes 5; dead_letter 30d/1000
-      - max_catchup_fires 1 — daemon restart does not fire the missed 40
+      - max_catchup_fires 1 after restart: see time.md#Schedule-&-maintenance
     - Serve lifecycle split
       - Registration (CLI): bind endpoint writes endpoint config to workspace.db, exit 0, no listener
       - Serving (daemon): `capcli sys serve --start` starts the HTTP listener; same policy gates as run
       - Lifecycle: sys serve --stop | --restart | --status; systemd/supervisord/docker govern in production
-      - Health: `bind endpoint <name> --health` → 200 live / 503; sys doctor checks all endpoints
+      - Endpoint --health checks: see interface.md#CLI-surface
       - serve.request fields: endpoint, routine@version, api_key_id, principal partner:stripe, response_status
-      - Every HTTP request generates a serve.request audit event — closes the CLI-vs-HTTP gap: see effect.md#Audit-spine
+      - serve.request per HTTP request: see interface.md#CLI-surface
     - Endpoint governance
       - Floors: min_trust pinned, require_version_pin — serve order_status@12, never a moving target
       - allow_writes_default false — inbound writes cost explicit opt-in
