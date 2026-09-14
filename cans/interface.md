@@ -71,7 +71,7 @@
       - Caller tags: [harness] safe for skills, [human] needs human/CI, [both] context-dependent
       - `db exec` direct instruction is [human] — skills must never instruct it
       - Discovery extras: `api catalog --state dormant`, `search gaps --since 7d`
-    - Refusals — what the surface refuses to grow
+    - Refusals
       - `config set`: refused — config is files + git + review, no CLI write-path
       - `db count`: dead — `db query --count` or AST-enforced pre-flight
       - `claim` noun: refused — `db lock` or `run --lock`; `jail` noun: `sys exec --sandbox`
