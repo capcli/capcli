@@ -1,63 +1,100 @@
 - Recovery
-<!-- ref-by: agent.md, effect.md, interface.md, overview.md, time.md, world.md -->
+<!-- ref-by: agent.md, effect.md, interface.md, overview.md, physics.md, space.md, time.md, world.md -->
   - Snapshots
     - Mechanics
       - Point-in-time tier: `db snapshot` = WAL-consistent copy plus hash (db.architecture.md §14)
-      - Snapshot-first migrations: every DDL takes a WAL-consistent snapshot before execution
-      - Delete a column without snapshot = exit 2 — migration is snapshot-first, always
-      - Failed migration auto-restores from its snapshot inside one transaction, exit 4
+      - db.snapshot.rs runs VACUUM INTO — a consistent file image, mid-traffic
       - `db restore <id>` reverses any point-in-time state
+      - Restore is transactional — the world never lands half-rolled-back
+      - Migration coupling: snapshot-first DDL, exit 2, auto-restore: see world.md#Schema-evolution
     - Indexes
-      - `sys recover --list` shows last N recovery points: timestamp, schema version, audit count
+      - `sys recover --list`: last N recovery points — timestamp, schema version, audit count
       - Human picks by time, not commit hash
-      - Snapshot ids are named: snap_onboarding_001, snap_migration_004, snap_auto_*
-      - Migration approvals carry snapshot ids (snap_migration_004) with rollback preview: see interface.md#PWA-layers
+      - Ids are named: snap_onboarding_001, snap_migration_004, snap_auto_*
+      - snap_auto_* fire on kernel schedule; snap_migration_* bind to DDL approvals
+      - Approval cards carry the rollback preview: see interface.md#PWA-layers
   - Git integration
     - Git is DX, not backup: `git push --force` rewrites history; tamper-evidence needs an append-only store
-    - Auto-commit: interval plus event-triggered commits of world.sql, audit logs, configs → remote
-    - Offsite target: S3/GCS/B2 with object versioning — append-only by design; the recovery guarantee
-    - `sys backup --push` pushes to git AND object storage — two independent stores
-    - backup section: interval_minutes 15, max_drift_minutes 30 alarms, include_audit (artifacts/governance.yaml)
-    - Event triggers: promote, migrate, import, register, restore, serve.add (artifacts/governance.yaml)
-    - env require_backup_push: no world exists unbacked (artifacts/governance.yaml)
-    - Git retention: git_max_age_days 90 — older commits squashed; full history lives in object storage
-    - Routines are git-tracked: a PR is a routine diff; promotion to prod = merge
-    - `env doctor` flags unmerged routines running in prod — drift made loud
-    - Governance overrides are commits too — exceptions reviewed like code
-    - readme.md enforcement map: backup section → `sys backup` + `sys doctor`
+    - Auto-commit
+      - Interval + event-triggered commits of world.sql, audit logs, configs → remote
+      - backup.interval_minutes 15, max_drift_minutes 30 → doctor alarm (artifacts/governance.yaml)
+      - trigger_on: promote, migrate, import, register, restore, serve.add (artifacts/governance.yaml)
+      - Backup guarantee: see space.md#Environment-axis
+    - Offsite targets
+      - S3/GCS/B2 with object versioning — append-only by design, the recovery guarantee
+      - `sys backup --push` pushes to git AND object storage — two independent stores
+      - Object versions keep every prior state — force-push cannot touch them
+      - backup.include_audit true — audit logs travel offsite with world.sql (governance.yaml)
+    - Retention
+      - git_max_age_days 90 — older commits squashed, git stays lean (artifacts/governance.yaml)
+      - Full history lives in object storage — archive complete, working repo small
+      - ~35K commits/year at 15-min intervals — squash keeps clones fast
+    - Routine coupling
+      - Routines are git-tracked: a PR is a routine diff; promotion to prod = merge
+      - Governance overrides are commits too — exceptions reviewed like code
+      - Prod merge drift: see space.md#Drift
+      - Enforcement map: backup section → `sys backup` + `sys doctor` (readme.md)
   - Hash chains
     - Chain
-      - Each JSONL audit line carries prev_hash: sha256:<previous_line_hash> — tampering breaks the chain
-      - Real tamper-evidence, independent of git history
-      - hash_chain_verify "0 4 * * *" — daily integrity validation (artifacts/governance.yaml)
-      - result_hash per event detects drift between recorded and actual outcomes
+      - Linking
+        - Each JSONL audit line carries prev_hash: sha256:<previous_line_hash>
+        - Tampering with any line breaks every link after it
+        - result_hash drift detection: see effect.md#Audit-spine
+        - Real tamper-evidence, independent of git history
+      - Sink
+        - sys.audit.service.ts owns the JSONL sink, _audit mirror, and hash chain
+        - Bun.CryptoHasher("sha256") computes each link — zero crypto deps
     - Verification
-      - `sys doctor` downloads the last pushed backup and compares world.sql hash
-      - backup.last_verified_at tracked — stale >24h → alarm
-      - require_hash_verify: boot verifies system-schema file hash against kernel version (artifacts/governance.yaml)
-      - Sink owner: `sys.audit.service.ts` — JSONL sink plus _audit mirror plus hash chain
+      - Scheduled
+        - Daily chain walk
+          - hash_chain_verify "0 4 * * *" — daily integrity validation (artifacts/governance.yaml)
+          - A broken link flags every event after the tamper point
+        - Stale backup watch
+          - `sys doctor` downloads the last pushed backup, compares world.sql hash
+          - backup.last_verified_at tracked — stale >24h → alarm (artifacts/governance.yaml)
+      - Boot gate
+        - require_hash_verify: boot verifies system-schema hash vs kernel version (governance.yaml)
+        - Mismatch refuses boot — the rulebook itself is tamper-evident
       - Replay re-verifies code_hash — edited file is not a replayable record: see time.md#Versioning-&-provenance
   - Restore path
     - Tiers
-      - Durability: point-in-time `db snapshot`, committed history world.sql, offsite `sys backup --push`
+      - Point-in-time — the fast undo: instant, local, minutes-deep
+      - Committed history: world.sql dump, git-tracked: see world.md#SQLite-as-SSOT
       - `sys recover <commit|timestamp>` restores full world-state from git
+      - Offsite truth: `sys backup --push` — interval + event-triggered, append-only
       - `sys audit replay` re-applies events through current policy — demotion never resurrects permissions
-      - world.sql is the deterministic dump — git-tracked, the recoverable artifact
-    - Degraded paths
-      - Recovery mode: CAPCLI_RECOVERY=1 loads only schema + audit sink — no policy, routines, or serve
-      - Recovery mode allows only db query/dump, sys audit tail, sys backup; logged recovery_mode_entered
-      - Boot diagnostic: `sys doctor --boot-check` validates boot without starting the daemon
-      - Break-glass paths: every use is an audit event — a config typo is never a 3 AM dead end
+    - Recovery mode
+      - Entry
+        - CAPCLI_RECOVERY=1 loads only schema + audit sink — no policy, routines, or serve
+        - recovery_mode_entered audited on entry — break-glass is loud, never silent
+        - `sys doctor --boot-check` validates boot without starting the daemon
+      - Allowlist
+        - Only db query, db dump, sys audit tail, sys backup — repair verbs
+        - No routine exec, no serve, no policy writes — read-and-repair only
+        - Every break-glass use is an audit event — a config typo is never a 3 AM dead end
     - Worst case
       - Harness wipes everything: `git clone` + `sys recover`, or pull from object storage
       - After worst case: world restored, audit spine intact, hash chain verified
       - e2e recovery.worst.case: wipe → clone → recover journey test
       - PWA simulate recovery: dry-run the restore in a temp env first
     - Re-entry
-      - Onboarding Stage 6 proof: `db snapshot` → snap_onboarding_002, mutate, `db restore` — reversible
-      - Recover, then context reinstatement: where am I, what was I doing, what changed, what is safe next
-      - Recovery output: world.sql restored, audit chain verified, workspace.db rebuilt, status ready
-      - Harness re-entry reads: sys audit tail --since 24h, routine stats, sys doctor, rule show — all --json
+      - Onboarding proof
+        - Trip out
+          - Stage 6: `db snapshot` → snap_onboarding_002
+          - Mutate: `db exec` flips orders.status to broken — intent onboarding: test recovery
+        - Trip back
+          - `db restore snap_onboarding_002` → orders.status: done (was: broken)
+          - Round trip audited as op_000006 — reversible is proven, not promised
+      - Context reinstatement
+        - Where: env dev, schema v12, policy v4 — position first
+        - Doing: last intent plus last governed effect (op_000041)
+        - Changed: audit events since last session, retires, policy diffs
+        - Safe next: dry-run suggestion, `sys audit tail --since 24h`, sweep
+        - One screen answers all four — retrieval cues, not a reboot
+      - Recovery output
+        - world.sql restored, audit chain verified, workspace.db rebuilt, status ready
+        - policy, governance, schema re-validated before ready prints
+      - `sys audit tail --since 24h`, routine stats, `sys doctor`, `rule show` — all --json
   - Destruction as transition
     - Philosophy
       - Deletion is a state transition; return is memory restoration — nothing destroyed, nothing lost
@@ -65,11 +102,22 @@
       - PWA Layer 8 undo console: snapshots, rollbacks, git points, hash verify: see interface.md#PWA-layers
       - Forensics localize failures to leaf ops — rollback is primitive-informed: see effect.md#Failure-forensics
     - Offboarding sequence
-      - Show what exists: `env inspect prod`, `sys doctor --report`
-      - Final backup: `sys backup --push`
-      - Revoke: `sys agent list`, `sys agent revoke agt_7f3k`; pause and remove binds
-      - Dump state: `db dump` → final-world.sql
-      - Remove: `env remove dev`, `env remove sim`, `env remove prod --confirm-backup --confirm-prod`
-      - Prod removal: prod_removal_flags 2 — two explicit confirm flags (artifacts/governance.yaml)
-      - Harness renders the recovery command first: `git clone <remote>` + `sys recover <commit>`
-      - Emotional message: closing a chapter, not erasing memory
+      - Survey
+        - Show what exists: `env inspect prod`, `sys doctor --report`
+        - bind list → pause → remove — served endpoints torn down first
+      - Preserve
+        - Final backup: `sys backup --push` — last offsite copy before teardown
+        - Dump state: `db dump` → final-world.sql
+        - Revoke: `sys agent list`, `sys agent revoke agt_7f3k` — identities die before worlds
+      - Remove
+        - Environments
+          - `env remove dev`, `env remove sim` — no confirm flags needed
+          - `env remove prod --confirm-backup --confirm-prod` — both flags, both required
+          - prod_removal_flags 2: two explicit confirms (artifacts/governance.yaml)
+        - Order matters
+          - Backup → revoke → dump → remove — reversal material exists at every step
+          - Environments last: nothing may point at a removed world
+      - Rendering
+        - Harness renders the recovery command first: `git clone <remote>` + `sys recover <commit>`
+        - Shows the last pushed backup: commit id, age — two minutes ago
+        - Emotional message: closing a chapter, not erasing memory
