@@ -1,4 +1,5 @@
 - World
+<!-- ref-by: action.md, agent.md, budget.md, effect.md, interface.md, overview.md, physics.md -->
   - SQLite as SSOT
     - workspace.db is the persistent world-state, not "the database behind the app"
     - workspace.db: capcli daemon-owned, chmod 600, NOT git-tracked

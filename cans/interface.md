@@ -1,4 +1,5 @@
 - Interface
+<!-- ref-by: agent.md, budget.md, effect.md, overview.md, physics.md, recovery.md, space.md, trust.md, world.md -->
   - CLI surface
     - Design laws
       - One shape forever: `capcli <noun> <verb> [target] [--flags]` — no exceptions

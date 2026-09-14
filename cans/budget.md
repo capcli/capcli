@@ -1,4 +1,5 @@
 - Budget
+<!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, time.md, world.md -->
   - Frames
     - Every routine invocation pushes a budget frame onto the call stack
     - Frame tracks ops consumed, duration elapsed, spend incurred, rows affected

@@ -1,4 +1,5 @@
 - Physics
+<!-- ref-by: action.md, interface.md, overview.md, world.md -->
   - Two-layer enforcement
     - Layer 1: sqlite3_set_authorizer
       - Engine-enforced at prepare-time, C-level, inside sqlite3_prepare_v2

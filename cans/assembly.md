@@ -1,4 +1,5 @@
 - Assembly
+<!-- ref-by: overview.md, physics.md -->
   - Monorepo layout
     - Tooling
       - Bun IS the monorepo: no turborepo, nx, pnpm, lerna — `bunfig.toml` plus workspace globs

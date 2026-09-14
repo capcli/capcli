@@ -1,4 +1,5 @@
 - Overview
+<!-- ref-by: agent.md -->
   - What capcli is
     - Policy gateway
       - Governed boundary through which an agent harness affects and observes a workspace

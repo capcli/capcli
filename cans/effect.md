@@ -1,4 +1,5 @@
 - Effect
+<!-- ref-by: action.md, budget.md, interface.md, overview.md, physics.md, recovery.md, trust.md, world.md -->
   - Audit spine
     - Ground truth
       - Three stores: state = `workspace.db`, procedure = Python + YAML, experience = JSONL audit log

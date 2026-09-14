@@ -1,4 +1,5 @@
 - Action
+<!-- ref-by: _adr/001-governance-yaml-v2.md, agent.md, assembly.md, effect.md, interface.md, overview.md, recovery.md, time.md, trust.md, world.md -->
   - Capability registry
     - Unifying concept
       - Everything the agent can effect is a capability: db op, routine, api verb, view

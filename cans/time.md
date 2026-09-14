@@ -1,4 +1,5 @@
 - Time
+<!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, physics.md, recovery.md, trust.md, world.md -->
   - Stage map
     - Pipeline: draft → prove → ship → live → monitor, ending in sweep / rollback / retire
     - draft: file scaffolded in `routines/` via harness native fs; nobody gates — creation is ungated
@@ -99,7 +100,7 @@
     - Near-duplicate detection runs on fingerprint similarity: identical primitive sequences merge, not code text
     - The registry stays a library because subtraction runs on schedule; consolidates, never duplicates
   - Schedule & maintenance
-    - Cron is a governed time trigger: daemon-owned schedule hand, time → agent: see interface.md#Bindings
+    - Cron is a governed time trigger: daemon-owned schedule hand, time → agent: see action.md#Bindings
     - Caps: max_active 20, max_per_agent 10, min_interval_minutes 5 — no sub-5-minute cron (artifacts/governance.yaml)
     - max_catchup_fires 1: daemon restart ≠ fire the missed 40 (artifacts/governance.yaml)
     - dead_schedule_disable: bound routine retired → schedule auto-disabled loudly (artifacts/governance.yaml)

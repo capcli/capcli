@@ -6,7 +6,7 @@ structure:
   empty_nodes: false
 
 style:
-  prefer: sibling
+  prefer: nested
   force_nested_above: 6
   force_sibling_below: 3
   shared_prefix_detection: true
@@ -18,16 +18,15 @@ content:
 references:
   mode: pointer
   back_pointers: true
-  max_hops: 1
   orphan_check: true
   duplicate_home_check: true
 
 redundancy:
   enabled: true
-  word_frequency_threshold: 4
+  word_frequency_threshold: 12
   phrase_overlap_threshold: 0.7
   cross_file_threshold: 2
-  stopwords: [the, a, an, of, to, in, for, and, or, with, must, shall, requires]
+  stopwords: [the, a, an, of, to, in, for, and, or, with, must, shall, requires, capcli, kernel, agent, agents, routine, routines, policy, governance, audit, capability, capabilities, budget, trust, world, frame, frames, env, environment, prod, sim, stage, gate, gates, spec, session, intent, human, yaml, schema, write, writes, read, reads, node, nodes, file, files]
   synonyms:
     - [postgres, postgresql, pg]
     - [auth, authentication, sign-in, signin]
@@ -38,6 +37,28 @@ redundancy:
     - [environment, env, world]
     - [routine, procedure, script]
     - [spec, cans, outline]
+    - [write, writes, writing, written]
+    - [read, reads, reading]
+    - [list, lists, listed, listing]
+    - [appear, appears, appeared]
+    - [queue, queues, queued]
+    - [revert, reverts, reverted]
+    - [populate, populates, populated]
+    - [preserve, preserves, preserved]
+    - [draft, drafts, drafted]
+    - [stay, stays, stayed]
+    - [grant, grants, granted]
+    - [scaffold, scaffolds, scaffolded]
+    - [cost, costs, costed]
+    - [fork, forks, forked]
+    - [mark, marks, marked]
+    - [end, ends, ending, ended]
+    - [feed, feeds, feeding]
+    - [sync, syncs, synced]
+    - [promote, promotes, promoted]
+    - [deny, denies, denied]
+    - [allow, allows, allowed]
+    - [trust, trusted, trusting]
 
 token_budget:
   enabled: true

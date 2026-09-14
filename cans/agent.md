@@ -1,4 +1,5 @@
 - Agent
+<!-- ref-by: action.md, effect.md, interface.md, overview.md, physics.md, world.md -->
   - Identity hierarchy
     - Chain
       - principal → agent → session → op; ids kernel-issued, stored in `workspace.db`, never self-declared

@@ -1,4 +1,5 @@
 - Space
+<!-- ref-by: action.md, effect.md, interface.md, overview.md, time.md, world.md -->
   - Environment axis
     - World roles
       - dev: birthplace — draft routines live here; experimentation is cheap

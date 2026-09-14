@@ -1,4 +1,5 @@
 - Trust
+<!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, space.md, time.md -->
   - The ladder
     - Rungs
       - draft: agent-learned, unproven; tight caps, full audit; max_rows_affected 10

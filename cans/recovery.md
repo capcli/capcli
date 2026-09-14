@@ -1,4 +1,5 @@
 - Recovery
+<!-- ref-by: agent.md, effect.md, interface.md, overview.md, time.md, world.md -->
   - Snapshots
     - Mechanics
       - Point-in-time tier: `db snapshot` = WAL-consistent copy plus hash (db.architecture.md §14)
