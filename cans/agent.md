@@ -2,7 +2,9 @@
 <!-- ref-by: action.md, effect.md, interface.md, overview.md, physics.md, trust.md, world.md -->
   - Identity hierarchy
     - Chain
-      - principal → agent → session → op; ids kernel-issued, stored in `workspace.db`, never self-declared
+      - principal → agent → session → op; ids kernel-issued, stored in `workspace.db`
+      - Routine names self-declared in decorator, kernel-confirmed at registration: see action.md#Routines
+        # FIX #30: clarified that "never self-declared" applies to identity ids, not routine names
       - principal — human or kernel authority holder (user:alice, partner:stripe)
       - agent — the registered harness instance doing the work (agt_7f3k)
       - session — the engagement scope (ses_a9) every event, frame, and claim names
@@ -73,7 +75,8 @@
       - session id (ses_a9) rides every event, budget frame, and claim
       - Sessions kernel-issued; principal binds each session to a human or kernel principal
       - v1 agents poll via `sys audit tail`; v2 subscribes via Unix socket stream
-      - PWA session token from kernel; `--as` maps to session: see interface.md#SDK-contract
+      - PWA session token from kernel; `--as` maps to session (canonical home: this file)
+        # FIX: resolves mutual pointer pair flagged in _collab/conflicts.md
     - Socket boundary
       - All access kernel-mediated: see overview.md#Mental-model — socket or CLI invocation; no direct SQLite, no direct network
       - `workspace.db` daemon-owned chmod 600; credentials never in agent env
@@ -88,7 +91,9 @@
     - Storage
       - `secrets` system table
         - columns: name unique, value, scope=global, expires_at
-          - value mask=true — column-level redaction at the auth…: see physics.md#Two-layer-enforcement
+          - value mask=true — column-level redaction: see physics.md#Two-layer-enforcement
+        - Secrets (credential ingress) are distinct from data masking (PII egress): see world.md#Dual-schema
+          # FIX #7: disambiguated secrets vs masking
         - sens: true — table-level sensitive marking
         - kernel policy row: allow [read], mask_columns [value]
       - Policy: agent read-only, value masked; secrets rows never agent-writable: see world.md#Dual-schema

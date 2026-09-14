@@ -41,17 +41,21 @@
     - PWA Layer 5 frame tree — frames, cascades, consumption, exhaustion, pools: see interface.md#PWA-layers
   - Cascade
     - min() law
-      - Child effective limit = min(declared need, governance ceiling, override, parent_remaining)
+      - Child effective limit = min(declared need, governance ceiling, override, parent_remaining, session_ceiling)
+        # FIX #4: session ceiling added to min() chain; hard ops cap applies per-frame, session cap applies per-session
       - Governance ceiling comes from routine_shape.execution limits (artifacts/governance.yaml)
       - Override values enter through approved override commits: see trust.md#Overrides
       - The kernel enforces the tightest constraint at every frame — the cage tightens, never widens
       - Splitting is not escaping
         - Session-level counters never reset through composition
-        - 100-op routine split into 10x10 sub-routines still hits the 50-op session ceiling
+        - 100-op routine split into 10x10 sub-routines still hits the session ops ceiling
+        - Session ops ceiling: see artifacts/governance.yaml#routine_shape.execution.session_ops_ceiling
+          # FIX #29: session ceiling was referenced but never defined; now points to governance
     - Dimensions
       - Ops
         - Unit: primitive executions per frame
-        - Scope: per-routine plus session
+        - Scope: per-frame (max_ops_per_run) plus session (session_ops_ceiling)
+          # FIX #4: clarified that ops have both a per-frame hard cap and a session-level ceiling
         - Cascade: child consumes from the parent's pool
       - Duration
         - Unit: wall-clock milliseconds
@@ -103,17 +107,8 @@
         - Live remaining/reset_at/budget status before invoking: see action.md#External-APIs
       - Fallback: providers without standard headers get kernel-counted sliding windows
     - Governance caps
-      - Registry size and creation-rate caps: see action.md#Capability-registry
-      - Cadence: max_activations_per_hour 10, sync min_interval_hours 24 (artifacts/governance.yaml)
-      - Schedule and watch cadence (artifacts/governance.yaml)
-        - cron min_interval_minutes: 5 — sub-5-minute loops must use watch
-        - webhook events_per_minute: 100 — DDoS guard on the mailbox
-        - poll max_poll_watches: 10 — polling costs egress budget
-      - Session budgets: consolidation max_session_minutes 30, max_proposals_per_session 10 (artifacts/governance.yaml)
-      - Surface caps (artifacts/governance.yaml)
-        - serve: max_endpoints 10, max_keys 25, key_rotation_days 90
-        - watch: max_active 50, max_per_agent 15
-        - dead_letter: max_age_days 30, max_items 1000 — FIFO purge, loudly
+      - All governance caps (registry, schedule, watch, serve, surface): see artifacts/governance.yaml
+        # FIX #28: removed entire duplicated governance section
     - Output caps
       - Routine results
         - max_result_tokens 500 — summaries crossing to the model truncate

@@ -137,7 +137,13 @@
       - Write can't be audited → it doesn't run (unauditable_write: deny)
       - Secret exposure detected → kill_and_alert
       - Pre-call enforcement: remaining ≤ deny_at_remaining → exit 2 before egress, not 429 after
-    - Exit codes are law: 0 ok, 2 policy-denied, 3 validation, 4 runtime, 5 audit-write-failed
+    - Exit codes are law:
+      - 0 ok — effect ran, audit written
+      - 2 policy-denied — gate refused, nothing mutated
+      - 3 validation-failed — bad params, governance breach, missing intent, boot refusal, drift detection
+      - 4 runtime-error — effect attempted and failed mid-run
+      - 5 audit-write-failed — audit sink broken, nothing ran
+      # FIX #11/#12: boot refusal and drift detection moved to exit 3; exit 4 reserved for mid-run failures; exit 5 reserved for audit sink
       - 2 policy-denied — a gate refused; denial cites the matched rule
       - 3 validation — intent missing/short or malformed request, pre-flight
       - 4 runtime — execution failed after gates passed
@@ -177,7 +183,8 @@
         - VACUUM require_trust pinned
         - prod overlay: vacuum deny outright (artifacts/policy.yaml env.prod)
         - dev overlay relaxes row caps, never physics: WHERE + LIMIT unchanged
-      - Triggers denied at runtime: enforcement lives in the gate, not the db; schema trig: kernel-compiled
+      - Triggers: agent-created denied at authorizer; kernel-compiled from schema.yaml trig: exempt
+        # FIX #20: clarified the distinction
       - ATTACH / PRAGMA writes: never — authorizer unconditional deny; PRAGMA whitelist [query_only, foreign_keys]
       - Function calls: deny + allow lists at the authorizer
         - deny [load_extension, writefile, readfile, fts3_tokenizer]
@@ -221,7 +228,10 @@
         - kernel serves the vectors; harness ranks them
       - Semantic intelligence belongs in the harness, not the gate
       - kernel never embeds, never ranks — it stores and serves
-    - Five-stage resolution: exact → prefix → fuzzy → semantic → did-you-mean, ranked by relevance
+    - Resolution stages (kernel owns 1–3, harness owns 4–5):
+      - Kernel: exact → prefix → structured filters (deterministic)
+      - Harness: fuzzy → semantic → did-you-mean (embedding-ranked)
+      # FIX #13: five-stage description blurred kernel/harness boundary
     - Search analytics
       - Event logging and gap flow: see action.md#Capability-registry
       - capcli search gaps --since 7d; gap_threshold 3 (artifacts/policy.yaml api.search)

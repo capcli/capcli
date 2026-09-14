@@ -7,7 +7,9 @@
       - sim: proving ground — seeded from prod (masked); replay real history against the routine
       - prod: destination — draft writes denied; only reviewed/pinned + merged code runs
         - Denial is the prod policy overlay, not convention
-      - Trust rides the same ladder as worlds — draft+dev, reviewed+sim, pinned+prod: see trust.md#The-ladder
+      - Trust and env are correlated but independent axes: draft+dev, reviewed+sim, pinned+prod
+      - Correlation is policy convention, not physics: see trust.md#The-ladder
+        # Clarification: prevents misreading as hard coupling
     - Travel rule
       - A routine does not just earn trust — it travels dev → sim → prod
       - Promotion commands carry `--env`; reaching prod = merge + pin sign-off, never a runtime promotion
@@ -102,7 +104,9 @@
     - Env drift
       - `env doctor` flags routines running in prod without merge — drift made loud
       - `env inspect` surfaces per-world state: schema drift vs prod, unmerged routines, staleness
-        - Kinds: runtime manifest drift, cross-worktree schema drift, stale sim data
+        - Drift (fatal, exit 3): runtime manifest drift, cross-worktree schema drift
+        - Staleness (warning, re-seed nag): stale sim data (stale_sim_after_days)
+          # FIX #6: "drift" reserved for fatal divergence; staleness is a separate concept
       - stale_sim_after_days 14: sim data too old vs prod → re-seed nag (artifacts/governance.yaml)
       - `sys doctor` checks boundaries, perms, drift
     - Anti-decisions

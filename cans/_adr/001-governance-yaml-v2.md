@@ -32,19 +32,19 @@
   - Manifest anatomy and fingerprint views: see action.md#Manifests-&-fingerprints
   - Enforcement map carries forward unchanged
     - registry → capcli routine draft
-      - max_routines 300 hard cap, soft_cap 200 nags, max_per_agent_draft 30
-      - creation_rate per_hour 10; require_description true — unsearchable = unregistrable
+      - Registry caps: see artifacts/governance.yaml#registry
+        # FIX #1 redundancy: ADR should cite, not duplicate
     - routine_shape → routine draft (static) + routine prove (runtime)
-      - loc 5–150, tokens 50–2000, params max 8, max_ops_per_run 50, manifest_drift anomaly
+      - Shape and runtime caps: see artifacts/governance.yaml#routine_shape
     - overrides → capcli rule apply (compile-time merge)
       - large_migration, weekly_report, order_status — declared need, approved by human commit
     - maintenance → routine sweep + bind cron
       - consolidation schedule "0 3 * * 0", fingerprint_similarity 0.90, duplicate_similarity 0.85
     - schedule / watch / serve → bind cron | webhook | endpoint
-      - min_interval_minutes 5, min_trust pinned, key_rotation_days 90
+      - Schedule/serve caps: see artifacts/governance.yaml#schedule, #serve
     - env → env new | remove | doctor
-      - max_worktrees 5, prod_removal_flags 2, sim_seed_masking enforce
+      - Env caps: see artifacts/governance.yaml#env
     - backup → sys backup + sys doctor
-      - interval_minutes 15, max_drift_minutes 30, trigger_on promote/migrate/import/register/restore
+      - Backup config: see artifacts/governance.yaml#backup
     - denials → sys audit trace --explain
       - cite_measured_value, suggest_remediation, log_all, budget denial cites level/remaining

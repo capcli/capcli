@@ -41,8 +41,9 @@
       - View declarations
         - exposes: lists touched tables; compile-checked against system-schema.yaml
         - scoped: principal requires a :principal bind param
-        - Example pending_orders: exposes [orders, customers], status = 'pending'
+        - Example pending_orders: exposes [orders, customers], status = 'pending' — unscoped
         - Example customer_lifetime_value: scoped, SUM(p.amount_cents) grouped per :principal
+          # FIX #21: not all views are principal-scoped; scoping is per-view declaration
       - Full-complexity example coverage (every DDL feature demonstrated)
         - customers: prov: true, sens: true; email text!, phone text~, tier text=standard
         - orders: customer_id int ref=customers.id; chk discount_cents <= total_cents
@@ -61,7 +62,8 @@
         - Kernel upgrades it during kernel releases; version-locked to kernel (kernel_version)
         - New system tables: agent proposes via harness; kernel decides
         - Kernel upgrades never touch schema.yaml; agent world unaffected by kernel releases
-      - System tables (six)
+      - System tables (eleven kernel-managed surfaces)
+        # FIX #9: was "six" — claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats were missing
         - _audit
           - sys: true, imm_rows: true — kernel-managed audit mirror, append-only
           - cols: event, ts, env, agent, session, principal, capability, intent, outcome
@@ -104,6 +106,17 @@
           - imm_cols: [id, principal] — kernel upgrades never rewrite id
           - idx: principal, status
           - Registered identities: see agent.md#Identity-hierarchy
+        - claims
+          - lease-based locks with TTL; kernel writes, agents read/insert/delete
+          - cols: target, holder, ttl, created_at
+        - _pending_asks
+          - kernel writes; agents observe; ping ask lifecycle
+        - _watch_cursors
+          - webhook/poll dispatch state; kernel-internal
+        - _capability_embeddings
+          - harness-computed description embeddings; kernel stores and serves
+        - routine_stats
+          - per-routine execution aggregates; kernel-managed mirror view
       - Cross-file wiring
         - exposes: [_audit] compile-checked against system-schema.yaml (Gate 2)
         - _budget_frames tracks per-invocation budgets: see budget.md#Frames
@@ -201,8 +214,8 @@
     - What the agent cannot do
       - db.exec "ALTER TABLE ..." → exit 2: alter.require_trust: reviewed
       - DROP TABLE → exit 2: drop: deny, authorizer unconditional
-      - Edit workspace.db directly → exit 4: file perms, chmod 600, daemon-owned
-      - Edit system-schema.yaml → exit 4: read-only file perms; kernel upgrades only
+      - Edit workspace.db directly → exit 2: file perms, chmod 600, daemon-owned (policy denial)
+      - Edit system-schema.yaml → exit 2: read-only file perms; kernel upgrades only (policy denial)
       - Apply system-schema via rule apply → exit 2: agent cannot trigger system schema application
       - Skip schema.yaml, hand-write DDL → exit 3: rule diff alarm; sys doctor refuses boot
       - Apply schema to prod without merge → exit 2: env overlay denies cross-world DDL
@@ -255,17 +268,20 @@
         - system-schema.yaml.version == governance.system_schema_version
         - == policy.system_schema_version
         - Mismatch → "system schema version mismatch: refusing boot"
-      - Any mismatch → refuse boot, exit 5
+      - Any mismatch → refuse boot, exit 3
+        # FIX #11: exit 5 = audit-write-failed; boot refusal is validation failure (exit 3)
       - Policy-side half of the lock: see physics.md#Two-layer-enforcement
     - Gate 4 live drift detection (runtime)
       - capcli sys doctor compares compiled YAML vs live DB via PRAGMAs
-      - Any divergence → refuse to serve, exit 4, cites exact drift
+      - Any divergence → refuse to serve, exit 3, cites exact drift
+        # FIX #12: exit 4 = runtime error (effect attempted); drift detection is pre-flight validation
       - Example: orders.hack_column exists in DB but not schema.yaml
       - Cross-worktree env drift: see space.md#Drift
     - Gate 5 migration safety (apply-time)
       - Snapshot taken before DDL; DDL executes in a test txn against the snapshot
       - Rollback verified, idempotency checked
-      - Fail → auto-restore snapshot, exit 4
+      - Fail → auto-restore snapshot, exit 3
+        # FIX #12: migration safety failure is validation, not runtime
       - Snapshot mechanics: see recovery.md#Snapshots
     - Sample catches
       - Compile-time (Gate 2)
@@ -277,11 +293,12 @@
       - Boot-time (Gate 3)
         - Schema v5 + Policy v4 → "version mismatch: refusing boot"
         - system-schema v3 + governance v2 → "system schema version mismatch: refusing boot"
-        - exit 5 — nothing runs after a failed boot
+        - exit 3 — nothing runs after a failed boot (validation failure)
       - Runtime (Gate 4)
         - Live DB extra column → "drift: orders.hack_column exists in DB but not schema.yaml"
         - Detection: PRAGMA comparison, no DDL parser
-        - Any divergence → refuse to serve, exit 4, exact drift cited
+        - Any divergence → refuse to serve, exit 3, exact drift cited
+          # FIX #12: same as Gate 4 — pre-flight validation, not runtime
   - Command surface db
     - Verbs
       - Reads

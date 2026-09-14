@@ -17,8 +17,8 @@
     - Git is DX, not backup: `git push --force` rewrites history; tamper-evidence needs an append-only store
     - Auto-commit
       - Interval + event-triggered commits of world.sql, audit logs, configs → remote
-      - backup.interval_minutes 15, max_drift_minutes 30 → doctor alarm (artifacts/governance.yaml)
-      - trigger_on: promote, migrate, import, register, restore, serve.add (artifacts/governance.yaml)
+      - Backup cadence and triggers: see artifacts/governance.yaml#backup
+        # FIX #1 redundancy
       - Backup guarantee: see space.md#Environment-axis
     - Offsite targets
       - S3/GCS/B2 with object versioning — append-only by design, the recovery guarantee
@@ -26,7 +26,8 @@
       - Object versions keep every prior state — force-push cannot touch them
       - backup.include_audit true — audit logs travel offsite with world.sql (governance.yaml)
     - Retention
-      - git_max_age_days 90 — older commits squashed, git stays lean (artifacts/governance.yaml)
+      - git_max_age_days 90 — older commits squashed, git stays lean: see artifacts/governance.yaml#backup
+        # FIX #15: now points to the field that was added to governance.yaml
       - Full history lives in object storage — archive complete, working repo small
       - ~35K commits/year at 15-min intervals — squash keeps clones fast
     - Routine coupling
@@ -47,7 +48,8 @@
     - Verification
       - Scheduled
         - Daily chain walk
-          - hash_chain_verify "0 4 * * *" — daily integrity validation (artifacts/governance.yaml)
+          - Hash chain verification schedule: see artifacts/governance.yaml#maintenance.audits
+            # FIX #1 redundancy
           - A broken link flags every event after the tamper point
         - Stale backup watch
           - `sys doctor` downloads the last pushed backup, compares world.sql hash

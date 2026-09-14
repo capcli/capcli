@@ -3,7 +3,8 @@
   - Capability registry
     - Unifying concept
       - Everything the agent can effect is a capability: db op, routine, api verb, view
-      - Views are read-only lenses, principal-scoped
+      - Views are read-only lenses; scoped views require `--as` and kernel binds :principal
+        # FIX #21: not all views are principal-scoped
       - One registry, one `search` surface, one audit format — agent never knows which channel an invocation used
       - run/search/inspect work identically on all kinds — registry flattens everything into `run`
       - Kind anatomy differs, contract does not: params in, gated effect out, leaf events recorded
@@ -34,11 +35,8 @@
       - Low search→invoke conversion flags bad descriptions, not just missing verbs
       - Gaps are consolidation signals for routines and API verbs alike: see time.md#Learning-loop
       - Progressive disclosure: one `cap search` meta-tool; base context constant at 10 or 10,000
-    - Registry caps
-      - Source: `artifacts/governance.yaml` registry — max_routines 300 hard cap, register refuses past it
-      - soft_cap 200: sys doctor nags, consolidation urged; max_per_agent_draft 30 anti-flood
-      - creation_rate 10 per hour — no rapid-fire generation
-      - require_description: unsearchable = unregistrable; description ≤ 60 tokens
+    - Registry caps: see artifacts/governance.yaml#registry
+      # FIX #1 redundancy: removed duplicated numbers
       - Caps bite at gate commands — `routine draft` / `api activate`, never file creation
   - Routines
     - Procedure layer
@@ -49,7 +47,9 @@
       - Naming precision: Op = invocation through the gate, Effect = world change, Event = audit record
       - Once registered both are capabilities — `capcli run` calls either the same way
     - Anatomy
-      - `@routine(name, trust, idempotent, description, limits)` — identity declared before first run
+      - `@routine(name, trust, idempotent, description, limits)` — self-declared metadata validated at registration
+      - Registry id is kernel-confirmed at `routine draft`; decorator proposes, kernel disposes
+        # FIX #30: reconciled "never self-declared" (identity hierarchy) with decorator self-declaration
       - idempotent must be declared before retries are allowed
       - Decorator fields
         - name: registry id; trust: ladder start — draft, reviewed, pinned
@@ -66,7 +66,9 @@
       - HTTP + raw SQL + Python logic in one callable; every leaf effect still crosses the gate
       - declared limits ask for less, never more than the governance ceiling
     - Registration
-      - `routine draft <name>` = scaffold + validate + manifest extract; file creation free, registration gated
+      - File creation is free (harness native fs); `routine draft` is the registration gate
+      - The kernel does not care how the file appeared; caps bite at `routine draft`, never at file write
+        # FIX #3: clarified kernel vs harness boundary
       - Near-duplicate check at birth: see space.md#Primitive-scoping
       - Caps bite at `routine draft` — the registry gate command under `- Capability registry`
       - Rules live in `artifacts/governance.yaml` registry — cited, never copied here
@@ -129,8 +131,8 @@
       - Near-duplicate across agents: merge or fork, human-gated, never silent duplication
     - Shape governance
       - Governance = what routines may be; policy = what they may do — two files, zero overlap
-      - Shape caps: loc 5–150, tokens 50–2000, params max 8, description min 5 words
-      - Runtime caps: max_ops_per_run 50, max_duration_seconds 300, max_result_tokens 500, max_txn_statements 10
+      - Shape and runtime caps: see artifacts/governance.yaml#routine_shape
+      # FIX #1 redundancy: removed duplicated numbers
       - manifest_drift: anomaly — undeclared ops trigger a governed event, never silent acceptance
       - Effective limit min()-cascade: see budget.md#Cascade
       - Five gates: register → draft (shape+manifest) → runtime (ops/duration/result/drift) → monitor → sweep
@@ -320,7 +322,8 @@
       - inspect shows live remaining, reset time, budget status before invoking — numbers live, not cached
       - Quota ownership and headers: see budget.md#Quotas
     - Search gaps
-      - The `search gaps` command: see interface.md#CLI-surface
+      - `capcli search gaps --since 7d`: see interface.md#CLI-surface
+        # FIX #14: made command explicit
       - Kernel surfaces the gap; harness proposes activation; human approves
       - Same consolidation signal as routines: see time.md#Learning-loop
       - Dormant catalog makes gaps actionable: the verb often exists, just unactivated
@@ -339,8 +342,8 @@
       - bind keys issue <name> --principal partner:X — human-gated
       - dead_schedule_disable on retirement: see time.md#Schedule-&-maintenance
       - max_catchup_fires 1 after restart: see time.md#Schedule-&-maintenance
-      - Caps: max_active 20 schedules / 50 watches, min_interval_minutes 5: path `artifacts/governance.yaml`
-      - Webhook guard: max_payload_bytes 65536, 100 events/min; poll min_interval_minutes 5; dead_letter 30d/1000
+      - Schedule/watch/serve caps: see artifacts/governance.yaml#schedule, #watch, #serve
+      # FIX #1 redundancy
     - Serve lifecycle split
       - Registration (CLI): bind endpoint writes endpoint config to workspace.db, exit 0, no listener
       - Serving (daemon): `capcli sys serve --start` starts the HTTP listener; same policy gates as run
@@ -356,6 +359,7 @@
       - Floors: min_trust pinned, require_version_pin — serve order_status@12, never a moving target
       - allow_writes_default false — inbound writes cost explicit opt-in
       - bind 127.0.0.1 — internal-first; public lives behind a proxy; key_rotation_days 90
-      - Response caps: max_body_bytes 65536, max_result_tokens 500 — inherits routine result cap
+      - Response caps: see artifacts/governance.yaml#serve.response
+      # FIX #1 redundancy
       - Every request re-enters the run hot path — identity, policy, budget all apply
       - Limits source: `artifacts/governance.yaml` serve — max_endpoints 10, max_keys 25

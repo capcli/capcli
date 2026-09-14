@@ -52,7 +52,8 @@
       - `--reason` must cite the measured evidence — no naked promotion claims
       - Stage-by-stage ship walkthrough: see time.md#Stage-details
     - Five enforcement gates
-      - register: registry caps — max_routines 300 hard, soft_cap 200 nags, max_per_agent_draft 30 (artifacts/governance.yaml)
+      - register: registry caps: see artifacts/governance.yaml#registry
+        # FIX #1 redundancy
         - soft_cap 200 is a nag, not a wall: growth pressure routes to consolidation, not refusal
       - creation_rate per_hour 10: see action.md#Capability-registry
       - draft: shape + manifest; runtime: ops/duration/result/drift; monitor: dead/failing; sweep: subtraction
@@ -95,7 +96,8 @@
         - gov.file_tax_return is the worked example: a declared prod-only verb, named in evidence
         - Gap naming is per-verb: the evidence lists exactly which verbs stayed unproved
       - Un-simulated verbs fall back to dry-run, never silent live behavior (artifacts/governance.yaml)
-      - max_unapproved_calls 3, approval_window_hours 24: training wheels for un-simulated verbs (artifacts/governance.yaml)
+      - Training wheels config: see artifacts/governance.yaml#api.prod_first_calls
+        # FIX #1 redundancy
         - apply_to [skip, prod-only]: simulated verbs never need training wheels
           - prod-only must be declared explicit, never inferred …: see space.md#Environment-axis
             - An inferred prod-only would hide exactly the gap evidence exists to show

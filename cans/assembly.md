@@ -17,7 +17,10 @@
         - native:build → `cd packages/native && napi build --release`
     - Layout
       - packages/ holds all code: types, kernel, sdk, pwa, native
-      - workspace/ is the gitignored runtime artifact: schema.yaml, system-schema.yaml, policy.yaml, governance.yaml
+      - workspace/ contains both git-tracked and gitignored files:
+        - Git-tracked: world.sql, audit/, schema.yaml, system-schema.yaml, policy.yaml, governance.yaml
+        - Gitignored: workspace.db (live SQLite)
+        # FIX #31: workspace/ is not wholesale gitignored
       - workspace/ also holds apis/, routines/, workspace.db, world.sql, audit/
       - The repo contains architecture, code, and config templates — never live data
       - Root law docs: architecture.md plus seven *.architecture.md siblings
@@ -40,7 +43,9 @@
       - Zero orchestration tools — if Bun can't do it, the task is wrong
       - Doc bundling configured at artifacts/repomix.config.json — markdown style, token tree
   - Naming law
-    - `*.*.*` — every src file is domain.feature.ext: three dot-separated segments, no exceptions
+    - `*.*.*` — every src file is domain.feature.ext: three dot-separated segments
+    - Test files exempt: `domain.feature.tier.test.ts` (four segments) — tier folder decides tier
+      # FIX #2: naming law contradicted test naming convention
     - Patterns
       - Handlers and services
         - `noun.verb.ts` = command handler, one CLI verb: db.query.ts
@@ -188,8 +193,10 @@
       - PWA: React 19, Vite 6, Tailwind 4, Zustand 5, TanStack Query 5, React Router 7, Playwright
       - Bun built-ins, zero deps: Bun.serve, Bun.spawn, Bun.file().writer(), Bun.CryptoHasher sha256
       - Also built-in: crypto.randomUUID, bun:test, Bun.env, bunfig.toml workspace resolution
-      - Dependency count: 6 npm kernel deps + PWA dev deps + 3 rust = 9 kernel deps
-      - Kernel npm deps: node-sql-parser, yaml, valibot, citty, react, zustand
+      - Dependency count: 4 npm kernel deps + PWA dev deps + 3 rust = 7 kernel deps
+      - Kernel npm deps: node-sql-parser, yaml, valibot, citty
+      - PWA deps (not kernel): react, zustand, tanstack-query, react-router, tailwind
+        # FIX #24: react and zustand are PWA libs, not kernel deps
   - Dependency graph
     - Direction
       - @capcli/types ← @capcli/kernel ← @capcli/sdk ← @capcli/pwa — acyclic, unidirectional

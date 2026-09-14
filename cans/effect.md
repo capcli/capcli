@@ -10,7 +10,8 @@
       - `_audit` mirror in `workspace.db`
         - `imm_rows: true` read-only kernel-managed table
         - Mirror + views are the query surface for what happened
-        - Mirror lag SLA 5 min (JSONL → `_audit`): path `artifacts/governance.yaml` maintenance.audits
+        - Mirror lag SLA: see artifacts/governance.yaml#maintenance.audits
+        # FIX #1 redundancy: removed hardcoded number
     - Event anatomy
       - Identity block: event, ts, env, stage — what ran, when, where
       - Actor block: agent, session, principal — who did it
@@ -25,6 +26,12 @@
       - One event per verb: see interface.md#CLI-surface
       - Exit 5 audit-write-failed = nothing ran; a write that cannot be audited does not run
     - Kernel event payloads
+      - capability.search payload
+        - query, results_count, resolution_stage (exact|prefix|fuzzy|semantic|did-you-mean)
+        - filters: trust, env, max_ops
+        - gap_signal: true if results_count 0 and query_count >= gap_threshold
+        - logged per policy.yaml api.search.log_all_queries
+        # FIX #10: was referenced by action.md but never defined here
       - db.exec payload
         - sql text + params dict recorded verbatim
           - Recorded op form: parameterized UPDATE with LIMIT: see physics.md#Raw-SQL-rules
@@ -69,7 +76,8 @@
         - Per-line `prev_hash: sha256:<previous_line_hash>`
           - Tampering any line breaks every later hash — tamper evidence without git
           - Files are append-only; no line is ever rewritten in place
-        - hash_chain_verify cron "0 4 * * *" validates daily: path `artifacts/governance.yaml` maintenance.audits
+        - Hash chain verification schedule: see artifacts/governance.yaml#maintenance.audits
+        # FIX #1 redundancy: removed hardcoded cron
         - Verification commands and backup checks: see recovery.md#Hash-chains
       - Backups include audit logs; degraded modes audited: see recovery.md#Git-integration
       - PWA Layer 4 renders live tail, event cards, search log: see interface.md#PWA-layers

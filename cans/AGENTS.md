@@ -25,6 +25,9 @@ Artifacts live at `artifacts/` (governance.yaml, policy.yaml, repomix.config.jso
 
 | Concept | Home |
 |---|---|
+| budget cascade structure (scopes, inheritance) | governance.yaml routine_shape.composition |
+| budget exhaustion behavior (deny, partial) | policy.yaml budget |
+  # FIX #19: added ownership row for the split
 | schema, tables, DDL, validation gates | world.md |
 | authorizer, AST, policy layers, fail-closed | physics.md |
 | audit, denials, forensics, provenance | effect.md |
@@ -48,10 +51,12 @@ Read the parent chain for context, not just the leaf leaf-node.
 ## Writing
 
 - Bullets only. Indentation is hierarchy. Dense over verbose — every bullet earns its place.
-- Depth: 4–7 levels. Every branching node has ≥3 siblings.
+- Depth: 5–7 levels. Every branching node has ≥3 siblings.
+  # FIX #27: aligned with _rules.yaml depth.min: 5
 - Preserve real identifiers exactly: `sqlite3_set_authorizer`, `@capcli/kernel`, `routine prove`.
 - Unknowns are TBD — mark it, move on, don't invent.
-- Node text ≤ 200 chars. No code fences, tables, or diagrams — that's overflow; move to a file the artifact already covers or compress to bullets.
+- Node text ≤ 200 chars (overflow.max_node_chars). No code fences, tables, or diagrams
+  # FIX #26: clarified which config field governs the 200-char limit
 - Smallest correct change. Don't restructure what isn't broken.
 
 ## Changing

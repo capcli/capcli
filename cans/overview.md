@@ -65,9 +65,12 @@
         - db.* → SQLite SSOT through authorizer + AST gate: see physics.md#Two-layer-enforcement
         - routine.* → Python sandbox, jail: net-none, socket-only
         - api.* → HTTP egress, kernel-owned secrets injected at boundary
-      - Inbound hands
-        - schedule.* → time; watch.* → inbound events; serve.* → governed endpoints
-        - notify/ask → humans: voice, blocking questions, fail-closed waits
+      - Inbound hands (conceptual) map to CLI nouns:
+        - schedule.* → `bind cron`
+        - watch.* → `bind webhook`
+        - serve.* → `bind endpoint` + `sys serve`
+        - notify/ask → `ping notify` + `ping ask`
+        # FIX #25: conceptual model names now mapped to CLI nouns
         - Agent never reaches SQLite or network directly; all access flows through the kernel
   - Design stance
     - Fail-closed and gated

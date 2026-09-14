@@ -3,7 +3,10 @@
   - CLI surface
     - Design laws
       - Shape law
-        - One shape forever: `capcli <noun> <verb> [target] [--flags]` — no exceptions
+        - One shape forever: `capcli <noun> <verb> [target] [--flags]`
+        - `search` and `inspect` are verbs under the `run` noun: `capcli run search`, `capcli run inspect`
+        - Shorthand `capcli search` and `capcli inspect` are accepted aliases (documented, not exceptions)
+          # FIX #22: CLI shape law was broken by top-level search/inspect
         - Command tree maps 1:1 to the nine nouns: run, db, routine, api, bind, ping, rule, env, sys
         - Built on `citty` (unjs): nested subcommands, typed args, auto `--help`
         - Each subcommand declares required and optional args with types
@@ -19,8 +22,10 @@
         - 0 ok — the effect ran and the audit event was written
         - 2 policy-denied — the gate refused; nothing was mutated
         - 3 validation-failed — bad params, governance breach, missing intent
+        - 3 validation-failed — bad params, governance breach, missing intent, boot refusal, drift detection, migration safety
         - 4 runtime-error — the effect was attempted and failed mid-run
-        - 5 audit-write-failed — nothing ran; the spine refuses unrecorded work
+        - 5 audit-write-failed — audit sink broken; nothing ran
+          # FIX #11/#12: boot/drift/migration failures moved to exit 3
         - Scripts and agents branch on codes, never parse stdout
       - Intent mandate
         - `--intent` is `required: true` on all write verbs
@@ -31,7 +36,10 @@
         - `run <capability> [-p k=v]` — the primary skill-to-routine bridge
         - `run` accepts `--dry-run`, `--intent`, `--lock <ref>`, `--json`, `--as`, `--by`
         - `search <query> [--trust X] [--env X] [--max-ops N]` — deterministic filters
-        - `inspect <capability>` — the full cost envelope in one JSON blob
+        - `run search <query> [--trust X] [--env X] [--max-ops N]` — canonical form under run noun
+        - `run search gaps --since 7d` — searched-never-invoked gap report
+        - `run inspect <capability>` — the full cost envelope in one JSON blob
+          # FIX #14/#22: search gaps and inspect now under run noun
         - Search resolution ladder: see physics.md#Search-ceiling
       - inspect cost envelope
         - Go/no-go from one response — no second round-trip; numbers live at inspect-time
@@ -205,7 +213,10 @@
       - `--sandbox`
         - `sys exec` only — bwrap/podman: net-none, ro binds
         - The only jail surface — no standalone `jail` noun
-      - The nine are the whole set — flags never grow per-noun
+      - Universal flags apply to all nouns; noun-scoped flags are enumerated and frozen:
+        - `--lock <ref>` — run only
+        - `--sandbox` — sys exec only
+        # FIX #23: acknowledged noun-specific flags instead of denying they exist
   - SDK contract
     - Entry
       - Import paths

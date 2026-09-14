@@ -28,3 +28,15 @@ Task ID: 6-b (trust.md dedup+deepen)
 - dups-action idx25 ("cannot loosen its own cage"): keeper=physics.md (physics.md:106 has it; action.md:138 already sees physics.md#Two-layer-enforcement). Converted trust.md's copy to "see physics.md#Two-layer-enforcement" per keeper rule.
 - dups-action idx22 vs dups-time-space-trust rec62 (min() precedence line): conflicting keepers (budget.md vs trust.md). Kept in trust.md#Overrides→Precedence per 6-b task content list ("min() precedence" is trust content); budget.md:46 pointer targets trust.md#Overrides, budget.md#Cascade still owns cascade mechanics.
 - Promotion queue mechanics (48h SLA, promotion.sla_breached, CI --by, veto countdown) are canonical in time.md#Stage-details (5-c); trust.md#Promotion-queue keeps the authority angle + one see: — no dup re-added.
+
+---
+## Resolved (this audit pass)
+- capability.search event: ADDED to effect.md#Kernel-event-payloads (was missing)
+- Mutual pointer agent.md ↔ interface.md: agent.md now owns canonical PWA session token sentence
+- hash-pinned line keeper: trust.md#Evidence confirmed as canonical; time.md#Versioning owns version walk
+- "The human verifies the why": canonical home TBD — overview.md owner should land it
+- min() precedence: budget.md#Cascade owns mechanics; trust.md#Overrides owns authority angle
+
+## Still open
+- "The human verifies the why" canonical home: overview.md vs agent.md vs trust.md — overview owner must decide
+- world.md:221 self-reference (world.md → world.md) — in-flight WIP

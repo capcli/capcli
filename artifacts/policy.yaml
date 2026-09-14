@@ -1,17 +1,14 @@
-# policy.yaml — full-complexity example
-
-> **Update v4.1:** Added identity.skill_origin section (2026-09-12)
-> Behavioral permission: what capabilities may **do**. (Structure — sizes, counts, cadence — lives in `governance.yaml`. Zero overlap.) Compiled at boot; bad config = kernel refuses to serve.
-
-```yaml
 # ═══════════════════════════════════════════════════════════════
 # policy.yaml — default-deny behavioral policy, compiled at boot
+# Update v4.1: Added identity.skill_origin section (2026-09-12)
+# Behavioral permission: what capabilities may do.
+# Structure lives in governance.yaml. Zero overlap.
 # Two enforcement layers: authorizer (C-level floor) + AST (semantic ceiling)
 # ═══════════════════════════════════════════════════════════════
-version: 4
+version: 5                          # bumped: v4.1 skill_origin landed
 schema_version: 12                    # world schema — quad-lock
 system_schema_version: 3              # system tables — quad-lock
-governance_version: 7
+governance_version: 8               # FIX #8: was 7, governance is v8
 default: deny                         # THE anchor. everything below carves exceptions
 
 # ───────────────────────────────────────────────────────────────
@@ -20,6 +17,8 @@ default: deny                         # THE anchor. everything below carves exce
 # ───────────────────────────────────────────────────────────────
 authorizer:
   tables:
+    # FIX #9: agent-authored tables get authorizer entries at rule apply
+    # Kernel auto-generates from schema.yaml; examples below are system tables only
     entities:
       allow: [read, insert, update, delete]
       deny_columns_write: [id, created_at, created_by, modified_by]  # system & immutable
@@ -64,7 +63,9 @@ authorizer:
     functions:
       allow: [count, sum, min, max, avg, json_extract, date, strftime]
       deny: [load_extension, writefile, readfile, fts3_tokenizer]
-    triggers: deny                             # enforcement lives in the gate, not the db
+    triggers: deny_agent              # FIX #20: agent-created triggers denied
+    # kernel-compiled triggers from schema.yaml trig: are exempt
+    # authorizer checks caller: kernel schema-apply bypasses, agent SQL does not
 
 # ───────────────────────────────────────────────────────────────
 # 2. LAYER 2 — AST rules, evaluated before prepare
@@ -102,7 +103,7 @@ query:
     confirm_above: { rows: 5000 }              # human gate, --reason required
 
   system_tables:
-    deny_write: [_audit, agents, _pending_asks, _watch_cursors]
+    deny_write: [_audit, agents, claims, _pending_asks, _watch_cursors]  # FIX #9: claims was missing
     deny_read: []                              # reads allowed; writes are kernel-internal
 
 # ───────────────────────────────────────────────────────────────
@@ -132,27 +133,19 @@ rate:
   denials_alert_threshold: 20                  # sustained denial = agent thrashing, surface it
 
 # ───────────────────────────────────────────────────────────────
-# 4.5 BUDGET CASCADE — limits flow downward through composition
+# 4.5 BUDGET — behavior on exhaustion (structure lives in governance)
 # ───────────────────────────────────────────────────────────────
+# FIX #19: Budget cascade mechanics removed from policy.yaml
+# Cascade structure (inheritance, scopes, nesting) lives in governance.yaml routine_shape.composition
+# Policy only gates the BEHAVIOR when budget is exhausted:
 budget:
-  cascade: true                        # budgets flow downward through composition
-  inheritance: min                     # child effective = min(declared, parent_remaining)
-  denial_cites_level: true             # exit 2 names which frame blocked
-  denial_cites_remaining: true         # shows remaining at blocking level
-  denial_cites_ancestors: true         # shows parent/session remaining for context
-  overage_behavior: deny               # no partial execution past budget
-  partial_result_on_exhaustion: false  # if budget hits mid-routine, routine fails cleanly
-  budget_frame_audit: true             # every frame push/pop is an audit event
-  session_scoped:                      # these counters never reset via composition
-    - spend_usd
-    - writes_per_minute
-    - capability_calls_per_minute
-    - rows_affected
-  routine_scoped_cascade:              # these cascade per-routine
-    - ops
-    - duration_ms
-  routine_scoped_independent:          # these are per-routine, no cascade
-    - result_tokens
+  overage_behavior: deny               # behavior: what happens at exhaustion
+  partial_result_on_exhaustion: false  # behavior: no half-execution
+  budget_frame_audit: true             # behavior: every frame is an audit event
+  denial_cites_level: true             # behavior: exit 2 names the frame
+  denial_cites_remaining: true         # behavior: shows remaining
+  denial_cites_ancestors: true         # behavior: shows parent/session context
+  # Structure (cascade, inheritance, scopes) → governance.yaml routine_shape.composition
 
 # ───────────────────────────────────────────────────────────────
 # 5. API — external effects gated STRICTER (pre-call only, no rollback)
@@ -333,6 +326,7 @@ audit:
     - sim_mode                               # sandbox | mock | dry-run | skip | prod-only | real
     - fixture_used                           # true if mock fixture served
     - http_called                            # false for dry-run and mock
+    - triggered_by_skill              # FIX: skill_origin audit field was declared but not in log list
   redact:
     columns: [secrets.value]
     params_matching: ["*token*", "*password*", "*secret*"]
@@ -354,34 +348,3 @@ fail_closed:
   headless_approval: deny
   missing_principal_on_scoped: deny
   secret_exposure_detected: kill_and_alert
-```
-
-## Enforcement map — which layer owns which section
-
-| Section | Layer 1 (authorizer) | Layer 2 (AST/gate) |
-|---|---|---|
-| `authorizer.tables/views/global` | ✅ compiled to callback | — |
-| `query.*` | — | ✅ pre-prepare rules |
-| `trust` | column/table denials (`deny_for_trust`) | row caps, audit depth |
-| `api` | egress allowlist (jail-level) | spend, retry, idempotency |
-| `hands` | — | trust floors, intent, confirm gates |
-| `identity` | socket identity pre-gate | principal binding, scoped views |
-| `env` | overlays compiled per world | both layers read env context |
-| `fail_closed` | both | both |
-
-## The policy ↔ governance line
-
-| Question | File |
-|---|---|
-| "May this write touch 500 rows?" | **policy** (behavior) |
-| "May this routine exist at 342 LOC?" | governance (structure) |
-| "May drafts read secrets?" | **policy** |
-| "How many routines may exist?" | governance |
-| "Does a served write need confirmation?" | **policy** |
-| "How many endpoints may be served?" | governance |
-
-Policy gates the **act**; governance gates the **artifact**. Verbs vs nouns — two files, one compile step, zero overlap.
-
-## The principle
-
-> **Every section of this file answers one question: "under what conditions does the gate open?"** And the last section answers the only question that matters when something goes wrong: *"it didn't."* 🔒

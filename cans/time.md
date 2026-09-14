@@ -1,7 +1,9 @@
 - Time
 <!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, physics.md, recovery.md, space.md, trust.md, world.md -->
   - Stage map
-    - Pipeline: draft → prove → ship → live → monitor, ending in sweep / rollback / retire
+    - Lifecycle pipeline: draft → prove → ship → live → monitor → sweep / rollback / retire
+    - Enforcement gates (different axis): register → draft → runtime → monitor → sweep
+      # FIX: lifecycle stages and enforcement gates use overlapping terms; now explicitly separated
       - sweep: merge/dedupe proposals from the maintenance cycle; human gated
       - rollback: revert to prior version; agent may propose, pinned rollback requires human
         - `rollback --to-version N` reverts code; `--to-trust draft` demotes trust
@@ -22,7 +24,8 @@
       - near-duplicate warning at birth: `get_orders_status` similarity 0.91 — reuse it, or justify `--reason`
         - Warning, not denial: the agent proceeds by justifying the duplicate in `--reason`
       - duplicate-similarity check at birth slows bloat before it starts
-      - Creation is free: the kernel does not care how the file appeared, only whether it may run
+      - File creation is free (harness native fs); the kernel gates at `routine draft` registration
+        # FIX #3: consistent with action.md clarification
     - prove — the first gate
       - `capcli routine prove refund_and_archive -p order_id=ORD-8842`: checks, real execution, audited `stage: prove`
         - Checks: AST bans subprocess/os/raw sqlite3/HTTP clients; Params typed; policy reachability; LOC/token caps
@@ -35,6 +38,8 @@
         - Runtime leaf ops vs declared manifest; divergence = warning (branch taken, undeclared op)
           - Warning cites the first-time branch taken or the undeclared op attempted
         - Proving never grants power: prove runs at draft trust regardless of declared trust
+        - Proving against prod requires `--env prod --reason`; prod-only verbs still need first-call approvals
+          # FIX #5: clarified that prove-at-draft-trust in prod still respects prod gates
         - System tables `_audit`, `_api_quota`, `_budget_frames` readable during prove; agent never writes
       - Environment and params
         - Defaults to sim/dev; proving against prod requires explicit `--env prod --reason`
@@ -120,8 +125,9 @@
       - fail_threshold 0.7: success below → rollback candidate
       - stale_sim_after_days 14: sim data too old vs prod: see space.md#Drift
     - Integrity cadence
-      - Audit mirror freshness SLA: mirror_lag_max_minutes 5, JSONL → `_audit` (artifacts/governance.yaml)
-      - hash_chain_verify "0 4 * * *" — daily tamper-evidence sweep: see recovery.md#Hash-chains
+      - Audit mirror freshness SLA: see artifacts/governance.yaml#maintenance.audits
+      - Hash chain verification: see recovery.md#Hash-chains
+        # FIX #1 redundancy
       - API sync is scheduled, not one-shot: min_interval_hours 24, no hammering provider URLs (artifacts/governance.yaml)
       - Backup auto-commit every 15 minutes + on promote/migrate/register triggers: see recovery.md#Git-integration
   - Versioning & provenance
