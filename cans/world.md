@@ -9,7 +9,7 @@
     - File permissions are the first authorizer: agent has no direct path; kernel is the only opener
     - Single-writer serialization is the multi-agent arbiter: transactions settle, no distributed locks
     - Every DB effect flows: intent → kernel → authorizer → AST → SQLite → audit event; no other path
-    - Harness can wipe everything natively; where capcli cannot gate, it recovers: see recovery.md#Destruction_as_transition
+    - Harness can wipe everything natively; where capcli cannot gate, it recovers: see recovery.md#Destruction-as-transition
   - Dual schema
     - Two files, two owners, one compiled DDL in workspace.db; SQL DDL is never hand-edited
     - schema.yaml — agent-authored
@@ -26,7 +26,7 @@
       - Kernel upgrades never touch schema.yaml; agent world unaffected by kernel releases
       - _budget_frames tracks per-invocation budgets: see budget.md#Frames
       - secrets table kernel-managed, value masked: see agent.md#Secrets
-      - agents table holds registered identities: see agent.md#Identity_hierarchy
+      - agents table holds registered identities: see agent.md#Identity-hierarchy
     - Shorthand expansion at compile time
       - pk → integer autoincrement PK; text pk → text PK; text! → unique; text=val → default
       - int~ → immutable; int ref=table.col → inline FK; idx: [a] / [[a,b]] → single/composite index
@@ -83,10 +83,10 @@
       - Snapshot-first: WAL-consistent snapshot before every DDL
       - Explicit-SQL-shown: --dry-run prints the exact DDL, no surprises
       - One transaction: failure auto-restores from snapshot
-      - Auto-commit: every successful migration is a git commit: see recovery.md#Git_integration
+      - Auto-commit: every successful migration is a git commit: see recovery.md#Git-integration
       - Version-locked: schema_version must match policy.yaml + governance.yaml or boot is refused
       - Onboarding is migration: first rule apply from intent is version 0→1, same pipeline, no fast-path
-      - Migration events record from_version, to_version, ddl, snapshot: see time.md#Versioning_&_provenance
+      - Migration events record from_version, to_version, ddl, snapshot: see time.md#Versioning-&-provenance
   - Validation gates
     - Five gates, zero trust; layered defense at every boundary; any failure = no execution
     - Gate 1 YAML syntax, parse-time
@@ -124,18 +124,18 @@
     - Law
       - Exit codes: 0 ok, 2 policy-denied, 3 validation, 4 runtime, 5 audit-failed
       - db count is dead: use db query --count or AST-enforced bulk pre-flights
-      - Enforcement behind every command: see physics.md#Raw_SQL_rules
-      - Gate pipeline order and db policy excerpt: see physics.md#Two-layer_enforcement
+      - Enforcement behind every command: see physics.md#Raw-SQL-rules
+      - Gate pipeline order and db policy excerpt: see physics.md#Two-layer-enforcement
     - Introspection
       - YAML → DB one-way generation; DB → diff via PRAGMAs
       - DB → YAML bootstraps via capcli rule show --type schema
       - No DDL parser: PRAGMAs + one-way generation
     - Consumers
-      - ctx.db SDK — query, execute, txn, lock; no raw connection: see action.md#The_ctx_contract
-      - PWA renders kernel.db.query()/exec() as drillable masked tables: see interface.md#PWA_layers
-      - Mirror views: routine_fingerprints, primitive_cost, shared_subsequences: see effect.md#Audit_spine
+      - ctx.db SDK — query, execute, txn, lock; no raw connection: see action.md#The-ctx-contract
+      - PWA renders kernel.db.query()/exec() as drillable masked tables: see interface.md#PWA-layers
+      - Mirror views: routine_fingerprints, primitive_cost, shared_subsequences: see effect.md#Audit-spine
     - Cross-world
-      - Each env is a worktree with its own workspace.db: see space.md#Environment_axis
-      - env new sim --seed prod: snapshot fork + auto-mask: see space.md#Rehearsal_&_sim
+      - Each env is a worktree with its own workspace.db: see space.md#Environment-axis
+      - env new sim --seed prod: snapshot fork + auto-mask: see space.md#Rehearsal-&-sim
       - Durability tiers — db snapshot, world.sql, sys backup --push: see recovery.md#Snapshots
-      - prov: true tables auto-fill created_by/modified_by: see agent.md#Identity_hierarchy
+      - prov: true tables auto-fill created_by/modified_by: see agent.md#Identity-hierarchy
