@@ -1,0 +1,118 @@
+- Time
+  - Stage map
+    - Pipeline: draft → prove → ship → live → monitor, ending in sweep / rollback / retire
+    - draft: file scaffolded in `routines/` via harness native fs; nobody gates — creation is ungated
+    - prove: AST + policy + governance shape + manifest extraction; kernel gates, env-scoped
+    - ship: draft → reviewed → pinned; human/CI gates — never the agent
+    - live: registered capability, callable via `capcli run`; policy gate per call
+    - monitor: stats, success rate, usage tracked continuously; kernel gathers evidence only
+    - sweep: merge/dedupe proposals from the maintenance cycle; human gated
+    - rollback: revert to prior version; agent may propose, pinned rollback requires human
+    - retire: removed from callable surface, provenance kept; auto for decay, human for merges
+    - Asymmetry: creation is free, registration and execution are gated; kernel only asks if a run is allowed
+    - Invariants: every routine passes draft → prove → ship, no stage skipped; every transition audited
+    - API verbs ride the same lifecycle with the same ladder and human gates: see action.md#External APIs
+  - Stage details
+    - draft — birth ungated
+      - `capcli routine draft refund_and_archive` scaffolds, validates, extracts manifest via harness fs
+      - near-duplicate warning at birth: `get_orders_status` similarity 0.91 — reuse it, or justify `--reason`
+      - duplicate-similarity check at birth slows bloat before it starts
+      - Creation is free: the kernel does not care how the file appeared, only whether it may run
+    - prove — the first gate
+      - `capcli routine prove refund_and_archive -p order_id=ORD-8842`: checks, real execution, audited `stage: prove`
+      - Checks: AST bans subprocess/os/raw sqlite3/HTTP clients; Params typed; policy reachability; LOC/token caps
+      - Manifest from AST of `ctx.*` calls: api.call stripe.get_charge, db.query entities, api.call stripe.refund_charge, db.txn
+      - `estimated_cost_class: [2× http, 2× write]` stored with the version at draft time
+      - Proving never grants power: runs at draft trust regardless of declared trust
+      - System tables `_audit`, `_api_quota`, `_budget_frames` readable during prove for evidence; agent never writes
+      - Defaults to sim/dev; proving against prod requires explicit `--env prod --reason`
+      - Sim-mode aware: each verb declares sandbox/mock/dry-run/skip/prod-only; prove adapts per verb
+      - Partial manifest match: skipped verbs report "3/4 primitives matched"; the gap is visible, never hidden
+      - Params come from `capcli sys audit sample`: real historical values, not invented fixtures
+      - Fingerprint proof: runtime leaf ops vs declared manifest; divergence = warning (branch taken, undeclared op)
+      - Manifest anatomy and mirror views: see action.md#Manifests & fingerprints
+    - ship — evidence up, authority down
+      - `capcli db query "SELECT * FROM routine_stats WHERE capability = 'refund_and_archive'"`
+      - Evidence: runs: 31, success_rate: 0.97, p95: 640ms
+      - `capcli routine ship refund_and_archive --to reviewed`
+      - with `--reason "97% success over 31 sim runs; replaces 3-op sequence seen 47×"`
+      - Evidence block includes manifest diff vs previous version: "v18 adds `api.call X`" — no raw diff reading
+      - Evidence block includes sim gaps: gov.file_tax_return prod-only → first 3 prod calls require human approval
+      - Prod promotion additionally requires merge from the routine's dev/sim branch
+    - auto-promotion draft → reviewed
+      - Low-risk only; mechanical verification should not require a human
+      - All thresholds must hold: see trust.md#Gates & promotion
+      - Logged `event: routine.auto_promoted` with from/to/evidence
+      - Retroactive human veto: `capcli routine rollback <name> --to-trust draft`
+      - reviewed → pinned is ALWAYS human-gated: relaxed caps and unattended prod are never automated
+    - promotion queue
+      - `capcli routine ship <name> --to reviewed --queue`: pending state, not promoted, not callable at new trust
+      - Batch review: `capcli routine pending` lists queued promotions with evidence summaries; bulk approve/reject
+      - Queue entry = `event: routine.queued`; approval = `routine.promoted` via `queue_batch_<id>`; rejection cited
+      - SLA `max_promotion_queue_age_hours: 48`; stale queue → `sys doctor` emits `promotion.sla_breached`
+      - Kernel never auto-promotes on timeout — it nags
+      - CI-driven promotion: pipeline proves `--env sim`, checks thresholds, ships `--by ci:github-actions --queue`
+      - Authority gate is the CI config, reviewed like code — not a human clicking approve per routine
+      - Veto window: 1-hour countdown after batch approval; any principal `rollback --to-trust draft` without override
+    - live — governed service
+      - Callable via `capcli run`, ctx composition, schedules, watches; every call crosses the gate; trust sets caps
+      - Runtime fingerprint continuously compared to manifest; drift triggers `governance.anomaly`: see space.md#Drift
+      - Every invocation pushes a budget frame tracking ops, duration, spend, rows: see budget.md#Frames
+      - Session counters never reset via composition; exhaustion = clean exit 2 citing frame, dimension, remaining
+    - monitor → decay — the counter-force
+      - `capcli routine sweep` surfaces dead, failing, duplicate signals
+      - `capcli routine rollback refund_and_archive --to-version 16` reverts to the prior version
+      - `capcli routine retire find_orders_by_status --reason "merged into orders_by_status"`
+      - Unused 30d → retire candidate; success < 0.7 → rollback candidate
+      - Retirement keeps provenance pointers; deletion never happens
+    - command census
+      - `routine draft|prove|ship|sweep|stats|rollback|retire` — the full lifecycle surface
+      - `routine stats <name> [--deep]`: per-leaf duration/spend/failure attribution
+      - `capcli sys audit sample --capability X` extracts test params; `sys audit trace <op-id>` forensics
+      - `capcli routine sweep [--since 30d]` — consolidation report + merge/dedupe proposals
+    - anti-decisions
+      - No ungated execution: the gate sits at registration, not birth
+      - No prod testing of draft writes: prod policy denies them; rehearsal belongs in sim by construction
+      - No routine-level-only lifecycle: env, stage, key, manifest, fingerprint live at the leaf
+      - No pretending externals are simulatable: prove reports the gap; ship shows what wasn't proven
+  - Learning loop
+    - Loop: agent runs raw ops → kernel logs every op with intent → audit mirror queries → propose routine
+    - Then draft → prove (audit-sampled real params) → ship with stats evidence → future work calls the routine
+    - Raw ops are exploration; the routine is exploitation — accumulation automatic on the mirror
+    - Audit mirror is the training data: repeated intent patterns + frequent op bigrams → candidates
+    - Deterministic views: `op_frequency`, `shared_subsequences` — pure GROUP BYs, no LLM in the kernel
+    - Proposal floor: routines drafted only after ≥3 identical primitive sequences appear in the audit mirror
+    - Search-first enforced: `routine draft` shows near-duplicates; reuse or justify with `--reason`
+    - Failures are teaching data: `policy.deny` patterns = what the agent doesn't yet know how to do right
+    - Search gaps are consolidation signals: searched but never invoked, routines and API verbs alike
+    - Kernel proposes extracting a common sub-routine from `shared_subsequences` n-grams, deterministically
+    - Kill raw SQL and the learning loop never starts; kill routines and nothing is ever learned
+  - Consolidation
+    - Accumulation is automatic; consolidation must be scheduled
+    - Maintenance window (Sun 03:00): kernel builds the consolidation report — similarity, dead, failing, overlap
+    - Harness drafts merges (LLM labor) → validate + test candidates (gate) → human approves (gate)
+    - Apply: retire originals with provenance pointers, never delete
+    - Merges are links: `consolidated_from: [a@12, b@7]`; rollback of a bad merge = un-retire
+    - Clustering thresholds: fingerprint_similarity 0.90, duplicate_similarity 0.85 (artifacts/governance.yaml)
+    - Consolidation labor is budgeted: max_session_minutes 30, max_proposals_per_session 10 (artifacts/governance.yaml)
+    - merge_requires_human always; auto_retire_dead false — propose, never auto-destroy (artifacts/governance.yaml)
+    - Near-duplicate detection runs on fingerprint similarity: identical primitive sequences merge, not code text
+    - The registry stays a library because subtraction runs on schedule; consolidates, never duplicates
+  - Schedule & maintenance
+    - Cron is a governed time trigger: daemon-owned schedule hand, time → agent: see interface.md#Bindings
+    - Caps: max_active 20, max_per_agent 10, min_interval_minutes 5 — no sub-5-minute cron (artifacts/governance.yaml)
+    - max_catchup_fires 1: daemon restart ≠ fire the missed 40 (artifacts/governance.yaml)
+    - dead_schedule_disable: bound routine retired → schedule auto-disabled loudly (artifacts/governance.yaml)
+    - Decay: dead_after_days 30, fail_threshold 0.7, stale_sim_after_days 14 re-seed nag (artifacts/governance.yaml)
+    - Audit mirror freshness SLA: mirror_lag_max_minutes 5, JSONL → `_audit` (artifacts/governance.yaml)
+    - hash_chain_verify "0 4 * * *" — daily tamper-evidence sweep: see recovery.md#Hash chains
+    - API sync is scheduled, not one-shot: min_interval_hours 24, no hammering provider URLs (artifacts/governance.yaml)
+    - Backup auto-commit every 15 minutes + on promote/migrate/register triggers: see recovery.md#Git integration
+  - Versioning & provenance
+    - Version record: `refund_and_archive` version 17, code_hash sha256:9d2e..., manifest_hash sha256:a1b2...
+    - created_by agt_7f3k, promoted_by user:alice, promoted_through [dev, sim, prod] — the journey is recorded
+    - `consolidated_from: [...]` records merge lineage
+    - Edits create versions; replay verifies the hash; no silent edits — change = new version
+    - The promotion path itself is provenance: ask how a pinned routine earned prod
+    - Merge/rollback never delete; pointers preserve the graph; history only grows
+    - Version hygiene: max_versions_kept 25, max_rollback_depth 5 (artifacts/governance.yaml)
