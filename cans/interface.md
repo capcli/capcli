@@ -422,7 +422,7 @@
       - GitHub PR review analog → Layer 7 Approval
       - AWS IAM console analog → Layer 3 Governance + Layer 10 Identity
       - Git history viewer analog → Layer 8 Recovery
-      - Never Metabase/trigger.dev/Grafana/pgAdmin/Airtable/Retool — see Anti-decisions
+      - Never Metabase/trigger.dev/Grafana/pgAdmin/Airtable/Retool — refused, listed above
   - Interaction patterns
     - Browse
       - Read-only drill-down — table → rows → row → history
