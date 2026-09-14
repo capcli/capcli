@@ -4,13 +4,23 @@
     - Tooling
       - Bun IS the monorepo: no turborepo, nx, pnpm, lerna — `bunfig.toml` plus workspace globs
       - Bun resolves, links, runs, tests — one tool, zero orchestration overhead
-      - `bunfig.toml`: test coverage on, reporters text + lcov, workspace packages = packages/*
-      - Root package.json: private, scripts only — dev, build, test, test:unit/integration/e2e, lint, native:build
+      - bunfig.toml
+        - [install] peer = false — no peer-dependency ceremony
+        - [test] coverage = true, coverageReporter text + lcov
+        - [workspace] packages = packages/* — single source of workspace truth
+      - Root package.json
+        - private: true, workspaces packages/* — scripts only, never published
+        - dev runs the kernel watcher: `bun run --filter @capcli/kernel dev`
+        - build, test → `bun run --filter '*' build|test`
+        - test:unit, test:integration, test:e2e — same filter, tier folder
+        - lint runs per package: `bun run --filter '*' lint`
+        - native:build → `cd packages/native && napi build --release`
     - Layout
       - packages/ holds all code: types, kernel, sdk, pwa, native
       - workspace/ is the gitignored runtime artifact: schema.yaml, system-schema.yaml, policy.yaml, governance.yaml
       - workspace/ also holds apis/, routines/, workspace.db, world.sql, audit/
       - The repo contains architecture, code, and config templates — never live data
+      - Root law docs: architecture.md plus seven *.architecture.md siblings
     - Sealing law: domain seals the package, feature seals the file — no file crosses domains, no package leaks
     - Anti-decisions
       - Turborepo/Nx/Lerna: refused — Bun workspaces suffice; pnpm: refused — Bun resolves natively
@@ -19,94 +29,157 @@
       - dto/ folders: refused — types live in `@capcli/types` plus noun.types.ts
       - Co-located tests in src/: refused — tests live in __tests__/ tier subfolders
       - Vitest/Jest: refused — `bun:test` is built-in, fast, zero-config
-      - Next/Remix: refused — Vite + React suffices, no SSR; Redux/MobX: refused — Zustand
-      - CSS-in-JS: refused — Tailwind utilities; Storybook: refused — the 10 layers are the story
+      - Next.js/Remix: refused — Vite + React suffices, no SSR
+      - CSS-in-JS: refused — Tailwind utilities; Storybook: refused — the ten layers are the story
       - Monorepo-wide tsconfig: refused — per-package tsconfig, tsconfig.base.json for shared options
       - stack.md: dead — its content lives here, once, forever
     - Invariants
-      - Dependency graph acyclic and unidirectional: types ← kernel ← sdk ← pwa
+      - The package line never cycles — every import points toward @capcli/types
       - Tests mirror source: every handler unit, every domain integration, every lifecycle e2e
       - Build outputs deterministic — same source + deps = same binary, no timestamps
       - Zero orchestration tools — if Bun can't do it, the task is wrong
       - Doc bundling configured at artifacts/repomix.config.json — markdown style, token tree
   - Naming law
     - `*.*.*` — every src file is domain.feature.ext: three dot-separated segments, no exceptions
-    - `noun.verb.ts` = command handler; `noun.service.ts` = shared domain logic
-    - `noun.gate.ts` = enforcement; `noun.config.ts` = config loader; `noun.types.ts` = re-exports
-    - PWA-only suffixes: `noun.store.ts` (Zustand), `noun.view.tsx` (React), `noun.hook.ts`
-    - Forbidden: index.ts, utils.ts, helpers.ts, constants.ts, bare types.ts, App.tsx
-    - Entry points are the sole exception: main.ts at package root, app.tsx in the PWA
-    - Tests mirror source: db.query.ts → db.query.unit/integration/e2e.test.ts — no orphan tests
+    - Patterns
+      - Handlers and services
+        - `noun.verb.ts` = command handler, one CLI verb: db.query.ts
+        - `noun.service.ts` = shared domain logic; `noun.gate.ts` = enforcement
+        - `noun.config.ts` = config loader; `noun.types.ts` = domain re-exports
+      - Test naming
+        - db.query.ts → db.query.unit/integration/e2e.test.ts — tier folder decides tier
+        - No orphan tests — a test exists only if its source exists
+      - PWA-only suffixes
+        - `noun.store.ts` (Zustand), `noun.view.tsx` (React), `noun.hook.ts`
+        - These suffixes never appear outside packages/pwa/src
+    - Forbidden
+      - Forbidden: index.ts, utils.ts, helpers.ts, constants.ts, bare types.ts, App.tsx
+      - A forbidden name hides what the file does — the name is the map
+      - Entry points are the sole exception: main.ts at package root, app.tsx in the PWA
   - Packages
     - @capcli/types
       - Single source of shared contracts — zero runtime code, types and const enums only
       - Imports nothing; every other package imports from it; breaking change = major bump
-      - Contracts: exit.codes, kernel.contract, audit.event, capability, policy, governance, schema
-      - Also: budget.types (frame, cascade, session pool), identity, env, api, routine, bind, ping
-      - Plus sdk.contract (createKernel return type) and cli.types (args, flags, output shapes)
+      - Contracts
+        - exit.codes, kernel.contract, audit.event, capability, policy, governance, schema
+        - budget.types (frame, cascade, session pool), identity, env, api, routine, bind, ping
+        - sdk.contract (createKernel return type) and cli.types (args, flags, output shapes)
+      - src/main.ts is the barrel export — the sole entry-point exception here
     - @capcli/kernel
       - The gate: handler (noun.verb.ts) → service → gate; direct imports, no decorators, no DI
       - boot.ts: quad-lock compile, refuse-or-serve; config/citty.commands.ts defines the CLI tree
-      - db domain: db.authorizer (rusqlite bridge), db.ast (node-sql-parser), db.prepare cross-check
-      - routine domain: manifest extraction, fingerprint compare, sandbox orchestration
-      - api domain: quota read/enforce, egress dispatch with secret injection, sim_mode resolution
-      - bind domain: cron/webhook/endpoint handlers + bind.daemon (Bun.serve() listener)
-      - sys domain: audit tail/trace/query/replay, agent register/list/revoke, doctor, backup, recover
-      - sys domain also: sys.serve (daemon lifecycle), sys.audit.service (JSONL+mirror+hash), sys.budget.service
-      - run domain: run.resolver — exact → prefix → fuzzy → semantic; run.inspect builds cost envelope
-      - identity domain: principal/agent/session resolution, SO_PEERCRED binding, skill_origin
-      - shared/: intent.validator, trust.ladder, config.validator (valibot), output.formatter, git.service
-      - rule domain: four loaders — schema, system (read-only), policy, governance
+      - Domains
+        - db — the SQL gate
+          - Files: db.query, db.exec, db.lock, db.unlock, db.snapshot, db.restore, db.dump, db.schema
+          - Gates: db.authorizer (rusqlite bridge), db.ast (node-sql-parser), db.prepare cross-check
+          - db.service shared logic; db.types re-exports from @capcli/types
+        - routine
+          - Verbs: draft, prove, ship, sweep, stats, rollback, retire
+          - routine.manifest.ts AST-extracts ctx.* calls; routine.fingerprint.ts diffs runtime
+          - routine.sandbox.ts is the jail orchestrator — file only: see action.md#Routines
+        - api
+          - Verbs: sync, diff, catalog, activate, prove, ship, stats, retire, deactivate, rollback, list
+          - api.quota.ts reads/enforces _api_quota; api.egress.ts dispatches with secret injection
+          - api.sim.ts resolves sim_mode and serves fixtures
+        - bind
+          - Verbs: cron, webhook, endpoint, list, inspect, pause, resume, remove, keys
+          - bind.daemon.ts — the Bun.serve() HTTP listener
+        - ping
+          - Verbs: notify, ask, list, resolve, expire
+          - Smallest domain — five verbs, one service
+        - rule
+          - Four loaders: schema, system (read-only), policy, governance
+          - Verbs: rule.show, rule.diff, rule.apply, rule.validate
+        - env
+          - Verbs: new, use, list, inspect, doctor, merge, remove — worktree management
+          - Envs are git worktrees: see space.md#Environment-axis
+        - sys
+          - audit tail/trace/query/replay; agent register/list/revoke
+          - doctor, backup, recover, exec; sys.serve daemon lifecycle
+          - sys.audit.service (JSONL + mirror + hash chain); sys.budget.service (frames, cascade)
+        - run
+          - run.exec, run.search; run.inspect builds the cost envelope
+          - run.resolver resolves capability names against the registry
+        - identity
+          - principal/agent/session resolution; identity.socket.ts SO_PEERCRED binding
+          - identity.skill.ts propagates skill_origin
+      - shared/
+        - intent.validator (min words, blacklist), trust.ladder, config.validator (valibot)
+        - output.formatter (pretty vs --json), git.service (commit, push, worktree, recover)
+      - config/
+        - citty.commands.ts — CLI tree definition
+        - kernel.config.ts — workspace path, env detection
     - @capcli/sdk
       - Thin wrapper, no logic — delegates everything to the kernel
-      - createKernel() entry in main.ts; sdk.brand.ts resolves white-label nouns
-      - sdk.stream.ts: WebSocket/SSE for audit.tail({follow: true})
-      - sdk.architecture.md lives here — embedder-facing, hidden from workspace docs
+      - createKernel() entry in main.ts; sdk.kernel.ts implements it
+      - File surface: sdk.run, sdk.db, sdk.routine, sdk.search, sdk.inspect, sdk.audit
+      - sdk.brand.ts resolves white-label nouns; sdk.stream.ts: WebSocket/SSE for audit.tail({follow: true})
+      - sdk.architecture.md lives here — embedder-facing: see interface.md#SDK-contract
     - @capcli/pwa
-      - React 19 + Vite 6 + Tailwind CSS 4 + Zustand 5; no Next.js, no SSR
+      - PWA stack law: see interface.md#PWA-layers
       - TanStack Query polls the kernel; React Router navigates the ten layers
-      - src/layers/: ten layer folders — world, capability, governance, audit, budget, environment
-      - Plus approval, recovery, learning, identity — mirroring the PWA layers
+      - src/layers/
+        - Ten folders: world, capability, governance, audit, budget, environment
+        - Plus approval, recovery, learning, identity — mirroring the PWA layers
+        - Each folder: layer shell, feature views, hooks, types — sealed per layer
       - Stores: kernel, audit, approval, budget, env, navigation
       - Components: ui.dag, ui.diff, ui.denial, ui.masked, ui.quadlock, ui.confirm — governed renderers
+      - Also ui.table, ui.card, ui.gauge, ui.badge, ui.breadcrumb
+      - Hooks: kernel.call (SDK wrapper, exit mapping), audit.poll, quota.poll 30s, approval.poll 2m
     - @capcli/native
       - Rust crate `capcli_db` — napi 2, napi-derive 2, rusqlite 0.31 bundled, cdylib
-      - Crate layout: Cargo.toml, build.rs, lib.rs (napi entry), db.open.rs, db.authorizer.rs, db.query.rs
-      - Plus db.execute.rs, db.snapshot.rs — one module per native function
-      - `napi build --release` → capcli_db.node
+      - One module per native function: db.open, db.authorizer, db.query, db.execute
+      - Plus db.snapshot (VACUUM INTO), db.restore, db.types bridges; lib.rs is the napi entry
       - Exposes exactly six functions: open, set_authorizer, query, execute, snapshot, restore
       - db.authorizer.rs builds the set_authorizer closure from compiled policy
-      - db.snapshot.rs uses VACUUM INTO; db.restore.rs restores from snapshot
-    - Sandbox binding: routine.sandbox.ts orchestrates the bwrap/podman jail — net-none, socket-only: see action.md#Routines
+      - `napi build --release` → capcli_db.node
+      - Tests run from TS through napi: authorizer unit + real deny-path integration
   - Test architecture
     - Three tiers, one law
-      - unit: one function, one decision — <50ms, pure mocks, no I/O, `bun:test`
-      - integration: one domain, real I/O — <5s, real SQLite, temp fs, no network
-      - e2e: full journey, all layers — <60s, real workspace, git, sandbox; Playwright for PWA
+      - unit
+        - One function, one decision — <50ms, pure mocks, no I/O
+        - Proves logic in isolation — AST rejects UPDATE without WHERE
+        - Also covers intent.validator junk rejection, trust.ladder resolution
+        - Run: `bun run test:unit` → `bun test __tests__/unit/`
+      - integration
+        - One domain, real I/O — <5s, real SQLite, temp fs, no network
+        - Proves enforcement on real substrate — authorizer denies ATTACH on real SQLite
+        - Covers db exec, routine prove, api sync, rule apply, boot quad-lock, env merge
+        - How: same harness over __tests__/integration/ — `bun run test:integration`
+      - e2e
+        - Full journey, all layers — <60s, real workspace, git, sandbox
+        - Proves the full path through all gates — intent → world → deny → write → recover
+        - Run: `bun run test:e2e` — the kernel journey tier
       - Runner is `bun:test` everywhere; Playwright enters only for PWA e2e
-    - What each tier proves
-      - unit: logic in isolation — AST rejects UPDATE without WHERE
-      - integration: enforcement on real substrate — authorizer denies ATTACH on real SQLite
-      - e2e: full path through all gates — intent → world → deny → write → recover
-      - unit also covers intent.validator junk rejection and trust.ladder resolution
-    - Kernel e2e suite: onboarding.journey, routine.lifecycle, api.lifecycle, multi.env
-    - Also: budget.cascade (nested routines, exhaustion), recovery.worst.case (wipe → clone → recover)
-    - PWA e2e: onboarding.render (all 11 stages), approval.flow, audit.drill, recovery.confirm
-    - E2E workspace strategy: createTempWorkspace() per test — git init, schema.yaml, policy.yaml, cleanup
-    - PWA e2e webServer: `bun run packages/kernel/src/main.ts --env test` — real kernel process
-    - Scripts per package: bun test per tier plus test:pwa:e2e (Playwright)
+    - Kernel e2e suite
+      - onboarding.journey, routine.lifecycle, api.lifecycle, multi.env
+      - budget.cascade (nested routines, exhaustion), recovery.worst.case (wipe → clone → recover)
+      - Workspace strategy
+        - Temp workspaces
+          - createTempWorkspace() per test — git init, schema.yaml, policy.yaml, cleanup
+          - No shared fixtures — a leaked workspace never poisons the next test
+        - Real kernel process
+          - webServer: `bun run packages/kernel/src/main.ts --env test`
+          - Playwright drives a real browser against a real kernel — never mocked
+    - PWA e2e
+      - onboarding.render (all 11 stages), approval.flow, audit.drill, recovery.confirm
+      - Playwright config lives in packages/pwa — run via the test:pwa:e2e script
   - Build & run
     - Commands
       - Native crate once or on Rust change: `cd packages/native && napi build --release`
-      - Dev kernel: `bun run --filter @capcli/kernel dev`; dev PWA: `bun run --filter @capcli/pwa dev`
-      - Build all: `bun run build`; test all: `bun run test`
+      - Dev: root script dev for the kernel; same script with @capcli/pwa for the PWA
+      - Build all and test all: root scripts build, test — filtered to every package
       - One tier: `bun run test:unit | test:integration | test:e2e`
       - SDK publish: `cd packages/sdk && bun build src/main.ts --outdir dist --target node`
     - Build outputs
-      - @capcli/kernel → dist/cli.js (Bun single-file)
-      - @capcli/sdk → dist/index.js + dist/index.d.ts (ESM + types)
-      - @capcli/pwa → dist/ static Vite build
-      - @capcli/native → capcli_db.node (NAPI binary)
+      - Per package
+        - @capcli/kernel → dist/cli.js (Bun single-file)
+        - @capcli/sdk → dist/index.js + dist/index.d.ts (ESM + types)
+        - @capcli/pwa → dist/ static Vite build
+        - @capcli/native → capcli_db.node (NAPI binary)
+      - Determinism
+        - No timestamps, no build-path leakage in artifacts
+        - Outputs diffable across builds — a changed binary means changed inputs
     - Stack (absorbed from dead stack.md)
       - Runtime Bun; SQLite via rusqlite through napi-rs → capcli_db.node
       - Authorizer L1: conn.authorizer closure — C-level; prepare cross-check L1.5: sqlite3_prepare_v2 + EXPLAIN
@@ -117,11 +190,21 @@
       - Dependency count: 6 npm kernel deps + PWA dev deps + 3 rust = 9 kernel deps
       - Kernel npm deps: node-sql-parser, yaml, valibot, citty, react, zustand
   - Dependency graph
-    - Direction: @capcli/types ← @capcli/kernel ← @capcli/sdk ← @capcli/pwa — acyclic, unidirectional
-    - types imported by all, imports none; kernel imports types + native
-    - sdk imports types + kernel; pwa imports types + sdk (runtime only)
-    - No circular deps; no kernel importing PWA; the PWA never imports the kernel directly — SDK only
-    - File ownership: kernel domains — kernel devs, read-only reference; native src — Rust devs
-    - workspace/schema.yaml: agent, governed, read-write via gate; routines/*.py: agent, governed
-    - system-schema.yaml: kernel releases only, read-only for agent; apis/*.yaml: kernel-compiled
-    - policy.yaml and governance.yaml: human-owned, read-only for the agent
+    - Direction
+      - @capcli/types ← @capcli/kernel ← @capcli/sdk ← @capcli/pwa — acyclic, unidirectional
+      - Edges
+        - types imported by all, imports none
+        - kernel imports types + native (capcli_db.node)
+        - sdk imports types + kernel; pwa imports types + sdk (runtime only)
+      - Violations
+        - No circular deps — the arrow points one way only
+        - No kernel importing PWA; the PWA never imports the kernel directly — SDK only
+    - File ownership
+      - Per-package owners
+        - kernel domains: kernel devs, agent read-only reference
+        - pwa src: frontend devs; native src: Rust devs
+      - Workspace files
+        - schema.yaml: agent, governed, read-write via gate; routines/*.py: agent, governed
+        - system-schema.yaml: kernel releases only, read-only for agent; apis/*.yaml: kernel-compiled
+        - policy.yaml and governance.yaml: human-owned, read-only for the agent
+      - src/** is out of agent reach — the gate is the only write surface
