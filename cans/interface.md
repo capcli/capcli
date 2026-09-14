@@ -1,0 +1,283 @@
+- Interface
+  - CLI surface
+    - Design laws
+      - One shape forever: `capcli <noun> <verb> [target] [--flags]` — no exceptions
+      - Everything resolves through the registry — db ops, routines, api verbs, views are capabilities
+      - `run`/`search`/`inspect` work identically on all capability kinds
+      - Output contract: humans get tables, agents pass `--json`, PWA renders `--json` via SDK
+      - Every output prefixes `[env]` — prod rendered in red
+      - Exit codes are law: 0 ok, 2 policy-denied, 3 validation, 4 runtime, 5 audit-write-failed
+      - Exit 5 means nothing ran; scripts branch on codes, never parse stdout
+      - Built on `citty` (unjs): nested subcommands, typed args, auto `--help`
+      - `--intent` is `required: true` on all write verbs
+      - Command tree maps 1:1 to the nine nouns
+    - `run` noun — hot path
+      - Verbs: `run <capability> [-p k=v]`, `search <query>`, `inspect <capability>`
+      - Resolution: exact → prefix → fuzzy → semantic → did-you-mean
+      - `inspect` returns the full cost envelope in one JSON blob — go/no-go, no second round-trip
+      - cost_envelope: tokens, duration p50/p95, live_quota, static_spend, db rows, frequency, success
+      - Also exposes composition (nesting depth, child routines) and budget_status.cascade remainder
+      - `inspect` is a read: exit 0 always — denial happens at `run`, not here
+    - `db` noun — world state
+      - Verbs: query, exec, lock, unlock, schema, snapshot, restore, dump
+      - `db exec` auto-txn, WHERE+LIMIT enforced; `db lock` = TTL lease for cross-agent claims
+      - `db count` is dead — `db query --count` or AST-enforced pre-flight
+      - Snapshot/restore mechanics: see recovery.md#Snapshots
+    - `routine` noun — learned procedures
+      - Verbs: draft, prove, ship, sweep, stats, rollback, retire
+      - `prove` tests runtime fingerprint vs declared manifest: see action.md#Manifests-&-fingerprints
+      - `sweep` builds the consolidation report: see time.md#Consolidation
+      - `stats --deep` gives per-leaf duration/spend/failure attribution
+      - Lifecycle stage depth: see time.md#Stage-details
+    - `api` noun — external lifecycle
+      - Verbs: sync, diff, catalog, activate, prove, ship, stats, retire, deactivate, rollback, list
+      - `sync` pulls the full catalog from URL — every verb enters dormant, no `--pick`
+      - `activate` is the gate: dormant → active at trust draft
+      - `prove` adapts to sim_mode — sandbox, mock, dry-run, skip, prod-only: see space.md#Rehearsal-&-sim
+      - `stats` returns usage, reliability, cost, quota burn, provenance per verb
+    - `bind` noun — inbound triggers
+      - Verbs: cron, webhook, endpoint, list, inspect, pause, resume, remove, keys
+      - `bind keys issue` is human-gated; endpoint bindings pin exact routine@version
+      - Trigger domain depth: see action.md#Bindings
+      - Serve lifecycle split: `bind endpoint` only registers config in workspace.db, exit 0, no listener
+      - `sys serve --start | --stop | --restart | --status`: the daemon (Bun.serve()) does the serving
+      - Health: `bind endpoint <name> --health` → 200 live, 503 not; `sys doctor` checks all endpoints
+      - Every HTTP request emits a serve.request audit event — closes the CLI-vs-HTTP audit gap
+    - `ping` noun — outbound human IO
+      - Verbs: notify, ask, list, resolve, expire
+      - `ping ask` carries --options and --timeout; kernel blocks fail-closed on crashed approval
+      - `ping list --pending` / `resolve <ask-id> --choice X` drive the answer loop
+      - `ping expire <ask-id>` retires stale questions; asks are audited like any op
+    - `rule` noun — static configuration
+      - Verbs: show, diff, apply, validate — one noun for schema, system-schema, policy, governance
+      - `rule apply --type schema` is world tables only; system-schema applies at boot or kernel upgrade
+      - `rule show --type system-schema` is a read — the agent can inspect system table definitions
+      - `rule validate` compiles all layers plus quad-lock; bad config = no boot: see physics.md#Fail-closed-stance
+    - `env` noun — switchable worlds
+      - Verbs: new, use, list, inspect, doctor, merge, remove
+      - `env new <name> --seed prod [--from-branch X]`; `env use` is an atomic switch
+      - `env remove prod` is multi-flag gated
+      - Axis and worktree depth: see space.md#env-command
+    - `sys` noun — kernel and audit
+      - audit tail/trace/query/replay — `trace --explain` is the single denial learning signal: see effect.md#Audit-spine
+      - agent register/list/revoke: see agent.md#Identity-hierarchy
+      - doctor (boundaries, perms, drift), backup --push, recover <commit>: see recovery.md#Restore-path
+      - `sys exec <cmd> --sandbox` — jailed execution, the only jail surface
+    - Daily surface
+      - A working agent lives in ~8 commands
+      - The loop: search → inspect → run → trace; reads always first (`db query`)
+      - `--dry-run` mandatory before first real effect
+      - Caller tags: [harness] safe for skills, [human] needs human/CI, [both] context-dependent
+      - `db exec` direct instruction is [human] — skills must never instruct it
+      - Discovery extras: `api catalog --state dormant`, `search gaps --since 7d`
+    - Refusals — what the surface refuses to grow
+      - `config set`: refused — config is files + git + review, no CLI write-path
+      - `db count`: dead — `db query --count` or AST-enforced pre-flight
+      - `claim` noun: refused — `db lock` or `run --lock`; `jail` noun: `sys exec --sandbox`
+      - `budget` noun, `--override-budget`, `--force`: refused — exceptions are governance overrides
+      - `api import --pick`: refused — sync pulls everything, activation gates what is callable
+      - `api create`: refused — verbs come from OpenAPI sync; `api call`: use `run` or ctx
+      - `api simulate`: refused — sim behavior declared per-verb via sim_mode
+      - `--force-prod`: refused — the authorizer physically denies prod-only verbs in sim/dev
+      - `policy explain`, `--verbose`: refused — `sys audit trace --explain` and `sys audit tail` cover both
+      - Interactive modes, onboarding wizards: refused — approvals render in harness and PWA
+      - `rule apply --type system-schema`: refused — kernel upgrades own it
+      - One event per verb: if a command can't be one audit event, it's two commands
+  - Universal flags
+    - `--dry-run`: all mutating verbs — full pipeline, zero effects; policy evaluated, plan returned
+    - `--json`: everything — versioned machine contract; agents always use it
+    - `--intent "<why>"`: writes — mandatory, anti-junk validated, inherited chains accepted
+    - `--reason "<why>"`: threshold crossings — bulk, overrides, promotions justification
+    - `--as <principal>`: everything — who this is ultimately for; scoped views require it
+    - `--by <agent-id>`: mutating — acting identity, socket-verified: see agent.md#Identity-hierarchy
+    - `--env <name>`: cross-world ops — explicit world targeting: see space.md#Environment-axis
+    - `--lock <ref>`: `run` — lease-based exclusivity with TTL
+    - `--sandbox`: `sys exec` — bwrap/podman, net-none, ro binds
+  - SDK contract
+    - Entry
+      - `import { createKernel } from '@capcli/sdk'` — `createKernel({ workspace, brand })`
+      - Or from JSON: `createKernel(config)` from an embedder config file
+      - sdk.architecture.md is embedder-facing and hidden — not part of the workspace docs
+      - One entry point for every consumer — PWA and embedders call the same createKernel()
+    - Brand config
+      - `name`: display name in human output; `cli`: binary name in help/suggestions
+      - `tagline`: replaces the default tagline
+      - `nouns`: surface-only noun aliases — run→exec, db→store, routine→flow
+      - `lockedNouns`: nouns that cannot be aliased — default `['sys']`
+      - Branding is text-only: JSON, exit codes, and audit format are never rebranded
+    - Programmatic API
+      - `kernel.run(capability, { params, intent, json, dryRun, env })`
+      - `kernel.db.query(sql, params)` and `kernel.db.exec(sql, params, intent)`
+      - `kernel.routine.prove(name, params, env)`, `kernel.search(query, filters)`, `kernel.inspect(capability)`
+      - `kernel.audit.tail(filters)` one-shot; `kernel.audit.trace(opId)` for the causal DAG
+      - `kernel.audit.tail(filters, { follow: true })` — WebSocket/SSE streaming, the PWA real-time path
+      - All methods return `{ exit, json, text }` — exit codes are law, JSON is the machine contract
+      - Text is branded human output
+    - What never changes
+      - Exit codes 0/2/3/4/5
+      - JSON output contract — request-response and streaming
+      - Audit event format; system table names; config file names
+      - The `ctx` contract
+      - `[env]` output prefix
+    - Hidden white-label
+      - Undocumented in workspace architecture docs
+      - Invisible in `--help`, `sys doctor`, and governance — exists only in SDK types and SDK docs
+      - Embedders discover it through TypeScript intellisense, not capcli docs
+      - The PWA is the primary SDK consumer — brand config applies to PWA rendering
+  - PWA layers
+    - Convictions
+      - Renderer of governed queries, never a query creator — agent defines views, kernel gates, PWA renders
+      - Every pixel is a kernel artifact — no data invented, no metric computed client-side
+      - The causal DAG is the navigation model — you never hit a dead end
+      - Exactly five interactions — browse, approve, answer, recover, observe
+      - Trust calibrator: the human sees what the agent can do, cannot do, why, and how to verify
+      - Thinnest layer: renders what the kernel computed, approves what it gated, recovers what it snapshotted
+    - What the PWA is NOT
+      - Not a kernel component — a client living outside the workspace
+      - Not a CLI replacement — the CLI is the machine contract; the PWA calls the SDK
+      - Not a second kernel — never gates, never enforces, never audits independently
+      - Not a harness for agents — agents use CLI; the PWA is for humans
+      - Not an interactive terminal — no [Y/n], no wizards; exit codes plus approval cards
+    - Ten layers
+      - Layer 1 World: tables, rows, CHECK, masks; governed browse; row → audit history: see world.md#SQLite-as-SSOT
+      - Layer 2 Capability: routines, API verbs, views, binds, keys; manifest vs fingerprint: see action.md#Capability-registry
+      - Layer 3 Governance: policy tree, limits with live usage, ERD, quad-lock banner: see physics.md#Two-layer-enforcement
+      - Layer 4 Audit: live tail, event cards, denial forensics, fingerprints: see effect.md#Audit-spine
+      - Layer 5 Budget: frames, cascades, consumption, exhaustion, session pools: see budget.md#Frames
+      - Layer 6 Environment: dev → sim → prod, worktrees, overlays, drift: see space.md#Environment-axis
+      - Layer 7 Approval: promotions, activations, migrations, merges, asks: see trust.md#Gates-&-promotion
+      - Layer 8 Recovery: snapshots, restores, rollbacks, git points, hash chain: see recovery.md#Restore-path
+      - Layer 9 Learning: search gaps, consolidation signals, decay, sweeps: see time.md#Learning-loop
+      - Layer 10 Identity: principals, agents, sessions, skills: see agent.md#Identity-hierarchy
+    - Navigation model
+      - One connected graph rendered as nested trees — everything connects
+      - Drill: row → event → routine → manifest → verb → quota → frame → session → agent → principal
+      - Cross-layer links keyed by fields: caused_by, frame_id, session, principal, rules_matched, snapshot, code_hash
+      - Every click is a `--json` call; every render is a kernel artifact
+    - Rendering model
+      - JSON shape → component: array = table, nested object = card, remaining/limit = gauge
+      - outcome denied → red card with rule and fix; exit 5 → black banner "nothing ran"
+      - budget_status.can_invoke_now false → orange banner with blocking reasons
+      - trust → ladder badge; env → badge with prod red; sim_mode → mode badge; mask=true → locked cell
+      - Exit codes drive UI state — the PWA never interprets stdout text
+    - Real-time model
+      - Audit tail: WebSocket/SSE real-time; budget frames push/pop real-time
+      - Near-real-time polls: _api_quota 30s, pending asks 30s
+      - Periodic polls: routine stats 5m, search gaps 1h, env drift 15m, backup status 15m, approvals 2m
+      - Hash chain: daily verify per governance schedule
+    - Mini ERP
+      - Governed views render as dashboard cards — orders, revenue, low stock, routine health, budget
+      - No ad-hoc SQL: every card is a governed view or audit query; filters are query params
+      - Time-series comes from audit mirror GROUP BYs; alerts are routines (bind cron → check → ping notify)
+      - The PWA shows alert status — it never creates alerts
+    - Technology stack
+      - React 19 + Vite 6 + Tailwind CSS 4 + Zustand 5 — no Next.js, no SSR
+      - Kernel JSON is the single source — no client-side data model; TanStack Query for polling
+      - PWA manifest + service worker: installable, offline cache of last-known state
+      - Auth: session token from kernel maps to `--as <principal>`
+      - No LLM — zero inference, zero summarization; the PWA never reasons
+    - White-label and SDK
+      - Brand nouns render throughout — "Routines" becomes "Flows", db becomes "store", run becomes "exec"
+      - Brand config arrives via createKernel(); lockedNouns cannot be aliased
+      - `sdk.brand.ts` resolves nouns in the SDK; `brand.resolver.ts` substitutes in the PWA
+      - Never changes: exit codes, JSON contract, audit format, system tables, `[env]` prefix, approval mechanics
+    - Anti-decisions
+      - SQL editor: refused — `db query` is the read path; ad-hoc exploration is the agent's job
+      - Chart builder: refused — charts render from governed views; the PWA invents nothing
+      - Alert builder: refused — alerts are routines (`bind cron` → check → `ping notify`)
+      - Routine/schema/policy editors: refused — the harness authors, the PWA renders
+      - Dashboard builder: refused — no drag-drop widgets; views are governed
+      - Direct SQLite access: refused — all through kernel.db.query/exec; kernel is the only door
+      - `--force` buttons: refused — exceptions are governance overrides, never UI flags
+      - Bulk approval without evidence: refused — every approval shows its evidence block
+      - Silent recovery: refused — every restore/rollback shows its audit event after confirmation
+      - PWA as audit source: refused — it reads `_audit`, never writes; no collaborative editing
+      - Metabase/trigger.dev/Grafana/pgAdmin/Airtable/Retool: refused — no ad-hoc, task running, alert rules
+    - Invariants
+      - Every interaction is a kernel SDK call; no client-side computation of governance state
+      - Every approval is an audit event — who, when, what evidence was shown
+      - Every denial cites the exact rule, layer, and fix — no mysterious errors
+      - Masked columns are always masked; single-principal: one human, one session, one view
+      - Quad-lock status always visible; any mismatch renders a red banner
+      - Recovery operations require confirmation — no one-click destructive actions
+      - Analogs: Prisma Studio × Datadog APM × GitHub PR review × AWS IAM × Git history viewer
+  - Interaction patterns
+    - Browse: read-only drill-down — table → rows → row → history
+    - Approve: exercise human authority — promotion queue → evidence → approve/reject
+    - Answer: respond to kernel questions — ping.ask → choose option → kernel resumes
+    - Recover: undo, restore, rollback — snapshot restore, routine rollback: see recovery.md#Restore-path
+    - Observe: watch live state — audit tail, quota gauges, budget frames
+    - No other interactions: no create, no edit, no configure, no reason — agent creates, kernel gates
+  - Onboarding journeys
+    - Convictions
+      - Not a tutorial — a competence loop: from "I don't know this" to act-safely, see, recover, return
+      - Intent first, infrastructure second — the world is built for a goal, never prerequisites
+      - The harness builds the world, the kernel gates it, the human approves it
+      - The first denial is a feature: a designed, explained, bounded denial teaches more than ten reads
+      - Recovery proof before power — reversibility is the prerequisite for exploration
+      - Deletion is a state transition; return is memory restoration: see recovery.md#Destruction-as-transition
+    - Neuroscience principles
+      - Reward prediction error: deny → explain → succeed → audit-trace beats instant success
+      - First denial must come before the first successful write — both visible in the audit
+      - Cognitive load: working memory holds ~4 chunks — never expose more than four concepts at once
+      - Five chunks, one at a time: World, Gate, Capability, Audit, Recovery
+      - Self-determination: autonomy (I chose the intent), competence (real visible wins), relatedness (it explains itself)
+      - Errorless learning: reads before writes, `--dry-run` first, dev → sim → prod, draft → reviewed → pinned
+      - Each stage removes one constraint — the learner never faces all constraints simultaneously
+      - Trust calibration: five experiences — allowed read, denied write, governed write, recovery, promotion gate
+      - Endowment effect: the user co-creates schema; tables carry the user's domain language, not templates
+      - Zeigarnik effect: every opened loop must close — "you proved this routine 12 times, ready to ship?"
+      - Episodic memory: the return flow answers where was I, what was I doing, what changed, what is safe next
+    - Intent-first law
+      - The first object in a workspace is an intent, not a table — no blank dashboard, no empty database
+      - Harness drafts schema.yaml plus a minimal policy overlay from the stated intent
+      - Kernel previews via `rule apply --dry-run`; human approves; apply takes snapshot, audits, auto-commits
+      - The kernel never infers schema from natural language
+      - Content is generated per intent — refunds world differs from inventory world
+      - No `onboarding.*` audit events — the audit records real ops from the first rule.apply
+    - Human journey (stages 0-10)
+      - S0 install and verify: `sys doctor` boundary checklist — perms, versions, sandbox, no creds leaked
+      - S1 intent capture: one question — "what do you want your agent to do?"; no jargon
+      - S2 minimal world proposal: `rule apply --dry-run` preview — tables, capabilities, reversible
+      - S3 first safe read: `db query` count 0 — world exists, empty, observable (chunk: World)
+      - S4 designed denial: unbounded UPDATE → exit 2 require_where plus trace --explain (chunk: Gate)
+      - S4 is scripted, not accidental — the most important stage
+      - S5 first governed write: bounded UPDATE exit 0 plus audit trace spine (chunks: Capability + Audit)
+      - S6 recovery proof: snapshot, mutate, restore snap_onboarding_002: see recovery.md#Restore-path
+      - S7 capability discovery: search → inspect → run --dry-run — the daily loop
+      - S8 routine formation: draft + prove in sim — manifest matched, runtime fingerprint
+      - S9 promotion with evidence: stats --deep + ship --to reviewed: see trust.md#Gates-&-promotion
+      - S10 trust receipt: `sys doctor --report` — audited ops, denials explained, recovery tested
+    - Harness journey (stages 0-7)
+      - H0 read the machine contract: `sys doctor --json`, `env list --json`, `rule show --json`
+      - H1 discover, don't guess: search + inspect --json — never guess tables, verbs, params, rules
+      - H2 dry-run before effect: `run --dry-run --json` — errorless learning for machines
+      - H3 first read: `db query --json` — cheap model-building without risk
+      - H4 first governed write: `db exec --json` — exit code, decision, rows, audit event id
+      - H5 learn from denial: `sys audit trace --explain --json` — denial is training data, never retry blindly
+      - H6 routine formation: audit query GROUP BY finds a pattern 3+ occurrences → propose routine
+      - H7 prove before trust: `prove --env sim --json` — the harness never self-promotes
+    - Shared competence loop
+      - Sequence: intent → minimal world → safe read → dry-run → designed denial → small write → recovery drill
+      - Then: discovery → routine proposal → sim prove → human-approved promotion → trust receipt
+      - Teaches the human: safety, control, evidence, reversibility
+      - Teaches the harness: contract, boundaries, capability, feedback
+      - 10-minute timeline: doctor 0:00, intent 0:15, world 1:30, denial 3:00, write 4:00, recover 5:00, receipt 10:00
+      - Milestones: human 7 (stated intent → recovered → promoted with evidence); harness 9 (contract → proved in sim)
+      - Metrics: first governed effect <5 min, first denial <7 min, first recovery <10 min; sim success >0.9
+    - PWA rendering of journeys
+      - Stage outputs render as kernel artifacts: doctor checklist, preview card, denial teaching card, restore flow
+      - S7 renders as a three-step wizard; S8 as side-by-side manifest vs fingerprint
+      - The PWA never generates onboarding content — the harness generates from intent, the PWA renders
+      - All 11 stage renderings are drillable views, not static pages
+    - Onboarding anti-decisions
+      - Blank dashboard: refused — the world is born from intent, never from an empty prompt
+      - Static welcome tour: refused — onboarding content is generated from stated intent
+      - Docs dump before first effect: refused — the user touches the world before reading about it
+      - Kernel-generated schema: refused — the harness authors, the kernel gates
+      - Synthetic `onboarding.*` events: refused — the audit records real operations
+      - Interactive modes: refused — the kernel returns exit codes and JSON; the harness renders UI
+      - Prod in the first 10 minutes: refused — writes in dev, proving in sim, prod earned
+      - All-commands-at-once: refused — daily surface is 4 commands; the rest appears contextually
+      - Unclosed loops: refused; mysterious denials: refused — cite rule, layer, fix
+      - Destructive deletion: refused — retirement with provenance, removal with backup confirmation
