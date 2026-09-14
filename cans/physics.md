@@ -37,6 +37,7 @@
       - policy.yaml (artifacts/policy.yaml): what capabilities may do — row caps, write denials, spend
       - Also policy: trust requirements, intent mandates — behavior, never structure
       - governance.yaml (artifacts/governance.yaml): what capabilities may be — LOC/tokens, max routines, cadence
+      - Governance is never runtime-editable — a routine cannot loosen its own cage
       - Both compiled at boot; bad config → kernel refuses to serve; no degraded mode
       - Quad-locked with both schema files: version mismatch → refuse boot: see world.md#Validation-gates
       - "May this write touch 500 rows?" = policy; "May this routine exist at 342 LOC?" = governance
@@ -62,6 +63,7 @@
       - Scoped capability without principal → refused
       - Write can't be audited → it doesn't run (unauditable_write: deny)
       - Secret exposure detected → kill_and_alert
+      - Pre-call enforcement: remaining ≤ deny_at_remaining → exit 2 before egress, not 429 after
     - Exit codes are law: 0 ok, 2 policy-denied, 3 validation, 4 runtime, 5 audit-write-failed
     - Denial UX: cite measured value, suggest remediation, log all: see effect.md#Denials
     - No automatic degraded mode
@@ -69,11 +71,10 @@
       - Every break-glass use is an audit event
       - Exist so a config typo is not a 3 AM outage with no recovery path
     - Break-glass paths
-      - Recovery mode: CAPCLI_RECOVERY=1 capcli sys recover — loads only schema + audit sink
-      - Recovery mode allows only db query, db dump, sys audit tail, sys backup; logged recovery_mode_entered
+      - Recovery-mode mechanics: see recovery.md#Restore-path
       - Boot diagnostic: capcli sys doctor --boot-check — all boot validations, no daemon, prints exact failure
       - Config pre-commit: capcli rule validate in CI catches YAML errors before they kill the service
-      - Audit disk exhaustion: reserved partition; read-only mode, writes queue 5-minute TTL, then hard denial
+      - Audit sink saturation behavior: see effect.md#Audit-spine
   - Raw SQL rules
     - Allowed by default
       - Raw SQL is the default primitive; the kernel exists so raw SQL is safe, not to forbid it
@@ -118,10 +119,8 @@
       - capcli search --semantic "handle customer refunds" queries this table
       - Kernel serves the vectors; harness ranks them
     - Five-stage resolution: exact → prefix → fuzzy → semantic → did-you-mean, ranked by relevance
-    - Every search query logged as event: capability.search — query, filters, results, invocation
     - Search analytics
-      - Audit mirror reveals gaps: "agents search 'invoice' 20 times but never invoke"
-      - Searched but never invoked = missing capability; kernel surfaces, harness proposes, human approves
+      - Event logging and gap flow: see action.md#Capability-registry
       - capcli search gaps --since 7d; gap_threshold 3 (artifacts/policy.yaml api.search)
       - Same consolidation signal for routines and API verbs: see time.md#Consolidation
     - At 300 routines (governance max_routines cap, artifacts/governance.yaml) keyword search returns noise
@@ -136,17 +135,9 @@
       - Skills reference capabilities via capcli search and capcli run; never raw SQL
       - Zero visibility into skill content, markdown structure, or agent reasoning
       - No skill storage, no SKILL.md parsing, no semantic analysis of harness instructions
-      - Skills are the mind's business; capcli is the nervous system
-      - skill_origin provenance (added v4.1)
-        - Opt-in via identity.skill_origin in artifacts/policy.yaml
-        - allow_propagation true; harness may pass the triggering skill name
-        - max_length 64, format lowercase-hyphens; deny_patterns reject traversal, paths, spaces
-        - audit_field triggered_by_skill recorded on every leaf event
-        - on_invalid strip_and_warn — malformed field dropped, warning logged, not denied
-        - Skills cannot grant authority; metadata only — trust comes from principal + agent
+      - Skill-origin provenance spec: see agent.md#Identity-hierarchy
     - PWA is a client, not a component
       - Lives outside the workspace, communicates exclusively via @capcli/sdk
-      - Renders kernel JSON; never gates, never enforces, never audits independently
       - Never writes to system tables; never creates routines, schemas, or policies
       - Approves, observes, recovers: see interface.md#PWA-layers
     - No other door
@@ -158,4 +149,4 @@
     - Kernel neutrality
       - The kernel never infers, never reasons, never does LLM work
       - It matches, dispatches, delivers, logs
-      - Intelligence is the harness's job; mechanics is capcli's
+      - Philosophy home: see overview.md#Core-philosophy
