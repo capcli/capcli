@@ -6,7 +6,7 @@
       - Everything resolves through the registry — db ops, routines, api verbs, views are capabilities
       - `run`/`search`/`inspect` work identically on all capability kinds
       - Output contract: humans get tables, agents pass `--json`, PWA renders `--json` via SDK
-      - Every output prefixes `[env]` — prod rendered in red
+      - [env] output prefix on every command: see space.md#env-command
       - Exit codes are law: 0 ok, 2 policy-denied, 3 validation, 4 runtime, 5 audit-write-failed
       - Exit 5 means nothing ran; scripts branch on codes, never parse stdout
       - Built on `citty` (unjs): nested subcommands, typed args, auto `--help`
@@ -14,7 +14,7 @@
       - Command tree maps 1:1 to the nine nouns
     - `run` noun — hot path
       - Verbs: `run <capability> [-p k=v]`, `search <query>`, `inspect <capability>`
-      - Resolution: exact → prefix → fuzzy → semantic → did-you-mean
+      - Search resolution ladder: see physics.md#Search-ceiling
       - `inspect` returns the full cost envelope in one JSON blob — go/no-go, no second round-trip
       - cost_envelope: tokens, duration p50/p95, live_quota, static_spend, db rows, frequency, success
       - Also exposes composition (nesting depth, child routines) and budget_status.cascade remainder
@@ -28,7 +28,7 @@
       - Verbs: draft, prove, ship, sweep, stats, rollback, retire
       - `prove` tests runtime fingerprint vs declared manifest: see action.md#Manifests-&-fingerprints
       - `sweep` builds the consolidation report: see time.md#Consolidation
-      - `stats --deep` gives per-leaf duration/spend/failure attribution
+      - `stats --deep` per-leaf attribution: see time.md#Stage-details
       - Lifecycle stage depth: see time.md#Stage-details
     - `api` noun — external lifecycle
       - Verbs: sync, diff, catalog, activate, prove, ship, stats, retire, deactivate, rollback, list
@@ -76,10 +76,10 @@
       - `db count`: dead — `db query --count` or AST-enforced pre-flight
       - `claim` noun: refused — `db lock` or `run --lock`; `jail` noun: `sys exec --sandbox`
       - `budget` noun, `--override-budget`, `--force`: refused — exceptions are governance overrides
-      - `api import --pick`: refused — sync pulls everything, activation gates what is callable
+      - `api import --pick`: refused: see action.md#External-APIs
       - `api create`: refused — verbs come from OpenAPI sync; `api call`: use `run` or ctx
       - `api simulate`: refused — sim behavior declared per-verb via sim_mode
-      - `--force-prod`: refused — the authorizer physically denies prod-only verbs in sim/dev
+      - `--force-prod`: refused: see physics.md#Two-layer-enforcement
       - `policy explain`, `--verbose`: refused — `sys audit trace --explain` and `sys audit tail` cover both
       - Interactive modes, onboarding wizards: refused — approvals render in harness and PWA
       - `rule apply --type system-schema`: refused — kernel upgrades own it
@@ -88,7 +88,7 @@
     - `--dry-run`: all mutating verbs — full pipeline, zero effects; policy evaluated, plan returned
     - `--json`: everything — versioned machine contract; agents always use it
     - `--intent "<why>"`: writes — mandatory, anti-junk validated, inherited chains accepted
-    - `--reason "<why>"`: threshold crossings — bulk, overrides, promotions justification
+    - `--reason "<why>"`: threshold crossings: see trust.md#The-ladder
     - `--as <principal>`: everything — who this is ultimately for; scoped views require it
     - `--by <agent-id>`: mutating — acting identity, socket-verified: see agent.md#Identity-hierarchy
     - `--env <name>`: cross-world ops — explicit world targeting: see space.md#Environment-axis
@@ -176,7 +176,7 @@
       - React 19 + Vite 6 + Tailwind CSS 4 + Zustand 5 — no Next.js, no SSR
       - Kernel JSON is the single source — no client-side data model; TanStack Query for polling
       - PWA manifest + service worker: installable, offline cache of last-known state
-      - Auth: session token from kernel maps to `--as <principal>`
+      - Auth: session token maps to `--as`: see agent.md#Sessions-and-sockets
       - No LLM — zero inference, zero summarization; the PWA never reasons
     - White-label and SDK
       - Brand nouns render throughout — "Routines" becomes "Flows", db becomes "store", run becomes "exec"
@@ -198,7 +198,7 @@
     - Invariants
       - Every interaction is a kernel SDK call; no client-side computation of governance state
       - Every approval is an audit event — who, when, what evidence was shown
-      - Every denial cites the exact rule, layer, and fix — no mysterious errors
+      - Every denial cites rule, layer, fix: see effect.md#Denials
       - Masked columns are always masked; single-principal: one human, one session, one view
       - Quad-lock status always visible; any mismatch renders a red banner
       - Recovery operations require confirmation — no one-click destructive actions
@@ -274,7 +274,7 @@
       - The PWA never generates onboarding content — the harness generates from intent, the PWA renders
       - All 11 stage renderings are drillable views, not static pages
     - Onboarding anti-decisions
-      - Blank dashboard: refused — the world is born from intent, never from an empty prompt
+      - Blank dashboard: refused: see space.md#Environment-axis
       - Static welcome tour: refused — onboarding content is generated from stated intent
       - Docs dump before first effect: refused — the user touches the world before reading about it
       - Kernel-generated schema: refused — the harness authors, the kernel gates
