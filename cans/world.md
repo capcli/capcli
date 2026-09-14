@@ -13,6 +13,7 @@
   - Dual schema
     - Two files, two owners, one compiled DDL in workspace.db; SQL DDL is never hand-edited
     - schema.yaml — agent-authored
+      - Creation is the harness's job, permission the kernel's, approval the human's
       - The agent writes this file; it decides the domain model, not a pre-defined template
       - Authored with native filesystem access in the dev worktree
       - Kernel expands shorthand at compile time, gates application, enforces runtime, refuses drift

@@ -81,7 +81,7 @@
       - No custom query-builder APIs: bulk_update(), cursor() = accidental ORM
     - Statement rules
       - Parameterized only — API enforces bound params; string interpolation rejected structurally
-      - Reads nearly free: authorizer scope + select max_limit 10000
+      - Reads nearly free: authorizer scope + select max_limit 10000; missing LIMIT on SELECT warns only
       - Writes capped: require_where + require_limit (update/delete max_limit 1000) + explicit transaction
       - Writes need intent: writes_require_intent, deny by default
       - INSERT max_rows_per_statement 500; chunked beyond this
@@ -89,10 +89,12 @@
       - Every raw write runs in an explicit transaction; kernel wraps, SDK requires ctx.db.txn()
       - Multi-statement denied; no executescript; no raw connection object
     - Hard denials
-      - DDL gated: alter require_trust reviewed
+      - DDL gated: alter require_trust reviewed; VACUUM require_trust pinned, denied in prod
+      - Triggers denied at runtime: enforcement lives in the gate, not the db; schema trig: is kernel-compiled
       - ATTACH / PRAGMA writes: never — authorizer unconditional deny; PRAGMA whitelist [query_only, foreign_keys]
       - Function deny list: load_extension, writefile, readfile, fts3_tokenizer
       - Deny patterns: "UPDATE * SET * WHERE * OR 1=1", "DELETE FROM * WHERE NOT EXISTS *", "* WHERE 1=1 *"
+      - System tables deny_write: _audit, agents, _pending_asks, _watch_cursors; reads allowed, writes kernel-internal
   - Bulk operations
     - Agents batch for token economy: fewer agent calls, many kernel operations
     - require_limit on UPDATE/DELETE forces chunking; agent writes the loop, kernel enforces max_limit per chunk
