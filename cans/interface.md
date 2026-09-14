@@ -271,43 +271,126 @@
       - Not a harness for agents — agents use CLI; the PWA is for humans
       - Not an interactive terminal — no [Y/n], no wizards; exit codes plus approval cards
     - Ten layers
-      - Layer 1 World: tables, rows, CHECK, masks; governed browse; row → audit history: see world.md#SQLite-as-SSOT
-      - Layer 2 Capability: routines, API verbs, views, binds, keys; manifest vs fingerprint: see action.md#Capability-registry
-      - Layer 3 Governance: policy tree, limits with live usage, ERD, quad-lock banner: see physics.md#Two-layer-enforcement
-      - Layer 4 Audit: live tail, event cards, denial forensics, fingerprints: see effect.md#Audit-spine
-      - Layer 5 Budget: frames, cascades, consumption, exhaustion, session pools: see budget.md#Frames
-      - Layer 6 Environment: dev → sim → prod, worktrees, overlays, drift: see space.md#Environment-axis
-      - Layer 7 Approval: promotions, activations, migrations, merges, asks: see trust.md#Gates-&-promotion
-      - Layer 8 Recovery: snapshots, restores, rollbacks, git points, hash chain: see recovery.md#Restore-path
-      - Layer 9 Learning: search gaps, consolidation signals, decay, sweeps: see time.md#Learning-loop
-      - Layer 10 Identity: principals, agents, sessions, skills: see agent.md#Identity-hierarchy
+      - Layer 1 World
+        - Tables render as browsable trees — columns, CHECK, relations, seed counts
+        - Browse rows = `kernel.db.query` as a table; filter/sort are query params
+        - Row click → audit events that touched the row
+        - mask=true renders locked cells ████ — values never revealed
+        - System tables read-only badge: _audit, _api_quota, _api_catalog, _budget_frames
+        - Click column header → policy rules governing that column
+        - World state depth: see world.md#SQLite-as-SSOT
+      - Layer 2 Capability
+        - Routines browser
+          - Trust badge, env journey (dev ✓ → sim ✓ → prod ✓), version list with diffs
+          - Manifest vs fingerprint
+            - match_rate and drift event count from the last runs
+            - click → side-by-side diff: declared manifest vs actual fingerprint
+            - gaps visible: prod-only verbs show the sim gap and approval need
+          - Promote, rollback, retire buttons route to Layers 7 and 8
+        - API verbs grouped by state — active cards, dormant search, deprecated loud badge
+        - prod-only verbs show sim_mode gap plus first_prod_calls remaining
+        - Binds panel: cron schedules, webhook payload schemas, endpoint health + keys
+        - Search analytics: top queries, gaps (searched, never invoked), denial patterns
+        - Registry depth: see action.md#Capability-registry
+      - Layer 3 Governance
+        - policy.yaml as interactive tree — click a rule → every denial citing it
+        - governance.yaml as limits with live usage — progress bars (47/300 routines)
+        - schema.yaml as interactive ERD — table nodes, relation edges, diff vs live DB
+        - system-schema read-only badge — kernel-owned, agent-readable
+        - Quad-lock banner: four versions; any mismatch renders red
+        - Two-layer depth: see physics.md#Two-layer-enforcement
+      - Layer 4 Audit
+        - Live tail via `kernel.audit.tail({ follow: true })`
+        - Event cards: intent_chain breadcrumbs, rules_matched, rows_affected, result_hash
+        - caused_by renders as clickable breadcrumb → parent event
+        - Denial forensics via `kernel.audit.trace(opId, { explain: true })` — layer, rule, fix
+        - Fingerprint views: match_rate per routine, drift gaps
+        - Primitive cost and shared subsequences feed Layer 9 proposals
+        - Audit spine depth: see effect.md#Audit-spine
+      - Layer 5 Budget
+        - Frame tree per session: declared vs inherited vs consumed, active/EXHAUSTED status
+        - Session spend pool with per-provider breakdown and time-series
+        - Rate limit gauges: writes_per_minute, capability_calls_per_minute
+        - Exhaustion renders a denial card with the session remainder
+        - Frames depth: see budget.md#Frames
+      - Layer 6 Environment
+        - dev/sim/prod cards — active badge, prod rendered red
+        - sim card: seed source, masking enforced, stale nag, API overlays active
+        - dev card: drift columns, unmerged routines, looser draft overlay
+        - New environment → `env new --seed prod` → masking enforced
+        - Environments depth: see space.md#Environment-axis
+      - Layer 7 Approval
+        - Promotion queue: evidence block, manifest diff, SLA countdown
+        - Activations: active slots usage, first-prod-call approvals with windows
+        - Migrations: DDL preview, snapshot, rollback preview, affected routines
+        - Merges: fingerprint similarity, fork-instead option
+        - Asks: ping.ask cards with timeout countdown — answering resumes the kernel
+        - History: approved, rejected, vetoed — the veto window is visible
+        - Gates depth: see trust.md#Gates-&-promotion
+      - Layer 8 Recovery
+        - Snapshot list with restore/inspect; routine version rollback chains
+        - Git recovery points from `sys recover --list` with schema and routine counts
+        - Object storage: last push, verify hash, chain-intact status
+        - Worst case: git clone + `sys recover`, simulated dry-run in a temp env
+        - Recovery depth: see recovery.md#Restore-path
+      - Layer 9 Learning
+        - Search gaps: searched N times, invoked 0 → propose activation or routine
+        - Consolidation signals: similarity clusters, shared subsequences, next sweep
+        - Decay candidates: dead_after_days, fail_threshold, stale sim re-seed
+        - Denial patterns by rule — the week's teaching signals
+        - Trust receipt card from `sys doctor --report` — shareable
+        - Learning loop depth: see time.md#Learning-loop
+      - Layer 10 Identity
+        - Principal cards: agents, sessions today, approvals granted, revoke all
+        - Agent cards: routines authored, denials this week, instant revoke, skill_origin
+        - Kernel principals: capcli-cron, capcli-watch, capcli-serve
+        - Identity depth: see agent.md#Identity-hierarchy
     - Navigation model
       - One connected graph rendered as nested trees — everything connects
-      - Drill: row → event → routine → manifest → verb → quota → frame → session → agent → principal
-      - Cross-layer links keyed by fields: caused_by, frame_id, session, principal, rules_matched, snapshot, code_hash
+      - Drill path: row → event → routine → manifest → verb → quota → frame → session → agent → principal
+      - Cross-layer link keys
+        - caused_by and routine — event to routine
+        - frame_id, session, agent, principal — the identity chain
+        - rules_matched — denial to policy rule
+        - snapshot, code_hash — migration to snapshot, version to code
       - Every click is a `--json` call; every render is a kernel artifact
     - Rendering model
-      - JSON shape → component: array = table, nested object = card, remaining/limit = gauge
-      - outcome denied → red card with rule and fix; exit 5 → black banner "nothing ran"
-      - budget_status.can_invoke_now false → orange banner with blocking reasons
-      - trust → ladder badge; env → badge with prod red; sim_mode → mode badge; mask=true → locked cell
+      - Shape mapping
+        - array of objects → table with filter/sort
+        - nested object → card with expandable sections
+        - ts array → time-series chart; remaining/limit → gauge
+        - caused_by → breadcrumb; manifest vs fingerprint → side-by-side diff
+      - State mapping
+        - exit 0 green; exit 2 red card citing rule and fix
+        - exit 3 yellow; exit 4 orange with trace; exit 5 black "nothing ran"
+        - budget_status.can_invoke_now false → orange banner with blocking reasons
+        - trust → ladder badge; env → badge; sim_mode → mode badge; mask → locked cell
       - Exit codes drive UI state — the PWA never interprets stdout text
     - Real-time model
       - Audit tail: WebSocket/SSE real-time; budget frames push/pop real-time
       - Near-real-time polls: _api_quota 30s, pending asks 30s
-      - Periodic polls: routine stats 5m, search gaps 1h, env drift 15m, backup status 15m, approvals 2m
+      - Periodic polls: routine stats 5m, search gaps 1h, env drift 15m, backup 15m, approvals 2m
+      - Scheduled: hash chain daily verify per governance schedule
       - Real-time data comes from the kernel — never caches stale state past its TTL
-      - Hash chain: daily verify per governance schedule
     - Mini ERP
-      - Governed views render as dashboard cards — orders, revenue, low stock, routine health, budget
-      - No ad-hoc SQL: every card is a governed view or audit query; filters are query params
-      - Time-series comes from audit mirror GROUP BYs; alerts are routines (bind cron → check → ping notify)
-      - The PWA shows alert status — it never creates alerts
+      - Cards
+        - Orders today, revenue 7d, low stock — count, trend, alert status
+        - Orders by status and low-stock render as governed view tables
+        - Routine health from the audit mirror: success, p95, exhausted frames
+        - Budget card: session ops, duration, spend vs the declared frame
+      - Rules
+        - Every card is a governed view or audit query — no ad-hoc SQL
+        - Filters are query params; the view defines the chart shape
+        - Time-series comes from audit mirror GROUP BYs
+        - Alerts are routines (bind cron → check → ping notify) — PWA shows status, never creates
+      - Mini ERP renders the business layer — the world stays governed underneath
     - Technology stack
       - React 19 + Vite 6 + Tailwind CSS 4 + Zustand 5 — no Next.js, no SSR
-      - Kernel JSON is the single source — no client-side data model; TanStack Query for polling
+      - Kernel JSON is the single source — no client-side data model
+      - TanStack Query for polling; WebSocket/SSE for real-time streams
       - PWA manifest + service worker: installable, offline cache of last-known state
       - Auth: session token maps to `--as`: see agent.md#Sessions-and-sockets
+      - Charts render deterministically from audit data — no chart builder
       - No LLM — zero inference, zero summarization; the PWA never reasons
     - White-label and SDK
       - Brand nouns render throughout — "Routines" becomes "Flows", db becomes "store", run becomes "exec"
@@ -333,7 +416,13 @@
       - Masked columns are always masked; single-principal: one human, one session, one view
       - Quad-lock status always visible; any mismatch renders a red banner
       - Recovery operations require confirmation — no one-click destructive actions
-      - Analogs: Prisma Studio × Datadog APM × GitHub PR review × AWS IAM × Git history viewer
+    - Tool analogs
+      - Prisma Studio analog → Layer 1 World governed reads
+      - Datadog APM analog → Layer 4 Audit causal DAG
+      - GitHub PR review analog → Layer 7 Approval
+      - AWS IAM console analog → Layer 3 Governance + Layer 10 Identity
+      - Git history viewer analog → Layer 8 Recovery
+      - Never Metabase/trigger.dev/Grafana/pgAdmin/Airtable/Retool — see Anti-decisions
   - Interaction patterns
     - Browse
       - Read-only drill-down — table → rows → row → history
