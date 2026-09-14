@@ -208,30 +208,49 @@
       - The nine are the whole set — flags never grow per-noun
   - SDK contract
     - Entry
-      - `import { createKernel } from '@capcli/sdk'` — `createKernel({ workspace, brand })`
-      - Or from JSON: `createKernel(config)` from an embedder config file
-      - sdk.architecture.md is embedder-facing and hidden — not part of the workspace docs
-      - One entry point for every consumer — PWA and embedders call the same createKernel()
+      - Import paths
+        - `import { createKernel } from '@capcli/sdk'` — one entry point for every consumer
+        - `createKernel({ workspace, brand })` — workspace path plus optional white-label
+        - Or from JSON: `createKernel(config)` from an embedder config file
+      - Consumption parity
+        - PWA and embedders call the same createKernel()
+        - Same `{ exit, json, text }` contract, same exit codes
+        - sdk.architecture.md is embedder-facing and hidden — not part of the workspace docs
     - Brand config
-      - `name`: display name in human output; `cli`: binary name in help/suggestions
-      - `tagline`: replaces the default tagline
-      - `nouns`: surface-only noun aliases — run→exec, db→store, routine→flow
-      - `lockedNouns`: nouns that cannot be aliased — default `['sys']`
-      - Branding is text-only: JSON, exit codes, and audit format are never rebranded
+      - Fields
+        - `name` string, required — display name in human output
+        - `cli` string, required — binary name in help/suggestions
+        - `tagline` string, optional — replaces the default tagline
+        - `nouns` object, optional — surface-only noun aliases
+        - `lockedNouns` string[], optional — default `['sys']`
+      - Aliasing rules
+        - Surface-only aliases: run→exec, db→store, routine→flow
+        - lockedNouns cannot be aliased — the kernel noun stays `sys`
+        - Branding is text-only: JSON, exit codes, and audit format are never rebranded
     - Programmatic API
-      - `kernel.run(capability, { params, intent, json, dryRun, env })`
-      - `kernel.db.query(sql, params)` and `kernel.db.exec(sql, params, intent)`
-      - `kernel.routine.prove(name, params, env)`, `kernel.search(query, filters)`, `kernel.inspect(capability)`
-      - `kernel.audit.tail(filters)` one-shot; `kernel.audit.trace(opId)` for the causal DAG
-      - `kernel.audit.tail(filters, { follow: true })` — WebSocket/SSE streaming, the PWA real-time path
-      - All methods return `{ exit, json, text }` — exit codes are law, JSON is the machine contract
-      - Text is branded human output
+      - Execution methods
+        - `kernel.run(capability, { params, intent, json, dryRun, env })`
+        - `kernel.db.query(sql, params)` and `kernel.db.exec(sql, params, intent)`
+        - `kernel.routine.prove(name, params, env)`
+        - `kernel.search(query, filters)` and `kernel.inspect(capability)`
+      - Audit methods
+        - `kernel.audit.tail(filters)` — one-shot snapshot
+        - `kernel.audit.trace(opId)` — the causal DAG walk
+        - `kernel.audit.tail(filters, { follow: true })` — WebSocket/SSE, the PWA real-time path
+      - Return contract
+        - All methods return `{ exit, json, text }`
+        - Exit codes are law — identical to the CLI
+        - JSON is the machine contract; text is branded human output
     - What never changes
-      - Exit codes 0/2/3/4/5
-      - JSON output contract — request-response and streaming
-      - Audit event format; system table names; config file names
-      - The `ctx` contract
-      - `[env]` output prefix
+      - Output contract
+        - Exit codes 0/2/3/4/5
+        - JSON output contract — request-response and streaming
+        - `[env]` output prefix
+      - Names and formats
+        - Audit event format
+        - System table names
+        - Config file names
+        - The `ctx` contract: see action.md#The-ctx-contract
     - Hidden white-label
       - Undocumented in workspace architecture docs
       - Invisible in `--help`, `sys doctor`, and governance — exists only in SDK types and SDK docs
@@ -316,12 +335,32 @@
       - Recovery operations require confirmation — no one-click destructive actions
       - Analogs: Prisma Studio × Datadog APM × GitHub PR review × AWS IAM × Git history viewer
   - Interaction patterns
-    - Browse: read-only drill-down — table → rows → row → history
-    - Approve: exercise human authority — promotion queue → evidence → approve/reject
-    - Answer: respond to kernel questions — ping.ask → choose option → kernel resumes
-    - Recover: undo, restore, rollback — snapshot restore, routine rollback: see recovery.md#Restore-path
-    - Observe: watch live state — audit tail, quota gauges, budget frames
-    - No other interactions: no create, no edit, no configure, no reason — agent creates, kernel gates
+    - Browse
+      - Read-only drill-down — table → rows → row → history
+      - Filter/sort are query params — no client-side query building
+      - Click row → audit events touching it; click column → governing policy rules
+    - Approve
+      - Exercise human authority — promotion queue → evidence → approve/reject
+      - Rejections carry reasons; approvals are audit events — who, when, evidence
+      - No bulk approve — one evidence block per decision
+    - Answer
+      - Respond to kernel questions — ping.ask → choose option → kernel resumes
+      - Ask card anatomy
+        - question, options, timeout countdown, ask-id
+        - answer path: `ping resolve <ask-id> --choice X` → kernel resumes, audit event
+      - Expired asks retire via `ping expire`; crashed approval blocks fail-closed
+    - Recover
+      - Undo, restore, rollback — snapshot restore, routine rollback: see recovery.md#Restore-path
+      - Confirmation before every destructive step — no one-click recovery
+      - The post-operation audit event is always rendered
+    - Observe
+      - Watch live state — audit tail, quota gauges, budget frames
+      - Quota gauges and rate limits update near-real-time (30s polls)
+      - Live data only — never cached past its TTL
+    - No other interactions
+      - No create, no edit, no configure, no reason — agent creates, kernel gates
+      - No [Y/n], no wizards — exit codes plus approval cards
+      - Single-principal: one human, one session, one view
   - Onboarding journeys
     - Convictions
       - Not a tutorial — a competence loop: from "I don't know this" to act-safely, see, recover, return
