@@ -87,6 +87,10 @@
           - The jail's syscall set is the source of truth — AST deny-list derived from it
           - Derived, never maintained separately — one config, two enforcers
           - exec/eval/dynamic imports evade AST, not seccomp-bpf
+          - Blocked even under escape
+            - No socket creation — the network stays unreachable
+            - No fork, no exec of new processes
+            - No writes outside the allowed paths
         - Isolation tiers
           - bwrap --unshare-net — Linux default tier
           - Podman --network none — portable tier
@@ -176,6 +180,14 @@
       - ctx.db.txn() — context manager; writes auto-txn, WHERE+LIMIT enforced: see physics.md#Raw-SQL-rules
       - ctx.db.lock(target, ttl) → Claim — cross-agent lease: see agent.md#Coordination
       - ctx.api.call(verb, params, intent) → dict; ctx.api.verify(verb, key) → dict
+      - ctx.api.call kernel guards
+        - Egress rides the kernel socket — the sandbox has no network
+        - Secrets injected from secret_ref at call time: see agent.md#Secrets
+        - Pre-call quota check refuses before egress: see budget.md#Quotas
+        - Idempotency keys
+          - Kernel generates the key for any retry
+          - Key persisted before the first attempt
+          - Retries reuse the persisted key — no double-spend
       - ctx.bind.cron / ctx.bind.webhook / ctx.bind.endpoint — a routine declares its own inbound triggers
       - ctx.ping.notify(principal, message, channel, intent); ctx.ping.ask(principal, question, options, timeout) → Answer
       - ctx.log(msg) — structured, audited; ctx.params — validated against Param declarations
@@ -184,6 +196,7 @@
       - No import requests, no import os, no raw sqlite3 — the kernel passes ctx into the sandbox
       - AST-validated before execution: subprocess, HTTP clients, filesystem escapes rejected at draft time
       - Param declarations are the interface: typed, documented, gate-validated — what inspect shows
+      - Draft-time guard order: AST check → Param validation → governance shape — all before first run
       - Intent chains: routine intent inherits session goal; ctx calls carry intent: see agent.md#Intent-chain
     - Data discipline
       - Large results stay in routine scope; only computed summaries cross back to the model
@@ -192,22 +205,45 @@
       - Data never transits the model — kills token cost and PII leakage into context
     - System schema discovery
       - Routines read `_audit`, `_api_quota` via ctx.db.query — authorizer allows read
+      - `_budget_frames` readable too — prove-time evidence gathering, read-only even in prove
       - Definitions visible via `capcli rule show --type system-schema`
       - Routines never write system tables: authorizer denies, file perms deny
       - Two-file ownership boundary: see world.md#Dual-schema
   - Manifests & fingerprints
     - Declared manifest (static)
       - AST extracts the exact ctx.* call sequence at draft; stored with the version
+      - Manifest fields
+        - Sequence entries
+          - api.call: provider.verb — the governed egress target, named exactly
+          - db.query: target table with access class — entities (read)
+          - db.txn entries
+            - children array lists the wrapped leaf writes in order
+            - [db.exec:entities(update), db.exec:edges(insert)] — one line, leaves as children
+        - estimated_cost_class
+          - [2× http, 2× write] — declared cost before first execution
+          - Feeds inspect cost_envelope and budget pre-flight
+          - Declared vs measured: primitive_cost view supplies the actual side
+        - sim_modes per verb
+          - sandbox, mock, dry-run, skip, prod-only — recorded per verb
+          - skip/prod-only verbs flagged for partial prove: see space.md#Rehearsal-&-sim
+        - manifest_hash
+          - Stored beside code_hash in the version record
+          - Replay verifies both — a version is code plus declared behavior
       - Example @17: api.call get_charge · db.query entities read · api.call refund_charge · db.txn 2× db.exec
-      - estimated_cost_class: [2× http, 2× write] — declared cost before first execution
-      - sim_modes recorded per verb; skip/prod-only verbs flagged for partial prove: see space.md#Rehearsal-&-sim
-      - manifest_hash stored beside code_hash in the version record
+      - The routine declares what it will touch before it ever runs
     - Runtime fingerprint (dynamic)
       - Aggregated from the audit mirror: the actual leaf-op sequence that executed
-      - routine_fingerprints view: GROUP BY routine_version, seq, capability, target over `_audit` leaf events
+      - routine_fingerprints view mechanics
+        - Source rows: `_audit` leaf events — db.exec, db.query, api.call
+        - Projection: routine_version, seq, capability, target, count(*)
+        - GROUP BY routine_version, seq, capability, target — pure SQL, no LLM
       - Prove compares fingerprint vs manifest; divergence = warning (conditional branch, undeclared op)
       - Proving proves the declaration, not just "it didn't crash"
-      - Partial match: skipped verbs → prove reports "3/4 primitives matched"; gap visible, never hidden
+      - Partial match
+        - Skipped verbs drop out of the fingerprint before comparison
+        - Prove reports "3/4 primitives matched"; gap visible, never hidden
+        - 0.75 ≠ 1.0 — the number itself carries the gap
+        - Ship evidence lists skipped verbs with sim_mode reasons — human sees what wasn't proven
     - Why it matters
       - Consolidation merges by fingerprint similarity, not Python text: see time.md#Consolidation
       - Regression: v17→v18 adding a leaf op is flagged automatically during promotion review: see trust.md#Evidence
@@ -231,6 +267,7 @@
       - Kernel fetches the raw OpenAPI spec, parses ALL endpoints, compiles `apis/<provider>.yaml`
       - Harness never reads the raw spec — kernel fetches, parses, compiles
       - Every verb enters state: dormant; no --pick, no pre-selection
+      - `--dry-run` parses and reports the diff without writing the catalog
       - Import is free, activation is gated — same law as routines
       - Anti-decisions: no hand-authored apis/*.yaml, no api create, no direct `api call` CLI egress
     - Catalog model
@@ -238,30 +275,47 @@
       - deprecated state for upstream removal — loud, never silent deletion
       - Dormant = searchable (--include-dormant), inspectable, not callable — dormant ≠ invisible
       - Dormant never expires: full surface permanent, only the active shelf is earned
+      - `api deactivate <verb>` returns active → dormant — shelf returned, surface kept
       - `capcli api catalog <provider> [--state dormant|active|deprecated|retired]`
     - Regular sync
       - Every sync_interval: fetch URL, diff against catalog by spec_hash
       - New endpoints → dormant; removed → deprecated; changed params/paths → version bump + diff recorded
       - api.sync audit event carries added/removed/changed/unchanged counts: see effect.md#Audit-spine
+      - `api diff <provider>` — inspect spec drift on demand, between scheduled syncs
       - Cadence governed: min_interval_hours 24, max_catalog_size_mb 10: path `artifacts/governance.yaml` api.sync
     - Activation gate
       - `capcli api activate stripe.refund_charge --intent "..."` — dormant becomes callable
-      - Validates verb exists, checks max_active_per_provider 50, activates at trust: draft, records api.activate
+      - Gate checks, in order
+        - Verb exists in catalog and is dormant — retired/deprecated refuse
+        - max_active_per_provider 50 — per-provider ceiling
+        - max_activations_per_hour 10 — anti-flood rate
+        - require_intent: true — activation must carry a why
+        - Activates at trust: draft — the ladder climb is earned after
+      - Limits source: `artifacts/governance.yaml` api.activation
       - Activation is the gate, not import: file exists, cannot run until proven and shipped
-      - max_activations_per_hour 10, require_intent: true: path `artifacts/governance.yaml` api.activation
+      - Records api.activate — dormant→active provenance
+      - Training wheels
+        - Scope: skip / prod-only verbs — the un-simulatable ones
+        - max_unapproved_calls 3
+          - Each of the first 3 prod calls needs fresh human approval
+          - Approval recorded per call — auditable sequence, not a blanket waiver
+        - Call 4 onward: normal governance — the wheels come off
     - Lifecycle parity
       - Prove, ship, live, retire — same ladder and gates as routines: see time.md#Stage-map
       - api prove/ship/stats/retire/deactivate/rollback mirror the routine verbs
+      - `api stats <provider> [--deep] [--summary]` — per-verb or provider rollup
       - Prove adapts per sim_mode: sandbox, mock, dry-run, skip, prod-only: see space.md#Rehearsal-&-sim
-      - First prod calls of un-simulated verbs need human approval (max_unapproved_calls 3)
     - Lean catalog format
       - Kernel-compiled, not hand-authored: provider, version, source_url, spec_hash, synced_at, sync_interval
+      - spec_hash drives regular-sync diffing — changed hash means changed catalog
       - auth block: type bearer, secret_ref kernel-held — never the raw value: see agent.md#Secrets
       - Per verb: method, path, params, idempotent, cost_class, state, trust, description
+      - idempotent per verb decides retry legality at the egress gate
       - sim_mode per verb; default sandbox if overlay exists, else dry-run: path `artifacts/governance.yaml` api.sim_mode
     - Live quota tracking
       - Static per_day_usd caps are the floor; headers are dynamic truth (X-RateLimit-Remaining, Retry-After)
       - Kernel extracts declared headers deterministically, stores in `_api_quota` (kernel-written, agent-readable)
+      - Rows refresh on every response — kernel updates from headers, agent never writes
       - Pre-call deny before egress: see physics.md#Fail-closed-stance
       - inspect shows live remaining, reset time, budget status before invoking — numbers live, not cached
       - Quota ownership and headers: see budget.md#Quotas
@@ -276,18 +330,25 @@
       - Async events: `capcli bind webhook <name> --provider X --event Y --run <cap> --intent "..."`
       - Sync endpoints: `capcli bind endpoint <routine@version> --auth api-key [--rate X]`
       - One bind noun owns cron + webhook + endpoint — no separate trigger nouns
+      - Cron anatomy: name, target capability, cron expression, intent — all declared at bind time
+      - Webhook anatomy: provider + event type subscribe → dispatch to the bound capability
+      - Endpoint anatomy: routine@version pin + auth mode + optional rate — serve target frozen
       - Watches: inbound webhooks/poll → capability dispatch; scheduler daemon-owned
     - Management
       - bind list | inspect | pause | resume | remove <name>
       - bind keys issue <name> --principal partner:X — human-gated
       - dead_schedule_disable on retirement: see time.md#Schedule-&-maintenance
-      - Limits: path `artifacts/governance.yaml` schedule + watch — max_active 20/50, min_interval_minutes 5
-      - Webhook guard: max_payload_bytes 65536, 100 events/min; poll min_interval_minutes 5; dead_letter 30d/1000
       - max_catchup_fires 1 after restart: see time.md#Schedule-&-maintenance
+      - Caps: max_active 20 schedules / 50 watches, min_interval_minutes 5: path `artifacts/governance.yaml`
+      - Webhook guard: max_payload_bytes 65536, 100 events/min; poll min_interval_minutes 5; dead_letter 30d/1000
     - Serve lifecycle split
       - Registration (CLI): bind endpoint writes endpoint config to workspace.db, exit 0, no listener
       - Serving (daemon): `capcli sys serve --start` starts the HTTP listener; same policy gates as run
       - Lifecycle: sys serve --stop | --restart | --status; systemd/supervisord/docker govern in production
+      - Two-sided design
+        - CLI side: synchronous, exit-code world — config written, zero processes started
+        - Daemon side: persistent and concurrent — Bun.serve() or companion process
+        - Kernel governs both identically — HTTP requests pass the same gates as `run`
       - Endpoint --health checks: see interface.md#CLI-surface
       - serve.request fields: endpoint, routine@version, api_key_id, principal partner:stripe, response_status
       - serve.request per HTTP request: see interface.md#CLI-surface
@@ -296,4 +357,5 @@
       - allow_writes_default false — inbound writes cost explicit opt-in
       - bind 127.0.0.1 — internal-first; public lives behind a proxy; key_rotation_days 90
       - Response caps: max_body_bytes 65536, max_result_tokens 500 — inherits routine result cap
+      - Every request re-enters the run hot path — identity, policy, budget all apply
       - Limits source: `artifacts/governance.yaml` serve — max_endpoints 10, max_keys 25
