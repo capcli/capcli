@@ -2,76 +2,17 @@
 <!-- ref-by: action.md, agent.md, budget.md, effect.md, interface.md, overview.md, space.md, trust.md, world.md -->
   - Two-layer enforcement
     - Layer 1: sqlite3_set_authorizer
-      - Engine-enforced at prepare-time, C-level, inside sqlite3_prepare_v2
-      - Bypass-proof even if TS code has bugs; bugs fail toward denial
-      - Granularity: action × table × column — fires on every prepared statement
-      - Scope: what the callback intercepts
-        - Table reads and writes, per-table allow lists
-        - Schema changes: drop, alter, vacuum — gated or denied
-        - ATTACH/DETACH — unconditional deny, no side-databases
-        - PRAGMA — only whitelisted names pass
-        - Function calls — allow + deny lists compiled in
-        - Trigger definitions — denied at the engine door
-      - Compiled from artifacts/policy.yaml `authorizer` section into Rust match arms at boot
-        - tables: allow lists + deny_columns_write per table
-          - entities
-            - allow [read, insert, update, delete] — full CRUD
-            - deny_columns_write [id, created_at, created_by, modified_by] — system & immutable
-            - require_where [update, delete] — mirrored at AST layer, defense twice
-          - edges: allow [read, insert] — immutable rows by construction
-          - secrets
-            - allow [read]
-            - mask_columns [value] — redacted in results, audit, explain
-            - deny_for_trust [draft] — unproven code never reads secrets
-          - agents: allow [read] — identity managed by kernel commands only
-          - claims: allow [read, insert, delete] — lease lifecycle via db lock only
-          - _audit: allow [read] — mirror is world-state, read-only grant
-          - _system_schema: allow [read], deny [insert, update, delete]
-        - views: see action.md#Capability-registry
-          - active_orders + orders_by_status: exposes [entities], compile-checked
-          - my_orders: scoped principal — refuses to run without --as
-          - kernel binds :principal into the view query itself
-        - global: unconditional floors, no per-table exceptions
-          - attach deny, detach deny, drop deny
-          - alter require_trust reviewed: see trust.md#Trust-receipts
-          - triggers deny — enforcement lives in the gate, not the db
-          - pragma whitelist, never blacklist
-          - functions: allow + deny lists compiled in
+      - Engine-enforced at prepare-time, C-level, bypass-proof
+      - Granularity: action × table × column
+      - Compiled from artifacts/policy.yaml#authorizer at boot
+      - Per-table allow/deny/mask/deny_for_trust: see artifacts/policy.yaml#authorizer.tables
+      - Global floors (attach/detach/drop deny, pragma whitelist, function lists): see artifacts/policy.yaml#authorizer.global
+      - View scoping: see action.md#Capability-registry
     - Layer 2: SQL AST check
-      - Evaluated before prepare; full semantic view
-      - node-sql-parser (sqlite dialect), version pinned, fuzz-tested against SQLite test corpus
-      - Granularity: statement shape, blast radius, parameters, intent presence
-      - Named checks, in gate order
-        - Intent gate
-          - writes_require_intent true — no intent → exit 3, cited in explain
-          - min_words 3 — one-word intents rejected
-          - blacklist [test, update, misc, fix, "...", "stuff"] — junk intents rejected
-        - Structural rules
-          - multi_statement deny — one statement per call
-          - unparseable deny — parser failure fails closed
-          - update/delete require_where + require_limit, max_limit 1000
-        - Row caps
-          - select
-            - max_limit 10000
-            - deny_without_limit false — missing LIMIT on SELECT warns only
-            - masked_columns_redacted true — masked values redacted in results
-          - insert max_rows_per_statement 500 — chunked beyond this
-          - update/delete max_rows_affected 100 base blast radius
-          - trust overlays: draft 10, reviewed 100, pinned 500
-        - Deny patterns
-          - "UPDATE * SET * WHERE * OR 1=1"
-          - "DELETE FROM * WHERE NOT EXISTS *"
-          - "* WHERE 1=1 *"
-    - Layer 1.5: prepare-time cross-check
-      - After AST passes, sqlite3_prepare_v2 dry-run in a txn; SQLite C parser is ground truth
-      - Prepare fails → deny; statement type contradicts AST classification → deny
-      - For writes: cross-check AST classification vs SQLite EXPLAIN; OpenWrite shown → deny
-      - Why a third layer exists
-        - The two layers cover different, non-overlapping surfaces
-        - Authorizer checks action×table×column; AST checks WHERE/LIMIT/patterns
-        - A node-sql-parser bug is invisible to the authorizer — different surface
-      - Parse failure = deny, never pass-through
-      - Every parse logged as ast_parse {ok, node_count, statement_type} in the audit event
+      - node-sql-parser (sqlite dialect), version pinned, fuzz-tested
+      - Named checks in gate order: intent gate → structural rules → row caps → deny patterns
+      - All thresholds: see artifacts/policy.yaml#query
+    - Layer 1.5: prepare-time cross-check — sqlite3_prepare_v2 dry-run; SQLite C parser is ground truth
     - Asymmetry
       - Authorizer = default-deny floor, cannot be bypassed
       - AST = expressive ceiling, semantic
@@ -83,17 +24,7 @@
       - AST rules: require_where, require_limit, max_rows, patterns
       - sqlite3_set_authorizer: table/column/action, ATTACH, PRAGMA, functions
       - Execute → audit event
-    - Implementation binding
-      - L1 floor: Rust, rusqlite via napi-rs, conn.authorizer(Some(closure)) — bypass-proof
-        - C-level, runs inside sqlite3_prepare_v2
-        - match AuthAction: Attach → Deny, DropTable → Deny
-        - Update arm checks compiled deny_columns_write per table
-      - L2 ceiling: TypeScript node-sql-parser
-        - runs before L1 in the gate pipeline
-        - rejected SQL never reaches prepare
-        - not bypass-proof alone — the L1 floor sits beneath
-      - The agent never touches SQLite directly; all access flows through both layers, in order
-      - Runtime wiring of both layers: see assembly.md#Packages
+    - Implementation: L1 Rust rusqlite via napi; L2 TypeScript node-sql-parser: see assembly.md#Packages
     - Policy vs governance
       - policy.yaml (artifacts/policy.yaml): what capabilities may do
         - row caps, write denials, spend limits
@@ -114,15 +45,7 @@
         - "Does a served write need confirmation?" = policy
         - "How many endpoints may be served?" = governance
       - Both layers compile once at boot — verbs vs nouns: see overview.md#Core-philosophy
-    - Enforcement map (artifacts/policy.yaml)
-      - authorizer.tables/views/global → Layer 1 compiled callback
-      - query.* → Layer 2 pre-prepare rules
-      - trust: L1 column/table denials (deny_for_trust) + L2 row caps, audit depth
-      - api: L1 egress allowlist, jail-level + L2 spend, retry, idempotency
-      - hands: L2 trust floors, intent, confirm gates
-      - identity: L1 socket identity pre-gate + L2 principal binding, scoped views
-      - env: see space.md#env-command
-      - fail_closed: both layers
+    - Enforcement map: artifacts/policy.yaml sections compile to L1 callback + L2 rules
   - Fail-closed stance
     - `default: deny` is the anchor; everything below carves exceptions (artifacts/policy.yaml)
     - Boot refusals
@@ -143,11 +66,6 @@
       - 3 validation-failed — bad params, governance breach, missing intent, boot refusal, drift detection
       - 4 runtime-error — effect attempted and failed mid-run
       - 5 audit-write-failed — audit sink broken, nothing ran
-      # FIX #11/#12: boot refusal and drift detection moved to exit 3; exit 4 reserved for mid-run failures; exit 5 reserved for audit sink
-      - 2 policy-denied — a gate refused; denial cites the matched rule
-      - 3 validation — intent missing/short or malformed request, pre-flight
-      - 4 runtime — execution failed after gates passed
-      - 5 audit-write-failed — write refused because the audit sink failed
     - Denial UX: cite measured value, suggest remediation, log all: see effect.md#Denials
     - No automatic degraded mode
       - Fail-closed is the default; operators get documented, audited escape hatches
@@ -184,7 +102,6 @@
         - prod overlay: vacuum deny outright (artifacts/policy.yaml env.prod)
         - dev overlay relaxes row caps, never physics: WHERE + LIMIT unchanged
       - Triggers: agent-created denied at authorizer; kernel-compiled from schema.yaml trig: exempt
-        # FIX #20: clarified the distinction
       - ATTACH / PRAGMA writes: never — authorizer unconditional deny; PRAGMA whitelist [query_only, foreign_keys]
       - Function calls: deny + allow lists at the authorizer
         - deny [load_extension, writefile, readfile, fts3_tokenizer]
@@ -216,50 +133,20 @@
       - Large-migration overrides (900s, 200 ops) live in governance (artifacts/governance.yaml)
       - `db count` is dead: see world.md#Command-surface-db
   - Search ceiling
-    - "No LLM in the kernel" applies to enforcement and execution, not to search forever
-    - Kernel search deterministic
-      - Exact match → prefix match → structured filters
-      - capcli search "refund" --trust pinned --env prod --max-ops 10; filters are deterministic
-      - Kernel returns candidates; it never ranks semantically
-    - Harness search semantic
-      - Harness computes embeddings for routine descriptions
-        - stored in side table _capability_embeddings
-        - capcli search --semantic "handle customer refunds" queries this table
-        - kernel serves the vectors; harness ranks them
-      - Semantic intelligence belongs in the harness, not the gate
-      - kernel never embeds, never ranks — it stores and serves
-    - Resolution stages (kernel owns 1–3, harness owns 4–5):
-      - Kernel: exact → prefix → structured filters (deterministic)
-      - Harness: fuzzy → semantic → did-you-mean (embedding-ranked)
-      # FIX #13: five-stage description blurred kernel/harness boundary
-    - Search analytics
-      - Event logging and gap flow: see action.md#Capability-registry
-      - capcli search gaps --since 7d; gap_threshold 3 (artifacts/policy.yaml api.search)
-      - Same consolidation signal for routines and API verbs: see time.md#Consolidation
-    - At 300 routines (governance max_routines cap, artifacts/governance.yaml) keyword search returns noise
-    - Structured filters narrow the set; semantic ranking orders it; kernel owns first two, harness third
-    - Principle: no LLM in enforcement; LLM-assisted discovery is the harness's job, with kernel-provided indexes
-    - The kernel is a lookup table with fast filters; the harness is the ranking engine
+    - Kernel: exact → prefix → structured filters (deterministic)
+    - Harness: fuzzy → semantic → did-you-mean (embedding-ranked)
+    - No LLM in enforcement; LLM-assisted discovery is harness's job
+    - Five stages, kernel owns 1–3, harness owns 4–5
+    - Gap analytics: see action.md#Capability-registry
   - Harness boundaries
     - Skills (SKILL.md)
       - capcli does not manage, store, validate, or govern harness skills
       - Skills live in the harness layer above; routines live in capcli
       - Boundary is the capability registry — clean, auditable, intentionally dumb
       - Skills reference capabilities via capcli search and capcli run; never raw SQL
-      - Skill ↔ kernel interaction
-        - Skill asks: "use capcli run refund_archive"
-        - Kernel path
-          - capcli search / inspect / run
-          - every path crosses the same gate, then audits
-          - routine executes jailed in its sandbox
-        - Return: summary result ≤500 tokens
       - Zero visibility into skill content, markdown structure, or agent reasoning
-      - No skill storage, no SKILL.md parsing, no semantic analysis of harness instructions
       - Skill-origin provenance spec: see agent.md#Identity-hierarchy
-    - PWA is a client, not a component
-      - Lives outside the workspace, communicates exclusively via @capcli/sdk
-      - Never writes to system tables; never creates routines, schemas, or policies
-      - Approves, observes, recovers: see interface.md#PWA-layers
+    - PWA is a client, not a component: see interface.md#PWA-layers
     - No other door
       - The gate is only real if there is no other path into the world
       - Isolation tiers
@@ -271,6 +158,6 @@
       - Misconfiguration must be loud
       - Credentials never in agent env; memory-decrypted, injected at egress: see agent.md#Secrets
     - Kernel neutrality
-      - The kernel never infers, never reasons, never does L…: see overview.md#What-capcli-is
+      - The kernel never infers, never reasons, never does LLM work: see overview.md#What-capcli-is
       - It matches, dispatches, delivers, logs: see overview.md#What-capcli-is
       - Philosophy home: see overview.md#Core-philosophy

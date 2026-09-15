@@ -33,9 +33,12 @@
     "useDotIgnore": true,
     "useDefaultPatterns": true,
     "customPatterns": [
-	".git/",
-	"repomix.md",
-		]
+      "cans/_collab/**",
+      "cans/_adr/**",
+      ".git/**",
+      "node_modules/**",
+      "repomix.md"
+    ]
   },
   "security": {
     "enableSecurityCheck": true

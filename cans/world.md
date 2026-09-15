@@ -44,14 +44,10 @@
         - Example pending_orders: exposes [orders, customers], status = 'pending' — unscoped
         - Example customer_lifetime_value: scoped, SUM(p.amount_cents) grouped per :principal
           # FIX #21: not all views are principal-scoped; scoping is per-view declaration
-      - Full-complexity example coverage (every DDL feature demonstrated)
+      - Example (all shorthands)
         - customers: prov: true, sens: true; email text!, phone text~, tier text=standard
-        - orders: customer_id int ref=customers.id; chk discount_cents <= total_cents
-        - orders trig: validate_total — before insert, RAISE(ABORT, 'total mismatch')
-        - order_items: imm_rows: true append-only; sku text ref=inventory.sku
-        - inventory: sku text!~ (unique + immutable); stock int=0, reorder_point int=10
-        - payments: raw_response json mask=true; status CHECK IN (pending, completed, failed, refunded)
-        - subscriptions: interval text=monthly; idx [customer_id, active] composite
+        - Shorthand demo: text! (unique), text~ (immutable), prov (auto created_by/modified_by), sens (masking)
+        - All other tables follow same expansion: see world.md#Shorthand-expansion
       - Why YAML, not raw schema.sql
         - mask=true, ~ immutable, prov/system columns: no SQL DDL concept
         - desc feeds search index and explain output; rel: gives traversal beyond FK integrity
@@ -62,61 +58,11 @@
         - Kernel upgrades it during kernel releases; version-locked to kernel (kernel_version)
         - New system tables: agent proposes via harness; kernel decides
         - Kernel upgrades never touch schema.yaml; agent world unaffected by kernel releases
-      - System tables (eleven kernel-managed surfaces)
-        # FIX #9: was "six" — claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats were missing
-        - _audit
-          - sys: true, imm_rows: true — kernel-managed audit mirror, append-only
-          - cols: event, ts, env, agent, session, principal, capability, intent, outcome
-          - payload json mask=true; duration_ms int
-          - idx: [event, ts], [agent, ts], [capability, outcome]
-        - _api_quota
-          - Live external API quota state, kernel-managed
-          - provider text!, scope_key, env text!, limit_total, remaining, reset_at
-          - retry_after_s, last_op, last_updated; chk: remaining >= -1
-          - idx: [provider, env], [provider, scope_key, env]
-        - _api_catalog
-          - Full verb catalog — all imported verbs, all states
-          - Identity cols
-            - provider text!, verb text!; imm_cols: [provider, verb]
-            - method, path, params_schema json
-            - description text — feeds the search index
-          - State machine
-            - state text=dormant: CHECK IN (dormant, active, deprecated, retired)
-            - trust text=draft: CHECK IN (draft, reviewed, pinned)
-            - sim_mode text=sandbox: CHECK IN (sandbox, mock, dry-run, skip, prod-only)
-            - cost_class text=read: CHECK IN (read, write)
-          - Gating cols
-            - prod_first_calls_remaining int=0 — unapproved prod calls tracked here
-            - activated_at / activated_by; retired_at; idempotent int=0
-            - spec_hash, synced_at, version int=1 — sync provenance
-          - idx: [provider, state], [provider, verb], [state, trust]
-        - _budget_frames
-          - Per-invocation budget tracking pushed on the call stack
-          - frame_id text!, routine, version, parent_frame, session text!, env text!
-          - declared_max_ops, declared_max_duration_ms; consumed_* int=0 defaults
-          - consumed dims: ops, duration_ms, spend_usd, rows, api_calls
-          - outcome CHECK IN (active, success, exhausted, denied, error)
-          - idx: [session, env], [routine, version], [parent_frame]
-        - secrets
-          - sens: true, kernel-managed; name text!~, value text mask=true
-          - scope text=global; expires_at int; idx: name, [scope, expires_at]
-          - Value masked in every surface: see agent.md#Secrets
-        - agents
-          - id text pk, name text!, harness, principal text!, st…: see agent.md#Identity-hierarchy
-          - imm_cols: [id, principal] — kernel upgrades never rewrite id
-          - idx: principal, status
-          - Registered identities: see agent.md#Identity-hierarchy
-        - claims
-          - lease-based locks with TTL; kernel writes, agents read/insert/delete
-          - cols: target, holder, ttl, created_at
-        - _pending_asks
-          - kernel writes; agents observe; ping ask lifecycle
-        - _watch_cursors
-          - webhook/poll dispatch state; kernel-internal
-        - _capability_embeddings
-          - harness-computed description embeddings; kernel stores and serves
-        - routine_stats
-          - per-routine execution aggregates; kernel-managed mirror view
+      - System tables (eleven): _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats
+        - All sys: true, imm_rows or imm_cols enforced, kernel-managed
+        - Column schemas: see artifacts/system-schema.yaml (agent-readable, never writable)
+        - Budget frame schema: see budget.md#Frames
+        - Audit mirror schema: see effect.md#Audit-spine
       - Cross-file wiring
         - exposes: [_audit] compile-checked against system-schema.yaml (Gate 2)
         - _budget_frames tracks per-invocation budgets: see budget.md#Frames
@@ -142,16 +88,7 @@
         - chk: → CHECK constraint array, SQLite engine enforcement
         - trig: → trigger definition, policy-gated explicit SQL
         - mask=true → column-level redaction, authorizer + audit redaction
-    - Seed data
-      - Declared form
-        - Tables declare seed: [...] riding with the schema migration
-        - Example rows: { ref: "ORD-001", status: "pending", total_cents: 4200 }
-        - Seeding is not agent runtime INSERT: it rides rule apply
-      - Mechanics
-        - Kernel INSERTs during capcli rule apply --type schema, inside the same DDL txn
-        - Capped at 50 rows per table — onboarding scale, not bulk loading
-        - Audited as part of the rule.apply event (seed_rows: N)
-      - The world is born populated; no bulk-inserting at draft trust to populate it
+    - Seed: tables declare seed: [...] -- kernel INSERTs during rule apply, capped 50 rows, audited
     - Per-flag enforcement split
       - SQLite engine layer
         - type → type affinity; =val → DEFAULT
@@ -170,56 +107,11 @@
       - No DDL parser: PRAGMAs + one-way generation, no reverse engineering
   - Schema evolution
     - Governed pipeline, not free-form ALTER TABLE; the kernel governs schema.yaml growth
-    - Column-add lifecycle
-      - Author
-        - Agent edits schema.yaml in dev worktree: adds discount_cents: int=0
-        - Bumps version: 4 → 5
-        - Needs a new system table? propose via harness; kernel decides
-      - Preview
-        - Command: capcli rule apply --type schema --dry-run --env dev
-        - Preview is read-only; it never takes the snapshot
-        - Dry-run output
-          - Plan facts
-            - exact DDL statement it will execute
-            - snapshot id it will take
-            - reversibility confirmation
-          - Exit semantics
-            - exit 0 when the plan is valid
-            - exit 3 when the plan fails a gate
-            - no effects applied in any case
-          - Role
-            - explicit-SQL-shown law made concrete
-            - the printed DDL is what the human reviews
-            - feeds the ship --reason
-      - Trust gate
-        - Policy check: alter.require_trust = reviewed
-        - Agent trust draft → exit 2 "schema changes require reviewed trust"
-        - Denial cites measured vs required trust: see effect.md#Denials
-      - Human review
-        - Human/CI reads the version diff 4 → 5
-        - Sees exact statement: ALTER TABLE orders ADD COLUMN discount_cents INTEGER DEFAULT 0
-        - Self-promotion impossible; promotion is human/CI-gated: see trust.md#The-ladder
-      - Ship
-        - capcli routine ship schema_v5 --to reviewed --reason "add discount column"
-        - --reason required: promotion crosses a trust threshold
-        - Ship is the human gate; the agent cannot run it for itself
-      - Apply
-        - Command: capcli rule apply --type schema --env dev --intent "add discount_cents to orders"
-        - Snapshot taken; DDL executed in one txn; schema_version bumped
-        - Auto-committed to git; schema-migration audit event written
-      - Prod
-        - Human merges dev branch into prod first
-        - capcli env use prod; same apply with prod-level confirmations
-        - Cross-world DDL without merge → exit 2: env overlay denies
-    - What the agent cannot do
-      - db.exec "ALTER TABLE ..." → exit 2: alter.require_trust: reviewed
-      - DROP TABLE → exit 2: drop: deny, authorizer unconditional
-      - Edit workspace.db directly → exit 2: file perms, chmod 600, daemon-owned (policy denial)
-      - Edit system-schema.yaml → exit 2: read-only file perms; kernel upgrades only (policy denial)
-      - Apply system-schema via rule apply → exit 2: agent cannot trigger system schema application
-      - Skip schema.yaml, hand-write DDL → exit 3: rule diff alarm; sys doctor refuses boot
-      - Apply schema to prod without merge → exit 2: env overlay denies cross-world DDL
-      - Delete a column without snapshot → exit 2: migration is snapshot-first, always
+    - Pipeline: author schema.yaml -> rule apply --dry-run -> trust gate -> human review -> rule apply -> git commit
+    - alter.require_trust reviewed; DROP deny; snapshot-first DDL
+    - Forward-only; snapshots are rollback; auto-commit on success
+    - Prod: merge first, then apply with prod confirmations
+    - Agent cannot: ALTER via db.exec, DROP, edit workspace.db, edit system-schema, skip schema.yaml, cross-env DDL without merge
     - Migration rules
       - Forward-only: no down-migrations; snapshots are the rollback
       - Rollback source is the pre-DDL snapshot: see recovery.md#Snapshots
@@ -234,101 +126,12 @@
       - sys doctor re-checks drift in every env at runtime; gates at every apply
   - Validation gates
     - Five gates, zero trust; layered defense at every boundary; any failure = no execution
-    - Gate 1 YAML syntax (parse-time)
-      - Valid YAML structure, no duplicate keys
-      - Shorthand expansion succeeds for every table and column
-      - Required fields present: version, engine, db
-      - Fail → exit 3, cites line + column
-    - Gate 2 semantic validation (compile-time)
-      - Reference checks
-        - ref= targets exist and types match
-        - rel: targets exist; rel columns match types
-        - idx: columns exist in the parent table
-        - No circular ref= chains (a→b→c→a)
-      - SQL checks
-        - chk: expressions parse as valid SQL WHERE clauses
-        - trig: SQL bodies parse without error
-        - View rules
-          - views.sql parses and touches only exposes: tables
-          - Example catch: pending_orders.sql touches 'inventory' not in exposes
-          - Scoped views
-            - scoped: principal requires a :principal bind param
-            - customer_lifetime_value: WHERE c.id = :principal, per-customer SUM
-            - Missing :principal bind → Gate 2 failure
-      - Column checks
-        - mask=true only on text/json columns
-        - imm_cols entries exist in the parent table
-        - Fail → exit 3, cites exact rule + location
-    - Gate 3 quad-lock (boot-time)
-      - World schema lock
-        - schema.yaml.version == governance.schema_version
-        - == policy.schema_version — three-way equality
-        - Mismatch → "version mismatch: refusing boot"
-      - System schema lock
-        - system-schema.yaml.version == governance.system_schema_version
-        - == policy.system_schema_version
-        - Mismatch → "system schema version mismatch: refusing boot"
-      - Any mismatch → refuse boot, exit 3
-        # FIX #11: exit 5 = audit-write-failed; boot refusal is validation failure (exit 3)
-      - Policy-side half of the lock: see physics.md#Two-layer-enforcement
-    - Gate 4 live drift detection (runtime)
-      - capcli sys doctor compares compiled YAML vs live DB via PRAGMAs
-      - Any divergence → refuse to serve, exit 3, cites exact drift
-        # FIX #12: exit 4 = runtime error (effect attempted); drift detection is pre-flight validation
-      - Example: orders.hack_column exists in DB but not schema.yaml
-      - Cross-worktree env drift: see space.md#Drift
-    - Gate 5 migration safety (apply-time)
-      - Snapshot taken before DDL; DDL executes in a test txn against the snapshot
-      - Rollback verified, idempotency checked
-      - Fail → auto-restore snapshot, exit 3
-        # FIX #12: migration safety failure is validation, not runtime
-      - Snapshot mechanics: see recovery.md#Snapshots
-    - Sample catches
-      - Compile-time (Gate 2)
-        - ref= to missing table: "orders.customer_id references missing table"
-        - idx on missing column: "index on orders.missing_col: column does not exist"
-        - mask on int column: "payments.amount_cents: mask only valid on text/json"
-        - FK type mismatch: "orders.customer_id (int) refs customers.id (text)"
-        - Circular ref: "circular reference: a→b→c→a"; trigger syntax error cited
-      - Boot-time (Gate 3)
-        - Schema v5 + Policy v4 → "version mismatch: refusing boot"
-        - system-schema v3 + governance v2 → "system schema version mismatch: refusing boot"
-        - exit 3 — nothing runs after a failed boot (validation failure)
-      - Runtime (Gate 4)
-        - Live DB extra column → "drift: orders.hack_column exists in DB but not schema.yaml"
-        - Detection: PRAGMA comparison, no DDL parser
-        - Any divergence → refuse to serve, exit 3, exact drift cited
-          # FIX #12: same as Gate 4 — pre-flight validation, not runtime
+      - Gate 1 YAML syntax (parse) -> exit 3
+      - Gate 2 semantic validation (compile) -> exit 3
+      - Gate 3 quad-lock (boot) -> exit 3
+      - Gate 4 live drift detection (runtime) -> exit 3
+      - Gate 5 migration safety (apply) -> exit 3
+      - Quad-lock: schema.version == governance.schema_version == policy.schema_version; system-schema locked separately
+      - Any mismatch -> refuse boot
   - Command surface db
-    - Verbs
-      - Reads
-        - capcli db query <sql> [-p k=v] [--limit N] [--count] [--json]
-        - --count is the mass-op pre-flight; replaces the dead db count
-        - select max_limit 10000 enforced: see physics.md#Raw-SQL-rules
-      - Writes
-        - capcli db exec <sql> [-p k=v] --intent "..." [--dry-run]
-        - db exec guard rails: see physics.md#Raw-SQL-rules
-        - --dry-run prints the plan without executing
-      - Coordination
-        - capcli db lock <table>:<ref> --ttl 10m --reason "..."; db unlock <target>
-        - Lease claims: see agent.md#Coordination
-        - Claims advisory: SQLite serializes writers: see agent.md#Coordination
-      - State
-        - capcli db schema [--table] — compiled DDL view
-        - capcli db snapshot | restore <id> | dump
-        - Snapshot/restore mechanics: see recovery.md#Snapshots
-    - Law
-      - Exit code law: see physics.md#Fail-closed-stance
-      - db count is dead: use db query --count or AST-enforced bulk pre-flights
-      - Enforcement behind every command: see physics.md#Raw-SQL-rules
-      - Gate pipeline order and db policy excerpt: see physics.md#Two-layer-enforcement
-    - Consumers
-      - ctx.db SDK — query, execute, txn, lock; no raw connection: see action.md#The-ctx-contract
-      - PWA renders kernel.db.query()/exec() as drillable masked tables: see interface.md#PWA-layers
-      - Mirror views: routine_fingerprints, primitive_cost, shared_subsequences: see effect.md#Audit-spine
-      - Bulk chunk loops consume db query --count + db exec: see physics.md#Bulk-operations
-    - Cross-world
-      - Each env is a worktree with its own workspace.db: see space.md#Environment-axis
-      - env new sim --seed prod: snapshot fork + auto-mask: see space.md#Rehearsal-&-sim
-      - Durability tiers — db snapshot, world.sql, sys backup --push: see recovery.md#Snapshots
-      - prov: true tables auto-fill created_by/modified_by: see agent.md#Identity-hierarchy
+    - Command surface: see interface.md#CLI-surface (db query, db exec, db lock, db schema, db snapshot)

@@ -2,20 +2,8 @@
 <!-- ref-by: action.md, agent.md, budget.md, effect.md, interface.md, overview.md, physics.md, space.md, time.md, world.md -->
   - The ladder
     - Rungs
-      - draft: agent-learned, unproven; tight caps, full audit; max_rows_affected 10
-        - Tight cap details: require_where true, audit full (artifacts/policy.yaml)
-          - require_where: no blanket UPDATE/DELETE — every write names its targets
-        - can_read.secrets false: an unproven agent reads no credentials (artifacts/policy.yaml)
-          - The value never enters agent memory — egress injects the header: see agent.md#Secrets
-        - How draft work earns promotion: see time.md#Learning-loop
-      - reviewed: human/CI sign-off granted; max_rows_affected 100, full audit
-        - Sign-off is recorded: the version carries promoted_by
-        - Unlocks bulk confirm flows: require_trust reviewed (artifacts/policy.yaml)
-        - Caps loosen 10×: 100 rows per op — audit stays full
-      - pinned: proven track record; relaxed caps, summary audit; max_rows_affected 500
-        - Unlocks may_run_unattended: schedules execute in prod without a human awake (artifacts/policy.yaml)
-        - Audit drops to summary: pinned routines log outcomes, not every row
-        - Served endpoints and their floors: see action.md#Bindings
+      - Rungs: draft (tight caps, full audit, no secrets) -> reviewed (human/CI sign-off, 10x caps) -> pinned (relaxed, summary audit, unattended prod)
+      - Per-rung caps: see artifacts/policy.yaml#trust
       - Rungs are earned in order: no skip from draft to pinned — the ladder has no elevator
     - Two axes
       - Trust and environment are two axes of one ladder: draft+dev, reviewed+sim, pinned+prod
@@ -32,7 +20,7 @@
       - Served endpoints floor: min_trust pinned, require_version_pin — non-negotiable (artifacts/governance.yaml)
       - Demotion is always cheaper than promotion: veto, decay, sweep never need a human gate
     - Human authority
-      - [human]`-tagged commands (raw `capcli db exec`) dema…: see interface.md#PWA-layers
+      - [human]`-tagged commands (raw `capcli db exec`) demand human/CI approval: see interface.md#PWA-layers
         - raw `capcli db exec` is the escape hatch — gated, audited, never silently allowed
       - Evidence is agent work; authority is human work
       - Authority split: see overview.md#Mental-model
@@ -60,14 +48,7 @@
         - Each gate cites its measured value at denial (artifacts/governance.yaml denials section)
       - A routine cannot loosen its own cage: see physics.md#Two-layer-enforcement
     - Auto-promotion
-      - draft → reviewed, low-risk only, when ALL thresholds hold
-        - sim_runs ≥ 10
-        - success_rate ≥ 0.95
-        - manifest_match_rate 1.0
-          - Partial 3/4 = 0.75 fails here — the gap goes to the human queue — The evidence names which verb skipped and why
-        - policy_denials 0
-        - fingerprint_drift_events 0
-        - Thresholds are conjunction: one miss routes the routine to the human queue
+      - Auto-promotion draft -> reviewed: ALL thresholds hold (sim_runs, success_rate, manifest_match 1.0, zero denials, zero drift)
       - reviewed → pinned is ALWAYS human-gated: relaxed caps + unattended prod are never automated
         - Pinned grants autonomy — a machine must never grant it
         - Thresholds automate verification, never judgment — prod readiness is judgment
@@ -83,13 +64,8 @@
       - Active verbs inherit draft caps: full audit, max_rows_affected 10 — unproven is unproven
       - Verb specifics: see action.md#External-APIs
   - Evidence
-    - Manifest evidence
-      - Evidence block includes manifest diff vs previous version: "v18 adds `api.call X`" — no raw diff
-        - Reviewers read a one-line behavior delta, not the implementation
-        - Regression: adding an undeclared leaf op is flagged during promotion review
-          - v17→v18: the new api.call surfaces as a reviewable, revertible delta
-      - manifest_match reflects reality: 3/4 = 0.75, not 1.0 — honest about real vs rehearsed
-      - Fingerprint vs manifest proof mechanics: see action.md#Manifests-&-fingerprints
+    - Evidence: manifest diff, sim gaps (per-verb), cost attribution (p95, spend per leaf), provenance (created_by, promoted_by, promoted_through)
+    - Ship evidence carries measured stats, never agent estimates
     - Sim gaps
       - Evidence text: "sim proved 3/4 verbs. gov.file_tax_return was prod-only. First 3 prod calls require human approval"
         - The human sees the gap before granting authority
@@ -99,7 +75,7 @@
       - Training wheels config: see artifacts/governance.yaml#api.prod_first_calls
         # FIX #1 redundancy
         - apply_to [skip, prod-only]: simulated verbs never need training wheels
-          - prod-only must be declared explicit, never inferred …: see space.md#Environment-axis
+          - prod-only must be declared explicit, never inferred (artifacts/governance.yaml): see space.md#Environment-axis
             - An inferred prod-only would hide exactly the gap evidence exists to show
         - After 3 approved prod calls the verb graduates to normal governance
           - Each first prod call is audited under `first_prod_call`
@@ -112,7 +88,7 @@
     - Provenance evidence
       - No silent edits: every change is a new hash-pinned version; replay verifies the hash
         - The version record carries who and how: created_by, promoted_by, promoted_through
-      - Every transition is an audit event with agent, princ…: see agent.md#Intent-chain
+      - Every transition is an audit event with agent, principal, intent/reason: see agent.md#Intent-chain
       - Prove params: real historical values from `capcli sys audit sample` — see time.md#Stage-details
   - Overrides
     - Exception model
@@ -120,16 +96,8 @@
       - Exceptions are git commits — declared need approved by a human commit, reviewed like code
         - The commit is the review artifact: blame, diff, revert all work
       - Compiled at boot; config changes go through files + `rule apply`, no CLI write-path
-    - Precedence
-      - Effective limit min() law: see budget.md#Cascade
-        - declared need: the routine's ask — may be less than allowed, never more
-        - governance ceiling: routine_shape limits, cited by number at denial
-        - override: the approved exception value from a governance commit
-        - parent_remaining: the caller's frame — a child never outspends its caller
-          - Budget cascade mechanics: see budget.md#Cascade
-      - Overrides can tighten, not only loosen: served endpoints get stricter latency ceilings
-        - order_status override: max_duration_seconds 5 — external callers pay for latency
-      - A routine may ask for less, never more — and never more than its caller has left
+    - Overrides: git commits, never --force; effective = min(declared, ceiling, override, parent_remaining)
+    - Precedence: see budget.md#Cascade
     - Flag bans
       - No `--force`: exceptions are overrides in governance.yaml
       - No `--override-budget: see interface.md#Universal-flags
@@ -137,11 +105,7 @@
         - Denial is structural — the authorizer refuses, not a convention
       - Denials cite the measured value and suggest: "split it, or propose an override": see effect.md#Denials
   - Trust receipts
-    - The receipt
-      - `capcli sys doctor --report` renders the workspace trust receipt
-      - Lines: 23 operations audited, 2 denied before execution (explained), 0 unaudited writes
-      - Lines: 2 snapshots created, 1 routine proven in sim, 1 routine promoted to reviewed
-      - Lines: 0 secrets exposed, backup pushed 2 minutes ago, recovery tested successfully
+    - Receipt: sys doctor --report -- audited ops, denials explained, recovery tested, 0 secrets exposed
     - Reading the receipt
       - Every effect was bounded, explained, and recoverable — the receipt proves it in one view
       - Denials before execution are shown as teaching, not failure

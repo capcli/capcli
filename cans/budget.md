@@ -77,19 +77,8 @@
         - Unit: tokens returned to the model
         - Scope: per-routine only
         - Cascade: none — each routine caps its own output independently
-    - Composition flags (artifacts/governance.yaml)
-      - budget_inheritance: min — child effective = min(declared, parent_remaining)
-      - ops_cascade: true, duration_cascade: true
-      - spend_scope: session, rate_scope: session, rows_scope: trust_session
-      - result_tokens_scope: routine
-      - max_nesting_depth: 5 caps composition depth
-      - budget_exhaustion: deny — exhausted budget = exit 2, never silent truncation
-    - Cascade view in `inspect`
-      - budget_status.cascade: session_ops_remaining 488, session_duration_remaining_ms 555000
-      - session_spend_remaining_usd 37.6, session_rate_remaining 287
-      - tightest_constraint names the first dimension to block (null while headroom lasts)
-      - composition.effective_limits: "min(50, session_remaining)" strings per dimension
-      - composition block: max_nesting_depth, child_routines list, budget_inheritance
+    - Composition: see artifacts/governance.yaml#routine_shape.composition (budget_inheritance min, cascade scopes)
+    - inspect budget_status.cascade: session remaining per dimension + tightest_constraint
   - Quotas
     - Live quota
       - Extraction
@@ -106,22 +95,8 @@
         - A 429 is a design failure, not a runtime surprise — the gate denies before the call
         - Live remaining/reset_at/budget status before invoking: see action.md#External-APIs
       - Fallback: providers without standard headers get kernel-counted sliding windows
-    - Governance caps
-      - All governance caps (registry, schedule, watch, serve, surface): see artifacts/governance.yaml
-        # FIX #28: removed entire duplicated governance section
-    - Output caps
-      - Routine results
-        - max_result_tokens 500 — summaries crossing to the model truncate
-        - serve response max_result_tokens 500 — inherited routine cap
-        - Overrides may raise it: weekly_report max_result_tokens 1500
-      - Ping surfaces
-        - notify message_max_tokens 300 — notifications are summaries, not essays
-        - ask question_max_tokens 100, max_options 5
-        - ask default_timeout_minutes 60, max_timeout_minutes 480
-      - Search and catalog
-        - search max_results: 20, semantic_min_relevance: 0.6
-        - search_index max_description_tokens: 60 — lean search surface
-        - sync max_catalog_size_mb: 10 — compiled catalog stays lean
+    - Governance caps: see artifacts/governance.yaml
+    - Output caps: see artifacts/governance.yaml#routine_shape.execution, #notify, #ask
   - Exhaustion
     - budget.exhausted event
       - Payload: frame_id, routine, blocking_level, dimension, declared, consumed

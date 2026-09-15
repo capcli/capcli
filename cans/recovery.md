@@ -70,9 +70,7 @@
         - CAPCLI_RECOVERY=1 loads only schema + audit sink — no policy, routines, or serve
         - recovery_mode_entered audited on entry — break-glass is loud, never silent
         - `sys doctor --boot-check` validates boot without starting the daemon
-      - Allowlist
-        - Only db query, db dump, sys audit tail, sys backup — repair verbs
-        - No routine exec, no serve, no policy writes — read-and-repair only
+      - Recovery mode: CAPCLI_RECOVERY=1; only db query/dump, sys audit tail/backup; no exec, no serve, no policy writes
         - Every break-glass use is an audit event — a config typo is never a 3 AM dead end
     - Worst case
       - Harness wipes everything: `git clone` + `sys recover`, or pull from object storage
@@ -87,12 +85,7 @@
         - Trip back
           - `db restore snap_onboarding_002` → orders.status: done (was: broken)
           - Round trip audited as op_000006 — reversible is proven, not promised
-      - Context reinstatement
-        - Where: env dev, schema v12, policy v4 — position first
-        - Doing: last intent plus last governed effect (op_000041)
-        - Changed: audit events since last session, retires, policy diffs
-        - Safe next: dry-run suggestion, `sys audit tail --since 24h`, sweep
-        - One screen answers all four — retrieval cues, not a reboot
+      - Re-entry: where (env, schema, policy) -> doing (last intent + effect) -> changed (events since) -> safe next (dry-run)
       - Recovery output
         - world.sql restored, audit chain verified, workspace.db rebuilt, status ready
         - policy, governance, schema re-validated before ready prints
@@ -103,22 +96,7 @@
       - Retirement: no longer callable, history and provenance kept, rollback un-retires: see action.md#Routines
       - PWA Layer 8 undo console: snapshots, rollbacks, git points, hash verify: see interface.md#PWA-layers
       - Forensics localize failures to leaf ops — rollback is primitive-informed: see effect.md#Failure-forensics
-    - Offboarding sequence
-      - Survey
-        - Show what exists: `env inspect prod`, `sys doctor --report`
-        - bind list → pause → remove — served endpoints torn down first
-      - Preserve
-        - Final backup: `sys backup --push` — last offsite copy before teardown
-        - Dump state: `db dump` → final-world.sql
-        - Revoke: `sys agent list`, `sys agent revoke agt_7f3k` — identities die before worlds
-      - Remove
-        - Environments
-          - `env remove dev`, `env remove sim` — no confirm flags needed
-          - `env remove prod --confirm-backup --confirm-prod` — both flags, both required
-          - prod_removal_flags 2: two explicit confirms (artifacts/governance.yaml)
-        - Order matters
-          - Backup → revoke → dump → remove — reversal material exists at every step
-          - Environments last: nothing may point at a removed world
+    - Offboarding: survey -> preserve (backup, dump, revoke) -> remove (env last) -- reversal material at every step
       - Rendering
         - Harness renders the recovery command first: `git clone <remote>` + `sys recover <commit>`
         - Shows the last pushed backup: commit id, age — two minutes ago

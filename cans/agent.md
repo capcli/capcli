@@ -2,52 +2,12 @@
 <!-- ref-by: action.md, effect.md, interface.md, overview.md, physics.md, trust.md, world.md -->
   - Identity hierarchy
     - Chain
-      - principal → agent → session → op; ids kernel-issued, stored in `workspace.db`
-      - Routine names self-declared in decorator, kernel-confirmed at registration: see action.md#Routines
-        # FIX #30: clarified that "never self-declared" applies to identity ids, not routine names
-      - principal — human or kernel authority holder (user:alice, partner:stripe)
-      - agent — the registered harness instance doing the work (agt_7f3k)
-      - session — the engagement scope (ses_a9) every event, frame, and claim names
-      - op — the single invocation (op_001); the leaf the causal DAG links
-      - Causal spine on every run: env, stage, agent, principal, intent chain, caused_by — no exceptions
-      - Lifecycle transitions record agent, principal, intent/reason on every audit event
-      - Socket proof: SO_PEERCRED binds credentials; `--by <agent-id>` is validated, not trusted
-        - `--by` is the acting identity on mutating verbs — verified against socket peer creds
-      - `--as <principal>` marks who an action is ultimately for; scoped views refuse without it
-      - No self-declared identity — kernel-issued, socket-proven (anti-decision)
-      - Kernel never infers identity from behavior — the hierarchy is data, bound at connection time
-    - Agent registry
-      - `agents` system table
-        - columns: id pk, name unique, harness, principal, status=active
-        - imm_cols [id, principal]: see world.md#Dual-schema
-        - indexed by principal and by status
-      - Agent access read-only; identity managed by kernel commands only: see world.md#Dual-schema
-      - `sys agent register | list | revoke`
-        - revoke ends access instantly — no grace period (revoked_agent: deny_all)
-        - identity rows are never agent-writable
-      - Kernel principals: capcli-cron → schedules, capcli-watch → webhooks, capcli-serve → endpoints
-      - Offboarding revokes agents before env removal — access dies first: see recovery.md#Destruction-as-transition
-    - Skill origin (policy v4.1)
-      - Source: `artifacts/policy.yaml` identity.skill_origin — harness skill provenance propagation
-      - allow_propagation
-        - harness may pass the triggering skill name on invocations
-        - format lowercase-hyphens, max_length 64
-      - triggered_by_skill — audit_field recorded on every leaf event: see physics.md#Harness-boundaries
-      - deny_patterns — reject traversal, path separators, spaces in skill names
-      - on_invalid strip_and_warn — malformed name dropped with warning, never a denial
-      - Skills cannot grant authority — metadata only; trust still comes from principal + agent
-      - PWA Layer 10 renders identity cards, revoke buttons, skill origin panel: see interface.md#PWA-layers
-    - Multi-agent scope
-      - v1 = single-agent with multi-principal: many humans supervise one agent; true multi-agent is v2
-      - max_concurrent_agents 1
-        - second simultaneous writer exits 2: "concurrent agents not supported in v1"
-        - serialize through single agent or upgrade
-      - Fail loud, not corrupt: scope gaps explicitly, never let users discover them via race conditions
-      - v2 path: `sys audit stream --follow --capability X` — Unix socket subscribe instead of polling
-      - v2 path: `_routine_deps` dependency tracking
-        - routine retire checks dependents before removal
-        - write-wait > 50ms → sys doctor suggests splitting workloads
-      - Cross-agent routine calls require callee ≥ reviewed: see trust.md#The-ladder
+      - principal -> agent -> session -> op; ids kernel-issued, stored in workspace.db
+      - Socket proof: SO_PEERCRED binds credentials; --by validated, not trusted
+      - --as <principal> marks who action is for; scoped views refuse without it
+      - No self-declared identity; kernel never infers identity from behavior
+    - Agent registry: agents system table, kernel commands only (register|list|revoke); revoke ends access instantly
+    - Skill origin: see artifacts/policy.yaml#identity.skill_origin; triggered_by_skill audit field; skills cannot grant authority
   - Intent chain
     - Chain shape
       - session goal → routine intent → op intent
@@ -88,43 +48,10 @@
       - Consolidation labor is session-budgeted: max_session_minutes 30: see time.md#Schedule-&-maintenance
       - Session visibility: PWA budget view shows remaining ops, duration, spend live: see interface.md#PWA-layers
   - Secrets
-    - Storage
-      - `secrets` system table
-        - columns: name unique, value, scope=global, expires_at
-          - value mask=true — column-level redaction: see physics.md#Two-layer-enforcement
-        - Secrets (credential ingress) are distinct from data masking (PII egress): see world.md#Dual-schema
-          # FIX #7: disambiguated secrets vs masking
-        - sens: true — table-level sensitive marking
-        - kernel policy row: allow [read], mask_columns [value]
-      - Policy: agent read-only, value masked; secrets rows never agent-writable: see world.md#Dual-schema
-      - Memory-decrypted at boot; never persisted to agent-visible surfaces
-      - Expiry tracked per secret; rotation is a scheduled human act, not agent work
-    - Egress injection
-      - Kernel injects Authorization at egress — tokens never in agent env, context, or audit output
-      - API catalogs store secret_ref (e.g. STRIPE_SECRET_KEY) — kernel-held reference, never the value
-      - Grades of unavailable: memory-decrypted + injected at boundary is the shippable minimum
-      - Isolation ladder: creds+perms → egress allowlist → network jail → gVisor/Firecracker: see physics.md#No-other-door
-    - Masking discipline
-      - Secrets masked in every surface — results, audit, explain — no exceptions
-      - Skills must never read secrets or masked columns; authorizer denies: see action.md#Routines
-      - PWA renders masked columns as locked cells, value always ████: see interface.md#PWA-layers
-      - Trust receipt proves "0 secrets exposed": see trust.md#Trust-receipts
+    - Secrets: system table, mask=true, memory-decrypted at boot, kernel injects at egress, never in agent env/context/audit
+    - Egress: Authorization injected; secret_ref in API catalogs; never the raw value
   - Coordination
-    - Through the world
-      - Agents coordinate through the world, never direct chat: claims, events, handoffs
-      - Claims
-        - lease-based locks with TTL
-        - `db lock <table>:<ref> --ttl 10m`, `run --lock <ref>`
-      - Claims advisory in v1: SQLite BEGIN IMMEDIATE serializes physical writers
-      - Events: agents watch each other's effects via `sys audit tail`
-      - Handoffs: world-state transitions visible to all agents
-    - Known gaps (v1)
-      - No dependency graph: retiring Y breaking X→Y→Z is manual; v2 `_routine_deps` checks dependents
-      - Polling only: no pub/sub event streaming until v2
-      - Concurrent writers serialize through one agent (max_concurrent_agents 1) — serialize or upgrade
-      - Claims prevent logical conflicts, not physical races — SQLite remains the arbiter
-    - Human and agent harness
-      - Agent harness reasons, proposes, executes; human observes + approves: see overview.md#One-contract,-two-harnesses
-      - Kernel never reasons, never does LLM work — matches, dispatches, delivers, logs: see overview.md#Capability-kernel
-      - Both harnesses consume the same governed contract: see overview.md#Mental-model
-      - PWA is a client, never a component: no gates, no enforcement, no system-table writes
+    - Coordination: claims (lease TTL), events (audit tail), handoffs (world-state transitions)
+    - Claims advisory in v1; SQLite BEGIN IMMEDIATE serializes physical writers
+    - v1: single-agent, multi-principal; max_concurrent_agents 1; second writer exits 2
+    - v2: Unix socket subscribe, _routine_deps dependency tracking

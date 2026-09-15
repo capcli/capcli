@@ -59,19 +59,8 @@
       - Sequencing, branching, retries, or composition turn representation into code
       - No programming language invented inside YAML
     - Topology
-      - Three effect channels out, four hands coming in
-      - One gate, one audit stream, one trust ladder
-      - Outbound
-        - db.* → SQLite SSOT through authorizer + AST gate: see physics.md#Two-layer-enforcement
-        - routine.* → Python sandbox, jail: net-none, socket-only
-        - api.* → HTTP egress, kernel-owned secrets injected at boundary
-      - Inbound hands (conceptual) map to CLI nouns:
-        - schedule.* → `bind cron`
-        - watch.* → `bind webhook`
-        - serve.* → `bind endpoint` + `sys serve`
-        - notify/ask → `ping notify` + `ping ask`
-        # FIX #25: conceptual model names now mapped to CLI nouns
-        - Agent never reaches SQLite or network directly; all access flows through the kernel
+      - Three effect channels: db.* -> SQLite, routine.* -> sandbox, api.* -> HTTP egress
+      - Four inbound hands: bind cron, bind webhook, bind endpoint + sys serve, ping notify/ask
   - Design stance
     - Fail-closed and gated
       - No valid policy, no boot; ambiguity resolves toward denial
@@ -82,12 +71,12 @@
       - The agent never knows or cares which channel an invocation uses
       - Activation is the gate; full surface permanent, active surface earned: see action.md#Capability-registry
     - Explore, then exploit
-      - Raw SQL is the exploration layer; routines are the e…: see action.md#Routines
+      - Raw SQL is the exploration layer; routines are the exploitation layer: see action.md#Routines
       - Routines are procedural memory: atoms composed into molecules, governed at every leaf
       - Routines born free but run gated: proven in sim, promoted by evidence, pinned by merge: see time.md#Stage-map
     - Trust and authority
-      - Trust ladder draft → reviewed → pinned over env axis…: see trust.md#The-ladder
-      - Self-promotion impossible; promotion is a human/CI-g…: see trust.md#Gates-&-promotion
+      - Trust ladder draft → reviewed → pinned over env axis dev → sim → prod: see trust.md#The-ladder
+      - Self-promotion impossible; promotion is a human/CI-gated command: see trust.md#Gates-&-promotion
       - The human verifies the why; the kernel verifies the what
       - The ladder: see trust.md#The-ladder
     - Small surface, deep gate
@@ -99,20 +88,4 @@
       - Destruction becomes a reversible event; reversibility needs two independent stores
       - Snapshots plus audit-in-git make deletion recoverable, not catastrophic
       - Where the gate cannot reach, recovery does: see recovery.md#Destruction-as-transition
-    - Refusals (anti-decisions)
-      - No ORM, no custom query builders, no YAML procedures, no `default: allow`
-      - No deletion: see action.md#Capability-registry
-      - No LLM in the kernel, no kernel-generated worlds, no hand-edited system-schema.yaml
-  - Doc map
-    - World (SQLite SSOT, dual schema, gates): see world.md#SQLite-as-SSOT
-    - Physics (two-layer enforcement, fail-closed, raw SQL): see physics.md#Two-layer-enforcement
-    - Effect (audit spine, causal DAG, denials, forensics): see effect.md#Audit-spine
-    - Agent (identity hierarchy, intent chain, sessions, secrets): see agent.md#Identity-hierarchy
-    - Action (capability registry, routines, ctx, manifests): see action.md#Capability-registry
-    - Time (stage map, learning loop, consolidation, schedule): see time.md#Stage-map
-    - Space (env axis, primitive scoping, rehearsal, drift): see space.md#Environment-axis
-    - Trust (the ladder, gates & promotion, evidence, overrides): see trust.md#The-ladder
-    - Budget (frames, cascade, quotas, exhaustion): see budget.md#Frames
-    - Recovery (snapshots, git, hash chains, restore): see recovery.md#Snapshots
-    - Interface (CLI surface, flags, SDK, PWA layers, journeys): see interface.md#CLI-surface
-    - Assembly (monorepo, naming law, packages, tests, deps): see assembly.md#Monorepo-layout
+    - Refusals: no ORM, no YAML procedures, no default:allow, no deletion, no LLM in kernel, no hand-edited system-schema
