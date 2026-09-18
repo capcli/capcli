@@ -1,164 +1,79 @@
 - Effect
-<!-- ref-by: action.md, budget.md, interface.md, overview.md, physics.md, recovery.md, space.md, trust.md, world.md -->
   - Audit spine
-    - Ground truth
-      - Three stores: state = `workspace.db`, procedure = Python + YAML, experience = JSONL audit log
-      - JSONL ground truth
-        - Daily append-only files `audit/2026-XX-XX.jsonl`
-        - Git-tracked; committed via backup triggers
-        - Replay source: state(t) = fold(events[0..t]) — log reconstructs world-state at any t
-      - `_audit` mirror in `workspace.db`
-        - `imm_rows: true` read-only kernel-managed table
-        - Mirror + views are the query surface for what happened
-        - Mirror lag SLA: see artifacts/governance.yaml#maintenance.audits
-        # FIX #1 redundancy: removed hardcoded number
+    - Ground truth stores
+      - audit/*.jsonl
+        - format — daily append-only files
+        - tracking — committed to git version control
+        - replay role — fold(events[0..t]) reconstructs state at time t
+      - _audit mirror
+        - location — live system table in workspace.db
+        - access — queryable via SQL; writes restricted to kernel
+        - freshness SLA — see artifacts/governance.yaml#maintenance
     - Event anatomy
-      - Identity block: event, ts, env, stage — what ran, when, where
-      - Actor block: agent, session, principal — who did it
-      - Causality block: caused_by, intent, intent_chain — why it ran
-      - Payload block: capability, sql, params — recorded verbatim so replay re-executes
-      - Policy block: decision allow|denied plus rules_matched
-        - rules_matched cites enforced rules: [require_where, require_limit]
-        - decision drives the exit code: denied → exit 2
-      - Outcome block: rows_affected, result_hash, duration_ms
-        - result_hash detects drift between recorded and actual outcomes
-        - rows_affected feeds the mirror views' GROUP BYs
-      - One event per verb: see interface.md#CLI-surface
-      - Exit 5 audit-write-failed = nothing ran; a write that cannot be audited does not run
+      - identity — event, ts, env, stage
+      - actor — agent, session, principal
+      - causality — caused_by, intent, intent_chain
+      - payload — capability, sql, params (recorded verbatim for replay)
+      - policy — decision (allow/denied), rules_matched
+      - outcome — rows_affected, result_hash, duration_ms
     - Kernel event payloads
-      - capability.search payload
-        - query, results_count, resolution_stage (exact|prefix|fuzzy|semantic|did-you-mean)
-        - filters: trust, env, max_ops
-        - gap_signal: true if results_count 0 and query_count >= gap_threshold
-        - logged per policy.yaml api.search.log_all_queries
-        # FIX #10: was referenced by action.md but never defined here
-      - db.exec payload
-        - sql text + params dict recorded verbatim
-          - Recorded op form: parameterized UPDATE with LIMIT: see physics.md#Raw-SQL-rules
-          - params: {s: "fulfilled", id: 7}
-        - policy decision, matched rules, rows_affected, result_hash
-        - duration_ms 4 closes the record
-      - routine.run payload
-        - routine, version, code_hash, manifest_hash
-        - triggered_by: run | cron | webhook | ask resume
-        - outcome, ops count, duration_ms close the parent record
-      - api.sync payload
-        - api.sync payload fields: see action.md#External-APIs
-        - counts: added, removed, changed, unchanged
-      - api.activate payload
-        - provider, verb, state_from dormant → state_to active, trust
-        - intent recorded — activation is the governed step
-      - api.call sim payload
-        - sim_mode, http_called, fixture_used, fixture_path
-        - outcome skipped carries the reason
-          - "sim_mode: prod-only — cannot execute outside prod"
-          - recorded even though no HTTP fired (http_called: false)
-      - api.first_prod_call payload
-        - prod_call_number, prod_first_calls_remaining
-        - human_approved, approved_by
-      - budget.frame_push / frame_pop payloads: see budget.md#Frames
-      - serve.request closes the CLI-vs-HTTP gap: see action.md#Bindings
-    - Event honesty
-      - Event exists even when the op is denied — denial recorded, effect none
-      - No synthetic events: no `onboarding.*` types; intent is a field on an op, not a standalone event
-      - First events of a world: rule.apply (schema v0→v1), db.query allow, db.exec denied, db.exec allow
-      - Audit is born from the first real operation; world is born from intent
-      - Learning loop runs on logs: kernel logs every op with intent: see time.md#Learning-loop
+      - capability.search — query, results_count, resolution_stage, gap_signal
+      - db.exec — sql, params, rules_matched, rows_affected, result_hash
+      - routine.run — routine, version, hashes, triggered_by, outcome, ops, duration
+      - api.sync — provider, added, removed, changed, unchanged
+      - api.activate — verb, state transition, trust, intent
+      - api.call sim — sim_mode, http_called, fixture_used, fixture_path
+      - api.first_prod_call — call_number, calls_remaining, human_approved, approver
+      - budget.frame_push/pop — declared, consumed, remaining balances
+      - serve.request — endpoint, routine@version, api_key_id, principal, status
+    - Event integrity
+      - write priority — unaudited writes denied outright (exit 5)
+      - denial logging — denied operations emit audit events with effect: none
+      - tamper detection — per-line sha256 prev_hash links form immutable chain
+      - verification — scheduled chain walk: see artifacts/governance.yaml#maintenance
     - Query surfaces
-      - `sys audit tail [--follow] [--capability X] [--since 1h]` — live and filtered stream
-      - `sys audit trace <op-id> [--explain]` — causal walk plus denial reason
-      - `sys audit query <sql> [-p k=v]` — SQL directly against the `_audit` mirror
-      - `sys audit replay --from <ts|event-id> [--dry-run]` — re-execution through current policy; --dry-run applies nothing
-      - Verbosity knob: no `--verbose` flag exists — `sys audit tail` is the verbosity control
-    - Integrity and degradation
-      - Reserved audit partition: on write failure kernel enters read-only mode, writes queue 5-min TTL
-      - Hash chain
-        - Per-line `prev_hash: sha256:<previous_line_hash>`
-          - Tampering any line breaks every later hash — tamper evidence without git
-          - Files are append-only; no line is ever rewritten in place
-        - Hash chain verification schedule: see artifacts/governance.yaml#maintenance.audits
-        # FIX #1 redundancy: removed hardcoded cron
-        - Verification commands and backup checks: see recovery.md#Hash-chains
-      - Backups include audit logs; degraded modes audited: see recovery.md#Git-integration
-      - PWA Layer 4 renders live tail, event cards, search log: see interface.md#PWA-layers
+      - tail — sys audit tail [--follow] [--capability X] [--since 1h]
+      - trace — sys audit trace <op-id> [--explain]
+      - query — sys audit query <sql> [-p k=v]
+      - replay — sys audit replay --from <ts> [--dry-run]
   - Causal DAG
-    - caused_by links
-      - One parent event plus one event per leaf op, joined by `caused_by`
-      - Chain: op → routine → session goal; every event records the full chain
-      - routine.run example: intent_chain ["process refund queue", "refund_and_archive", "..."]
-      - `env` + `stage` ride every leaf event — worlds stay distinguishable: see space.md#Primitive-scoping
-    - Trace
-      - `sys audit trace <op-id>` walks any leaf up through routine → session goal
-      - Each hop shows
-        - decision, rules matched, rows_affected, result_hash — evidence at every step
-        - corrupted-row answers: which routine, which version, which world, which agent, why
-      - `trace --explain` is the single learning signal for denials
-    - DAG discipline
-      - Strictly sequential routine interiors keep the DAG acyclic: see action.md#Routines
-      - Budget frames join the DAG via parent_frame: see budget.md#Frames
-      - serve.request events give HTTP callers a place in the DAG: see action.md#Bindings
-      - PWA navigation: causal DAG is the UX, drill goal → op → SQL → rule → rows: see interface.md#PWA-layers
+    - Linkage model
+      - parent pointer — caused_by references parent operation id
+      - hierarchy — op → routine → session goal
+      - context stamping — env and stage stamped on every leaf event
+    - Trace traversal
+      - inspection — sys audit trace <op-id> walks DAG to root intent
+      - forensics — corruption traced to specific routine, world, agent, and version
+      - explain — --explain flag prints exact policy rules and remediation
+    - Structural invariants
+      - linearity — sequential routine interiors guarantee acyclic DAG
+      - frame integration — budget frames bind via parent_frame
+      - http integration — inbound HTTP requests bind via serve.request
   - Denials
-    - Denial record
-      - Exit-code law (0 ok / 2 / 3 / 4 / 5): see interface.md#CLI-surface
-      - Every governance.deny is itself an audit event (log_all): see physics.md#Runtime-denials
-      - Record fields
-        - rule: exact violated rule id — policy.query.update_delete.require_where
-        - layer: authorizer, AST, governance, budget
-        - measured value: cited exactly — "342 LOC, max is 150"
-        - fix: remediation — "split it, or propose an override"
-        - effect: none — the denial precedes any world change
-      - Registry example: draft refuses past max_routines 300, cites the number: see action.md#Capability-registry
-      - Designed denial op_000003
-        - Unbounded UPDATE denied before execution under require_where
-        - Carries the full record: rule, layer, measured value, fix
-    - Explanation
-      - `sys audit trace --explain`: decision, layer (authorizer/AST), rule, fix, effect none
-      - No mysterious denials: every denial cites the rule, the layer, and the fix
-      - `intent_quality: low` is an audit flag, not denial — kernel verifies shape, never truth: see agent.md#Intent-chain
-    - Learning from denials
-      - policy.deny patterns = what the agent does not yet know; harness adjusts (WHERE, LIMIT, sim, routine)
-      - denials_alert_threshold 20: sustained denial = agent thrashing, surface it: path `artifacts/policy.yaml`
-      - PWA denial patterns view (require_where: 14 denials): see interface.md#PWA-layers
-      - Budget denial cites exact frame, dimension, remaining: see budget.md#Exhaustion
+    - Denial event structure
+      - violation — rule id (e.g. policy.query.update_delete.require_where)
+      - layer — authorizer, AST, governance, or budget
+      - measured value — observed count vs ceiling (e.g. 342 LOC vs 150 cap)
+      - remediation — explicit fix instructions printed
+      - mutation — state change strictly none
+    - Learning and alerting
+      - training data — denial patterns inform harness prompt and code adjustments
+      - thrashing alert — threshold: see artifacts/policy.yaml#rate
   - Failure forensics
-    - Leaf localization
-      - `sys audit trace op_000123` → refund_and_archive@17 (prod), per-primitive outcomes:
-      - api.call stripe.get_charge ✓ 310ms
-      - api.call stripe.refund_charge ✗ policy-denied: spend cap exceeded
-      - db.exec never reached — execution stops at the first denied leaf
-      - Rollback decisions primitive-informed: routine not broken, spend policy is — fix the right thing
-    - Forensic views
-      - primitive_failures
-        - which leaf failed, grouped by routine_version and seq
-        - localization entry: feed the failing op id to `sys audit trace`
-      - primitive_cost
-        - per-leaf duration and spend attribution: see action.md#Capability-registry
-        - feeds `routine stats --deep`: see time.md#Stage-details
-      - Prove params sampled from real audit history: see time.md#Stage-details
-      - Fingerprint views: see action.md#Manifests-&-fingerprints
-    - Failure to teaching
-      - Harness consumes `trace --explain`, adjusts, never retries blindly — denial is training data
-      - Rollback/retire thresholds: see time.md#Stage-details
-      - `sys audit replay` re-executes history under current policy to reproduce failures
-      - Trust receipt: "2 denied before execution (explained)" — denials are evidence: see trust.md#Trust-receipts
+    - Leaf-level localization
+      - trace diagnostics — sys audit trace pinpoints exact failing leaf in DAG
+      - partial execution — execution halts immediately at first failing leaf
+      - separation — distinguishes between code failures and policy cap breaches
+    - Forensic mirror views
+      - primitive_failures — aggregates failures by version, leaf seq, and capability
+      - primitive_cost — aggregates duration and spend per leaf primitive
   - Provenance
-    - Causal spine
-      - Causal spine fields on every run: see agent.md#Chain
-      - `prov: true` tables
-        - Kernel auto-fills created_by / modified_by
-        - Every provenance row answers who changed it
-      - Every write transactional, audited, intent-chained: see world.md#Validation-gates
-      - Lifecycle transitions audited with agent, principal, intent/reason: see agent.md#Chain
     - Artifact lineage
-      - Versions record code_hash + manifest_hash + created_by + promoted_by
-      - promoted_through: [dev, sim, prod] — the journey recorded on the version
-      - consolidated_from: [a@12, b@7] merge links; rollback un-retires; history only grows
-      - Retirement semantics: see time.md#Versioning-&-provenance
-      - max_versions_kept 25 keeps graphs navigable: path `artifacts/governance.yaml` versions
+      - version stamp — code_hash, manifest_hash, created_by, promoted_by
+      - environment journey — promoted_through records [dev, sim, prod] progression
+      - merge lineage — consolidated_from preserves origins of merged routines
+      - retention bounds — versions kept: see artifacts/governance.yaml#routine_shape
     - Replay invariants
-      - Replay re-applies current policy, not historical — a demoted routine cannot resurrect old permissions
-      - Replayable requires the unedited file: see recovery.md#Hash-chains
-      - External effects never auto-replayed — records mark them replay: manual
-      - Idempotency keys on every write make retries safe; keys are env-scoped: see space.md#Primitive-scoping
-      - Cross-env replay turns prod history into sim test data: see space.md#Rehearsal-&-sim
+      - policy enforcement — replay executes under current policy, not historical
+      - external effects — external API calls flagged replay: manual
+      - idempotency — environment-scoped idempotency keys prevent duplicate execution

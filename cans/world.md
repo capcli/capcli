@@ -1,334 +1,248 @@
 - World
-<!-- ref-by: action.md, agent.md, budget.md, effect.md, interface.md, overview.md, physics.md, recovery.md -->
   - SQLite as SSOT
     - Storage trinity
       - workspace.db
-        - capcli daemon-owned, chmod 600, NOT git-tracked
-        - WAL mode for concurrent reads during routine execution
-        - Single-writer serialization is the multi-agent arbiter: transactions settle, no distributed locks
-        - Agent user has no direct path; the kernel process is the only opener
+        - ownership
+          - process — capcli daemon-owned
+          - permissions — chmod 600
+        - tracking
+          - git status — ignored via .gitignore
+          - persistence — local to active worktree
+        - concurrency
+          - journal mode — WAL mode enabled
+          - readers — concurrent non-blocking reads
+          - writers — serialized via single-writer lock
+        - access perimeter
+          - direct sockets — agent connection denied
+          - direct filesystem — agent file open denied
+          - sole gateway — kernel mediation mandatory
       - world.sql
-        - deterministic dump, git-tracked, the recoverable artifact
-        - Deterministic: same world-state → same bytes; diffs stay meaningful
-        - Auto-committed with every successful migration: see recovery.md#Git-integration
-        - Restored by sys recover: see recovery.md#Restore-path
+        - format
+          - structure — deterministic DDL and seed dump
+          - byte reproducibility — identical world yields identical bytes
+        - version control
+          - tracking — committed to git
+          - diffs — readable schema change history
+        - commit automation
+          - trigger — successful schema migrations
+          - cadence — see artifacts/governance.yaml#backup
+        - disaster recovery
+          - restoration — sys recover: see recovery.md#Restore-path
       - audit/*.jsonl
-        - append-only event stream, git-tracked, tamper-evident
-        - state(t) = fold(events[0..t]); the audit log is the replay source
-        - Every event hash-chained to the previous line: see recovery.md#Hash-chains
-        - Format example: event, sql, params, rows_affected, result_hash: see effect.md#Audit-spine
-    - Effect path
-      - Every DB effect: intent → kernel → authorizer → AST → SQLite → audit event
-      - No other path exists: no direct connection, no ORM side door
-      - Gate internals per stage: see physics.md#Two-layer-enforcement
-      - Enforcement behind every command: see physics.md#Raw-SQL-rules
-    - Durability stance
-      - Where capcli cannot gate, it recovers: world.sql + audit-in-git
-      - Harness can wipe everything natively; deletion becomes a recoverable event
-      - Recovery mechanics: see recovery.md#Destruction-as-transition
-    - Introspection
-      - YAML → DB one-way generation; DB → diff via PRAGMAs
-      - DB → YAML bootstraps via capcli rule show --type schema
-      - No DDL parser: PRAGMAs + one-way generation
+        - stream format
+          - structure — daily append-only files
+          - immutability — lines never rewritten in-place
+        - version control
+          - tracking — committed to git alongside world.sql
+          - offsite sync — see artifacts/governance.yaml#backup
+        - cryptographic linking
+          - mechanism — sha256 prev_hash per line
+          - tamper detection — see recovery.md#Hash-chains
+        - replay engine
+          - mathematical formula — state(t) = fold(events[0..t])
+          - verification — see effect.md#Audit-spine
+    - Mutation pipeline
+      - execution flow
+        - step 1 — causal intent declaration
+        - step 2 — kernel gate intake
+        - step 3 — AST structural analysis
+        - step 4 — C-level authorizer interception
+        - step 5 — physical SQLite commit
+        - step 6 — audit mirror emission
+      - perimeter enforcement
+        - direct driver paths — denied
+        - external ORM sockets — denied
+        - verification mechanics — see physics.md#Two-layer-enforcement
+    - Schema introspection
+      - compilation — declarative YAML translates to physical DDL
+      - PRAGMA checks — live database schema compared against declaration
+      - command surface — capcli rule show --type schema
   - Dual schema
-    - Two files, two owners, one compiled DDL in workspace.db; SQL DDL is never hand-edited
-    - schema.yaml — agent-authored
-      - Ownership and role
-        - The agent writes this file; it decides the domain model, not a pre-defined template
-        - Authored with native filesystem access in the dev worktree
-        - Creation is the harness's job, permission the kernel's, approval the human's
-        - Kernel: expands shorthand, gates application, enforces runtime, refuses drift
-      - View declarations
-        - exposes: lists touched tables; compile-checked against system-schema.yaml
-        - scoped: principal requires a :principal bind param
-        - Example pending_orders: exposes [orders, customers], status = 'pending' — unscoped
-        - Example customer_lifetime_value: scoped, SUM(p.amount_cents) grouped per :principal
-          # FIX #21: not all views are principal-scoped; scoping is per-view declaration
-      - Full-complexity example coverage (every DDL feature demonstrated)
-        - customers: prov: true, sens: true; email text!, phone text~, tier text=standard
-        - orders: customer_id int ref=customers.id; chk discount_cents <= total_cents
-        - orders trig: validate_total — before insert, RAISE(ABORT, 'total mismatch')
-        - order_items: imm_rows: true append-only; sku text ref=inventory.sku
-        - inventory: sku text!~ (unique + immutable); stock int=0, reorder_point int=10
-        - payments: raw_response json mask=true; status CHECK IN (pending, completed, failed, refunded)
-        - subscriptions: interval text=monthly; idx [customer_id, active] composite
-      - Why YAML, not raw schema.sql
-        - mask=true, ~ immutable, prov/system columns: no SQL DDL concept
-        - desc feeds search index and explain output; rel: gives traversal beyond FK integrity
-        - ~60% token savings vs verbose DDL; kernel compiles it, single source of truth preserved
-    - system-schema.yaml — kernel-owned
-      - Ownership rules
-        - Agent-readable for discoverability, never agent-editable; file permissions enforce read-only
-        - Kernel upgrades it during kernel releases; version-locked to kernel (kernel_version)
-        - New system tables: agent proposes via harness; kernel decides
-        - Kernel upgrades never touch schema.yaml; agent world unaffected by kernel releases
-      - System tables (eleven kernel-managed surfaces)
-        # FIX #9: was "six" — claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats were missing
-        - _audit
-          - sys: true, imm_rows: true — kernel-managed audit mirror, append-only
-          - cols: event, ts, env, agent, session, principal, capability, intent, outcome
-          - payload json mask=true; duration_ms int
-          - idx: [event, ts], [agent, ts], [capability, outcome]
-        - _api_quota
-          - Live external API quota state, kernel-managed
-          - provider text!, scope_key, env text!, limit_total, remaining, reset_at
-          - retry_after_s, last_op, last_updated; chk: remaining >= -1
-          - idx: [provider, env], [provider, scope_key, env]
-        - _api_catalog
-          - Full verb catalog — all imported verbs, all states
-          - Identity cols
-            - provider text!, verb text!; imm_cols: [provider, verb]
-            - method, path, params_schema json
-            - description text — feeds the search index
-          - State machine
-            - state text=dormant: CHECK IN (dormant, active, deprecated, retired)
-            - trust text=draft: CHECK IN (draft, reviewed, pinned)
-            - sim_mode text=sandbox: CHECK IN (sandbox, mock, dry-run, skip, prod-only)
-            - cost_class text=read: CHECK IN (read, write)
-          - Gating cols
-            - prod_first_calls_remaining int=0 — unapproved prod calls tracked here
-            - activated_at / activated_by; retired_at; idempotent int=0
-            - spec_hash, synced_at, version int=1 — sync provenance
-          - idx: [provider, state], [provider, verb], [state, trust]
-        - _budget_frames
-          - Per-invocation budget tracking pushed on the call stack
-          - frame_id text!, routine, version, parent_frame, session text!, env text!
-          - declared_max_ops, declared_max_duration_ms; consumed_* int=0 defaults
-          - consumed dims: ops, duration_ms, spend_usd, rows, api_calls
-          - outcome CHECK IN (active, success, exhausted, denied, error)
-          - idx: [session, env], [routine, version], [parent_frame]
-        - secrets
-          - sens: true, kernel-managed; name text!~, value text mask=true
-          - scope text=global; expires_at int; idx: name, [scope, expires_at]
-          - Value masked in every surface: see agent.md#Secrets
-        - agents
-          - id text pk, name text!, harness, principal text!, st…: see agent.md#Identity-hierarchy
-          - imm_cols: [id, principal] — kernel upgrades never rewrite id
-          - idx: principal, status
-          - Registered identities: see agent.md#Identity-hierarchy
-        - claims
-          - lease-based locks with TTL; kernel writes, agents read/insert/delete
-          - cols: target, holder, ttl, created_at
-        - _pending_asks
-          - kernel writes; agents observe; ping ask lifecycle
-        - _watch_cursors
-          - webhook/poll dispatch state; kernel-internal
-        - _capability_embeddings
-          - harness-computed description embeddings; kernel stores and serves
-        - routine_stats
-          - per-routine execution aggregates; kernel-managed mirror view
-      - Cross-file wiring
-        - exposes: [_audit] compile-checked against system-schema.yaml (Gate 2)
-        - _budget_frames tracks per-invocation budgets: see budget.md#Frames
-        - System-table writes stay kernel-internal: see physics.md#Raw-SQL-rules
-    - Shorthand expansion at compile time
-      - Column shorthands
-        - pk → {type: integer, pk: true, autoincrement: true}
-        - text pk → {type: text, pk: true} — e.g. agents.id
-        - text! → {type: text, unique: true}; text=val → {type: text, default: "val"}
-        - int~ → {type: integer, immutable: true} — write-once columns
-        - int ref=table.col → {type: integer, references: table.col} inline FK
-      - Table shorthands
-        - prov: true → provenance: true + auto created_by/modified_by columns
-        - sens: true → sensitive: true, table-level masking
-        - sys: true → system: true + readonly_grant: true
-        - imm_rows: true → append-only table; authorizer denies UPDATE/DELETE
-        - imm_cols: [...] → authorizer denies writes on the listed columns
-      - Index and data shorthands
-        - idx: [a] → indexes: [{on: [a]}]; idx: [[a,b]] → composite index
-        - rel: → semantic traversal edge feeding kernel search index + explain
-        - seed: [...] → initial rows applied with the schema migration
-      - Constraint shorthands
-        - chk: → CHECK constraint array, SQLite engine enforcement
-        - trig: → trigger definition, policy-gated explicit SQL
-        - mask=true → column-level redaction, authorizer + audit redaction
+    - File partition
+      - agent-owned file — schema.yaml
+      - kernel-owned file — system-schema.yaml
+      - physical compilation — single unified DDL in workspace.db
+      - boundary invariant — manual SQL DDL editing prohibited
+    - schema.yaml
+      - ownership
+        - author — agent harness in dev worktree
+        - permissions — agent-writable in dev: see artifacts/governance.yaml#schema
+      - dimension ceilings
+        - limits — see artifacts/governance.yaml#schema.world
+        - enforcement — validated at compile time
+      - component declarations
+        - domain tables — data models, constraints, and indexes
+        - read views — pre-defined queries with declared exposure
+        - triggers — policy-vetted SQLite triggers
+      - view governance
+        - exposed tables
+          - declaration — exposes: [...] list mandatory
+          - validation — compile-checked against known tables
+        - principal scoping
+          - declaration — scoped: principal
+          - parameter — requires :principal bind variable
+          - enforcement — authorizer denies execution without --as
+    - system-schema.yaml
+      - ownership
+        - author — kernel maintainers only
+        - permissions — agent read-only: see artifacts/governance.yaml#schema.system
+        - upgrades — release binaries only: see artifacts/governance.yaml#schema.system
+      - integrity verification
+        - hash verification — mandatory at boot: see artifacts/governance.yaml#schema.system
+        - mismatch behavior — refuse boot: see artifacts/policy.yaml#fail_closed
+      - managed tables: see artifacts/system-schema.yaml
+    - Shorthand expansion
+      - column shorthands
+        - primary key
+          - integer — pk expands to integer autoincrement primary key
+          - text — text pk expands to text primary key
+        - uniqueness — text! expands to text unique
+        - defaults — text=val expands to text default 'val'
+        - immutability — int~ expands to integer immutable write-once
+        - foreign relations — int ref=table.col expands to foreign key
+        - redaction — mask=true marks column for audit and result masking
+      - table shorthands
+        - provenance
+          - tag — prov: true
+          - added columns — created_by, modified_by
+        - sensitivity
+          - tag — sens: true
+          - fork rule — sensitive data masked in sim: see artifacts/governance.yaml#env
+        - audit grant
+          - tag — sys: true
+          - permissions — read-only grant for agents
+        - row locking
+          - tag — imm_rows: true
+          - authorizer effect — UPDATE and DELETE denied physically
+        - column locking
+          - tag — imm_cols: [...]
+          - authorizer effect — UPDATE denied on targeted columns
+      - indexing shorthands
+        - single index — idx: [col] expands to indexes: [{on: [col]}]
+        - composite index — idx: [[col_a, col_b]] expands to composite index
+      - relation shorthands
+        - traversal edges — rel: maps semantic graph for search index
+      - constraint shorthands
+        - checks — chk: expands to physical SQLite CHECK array
+        - triggers — trig: expands to kernel-compiled trigger
     - Seed data
-      - Declared form
-        - Tables declare seed: [...] riding with the schema migration
-        - Example rows: { ref: "ORD-001", status: "pending", total_cents: 4200 }
-        - Seeding is not agent runtime INSERT: it rides rule apply
-      - Mechanics
-        - Kernel INSERTs during capcli rule apply --type schema, inside the same DDL txn
-        - Capped at 50 rows per table — onboarding scale, not bulk loading
-        - Audited as part of the rule.apply event (seed_rows: N)
-      - The world is born populated; no bulk-inserting at draft trust to populate it
-    - Per-flag enforcement split
+      - declaration — seed: [...] array in table definition
+      - execution — executed inside DDL transaction during rule apply
+      - row volume bounds — ceiling: see artifacts/governance.yaml#schema.world
+    - Enforcement split
       - SQLite engine layer
-        - type → type affinity; =val → DEFAULT
-        - pk → PK; ! → UNIQUE
-        - ref= → FK constraint; chk: → CHECK constraint
-      - Authorizer layer
-        - ~ immutable: denies UPDATE on that column
-        - mask=true: authorizer + audit redaction; system: true: denies agent writes
-        - imm_rows: denies UPDATE/DELETE; imm_cols: denies listed columns
-      - Shape = capcli, content = SQLite: no overlap, no dual enforcement
-    - Anti-decisions
-      - No hand-edited DDL: schema.yaml is SSOT, kernel compiles
-      - No `validate=` keywords: CHECK constraints are validation, one enforcement point
-      - No single-file mixed-ownership schema: structural boundary, not a sys: true flag
-      - No pre-defined schemas: the agent builds the world, capcli governs its growth
-      - No DDL parser: PRAGMAs + one-way generation, no reverse engineering
+        - type affinity
+          - integer types
+          - text types
+          - blob types
+        - table constraints
+          - primary keys
+          - foreign key cascades
+          - unique constraints
+          - check constraints
+      - Kernel authorizer layer
+        - column immutability — ~ syntax denies column update
+        - output redaction — mask=true redacts cell data
+        - row immutability — imm_rows denies row mutation
+        - system protection — sys: true denies agent writes
   - Schema evolution
-    - Governed pipeline, not free-form ALTER TABLE; the kernel governs schema.yaml growth
-    - Column-add lifecycle
-      - Author
-        - Agent edits schema.yaml in dev worktree: adds discount_cents: int=0
-        - Bumps version: 4 → 5
-        - Needs a new system table? propose via harness; kernel decides
-      - Preview
-        - Command: capcli rule apply --type schema --dry-run --env dev
-        - Preview is read-only; it never takes the snapshot
-        - Dry-run output
-          - Plan facts
-            - exact DDL statement it will execute
-            - snapshot id it will take
-            - reversibility confirmation
-          - Exit semantics
-            - exit 0 when the plan is valid
-            - exit 3 when the plan fails a gate
-            - no effects applied in any case
-          - Role
-            - explicit-SQL-shown law made concrete
-            - the printed DDL is what the human reviews
-            - feeds the ship --reason
-      - Trust gate
-        - Policy check: alter.require_trust = reviewed
-        - Agent trust draft → exit 2 "schema changes require reviewed trust"
-        - Denial cites measured vs required trust: see effect.md#Denials
-      - Human review
-        - Human/CI reads the version diff 4 → 5
-        - Sees exact statement: ALTER TABLE orders ADD COLUMN discount_cents INTEGER DEFAULT 0
-        - Self-promotion impossible; promotion is human/CI-gated: see trust.md#The-ladder
-      - Ship
-        - capcli routine ship schema_v5 --to reviewed --reason "add discount column"
-        - --reason required: promotion crosses a trust threshold
-        - Ship is the human gate; the agent cannot run it for itself
-      - Apply
-        - Command: capcli rule apply --type schema --env dev --intent "add discount_cents to orders"
-        - Snapshot taken; DDL executed in one txn; schema_version bumped
-        - Auto-committed to git; schema-migration audit event written
-      - Prod
-        - Human merges dev branch into prod first
-        - capcli env use prod; same apply with prod-level confirmations
-        - Cross-world DDL without merge → exit 2: env overlay denies
-    - What the agent cannot do
-      - db.exec "ALTER TABLE ..." → exit 2: alter.require_trust: reviewed
-      - DROP TABLE → exit 2: drop: deny, authorizer unconditional
-      - Edit workspace.db directly → exit 2: file perms, chmod 600, daemon-owned (policy denial)
-      - Edit system-schema.yaml → exit 2: read-only file perms; kernel upgrades only (policy denial)
-      - Apply system-schema via rule apply → exit 2: agent cannot trigger system schema application
-      - Skip schema.yaml, hand-write DDL → exit 3: rule diff alarm; sys doctor refuses boot
-      - Apply schema to prod without merge → exit 2: env overlay denies cross-world DDL
-      - Delete a column without snapshot → exit 2: migration is snapshot-first, always
-    - Migration rules
-      - Forward-only: no down-migrations; snapshots are the rollback
-      - Rollback source is the pre-DDL snapshot: see recovery.md#Snapshots
-      - Explicit-SQL-shown: --dry-run prints the exact DDL, no surprises
-      - Auto-commit: every successful migration is a git commit: see recovery.md#Git-integration
-      - Version-locked: schema_version must match policy.yaml + governance.yaml or boot is refused
-      - Onboarding is migration: first rule apply from intent is version 0→1, same pipeline, no fast-path
-      - Migration events record from_version, to_version, ddl, snapshot: see time.md#Versioning-&-provenance
-    - Travel and drift
-      - Migrations travel dev → sim → prod via git merge: see space.md#Rehearsal-&-sim
-      - Each env holds its own workspace.db: see space.md#Environment-axis
-      - sys doctor re-checks drift in every env at runtime; gates at every apply
+    - Column addition lifecycle
+      - step 1: edit — agent modifies schema.yaml and bumps version
+      - step 2: dry-run
+        - command — rule apply --type schema --dry-run --env dev
+        - preview — prints exact physical SQL DDL
+        - snapshot test — verifies snapshot creation without mutation
+      - step 3: trust gate
+        - trust requirement — alter: see artifacts/policy.yaml#authorizer.global
+        - evaluation — draft trust throws exit 2
+      - step 4: approval — human inspects DDL plan and rollback preview
+      - step 5: ship — routine ship schema_<v> --to reviewed --reason "..."
+      - step 6: apply
+        - command — rule apply --type schema --env dev --intent "..."
+        - execution — snapshot taken, DDL executed in transaction
+        - audit — schema migration event emitted
+      - step 7: prod merge — git merge dev into prod worktree
+    - Agent denial rules
+      - raw DDL execution
+        - command — db.exec "ALTER TABLE ..."
+        - decision — denied: see artifacts/policy.yaml#authorizer.global
+      - table destruction
+        - command — DROP TABLE
+        - decision — denied: see artifacts/policy.yaml#authorizer.global
+      - direct database edits
+        - target — workspace.db
+        - decision — denied via filesystem permissions (chmod 600)
+      - system schema manipulation
+        - target — system-schema.yaml
+        - decision — denied: see artifacts/governance.yaml#schema.system
+      - unmerged production migrations
+        - condition — cross-world DDL without git merge
+        - decision — denied: see artifacts/policy.yaml#env.prod
+    - Migration invariants
+      - forward only — down-migrations banned; snapshots serve as rollbacks
+      - snapshot pairing — snapshot taken before physical DDL execution
+      - version synchronization — quad-lock: see physics.md#Fail-closed-stance
   - Validation gates
-    - Five gates, zero trust; layered defense at every boundary; any failure = no execution
-    - Gate 1 YAML syntax (parse-time)
-      - Valid YAML structure, no duplicate keys
-      - Shorthand expansion succeeds for every table and column
-      - Required fields present: version, engine, db
-      - Fail → exit 3, cites line + column
-    - Gate 2 semantic validation (compile-time)
-      - Reference checks
-        - ref= targets exist and types match
-        - rel: targets exist; rel columns match types
-        - idx: columns exist in the parent table
-        - No circular ref= chains (a→b→c→a)
-      - SQL checks
-        - chk: expressions parse as valid SQL WHERE clauses
-        - trig: SQL bodies parse without error
-        - View rules
-          - views.sql parses and touches only exposes: tables
-          - Example catch: pending_orders.sql touches 'inventory' not in exposes
-          - Scoped views
-            - scoped: principal requires a :principal bind param
-            - customer_lifetime_value: WHERE c.id = :principal, per-customer SUM
-            - Missing :principal bind → Gate 2 failure
-      - Column checks
-        - mask=true only on text/json columns
-        - imm_cols entries exist in the parent table
-        - Fail → exit 3, cites exact rule + location
-    - Gate 3 quad-lock (boot-time)
-      - World schema lock
-        - schema.yaml.version == governance.schema_version
-        - == policy.schema_version — three-way equality
-        - Mismatch → "version mismatch: refusing boot"
-      - System schema lock
-        - system-schema.yaml.version == governance.system_schema_version
-        - == policy.system_schema_version
-        - Mismatch → "system schema version mismatch: refusing boot"
-      - Any mismatch → refuse boot, exit 3
-        # FIX #11: exit 5 = audit-write-failed; boot refusal is validation failure (exit 3)
-      - Policy-side half of the lock: see physics.md#Two-layer-enforcement
-    - Gate 4 live drift detection (runtime)
-      - capcli sys doctor compares compiled YAML vs live DB via PRAGMAs
-      - Any divergence → refuse to serve, exit 3, cites exact drift
-        # FIX #12: exit 4 = runtime error (effect attempted); drift detection is pre-flight validation
-      - Example: orders.hack_column exists in DB but not schema.yaml
-      - Cross-worktree env drift: see space.md#Drift
-    - Gate 5 migration safety (apply-time)
-      - Snapshot taken before DDL; DDL executes in a test txn against the snapshot
-      - Rollback verified, idempotency checked
-      - Fail → auto-restore snapshot, exit 3
-        # FIX #12: migration safety failure is validation, not runtime
-      - Snapshot mechanics: see recovery.md#Snapshots
-    - Sample catches
-      - Compile-time (Gate 2)
-        - ref= to missing table: "orders.customer_id references missing table"
-        - idx on missing column: "index on orders.missing_col: column does not exist"
-        - mask on int column: "payments.amount_cents: mask only valid on text/json"
-        - FK type mismatch: "orders.customer_id (int) refs customers.id (text)"
-        - Circular ref: "circular reference: a→b→c→a"; trigger syntax error cited
-      - Boot-time (Gate 3)
-        - Schema v5 + Policy v4 → "version mismatch: refusing boot"
-        - system-schema v3 + governance v2 → "system schema version mismatch: refusing boot"
-        - exit 3 — nothing runs after a failed boot (validation failure)
-      - Runtime (Gate 4)
-        - Live DB extra column → "drift: orders.hack_column exists in DB but not schema.yaml"
-        - Detection: PRAGMA comparison, no DDL parser
-        - Any divergence → refuse to serve, exit 3, exact drift cited
-          # FIX #12: same as Gate 4 — pre-flight validation, not runtime
+    - Gate 1: Syntax
+      - timing — parse-time on file load
+      - checks
+        - YAML formatting — valid syntax without duplicate keys
+        - shorthand expansion — all shorthands expand cleanly
+        - required roots — version, engine, db present
+      - failure code — throws exit 3
+    - Gate 2: Semantics
+      - timing — compile-time before statement generation
+      - relational integrity
+        - reference targets — ref= targets must exist with matching types
+        - traversal targets — rel: targets must resolve to real tables
+        - index targets — indexed columns must exist in parent table
+        - circularity — circular foreign key chains prohibited
+      - SQL syntax
+        - check constraints — chk: expressions parse as valid SQL WHERE
+        - triggers — trig: bodies compile without syntax errors
+        - view exposures — views touch exposes: tables exclusively
+        - principal binds — scoped: principal views contain :principal
+      - data types
+        - masking targets — mask=true restricted to text and json
+        - immutable targets — imm_cols exist in target table
+      - failure code — throws exit 3
+    - Gate 3: Quad-lock
+      - timing — boot-time startup check
+      - world schema lock
+        - schema version — see artifacts/schema.yaml#version
+        - governance version — see artifacts/governance.yaml#schema_version
+        - policy version — see artifacts/policy.yaml#schema_version
+        - condition — three-way equality mandatory
+      - system schema lock
+        - schema version — see artifacts/system-schema.yaml#version
+        - governance version — see artifacts/governance.yaml#system_schema_version
+        - policy version — see artifacts/policy.yaml#system_schema_version
+        - condition — three-way equality mandatory
+      - failure code — throws exit 3 (refuse boot)
+    - Gate 4: Live drift
+      - timing — runtime inspection via sys doctor
+      - detection — PRAGMA scans compare live tables against compiled YAML
+      - condition — undeclared columns or tables trigger refusal
+      - failure code — throws exit 3
+    - Gate 5: Migration safety
+      - timing — apply-time during rule apply
+      - execution — DDL dry-runs in isolated test transaction on snapshot
+      - rollback check — verifies transaction rollback cleanly reverses DDL
+      - failure code — auto-restores snapshot and throws exit 3
   - Command surface db
-    - Verbs
-      - Reads
-        - capcli db query <sql> [-p k=v] [--limit N] [--count] [--json]
-        - --count is the mass-op pre-flight; replaces the dead db count
-        - select max_limit 10000 enforced: see physics.md#Raw-SQL-rules
-      - Writes
-        - capcli db exec <sql> [-p k=v] --intent "..." [--dry-run]
-        - db exec guard rails: see physics.md#Raw-SQL-rules
-        - --dry-run prints the plan without executing
-      - Coordination
-        - capcli db lock <table>:<ref> --ttl 10m --reason "..."; db unlock <target>
-        - Lease claims: see agent.md#Coordination
-        - Claims advisory: SQLite serializes writers: see agent.md#Coordination
-      - State
-        - capcli db schema [--table] — compiled DDL view
-        - capcli db snapshot | restore <id> | dump
-        - Snapshot/restore mechanics: see recovery.md#Snapshots
-    - Law
-      - Exit code law: see physics.md#Fail-closed-stance
-      - db count is dead: use db query --count or AST-enforced bulk pre-flights
-      - Enforcement behind every command: see physics.md#Raw-SQL-rules
-      - Gate pipeline order and db policy excerpt: see physics.md#Two-layer-enforcement
-    - Consumers
-      - ctx.db SDK — query, execute, txn, lock; no raw connection: see action.md#The-ctx-contract
-      - PWA renders kernel.db.query()/exec() as drillable masked tables: see interface.md#PWA-layers
-      - Mirror views: routine_fingerprints, primitive_cost, shared_subsequences: see effect.md#Audit-spine
-      - Bulk chunk loops consume db query --count + db exec: see physics.md#Bulk-operations
-    - Cross-world
-      - Each env is a worktree with its own workspace.db: see space.md#Environment-axis
-      - env new sim --seed prod: snapshot fork + auto-mask: see space.md#Rehearsal-&-sim
-      - Durability tiers — db snapshot, world.sql, sys backup --push: see recovery.md#Snapshots
-      - prov: true tables auto-fill created_by/modified_by: see agent.md#Identity-hierarchy
+    - Query commands
+      - reads
+        - command — db query <sql> [-p k=v] [--limit N] [--count]
+        - bounds — row ceiling: see artifacts/policy.yaml#query.select
+      - writes
+        - command — db exec <sql> -p k=v --intent "..." [--dry-run]
+        - bounds — row ceiling: see artifacts/policy.yaml#query.update_delete
+    - Concurrency commands
+      - acquisition — db lock <table>:<ref> --ttl <duration> --reason "..."
+      - release — db unlock <target>
+    - Introspection commands
+      - ddl display — db schema [--table]
+      - state management — db snapshot, db restore <id>, db dump
+    - Boundary laws
+      - dead commands — db count banned; replaced by db query --count
+      - enforcement depth — all commands cross AST and authorizer layers

@@ -1,0 +1,211 @@
+version: 3                             # quad-lock: matches policy.yaml & governance.yaml
+engine: sqlite                         # SQLite SSOT substrate
+db: workspace.db                       # managed runtime database
+readonly_for_agent: true               # kernel-upgrades only; agent write throws exit 2
+
+# ───────────────────────────────────────────────────────────────
+# SYSTEM TABLES (11 KERNEL-MANAGED SURFACES)
+# ───────────────────────────────────────────────────────────────
+tables:
+  _audit:
+    description: "Append-only historical audit mirror; primary query surface for what happened"
+    sys: true                          # readonly_grant for agents
+    imm_rows: true                     # authorizer denies UPDATE & DELETE unconditionally
+    columns:
+      id: pk                           # autoincrement sequence ID
+      event: text!                     # dot-notated channel.verb event identifier
+      ts: int!                         # unix timestamp in milliseconds
+      env: text!                       # dev, sim, or prod
+      stage: text!                     # live, test, replay, or prove
+      agent: text!                     # acting agent instance id (e.g. agt_7f3k)
+      session: text!                   # engagement session id (e.g. ses_a9)
+      principal: text!                 # human or kernel authority holder
+      capability: text                 # target capability or SQL table
+      intent: text                     # causal intent declaration
+      caused_by: text                  # parent event ID in causal DAG
+      decision: text!                  # allow or denied
+      rules_matched: json              # array of policy rules evaluated
+      payload: json mask=true          # parameters or SQL text; redacted on secret match
+      rows_affected: int=0             # rows modified by this operation
+      result_hash: text                # sha256 of execution result
+      duration_ms: int=0               # execution wall-clock time
+      prev_hash: text!                 # sha256 link to prior log line for tamper-evidence
+    idx:
+      - [[event, ts]]
+      - [[agent, ts]]
+      - [[capability, decision]]
+
+  _api_quota:
+    description: "Live external provider rate limits parsed deterministically from response headers"
+    sys: true
+    columns:
+      id: pk
+      provider: text!                  # provider slug (e.g. stripe, github)
+      scope_key: text=global           # per-key or per-endpoint quota partition
+      env: text!                       # sim and prod track quotas independently
+      limit_total: int=-1              # X-RateLimit-Limit (-1 = untracked)
+      remaining: int=-1                # X-RateLimit-Remaining
+      reset_at: int=0                  # unix epoch seconds for quota reset
+      retry_after_s: int=0             # Retry-After delay in seconds
+      last_op: text                    # last verb to touch this quota
+      last_updated: int!               # timestamp of last header extraction
+    chk:
+      - "remaining >= -1"
+    idx:
+      - [[provider, env]]
+      - [[provider, scope_key, env]]
+
+  _api_catalog:
+    description: "OpenAPI imported verbs catalog tracking lifecycle, sim mode, and training wheels"
+    sys: true
+    imm_cols: [provider, verb]         # provider and verb identity cannot be mutated
+    columns:
+      id: pk
+      provider: text!                  # provider namespace (e.g. stripe)
+      verb: text!                      # operation id or path slug (e.g. refund_charge)
+      method: text!                    # HTTP verb: GET, POST, PUT, DELETE, PATCH
+      path: text!                      # URL path template
+      params_schema: json              # JSON schema of accepted parameters
+      description: text!               # feeds search index and inspector
+      state: text=dormant              # lifecycle state
+      trust: text=draft                # trust ladder level
+      sim_mode: text=sandbox           # rehearsal behavior
+      cost_class: text=read            # read or write
+      prod_first_calls_remaining: int=0 # training wheels counter
+      activated_at: int
+      activated_by: text
+      retired_at: int
+      idempotent: int=0                # 1 = retries allowed with same key
+      spec_hash: text!                 # sha256 of imported OpenAPI endpoint
+      synced_at: int!                  # last sync timestamp
+      version: int=1                   # catalog version increment
+    chk:
+      - "state IN ('dormant', 'active', 'deprecated', 'retired')"
+      - "trust IN ('draft', 'reviewed', 'pinned')"
+      - "sim_mode IN ('sandbox', 'mock', 'dry-run', 'skip', 'prod-only')"
+      - "cost_class IN ('read', 'write')"
+    idx:
+      - [[provider, state]]
+      - [[provider, verb]]
+      - [[state, trust]]
+
+  _budget_frames:
+    description: "Per-invocation budget execution frames enforcing downward min() cascade"
+    sys: true
+    columns:
+      frame_id: text pk                # frame UUID (e.g. frame_004)
+      routine: text!                   # routine registry id
+      version: int!                    # pinned routine version
+      parent_frame: text               # parent frame_id; null at session root
+      session: text!                   # session context id
+      env: text!                       # world scope
+      declared_max_ops: int!           # declared primitive ceiling
+      declared_max_duration_ms: int!   # declared timeout ceiling
+      consumed_ops: int=0              # primitive executions consumed
+      consumed_duration_ms: int=0      # wall-clock milliseconds consumed
+      consumed_spend_usd: text=0.00    # egress USD consumed (stored as fixed-point text)
+      consumed_rows: int=0             # rows affected consumed
+      consumed_api_calls: int=0        # HTTP egress operations consumed
+      outcome: text=active             # frame completion state
+      created_at: int!
+      closed_at: int
+    chk:
+      - "outcome IN ('active', 'success', 'exhausted', 'denied', 'error')"
+    idx:
+      - [[session, env]]
+      - [[routine, version]]
+      - [parent_frame]
+
+  secrets:
+    description: "Egress credentials and tokens; memory-decrypted at boot, never visible to agent"
+    sens: true
+    columns:
+      id: pk
+      name: text!~                     # unique write-once credential reference
+      value: text mask=true            # redacted in query results, audit mirror, and traces
+      scope: text=global               # global, provider, or agent scope
+      expires_at: int=0                # epoch seconds; 0 = never
+    idx:
+      - [name]
+      - [[scope, expires_at]]
+
+  agents:
+    description: "Registered harness identities proven via SO_PEERCRED socket validation"
+    sys: true
+    imm_cols: [id, principal]          # kernel upgrades never rewrite agent identity or owner
+    columns:
+      id: text pk                      # kernel-minted id (e.g. agt_7f3k)
+      name: text!                      # human or system label
+      harness: text!                   # claude-code, codex, hermes, custom
+      principal: text!                 # authority holder (user:alice, partner:stripe)
+      status: text=active              # active or revoked
+    chk:
+      - "status IN ('active', 'revoked')"
+    idx:
+      - [principal]
+      - [status]
+
+  claims:
+    description: "Distributed lease-based concurrency locks with mandatory TTL"
+    columns:
+      id: pk
+      target: text!                    # resource lock URI (e.g. orders:ORD-8842)
+      holder: text!                    # agent id holding the lease
+      ttl: int!                        # duration in seconds
+      created_at: int!                 # lease acquisition timestamp
+    idx:
+      - [target]
+      - [[holder, created_at]]
+
+  _pending_asks:
+    description: "Suspended routine questions awaiting structured human or partner resolution"
+    sys: true
+    columns:
+      ask_id: text pk                  # question UUID
+      principal: text!                 # target human or partner identity
+      question: text!                  # prompt text
+      options: json!                   # allowed choice strings array
+      timeout_at: int!                 # unix epoch seconds
+      status: text=pending             # pending, resolved, expired
+      resolution: text                 # selected option
+      created_at: int!
+    chk:
+      - "status IN ('pending', 'resolved', 'expired')"
+    idx:
+      - [[principal, status]]
+
+  _watch_cursors:
+    description: "Stream pagination offsets for inbound webhook and polling listeners"
+    sys: true
+    columns:
+      watch_id: text pk                # binding id
+      provider: text!                  # source provider
+      cursor: text!                    # provider event offset or timestamp
+      last_dispatched_at: int!         # last successful invocation timestamp
+    idx:
+      - [provider]
+
+  _capability_embeddings:
+    description: "Harness-generated semantic vector store for progressive routine discovery"
+    sys: true
+    columns:
+      capability: text pk              # capability identifier
+      version: int!                    # capability version
+      embedding: blob!                 # serialized float array vector
+      updated_at: int!
+    idx:
+      - [[capability, version]]
+
+  routine_stats:
+    description: "Aggregated primitive telemetry and execution metrics driving promotion gates"
+    sys: true
+    columns:
+      capability: text!                # routine or api verb identifier
+      version: int!                    # routine version
+      total_runs: int=0
+      success_runs: int=0
+      p50_duration_ms: int=0
+      p95_duration_ms: int=0
+      last_run_at: int=0
+    idx:
+      - [[capability, version]]

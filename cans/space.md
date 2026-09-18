@@ -1,130 +1,82 @@
 - Space
-<!-- ref-by: action.md, assembly.md, effect.md, interface.md, overview.md, physics.md, recovery.md, time.md, trust.md, world.md -->
   - Environment axis
-    - World roles
-      - dev: birthplace — draft routines live here; experimentation is cheap
-        - Bulk pre-flight relaxed in dev/sim: see physics.md#Bulk-operations
-      - sim: proving ground — seeded from prod (masked); replay real history against the routine
-      - prod: destination — draft writes denied; only reviewed/pinned + merged code runs
-        - Denial is the prod policy overlay, not convention
-      - Trust and env are correlated but independent axes: draft+dev, reviewed+sim, pinned+prod
-      - Correlation is policy convention, not physics: see trust.md#The-ladder
-        # Clarification: prevents misreading as hard coupling
-    - Travel rule
-      - A routine does not just earn trust — it travels dev → sim → prod
-      - Promotion commands carry `--env`; reaching prod = merge + pin sign-off, never a runtime promotion
-      - Environments are git worktrees; each env = worktree with its own `workspace.db`
-      - Schema migrations travel dev → sim → prod via git merge
+    - World definitions
+      - dev world
+        - purpose — birthplace for exploratory authoring
+        - constraints — draft routines execute freely
+        - pre-flight — bulk pre-count checks waived
+      - sim world
+        - purpose — proving ground for production candidate routines
+        - data source — seeded from prod with sensitive data masked
+        - execution — real historical audit inputs replayed against candidates
+      - prod world
+        - purpose — live operational destination
+        - policy — draft writes denied unconditionally by overlay
+        - authority — reviewed or pinned trust required
+    - Alignment conventions
+      - orthogonality — environment bounds data; trust bounds capabilities
+      - default pairs — dev with draft; sim with reviewed; prod with pinned
+      - travel law — routines travel dev → sim → prod via git worktree merges
     - Policy overlays
-      - One policy engine in every world; overlays parameterize it per env
-      - Env overlay swaps `base_url` for sandbox verbs via `apis/<provider>.sim.yaml`
-        - Sim notifications route to `#sim-notifications` through the same overlay
-      - Default sim_mode: sandbox if overlay exists, else dry-run (artifacts/governance.yaml)
-    - World dimensions (artifacts/governance.yaml)
-      - max_worktrees 5: prod + dev + sim + 2 experiments
-      - prod_removal_flags 2: removing prod needs two confirm flags
-      - require_backup_push: see recovery.md#Git-integration
-      - Worlds stay honest — environments are governed like everything else
-    - World proposal
-      - Onboarding drafts the minimal world from user intent in the dev worktree
-      - `capcli rule apply --type schema --dry-run --env dev` previews the plan; no effects applied
-      - Human approves; world tables carry the user's domain language: see interface.md#Onboarding-journeys
+      - mechanism — unified engine parameterized per environment
+      - endpoint overrides — base_url swapped via apis/<provider>.sim.yaml
+      - notification routing — sim messages routed to #sim-notifications
+      - sim defaults — mode resolution: see artifacts/governance.yaml#api
+    - World governance
+      - worktree allocation — max worktrees: see artifacts/governance.yaml#env
+      - prod protection — removal flags: see artifacts/governance.yaml#env
+      - backup mandate — git and object push required on mutation
   - Primitive scoping
     - Event identity
-      - Every primitive is env-scoped by birth: leaf events carry `env` + `stage`
-      - Example: db.exec, env sim, stage test, routine refund_and_archive@17
-      - Same routine, same params → distinguishable event stream per world — everything below builds on this
-      - Denied ops still emit env-stamped events: see effect.md#Audit-spine
-    - Idempotency
-      - Keys are env-scoped: key = f(routine_version, params, env)
-        - Rehearsal can never collide with production — namespaces are world-local
-          - Replaying sim never double-fires a prod provider call
-      - A sim run and a prod run of the same routine get different keys
-      - Keys never span worlds — cross-env reuse is a design error
-    - Primitive contract
-      - Identity: every event carries `env` + `stage`
-      - Idempotency: keys namespaced per env — no cross-world collisions
-      - Rehearsal: identical DAG executes in any world; cost asymmetry is the safety
-      - Fingerprint: per-env primitive profiles; deviations are anomalies
-      - Manifest: static declaration extracted at validate; drift detected at runtime
-      - Replay: history re-executes per env; externals confirmed manually
-      - Forensics: failures localize to leaf ops within their world
-      - Sim mode: each verb declares how it behaves in sim; prove adapts; gaps visible
-    - Env-scoped quota
-      - `_api_quota` rows carry env: sim quota and prod quota are independent
-      - Sim runs draw the sim pool; prod pools stay untouched
-      - Denial lands per world, at that world's own gate
-    - Composition scoping
-      - Sim mode cascades through composition: a prod-only child verb propagates the gap upward
-      - Ship evidence at every level shows what wasn't proven
-      - No depth discount at any stack depth: see action.md#Routines
+      - stamping — leaf events stamped with env and stage
+      - segregation — sim and prod events maintain distinct namespaces
+      - denial logging — rejected operations record world context
+    - Idempotency boundaries
+      - key formulation — key = f(routine_version, params, env)
+      - isolation — sim replay execution cannot collide with prod keys
+      - scope mandate — cross-environment key sharing denied
+    - Quota isolation
+      - accounting — _api_quota tracks usage partitioned by env
+      - independence — sim rehearsals consume sim quota only
+      - gating — exhaustion denies calls at target world gate
+    - Composition propagation
+      - cascade — child verb constraints propagate up call stack
+      - unproven gaps — prod-only children surface in parent ship evidence
   - Rehearsal & sim
-    - Rehearsal flow
-      - `capcli env use sim` — switch to the proving world
-      - `capcli run refund_and_archive -p order_id=ORD-8842` — full primitive DAG executes
-        - Each leaf event stamps env: sim, for later diffing against prod
-      - `capcli sys audit tail --routine refund_and_archive` — inspect every leaf
-      - `capcli env use prod` and run again — now with confidence
-      - Rehearsal = same primitives, different world; the code does not know or care which world it is in
-        - Prove the code in a world that costs nothing
-    - Forked state
-      - db.* primitives execute against sim's forked state: real schema, masked data
-      - sim_seed_masking: enforce — sensitive columns masked on fork, always (artifacts/governance.yaml)
-      - schedule/notify primitives fire in the sim world: notifications land in `#sim-notifications`
-    - Sim honesty
-      - The world is always simulatable; external systems are not — the architecture handles both
-      - Per-verb sim_mode declared in the compiled catalog
-        - sandbox: HTTP fires at the provider test endpoint via overlay
-        - mock: kernel returns canned fixture from `apis/*.mock.yaml` — no HTTP
-        - dry-run: validates params and policy, returns `simulated: true` — no HTTP
-        - skip: excluded from execution; routine proves without the verb
-        - prod-only: excluded AND authorizer denies execution in sim/dev
-          - prod-only must be declared explicitly, never inferred (artifacts/governance.yaml)
-      - No `api simulate` command: sim behavior is declared per-verb, never improvised
-      - Partial match reporting: see time.md#Stage-details
-    - Primitive diff
-      - After a sim run the audit mirror yields per-primitive evidence: 2 api calls, 2 db writes, 3 rows
-        - One GROUP BY over `_audit` WHERE env = 'sim' yields the rehearsed profile per capability
-      - Prod deviation from the rehearsed profile (5 writes instead of 2) is a loud anomaly
-      - Primitives give an execution fingerprint per environment
-    - Cross-env replay
-      - `capcli sys audit replay --from prod --since 7d`: prod's actual primitive streams re-execute in sim
-        - Every leaf op re-runs against forked state with current policy enforced
-        - External primitives marked `replay: manual`, never auto-replayed
-          - A human confirms each external effect before it re-fires
-      - db.* replay is deterministic; externals are the manual exception
-      - History as test data: a version is validated against what really happened; mirror shows divergence
+    - Rehearsal workflow
+      - environment selection — capcli env use sim
+      - simulation run — capcli run <capability> -p k=v
+      - inspection — capcli sys audit tail --routine <capability>
+      - production switch — capcli env use prod
+    - Data masking
+      - fork rule — sim_seed_masking: enforce (artifacts/governance.yaml)
+      - redaction — sensitive columns masked on database fork
+    - Sim mode taxonomy
+      - sandbox — HTTP routes to provider test endpoint via overlay
+      - mock — kernel returns canned fixture from apis/*.mock.yaml
+      - dry-run — parameter and policy check returning simulated: true
+      - skip — excluded from execution; omitted from fingerprint
+      - prod-only — execution denied inside sim and dev by authorizer
+    - Historical replay
+      - command — capcli sys audit replay --from prod --since 7d
+      - database ops — deterministic re-execution against forked state
+      - external ops — manual human confirmation required for HTTP re-fire
   - Drift
-    - Manifest vs fingerprint
-      - Kernel compares the executing fingerprint against the declared manifest at runtime
-      - Match: routine behaves as declared
-      - Divergence: first-time conditional branch or undeclared op attempted → `governance.anomaly` logged
-      - New leaf op added between versions is automatically cited during promote review
-      - Actual behavior is diffable against declared behavior, per version
-    - Env drift
-      - `env doctor` flags routines running in prod without merge — drift made loud
-      - `env inspect` surfaces per-world state: schema drift vs prod, unmerged routines, staleness
-        - Drift (fatal, exit 3): runtime manifest drift, cross-worktree schema drift
-        - Staleness (warning, re-seed nag): stale sim data (stale_sim_after_days)
-          # FIX #6: "drift" reserved for fatal divergence; staleness is a separate concept
-      - stale_sim_after_days 14: sim data too old vs prod → re-seed nag (artifacts/governance.yaml)
-      - `sys doctor` checks boundaries, perms, drift
-    - Anti-decisions
-      - No silent manifest drift: see action.md#Capability-registry
-      - No pretending external systems are simulatable: verbs without sandboxes declare sim_mode
-      - No cross-env key reuse: idempotency namespaces are world-local
+    - Manifest drift
+      - runtime comparison — dynamic fingerprint diffed against manifest
+      - anomaly event — divergence triggers governance.anomaly audit event
+      - review impact — undeclared primitives block auto-promotion
+    - Environment drift
+      - detection — env doctor checks unmerged production routines
+      - inspection — env inspect flags schema drift and data staleness
+      - staleness threshold — sim re-seed nag: see artifacts/governance.yaml#maintenance
   - env command
-    - World lifecycle
-      - `capcli env new <name> [--seed prod] [--from-branch X]` creates a world
-      - `env new sim --seed prod` → snapshot + auto-mask sensitive columns
-      - capcli env remove <name>` — prod removal multi-flag …: see interface.md#CLI-surface
-        - Prod removal demands `--confirm-backup` plus `--confirm-prod`
-    - World ops
-      - `capcli env use <name>` — atomic switch
-      - env <name>` flag for cross-world ops; explicit targe…: see interface.md#CLI-surface
-      - capcli env list | inspect | doctor` — worlds, drift,…: see interface.md#CLI-surface
-      - `[env]` output prefix, prod rendered red: see interface.md#CLI-surface
-    - Merge path
-      - capcli env merge <name> --into prod` — promotion tra…: see trust.md#Gates-&-promotion
-      - Prod promotion merge requirement: see trust.md#Gates-&-promotion
-      - `env doctor` + `env merge` keep promotion explicit and drift loud
+    - Management commands
+      - provisioning — env new <name> [--seed prod] [--from-branch <b>]
+      - activation — env use <name>
+      - audit — env list, env inspect, env doctor
+      - merge — env merge <name> --into prod
+      - deletion — env remove <name>
+    - Safety controls
+      - prod removal flags — --confirm-backup and --confirm-prod mandatory
+      - merge gate — prod promotion demands explicit git worktree merge

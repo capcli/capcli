@@ -1,0 +1,160 @@
+
+example only
+
+version: 12                            # quad-lock: matches policy.yaml & governance.yaml
+engine: sqlite                         # SQLite SSOT substrate
+db: workspace.db                       # managed runtime database
+
+# ───────────────────────────────────────────────────────────────
+# 1. DOMAIN TABLES
+# ───────────────────────────────────────────────────────────────
+tables:
+  customers:
+    description: "Core customer identity, contact info, and sensitivity bounds"
+    prov: true                         # provenance: auto created_by/modified_by
+    sens: true                         # sensitive: masked on simulation fork
+    imm_cols: [email]                  # authorizer denies UPDATE on email column
+    columns:
+      id: pk                           # autoincrement integer primary key
+      email: text!                     # unique, required text
+      phone: text~                     # write-once immutable text
+      tier: text=standard              # default value assignment
+    rel:
+      orders: "orders.customer_id"     # semantic traversal edge for search index
+    seed:                              # initial rows applied inside DDL transaction
+      - { email: "alice@acme.corp", phone: "+15550199", tier: "enterprise" }
+      - { email: "bob@retail.org", phone: "+15550244", tier: "standard" }
+
+  inventory:
+    description: "Physical stock tracking with immutable SKUs and non-negative bounds"
+    columns:
+      id: pk
+      sku: text!~                      # unique AND immutable in one declaration
+      stock: int=0
+      reorder_point: int=10
+    chk:                               # physical SQLite CHECK constraints
+      - "stock >= 0"
+      - "reorder_point >= 0"
+    rel:
+      items: "order_items.sku"
+    seed:
+      - { sku: "WIDGET-01", stock: 120, reorder_point: 25 }
+      - { sku: "GADGET-99", stock: 14, reorder_point: 10 }
+
+  orders:
+    description: "Transactional order root with discount integrity trigger"
+    prov: true
+    columns:
+      id: pk
+      ref: text!                       # unique tracking reference (ORD-XXXX)
+      customer_id: int ref=customers.id  # inline foreign key constraint
+      total_cents: int=0
+      discount_cents: int=0
+      status: text=pending
+    idx:
+      - [ref]                          # single column index
+      - [[customer_id, status]]        # composite performance index
+    chk:
+      - "discount_cents <= total_cents"
+      - "status IN ('pending', 'processing', 'completed', 'cancelled')"
+    trig:                              # kernel-compiled policy-exempt trigger
+      validate_total:
+        timing: BEFORE INSERT
+        body: |
+          WHEN NEW.discount_cents > NEW.total_cents
+          BEGIN
+            SELECT RAISE(ABORT, 'total mismatch');
+          END;
+    rel:
+      items: "order_items.order_id"
+      customer: "customers.id"
+    seed:
+      - { ref: "ORD-001", customer_id: 1, total_cents: 4200, discount_cents: 0, status: "pending" }
+      - { ref: "ORD-002", customer_id: 2, total_cents: 1800, discount_cents: 200, status: "completed" }
+
+  order_items:
+    description: "Immutable line items appended to finalized orders"
+    imm_rows: true                     # authorizer denies physical UPDATE & DELETE
+    columns:
+      id: pk
+      order_id: int ref=orders.id
+      sku: text ref=inventory.sku
+      quantity: int=1
+      price_cents: int!
+    chk:
+      - "quantity > 0"
+      - "price_cents >= 0"
+
+  payments:
+    description: "Financial ledger with PII redaction and payload masking"
+    columns:
+      id: pk
+      order_id: int ref=orders.id
+      amount_cents: int!
+      raw_response: json mask=true     # redacted from results, trace, and audit mirror
+      status: text=pending
+    chk:
+      - "status IN ('pending', 'completed', 'failed', 'refunded')"
+      - "amount_cents > 0"
+    idx:
+      - [[order_id, status]]
+
+  subscriptions:
+    description: "Recurring engagement records with multi-column status indexing"
+    columns:
+      id: pk
+      customer_id: int ref=customers.id
+      interval: text=monthly
+      active: int=1
+    idx:
+      - [[customer_id, active]]        # multi-column compound index
+    chk:
+      - "interval IN ('monthly', 'yearly')"
+      - "active IN (0, 1)"
+
+# ───────────────────────────────────────────────────────────────
+# 2. READ VIEWS
+# ───────────────────────────────────────────────────────────────
+views:
+  pending_orders:
+    description: "Global queue of unsettled orders requiring fulfillment"
+    exposes: [orders, customers]       # Gate 2 compile-checks targets
+    query: |
+      SELECT 
+        o.id,
+        o.ref,
+        c.email,
+        o.total_cents,
+        o.status
+      FROM orders o
+      JOIN customers c ON o.customer_id = c.id
+      WHERE o.status = 'pending';
+
+  my_orders:
+    description: "Orders scoped to execution principal passed via --as"
+    scoped: principal                  # authorizer enforces --as; binds :principal
+    exposes: [orders]
+    query: |
+      SELECT 
+        o.id,
+        o.ref,
+        o.total_cents,
+        o.status
+      FROM orders o
+      WHERE o.customer_id = :principal;
+
+  customer_lifetime_value:
+    description: "Aggregated revenue per customer scoped to principal"
+    scoped: principal
+    exposes: [orders, payments, customers]
+    query: |
+      SELECT 
+        c.id,
+        c.email,
+        SUM(p.amount_cents) AS lifetime_cents
+      FROM customers c
+      JOIN orders o ON o.customer_id = c.id
+      JOIN payments p ON p.order_id = o.id
+      WHERE c.id = :principal 
+        AND p.status = 'completed'
+      GROUP BY c.id;
