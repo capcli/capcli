@@ -90,16 +90,16 @@
         - return value — summary-sized dict
     - Sandbox execution
       - Jail architecture
-        - process model — jailed subprocess
-        - network — unshared namespace, socket creation denied
+        - process model — jailed subprocess or unconfined process
+        - network — unshared namespace or host loopback
         - filesystem — workspace mounted read-only, tmpfs /scratch wiped at exit
         - syscalls — seccomp-bpf filter derived from AST deny-list
-      - Isolation tiers
-        - linux default — bwrap --unshare-net
-        - portable tier — podman --network none
-        - multi-tenant — gVisor or Firecracker
+      - Provider backends
+        - linux default — bwrap with network isolation
+        - container engine — podman or docker rootless container
+        - disposable host — process mode without OS namespace isolation
       - Jail defenses
-        - socket restriction — kernel socket is sole door
+        - socket restriction — kernel socket is sole door in isolated modes
         - process hierarchy — fork and exec blocked
         - path restriction — writes outside scratch blocked at syscall
       - Execution limits
@@ -164,6 +164,10 @@
       - External api methods
         - ctx.api.call(verb, params, intent) — governed HTTP egress
         - ctx.api.verify(verb, key) — key validation check
+        - Blob storage methods
+          - ctx.storage.put(name, data, mime) — uploads blob and returns metadata
+          - ctx.storage.get(key) — retrieves stream and verified sha256
+          - ctx.storage.url(key, ttl) — mints signed temporary access url
       - Hand triggers
         - ctx.bind.cron — time declaration
         - ctx.bind.webhook — async event subscription

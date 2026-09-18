@@ -5,6 +5,10 @@
         - ownership
           - process — capcli daemon-owned
           - permissions — chmod 600
+          - engine substrate
+            - sqlite local — standalone local embedded database
+            - libsql replica — embedded replica with Turso cloud sync
+            - remote refusal — pure HTTP databases without C authorizer denied
         - tracking
           - git status — ignored via .gitignore
           - persistence — local to active worktree
@@ -100,6 +104,7 @@
         - defaults — text=val expands to text default 'val'
         - immutability — int~ expands to integer immutable write-once
         - foreign relations — int ref=table.col expands to foreign key
+          - blob reference — blob ref=storage expands to object metadata json
         - redaction — mask=true marks column for audit and result masking
       - table shorthands
         - provenance

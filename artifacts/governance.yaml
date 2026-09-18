@@ -36,6 +36,10 @@ routine_shape:
     max_txn_statements: 10            # one transaction stays one thought
     # FIX #29: session-level ops ceiling was referenced but never defined
     session_ops_ceiling: 500          # session-level hard cap; frames cascade within this
+    sandbox:
+      provider: bwrap                 # bwrap | podman | process
+      scratch_mb: 64                  # tmpfs ceiling
+      allow_unconfined: false         # true permits provider=process in dev/sim
     composition:
       budget_inheritance: min          # child effective = min(declared, parent_remaining)
       ops_cascade: true                # child ops consume from parent's pool
@@ -96,6 +100,14 @@ schedule:
   min_interval_minutes: 5             # no sub-5-minute cron (use watch)
   max_catchup_fires: 1                # daemon restart ≠ fire the missed 40
   dead_schedule_disable: true         # bound routine retired → auto-disable loudly
+
+# ───────────────────────────────────────────────────────────────
+# 5.5 STORAGE — blob storage bounds
+# ───────────────────────────────────────────────────────────────
+storage:
+  provider: local                      # local | s3 | r2
+  max_upload_bytes: 10485760           # 10MB per object ceiling
+  allowed_mime: ["application/pdf", "image/*", "text/*", "application/json"]
 
 # ───────────────────────────────────────────────────────────────
 # 5.5 API — the catalog has dimensions

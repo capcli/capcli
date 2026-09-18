@@ -39,6 +39,7 @@
       - missing configuration — policy.yaml or governance.yaml absent
       - quad-lock mismatch — version misalignment triggers refusal
       - schema integrity — system_schema hash mismatch aborts boot
+      - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
       - sql errors — unparseable SQL or authorizer errors fail closed
       - ambiguity — unclassified read/write treated as write

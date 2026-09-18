@@ -2,7 +2,8 @@
 example only
 
 version: 12                            # quad-lock: matches policy.yaml & governance.yaml
-engine: sqlite                         # SQLite SSOT substrate
+engine: sqlite                         # sqlite | libsql (embedded C authorizer mandatory)
+# sync_url: "libsql://db.turso.io"     # optional embedded replica sync for libsql
 db: workspace.db                       # managed runtime database
 
 # ───────────────────────────────────────────────────────────────
@@ -51,6 +52,7 @@ tables:
       total_cents: int=0
       discount_cents: int=0
       status: text=pending
+      receipt: blob ref=storage        # s3 or local blob metadata reference
     idx:
       - [ref]                          # single column index
       - [[customer_id, status]]        # composite performance index
