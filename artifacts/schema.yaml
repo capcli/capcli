@@ -1,7 +1,7 @@
 
 example only
 
-version: 12                            # quad-lock: matches policy.yaml & governance.yaml
+version: 12                            # compiled into capcli.lock root hash
 engine: sqlite                         # sqlite | libsql (embedded C authorizer mandatory)
 # sync_url: "libsql://db.turso.io"     # optional embedded replica sync for libsql
 db: workspace.db                       # managed runtime database

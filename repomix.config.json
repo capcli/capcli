@@ -35,6 +35,8 @@
     "customPatterns": [
 	".git/",
 	"repomix.md",
+	"cans/_adr",
+	"cans/_collab"
 		]
   },
   "security": {

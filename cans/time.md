@@ -9,7 +9,7 @@
       - subtraction — sweep, rollback, or retire
     - Enforcement gates
       - register — namespace and creation rate validation
-      - draft — shape and AST manifest extraction
+      - draft — shape and declared manifest registration
       - runtime — ops, timeout, and drift verification
       - monitor — dead and failing threshold detection
       - sweep — deduplication and consolidation proposals
@@ -22,13 +22,13 @@
       - scaffolding — capcli routine draft <name>
       - authoring — direct filesystem writes in routines/
       - near-duplicate scan
-        - similarity calculation — AST comparison at birth
+        - similarity calculation — code-text similarity comparison at birth
         - threshold nag — similarity warning: see artifacts/governance.yaml#maintenance
         - override — bypass requires justification in --reason
     - prove stage
       - command — capcli routine prove <name> [-p k=v] [--env sim]
       - verification checks
-        - ast rules — subprocess, os, and raw socket bans
+        - sandbox rules — subprocess, os, and raw socket access trapped by jail
         - parameter typing — Param schemas validated
         - policy reachability — table and egress permissions verified
         - shape limits — token and LOC limits: see artifacts/governance.yaml#routine_shape
@@ -40,19 +40,10 @@
       - data inputs — test parameters sampled via capcli sys audit sample
     - ship stage
       - command — capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."
-      - authority flow — evidence flows up, authority grants down
+      - authority model — see overview.md#Human-authority
       - metric prerequisites — success rates queried from routine_stats
       - production promotion — automated upon passing synthetic fuzz and replay suite
-    - auto-promotion (draft to reviewed)
-      - scope — low-risk routines matching strict criteria
-      - prerequisites
-        - sim runs — threshold: see trust.md#Gates-&-promotion
-        - success rate — threshold: see trust.md#Gates-&-promotion
-        - manifest match — perfect 1.0 match required (zero skips)
-        - policy denials — exactly zero permitted
-        - drift events — exactly zero permitted
-      - audit trail — emits routine.auto_promoted event
-      - veto — human can demote via capcli routine rollback <name> --to-trust draft
+    - auto-promotion path — qualifying low-risk routines: see trust.md#Gates-&-promotion
     - promotion queue
       - queue enqueue — capcli routine ship <name> --to reviewed --queue
       - queue inspection — capcli routine pending

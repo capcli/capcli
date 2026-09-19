@@ -9,9 +9,10 @@
         - test runs — bun run --filter '*' test
         - native compile — napi build --release in packages/native
     - Directory structure
-      - packages/ — all source packages (types, kernel, sdk, pwa, native)
+      - artifacts/ — repository-level declarative blueprints and governance defaults
+      - packages/ — all source packages (types, kernel, client, pwa, native)
       - workspace/ — instance workspace containing git-tracked and gitignored files
-        - git-tracked — world.sql, audit/, schema.yaml, system-schema.yaml, policies
+        - git-tracked — world.sql, audit/, schema.yaml, system-schema.yaml (scaffolded from artifacts/)
         - gitignored — live SQLite workspace.db
     - Sealing laws
       - package seal — domain boundaries seal the package; cross-package leaks denied
@@ -56,15 +57,15 @@
         - env — git worktree world switching and drift checks
         - sys — audit streaming, replay, agent registry, doctor
         - run — capability execution and registry resolution
-        - identity — SO_PEERCRED socket validation and skill propagation
-    - @capcli/sdk
-      - role — thin programmatic wrapper around kernel interface
-      - exports — createKernel({ workspace, brand })
-      - contracts — programmatic parity with CLI exit codes and JSON outputs
+        - identity — OS process UID validation and skill propagation
+    - @capcli/client
+      - role — lightweight browser-safe JSON-RPC 2.0 client over HTTP/WS
+      - imports — @capcli/types only; zero native or node runtime dependencies
+      - exports — createClient({ endpoint, token })
     - @capcli/pwa
       - role — client browser for governed workspace state
       - structure — ten feature folders mirroring governance layers
-      - execution — calls SDK methods; zero direct database writes
+      - execution — calls @capcli/client methods; zero direct database writes
     - @capcli/native
       - role — Rust napi-rs bridge (capcli_db)
       - engine — bundled rusqlite
@@ -82,12 +83,13 @@
       - cleanup — temp workspaces destroyed at test teardown
   - Build & dependencies
     - Build outputs
-      - kernel — dist/cli.js (Bun standalone executable)
-      - sdk — dist/index.js with TypeScript definitions
+      - kernel — dist/cli.js (Bun standalone CLI executable)
+      - client — dist/index.js (browser-safe ESM bundle)
       - pwa — dist/ static Vite SPA bundle
       - native — capcli_db.node binary
     - Dependency graph
-      - flow — @capcli/types ← @capcli/kernel ← @capcli/sdk ← @capcli/pwa
+      - kernel flow — @capcli/types ← @capcli/kernel
+      - client flow — @capcli/types ← @capcli/client ← @capcli/pwa
       - constraints — unidirectional flow; circular references prohibited
     - Core runtime dependencies
       - kernel deps — node-sql-parser, yaml, valibot, citty

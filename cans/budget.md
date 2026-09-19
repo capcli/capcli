@@ -42,7 +42,6 @@
   - Cascade
     - min() law
       - Child effective limit = min(declared need, governance ceiling, override, parent_remaining, session_ceiling)
-        # FIX #4: session ceiling added to min() chain; hard ops cap applies per-frame, session cap applies per-session
       - Governance ceiling comes from routine_shape.execution limits (artifacts/governance.yaml)
       - Override values enter through approved override commits: see trust.md#Overrides
       - The kernel enforces the tightest constraint at every frame — the cage tightens, never widens
@@ -50,12 +49,10 @@
         - Session-level counters never reset through composition
         - 100-op routine split into 10x10 sub-routines still hits the session ops ceiling
         - Session ops ceiling: see artifacts/governance.yaml#routine_shape.execution.session_ops_ceiling
-          # FIX #29: session ceiling was referenced but never defined; now points to governance
     - Dimensions
       - Ops
         - Unit: primitive executions per frame
         - Scope: per-frame (max_ops_per_run) plus session (session_ops_ceiling)
-          # FIX #4: clarified that ops have both a per-frame hard cap and a session-level ceiling
         - Cascade: child consumes from the parent's pool
       - Duration
         - Unit: wall-clock milliseconds
@@ -93,7 +90,7 @@
   - Quotas
     - Proactive rate limiting
       - Local bucket — token-bucket algorithm runs in kernel before egress
-      - Gate decision — zero tokens available throws exit 2 before socket open
+      - Gate decision — zero tokens available throws exit 2 before network dispatch
       - Header calibration — provider headers calibrate local drift downward
       - Double-spend prevention — external 429s treated as bucket misconfiguration
       - Storage
@@ -108,7 +105,6 @@
       - Fallback: providers without standard headers get kernel-counted sliding windows
     - Governance caps
       - All governance caps (registry, schedule, watch, serve, surface): see artifacts/governance.yaml
-        # FIX #28: removed entire duplicated governance section
     - Output caps
       - Routine results
         - max_result_tokens 500 — summaries crossing to the model truncate

@@ -6,7 +6,7 @@
 # Two enforcement layers: authorizer (C-level floor) + AST (semantic ceiling)
 # ═══════════════════════════════════════════════════════════════
 version: 5
-lockfile: capcli.lock                 # compiled root hash: replaces quad-lock integers
+lockfile: capcli.lock                 # compiled root hash SSOT
 default: deny                         # THE anchor. everything below carves exceptions
 
 # ───────────────────────────────────────────────────────────────
@@ -15,41 +15,47 @@ default: deny                         # THE anchor. everything below carves exce
 # ───────────────────────────────────────────────────────────────
 authorizer:
   tables:
-    # FIX #9: agent-authored tables get authorizer entries at rule apply
-    # Kernel auto-generates from schema.yaml; examples below are system tables only
-    entities:
-      allow: [read, insert, update, delete]
-      deny_columns_write: [id, created_at, created_by, modified_by]  # system & immutable
-      require_where: [update, delete]          # mirrored at AST layer, defense twice
-    edges:
-      allow: [read, insert]                    # immutable rows by construction
+    # System tables (11 kernel-managed surfaces)
+    _audit:
+      allow: [read]
+    _api_quota:
+      allow: [read]
+    _api_catalog:
+      allow: [read]
+    _budget_frames:
+      allow: [read]
     secrets:
       allow: [read]
-      mask_columns: [value]                    # redacted in results, audit, explain
-      deny_for_trust: [draft]                  # unproven code never reads secrets
+      mask_columns: [value]
+      deny_for_trust: [draft]
     agents:
-      allow: [read]                            # identity managed by kernel commands only
+      allow: [read]
     claims:
-      allow: [read, insert, delete]            # lease lifecycle via db lock only
-    _audit:
-      allow: [read]                            # mirror is world-state, read-only grant
-    _system_schema:
-      allow: [read]                            # agent reads system-schema.yaml definitions
-      deny: [insert, update, delete]           # never agent-writable
+      allow: [read, insert, delete]
     _pending_asks:
-      allow: [read]                            # kernel writes; agents observe
+      allow: [read]
+    _watch_cursors:
+      allow: [read]
+    _capability_embeddings:
+      allow: [read]
+    routine_stats:
+      allow: [read]
+    _system_schema:
+      allow: [read]
+      deny: [insert, update, delete]
 
   views:
-    active_orders:
+    pending_orders:
       allow: [read]
-      exposes: [entities]                      # compile-checked: view may touch only these
-    orders_by_status:
-      allow: [read]
-      exposes: [entities]
+      exposes: [orders, customers]
     my_orders:
       allow: [read]
-      exposes: [entities]
-      scoped: principal                        # refuses to run without --as; kernel binds :principal
+      exposes: [orders]
+      scoped: principal
+    customer_lifetime_value:
+      allow: [read]
+      exposes: [orders, payments, customers]
+      scoped: principal
 
   global:
     attach: deny                               # no side-databases, ever
@@ -61,7 +67,7 @@ authorizer:
     functions:
       allow: [count, sum, min, max, avg, json_extract, date, strftime]
       deny: [load_extension, writefile, readfile, fts3_tokenizer]
-    triggers: deny_agent              # FIX #20: agent-created triggers denied
+    triggers: deny_agent
     # kernel-compiled triggers from schema.yaml trig: are exempt
     # authorizer checks caller: kernel schema-apply bypasses, agent SQL does not
 
@@ -100,7 +106,7 @@ query:
     confirm_above: { rows: 50000 }             # raised: human gate only on massive blast radius
 
   system_tables:
-    deny_write: [_audit, agents, claims, _pending_asks, _watch_cursors]  # FIX #9: claims was missing
+    deny_write: [_audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats, _system_schema]
     deny_read: []                              # reads allowed; writes are kernel-internal
 
 # ───────────────────────────────────────────────────────────────
@@ -132,9 +138,6 @@ rate:
 # ───────────────────────────────────────────────────────────────
 # 4.5 BUDGET — behavior on exhaustion (structure lives in governance)
 # ───────────────────────────────────────────────────────────────
-# FIX #19: Budget cascade mechanics removed from policy.yaml
-# Cascade structure (inheritance, scopes, nesting) lives in governance.yaml routine_shape.composition
-# Policy only gates the BEHAVIOR when budget is exhausted:
 budget:
   overage_behavior: deny               # behavior: what happens at exhaustion
   partial_result_on_exhaustion: false  # behavior: no half-execution
@@ -249,7 +252,7 @@ notify:
 # 7. IDENTITY — who may act, and how they're proven
 # ───────────────────────────────────────────────────────────────
 identity:
-  socket_bound: true                           # SO_PEERCRED; --by validated, not trusted
+  process_bound: true                          # OS process UID; --by validated against caller context
   self_declaration: deny                       # ids are kernel-issued, never claimed
   scoped_requires_principal: true              # scoped views/asks refuse without --as
   revoked_agent: deny_all                      # instant, no grace period
@@ -318,7 +321,7 @@ audit:
     - sim_mode                               # sandbox | mock | dry-run | skip | prod-only | real
     - fixture_used                           # true if mock fixture served
     - http_called                            # false for dry-run and mock
-    - triggered_by_skill              # FIX: skill_origin audit field was declared but not in log list
+    - triggered_by_skill
   redact:
     columns: [secrets.value]
     params_matching: ["*token*", "*password*", "*secret*"]

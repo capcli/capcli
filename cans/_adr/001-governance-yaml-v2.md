@@ -33,7 +33,6 @@
   - Enforcement map carries forward unchanged
     - registry → capcli routine draft
       - Registry caps: see artifacts/governance.yaml#registry
-        # FIX #1 redundancy: ADR should cite, not duplicate
     - routine_shape → routine draft (static) + routine prove (runtime)
       - Shape and runtime caps: see artifacts/governance.yaml#routine_shape
     - overrides → capcli rule apply (compile-time merge)

@@ -1,14 +1,14 @@
 - Effect
   - Audit spine
-    - Ground truth stores
-      - audit/*.jsonl
-        - format — daily append-only files
-        - tracking — committed to git version control
-        - replay role — fold(events[0..t]) reconstructs state at time t
-      - _audit mirror
+    - Storage hierarchy
+      - _audit table (SSOT)
+        - role — primary transactional source of truth for all events
         - location — live system table in workspace.db
-        - access — queryable via SQL; writes restricted to kernel
-        - freshness SLA — see artifacts/governance.yaml#maintenance
+        - access — queryable via SQL; writes restricted to kernel engine
+      - audit/*.jsonl (export mirror)
+        - role — secondary read-only export view streamed from _audit table
+        - persistence — flushed to disk and git for offline diffing and cold recovery
+        - format — daily append-only files
     - Event anatomy
       - identity — event, ts, env, stage
       - actor — agent, session, principal

@@ -7,11 +7,11 @@
     - Core abstractions
       - world — SQLite workspace.db holding state and system tables
       - physics — two-layer compile-time and runtime policy enforcement
-      - memory — append-only JSONL audit stream preserving experience
+      - memory — append-only SQLite _audit table mirrored to JSONL
     - Harness consumers
       - agent harness — autonomous reasoning via CLI and machine contract
       - human harness — oversight, authorization, and recovery via PWA
-      - client boundary — PWA consumes @capcli/sdk as external client
+      - client boundary — PWA consumes @capcli/client over HTTP/WS
   - Core philosophy
     - Zero trust agent
       - premise — agent intentions are never inherently trusted
@@ -30,9 +30,9 @@
       - compilation — compiled together at startup; runtime mutation denied
   - Mental model
     - Storage trinity
-      - state — SQLite workspace.db managed by kernel daemon
+      - state — SQLite workspace.db managed by kernel CLI engine
       - procedure — Python routines and OpenAPI catalog definitions
-      - experience — JSONL audit logs chained cryptographically
+      - experience — SQLite _audit table mirrored to git-tracked JSONL
     - Language law
       - YAML — static declarative configuration and schema definitions
       - Python — procedural control flow, composition, and error branching

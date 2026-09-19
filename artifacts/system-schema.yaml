@@ -1,4 +1,4 @@
-version: 3                             # quad-lock: matches policy.yaml & governance.yaml
+version: 3                             # compiled into capcli.lock root hash
 engine: sqlite                         # SQLite SSOT substrate
 db: workspace.db                       # managed runtime database
 readonly_for_agent: true               # kernel-upgrades only; agent write throws exit 2
@@ -29,6 +29,7 @@ tables:
       rows_affected: int=0             # rows modified by this operation
       result_hash: text                # sha256 of execution result
       duration_ms: int=0               # execution wall-clock time
+      triggered_by_skill: text         # harness skill provenance
       prev_hash: text!                 # sha256 link to prior log line for tamper-evidence
     idx:
       - [[event, ts]]
@@ -52,7 +53,7 @@ tables:
       last_op: text                    # last verb to touch this quota
       last_updated: int!               # timestamp of last header extraction
     chk:
-      - "remaining >= -1"
+      - "last_provider_remaining >= -1"
     idx:
       - [[provider, env]]
       - [[provider, scope_key, env]]
@@ -132,7 +133,7 @@ tables:
       - [[scope, expires_at]]
 
   agents:
-    description: "Registered harness identities proven via SO_PEERCRED socket validation"
+    description: "Registered harness identities proven via OS process execution credentials"
     sys: true
     imm_cols: [id, principal]          # kernel upgrades never rewrite agent identity or owner
     columns:

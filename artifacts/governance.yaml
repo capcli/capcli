@@ -33,7 +33,6 @@ routine_shape:
     max_duration_seconds: 300         # sandbox watchdog kill
     max_result_tokens: 500            # summary cap crossing to the model
     max_txn_statements: 10            # one transaction stays one thought
-    # FIX #29: session-level ops ceiling was referenced but never defined
     session_ops_ceiling: 500          # session-level hard cap; frames cascade within this
     sandbox:
       provider: bwrap                 # bwrap | podman | process
@@ -49,7 +48,6 @@ routine_shape:
       result_tokens_scope: routine     # each routine caps its own output independently
       max_nesting_depth: 5             # composition depth hygiene
       budget_exhaustion: deny          # exhausted budget = exit 2, never silent truncation
-      # FIX #19: cascade STRUCTURE lives here (moved from policy.yaml)
       cascade: true
       session_scoped: [spend_usd, writes_per_minute, capability_calls_per_minute, rows_affected]
       routine_scoped_cascade: [ops, duration_ms]
@@ -206,7 +204,7 @@ backup:
   push: true
   include_audit: true
   trigger_on: [promote, migrate, import, register, restore, serve.add]
-  git_max_age_days: 90              # FIX #15: was phantom — referenced in recovery.md but never defined
+  git_max_age_days: 90
 
 # ───────────────────────────────────────────────────────────────
 # 11. DENIAL UX — limits teach, not just block

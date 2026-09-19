@@ -83,19 +83,9 @@
       - bulk minimum — trust >= reviewed: see artifacts/policy.yaml#query
       - human threshold — writes exceeding row caps require confirmation
   - Search ceiling
-    - Split responsibilities
-      - kernel search — deterministic exact, prefix, and structured filters
-      - harness search — semantic rankings via embeddings in _capability_embeddings
-    - Resolution stages
-      - Stage 1 — exact id match (kernel)
-      - Stage 2 — prefix string match (kernel)
-      - Stage 3 — structured filter Pruning (kernel)
-      - Stage 4 — fuzzy distance match (kernel)
-      - Stage 5 — semantic embedding rank (harness)
-      - Stage 6 — did-you-mean fallback (harness)
-    - Scale handling
-      - saturation point — registry cap: see artifacts/governance.yaml#registry
-      - mitigation — filters prune candidates prior to semantic ranking
+    - Execution split — kernel filters deterministically; harness ranks semantically
+    - Stage cascade — exact, prefix, fuzzy, and embedding stages: see action.md#Search-surface
+    - Saturation boundary — registry ceilings enforce hard stop: see artifacts/governance.yaml#registry
   - Harness boundaries
     - Skills (SKILL.md)
       - separation — skills exist in harness; routines exist in capcli
@@ -104,7 +94,7 @@
       - provenance — skill name captured in triggered_by_skill audit field
     - Boundary isolation
       - perimeter layers
-        - credentials isolation — tokens injected at socket egress
+        - credentials isolation — tokens injected by kernel at egress boundary
         - egress allowlist — outbound calls restricted to apis/ catalog
         - network jail — unshared network namespace for routines
         - virtualization — gVisor or Firecracker for multi-tenant tiers

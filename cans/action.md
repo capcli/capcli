@@ -93,13 +93,13 @@
         - process model — jailed subprocess or unconfined process
         - network — unshared namespace or host loopback
         - filesystem — workspace mounted read-only, tmpfs /scratch wiped at exit
-        - syscalls — seccomp-bpf filter derived from AST deny-list
+        - syscalls — default-deny seccomp-bpf filter blocking raw network and spawn
       - Provider backends
         - linux default — bwrap with network isolation
         - container engine — podman or docker rootless container
         - disposable host — process mode without OS namespace isolation
       - Jail defenses
-        - socket restriction — kernel socket is sole door in isolated modes
+        - IPC restriction — CLI process boundary is sole door in isolated modes
         - process hierarchy — fork and exec blocked
         - path restriction — writes outside scratch blocked at syscall
       - Execution limits
@@ -149,7 +149,7 @@
         - no immortal routines — mandatory decay and consolidation
         - no deletion — retirement keeps provenance graph
       - Invariants
-        - pre-execution validation via AST and policy
+        - pre-execution validation via policy gates and sandbox containment
         - sandbox isolation during execution
         - leaf effects pass kernel gate
         - versions hash-pinned
@@ -180,14 +180,13 @@
         - ctx.params — validated input mapping
     - Execution guards
       - API call boundaries
-        - socket routing — egress routed through kernel daemon
+        - kernel mediation — egress executed exclusively through kernel binary
         - secret injection — boundary insertion from vault: see agent.md#Secrets
-        - pre-call quota — deny before socket write: see budget.md#Quotas
+        - pre-call quota — deny before network dispatch: see budget.md#Quotas
         - idempotency — kernel-minted key persisted before egress
-      - Code injection rules
-        - module bans — requests, urllib, os, sqlite3 blocked at draft AST
-        - interface definition — Param typing enforces validation
-        - guard execution order — AST lint → Param check → shape governance
+      - Sandbox boundaries
+        - runtime isolation — unshared network namespace blocks urllib, requests, and sockets
+        - interface definition — Param typing enforces input validation
     - Data protection
       - Context confinement — raw records stay inside sandbox
       - Egress truncation — token cap: see artifacts/governance.yaml#routine_shape
@@ -200,7 +199,7 @@
       - Schema boundary — see world.md#Dual-schema
   - Manifests & fingerprints
     - Declared manifest (static)
-      - Extraction — AST scan at routine draft
+      - Extraction — declared explicitly in @routine decorator manifest argument
       - Manifest contents
         - call sequence — provider.verb, db targets with access mode
         - txn wrappers — ordered list of nested execution leaves
@@ -224,7 +223,7 @@
     - Boundary characteristics
       - Authorizer separation — authorizer protects SQLite; egress proxy protects HTTP
       - Irreversibility — HTTP writes lack rollback and transactions
-      - Pre-call policy — checks enforced before egress leaves socket
+      - Pre-call policy — checks enforced before egress leaves kernel
       - Idempotency mandate — non-idempotent retries denied
     - Catalog synchronization
       - Sync trigger — capcli api sync <provider> --from <url> --interval <cadence>
@@ -256,11 +255,8 @@
         - approval cap — human gate: see artifacts/governance.yaml#api.prod_first_calls
         - graduation — fourth call enters normal governance
     - Live quota tracking
-      - Header extraction — X-RateLimit-Remaining, Retry-After read by kernel
-      - Quota table — _api_quota updated on every HTTP response
-      - Pre-call check — remaining <= deny_at_remaining throws exit 2
-      - Environment scope — sim and prod quotas tracked independently
-      - Fallback mechanism — sliding window counter when headers absent
+      - mechanics — token bucket calculation and _api_quota sync: see budget.md#Quotas
+      - pre-call gate — remaining <= deny_at_remaining denies egress with exit 2
   - Bindings
     - Trigger types
       - cron — bind cron <name> --run <cap> --cron "<expr>" --intent "..."

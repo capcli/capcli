@@ -7,11 +7,7 @@
       - Flag conventions — humans receive tables; agents pass --json
       - Prefix standard — [env] prepended to all output streams
     - Exit codes
-      - 0 ok — effect executed and audit recorded
-      - 2 policy-denied — gate refused execution; zero state mutation
-      - 3 validation-failed — bad params, governance breach, missing intent, drift
-      - 4 runtime-error — execution started and failed mid-flight
-      - 5 audit-write-failed — audit sink unreachable; zero execution permitted
+      - exit code laws — strict integer contract (0, 2, 3, 4, 5): see physics.md#Exit-code-law
     - Hot path: run noun
       - Commands
         - execute — run <capability> [-p k=v]
@@ -101,24 +97,19 @@
       - --dry-run — plan execution without applying state changes
       - --intent "<why>" — causal motivation, validated against anti-junk rules
       - --reason "<why>" — threshold crossing justification
-      - --by <agent-id> — acting identity verified via socket credentials
+      - --by <agent-id> — acting identity verified via process credentials
     - Scoped flags
       - --lock <ref> — exclusive claim lease on run
       - --sandbox — jail wrapper on sys exec
-  - SDK contract
+  - Client contract (@capcli/client)
     - Instantiation
-      - entry point — import { createKernel } from '@capcli/sdk'
-      - config parameters — createKernel({ workspace, brand })
-    - Brand configuration
-      - name — human display label
-      - cli — binary name rendered in suggestions
-      - tagline — system tagline replacement
-      - nouns — dictionary of surface aliases (e.g. routine -> flow)
-      - lockedNouns — immutable kernel domains (default: ['sys'])
+      - entry point — import { createClient } from '@capcli/client'
+      - config parameters — createClient({ endpoint, token })
+      - transport — HTTP POST for commands; WebSocket / SSE for live audit tail
     - Method surface
-      - execution — kernel.run(), kernel.db.query(), kernel.db.exec(), kernel.routine.prove()
-      - discovery — kernel.search(), kernel.inspect()
-      - auditing — kernel.audit.tail(), kernel.audit.trace()
+      - execution — client.run(), client.db.query(), client.routine.prove()
+      - discovery — client.search(), client.inspect()
+      - auditing — client.audit.tail(), client.audit.trace()
       - return envelope — { exit: number, json: object, text: string }
     - Unchangeable elements
       - exit code definitions
@@ -128,13 +119,13 @@
   - PWA layers
     - Core principles
       - client boundary — client outside workspace; zero authority creation
-      - data source — renders kernel SDK outputs; zero invented metrics
+      - data source — renders @capcli/client JSON-RPC outputs; zero invented metrics
       - navigation — causal DAG traversal without dead ends
       - interaction set — browse, approve, answer, recover, observe
     - Ten layer architecture
       - Layer 1: World — table schema trees, masked data cells, column policies
       - Layer 2: Capability — routine versions, manifest vs fingerprint diffs, api states
-      - Layer 3: Governance — policy rules, live governance quotas, quad-lock status
+      - Layer 3: Governance — policy rules, live governance quotas, lockfile integrity status
       - Layer 4: Audit — live event tail, DAG breadcrumbs, denial explanations
       - Layer 5: Budget — session frame trees, spend pools, live rate gauges
       - Layer 6: Environment — dev/sim/prod status cards, seed tracking, drift flags

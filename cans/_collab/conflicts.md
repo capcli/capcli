@@ -34,9 +34,9 @@ Task ID: 6-b (trust.md dedup+deepen)
 - capability.search event: ADDED to effect.md#Kernel-event-payloads (was missing)
 - Mutual pointer agent.md ↔ interface.md: agent.md now owns canonical PWA session token sentence
 - hash-pinned line keeper: trust.md#Evidence confirmed as canonical; time.md#Versioning owns version walk
-- "The human verifies the why": canonical home TBD — overview.md owner should land it
+- "The human verifies the why": canonical home pinned to overview.md#Human-authority; trust.md and agent.md cite it
 - min() precedence: budget.md#Cascade owns mechanics; trust.md#Overrides owns authority angle
+- world.md self-reference: resolved to physics.md#Fail-closed-stance lockfile check
 
 ## Still open
-- "The human verifies the why" canonical home: overview.md vs agent.md vs trust.md — overview owner must decide
-- world.md:221 self-reference (world.md → world.md) — in-flight WIP
+None. All cross-file keepers and duplicate ownership claims reconciled.

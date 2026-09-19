@@ -3,7 +3,7 @@
     - Storage trinity
       - workspace.db
           - ssot role — primary source of truth for domain state AND _audit events
-          - process — capcli daemon-owned
+          - process — capcli kernel-managed
           - permissions — chmod 600
           - engine substrate
             - sqlite local — standalone local embedded database
@@ -15,7 +15,7 @@
         - concurrency
           - journal mode — WAL mode enabled
           - readers — concurrent non-blocking reads
-          - writers — non-blocking per-agent sandbox DBs committed via transaction queue
+          - writers — serialized atomic transactions via busy-timeout queue
         - access perimeter
           - direct sockets — agent connection denied
           - direct filesystem — agent file open denied
@@ -176,7 +176,7 @@
     - Migration invariants
       - forward only — down-migrations banned; snapshots serve as rollbacks
       - snapshot pairing — snapshot taken before physical DDL execution
-      - version synchronization — quad-lock: see physics.md#Fail-closed-stance
+      - lockfile check — capcli.lock verification at boot: see physics.md#Fail-closed-stance
   - Validation gates
     - Gate 1: Syntax
       - timing — parse-time on file load

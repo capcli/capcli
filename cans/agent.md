@@ -6,8 +6,8 @@
       - session — temporary engagement scope (ses_a9)
       - op — single leaf execution in causal DAG
     - Credential binding
-      - socket authentication — SO_PEERCRED binds caller process uid
-      - acting identity — --by validated against peer credentials
+      - process authentication — OS process UID binds caller identity
+      - acting identity — --by validated against calling process environment
       - beneficiary identity — --as declares target principal
       - identity generation — ids kernel-issued; self-declaration denied
     - System agent registry
@@ -22,8 +22,8 @@
       - validation — format constraints: see artifacts/policy.yaml#identity
       - authority limit — skill origin acts as metadata, never grants power
     - Concurrency scope
-      - concurrency model — multi-agent via isolated ephemeral agent databases
-      - collision handling — optimistic concurrency at sync; branch merge on conflict
+      - concurrency model — single shared workspace.db in WAL mode
+      - write arbitration — serialized atomic transactions with busy-timeout queuing
       - callee floor — cross-agent routine calls demand trust >= reviewed
   - Intent chain
     - Chain hierarchy
@@ -34,15 +34,14 @@
       - structural binding — intent target must match AST write tables and columns
       - divergence check — write touching undeclared tables rejected with exit 2
       - threshold justifications — high-impact writes demand --reason
-  - Sessions and sockets
+  - Sessions and boundaries
     - Session lifecycle
       - scoping — session id rides every budget frame, audit event, and claim
       - tracking — session counters govern spend, rate, and rows affected
-      - pwa mapping — session tokens map directly to --as principal
-    - Socket boundary
-      - transport — UNIX domain socket between harness and kernel
-      - permissions — workspace.db owned by daemon chmod 600
-      - isolation — direct filesystem and network access denied to routine
+    - Harness execution boundary
+      - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)
+      - exit contract — process exit codes (0, 2, 3, 4, 5) return status to subshell
+      - pwa boundary — HTTP/WS daemon serving JSON-RPC 2.0 strictly for PWA client
   - Secrets
     - Vault storage
       - table — secrets system table in workspace.db
@@ -50,13 +49,13 @@
       - access — agent read-only; value masked in all outputs
       - boot handling — memory-decrypted at kernel startup
     - Egress injection
-      - injection point — Authorization headers inserted at kernel socket
+      - injection point — Authorization headers inserted at kernel egress boundary
       - references — catalogs reference secret_ref, never plaintext values
       - trust restriction — draft routines denied secret access
   - Coordination
     - World coordination
-      - claims — distributed lease locks with TTL via db lock
-      - physical arbiter — per-agent local databases sync to target env via atomic write log
+      - claims — distributed lease locks with TTL via db lock for multi-step ops
+      - physical arbiter — shared workspace.db with WAL-mode serialized commits
       - event tailing — agents observe sibling effects via sys audit tail
     - Harness split
       - agent harness — reasoning, planning, proposal drafting
