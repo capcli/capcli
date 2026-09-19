@@ -16,14 +16,14 @@
     - Alignment conventions
       - orthogonality — environment bounds data; trust bounds capabilities
       - default pairs — dev with draft; sim with reviewed; prod with pinned
-      - travel law — routines travel dev → sim → prod via git worktree merges
+      - travel law — routines travel dev → sim → prod via manifest migration pipelines
     - Policy overlays
       - mechanism — unified engine parameterized per environment
       - endpoint overrides — base_url swapped via apis/<provider>.sim.yaml
       - notification routing — sim messages routed to #sim-notifications
       - sim defaults — mode resolution: see artifacts/governance.yaml#api
     - World governance
-      - worktree allocation — max worktrees: see artifacts/governance.yaml#env
+      - namespace allocation — isolated directories under envs/<name>/workspace.db
       - prod protection — removal flags: see artifacts/governance.yaml#env
       - backup mandate — git and object push required on mutation
   - Primitive scoping
@@ -72,11 +72,11 @@
       - staleness threshold — sim re-seed nag: see artifacts/governance.yaml#maintenance
   - env command
     - Management commands
-      - provisioning — env new <name> [--seed prod] [--from-branch <b>]
+      - provisioning — env new <name> [--seed prod]
       - activation — env use <name>
       - audit — env list, env inspect, env doctor
       - merge — env merge <name> --into prod
       - deletion — env remove <name>
     - Safety controls
       - prod removal flags — --confirm-backup and --confirm-prod mandatory
-      - merge gate — prod promotion demands explicit git worktree merge
+      - merge gate — prod promotion requires policy-verified state sync command

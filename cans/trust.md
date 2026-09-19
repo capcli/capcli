@@ -52,7 +52,7 @@
         - content — must cite measured audit mirror statistics
       - production prerequisites
         - git status — branch merged into prod worktree
-        - human gate — explicit pin sign-off mandatory
+        - synthetic proof — 100% replay invariant pass and fuzzing in sim
         - simulation proof — success rate threshold: >= 0.90
     - Auto-promotion (draft to reviewed)
       - qualification criteria
@@ -65,8 +65,8 @@
       - audit trail — emits routine.auto_promoted event
       - retroactive control — human veto via rollback --to-trust draft
     - Pinned promotion
-      - human exclusivity — automated systems banned from granting pinned status
-      - attribution — approver principal permanently linked to version
+      - progressive autonomy — autonomous pin unlocked via invariant & mutation tests
+      - human reserve — human approval reserved exclusively for schema drops and spend > $100
     - Promotion queue
       - mechanics — capcli routine ship <name> --to reviewed --queue
       - inspection — capcli routine pending surfaces batch candidates

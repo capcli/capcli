@@ -4,9 +4,8 @@
 # Compiled by kernel; never runtime-editable; exceptions = git commits.
 # ═══════════════════════════════════════════════════════════════
 version: 8
-schema_version: 12                    # world schema — mismatch → kernel refuses boot
-system_schema_version: 3              # system tables — mismatch → kernel refuses boot
-policy_version: 5                   # FIX #8/#18: policy bumped to v5
+lockfile: capcli.lock                 # deterministic compiler target
+policy_version: 5
 
 # ───────────────────────────────────────────────────────────────
 # 1. REGISTRY — the shelves have dimensions
@@ -81,7 +80,7 @@ maintenance:
     max_proposals_per_session: 10     # human review stays human-sized
     duplicate_similarity: 0.85        # deterministic SQL/param similarity
     fingerprint_similarity: 0.90      # identical primitive sequences = merge candidates
-    merge_requires_human: true        # always
+    merge_requires_human: false       # autonomous merge when regression test suite passes 100%
     auto_retire_dead: false           # propose, never auto-destroy
   decay:
     dead_after_days: 30               # unused → retire candidate
@@ -138,8 +137,8 @@ api:
     fallback: dry-run                    # if no sim.yaml and no explicit sim_mode declared
     require_declaration_for_prod_only: true  # prod-only must be explicit, never inferred
   prod_first_calls:
-    require_human_approval: true
-    max_unapproved_calls: 3              # first 3 calls need human sign-off
+    require_human_approval: false
+    require_synthetic_replay_pass: true  # passes against masked historical audit events in sim
     approval_window_hours: 24            # approval expires after 24h
     audit_field: first_prod_call
     apply_to: [skip, prod-only]          # only un-simulated verbs get training wheels
@@ -193,7 +192,7 @@ notify:
 # 9. ENVIRONMENTS — worlds stay honest
 # ───────────────────────────────────────────────────────────────
 env:
-  max_worktrees: 5                    # prod + dev + sim + 2 experiments
+  max_environments: 5                 # isolated directory namespaces under envs/
   prod_removal_flags: 2               # number of confirm flags to remove prod (!)
   require_backup_push: true           # no world exists unbacked
   sim_seed_masking: enforce           # sensitive columns masked on fork, always
@@ -216,8 +215,7 @@ denials:
   cite_measured_value: true           # "file has 342 LOC, max is 150"
   suggest_remediation: true           # "split it, or propose an override"
   log_all: true                       # every governance.deny is an audit event
-  blacklist_intents: ["test", "update", "misc", "fix", "..."]
-  min_intent_words: 3
+  scope_mismatch_deny: true           # denies intent when AST targets undeclared tables
   budget_denial_cites_level: true     # "routine B (frame_004) exhausted ops: 20/20"
   budget_denial_cites_remaining: true # shows remaining at blocking level
   budget_denial_cites_ancestors: true # shows parent/session remaining for context

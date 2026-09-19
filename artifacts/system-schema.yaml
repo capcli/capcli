@@ -43,10 +43,12 @@ tables:
       provider: text!                  # provider slug (e.g. stripe, github)
       scope_key: text=global           # per-key or per-endpoint quota partition
       env: text!                       # sim and prod track quotas independently
-      limit_total: int=-1              # X-RateLimit-Limit (-1 = untracked)
-      remaining: int=-1                # X-RateLimit-Remaining
+      bucket_capacity: int!            # max token burst size
+      tokens_available: int!           # current proactive client-side token count
+      refill_rate_per_s: real!         # token drip rate per second
+      last_provider_remaining: int=-1  # last observed provider X-RateLimit-Remaining
       reset_at: int=0                  # unix epoch seconds for quota reset
-      retry_after_s: int=0             # Retry-After delay in seconds
+      last_reconciled_at: int!         # timestamp of last header reconciliation
       last_op: text                    # last verb to touch this quota
       last_updated: int!               # timestamp of last header extraction
     chk:

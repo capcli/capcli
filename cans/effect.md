@@ -29,7 +29,8 @@
     - Event integrity
       - write priority — unaudited writes denied outright (exit 5)
       - denial logging — denied operations emit audit events with effect: none
-      - tamper detection — per-line sha256 prev_hash links form immutable chain
+      - tamper detection — per-row sha256 chain verified against remote notary/witness
+      - external attestation — root hash checkpointed to remote append-only log / KMS
       - verification — scheduled chain walk: see artifacts/governance.yaml#maintenance
     - Query surfaces
       - tail — sys audit tail [--follow] [--capability X] [--since 1h]

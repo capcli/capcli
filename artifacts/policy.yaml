@@ -5,10 +5,8 @@
 # Structure lives in governance.yaml. Zero overlap.
 # Two enforcement layers: authorizer (C-level floor) + AST (semantic ceiling)
 # ═══════════════════════════════════════════════════════════════
-version: 5                          # bumped: v4.1 skill_origin landed
-schema_version: 12                    # world schema — quad-lock
-system_schema_version: 3              # system tables — quad-lock
-governance_version: 8               # FIX #8: was 7, governance is v8
+version: 5
+lockfile: capcli.lock                 # compiled root hash: replaces quad-lock integers
 default: deny                         # THE anchor. everything below carves exceptions
 
 # ───────────────────────────────────────────────────────────────
@@ -75,9 +73,8 @@ query:
   multi_statement: deny
   unparseable: deny                            # parser failure fails CLOSED
   writes_require_intent: true                  # no intent → exit 3, cited in explain
-  intent:
-    min_words: 3
-    blacklist: ["test", "update", "misc", "fix", "...", "stuff"]
+    enforce_target_scope: true                 # AST tables/columns must match declared intent target
+    max_unrelated_tables: 0                    # zero writes outside intent boundary
 
   update_delete:
     require_where: true
@@ -100,7 +97,7 @@ query:
   bulk:
     require_pre_count: true                    # db query --count before mass ops
     require_trust: reviewed
-    confirm_above: { rows: 5000 }              # human gate, --reason required
+    confirm_above: { rows: 50000 }             # raised: human gate only on massive blast radius
 
   system_tables:
     deny_write: [_audit, agents, claims, _pending_asks, _watch_cursors]  # FIX #9: claims was missing
@@ -176,26 +173,21 @@ api:
     dry_run_returns_simulated: true      # dry-run verbs return { simulated: true }
     skip_reports_gap: true               # skipped verbs produce manifest gap warning
   prod_first_calls:
-    enforce: true                        # first N calls of skip/prod-only verbs need human approval
-    denial_cites_approval_needed: true   # exit 2 message: "first prod call, human approval required"
+    enforce: false                       # killed: un-simulated calls proven via synthetic contracts
+    require_contract_proof: true         # OpenAPI schema + dry-run verification replaces human sign-off
   spend:
     per_day_usd: 50
-    confirm_above_usd: 10                      # human gate before expensive calls
+    confirm_above_usd: 100                     # human gate reserved strictly for real budget impact
     per_call_confirm_usd: 25
   rate_limit:                                    # live quota from provider responses
-    extract:                                     # header names → _api_quota columns
-      limit: "X-RateLimit-Limit"
-      remaining: "X-RateLimit-Remaining"
-      reset_at: "X-RateLimit-Reset"             # unix epoch
-      retry_after: "Retry-After"                # seconds
-    scope: per_key                               # per_key | per_endpoint | per_provider
-    deny_at_remaining: 0                         # pre-call gate: remaining ≤ this → exit 2
-    warn_at_remaining: 5                         # inspect shows warning, does not block
-    stale_after_seconds: 3600                    # row older than this → fall through to static spend
-    fallback:                                    # providers without standard headers
-      type: sliding_window                       # kernel counts locally
-      window_seconds: 60
-      max_calls: 300
+    model: proactive_token_bucket                # client-side bucket is PRIMARY authority
+    default_capacity: 60                         # burst ceiling
+    refill_rate_per_sec: 1.0                     # steady-state token drip
+    pre_call_gate: true                          # fail-closed: tokens < 1 → exit 2 immediately
+    header_calibration:                          # reactive headers used ONLY to recalibrate bucket
+      reconcile_on_response: true                # sync local bucket down if provider reports lower
+      reset_header: "X-RateLimit-Reset"
+      remaining_header: "X-RateLimit-Remaining"
     audit:
       record_before_after: true                  # quota_before/quota_after on every api.call event
       denial_cites_remaining: true               # exit 2 message includes remaining + reset_at
@@ -340,7 +332,7 @@ audit:
 # ───────────────────────────────────────────────────────────────
 fail_closed:
   no_policy: refuse_boot
-  version_mismatch: refuse_boot            # quad-lock: schema + system-schema + policy + governance
+  lockfile_mismatch: refuse_boot           # abort if hash(schema+system+policy+gov) != capcli.lock
   system_schema_hash_mismatch: refuse_boot # kernel integrity check
   unparseable_sql: deny
   authorizer_callback_error: deny

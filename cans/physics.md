@@ -25,7 +25,7 @@
       - cross-check — compares AST classification against SQLite EXPLAIN
       - discrepancy — unclassified writes (OpenWrite bytecode) trigger denial
     - Pipeline sequence
-      - Stage 1 — intent string presence and anti-junk validation
+      - Stage 1 — intent target binding and AST blast-radius cross-check
       - Stage 2 — AST parse and structural pattern scan
       - Stage 3 — prepare-time cross-check and authorizer callback
       - Stage 4 — physical SQLite execution and audit event emission
@@ -37,7 +37,7 @@
     - Anchor principle — default: deny (artifacts/policy.yaml)
     - Boot refusals
       - missing configuration — policy.yaml or governance.yaml absent
-      - quad-lock mismatch — version misalignment triggers refusal
+      - lockfile mismatch — compiled capcli.lock SHA256 mismatch aborts boot
       - schema integrity — system_schema hash mismatch aborts boot
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals

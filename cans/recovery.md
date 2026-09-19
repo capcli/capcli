@@ -23,11 +23,12 @@
       - archive — full immutable history retained in object storage
   - Hash chains
     - Line linking
-      - calculation — prev_hash: sha256:<previous_line_hash> on every JSONL entry
+      - source — generated in DB _audit table rows and mirrored to JSONL export
+      - calculation — prev_hash: sha256:<previous_row_hash>
       - engine — Bun.CryptoHasher("sha256") in sys.audit.service.ts
       - tamper evidence — modifying any line breaks all subsequent hashes
     - Integrity checks
-      - verification schedule — cron: see artifacts/governance.yaml#maintenance
+      - witness check — local hash chain validated against signed remote checkpoint
       - boot gate — require_hash_verify verifies system-schema hash at boot
       - replay gate — replay re-verifies code_hash before execution
   - Restore path

@@ -91,11 +91,11 @@
       - composition.effective_limits: "min(50, session_remaining)" strings per dimension
       - composition block: max_nesting_depth, child_routines list, budget_inheritance
   - Quotas
-    - Live quota
-      - Extraction
-        - Kernel extracts X-RateLimit-Remaining, Retry-After from every API response
-        - Deterministic string match on declared headers — no LLM in the loop
-        - Which headers to watch is declared per provider, never guessed
+    - Proactive rate limiting
+      - Local bucket — token-bucket algorithm runs in kernel before egress
+      - Gate decision — zero tokens available throws exit 2 before socket open
+      - Header calibration — provider headers calibrate local drift downward
+      - Double-spend prevention — external 429s treated as bucket misconfiguration
       - Storage
         - State lands in `_api_quota` rows — kernel-written, agent-readable
         - Rows scoped per env: sim and prod quotas independent — rehearsal never burns prod limits

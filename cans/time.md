@@ -42,7 +42,7 @@
       - command — capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."
       - authority flow — evidence flows up, authority grants down
       - metric prerequisites — success rates queried from routine_stats
-      - production promotion — requires git branch merge and pin approval
+      - production promotion — automated upon passing synthetic fuzz and replay suite
     - auto-promotion (draft to reviewed)
       - scope — low-risk routines matching strict criteria
       - prerequisites
@@ -92,7 +92,7 @@
     - Merge mechanics
       - draft — harness generates consolidated routine code
       - verification — automated gate tests candidate against test suite
-      - approval — human must approve merge; auto-destruction banned
+      - approval — autonomous execution if synthetic test suite passes with zero drift
       - provenance — retired routines link via consolidated_from: [...]
   - Schedule & maintenance
     - Cron governance

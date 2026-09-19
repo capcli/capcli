@@ -22,18 +22,17 @@
       - validation — format constraints: see artifacts/policy.yaml#identity
       - authority limit — skill origin acts as metadata, never grants power
     - Concurrency scope
-      - concurrency limit — max concurrent writers: 1 (single-agent in v1)
-      - collision handling — concurrent writers receive exit 2 refusal
+      - concurrency model — multi-agent via isolated ephemeral agent databases
+      - collision handling — optimistic concurrency at sync; branch merge on conflict
       - callee floor — cross-agent routine calls demand trust >= reviewed
   - Intent chain
     - Chain hierarchy
       - propagation — session goal → routine intent → op intent
       - audit trail — full intent chain recorded on every leaf event
       - write mandate — mutating operations require --intent (missing throws exit 3)
-    - Anti-junk validation
-      - length floor — min words: see artifacts/policy.yaml#query
-      - blacklist — rejected terms: see artifacts/policy.yaml#query
-      - quality scoring — heuristic flags intent_quality: low without blocking
+    - Blast-radius validation
+      - structural binding — intent target must match AST write tables and columns
+      - divergence check — write touching undeclared tables rejected with exit 2
       - threshold justifications — high-impact writes demand --reason
   - Sessions and sockets
     - Session lifecycle
@@ -57,7 +56,7 @@
   - Coordination
     - World coordination
       - claims — distributed lease locks with TTL via db lock
-      - physical arbiter — SQLite BEGIN IMMEDIATE serializes database writes
+      - physical arbiter — per-agent local databases sync to target env via atomic write log
       - event tailing — agents observe sibling effects via sys audit tail
     - Harness split
       - agent harness — reasoning, planning, proposal drafting

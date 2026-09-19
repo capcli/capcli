@@ -2,7 +2,7 @@
   - SQLite as SSOT
     - Storage trinity
       - workspace.db
-        - ownership
+          - ssot role — primary source of truth for domain state AND _audit events
           - process — capcli daemon-owned
           - permissions — chmod 600
           - engine substrate
@@ -11,11 +11,11 @@
             - remote refusal — pure HTTP databases without C authorizer denied
         - tracking
           - git status — ignored via .gitignore
-          - persistence — local to active worktree
+          - persistence — partitioned at envs/<name>/workspace.db and agent sandboxes
         - concurrency
           - journal mode — WAL mode enabled
           - readers — concurrent non-blocking reads
-          - writers — serialized via single-writer lock
+          - writers — non-blocking per-agent sandbox DBs committed via transaction queue
         - access perimeter
           - direct sockets — agent connection denied
           - direct filesystem — agent file open denied
@@ -32,19 +32,9 @@
           - cadence — see artifacts/governance.yaml#backup
         - disaster recovery
           - restoration — sys recover: see recovery.md#Restore-path
-      - audit/*.jsonl
-        - stream format
-          - structure — daily append-only files
-          - immutability — lines never rewritten in-place
-        - version control
-          - tracking — committed to git alongside world.sql
-          - offsite sync — see artifacts/governance.yaml#backup
-        - cryptographic linking
-          - mechanism — sha256 prev_hash per line
-          - tamper detection — see recovery.md#Hash-chains
-        - replay engine
-          - mathematical formula — state(t) = fold(events[0..t])
-          - verification — see effect.md#Audit-spine
+        - role — secondary read-only export view streamed from _audit table
+        - persistence — flushed to disk and git for offline diffing only
+        - attestation — signed by external notary checkpoint; DB remains SSOT
     - Mutation pipeline
       - execution flow
         - step 1 — causal intent declaration
@@ -211,18 +201,10 @@
         - masking targets — mask=true restricted to text and json
         - immutable targets — imm_cols exist in target table
       - failure code — throws exit 3
-    - Gate 3: Quad-lock
+    - Gate 3: Manifest lock
       - timing — boot-time startup check
-      - world schema lock
-        - schema version — see artifacts/schema.yaml#version
-        - governance version — see artifacts/governance.yaml#schema_version
-        - policy version — see artifacts/policy.yaml#schema_version
-        - condition — three-way equality mandatory
-      - system schema lock
-        - schema version — see artifacts/system-schema.yaml#version
-        - governance version — see artifacts/governance.yaml#system_schema_version
-        - policy version — see artifacts/policy.yaml#system_schema_version
-        - condition — three-way equality mandatory
+      - validation — compile sha256 of schema, system-schema, policy, and governance
+      - verification — computed hash must match active capcli.lock entry exactly
       - failure code — throws exit 3 (refuse boot)
     - Gate 4: Live drift
       - timing — runtime inspection via sys doctor
