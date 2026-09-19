@@ -171,10 +171,10 @@
       - S10 receipt — sys doctor --report verification receipt
     - Harness journey stages
       - H0 contract — parse machine boundaries via sys doctor --json
-      - H1 discovery — discover capabilities via search and inspect
+      - H1 discovery — inspect catalog verbs and existing schema views via run search
       - H2 rehearsal — execute plan with run --dry-run
-      - H3 exploration — query state via db query
-      - H4 mutation — execute bounded write via db exec
+      - H3 dual probe — query local state via db query and inspect remote verbs via api catalog
+      - H4 hybrid rehearsal — test composite write and simulated egress via routine prove
       - H5 feedback — parse denial rules via sys audit trace --explain
       - H6 codification — propose routine based on repeated DAG sequences
       - H7 proving — execute routine prove --env sim

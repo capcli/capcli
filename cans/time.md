@@ -63,15 +63,17 @@
         - failure rate — rollback candidate: see artifacts/governance.yaml#maintenance
   - Learning loop
     - Discovery arc
-      - exploration — raw SQL commands executed by agent
-      - tracking — kernel logs all queries with intent and parameters
-      - analysis — deterministic mirror views (op_frequency, shared_subsequences)
-      - extraction — shared n-grams surface candidate routines
+      - dual exploration — worker agents execute raw SQL reads and simulated API probes
+      - tracking — kernel logs all database and egress attempts with intent and parameters
+      - sufficiency floor — log analysis triggers only after minimum audit sample density
+      - analysis views — deterministic kernel SQL views surface op frequencies and n-grams
+      - extraction — specialized analysis agent inspects surfaced DB and API sequences
     - Routine codification
       - threshold — minimum identical primitive sequences: >= 3
-      - proposal — harness scaffolds routine from repeated sequences
+      - hybrid composition — routines bundle atomic DB transactions with external API verbs
+      - synthesis — specialized analysis agent scaffolds routine from mined sequences
       - verification — routine prove executes real historical audit inputs
-      - exploitation — agent calls routine via run, replacing raw SQL
+      - exploitation — worker agents call routine via run, replacing ad-hoc primitives
   - Consolidation
     - Maintenance cadence
       - execution schedule — cron: see artifacts/governance.yaml#maintenance

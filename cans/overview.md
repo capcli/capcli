@@ -21,9 +21,10 @@
       - mechanism — impossible paths preferred over prompt instructions
       - unbounded writes — denied structurally via AST and authorizer
       - failure modes — designed denials teach harness through structured feedback
-    - Intent precedence
-      - sequence — intent declaration precedes environment and schema creation
-      - derivation — tables and capabilities derive from stated objectives
+      - Initialization paths
+        - guided mission — subsystem-scale intent directs worker agents to author domain modules
+        - emergent discovery — blank world accumulates audit density before log-analysis codification
+        - predefined structure — human-committed schema governs immediate execution inside bounds
     - Governance line
       - behavioral policy — policy.yaml governs runtime acts (verbs)
       - structural governance — governance.yaml governs artifact shapes (nouns)
@@ -52,9 +53,9 @@
       - startup — invalid configuration or version mismatch aborts boot
       - runtime — unparseable SQL, missing principals, or quota breaches deny
     - Capability lifecycle
-      - exploration — raw SQL permitted for initial data discovery
-      - exploitation — repeated query sequences codified into routines
-      - trust progression — draft → reviewed → pinned progression
+      - exploration — bounded SQL queries and simulated API probes establish baseline behavior
+      - codification — repeated DB and API call sequences compiled into governed routines
+      - trust progression — earned autonomy moves routines from draft to reviewed to pinned
     - Human authority
       - verification split — human validates why; kernel validates what
       - gates — high-impact writes and pinned trust demand human signatures

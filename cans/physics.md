@@ -1,4 +1,8 @@
 - Physics
+  - Dual-engine enforcement
+    - parity principle — local state mutations and external API egress share equal gate severity
+    - local engine — C authorizer and AST parse intercept SQLite commands at prepare time
+    - egress engine — token-bucket quotas, secret boundaries, and sim routing intercept network calls
   - Two-layer enforcement
     - Layer 1: sqlite3_set_authorizer
       - engine — C-level callback inside sqlite3_prepare_v2

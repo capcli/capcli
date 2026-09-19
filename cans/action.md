@@ -221,6 +221,7 @@
       - Verification — proof of execution path rather than simple crash status
   - External APIs
     - Boundary characteristics
+      - routine encapsulation — external egress strictly prohibited from ad-hoc CLI commands
       - Authorizer separation — authorizer protects SQLite; egress proxy protects HTTP
       - Irreversibility — HTTP writes lack rollback and transactions
       - Pre-call policy — checks enforced before egress leaves kernel

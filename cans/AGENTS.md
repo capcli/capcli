@@ -7,7 +7,7 @@ This spec describes **capcli**: a governed agent kernel where agents author, a k
 
 - overview.md — what capcli is: philosophy, mental model, kernel stance
 - world.md — what exists: SQLite SSOT, dual schema, DDL evolution, validation
-- physics.md — what is allowed: two-layer policy, fail-closed, raw SQL rules
+- physics.md — what is allowed: dual-engine policy, fail-closed, DB and egress gates
 - effect.md — what happened: audit spine, causal DAG, JSONL ground truth
 - agent.md — who acts: principal → agent → session → op identity hierarchy
 - action.md — what can be done: capabilities, routines, manifests, API catalog
