@@ -167,6 +167,19 @@
         - leaf effects pass kernel gate
         - versions hash-pinned
         - manifest drift treated as governed anomaly
+    - Mandatory overview routine
+      - Core aim
+        - amnesia elimination — grounds incoming agents with immediate business situational awareness
+        - spend efficiency — prevents token burn from blind, iterative schema exploration
+        - canonical baseline — provides unified domain KPI and blocker snapshot before planning
+      - Standard contract
+        - file substrate — routines/overview.py registered under name overview
+        - decorator bounds — @routine(name="overview", idempotent=true, limits=...)
+        - output envelope — dense situational summary capped at 500 result tokens
+      - Assembly pattern
+        - data aggregation — queries domain read-views compiled in schema.yaml
+        - blocker checks — aggregates active lease locks, pending asks, and budget state
+        - invocation trigger — standard zero-step executed at start of agent sessions
   - The ctx contract
     - Surface methods
       - Database methods

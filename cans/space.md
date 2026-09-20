@@ -81,4 +81,4 @@
       - deletion — env remove <name>
     - Safety controls
       - prod removal flags — --confirm-backup and --confirm-prod mandatory
-      - merge gate — prod promotion requires policy-verified state sync command
+      - merge gate — prod promotion blocked without verified state sync and pinned overview
