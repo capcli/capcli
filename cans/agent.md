@@ -59,6 +59,14 @@
       - schema — name unique, value, scope, expires_at, sens: true
       - access — agent read-only; value masked in all outputs
       - boot handling — memory-decrypted at kernel startup
+    - Provisioning workflow
+      - Lifecycle steps
+        - detection — missing secret_ref trips pre-call check before egress
+        - suspension — routine calls ctx.ping.ask and enters suspended state
+        - alert dispatch — ping notify sends human notification with PWA vault link
+        - out-of-band entry — human enters raw secret into PWA Layer 10 Vault UI
+        - kernel write — daemon commits secret directly to vault table
+        - execution resume — human resolves ask; routine awakens with injected key
     - Egress injection
       - injection point — Authorization headers inserted at kernel egress boundary
       - references — catalogs reference secret_ref, never plaintext values

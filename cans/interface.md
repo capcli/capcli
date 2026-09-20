@@ -160,10 +160,10 @@
       - Layer 4: Audit — live event tail, DAG breadcrumbs, denial explanations
       - Layer 5: Budget — session frame trees, spend pools, live rate gauges
       - Layer 6: Environment — dev/sim/prod status cards, seed tracking, drift flags
-      - Layer 7: Approval — promotion queues, DDL previews, ask cards, veto countdowns
+      - Layer 7: Approval — promotion queues, DDL previews, ask cards, secret prompt dialogs, veto countdowns
       - Layer 8: Recovery — snapshots, rollback chains, git targets, recovery drills
       - Layer 9: Learning — search gap trends, similarity clusters, decay candidates
-      - Layer 10: Identity — principal directories, agent allocations, skill origins
+      - Layer 10: Identity — principal directories, agent allocations, skill origins, vault credential management
     - Real-time and polling intervals
       - real-time stream — audit tail and frame lifecycle via WebSocket/SSE
       - rapid polls — _api_quota (30s), pending asks (30s)
