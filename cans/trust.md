@@ -60,6 +60,7 @@
         - git status — branch merged into prod worktree
         - synthetic proof — 100% replay invariant pass and fuzzing in sim
         - simulation proof — success rate threshold: >= 0.90
+        - root overview — verified overview routine registered and pinned
     - Auto-promotion (draft to reviewed)
       - qualification criteria
         - execution volume — sim_runs >= 10

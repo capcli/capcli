@@ -15,6 +15,7 @@
     - Hot path: run noun
       - Commands
         - execute — run <capability> [-p k=v]
+        - overview — run overview [--as <principal>] — single-shot domain situational briefing
         - search — run search <query> [--trust X] [--env X] [--max-ops N]
         - gap detection — run search gaps --since 7d
         - inspect — run inspect <capability>
@@ -206,7 +207,7 @@
       - H3 dual probe — query local state via db query and inspect remote verbs via api catalog
       - H4 hybrid rehearsal — test composite write and simulated egress via routine prove
       - H5 feedback — parse denial rules via sys audit trace --explain
-      - H6 codification — propose routine based on repeated DAG sequences
+      - H6 codification — author mandatory overview routine to ground future agents in domain state
       - H7 proving — execute routine prove --env sim
     - Anti-decisions
       - no blank templates or static tours
