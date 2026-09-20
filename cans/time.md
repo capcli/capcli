@@ -23,6 +23,7 @@
       - authoring — direct filesystem writes in routines/
       - near-duplicate scan
         - similarity calculation — code-text similarity comparison at birth
+        - duplicate nag — similarity >= 0.85 requires justification in --reason
         - threshold nag — similarity warning: see artifacts/governance.yaml#maintenance
         - override — bypass requires justification in --reason
     - prove stage
@@ -44,11 +45,19 @@
       - metric prerequisites — success rates queried from routine_stats
       - production promotion — automated upon passing synthetic fuzz and replay suite
     - auto-promotion path — qualifying low-risk routines: see trust.md#Gates-&-promotion
+      - qualification conjunction
+        - execution volume — minimum 10 sim runs with 0.95 success rate
+        - declaration match — 100% manifest match; 3/4 partial match routes to queue
+        - stability bounds — exactly 0 policy denials and 0 drift events
+      - audit payload
+        - event type — routine.auto_promoted
+        - event fields — from_trust: draft, to_trust: reviewed, 5-point metric record
     - promotion queue
       - queue enqueue — capcli routine ship <name> --to reviewed --queue
       - queue inspection — capcli routine pending
       - batch approval — human approves queue batch via single audit event
       - expiration SLA — age alert: see artifacts/governance.yaml#maintenance
+        - breach notification — queue age > 48h triggers promotion.sla_breached
       - veto countdown — 1-hour window permits retroactive human rollback
     - live stage
       - invocation — execution via run, cron, webhook, or ask resume
@@ -59,8 +68,9 @@
       - rollback command — capcli routine rollback <name> --to-version N
       - retire command — capcli routine retire <name> [--reason]
       - decay thresholds
-        - inactivity — retirement candidate: see artifacts/governance.yaml#maintenance
-        - failure rate — rollback candidate: see artifacts/governance.yaml#maintenance
+        - inactivity — unused for 30 days triggers retirement candidate
+        - failure rate — success below 0.70 triggers rollback candidate
+        - versioning caps — max 25 versions retained; max rollback depth 5
   - Learning loop
     - Discovery arc
       - dual exploration — worker agents execute raw SQL reads and simulated API probes
@@ -76,9 +86,9 @@
       - exploitation — worker agents call routine via run, replacing ad-hoc primitives
   - Consolidation
     - Maintenance cadence
-      - execution schedule — cron: see artifacts/governance.yaml#maintenance
-      - duration budget — minutes cap: see artifacts/governance.yaml#maintenance
-      - batch limits — proposal ceiling: see artifacts/governance.yaml#maintenance
+      - execution schedule — scheduled weekly maintenance window on Sun 03:00
+      - session ceilings — max 30 minutes duration; max 10 proposals per session
+      - similarity triggers — fingerprint similarity 0.90; duplicate similarity 0.85
     - Merge clustering
       - text similarity — threshold: see artifacts/governance.yaml#maintenance
       - fingerprint similarity — threshold: see artifacts/governance.yaml#maintenance

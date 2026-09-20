@@ -82,6 +82,13 @@
       - max_nesting_depth: 5 caps composition depth
       - budget_exhaustion: deny — exhausted budget = exit 2, never silent truncation
     - Cascade view in `inspect`
+      - pre-flight check
+        - invocation verdict — can_invoke_now boolean returned
+        - gap visibility — sim_gaps arrays missing simulated providers
+        - denial reasons — blocking_reasons details exact failing constraints
+      - constraint resolution
+        - tightest dimension — tightest_constraint names dimension nearest exhaustion
+        - limit string — effective_limits formats min(ceiling, parent_remaining)
       - budget_status.cascade: session_ops_remaining 488, session_duration_remaining_ms 555000
       - session_spend_remaining_usd 37.6, session_rate_remaining 287
       - tightest_constraint names the first dimension to block (null while headroom lasts)
@@ -104,6 +111,9 @@
         - Live remaining/reset_at/budget status before invoking: see action.md#External-APIs
       - Fallback: providers without standard headers get kernel-counted sliding windows
     - Governance caps
+      - maintenance budgets — consolidation max 30 minutes; max 10 proposals
+      - trigger budgets — cron min 5 minutes; webhook 100 events/min; poll max 10
+      - queue caps — dead letter retention 30 days or 1,000 items
       - All governance caps (registry, schedule, watch, serve, surface): see artifacts/governance.yaml
     - Output caps
       - Routine results

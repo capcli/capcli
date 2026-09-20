@@ -20,7 +20,8 @@
     - Policy overlays
       - mechanism — unified engine parameterized per environment
       - endpoint overrides — base_url swapped via apis/<provider>.sim.yaml
-      - notification routing — sim messages routed to #sim-notifications
+      - notification routing — sim notification primitives rerouted to #sim-notifications
+      - capacity limits — max 5 concurrent environments (prod, dev, sim, 2 experiments)
       - sim defaults — mode resolution: see artifacts/governance.yaml#api
     - World governance
       - namespace allocation — isolated directories under envs/<name>/workspace.db
@@ -69,7 +70,8 @@
     - Environment drift
       - detection — env doctor checks unmerged production routines
       - inspection — env inspect flags schema drift and data staleness
-      - staleness threshold — sim re-seed nag: see artifacts/governance.yaml#maintenance
+      - staleness threshold — sim data older than 14 days triggers re-seed nag
+      - deprovisioning — prod removal requires --confirm-backup and --confirm-prod
   - env command
     - Management commands
       - provisioning — env new <name> [--seed prod]

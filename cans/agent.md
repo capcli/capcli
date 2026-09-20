@@ -6,6 +6,7 @@
       - session — temporary engagement scope (ses_a9)
       - op — single leaf execution in causal DAG
     - Credential binding
+      - socket proof — SO_PEERCRED validates calling process credentials
       - process authentication — OS process UID binds caller identity
       - acting identity — --by validated against calling process environment
       - beneficiary identity — --as declares target principal
@@ -15,6 +16,10 @@
       - schema — id pk, name unique, harness, principal, status
       - immutability — id and principal protected by imm_cols
       - management — sys agent register, list, revoke
+      - kernel principals
+        - scheduler — capcli-cron owns automated time triggers
+        - webhooks — capcli-watch owns asynchronous provider dispatches
+        - listener — capcli-serve owns synchronous endpoint requests
       - revocation — sys agent revoke ends execution instantly
     - Harness skill origin
       - provenance — identity.skill_origin (artifacts/policy.yaml)
@@ -22,7 +27,8 @@
       - validation — format constraints: see artifacts/policy.yaml#identity
       - authority limit — skill origin acts as metadata, never grants power
     - Concurrency scope
-      - concurrency model — single shared workspace.db in WAL mode
+      - concurrency model — single-agent writer in v1; concurrent writers exit 2
+      - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
       - write arbitration — serialized atomic transactions with busy-timeout queuing
       - callee floor — cross-agent routine calls demand trust >= reviewed
   - Intent chain
@@ -31,6 +37,11 @@
       - audit trail — full intent chain recorded on every leaf event
       - write mandate — mutating operations require --intent (missing throws exit 3)
     - Blast-radius validation
+      - quality scoring
+        - heuristic — word overlap, parameter references, and target specificity
+        - failure flag — weak intent emits intent_quality: low audit tag without denying
+      - anti-junk filter
+        - bounds — min 3 words; blacklists test, update, misc, fix
       - structural binding — intent target must match AST write tables and columns
       - divergence check — write touching undeclared tables rejected with exit 2
       - threshold justifications — high-impact writes demand --reason
@@ -55,6 +66,7 @@
   - Coordination
     - World coordination
       - claims — distributed lease locks with TTL via db lock for multi-step ops
+      - dependency tracking — _routine_deps graph blocks retirement of active deps
       - physical arbiter — shared workspace.db with WAL-mode serialized commits
       - event tailing — agents observe sibling effects via sys audit tail
     - Harness split

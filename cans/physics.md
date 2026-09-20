@@ -7,26 +7,36 @@
     - Layer 1: sqlite3_set_authorizer
       - engine — C-level callback inside sqlite3_prepare_v2
       - binding — Rust rusqlite via napi-rs closure
-      - granularity — action × table × column evaluated at prepare
+      - granularity — 3D action × table × column tuple evaluated on every prepared statement
       - intercepted actions
         - table mutations — read, insert, update, delete allowlists
         - column writes — deny_columns_write protection on immutable keys
         - schema operations — drop, alter, vacuum restrictions
         - engine safety — attach and detach unconditionally denied
-        - pragmas — query_only and foreign_keys allowlist only
-        - function calls — forbidden execution functions denied
+        - pragmas — query_only and foreign_keys strictly permitted; all others denied
+        - function allowlist — count, sum, min, max, avg, json_extract, date, strftime
+        - function denylist — load_extension, writefile, readfile, fts3_tokenizer denied
       - compilation — authorizer table compiled from artifacts/policy.yaml
+      - ddl trust floors
+        - alter table — requires reviewed trust; draft attempts exit with code 2
+        - vacuum — requires pinned trust; denied unconditionally in prod overlay
     - Layer 2: SQL AST check
       - engine — TypeScript node-sql-parser before statement preparation
       - checks
+        - parameterization — bound parameters mandatory; string interpolation denied
+        - execution mode — multi-statement executescript strings denied structurally
         - intent gate — writes require valid intent: see artifacts/policy.yaml#query
         - structure — multi-statement denied, unparseable denied
-        - update/delete — require_where and require_limit mandatory
-        - row bounds — select, insert, and update caps: see artifacts/policy.yaml#query
+        - update/delete — require_where and require_limit mandatory; statement limit capped at 1000
+        - row bounds — select max 10000, insert max 500, update/delete base max 100
+        - deny patterns
+          - boolean injections — UPDATE * SET * WHERE * OR 1=1 denied
+          - unconditional deletions — DELETE FROM * WHERE NOT EXISTS * denied
         - deny patterns — boolean bypass attacks (e.g. WHERE 1=1) denied
     - Layer 1.5: prepare-time cross-check
       - engine — sqlite3_prepare_v2 dry-run in test transaction
       - cross-check — compares AST classification against SQLite EXPLAIN
+      - opcode trap — OpenWrite detected on statement classified as read denies run
       - discrepancy — unclassified writes (OpenWrite bytecode) trigger denial
     - Pipeline sequence
       - Stage 1 — intent target binding and AST blast-radius cross-check
@@ -45,6 +55,7 @@
       - schema integrity — system_schema hash mismatch aborts boot
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
+      - leak prevention — secret exposure detected in output executes kill_and_alert
       - sql errors — unparseable SQL or authorizer errors fail closed
       - ambiguity — unclassified read/write treated as write
       - approval absence — headless or crashed approval denies execution
@@ -84,6 +95,7 @@
       - count query — db query --count mandatory before mass updates
       - environment exemptions — dev and sim waive mandatory pre-counts
     - Trust thresholds
+      - prod confirmation — bulk updates in prod require approval above 10 rows
       - bulk minimum — trust >= reviewed: see artifacts/policy.yaml#query
       - human threshold — writes exceeding row caps require confirmation
   - Search ceiling

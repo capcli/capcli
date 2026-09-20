@@ -6,6 +6,10 @@
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json
       - Prefix standard — [env] prepended to all output streams
+      - Caller categories
+        - [harness] — safe for autonomous agent execution
+        - [human] — requires interactive human approval
+        - [both] — dual execution permitted depending on flags
     - Exit codes
       - exit code laws — strict integer contract (0, 2, 3, 4, 5): see physics.md#Exit-code-law
     - Hot path: run noun
@@ -16,6 +20,7 @@
         - inspect — run inspect <capability>
       - Aliases — capcli search, capcli inspect
       - Inspect envelope
+        - sla guarantee — single-response zero-roundtrip go/no-go verdict via can_invoke_now
         - tokens — file size, parameter schema, result caps
         - duration — p50, p95, timeout ceiling
         - storage — writes, reads, max rows affected
@@ -63,7 +68,7 @@
       - Expiry — ping expire <ask-id>
     - Governance path: rule noun
       - Inspection — rule show [--type schema|system-schema|policy|governance]
-      - Comparison — rule diff [--git] [--type schema|system-schema]
+      - Comparison — rule diff [--git] [--type schema|system-schema] vs HEAD or live DB PRAGMAs
       - Application — rule apply [--type schema] [--dry-run]
       - Validation — rule validate
     - World path: env noun
@@ -83,16 +88,25 @@
       - Sandboxing — sys exec <cmd> --sandbox
       - Daemon control — sys serve --start, --stop, --restart, --status
     - Banned operations
-      - config mutations via CLI — edit files and commit
+      - config writes — config set banned; edit YAML and git commit
       - direct system-schema apply — managed by kernel upgrades
-      - manual schema editing via CLI — edit schema.yaml
+      - manual schema edits — schema edit banned; edit schema.yaml
       - override flags — --force, --override-budget, --force-prod banned
-      - ad-hoc verbs — db count, claim, jail, api call, api create banned
+      - retired verbs
+        - db count — banned; use db query --count
+        - claim — banned; use db lock or run --lock
+        - jail — banned; use sys exec --sandbox
+        - policy explain — banned; use sys audit trace --explain
+        - --verbose — banned; use sys audit tail
+        - api call — banned; use run or ctx.api.call
+        - budget — banned; use inspect cost envelope
+        - api import --pick — banned; verbs synced in full
   - Universal flags
     - Global flags
       - --json — stable machine-readable output
       - --as <principal> — target execution principal for scoped access
       - --env <name> — target environment selection
+      - flag ceiling — universal flags frozen at exactly nine; no per-noun growth
     - Mutating flags
       - --dry-run — plan execution without applying state changes
       - --intent "<why>" — causal motivation, validated against anti-junk rules
@@ -104,8 +118,14 @@
   - Client contract (@capcli/client)
     - Instantiation
       - entry point — import { createClient } from '@capcli/client'
-      - config parameters — createClient({ endpoint, token })
+      - config parameters — createClient({ endpoint, token, brand })
       - transport — HTTP POST for commands; WebSocket / SSE for live audit tail
+    - White-label engine
+      - brand schema — name string, cli binary name, optional tagline
+      - noun aliasing — surface aliases for nouns (e.g. routine→flow, db→store, run→exec)
+      - locked nouns — kernel sys noun cannot be aliased (lockedNouns default: ['sys'])
+      - branding scope — human text output only; JSON, audit logs, and exit codes never rebranded
+      - discovery model — embedder configuration discovered via TypeScript types; invisible in docs
     - Method surface
       - execution — client.run(), client.db.query(), client.routine.prove()
       - discovery — client.search(), client.inspect()
@@ -123,7 +143,17 @@
       - navigation — causal DAG traversal without dead ends
       - interaction set — browse, approve, answer, recover, observe
     - Ten layer architecture
-      - Layer 1: World — table schema trees, masked data cells, column policies
+      - navigation model — causal DAG drill-down without dead ends
+        - drill sequence — row → event → routine → manifest → verb → quota → frame → session → agent → principal
+      - UI rendering mechanics
+        - cell redaction — mask=true columns rendered as locked cells ████
+        - usage telemetry — governance caps rendered as live progress bars (e.g. 47/300)
+        - integrity alerts — quad-lock version mismatch renders red banner
+        - veto countdown — 1-hour active countdown timer displayed on promotions
+      - Offline support — service worker caches last-known world state and schemas
+      - Tool analogs — Prisma Studio (L1), Datadog (L4), IAM (L3/L10), GitHub PR (L7)
+      - Banned builders — no SQL editors, chart builders, alert builders, or ad-hoc dashboards
+      - Layer 1: World — table schema trees, masked data cells, column header clicks deep-link to policy
       - Layer 2: Capability — routine versions, manifest vs fingerprint diffs, api states
       - Layer 3: Governance — policy rules, live governance quotas, lockfile integrity status
       - Layer 4: Audit — live event tail, DAG breadcrumbs, denial explanations

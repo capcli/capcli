@@ -40,6 +40,12 @@
         - prod world — pinned trust production floor
       - travel rule — routines cross environments via git worktree merges
     - Ladder laws
+      - human authority floor
+        - production writes — every mutating write in prod requires human approval
+        - bulk modifications — writes exceeding 100 rows route reason through human
+        - external egress — HTTP calls leaving perimeter require explicit grant
+      - cross-agent floor — cross-agent calls require callee trust >= reviewed; drafts cannot be dependencies
+      - training wheels graduation — unapproved calls graduate to normal governance automatically on call 4
       - monotonic ascent — ladder climbed sequentially; elevation skips denied
       - zero self-promotion — promotion commands demand human or CI credentials
       - dependency floor — cross-agent callee routines must hold trust >= reviewed
@@ -83,6 +89,7 @@
   - Evidence
     - Manifest evidence
       - delta review
+        - delta format — single-line behavioral change (e.g. v18 adds api.call X)
         - interface — human reviews manifest diff rather than code text
         - regression detection — undeclared leaf additions flagged explicitly
       - match calculation
@@ -97,6 +104,7 @@
       - training wheels
         - target verbs — skip and prod-only verbs
         - human approval — call cap: see artifacts/governance.yaml#api.prod_first_calls
+        - window expiration — 24-hour approval TTL on each first prod call
         - tracking — remaining calls decremented in _api_catalog
     - Cost evidence
       - profiling metrics
@@ -118,10 +126,19 @@
       - ceiling tightening — overrides can enforce stricter caps than defaults
       - physical immutability — overrides cannot loosen SQLite authorizer or jail walls
     - Banned override flags
+      - --force — banned; exceptions require git commits in governance.yaml
+      - --override-budget — banned; budgets governed strictly by frame cascade
+      - --force-prod — banned; authorizer physically blocks prod-only calls in sim
       - --force — banned unconditionally
       - --override-budget — banned; budgets governed structurally
       - --force-prod — banned; authorizer physically denies prod-only verbs in sim
   - Trust receipts
+    - Verified receipt lines
+      - audited operations — exact count of bounded leaf operations recorded
+      - pre-execution denials — count of explained policy rejections with zero state mutation
+      - unaudited writes — verified strictly zero
+      - secret protection — verified zero unmasked tokens exposed
+      - recovery validation — confirmation that snapshot restore and git replay drills passed
     - Receipt generation
       - command — capcli sys doctor --report
       - provenance — computed directly from kernel _audit mirror

@@ -43,13 +43,16 @@
         - prefix — name completion
         - fuzzy — edit-distance over names and descriptions
         - semantic — harness-side embedding ranking
-        - did-you-mean — nearest candidates on zero hits
+        - did-you-mean — nearest candidates proposed on zero hits
+      - Progressive disclosure
+        - meta-tool — single cap search tool retains constant context at scale
+        - relevance floor — semantic matches below 0.60 rejected
       - Determinism split
         - kernel search — exact, prefix, structured filters
         - harness search — semantic rankings, fuzzy tolerance
         - rationale — see physics.md#Search-ceiling
       - Scale behavior
-        - cap trigger — see artifacts/governance.yaml#registry
+        - cap trigger — keyword search degrades past 300-routine hard ceiling. see artifacts/governance.yaml#registry
         - degradation — keyword search yields noise past cap
         - mitigation — structured filters prune, semantic ranks
       - Analytics and gaps
@@ -88,6 +91,11 @@
         - api write — ctx.api.call with pre-call spend check
         - db write — ctx.db.txn context wrapping ctx.db.execute
         - return value — summary-sized dict
+    - Shape constraints
+      - file size — 5 to 150 lines of code; 50 to 2,000 tokens
+      - signatures — max 8 typed Param declarations; description min 5 words
+      - execution caps — max 50 ops per run; max 300s duration; max 10 txn statements
+      - output envelope — max 500 result tokens; oversized results return truncated: true
     - Sandbox execution
       - Jail architecture
         - process model — jailed subprocess or unconfined process
@@ -99,6 +107,7 @@
         - container engine — podman or docker rootless container
         - disposable host — process mode without OS namespace isolation
       - Jail defenses
+        - filter derivation — AST deny-list compiled directly from seccomp-bpf
         - IPC restriction — CLI process boundary is sole door in isolated modes
         - process hierarchy — fork and exec blocked
         - path restriction — writes outside scratch blocked at syscall
@@ -125,6 +134,7 @@
       - Rules and caps
         - nesting ceiling — see artifacts/governance.yaml#routine_shape
         - import ceiling — see artifacts/governance.yaml#routine_shape
+        - cross-agent deduplication — near-duplicate across agents forces merge or fork
         - counter scopes — spend, rate, rows session-scoped
         - constraint direction — cages tighten downward
         - min cascade law — see budget.md#Cascade
@@ -132,14 +142,17 @@
     - Skill invocation protocol
       - Pipeline stages — DISCOVER (search) → INSPECT (inspect) → INVOKE (run)
       - Mapping contract — skill frontmatter maps 1:1 to Param declarations
+        - validation failure — signature mismatch exits with code 3
       - Result constraint — computed summaries only (<= 500 tokens)
       - Provenance pass — skill name recorded in triggered_by_skill
       - Protocol bans
+        - unproven drafting — routine draft and ship forbidden within skills
         - raw SQL instruction
         - routine ship or draft within skills
         - reading secrets or masked columns
         - bypassing run via raw HTTP
         - cross-session result caching
+      - Evidence prerequisite — proposal requires >= 3 identical audit sequences
     - Invariants and anti-decisions
       - Anti-decisions
         - no YAML procedures — control flow belongs in code
@@ -215,6 +228,11 @@
         - match rate expressed as fraction (e.g. 3/4 = 0.75)
         - divergence yields warning or governance.anomaly event
     - Architectural purpose
+      - Mirror view definitions
+        - shared_subsequences — aggregates frequent n-grams to propose routines
+        - primitive_cost — groups duration p50/p95 and USD spend per leaf
+        - primitive_failures — isolates leaf failures by version and sequence
+        - op_frequency — tracks atomic op calls across sessions
       - Consolidation — merge clustering via fingerprint similarity: see time.md#Consolidation
       - Regression tracking — newly introduced leaves detected between versions
       - Cost attribution — leaf-level profiling: see time.md#Stage-map
@@ -228,9 +246,11 @@
       - Idempotency mandate — non-idempotent retries denied
     - Catalog synchronization
       - Sync trigger — capcli api sync <provider> --from <url> --interval <cadence>
+      - Spec quarantine — kernel alone parses OpenAPI specs; harness never reads raw spec
       - Compilation — kernel parses OpenAPI spec and generates apis/<provider>.yaml
       - Sync cadence limits — see artifacts/governance.yaml#api.sync
       - Verb default state — dormant across entire imported spec
+        - immortality — dormant verbs never expire; unactivated surface stays permanent
       - Diff inspection — api diff <provider> compares spec_hash
     - State machine
       - States
@@ -246,14 +266,17 @@
     - Activation gate
       - Trigger — capcli api activate <verb> --intent "..."
       - Validation checks
+        - provider ceilings — max 50 active verbs per provider
         - verb exists in catalog and holds dormant status
         - active count under provider cap: see artifacts/governance.yaml#api
         - rate under activation cap: see artifacts/governance.yaml#api.activation
+        - hourly ceiling — max 10 activations per hour
         - intent present and passes anti-junk validation
       - Initial trust — draft
       - Training wheels
         - target verbs — skip and prod-only
         - approval cap — human gate: see artifacts/governance.yaml#api.prod_first_calls
+        - window expiration — 24-hour approval window per unapproved call
         - graduation — fourth call enters normal governance
     - Live quota tracking
       - mechanics — token bucket calculation and _api_quota sync: see budget.md#Quotas
@@ -267,6 +290,11 @@
       - Lifecycle commands — bind list, inspect, pause, resume, remove
       - Key management — bind keys issue <name> --principal partner:<id>
       - Health checks — bind endpoint <name> --health
+      - Schedule defenses
+        - orphan protection — retiring a routine auto-disables schedules loudly
+        - restart safety — max 1 catchup execution permitted on daemon boot
+        - webhook limits — payload max 65,536 bytes; 100 events/minute ceiling
+        - dead letter queue — FIFO retention for 30 days or max 1,000 items
     - Serve lifecycle split
       - CLI configuration — bind endpoint writes config to workspace.db and exits
       - Daemon process — sys serve --start launches persistent Bun.serve() listener
@@ -276,5 +304,7 @@
       - Minimum trust — pinned: see artifacts/governance.yaml#serve
       - Version locking — explicit routine@version required
       - Default writes — deny: see artifacts/governance.yaml#serve
+      - Surface limits — max 10 endpoints; max 25 API keys
       - Local binding — 127.0.0.1: see artifacts/governance.yaml#serve
+      - Payload ceiling — response body capped at 65,536 bytes
       - Key rotation — days cap: see artifacts/governance.yaml#serve

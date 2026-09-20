@@ -75,6 +75,8 @@
         - principal scoping
           - declaration — scoped: principal
           - parameter — requires :principal bind variable
+          - compile check — Gate 2 fails if scoped view omits :principal
+          - call check — authorizer denies scoped execution without --as
           - enforcement — authorizer denies execution without --as
     - system-schema.yaml
       - ownership
@@ -84,7 +86,8 @@
       - integrity verification
         - hash verification — mandatory at boot: see artifacts/governance.yaml#schema.system
         - mismatch behavior — refuse boot: see artifacts/policy.yaml#fail_closed
-      - managed tables: see artifacts/system-schema.yaml
+      - managed surfaces — 11 kernel tables defined in artifacts/system-schema.yaml
+        - registry roster — _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats
     - Shorthand expansion
       - column shorthands
         - primary key
@@ -122,7 +125,8 @@
         - triggers — trig: expands to kernel-compiled trigger
     - Seed data
       - declaration — seed: [...] array in table definition
-      - execution — executed inside DDL transaction during rule apply
+      - execution — executed inside migration DDL transaction; audited with seed_rows count
+      - volume cap — max 50 rows per table to prevent draft bulk loading
       - row volume bounds — ceiling: see artifacts/governance.yaml#schema.world
     - Enforcement split
       - SQLite engine layer
@@ -139,6 +143,7 @@
         - column immutability — ~ syntax denies column update
         - output redaction — mask=true redacts cell data
         - row immutability — imm_rows denies row mutation
+        - audit injection — created_by and modified_by populated by kernel on prov tables
         - system protection — sys: true denies agent writes
   - Schema evolution
     - Column addition lifecycle
@@ -192,6 +197,7 @@
         - traversal targets — rel: targets must resolve to real tables
         - index targets — indexed columns must exist in parent table
         - circularity — circular foreign key chains prohibited
+        - graph cycles — circular references (a -> b -> c -> a) rejected at compile
       - SQL syntax
         - check constraints — chk: expressions parse as valid SQL WHERE
         - triggers — trig: bodies compile without syntax errors
