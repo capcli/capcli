@@ -18,6 +18,7 @@
       - enforcement — constraints enforced via SQLite C authorizer and OS jails
       - policy anchor — default: deny across all capability vectors
     - Physics over rules
+      - dual store recovery — where gates cannot reach, recovery via git and object store does
       - mechanism — impossible paths preferred over prompt instructions
       - unbounded writes — denied structurally via AST and authorizer
       - failure modes — designed denials teach harness through structured feedback
@@ -30,11 +31,14 @@
       - structural governance — governance.yaml governs artifact shapes (nouns)
       - compilation — compiled together at startup; runtime mutation denied
   - Mental model
+    - three-surface law — state in SQLite, procedure in Python, experience in JSONL
     - Storage trinity
       - state — SQLite workspace.db managed by kernel CLI engine
       - procedure — Python routines and OpenAPI catalog definitions
       - experience — SQLite _audit table mirrored to git-tracked JSONL
     - Language law
+      - format axiom — YAML declares, Python executes, JSONL records
+      - procedural boundary — control flow, branching, and loops forbidden in YAML
       - YAML — static declarative configuration and schema definitions
       - Python — procedural control flow, composition, and error branching
       - JSONL — immutable linear historical record of world mutations

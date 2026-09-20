@@ -8,10 +8,12 @@
     - Snapshot catalog
       - listing — sys recover --list displays recovery points
       - identification — human-readable names (e.g. snap_migration_004)
+      - naming convention — snap_auto_*, snap_migration_*, snap_onboarding_*
       - trigger bindings — auto-created by schedule or migration gates
   - Git integration
     - Commit automation
-      - cadence — interval commits: see artifacts/governance.yaml#backup
+      - cadence — commits every 15 minutes; drift > 30 minutes raises doctor alarm
+      - mutation triggers — commits on promote, migrate, import, register, restore
       - event triggers — commit on promote, migrate, import, register
       - tracked artifacts — world.sql, audit logs, and configuration YAMLs
     - Dual storage guarantee
@@ -19,6 +21,7 @@
       - object storage — append-only S3, GCS, or B2 bucket with versioning
       - push command — sys backup --push writes to git and object store
     - History retention
+      - squash cadence — 90-day git squash keeps repo small under ~35k commits/year
       - git squash — git_max_age_days threshold: see artifacts/governance.yaml#backup
       - archive — full immutable history retained in object storage
   - Hash chains
@@ -42,6 +45,11 @@
       - allowlist — db query, db dump, sys audit tail, sys backup
       - audit trail — logs recovery_mode_entered on startup
     - Re-entry context
+      - context reinstatement
+        - position — active environment, schema version, policy version
+        - last action — last recorded intent and successful effect
+        - drift log — audit events and retirements since prior session
+        - safe next step — proposed dry-run or audit verification command
       - position — active environment, schema version, policy version
       - last action — last recorded intent and successful effect
       - drift log — audit events and retirements since prior session
@@ -51,6 +59,8 @@
       - retirement — capabilities uncallable; historical provenance preserved
       - reversal — rollback un-retires routines by reinstating pointer
     - Offboarding sequence
+      - strict ordering — backup first, revoke identities second, dump state third, remove envs last
       - Stage 1: Survey — inspect prod state and remove active endpoint binds
       - Stage 2: Preserve — sys backup --push, export db dump, revoke agents
       - Stage 3: Teardown — remove environments; prod demands dual confirmation
+        - confirmation flags — --confirm-backup and --confirm-prod both required

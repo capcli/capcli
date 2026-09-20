@@ -8,6 +8,7 @@
       - audit/*.jsonl (export mirror)
         - role — secondary read-only export view streamed from _audit table
         - persistence — flushed to disk and git for offline diffing and cold recovery
+        - sync freshness — mirror lag hard SLA capped at 5 minutes
         - format — daily append-only files
     - Event anatomy
       - identity — event, ts, env, stage
@@ -18,6 +19,7 @@
       - outcome — rows_affected, result_hash, duration_ms
     - Kernel event payloads
       - capability.search — query, results_count, resolution_stage, gap_signal
+      - db.exec — sql, params, ast_parse {ok, node_count, statement_type}, rows, hash
       - db.exec — sql, params, rules_matched, rows_affected, result_hash
       - routine.run — routine, version, hashes, triggered_by, outcome, ops, duration
       - api.sync — provider, added, removed, changed, unchanged
@@ -27,6 +29,10 @@
       - budget.frame_push/pop — declared, consumed, remaining balances
       - serve.request — endpoint, routine@version, api_key_id, principal, status
     - Event integrity
+      - failure buffer — audit sink error queues writes in memory for 5m before fail
+      - genesis sequence — world starts with rule.apply, db.query, db.exec deny, db.exec ok
+      - no synthetic types — onboarding.* and fake lifecycle events denied
+      - tamper blast radius — broken sha256 link invalidates all subsequent events
       - write priority — unaudited writes denied outright (exit 5)
       - denial logging — denied operations emit audit events with effect: none
       - tamper detection — per-row sha256 chain verified against remote notary/witness
@@ -58,6 +64,7 @@
       - remediation — explicit fix instructions printed
       - mutation — state change strictly none
     - Learning and alerting
+      - thrashing detector — 20 sustained denials triggers agent thrashing alert
       - training data — denial patterns inform harness prompt and code adjustments
       - thrashing alert — threshold: see artifacts/policy.yaml#rate
   - Failure forensics
@@ -76,5 +83,5 @@
       - retention bounds — versions kept: see artifacts/governance.yaml#routine_shape
     - Replay invariants
       - policy enforcement — replay executes under current policy, not historical
-      - external effects — external API calls flagged replay: manual
+      - external effects — external API calls flagged replay: manual; auto-replay strictly forbidden
       - idempotency — environment-scoped idempotency keys prevent duplicate execution
