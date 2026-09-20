@@ -208,6 +208,7 @@
       - API call boundaries
         - kernel mediation — egress executed exclusively through kernel binary
         - secret injection — boundary insertion from vault: see agent.md#Secrets
+        - missing secret fallback — missing secret_ref triggers suspension via ping.ask
         - pre-call quota — deny before network dispatch: see budget.md#Quotas
         - idempotency — kernel-minted key persisted before egress
       - Sandbox boundaries
