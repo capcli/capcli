@@ -51,7 +51,8 @@
       - production switch — capcli env use prod
     - Data masking
       - fork rule — sim_seed_masking: enforce (artifacts/governance.yaml)
-      - redaction — sensitive columns masked on database fork
+      - redaction — sensitive columns populated via Format-Preserving Anonymization (FPA)
+      - type validity — emails become anon_*@sim.local; unicode blocks (████) banned
     - Sim mode taxonomy
       - sandbox — HTTP routes to provider test endpoint via overlay
       - mock — kernel returns canned fixture from apis/*.mock.yaml

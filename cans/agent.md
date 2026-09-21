@@ -27,9 +27,10 @@
       - validation — format constraints: see artifacts/policy.yaml#identity
       - authority limit — skill origin acts as metadata, never grants power
     - Concurrency scope
-      - concurrency model — single-agent writer in v1; concurrent writers exit 2
+      - concurrency model — multi-principal single-writer queue (kernel.tx_queue)
+      - arbitration — background FIFO queue buffers webhook and cron writes up to busy_timeout
+      - collision handling — writers queue sequentially; immediate exit 2 occurs on queue timeout only
       - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
-      - write arbitration — serialized atomic transactions with busy-timeout queuing
       - callee floor — cross-agent routine calls demand trust >= reviewed
   - Intent chain
     - Chain hierarchy
@@ -49,7 +50,9 @@
     - Session lifecycle
       - scoping — session id rides every budget frame, audit event, and claim
       - tracking — session counters govern spend, rate, and rows affected
+      - workspace anchor — CAPCLI_WORKSPACE env var or --workspace flag anchors root; cd reliance banned
     - Harness execution boundary
+      - tool schema — single JSON-RPC tool capcli(command: string); open bash execution prohibited
       - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)
       - exit contract — process exit codes (0, 2, 3, 4, 5) return status to subshell
       - pwa boundary — HTTP/WS daemon serving JSON-RPC 2.0 strictly for PWA client

@@ -98,12 +98,13 @@
       - output envelope — max 500 result tokens; oversized results return truncated: true
     - Sandbox execution
       - Jail architecture
-        - process model — jailed subprocess or unconfined process
+        - process model — jailed subprocess or pre-forked warm sandbox pool in daemon
+        - latency floor — warm runner recycling ensures execution overhead < 50ms
         - network — unshared namespace or host loopback
         - filesystem — workspace mounted read-only, tmpfs /scratch wiped at exit
         - syscalls — default-deny seccomp-bpf filter blocking raw network and spawn
       - Provider backends
-        - linux default — bwrap with network isolation
+        - linux default — bwrap with network isolation and host userns doctor checks
         - container engine — podman or docker rootless container
         - disposable host — process mode without OS namespace isolation
       - Jail defenses
@@ -123,8 +124,12 @@
         - cron fire — daemon time trigger
         - webhook dispatch — inbound provider event
         - ask resume — suspension release via ping ask
+        - inbox poll — capcli sys inbox pop fetches sensory queued tasks
+      - Sensory grounding
+        - physical stimulus — worker agents consume real inbox queue items; ad-hoc telepathic order hallucinations banned
       - Interior rules
         - execution model — strictly sequential
+        - transaction integrity — ctx.api.call strictly forbidden inside ctx.db.txn blocks
         - banned patterns — ctx.on listeners, reactive streams, subscriptions
         - failure modes — callbacks break DAG linearity, txn boundaries, replay
         - architecture law — events start routines, routines never consume events
@@ -176,6 +181,8 @@
         - file substrate — routines/overview.py registered under name overview
         - decorator bounds — @routine(name="overview", idempotent=true, limits=...)
         - output envelope — dense situational summary capped at 500 result tokens
+      - Prompt cache economics
+        - transcript placement — overview outputs mount at volatile turn leaves; system prompt mounting banned to preserve KV cache
       - Assembly pattern
         - data aggregation — queries domain read-views compiled in schema.yaml
         - blocker checks — aggregates active lease locks, pending asks, and budget state
@@ -262,6 +269,7 @@
       - Sync trigger — capcli api sync <provider> --from <url> --interval <cadence>
       - Spec quarantine — kernel alone parses OpenAPI specs; harness never reads raw spec
       - Compilation — kernel parses OpenAPI spec and generates apis/<provider>.yaml
+      - Spec pruning — specs exceeding 10MB auto-prune unreferenced paths during compilation
       - Sync cadence limits — see artifacts/governance.yaml#api.sync
       - Verb default state — dormant across entire imported spec
         - immortality — dormant verbs never expire; unactivated surface stays permanent

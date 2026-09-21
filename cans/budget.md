@@ -118,6 +118,7 @@
     - Output caps
       - Routine results
         - max_result_tokens 500 — summaries crossing to the model truncate
+        - truncation structure — emits valid JSON envelope with truncated: true and next_cursor; inline raw string corruption banned
         - serve response max_result_tokens 500 — inherited routine cap
         - Overrides may raise it: weekly_report max_result_tokens 1500
       - Ping surfaces

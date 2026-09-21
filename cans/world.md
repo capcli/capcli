@@ -98,7 +98,8 @@
         - immutability — int~ expands to integer immutable write-once
         - foreign relations — int ref=table.col expands to foreign key
           - blob reference — blob ref=storage expands to object metadata json
-        - redaction — mask=true marks column for audit and result masking
+        - redaction — mask=true marks column for format-preserving anonymization (FPA)
+          - fpa behavior — synthetic typed valid values; block characters (████) banned
       - table shorthands
         - provenance
           - tag — prov: true
@@ -157,11 +158,13 @@
         - evaluation — draft trust throws exit 2
       - step 4: approval — human inspects DDL plan and rollback preview
       - step 5: ship — routine ship schema_<v> --to reviewed --reason "..."
-      - step 6: apply
+      - step 6: apply dev
         - command — rule apply --type schema --env dev --intent "..."
         - execution — snapshot taken, DDL executed in transaction
         - audit — schema migration event emitted
-      - step 7: prod merge — git merge dev into prod worktree
+      - step 7: atomic prod promotion
+        - command — env merge dev --into prod --intent "..."
+        - mechanics — snapshots prod, merges git, applies physical DDL, locks lockfile
     - Agent denial rules
       - raw DDL execution
         - command — db.exec "ALTER TABLE ..."
