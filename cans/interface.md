@@ -3,6 +3,7 @@
     - Design laws
       - Command shape — capcli <noun> <verb> [target] [--flags]
       - Subcommand tree — nine nouns (run, db, routine, api, bind, ping, rule, env, sys)
+      - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json
       - Prefix standard — [env] prepended to all output streams
@@ -57,8 +58,10 @@
     - Trigger path: bind noun
       - Bindings
         - bind cron <name> --run <cap> --cron "<expr>" --intent "..."
-        - bind webhook <name> --provider <p> --event <e> --run <cap> --intent "..."
+        - bind webhook <name> --provider <p> --event <e> --run <cap> [--ingress <url>|--tunnel] --intent "..."
         - bind endpoint <routine@version> --auth api-key [--rate <r>]
+      - Webhook ingress
+        - route verification — external webhooks require valid public --ingress url or active tunnel; raw 127.0.0.1 denied
       - Management — bind list, inspect, pause, resume, remove
       - Credentials — bind keys issue <name> --principal partner:<id>
     - Interaction path: ping noun
@@ -79,6 +82,7 @@
       - Promotion — env merge <name> --into prod
       - Deprovisioning — env remove <name>
     - System path: sys noun
+      - Sensory inbox — sys inbox pop [--channel <name>]
       - Audit tailing — sys audit tail [--follow] [--capability X] [--since 1h]
       - Causal tracing — sys audit trace <op-id> [--explain]
       - Mirror queries — sys audit query <sql> [-p k=v]
@@ -107,6 +111,7 @@
       - --json — stable machine-readable output
       - --as <principal> — target execution principal for scoped access
       - --env <name> — target environment selection
+      - --workspace <path> — project root anchor (overrides CAPCLI_WORKSPACE env var)
       - flag ceiling — universal flags frozen at exactly nine; no per-noun growth
     - Mutating flags
       - --dry-run — plan execution without applying state changes

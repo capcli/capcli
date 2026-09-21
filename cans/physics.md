@@ -24,6 +24,7 @@
       - engine — TypeScript node-sql-parser before statement preparation
       - checks
         - parameterization — bound parameters mandatory; string interpolation denied
+        - transaction isolation — ctx.api.call inside ctx.db.txn blocks rejected at compile
         - execution mode — multi-statement executescript strings denied structurally
         - intent gate — writes require valid intent: see artifacts/policy.yaml#query
         - structure — multi-statement denied, unparseable denied
@@ -68,6 +69,10 @@
       - exit 3 — validation error, missing intent, boot refusal, drift
       - exit 4 — mid-execution runtime crash
       - exit 5 — audit sink failure; write aborted
+    - Diagnostic output law
+      - machine style — text output emits rustc-style diagnostics; conversational filler banned
+      - denial format — [FAIL] rule code, rejected statement, expected syntax, code template
+      - structural purity — machine consumers receiving --json receive parseable envelopes without banner chrome
     - Break-glass paths
       - recovery shell — CAPCLI_RECOVERY=1 loads schema and audit sink only
       - diagnostic check — sys doctor --boot-check verifies boot without daemon

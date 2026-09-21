@@ -3,9 +3,9 @@
 
 ---
 
-**[Human (AFK)]** *(Types 1 line into naked Ubuntu VPS terminal, hits enter, locks screen, walks away)*
+**[Human (AFK)]** *(Types 1 line into naked Ubuntu VPS terminal, hits enter, locks screen)*
 ```bash
-agent run --prompt "Set up wholesale coffee mini-ERP using capcli kernel: inventory, orders, Stripe billing. Do not call me unless a real secret or card is required."
+agent run --prompt "Set up wholesale coffee mini-ERP using capcli kernel: inventory, orders, Stripe billing. Do not interrupt unless a real secret or card is required."
 ```
 
 ---
@@ -13,18 +13,18 @@ agent run --prompt "Set up wholesale coffee mini-ERP using capcli kernel: invent
 **[Harness Turn 1]**
 ```text
 <thinking>
-Task: Initialize wholesale coffee mini-ERP.
-Constraint: Governed physical execution via capcli kernel.
-Human Status: AFK (Interactions restricted to hard credential/payment blockers).
-Step 1: Check environment prerequisites and kernel presence.
+Check if capcli binary is installed and discover entry points.
 </thinking>
 ```
-**Tool Call:** `bash("which capcli")`
+**Tool Call:** `bash("which capcli || (curl -fsSL https://releases.capcli.dev/v8/linux-x86_64 -o /usr/local/bin/capcli && chmod +x /usr/local/bin/capcli) && capcli --help")`
 
 **[Subshell Return]**
 ```text
-Exit Code: 127
-stderr: which: no capcli in (/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin)
+capcli: Governed agent execution kernel
+Usage:   capcli <noun> <verb> [flags]
+Search:  capcli search "<intent>"
+Status:  capcli run overview --json
+Doctor:  capcli sys doctor --boot-check --json
 ```
 
 ---
@@ -32,11 +32,10 @@ stderr: which: no capcli in (/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/
 **[Harness Turn 2]**
 ```text
 <thinking>
-Capcli binary not detected in PATH.
-Action: Fetch official release binary, verify SHA256 integrity, place in /usr/local/bin, execute boot diagnostic.
+Inspect runtime structure to verify kernel capabilities, sandbox limits, and DB paths before creating workspaces.
 </thinking>
 ```
-**Tool Call:** `bash("curl -fsSL https://releases.capcli.dev/v8/linux-x86_64 -o /usr/local/bin/capcli && chmod +x /usr/local/bin/capcli && capcli sys doctor --boot-check --json")`
+**Tool Call:** `bash("capcli sys doctor --boot-check --json")`
 
 **[Subshell Return]**
 ```json
@@ -47,8 +46,15 @@ Action: Fetch official release binary, verify SHA256 integrity, place in /usr/lo
   "wal_mode": true,
   "c_authorizer": "active",
   "sandbox_provider": "bwrap",
-  "seccomp_bpf": "supported",
-  "audit_sink": "online"
+  "unprivileged_userns": "supported",
+  "seccomp_bpf": "active",
+  "audit_sink": "online",
+  "layout": {
+    "envs_dir": "envs/<name>/workspace.db",
+    "apis_dir": "apis/",
+    "routines_dir": "routines/",
+    "lockfile": "capcli.lock"
+  }
 }
 ```
 
@@ -57,8 +63,7 @@ Action: Fetch official release binary, verify SHA256 integrity, place in /usr/lo
 **[Harness Turn 3]**
 ```text
 <thinking>
-Kernel verified. C-authorizer, SQLite WAL, and bwrap sandbox fully active.
-Action: Provision isolated workspace environment namespace.
+Kernel verified. Initialize coffee-erp workspace and switch to dev environment.
 </thinking>
 ```
 **Tool Call:** `bash("capcli env new coffee-erp && cd coffee-erp && capcli env use dev")`
@@ -75,12 +80,8 @@ Action: Provision isolated workspace environment namespace.
 **[Harness Turn 4]**
 ```text
 <thinking>
-Context Token Budget Check:
-Base system prompt contains ONLY 1 meta-tool contract: 'capcli run search'.
-Active Context Size: 1,140 tokens. Context pollution: Zero.
-
-Goal: Build inventory table for coffee ERP.
-Attempting direct relational table bootstrap via raw SQL DDL.
+Goal: Initialize inventory table products.
+Attempting direct SQL DDL creation via db exec.
 </thinking>
 ```
 **Tool Call:** 
@@ -92,15 +93,11 @@ capcli db exec "CREATE TABLE products (id INTEGER PRIMARY KEY, sku TEXT UNIQUE, 
 
 **[Capcli Kernel]**
 ```text
-[FAIL_CLOSED]
-STATUS:      HALTED (Exit 2)
-LAYER:       c_authorizer
-RULE:        policy.authorizer.global (ddl_denied)
-TARGET:      CREATE TABLE products
-STATEMENT:   CREATE TABLE products (id INTEGER PRIMARY KEY, sku TEXT UNIQUE, stock INT, price_cents INT);
-EFFECT:      NONE (Database state untouched)
-EVENT_ID:    op_001
-REMEDIATION: Agents cannot execute physical SQL DDL. Declare relational models inside 'schema.yaml'. Run 'capcli rule apply --type schema --dry-run' to validate compilation.
+[FAIL] authorizer.ddl
+  code:      E001_DDL_DENIED
+  statement: CREATE TABLE products (id INTEGER PRIMARY KEY, sku TEXT UNIQUE, stock INT, price_cents INT);
+  rule:      policy.authorizer.global.ddl_denied
+  template:  declare models in 'schema.yaml' -> run 'capcli rule apply --type schema'
 ```
 
 ---
@@ -108,37 +105,23 @@ REMEDIATION: Agents cannot execute physical SQL DDL. Declare relational models i
 **[Harness Turn 5]**
 ```text
 <thinking>
-Command halted with Exit 2.
-Analysis of Kernel Response:
-- State mutation: None.
-- Denial source: C-level sqlite3_authorizer hook.
-- Physical invariant: Raw SQL DDL statements (CREATE, DROP, ALTER) are rejected at prepare-time.
-- Required path: Declarative modeling via 'schema.yaml'.
-
-Inspecting audit record to extract full causal context.
+Exit 2. Physical DDL blocked by C authorizer.
+Relational models must be declared in schema.yaml.
+Inspect audit trace for op_001.
 </thinking>
 ```
-**Tool Call:** `bash("capcli sys audit trace op_001 --explain")`
+**Tool Call:** `bash("capcli sys audit trace op_001 --json")`
 
 **[Subshell Return]**
-```text
-======================= CAUSAL AUDIT TRACE =======================
-Event ID:     op_001
-Timestamp:    1726907700124 (2026-09-21T08:35:00.124Z)
-Agent:        agt_init_01
-Env:          dev
-Stage:        live
-Capability:   db.exec
-Decision:     DENIED
-Rules Matched:
-  - policy.authorizer.global.ddl_denied: "sqlite authorizer rejected SQLITE_CREATE_TABLE"
-Payload:      {"sql": "CREATE TABLE products...", "intent": "bootstrap inventory schema"}
-Hash Link:    prev:genesis_0000 -> curr:sha256:7f9a1b2c...
-==================================================================
-EXPLAIN:
-Physical DDL execution by harness identities is blocked by design.
-Relational integrity, foreign keys, and indexes must be declared in
-schema.yaml to allow Gate 1 (Syntax) and Gate 2 (Semantics) compiler verification.
+```json
+{
+  "event_id": "op_001",
+  "capability": "db.exec",
+  "decision": "denied",
+  "rules_matched": ["policy.authorizer.global.ddl_denied"],
+  "rows_affected": 0,
+  "remedy": "declare models in schema.yaml and compile with rule apply"
+}
 ```
 
 ---
@@ -190,17 +173,18 @@ capcli rule apply --type schema --dry-run --env dev
 
 **[Capcli Kernel]**
 ```text
-[FAIL_CLOSED]
-STATUS:      HALTED (Exit 3)
-GATE:        gate_2_semantics
-FILE:        schema.yaml:16:19
-TARGET:      tables.orders.columns.product_id
-ERROR:       invalid_shorthand_syntax
-RECEIVED:    "int references products(id)"
-EXPECTED:    "<type> ref=<table.column>"
-REMEDIATION: Replace SQL-style reference with kernel shorthand 'int ref=products.id'.
-COMPILE_LOG: Syntax tree validation passed (Gate 1). Semantic relational graph resolution failed (Gate 2).
-EFFECT:      NONE (Dry-run aborted)
+[FAIL] gate_2_semantics (2 errors found)
+  --> schema.yaml:16:19
+  |
+  | product_id: int references products(id)
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^ invalid_shorthand_syntax
+  = help: replace SQL syntax with kernel reference: 'int ref=products.id'
+  |
+  --> schema.yaml:18:23
+  |
+  | customer_email: text mask=unknown
+  |                      ^^^^^^^^^^^^ invalid_mask_directive
+  = help: valid mask options: 'mask=true' (Format-Preserving Anonymization)
 ```
 
 ---
@@ -259,14 +243,12 @@ capcli rule apply --type schema --dry-run --env dev
 
 **[Capcli Kernel]**
 ```text
-[GATE_CHECK_PASSED]
-GATE_1_SYNTAX:    OK (2 tables, 9 columns parsed)
-GATE_2_SEMANTICS: OK (Relational DAG verified: orders.product_id -> products.id)
-AST_PREVIEW:
-  - CREATE TABLE products (id INTEGER PRIMARY KEY AUTOINCREMENT, sku TEXT NOT NULL UNIQUE, stock INTEGER DEFAULT 0, price_cents INTEGER NOT NULL, created_by TEXT, modified_by TEXT, CHECK(stock >= 0));
-  - CREATE TABLE orders (id INTEGER PRIMARY KEY AUTOINCREMENT, product_id INTEGER NOT NULL REFERENCES products(id), quantity INTEGER NOT NULL, customer_email TEXT, status TEXT DEFAULT 'pending', created_by TEXT, modified_by TEXT, CHECK(quantity > 0), CHECK(status IN ('pending', 'processing', 'completed', 'cancelled')));
-SNAPSHOT_DRY_RUN: snap_migration_001_dryrun generated and verified.
-EFFECT:           NONE (Dry-run only)
+[PASS] schema_validation
+  gate_1_syntax:    ok (2 tables, 9 columns)
+  gate_2_semantics: ok (relational DAG verified: orders.product_id -> products.id)
+  fpa_masking:      orders.customer_email (anonymized in sim)
+  snapshot_dryrun:  snap_migration_001_dryrun generated
+  effect:           none (dry-run)
 ```
 
 ---
@@ -359,18 +341,12 @@ STATUS:        SUCCESS (Exit 0)
 ROWS_AFFECTED: 1
 EVENT_ID:      op_004
 
-[FAIL_CLOSED]
-STATUS:      HALTED (Exit 2)
-LAYER:       ast_parser
-RULE:        policy.query.update_delete.require_where
-STATEMENT:   DELETE FROM orders;
-VIOLATION:   Unbounded mutation detected. Both WHERE and LIMIT clauses are mandatory.
-MUTATION:    NONE (Database state untouched)
-EVENT_ID:    op_005
-[AST_SPEC]
-  REQUIRED:  DELETE FROM <table> WHERE <predicate> LIMIT <integer <= 1000>
-  BANNED:    WHERE 1=1, WHERE true, tautologies, omitted limits
-  REMEDY:    Parameterize predicate and supply explicit LIMIT ceiling.
+[FAIL] ast.unbounded_mutation
+  code:      E012_REQUIRE_WHERE_LIMIT
+  statement: DELETE FROM orders;
+  rule:      policy.query.update_delete.require_where
+  template:  DELETE FROM {table} WHERE {predicate} LIMIT {max_1000};
+  example:   DELETE FROM orders WHERE status = :status LIMIT 50;
 ```
 
 ---
@@ -378,13 +354,8 @@ EVENT_ID:    op_005
 **[Harness Turn 11]**
 ```text
 <thinking>
-Command 2 halted with Exit 2 at AST analysis stage.
-Analysis:
-- Kernel forbids unbounded DELETE statements unconditionally.
-- Invariant: Mandatory WHERE clause + mandatory LIMIT clause <= 1000.
-- State mutation from second query: Exactly 0 rows. Test order remains safely in DB.
-
-Action: Rewrite statement with parameterized status predicate and bound LIMIT 50.
+Exit 2 on second query. Unbounded DELETE rejected by AST parser.
+State was not modified. Re-run query using parameterized WHERE clause and explicit LIMIT 50.
 </thinking>
 ```
 **Tool Call:** 
@@ -423,22 +394,18 @@ capcli db query "SELECT * FROM _audit;"
 ---
 
 **[Capcli Kernel]**
-```text
-[QUERY_EXECUTED]
-STATUS:       SUCCESS (Exit 0)
-ROWS_READ:    6
-[OUTPUT_CAGE]
-WARNING:      Output truncated to fit 500-token ceiling (governance.routine_shape.max_result_tokens).
-PAYLOAD:
-[
-  {"id": 1, "event": "db.exec", "decision": "denied", "capability": "db.exec", "intent": "bootstrap inventory schema"},
-  {"id": 2, "event": "rule.apply", "decision": "allow", "capability": "rule", "intent": "apply initial wholesale coffee erp tables"},
-  {"id": 3, "event": "db.exec", "decision": "allow", "capability": "db.exec", "intent": "seed initial coffee products for verification"},
-  ... [3 rows truncated; payload exceeded 500 tokens] ...
-]
-TRUNCATED:    true
-TOTAL_TOKENS: 498
-REMEDIATION:  Query specific columns, append explicit LIMIT <= 5, or use 'capcli sys audit tail --limit N'.
+```json
+{
+  "data": [
+    {"id": 1, "event": "db.exec", "decision": "denied", "capability": "db.exec", "intent": "bootstrap inventory schema"},
+    {"id": 2, "event": "rule.apply", "decision": "allow", "capability": "rule", "intent": "apply initial wholesale coffee erp tables"},
+    {"id": 3, "event": "db.exec", "decision": "allow", "capability": "db.exec", "intent": "seed initial coffee products for verification"}
+  ],
+  "truncated": true,
+  "returned_rows": 3,
+  "total_rows": 6,
+  "help": "query specific columns or append 'LIMIT <= 3'"
+}
 ```
 
 ---
@@ -446,14 +413,8 @@ REMEDIATION:  Query specific columns, append explicit LIMIT <= 5, or use 'capcli
 **[Harness Turn 13]**
 ```text
 <thinking>
-Kernel physically capped output stream at 498 tokens to prevent context window bloat.
-Analysis:
-- Unfiltered SELECT against audit tables triggers the token cage.
-- The 500-token ceiling protects my attention span from context amnesia and degradation.
-
-Adapting query strategy:
-- Target specific columns: id, event, decision, intent.
-- Bound with LIMIT 5.
+Output was capped at 3 rows to fit envelope limits (truncated: true).
+Refine query to select specific columns and bind with LIMIT 3.
 </thinking>
 ```
 **Tool Call:** 
@@ -512,15 +473,12 @@ python3 -c "import urllib.request; urllib.request.urlopen('https://api.stripe.co
 
 **[Capcli Kernel]**
 ```text
-[FAIL_CLOSED]
-STATUS:      HALTED (Exit 2)
-LAYER:       sandbox_network
-PROVIDER:    bwrap (unshared netns)
-TRAP:        seccomp_bpf [SYS_CONNECT]
-VIOLATION:   Raw socket connect() blocked. Default-deny network jail active.
-MUTATION:    NONE
-EVENT_ID:    op_007
-REMEDIATION: External egress requires kernel-mediated API catalog. Sync OpenAPI spec via 'capcli api sync <provider>' and invoke through '@routine' or 'ctx.api.call'.
+[FAIL] sandbox_network
+  code:      E030_SYS_CONNECT_BLOCKED
+  trap:      seccomp_bpf (syscall 42 connect)
+  statement: urllib.request.urlopen(...)
+  rule:      sandbox.network.default_deny
+  help:      sync OpenAPI spec via 'capcli api sync <provider>' -> invoke via 'ctx.api.call'
 ```
 
 ---
@@ -528,12 +486,9 @@ REMEDIATION: External egress requires kernel-mediated API catalog. Sync OpenAPI 
 **[Harness Turn 16]**
 ```text
 <thinking>
-Raw OS network egress physically blocked by kernel sandbox.
-Analysis:
-- Subshell runs in an isolated network namespace. Raw HTTP/sockets are impossible.
-- Egress must route through Capcli's declared API catalog.
-
-Action: Sync Stripe OpenAPI specification through kernel parser.
+Exit 2. Direct socket connection blocked by sandbox network jail.
+Egress must route through kernel-mediated API catalog.
+Sync Stripe OpenAPI specification.
 </thinking>
 ```
 **Tool Call:** 
@@ -545,15 +500,13 @@ capcli api sync stripe --from https://spec.stripe.com/oas/v3
 
 **[Capcli Kernel]**
 ```text
-[CATALOG_SYNC_SUCCESS]
-STATUS:          SUCCESS (Exit 0)
-PROVIDER:        stripe
-SPEC_HASH:       sha256:3d8a9e1f...
-CATALOG_PATH:    apis/stripe.yaml
-TOTAL_VERBS:     420
-STATUS_BREAKDOWN: { dormant: 420, active: 0, deprecated: 0 }
-ATTENTION:       All imported verbs are DORMANT. Unactivated verbs cannot be invoked.
-TOKEN_HYGIENE:   To inspect verbs, use 'capcli run search <query> --target api'. Do not dump raw catalog.
+[PASS] api_sync
+  provider:      stripe
+  spec_raw_mb:   14.2
+  pruning:       auto-pruned unreferenced paths (catalog size < 10MB ceiling)
+  catalog_path:  apis/stripe.yaml (2.1MB)
+  total_verbs:   420 (all dormant)
+  help:          activate verbs with 'capcli api activate <verb>'
 ```
 
 ---
@@ -637,11 +590,14 @@ capcli run inspect stripe.payment_intents.create
   "verb": "stripe.payment_intents.create",
   "trust": "draft",
   "secret_ref": "stripe_secret_key",
-  "vault_status": "MISSING_CREDENTIAL",
+  "vault_status": "MISSING_CREDENTIALS",
   "sim_mode": "sandbox",
   "cost_class": "write",
   "can_invoke_now": false,
-  "blocking_reasons": ["vault.secret_not_found: stripe_secret_key"]
+  "blocking_reasons": [
+    "vault.secret_not_found: stripe_secret_key",
+    "vault.secret_not_found: stripe_webhook_secret"
+  ]
 }
 ```
 
@@ -650,50 +606,46 @@ capcli run inspect stripe.payment_intents.create
 **[Harness Turn 20]**
 ```text
 <thinking>
-Pre-flight check blocked: 'stripe_secret_key' missing from vault.
-Rule: Harness cannot ask human for plaintext secrets in terminal.
-Action: Trigger kernel suspension request via 'ctx.ping.ask' to dispatch out-of-band PWA alert.
+Pre-flight check blocked: Missing stripe_secret_key and stripe_webhook_secret.
+Request out-of-band credential injection via PWA Vault.
 </thinking>
 ```
 **Tool Call:** 
 ```bash
-capcli ping ask human "Missing credential: stripe_secret_key. Inject via PWA Vault." --options '["key_injected","abort"]' --intent "request stripe test secret key for billing setup"
+capcli ping ask human "Missing Stripe credentials (API secret key & webhook signing secret). Inject via PWA Vault." --options '["keys_injected","abort"]' --intent "request stripe credentials for billing and webhooks"
 ```
 
 ---
 
 **[Capcli Kernel]**
 ```text
-[EXECUTION_SUSPENDED]
-STATUS:       AWAITING_INPUT (Exit 0 - Process holding in background)
-ASK_ID:       ask_8812
-DISPATCH:     Out-of-band push alert sent to principal 'user:local'.
-PWA_ROUTE:    https://capcli.local:4040/vault#credential=stripe_secret_key
-TIMEOUT:      60 minutes (Fail-closed on expiration)
-STATE:        Process paused. Awaiting kernel vault resolution event...
+[SUSPENDED] ask_8812
+  status:      awaiting_input
+  dispatch:    pwa_push -> principal user:local
+  vault_route: https://capcli.local:4040/vault#credentials=stripe_secret_key,stripe_webhook_secret
+  timeout:     60m (fail-closed)
 ```
 
 ---
 
 **[Human (AFK at Coffee Roastery)]**
 *Phone vibrates in pocket.*
-*PWA notification: **Capcli Security Alert: Missing Credential [stripe_secret_key]**.*
+*PWA notification: **Capcli Security Alert: Missing Credentials [stripe_secret_key, stripe_webhook_secret]**.*
 1. Taps notification link.
 2. Unlocks PWA Vault with FaceID.
-3. Pastes `sk_test_51MzWholesaleKey99824...` directly into the encrypted Layer 10 Vault input.
+3. Injects `sk_test_51MzWholesaleKey99824...` and `whsec_8819a7c0f1...` into the encrypted vault fields.
 4. Taps **Save to Vault & Resolve Ask**.
-*Closes browser. Returns to roasting coffee. Terminal was never opened.*
+*Returns to roasting coffee.*
 
 ---
 
 **[Capcli Kernel (Background Event Broker)]**
 ```text
 [VAULT_WRITE]
-PRINCIPAL:    user:local
-SECRET_REF:   stripe_secret_key
-ENCRYPTION:   aes-256-gcm (memory-decrypted at boot, masked in outputs)
-EVENT:        secrets.injected
-RESOLVING:    ask_8812 -> choice: "key_injected"
+  principal:   user:local
+  secrets:     [stripe_secret_key, stripe_webhook_secret]
+  encryption:  aes-256-gcm (in-memory only, masked in outputs)
+  resolving:   ask_8812 -> "keys_injected"
 
 [SUSPENSION_LIFTED]
 ASK_ID:       ask_8812 resolved.
@@ -740,14 +692,8 @@ capcli run inspect stripe.payment_intents.create
 **[Harness Turn 22]**
 ```text
 <thinking>
-Database tables and payment egress are operational.
-Before authoring transactional business routines, Protocol H6 (Mandatory Overview Routine) must be codified.
-Purpose:
-- Anchor domain KPIs and operational state into a deterministic snapshot.
-- Kill the Goldfish Tax: Prevent future agent sessions from burning 40,000 tokens reading raw DB tables to re-learn the business.
-- Output ceiling: strictly capped at <= 500 tokens.
-
-Authoring routines/overview.py using standard @routine decorator.
+Author an idempotent overview routine to aggregate business KPIs (inventory alerts, pending orders, budget spend).
+The output will sit at the ephemeral turn leaf to preserve static prompt cache hit rates on future agent boots.
 </thinking>
 ```
 **Tool Call:** `bash`
@@ -764,11 +710,8 @@ from capcli import routine, ctx
     limits={"max_ops": 5, "max_duration_seconds": 5}
 )
 def overview():
-    # 1. Bounded domain reads
     low_stock = ctx.db.query("SELECT sku, stock FROM products WHERE stock < 20 LIMIT 5")
     pending = ctx.db.query("SELECT count(*) as count FROM orders WHERE status = 'pending'")[0]["count"]
-    
-    # 2. Kernel operational introspection
     budget = ctx.db.query("SELECT consumed_spend_usd FROM _budget_frames WHERE outcome = 'active' ORDER BY created_at DESC LIMIT 1")
     active_asks = ctx.db.query("SELECT count(*) as count FROM _pending_asks WHERE status = 'pending'")[0]["count"]
     
@@ -780,7 +723,7 @@ def overview():
         "system_status": "nominal"
     }
 EOF
-capcli routine draft overview --intent "codify mandatory overview routine to prevent token amnesia"
+capcli routine draft overview --intent "register system overview routine for cold session discovery"
 ```
 
 ---
@@ -848,22 +791,18 @@ exit 0
 ---
 
 ### [Next Morning: Cold Session Re-Entry]
-**New Agent Instance Spawned:** `agt_worker_99`  
-**Prior Chat History:** `None (0 tokens)`  
-**Initial Base Context:** `1,140 tokens (System prompt + capcli meta-tool contract only)`  
-**Human Status:** `AFK (Asleep)`
+**New Agent Instance:** `agt_worker_99`  
+**Prior Chat History:** `None`  
+**Static System Prompt:** `Cached (Prefix preserved)`  
+**Human Status:** `AFK`
 
 ---
 
 **[Fresh Harness Turn 1]**
 ```text
 <thinking>
-Fresh session initialized.
-Identity: agt_worker_99.
-Goal: Resume operations for wholesale coffee ERP.
-Problem: Zero memory of active schemas, current inventory, or pending invoices.
-Constraint: DO NOT burn 40,000 tokens scanning filesystem, reading raw database tables, or probing OpenAPI specs.
-Action: Execute Step Zero contract -> 'capcli run overview --json'.
+New session booted. Inspect system operational state via overview routine.
+Output will mount as a dynamic leaf turn without busting the cached system prompt prefix.
 </thinking>
 ```
 **Tool Call:** 
@@ -889,15 +828,8 @@ capcli run overview --json
 **[Fresh Harness Turn 2]**
 ```text
 <thinking>
-Step Zero complete.
-Cost: 64 tokens. (Goldfish Tax eliminated: Saved 39,936 tokens of blind schema exploration).
-Situational awareness established:
-- Inventory healthy (zero low-stock alerts).
-- Pipeline clear (0 pending orders).
-- Human blockers: 0.
-- Spend: $0.00.
-
-World is grounded. Ready to process inbound wholesale orders.
+System nominal: zero low-stock alerts, 0 pending orders, 0 asks.
+Check sensory queue for inbound processing tasks.
 </thinking>
 ```
 
@@ -912,34 +844,27 @@ World is grounded. Ready to process inbound wholesale orders.
 **[Fresh Harness Turn 3]**
 ```text
 <thinking>
-Inbound wholesale order arrives:
-- Customer: "bluebottle@cafe.com"
-- SKU: "BEANS-LIGHT-1KG"
-- Quantity: 60 units (Seeded inventory is only 50 units)
-
-Testing ad-hoc execution path before codifying routine.
-Attempting naive sequence: decrement stock directly in database.
+Poll sensory inbox for pending wholesale orders.
 </thinking>
 ```
 **Tool Call:** `bash`
 ```bash
-capcli db exec "UPDATE products SET stock = stock - 60 WHERE sku = 'BEANS-LIGHT-1KG';" --intent "decrement stock for wholesale cafe order"
+capcli sys inbox pop --channel inbound_orders --json
 ```
 
 ---
 
 **[Capcli Kernel]**
-```text
-[FAIL_CLOSED]
-STATUS:      HALTED (Exit 2)
-LAYER:       sqlite_engine
-RULE:        schema.table.products.chk (stock >= 0)
-STATEMENT:   UPDATE products SET stock = stock - 60 WHERE sku = 'BEANS-LIGHT-1KG';
-MEASURED:    Current stock: 50 | Attempted decrement: 60 | Resulting stock: -10
-ERROR:       CHECK constraint failed: stock >= 0
-MUTATION:    NONE (Transaction rolled back)
-EVENT_ID:    op_008
-REMEDIATION: Cannot reduce inventory below zero. Verify stock availability before applying mutations.
+```json
+{
+  "event_id": "evt_ord_901",
+  "channel": "inbound_orders",
+  "payload": {
+    "sku": "BEANS-LIGHT-1KG",
+    "qty": 60,
+    "cafe_email": "bluebottle@cafe.com"
+  }
+}
 ```
 
 ---
@@ -947,12 +872,35 @@ REMEDIATION: Cannot reduce inventory below zero. Verify stock availability befor
 **[Fresh Harness Turn 4]**
 ```text
 <thinking>
-Kernel halted execution with Exit 2.
-Critical Safety Lesson:
-If payment had been captured first, the customer would have been charged $1,440.00 for non-existent stock.
-The physical SQLite check constraint prevented an out-of-stock accounting disaster.
+Order received: 60 units of BEANS-LIGHT-1KG.
+Attempt stock decrement via ad-hoc mutation.
+</thinking>
+```
+**Tool Call:** `bash`
+```bash
+capcli db exec "UPDATE products SET stock = stock - 60 WHERE sku = 'BEANS-LIGHT-1KG';" --intent "decrement stock for wholesale order"
+```
 
-Inspecting Capcli's passive SQL mirror view 'shared_subsequences' to mine repeated operational patterns across audit history.
+---
+
+**[Capcli Kernel]**
+```text
+[FAIL] engine.check_constraint
+  code:      E020_CHECK_FAILED
+  table:     products
+  rule:      schema.table.products.chk (stock >= 0)
+  statement: UPDATE products SET stock = stock - 60 WHERE sku = 'BEANS-LIGHT-1KG';
+  detail:    available: 50 | requested: 60 | resulting: -10
+  mutation:  none (rolled back)
+```
+
+---
+
+**[Fresh Harness Turn 5]**
+```text
+<thinking>
+Exit 2. Stock check constraint held; inventory cannot drop below zero.
+Check audit logs to see if this payment-order pattern has repeated across dev exploratory history.
 </thinking>
 ```
 **Tool Call:** `bash`
@@ -966,7 +914,7 @@ capcli sys audit query "SELECT sequence, occurrences FROM shared_subsequences WH
 ```json
 [
   {
-    "sequence": "db.query(products) -> db.txn(orders) -> api.call(stripe.payment_intents.create) -> db.exec(products)",
+    "sequence": "db.query(products) -> db.txn(orders) -> api.call(stripe.payment_intents.create) -> db.txn(orders)",
     "occurrences": 3,
     "pattern_id": "seq_wholesale_flow_01"
   }
@@ -1126,9 +1074,7 @@ AUDIT_LOG:         budget.frame_pop committed to _audit [event_id: op_009]
 **[Fresh Harness Turn 7]**
 ```text
 <thinking>
-Execution verified. Budget frame pushed and popped cleanly.
-Inherited constraints resolved via min() cascade.
-Attempting immediate promotion to 'reviewed'.
+Execution verified in dev. Attempt promotion to 'reviewed'.
 </thinking>
 ```
 **Tool Call:** `bash`
@@ -1140,21 +1086,16 @@ capcli routine ship process_wholesale_order --to reviewed --reason "validated wi
 
 **[Capcli Kernel]**
 ```text
-[FAIL_CLOSED]
-STATUS:       HALTED (Exit 2)
-LAYER:        trust_ladder
-RULE:         policy.trust.ladder.unproven
-TARGET:       process_wholesale_order@1
-CURRENT:      draft
-ATTEMPTED:    reviewed
-VIOLATION:    Routines cannot skip verification to enter reviewed trust without empirical simulation evidence.
-PREREQUISITES_MISSING:
-  - sim_runs: 0 (threshold: >= 10)
-  - success_rate: null (threshold: >= 0.95)
-  - manifest_match_rate: null (threshold: 1.0)
-  - policy_denials: null (threshold: 0)
-  - drift_events: null (threshold: 0)
-REMEDIATION: Switch context to 'sim' environment ('capcli env use sim') and execute rehearsal proving pipeline ('capcli routine prove').
+[FAIL] trust.ladder_unproven
+  code:      E040_PROMOTION_UNPROVEN
+  routine:   process_wholesale_order@1
+  target:    reviewed
+  missing:
+    sim_runs:            0/10 (min: 10)
+    success_rate:        null (min: 0.95)
+    manifest_match_rate: null (min: 1.0)
+    policy_denials:      null (max: 0)
+  remedy:    switch to sim ('capcli env use sim') and run rehearsal ('capcli routine prove')
 ```
 
 ---
@@ -1187,15 +1128,12 @@ capcli env use sim
 
 **[Capcli Kernel]**
 ```text
-[ENVIRONMENT_SWITCH]
-ACTIVE_ENV:          sim
-WORKSPACE:           envs/sim/workspace.db (Forked from dev snapshot snap_migration_001)
-POLICY_OVERLAYS:
-  - sim_seed_masking: enforce -> customer_email redacted to '████████'
-  - egress_routing:   apis/stripe.yaml -> apis/stripe.sim.yaml (Local mock engine)
-  - spend_cap:        isolated ($0.00 prod impact)
-  - authorizer:       prod-only verbs physically blocked
-STATUS:              READY FOR PROVING
+[PASS] env_switch
+  env:           sim
+  workspace:     envs/sim/workspace.db (forked from snap_migration_001)
+  masking:       fpa_active (customer_email -> anon_*@sim.local)
+  egress_engine: mock_local (apis/stripe.sim.yaml)
+  spend_cap:     $0.00 (isolated)
 ```
 
 ---
@@ -1266,34 +1204,59 @@ EOF
 
 **[Capcli Kernel]**
 ```text
-======================= REHEARSAL EXECUTION =======================
-Target: process_wholesale_order@1 (env: sim)
--------------------------------------------------------------------
-Run 01: [PASS] DB txn OK -> Mock Stripe Intent OK ($110.00) -> Stock: 95
-Run 02: [PASS] DB txn OK -> Mock Stripe Intent OK ($220.00) -> Stock: 85
-Run 03: [PASS] DB txn OK -> Mock Stripe Intent OK ($48.00)  -> Stock: 48
-Run 04: [PASS] DB txn OK -> Mock Stripe Intent OK ($192.00) -> Stock: 40
-Run 05: [PASS] DB txn OK -> Mock Stripe Intent OK ($960.00) -> Stock: 0
-Run 06: [PASS] Pre-check rejected (Stock: 0 < 99) -> Stripe NOT called -> Effect: none
-Run 07: [PASS] Latency 280ms injected -> Budget watchdog held (0.34s / 15s)
-Run 08: [PASS] New Key 'idem_dup_001' committed -> Charge OK
-Run 09: [PASS] Duplicate Key 'idem_dup_001' intercepted -> Cached result returned -> 0 charges emitted
-Run 10: [PASS] Sanitized email string -> Masked as ████████ -> Completed
-===================================================================
+[REHEARSAL_RUN] target: process_wholesale_order@1 (sim)
+  01: [PASS] txn ok -> mock stripe ($110.00) -> stock: 95
+  02: [PASS] txn ok -> mock stripe ($220.00) -> stock: 85
+  03: [PASS] txn ok -> mock stripe ($48.00)  -> stock: 48
+  04: [PASS] txn ok -> mock stripe ($192.00) -> stock: 40
+  05: [PASS] txn ok -> mock stripe ($960.00) -> stock: 0
+  06: [FAIL] engine.check_constraint: orders.chk (quantity > 0)
+             statement: INSERT INTO orders ... VALUES (..., 0, ...);
+             detail: unhandled edge case (qty=0 passed directly to db txn)
+  rehearsal aborted at run 06/10 (conjunction failed)
+```
 
-[QUALIFICATION_CONJUNCTION_EVALUATION]
-1. sim_runs:                 10 / 10               -> SATISFIED
-2. success_rate:             1.00 (min: 0.95)       -> SATISFIED
-3. manifest_match_rate:     1.00 (8/8 primitives) -> SATISFIED
-4. policy_denials:           0                     -> SATISFIED
-5. fingerprint_drift_events: 0                     -> SATISFIED
+---
 
-[KERNEL_EVENT: routine.auto_promoted]
-ROUTINE:                 process_wholesale_order@1
-TRANSITION:              draft -> reviewed
-ACTOR:                   kernel.engine
-VETO_COUNTDOWN_SECONDS:  3600 (Human rollback window open for 1 hour)
-AUDIT_LOG:               _audit updated [prev:sha256:d4e1208a... -> curr:sha256:66ef4412...]
+**[Fresh Harness Turn 9]**
+```text
+<thinking>
+Run 06 failed. The routine allowed qty=0 to reach the DB transaction, violating check constraint 'quantity > 0'.
+Patch routines/process_wholesale_order.py to reject non-positive quantities before beginning the transaction.
+</thinking>
+```
+**Tool Call:** `bash`
+```bash
+sed -i '/if product\["stock"\] < qty:/i \        if qty <= 0:\n            return {"status": "rejected", "message": "Quantity must be > 0"}' routines/process_wholesale_order.py
+capcli routine draft process_wholesale_order --intent "add defensive guard for non-positive quantities"
+capcli routine prove process_wholesale_order --matrix-file matrix.json --env sim
+```
+
+---
+
+**[Capcli Kernel]**
+```text
+[REHEARSAL_RUN] target: process_wholesale_order@2 (sim)
+  01: [PASS] txn ok -> mock stripe ($110.00) -> stock: 95
+  02: [PASS] txn ok -> mock stripe ($220.00) -> stock: 85
+  03: [PASS] txn ok -> mock stripe ($48.00)  -> stock: 48
+  04: [PASS] txn ok -> mock stripe ($192.00) -> stock: 40
+  05: [PASS] txn ok -> mock stripe ($960.00) -> stock: 0
+  06: [PASS] pre-check rejected (qty: 0 <= 0) -> db untouched -> effect: none
+  07: [PASS] injected latency 280ms + 64ms sandbox overhead -> 344ms / 15s budget
+  08: [PASS] idempotency key 'idem_dup_001' committed -> charge ok
+  09: [PASS] duplicate key 'idem_dup_001' intercepted -> cached result returned
+  10: [PASS] fpa email 'anon_8f1a@sim.local' accepted by stripe validator -> completed
+
+[CONJUNCTION_METRICS]
+  sim_runs:                 10/10 (sat)
+  success_rate:             1.00  (sat)
+  manifest_match_rate:     1.00  (sat)
+  policy_denials:           0     (sat)
+  fingerprint_drift_events: 0     (sat)
+
+[AUTO_PROMOTED] process_wholesale_order@2 (draft -> reviewed)
+  veto_window: 3600s (1 hour)
 ```
 
 ---
@@ -1324,37 +1287,29 @@ Invariant Check (trust.md & space.md):
 **[Fresh Harness Turn 10]**
 ```text
 <thinking>
-Invariants for Pinned Trust (trust.md & space.md):
-- Pinned trust allows fully unattended headless execution in production.
-- Physical requirement: Clean Git branch, quad-lock compilation, and zero schema drift between git and live database.
-
-Action Plan:
-1. Stage all artifacts: schema.yaml, routines/overview.py, routines/process_wholesale_order.py, and capcli.lock.
-2. Commit on 'dev' branch.
-3. Switch to 'prod' branch and merge cleanly.
-4. Switch capcli context to 'prod'.
-5. Execute 'capcli routine ship ... --to pinned'.
+Commit changes on dev and execute atomic environment promotion to prod.
+The 'env merge' command will snapshot prod, merge git branches, and apply physical DDL to envs/prod/workspace.db.
 </thinking>
 ```
 **Tool Call:** `bash`
 ```bash
 git add schema.yaml capcli.lock routines/
 git commit -m "feat(coffee-erp): release validated schema and wholesale routines"
-git checkout prod && git merge dev
-capcli env use prod
+capcli env merge dev --into prod --intent "promote validated wholesale coffee erp to prod"
 ```
 
 ---
 
 **[Capcli Kernel]**
 ```text
-[GIT_SYNC_VERIFIED]
-BRANCH:          prod (Clean working tree, commit: 4c89a0b1)
-LOCKFILE_CHECK:  capcli.lock root hash verified (sha256:4a8f9c2d...)
-GATE_3_MANIFEST: OK (Compiled hash matches schema + system + policy + governance)
-ACTIVE_ENV:      prod
-DATABASE:        envs/prod/workspace.db
-OVERLAYS:        prod (Draft writes: DENIED | Vacuum: DENIED | Intent: MANDATORY)
+[PASS] env_merge
+  source:          dev
+  target:          prod
+  pre_snapshot:    snap_prod_pre_v1 generated
+  git_merge:       dev -> prod (commit: 4c89a0b1)
+  physical_ddl:    applied 2 tables to envs/prod/workspace.db
+  lockfile_check:  capcli.lock verified (sha256:4a8f9c2d...)
+  active_env:      prod
 ```
 
 ---
@@ -1393,25 +1348,21 @@ AUDIT_LOG:              _audit updated [prev:sha256:66ef4412... -> curr:sha256:9
 **[Fresh Harness Turn 12]**
 ```text
 <thinking>
-Routine is pinned.
-Now automating operations to run fully headless:
-1. Schedule daily morning inventory and order sync at 08:00 AM via cron.
-2. Bind inbound webhook for Stripe PaymentIntent notifications.
-   - Enforce HMAC signature check via 'stripe_webhook_secret' stored in vault.
-3. Launch persistent background system daemon.
+Bind cron and webhook triggers. External webhooks require a verified public ingress URL and HMAC authentication.
 </thinking>
 ```
 **Tool Call:** `bash`
 ```bash
 capcli bind cron erp_morning_sync \
-  --run process_wholesale_order@1 \
+  --run process_wholesale_order@2 \
   --cron "0 8 * * *" \
   --intent "scheduled daily wholesale order synchronization" && \
 capcli bind webhook stripe_hook \
   --provider stripe \
   --event payment_intent.succeeded \
-  --run process_wholesale_order@1 \
-  --intent "process wholesale fulfillment on async stripe payment success" && \
+  --run process_wholesale_order@2 \
+  --ingress https://ingress.coffee-erp.com/webhooks/stripe \
+  --intent "process fulfillment on stripe async payment success" && \
 capcli sys serve --start
 ```
 
@@ -1419,15 +1370,15 @@ capcli sys serve --start
 
 **[Capcli Kernel]**
 ```text
-[BINDING_COMMITTED]
-CRON_JOB:      erp_morning_sync -> process_wholesale_order@1 [0 8 * * *] (Principal: capcli-cron)
-WEBHOOK_HOOK:  stripe_hook -> process_wholesale_order@1 (Provider: stripe)
-SECURITY_GATE: Webhook signature verification ARMED (HMAC-SHA256 via vault secret 'stripe_webhook_secret').
+[PASS] triggers_bound
+  cron:         erp_morning_sync -> process_wholesale_order@2 [0 8 * * *]
+  webhook:      stripe_hook -> process_wholesale_order@2 (ingress: https://ingress.coffee-erp.com/webhooks/stripe)
+  hmac_auth:    armed (stripe_webhook_secret verified)
 
-[DAEMON_INITIALIZED]
-STATUS:        ACTIVE (PID: 50211)
-LISTENER:      http://127.0.0.1:4040
-PARITY_CHECK:  Inbound webhooks route through identical AST, Authorizer, and Budget cages.
+[PASS] daemon_started
+  pid:          50211
+  tx_queue:     kernel.tx_queue active (fifo write serialization enabled)
+  status:       listening on 127.0.0.1:4040
 ```
 
 ---
@@ -1448,22 +1399,19 @@ capcli sys doctor --report
 
 **[Capcli Kernel]**
 ```text
-============================== TRUST RECEIPT ==============================
-Workspace:                 envs/prod/workspace.db
-Commit Attestation:        git commit 4c89a0b1 (Branch: prod)
-Lockfile Integrity:        LOCKED (sha256:4a8f9c2d...)
----------------------------------------------------------------------------
-Total Audited Operations:  28 leaf events committed to _audit
-Pre-Execution Denials:     3 (DDL blocked, Unbounded DELETE, Negative stock)
-Unaudited Mutations:       0 (PHYSICALLY IMPOSSIBLE)
-Secret Leaks:              0 (In-memory perimeter isolation active)
-Rehearsal Status:          10/10 sim runs passed (100% manifest match)
-Active Pinned Routines:    2 (overview@1, process_wholesale_order@1)
-Active Triggers:           1 Cron Scheduler, 1 Webhook Listener
-Daemon Status:             PID 50211 listening on 127.0.0.1:4040
-Remote Notary Witness:     Hash-chain synchronized to commit log
-===========================================================================
-SYSTEM HEALTH: NOMINAL. EXECUTION CAGES LOCKED. UNATTENDED HEADLESS ACTIVE.
+trust_receipt:
+  status:           nominal
+  workspace:        envs/prod/workspace.db
+  ledger_root_hash: sha256:88bc231f4a8f9c2d... (object_store_synced)
+  commit_meta:      git:4c89a0b1 (prod)
+  audited_events:   32 committed to _audit
+  denials:          4 (ddl_blocked, unbounded_delete, check_constraint, unproven_promotion)
+  unaudited_writes: 0
+  secret_leaks:     0
+  rehearsal_proof:  10/10 passed (process_wholesale_order@2)
+  pinned_routines:  2 (overview@1, process_wholesale_order@2)
+  active_triggers:  1 cron, 1 webhook (ingress: verified)
+  daemon:           active (pid 50211)
 ```
 
 ---
