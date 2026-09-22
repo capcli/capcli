@@ -193,9 +193,14 @@
       - Prompt cache economics
         - transcript placement — overview outputs mount at volatile turn leaves; system prompt mounting banned to preserve KV cache
       - Assembly pattern
-        - data aggregation — queries domain read-views compiled in schema.yaml
-        - blocker checks — aggregates active lease locks, pending asks, and budget state
-        - invocation trigger — standard zero-step executed at start of agent sessions
+        - domain KPIs — aggregates business vitals from schema.yaml read views
+        - pending asks — queries _pending_asks count and unresolved vault requests
+        - sensory inbox — queries queued inbound events without pulling payloads
+        - active locks — reads active lease locks from claims and db locks
+        - budget headroom — reads consumed spend and remaining session quota
+        - system health — returns nominal status, drift alarms, or thrash warnings
+        - result constraint — dense summary strictly under 500 tokens
+        - invocation trigger — standard zero-step executed at session boot
   - The ctx contract
     - Surface methods
       - Database methods
@@ -224,6 +229,7 @@
       - API call boundaries
         - kernel mediation — egress executed exclusively through kernel binary
         - secret injection — boundary insertion from vault: see agent.md#Secrets
+        - token refresh — proxy auto-refreshes ephemeral bearer tokens via vaulted root
         - missing secret fallback — missing secret_ref triggers suspension via ping.ask
         - pre-call quota — deny before network dispatch: see budget.md#Quotas
         - idempotency — kernel-minted key persisted before egress

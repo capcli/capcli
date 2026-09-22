@@ -24,6 +24,7 @@
       - routine.run — routine, version, hashes, triggered_by, outcome, ops, duration
       - api.sync — provider, added, removed, changed, unchanged
       - api.activate — verb, state transition, trust, intent
+      - api.token_refresh — provider, token_type, expires_in, refresh_outcome
       - api.call sim — sim_mode, http_called, fixture_used, fixture_path
       - api.first_prod_call — call_number, calls_remaining, human_approved, approver
       - budget.frame_push/pop — declared, consumed, remaining balances

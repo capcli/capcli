@@ -120,6 +120,7 @@
       - perimeter layers
         - credentials isolation — tokens injected by kernel at egress boundary
         - egress allowlist — outbound calls restricted to apis/ catalog
+        - shell egress trap — open bash blocked from raw socket connect via seccomp-bpf
         - network jail — unshared network namespace for routines
         - virtualization — gVisor or Firecracker for multi-tenant tiers
       - boundary alarms — sys doctor halts boot on compromised boundaries
