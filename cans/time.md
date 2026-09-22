@@ -47,6 +47,7 @@
     - auto-promotion path — qualifying low-risk routines: see trust.md#Gates-&-promotion
       - qualification conjunction
         - execution volume — minimum 10 sim runs with 0.95 success rate
+        - latency floor — p95 duration <= 0.70 * declared_max_duration
         - declaration match — 100% manifest match; 3/4 partial match routes to queue
         - stability bounds — exactly 0 policy denials and 0 drift events
       - audit payload

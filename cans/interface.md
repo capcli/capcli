@@ -2,7 +2,7 @@
   - CLI surface
     - Design laws
       - Command shape — capcli <noun> <verb> [target] [--flags]
-      - Subcommand tree — nine nouns (run, db, routine, api, bind, ping, rule, env, sys)
+      - Subcommand tree — ten nouns (run, db, routine, api, bind, ping, rule, env, sys, doc)
       - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json
@@ -17,9 +17,9 @@
       - Commands
         - execute — run <capability> [-p k=v]
         - overview — run overview [--as <principal>] — single-shot domain situational briefing
-        - search — run search <query> [--trust X] [--env X] [--max-ops N]
+        - search — search <query> [--type <domain>] [--trust X] [--env X]
         - gap detection — run search gaps --since 7d
-        - inspect — run inspect <capability>
+        - inspect — inspect <ptr> — resolves pre-flight envelopes across all URP types
       - Aliases — capcli search, capcli inspect
       - Inspect envelope
         - sla guarantee — single-response zero-roundtrip go/no-go verdict via can_invoke_now
@@ -92,6 +92,9 @@
       - Backups — sys backup [--push], recover <commit>
       - Sandboxing — sys exec <cmd> --sandbox
       - Daemon control — sys serve --start, --stop, --restart, --status
+    - Document path: doc noun
+      - Reading — doc read <ptr> [--max-tokens 100]
+      - Outline — doc outline <ptr>
     - Banned operations
       - config writes — config set banned; edit YAML and git commit
       - direct system-schema apply — managed by kernel upgrades
@@ -112,7 +115,8 @@
       - --as <principal> — target execution principal for scoped access
       - --env <name> — target environment selection
       - --workspace <path> — project root anchor (overrides CAPCLI_WORKSPACE env var)
-      - flag ceiling — universal flags frozen at exactly nine; no per-noun growth
+      - --session <token> — cryptographic session handle binding principal and frame
+      - flag ceiling — universal flags frozen at exactly ten; no per-noun growth
     - Mutating flags
       - --dry-run — plan execution without applying state changes
       - --intent "<why>" — causal motivation, validated against anti-junk rules

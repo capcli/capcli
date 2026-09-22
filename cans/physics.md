@@ -40,6 +40,7 @@
       - opcode trap — OpenWrite detected on statement classified as read denies run
       - discrepancy — unclassified writes (OpenWrite bytecode) trigger denial
     - Pipeline sequence
+      - Stage 0 — cryptographic session token verification and active frame lookup
       - Stage 1 — intent target binding and AST blast-radius cross-check
       - Stage 2 — AST parse and structural pattern scan
       - Stage 3 — prepare-time cross-check and authorizer callback
@@ -58,6 +59,8 @@
     - Runtime refusals
       - leak prevention — secret exposure detected in output executes kill_and_alert
       - sql errors — unparseable SQL or authorizer errors fail closed
+      - session errors — missing, forged, or expired session token aborts execution (exit 3)
+      - latency SLA breach — rehearsal P95 exceeding 70% of timeout ceiling denies promotion
       - ambiguity — unclassified read/write treated as write
       - approval absence — headless or crashed approval denies execution
       - principal missing — scoped view invoked without --as rejected
