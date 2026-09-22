@@ -88,6 +88,7 @@
       - Mirror queries — sys audit query <sql> [-p k=v]
       - Log replay — sys audit replay --from <point> [--dry-run]
       - Identity control — sys agent register, list, revoke
+      - Vault provisioning — sys vault set <key> <val>, sys vault import-env
       - Diagnostics — sys doctor [--boot-check]
       - Backups — sys backup [--push], recover <commit>
       - Sandboxing — sys exec <cmd> --sandbox
@@ -172,7 +173,7 @@
       - Layer 7: Approval — promotion queues, DDL previews, ask cards, secret prompt dialogs, veto countdowns
       - Layer 8: Recovery — snapshots, rollback chains, git targets, recovery drills
       - Layer 9: Learning — search gap trends, similarity clusters, decay candidates
-      - Layer 10: Identity — principal directories, agent allocations, skill origins, vault credential management
+      - Layer 10: Identity — principal directories, agent allocations, skill origins, and PWA mirror of vault credentials
     - Real-time and polling intervals
       - real-time stream — audit tail and frame lifecycle via WebSocket/SSE
       - rapid polls — _api_quota (30s), pending asks (30s)

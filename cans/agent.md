@@ -28,8 +28,8 @@
       - validation — format constraints: see artifacts/policy.yaml#identity
       - authority limit — skill origin acts as metadata, never grants power
     - Concurrency scope
-      - concurrency model — multi-principal single-writer queue (kernel.tx_queue)
-      - arbitration — background FIFO queue buffers webhook and cron writes up to busy_timeout
+      - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE with busy_timeout
+      - application locks — business-level leases tracked in _claims table with daemon TTL cleanup
       - collision handling — writers queue sequentially; immediate exit 2 occurs on queue timeout only
       - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
       - callee floor — cross-agent routine calls demand trust >= reviewed
@@ -39,11 +39,8 @@
       - audit trail — full intent chain recorded on every leaf event
       - write mandate — mutating operations require --intent (missing throws exit 3)
     - Blast-radius validation
-      - quality scoring
-        - heuristic — word overlap, parameter references, and target specificity
-        - failure flag — weak intent emits intent_quality: low audit tag without denying
-      - anti-junk filter
-        - bounds — min 3 words; blacklists test, update, misc, fix
+      - intent verification
+        - structure — --intent required as audit trail metadata
       - structural binding — intent target must match AST write tables and columns
       - divergence check — write touching undeclared tables rejected with exit 2
       - threshold justifications — high-impact writes demand --reason
@@ -53,7 +50,7 @@
       - tracking — session counters govern spend, rate, and rows affected
       - workspace anchor — CAPCLI_WORKSPACE env var or --workspace flag anchors root; cd reliance banned
     - Harness execution boundary
-      - execution environment — open bash subshell with capcli binary in PATH
+      - execution environment — bash subshell isolated via IPC socket to kernel daemon; direct workspace.db file access blocked
       - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)
       - session persistence — CAPCLI_SESSION env var or workspace.db active context preserves session across turns
       - exit contract — process exit codes (0, 2, 3, 4, 5) return status to subshell
@@ -64,17 +61,15 @@
       - schema — name unique, value, scope, expires_at, sens: true
       - two-tier secrets — root secrets held in vault; ephemeral egress tokens derived
       - access — agent read-only; value masked in all outputs
-      - boot handling — memory-decrypted at kernel startup
+      - encryption — AES-256-GCM at rest; cached in memory by daemon or decrypted ephemerally per CLI run
+      - ingestion — provisioned via CLI (`capcli sys vault set`), environment variables (`CAPCLI_SECRET_*`), or PWA
     - Provisioning workflow
       - Lifecycle steps
         - detection — missing secret_ref trips pre-call check before egress
-        - auto-refresh — expired ephemeral tokens refresh via vaulted root credentials
-        - suspension — routine calls ctx.ping.ask and enters suspended state
-        - suspension trigger — occurs only if root secret is missing or refresh fails
-        - alert dispatch — ping notify sends human notification with PWA vault link
-        - out-of-band entry — human enters raw secret into PWA Layer 10 Vault UI
-        - kernel write — daemon commits secret directly to vault table
-        - execution resume — human resolves ask; routine awakens with injected key
+        - auto-refresh — daemon auto-rotates tokens in memory; stateless CLI decrypts root, rotates, and commits updated ciphertext
+        - env resolution — kernel checks process env vars (`CAPCLI_SECRET_<NAME>`) before raising suspension
+        - injection channels — headless CLI (`capcli sys vault set`), env auto-binding, or PWA Layer 10 UI
+        - suspension — headless execution exits with code 3 on missing secrets; interactive sessions pause via ask
     - Egress injection
       - injection point — Authorization headers inserted at kernel egress boundary
       - boundary rotation — egress proxy silently refreshes expired bearer tokens
