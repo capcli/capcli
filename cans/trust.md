@@ -68,6 +68,7 @@
         - declaration match — manifest_match_rate: 1.0 (zero skipped verbs)
         - policy compliance — policy_denials: exactly 0
         - runtime stability — fingerprint_drift_events: exactly 0
+        - latency ceiling — p95_duration <= 0.70 * declared_max_duration
       - conjunction rule — failure of any single metric routes to human queue
       - audit trail — emits routine.auto_promoted event
       - retroactive control — human veto via rollback --to-trust draft

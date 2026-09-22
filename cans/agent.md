@@ -6,11 +6,12 @@
       - session — temporary engagement scope (ses_a9)
       - op — single leaf execution in causal DAG
     - Credential binding
-      - socket proof — SO_PEERCRED validates calling process credentials
-      - process authentication — OS process UID binds caller identity
-      - acting identity — --by validated against calling process environment
+      - capability token — kernel-minted HMAC session token in _sessions system table
+      - workspace pinning — active session and principal pinned to envs/<name>/workspace.db
+      - session fork — child agents inherit scoped parent token via session fork
+      - acting identity — --session and --by validated against active token registry
       - beneficiary identity — --as declares target principal
-      - identity generation — ids kernel-issued; self-declaration denied
+      - identity generation — tokens and ids kernel-issued; self-declaration denied
     - System agent registry
       - storage — agents system table in workspace.db
       - schema — id pk, name unique, harness, principal, status
@@ -54,6 +55,7 @@
     - Harness execution boundary
       - tool schema — single JSON-RPC tool capcli(command: string); open bash execution prohibited
       - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)
+      - session persistence — CAPCLI_SESSION env var or workspace.db active context preserves session across turns
       - exit contract — process exit codes (0, 2, 3, 4, 5) return status to subshell
       - pwa boundary — HTTP/WS daemon serving JSON-RPC 2.0 strictly for PWA client
   - Secrets

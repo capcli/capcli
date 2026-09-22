@@ -72,7 +72,7 @@ Kernel verified. Initialize coffee-erp workspace and switch to dev environment.
 ```text
 [dev] Environment initialized: envs/dev/workspace.db
 [dev] Dual-schema compiled: system-schema.yaml (v3) -> locked
-[dev] Context active: env=dev | principal=user:local | agent=agt_init_01
+[dev] Context active: env=dev | principal=user:local | agent=agt_init_01 | session=ses_boot_01 (token: active)
 ```
 
 ---
@@ -515,14 +515,11 @@ capcli api sync stripe --from https://spec.stripe.com/oas/v3
 ```text
 <thinking>
 420 verbs imported. All dormant.
-Using meta-tool search to find wholesale payment verbs without context window bloat.
+Using global pointer search to find payment capabilities and related secrets without context bloat.
 Target: payment intents.
 </thinking>
 ```
-**Tool Call:** 
-```bash
-capcli run search "create payment intent" --target api
-```
+**Tool Call:** `bash("capcli search 'create payment intent'")`
 
 ---
 
@@ -530,11 +527,14 @@ capcli run search "create payment intent" --target api
 ```json
 [
   {
-    "id": "stripe.payment_intents.create",
-    "method": "POST",
-    "path": "/v1/payment_intents",
-    "state": "dormant",
-    "description": "Creates a PaymentIntent object for transactional card or invoice capture."
+    "ptr": "api://stripe.payment_intents.create",
+    "status": "dormant",
+    "summary": "Creates PaymentIntent for card/invoice capture"
+  },
+  {
+    "ptr": "vault://secrets/stripe_secret_key",
+    "status": "missing",
+    "summary": "Required auth key for stripe payment egress"
   }
 ]
 ```
@@ -574,13 +574,10 @@ AUDIT_LOG:    _audit updated [prev:sha256:99da314e... -> curr:sha256:55aa128b...
 ```text
 <thinking>
 Verb is active at draft trust.
-Inspecting verb boundary contract before writing integration routine.
+Drilling into verb boundary contract via pointer inspect before writing integration routine.
 </thinking>
 ```
-**Tool Call:** 
-```bash
-capcli run inspect stripe.payment_intents.create
-```
+**Tool Call:** `bash("capcli inspect api://stripe.payment_intents.create")`
 
 ---
 
@@ -659,13 +656,10 @@ STATUS:       READY. Kernel egress proxy armed. Plaintext tokens remain unexpose
 ```text
 <thinking>
 Suspension lifted out-of-band.
-Re-running inspect to verify vault credential resolution.
+Re-running pointer inspect to verify vault credential resolution.
 </thinking>
 ```
-**Tool Call:** 
-```bash
-capcli run inspect stripe.payment_intents.create
-```
+**Tool Call:** `bash("capcli inspect api://stripe.payment_intents.create")`
 
 ---
 
@@ -1095,6 +1089,7 @@ capcli routine ship process_wholesale_order --to reviewed --reason "validated wi
     success_rate:        null (min: 0.95)
     manifest_match_rate: null (min: 1.0)
     policy_denials:      null (max: 0)
+    p95_latency:         null (max: 10500ms [70% of 15s budget])
   remedy:    switch to sim ('capcli env use sim') and run rehearsal ('capcli routine prove')
 ```
 
@@ -1254,6 +1249,7 @@ capcli routine prove process_wholesale_order --matrix-file matrix.json --env sim
   manifest_match_rate:     1.00  (sat)
   policy_denials:           0     (sat)
   fingerprint_drift_events: 0     (sat)
+  p95_latency:              280ms / 10500ms ceiling (sat)
 
 [AUTO_PROMOTED] process_wholesale_order@2 (draft -> reviewed)
   veto_window: 3600s (1 hour)

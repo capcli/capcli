@@ -86,8 +86,8 @@
       - integrity verification
         - hash verification — mandatory at boot: see artifacts/governance.yaml#schema.system
         - mismatch behavior — refuse boot: see artifacts/policy.yaml#fail_closed
-      - managed surfaces — 11 kernel tables defined in artifacts/system-schema.yaml
-        - registry roster — _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats
+      - managed surfaces — 13 kernel tables defined in artifacts/system-schema.yaml
+        - registry roster — _audit, _api_quota, _api_catalog, _budget_frames, _sessions, _search_index, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats
     - Shorthand expansion
       - column shorthands
         - primary key

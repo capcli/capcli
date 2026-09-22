@@ -1,14 +1,21 @@
 - Action
-  - Capability registry
+  - Global pointer registry
     - Unifying concept
-      - Kinds
-        - db op — raw operation, gated inline
-        - routine — composed script
-        - api verb — external endpoint
-        - view — read-only lens
+      - Universal Resource Pointers (URP) — typed URN pointers across entire workspace
+      - Pointer taxonomy
+        - cap:// — routines and activated/dormant API verbs
+        - db:// — tables, columns, check constraints, and read views
+        - doc:// — markdown specs, playbooks, error codes, and rules
+        - audit:// — causal DAG events, failures, and sequence patterns
+        - bind:// — cron schedules, webhooks, and endpoint ingress routes
+        - vault:// — secret references and in-memory injection status
+        - ask:// — pending human inquiries and suspensions
+        - snap:// — VACUUM recovery snapshots and migration restore points
+        - quota:// — provider rate-bucket balances and spend ceilings
+        - policy:// — authorizer AST constraints and governance limits
       - Surface uniformity
-        - commands — run, search, inspect
-        - flattening — registry exposes all kinds via run
+        - commands — search, inspect, run, doc
+        - flattening — search returns typed URN pointers with action hints
         - contract — params in, gated effect out, leaf events recorded
       - Scoped views
         - principal required via --as
@@ -45,10 +52,12 @@
         - semantic — harness-side embedding ranking
         - did-you-mean — nearest candidates proposed on zero hits
       - Progressive disclosure
-        - meta-tool — single cap search tool retains constant context at scale
+        - 3-step discipline — DISCOVER (search) -> INSPECT (inspect <ptr>) -> ACT / DEREF
+        - payload constraint — search returns pointers and summaries (<60 tokens), never raw blobs
+        - doc inspection — inspect on doc:// returns outline nodes; doc read fetches targeted leaf
         - relevance floor — semantic matches below 0.60 rejected
       - Determinism split
-        - kernel search — exact, prefix, structured filters
+        - kernel search — exact, prefix, FTS5 structured filters over _search_index
         - harness search — semantic rankings, fuzzy tolerance
         - rationale — see physics.md#Search-ceiling
       - Scale behavior
