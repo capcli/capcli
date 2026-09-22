@@ -118,7 +118,7 @@
         - disposable host — process mode without OS namespace isolation
       - Jail defenses
         - filter derivation — AST deny-list compiled directly from seccomp-bpf
-        - IPC restriction — CLI process boundary is sole door in isolated modes
+        - IPC restriction — mounted Unix socket /run/capcli/kernel.sock is sole bridge for ctx RPC calls
         - process hierarchy — fork and exec blocked
         - path restriction — writes outside scratch blocked at syscall
       - Execution limits
@@ -181,9 +181,9 @@
         - leaf effects pass kernel gate
         - versions hash-pinned
         - manifest drift treated as governed anomaly
-    - Mandatory overview routine
+    - Session Overview Primer
       - Core aim
-        - amnesia elimination — grounds incoming agents with immediate business situational awareness
+        - session priming — grounds incoming agents with immediate business situational awareness
         - spend efficiency — prevents token burn from blind, iterative schema exploration
         - canonical baseline — provides unified domain KPI and blocker snapshot before planning
       - Standard contract
@@ -207,9 +207,10 @@
         - ctx.db.query(sql, params) — read returning list[dict]
         - ctx.db.execute(sql, params, intent) — write returning Result
         - ctx.db.txn() — transaction context manager
-        - ctx.db.lock(target, ttl) — distributed lease claim
+        - ctx.db.lock(target, ttl) — application-level lease claim in _claims; auto-expired by daemon tick
       - External api methods
         - ctx.api.call(verb, params, intent) — governed HTTP egress
+        - egress retry — automatic backoff and jitter on 429/503 upstream responses
         - ctx.api.verify(verb, key) — key validation check
         - Blob storage methods
           - ctx.storage.put(name, data, mime) — uploads blob and returns metadata
@@ -228,13 +229,13 @@
     - Execution guards
       - API call boundaries
         - kernel mediation — egress executed exclusively through kernel binary
-        - secret injection — boundary insertion from vault: see agent.md#Secrets
-        - token refresh — proxy auto-refreshes ephemeral bearer tokens via vaulted root
-        - missing secret fallback — missing secret_ref triggers suspension via ping.ask
+        - secret injection — boundary insertion; decrypted ephemerally in CLI or retrieved from daemon cache; memory zeroized post-dispatch
+        - token refresh — daemon auto-refreshes bearer tokens; stateless CLI refreshes on demand and persists updated token to encrypted vault
+        - missing secret fallback — missing secret_ref auto-binds from CAPCLI_SECRET_* before triggering headless exit 3 or ask prompt
         - pre-call quota — deny before network dispatch: see budget.md#Quotas
         - idempotency — kernel-minted key persisted before egress
       - Sandbox boundaries
-        - runtime isolation — unshared network namespace blocks urllib, requests, and sockets
+        - runtime isolation — unshared network namespace blocks raw sockets; AF_UNIX permitted for /run/capcli/kernel.sock
         - interface definition — Param typing enforces input validation
     - Data protection
       - Context confinement — raw records stay inside sandbox
@@ -260,9 +261,9 @@
       - Mechanics — routine_fingerprints view aggregates sequences via SQL
       - Comparison — prove compares dynamic fingerprint vs static manifest
       - Match calculation
-        - skipped verbs dropped before comparison
-        - match rate expressed as fraction (e.g. 3/4 = 0.75)
-        - divergence yields warning or governance.anomaly event
+        - subset validation — executed leaves must be a subset of declared manifest (executed <= declared)
+        - defensive branching — unexecuted branches from early returns/guards pass without penalty
+        - undeclared leaves — execution of undeclared primitives triggers governance.anomaly event
     - Architectural purpose
       - Mirror view definitions
         - shared_subsequences — aggregates frequent n-grams to propose routines
@@ -311,8 +312,8 @@
         - intent present and passes anti-junk validation
       - Initial trust — draft
       - Training wheels
-        - target verbs — skip and prod-only
-        - approval cap — human gate: see artifacts/governance.yaml#api.prod_first_calls
+        - target verbs — un-simulated third-party verbs
+        - autonomous graduation — synthetic mock verification with valid OpenAPI contracts graduates verbs on first rehearsal
         - window expiration — 24-hour approval window per unapproved call
         - graduation — fourth call enters normal governance
     - Live quota tracking

@@ -5,7 +5,8 @@
     - egress engine — token-bucket quotas, secret boundaries, and sim routing intercept network calls
   - Two-layer enforcement
     - Layer 1: sqlite3_set_authorizer
-      - engine — C-level callback inside sqlite3_prepare_v2
+      - engine — C-level callback inside sqlite3_prepare_v2 via Rust rusqlite napi-rs
+      - scope — access control only (SQLITE_OK, SQLITE_DENY, SQLITE_IGNORE); row masking executed in kernel result serializer
       - binding — Rust rusqlite via napi-rs closure
       - granularity — 3D action × table × column tuple evaluated on every prepared statement
       - intercepted actions
@@ -21,7 +22,7 @@
         - alter table — requires reviewed trust; draft attempts exit with code 2
         - vacuum — requires pinned trust; denied unconditionally in prod overlay
     - Layer 2: SQL AST check
-      - engine — TypeScript node-sql-parser before statement preparation
+      - engine — TypeScript node-sql-parser cross-checked against Rust rusqlite prepare/EXPLAIN bytecode
       - checks
         - parameterization — bound parameters mandatory; string interpolation denied
         - transaction isolation — ctx.api.call inside ctx.db.txn blocks rejected at compile
@@ -53,7 +54,7 @@
     - Anchor principle — default: deny (artifacts/policy.yaml)
     - Boot refusals
       - missing configuration — policy.yaml or governance.yaml absent
-      - lockfile mismatch — compiled capcli.lock SHA256 mismatch aborts boot
+      - lockfile mismatch — compiled capcli.lock SHA256 mismatch aborts boot in prod and sim
       - schema integrity — system_schema hash mismatch aborts boot
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
@@ -62,14 +63,13 @@
       - session errors — missing, forged, or expired session token aborts execution (exit 3)
       - latency SLA breach — rehearsal P95 exceeding 70% of timeout ceiling denies promotion
       - ambiguity — unclassified read/write treated as write
-      - approval absence — headless or crashed approval denies execution
       - principal missing — scoped view invoked without --as rejected
       - audit sink error — unaudited writes denied outright (exit 5)
       - quota exhaustion — remaining <= deny_at_remaining throws exit 2
     - Exit code law
       - exit 0 — execution success with audit event recorded
-      - exit 2 — policy or governance gate denial; state untouched
-      - exit 3 — validation error, missing intent, boot refusal, drift
+      - exit 2 — policy, trust rung, or budget quota denial; state untouched
+      - exit 3 — validation error, syntax error, missing parameter, boot refusal, drift
       - exit 4 — mid-execution runtime crash
       - exit 5 — audit sink failure; write aborted
     - Diagnostic output law
@@ -118,7 +118,7 @@
       - provenance — skill name captured in triggered_by_skill audit field
     - Boundary isolation
       - perimeter layers
-        - credentials isolation — tokens injected by kernel at egress boundary
+        - credentials isolation — tokens injected at egress boundary; in-memory secret buffers zeroized on subshell CLI exit
         - egress allowlist — outbound calls restricted to apis/ catalog
         - shell egress trap — open bash blocked from raw socket connect via seccomp-bpf
         - network jail — unshared network namespace for routines
@@ -126,4 +126,4 @@
       - boundary alarms — sys doctor halts boot on compromised boundaries
     - Neutrality law
       - processing — kernel matches, dispatches, delivers, and logs
-      - cognition — kernel contains zero LLM inference, heuristics, or reasoning
+      - cognition — kernel executes deterministic AST verification and schema constraints; zero LLM inference

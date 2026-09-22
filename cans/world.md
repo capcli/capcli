@@ -10,17 +10,17 @@
             - libsql replica — embedded replica with Turso cloud sync
             - remote refusal — pure HTTP databases without C authorizer denied
         - tracking
-          - git status — ignored via .gitignore
-          - persistence — partitioned at envs/<name>/workspace.db and agent sandboxes
+          - git status — snapshots and world.sql tracked in git; binary workspace.db committed via git LFS/backups
+          - persistence — partitioned at envs/<name>/workspace.db and backed up to object store
         - concurrency
           - journal mode — WAL mode enabled
           - readers — concurrent non-blocking reads
           - writers — serialized atomic transactions via busy-timeout queue
         - access perimeter
           - direct sockets — agent connection denied
-          - direct db file — raw open on workspace.db denied via chmod 600
+          - direct db file — workspace.db isolated behind daemon IPC socket; raw subshell access denied
           - workspace files — open read and write for schemas, routines, and scripts
-          - sole gateway — kernel mediation mandatory
+          - sole gateway — kernel daemon mediation mandatory
       - world.sql
         - format
           - structure — deterministic DDL and seed dump
@@ -100,7 +100,7 @@
         - foreign relations — int ref=table.col expands to foreign key
           - blob reference — blob ref=storage expands to object metadata json
         - redaction — mask=true marks column for format-preserving anonymization (FPA)
-          - fpa behavior — synthetic typed valid values; block characters (████) banned
+          - fpa behavior — synthetic typed valid values in sim data layer; UI free to render glyphs (including ████)
       - table shorthands
         - provenance
           - tag — prov: true
@@ -143,7 +143,7 @@
           - check constraints
       - Kernel authorizer layer
         - column immutability — ~ syntax denies column update
-        - output redaction — mask=true redacts cell data
+        - access control — authorizer permits/denies read; kernel serializer redacts mask=true columns
         - row immutability — imm_rows denies row mutation
         - audit injection — created_by and modified_by populated by kernel on prov tables
         - system protection — sys: true denies agent writes
@@ -212,10 +212,10 @@
         - immutable targets — imm_cols exist in target table
       - failure code — throws exit 3
     - Gate 3: Manifest lock
-      - timing — boot-time startup check
+      - timing — boot-time startup check in prod and sim environments
       - validation — compile sha256 of schema, system-schema, policy, and governance
       - verification — computed hash must match active capcli.lock entry exactly
-      - failure code — throws exit 3 (refuse boot)
+      - failure code — throws exit 3 (refuse boot in prod/sim; marks dev as uncompiled draft)
     - Gate 4: Live drift
       - timing — runtime inspection via sys doctor
       - detection — PRAGMA scans compare live tables against compiled YAML

@@ -36,8 +36,8 @@
       - tamper blast radius — broken sha256 link invalidates all subsequent events
       - write priority — unaudited writes denied outright (exit 5)
       - denial logging — denied operations emit audit events with effect: none
-      - tamper detection — per-row sha256 chain verified against remote notary/witness
-      - external attestation — root hash checkpointed to remote append-only log / KMS
+      - tamper detection — per-row sha256 chain verified against root ledger hash
+      - external attestation — ledger root hash checkpointed to S3 Object Lock (WORM) storage with KMS signatures
       - verification — scheduled chain walk: see artifacts/governance.yaml#maintenance
     - Query surfaces
       - tail — sys audit tail [--follow] [--capability X] [--since 1h]

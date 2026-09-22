@@ -95,10 +95,10 @@
       - composition block: max_nesting_depth, child_routines list, budget_inheritance
   - Quotas
     - Proactive rate limiting
-      - Local bucket — token-bucket algorithm runs in kernel before egress
-      - Gate decision — zero tokens available throws exit 2 before network dispatch
+      - Local bucket — token-bucket throttle regulates client-side egress cadence
+      - Gate decision — local bucket empty pauses dispatch up to timeout; hard limit exhaustion throws exit 2
       - Header calibration — provider headers calibrate local drift downward
-      - Double-spend prevention — external 429s treated as bucket misconfiguration
+      - Remote 429 handling — automatic exponential backoff with jitter in kernel proxy before reporting error
       - Storage
         - State lands in `_api_quota` rows — kernel-written, agent-readable
         - Rows scoped per env: sim and prod quotas independent — rehearsal never burns prod limits
@@ -106,7 +106,7 @@
       - Enforcement
         - Static per_day_usd spend caps are the floor under dynamic quota
         - Pre-call deny at deny_at_remaining → exit 2 before egress: see physics.md#Fail-closed-stance
-        - A 429 is a design failure, not a runtime surprise — the gate denies before the call
+        - Remote 429 triggers backoff retry; persistent exhaustion surfaces upstream provider limits cleanly
         - Live remaining/reset_at/budget status before invoking: see action.md#External-APIs
       - Fallback: providers without standard headers get kernel-counted sliding windows
     - Governance caps

@@ -18,7 +18,7 @@
       - enforcement — constraints enforced via SQLite C authorizer and OS jails
       - policy anchor — default: deny across all capability vectors
     - Physics over rules
-      - dual store recovery — where gates cannot reach, recovery via git and object store does
+      - dual store recovery — hot state in workspace.db; full snapshot backups synced to git and object store
       - mechanism — impossible paths preferred over prompt instructions
       - unbounded writes — denied structurally via AST and authorizer
       - failure modes — designed denials teach harness through structured feedback
@@ -33,7 +33,7 @@
   - Mental model
     - three-surface law — state in SQLite, procedure in Python, experience in JSONL
     - Storage trinity
-      - state — SQLite workspace.db managed by kernel CLI engine
+      - state — SQLite workspace.db backed up via git snapshots and object store
       - procedure — Python routines and OpenAPI catalog definitions
       - experience — SQLite _audit table mirrored to git-tracked JSONL
     - Language law
@@ -57,14 +57,13 @@
       - startup — invalid configuration or version mismatch aborts boot
       - runtime — unparseable SQL, missing principals, or quota breaches deny
     - Capability lifecycle
-      - exploration — bounded SQL queries and simulated API probes establish baseline behavior
+      - exploration — autonomous bounded SQL queries and simulated API probes establish baseline behavior
       - codification — repeated DB and API call sequences compiled into governed routines
-      - trust progression — earned autonomy moves routines from draft to reviewed to pinned
-    - Human authority
-      - verification split — human validates why; kernel validates what
-      - gates — high-impact writes and pinned trust demand human signatures
+      - trust progression — earned autonomy moves routines from draft to reviewed to pinned via synthetic proof
+    - Autonomous authority
+      - execution — fully headless; policy rungs, budget cages, and compiler gates replace interactive human sign-offs
     - Refusals
       - no ORMs or query builders — raw SQL crosses authorizer directly
       - no runtime policy mutation — policy changes require git commits
-      - no deletion — state changes track provenance; history only grows
+      - append-only audit spine — domain tables permit bounded DELETEs; _audit table is strictly append-only
       - no kernel LLM — zero AI inference or natural language parsing in core

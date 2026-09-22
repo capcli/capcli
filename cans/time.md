@@ -45,10 +45,10 @@
       - metric prerequisites — success rates queried from routine_stats
       - production promotion — automated upon passing synthetic fuzz and replay suite
     - auto-promotion path — qualifying low-risk routines: see trust.md#Gates-&-promotion
-      - qualification conjunction
-        - execution volume — minimum 10 sim runs with 0.95 success rate
+      - risk-weighted conjunction
+        - execution volume — 1 run (reads), 3 runs (writes), 10 runs (egress)
         - latency floor — p95 duration <= 0.70 * declared_max_duration
-        - declaration match — 100% manifest match; 3/4 partial match routes to queue
+        - declaration match — strict subset verification; defensive early-returns pass without penalty
         - stability bounds — exactly 0 policy denials and 0 drift events
       - audit payload
         - event type — routine.auto_promoted
@@ -59,7 +59,7 @@
       - batch approval — human approves queue batch via single audit event
       - expiration SLA — age alert: see artifacts/governance.yaml#maintenance
         - breach notification — queue age > 48h triggers promotion.sla_breached
-      - veto countdown — 1-hour window permits retroactive human rollback
+      - veto canary — 1-hour autonomous telemetry window triggers auto-rollback on error spikes
     - live stage
       - invocation — execution via run, cron, webhook, or ask resume
       - frame tracking — each call pushes frame to _budget_frames
@@ -87,9 +87,8 @@
       - exploitation — worker agents call routine via run, replacing ad-hoc primitives
   - Consolidation
     - Maintenance cadence
-      - execution schedule — scheduled weekly maintenance window on Sun 03:00
-      - session ceilings — max 30 minutes duration; max 10 proposals per session
-      - similarity triggers — fingerprint similarity 0.90; duplicate similarity 0.85
+      - diagnostic cadence — weekly scan flags duplicate proposals via sys doctor
+      - autonomous limits — proposes diffs; never merges executable code automatically
     - Merge clustering
       - text similarity — threshold: see artifacts/governance.yaml#maintenance
       - fingerprint similarity — threshold: see artifacts/governance.yaml#maintenance

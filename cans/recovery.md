@@ -18,8 +18,8 @@
       - mutation triggers — commands auto-commit on draft, apply, promote, migrate, merge
       - tracked artifacts — world.sql, audit logs, and configuration YAMLs
     - Dual storage guarantee
-      - git repository — operational developer experience and branching
-      - object storage — append-only S3, GCS, or B2 bucket with versioning (SSOT ledger root)
+      - git repository — operational developer experience, world.sql DDL, and workspace snapshots
+      - object storage — append-only S3, GCS, or B2 bucket with versioning for binary DB backups
       - push command — sys backup --push writes to git and object store
     - History retention
       - squash cadence — 90-day git squash keeps repo small under ~35k commits/year
@@ -32,8 +32,8 @@
       - engine — Bun.CryptoHasher("sha256") in sys.audit.service.ts
       - tamper evidence — modifying any line breaks all subsequent hashes
     - Integrity checks
-      - witness check — local hash chain validated against object storage notary, independent of squashed git commits
-      - receipt anchoring — receipts cite ledger root hash and object store checkpoint; git commit hashes act as ephemeral metadata
+      - ledger verification — local hash chain validated against S3 WORM immutable ledger root, independent of git squashes
+      - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata
       - boot gate — require_hash_verify verifies system-schema hash at boot
       - replay gate — replay re-verifies code_hash before execution
   - Restore path

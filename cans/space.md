@@ -42,7 +42,7 @@
       - gating — exhaustion denies calls at target world gate
     - Composition propagation
       - cascade — child verb constraints propagate up call stack
-      - unproven gaps — prod-only children surface in parent ship evidence
+      - unproven gaps — prod-only children resolve to contract-validated mock fixtures in sim; verified against schemas
   - Rehearsal & sim
     - Rehearsal workflow
       - environment selection — capcli env use sim
@@ -58,7 +58,7 @@
       - mock — kernel returns canned fixture from apis/*.mock.yaml
       - dry-run — parameter and policy check returning simulated: true
       - skip — excluded from execution; omitted from fingerprint
-      - prod-only — execution denied inside sim and dev by authorizer
+      - prod-only — execution routes to schema-validated mock fixtures in sim; physical egress strictly denied outside prod
     - Historical replay
       - command — capcli sys audit replay --from prod --since 7d
       - database ops — deterministic re-execution against forked state

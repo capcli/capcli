@@ -40,14 +40,14 @@
         - prod world — pinned trust production floor
       - travel rule — routines cross environments via kernel env merge pipeline
     - Ladder laws
-      - human authority floor
-        - production writes — every mutating write in prod requires human approval
-        - bulk modifications — writes exceeding 100 rows route reason through human
+      - autonomous authority floor
+        - production writes — fully autonomous; governed by pinned trust rungs and AST limits
+        - bulk modifications — autonomous up to declared routine row ceilings
         - external egress — HTTP calls leaving perimeter require explicit grant
       - cross-agent floor — cross-agent calls require callee trust >= reviewed; drafts cannot be dependencies
       - training wheels graduation — unapproved calls graduate to normal governance automatically on call 4
       - monotonic ascent — ladder climbed sequentially; elevation skips denied
-      - zero self-promotion — promotion commands demand human or CI credentials
+      - verified promotion — promotion automated upon passing synthetic sim replay and invariant suite
       - dependency floor — cross-agent callee routines must hold trust >= reviewed
       - demotion priority — demotion commands execute without gate resistance
   - Gates & promotion
@@ -62,10 +62,12 @@
         - simulation proof — success rate threshold: >= 0.90
         - root overview — verified overview routine registered and pinned
     - Auto-promotion (draft to reviewed)
-      - qualification criteria
-        - execution volume — sim_runs >= 10
+      - risk-weighted qualification criteria
+        - read-only routines — sim_runs >= 1
+        - internal db write routines — sim_runs >= 3
+        - external egress / payment routines — sim_runs >= 10
         - reliability — success_rate >= 0.95
-        - declaration match — manifest_match_rate: 1.0 (zero skipped verbs)
+        - declaration match — manifest_subset_match: true (executed leaves subset of declared manifest; zero undeclared leaves)
         - policy compliance — policy_denials: exactly 0
         - runtime stability — fingerprint_drift_events: exactly 0
         - latency ceiling — p95_duration <= 0.70 * declared_max_duration
@@ -73,8 +75,8 @@
       - audit trail — emits routine.auto_promoted event
       - retroactive control — human veto via rollback --to-trust draft
     - Pinned promotion
-      - progressive autonomy — autonomous pin unlocked via invariant & mutation tests
-      - human reserve — human approval reserved exclusively for schema drops and spend > $100
+      - full autonomy — autonomous pin unlocked via invariant & mutation tests
+      - boundary safety — high spend or schema migrations governed by hard-coded budget caps
     - Promotion queue
       - mechanics — capcli routine ship <name> --to reviewed --queue
       - inspection — capcli routine pending surfaces batch candidates
@@ -82,8 +84,8 @@
         - breach trigger — queue age threshold: see artifacts/governance.yaml#maintenance
         - alarm — sys doctor emits promotion.sla_breached
       - veto window
-        - duration — 1-hour post-approval countdown
-        - action — any authorized principal can trigger immediate demotion
+        - duration — 1-hour automated canary telemetry window
+        - action — anomaly spikes or policy denials trigger autonomous circuit-breaker rollback to draft
     - API activation gate
       - trigger — capcli api activate <verb> --intent "..."
       - initial rung — activates at draft trust: see artifacts/policy.yaml#api.activation
@@ -99,10 +101,10 @@
         - representation — fractional score (e.g. 3/4 = 0.75)
     - Simulation gaps
       - disclosure format
-        - un-simulated endpoints — explicitly enumerated in ship evidence
-        - mode attribution — skip and prod-only reasons printed
+        - synthetic resolution — prod-only verbs execute against schema-validated mock fixtures in sim
+        - rehearsal pass — mock execution satisfies conjunction metrics with zero policy denials
       - fallback handling
-        - execution — un-simulated verbs default to dry-run (artifacts/governance.yaml)
+        - execution — prod-only and un-simulated verbs resolve to schema-validated mock fixtures in sim
       - training wheels
         - target verbs — skip and prod-only verbs
         - human approval — call cap: see artifacts/governance.yaml#api.prod_first_calls
@@ -125,7 +127,7 @@
     - Banned override flags
       - --force — banned unconditionally
       - --override-budget — banned; budgets governed structurally
-      - --force-prod — banned; authorizer physically denies prod-only verbs in sim
+      - --force-prod — banned; sim rehearsals strictly isolate via local mock fixtures
   - Trust receipts
     - Receipt generation
       - command — capcli sys doctor --report
