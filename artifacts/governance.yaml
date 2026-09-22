@@ -58,17 +58,6 @@ routine_shape:
   manifest_drift: anomaly             # undeclared primitives trigger governance event
 
 # ───────────────────────────────────────────────────────────────
-# 3. OVERRIDES — reviewable exceptions, never --force
-# ───────────────────────────────────────────────────────────────
-overrides:
-  large_migration:                    # declared need approved by human commit
-    execution: { max_duration_seconds: 900, max_ops_per_run: 200 }
-  weekly_report:
-    execution: { max_result_tokens: 1500 }   # reports may summarize longer
-  order_status:                       # served endpoint gets tighter, not looser
-    execution: { max_duration_seconds: 5 }   # external callers pay for latency
-
-# ───────────────────────────────────────────────────────────────
 # 4. MAINTENANCE — subtraction runs on schedule
 # ───────────────────────────────────────────────────────────────
 maintenance:
@@ -118,6 +107,10 @@ api:
     min_interval_hours: 24               # no hourly hammering of provider URLs
     max_catalog_size_mb: 10              # compiled catalog stays lean
     auto_deprecate_removed: true         # upstream removal → deprecated state
+  token_refresh:
+    auto_refresh: true                   # auto-rotates ephemeral access tokens via vaulted root
+    refresh_buffer_seconds: 300          # proactive refresh window before expiration
+    max_retries: 3                       # exhaust retries before falling back to human ask
   activation:
     max_activations_per_hour: 10         # no rapid-fire activation
     require_intent: true
@@ -203,7 +196,7 @@ backup:
   max_drift_minutes: 30               # doctor alarms if commits fall behind
   push: true
   include_audit: true
-  trigger_on: [promote, migrate, import, register, restore, serve.add]
+  trigger_on: [draft, apply, promote, migrate, merge, import, register, restore, serve.add]
   git_max_age_days: 90
 
 # ───────────────────────────────────────────────────────────────
@@ -211,7 +204,7 @@ backup:
 # ───────────────────────────────────────────────────────────────
 denials:
   cite_measured_value: true           # "file has 342 LOC, max is 150"
-  suggest_remediation: true           # "split it, or propose an override"
+  suggest_remediation: true           # "split it, or adjust governance config"
   log_all: true                       # every governance.deny is an audit event
   scope_mismatch_deny: true           # denies intent when AST targets undeclared tables
   budget_denial_cites_level: true     # "routine B (frame_004) exhausted ops: 20/20"

@@ -53,7 +53,7 @@
       - tracking — session counters govern spend, rate, and rows affected
       - workspace anchor — CAPCLI_WORKSPACE env var or --workspace flag anchors root; cd reliance banned
     - Harness execution boundary
-      - tool schema — single JSON-RPC tool capcli(command: string); open bash execution prohibited
+      - execution environment — open bash subshell with capcli binary in PATH
       - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)
       - session persistence — CAPCLI_SESSION env var or workspace.db active context preserves session across turns
       - exit contract — process exit codes (0, 2, 3, 4, 5) return status to subshell
@@ -62,18 +62,22 @@
     - Vault storage
       - table — secrets system table in workspace.db
       - schema — name unique, value, scope, expires_at, sens: true
+      - two-tier secrets — root secrets held in vault; ephemeral egress tokens derived
       - access — agent read-only; value masked in all outputs
       - boot handling — memory-decrypted at kernel startup
     - Provisioning workflow
       - Lifecycle steps
         - detection — missing secret_ref trips pre-call check before egress
+        - auto-refresh — expired ephemeral tokens refresh via vaulted root credentials
         - suspension — routine calls ctx.ping.ask and enters suspended state
+        - suspension trigger — occurs only if root secret is missing or refresh fails
         - alert dispatch — ping notify sends human notification with PWA vault link
         - out-of-band entry — human enters raw secret into PWA Layer 10 Vault UI
         - kernel write — daemon commits secret directly to vault table
         - execution resume — human resolves ask; routine awakens with injected key
     - Egress injection
       - injection point — Authorization headers inserted at kernel egress boundary
+      - boundary rotation — egress proxy silently refreshes expired bearer tokens
       - references — catalogs reference secret_ref, never plaintext values
       - trust restriction — draft routines denied secret access
   - Coordination

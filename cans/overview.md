@@ -9,7 +9,7 @@
       - physics — two-layer compile-time and runtime policy enforcement
       - memory — append-only SQLite _audit table mirrored to JSONL
     - Harness consumers
-      - agent harness — autonomous reasoning via CLI and machine contract
+      - agent harness — autonomous reasoning via open bash shell and CLI contract
       - human harness — oversight, authorization, and recovery via PWA
       - client boundary — PWA consumes @capcli/client over HTTP/WS
   - Core philosophy

@@ -99,7 +99,7 @@
       - config writes — config set banned; edit YAML and git commit
       - direct system-schema apply — managed by kernel upgrades
       - manual schema edits — schema edit banned; edit schema.yaml
-      - override flags — --force, --override-budget, --force-prod banned
+      - banned bypass flags — --force, --override-budget, --force-prod banned
       - retired verbs
         - db count — banned; use db query --count
         - claim — banned; use db lock or run --lock

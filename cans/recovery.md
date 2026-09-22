@@ -12,9 +12,10 @@
       - trigger bindings — auto-created by schedule or migration gates
   - Git integration
     - Commit automation
+      - kernel stewardship — kernel automates 100% of git lifecycle for governed files
+      - no raw git — agents execute capcli verbs; manual git add and commit prohibited
       - cadence — commits every 15 minutes; drift > 30 minutes raises doctor alarm
-      - mutation triggers — commits on promote, migrate, import, register, restore
-      - event triggers — commit on promote, migrate, import, register
+      - mutation triggers — commands auto-commit on draft, apply, promote, migrate, merge
       - tracked artifacts — world.sql, audit logs, and configuration YAMLs
     - Dual storage guarantee
       - git repository — operational developer experience and branching
@@ -47,14 +48,11 @@
       - audit trail — logs recovery_mode_entered on startup
     - Re-entry context
       - context reinstatement
+        - ground zero — execute capcli run overview for instant situational state
         - position — active environment, schema version, policy version
         - last action — last recorded intent and successful effect
         - drift log — audit events and retirements since prior session
         - safe next step — proposed dry-run or audit verification command
-      - position — active environment, schema version, policy version
-      - last action — last recorded intent and successful effect
-      - drift log — audit events and retirements since prior session
-      - safe next step — proposed dry-run or audit verification command
   - Destruction as transition
     - Lifecycle stance
       - retirement — capabilities uncallable; historical provenance preserved

@@ -706,14 +706,18 @@ from capcli import routine, ctx
 def overview():
     low_stock = ctx.db.query("SELECT sku, stock FROM products WHERE stock < 20 LIMIT 5")
     pending = ctx.db.query("SELECT count(*) as count FROM orders WHERE status = 'pending'")[0]["count"]
-    budget = ctx.db.query("SELECT consumed_spend_usd FROM _budget_frames WHERE outcome = 'active' ORDER BY created_at DESC LIMIT 1")
-    active_asks = ctx.db.query("SELECT count(*) as count FROM _pending_asks WHERE status = 'pending'")[0]["count"]
+    spend = ctx.db.query("SELECT consumed_spend_usd FROM _budget_frames WHERE outcome = 'active' ORDER BY created_at DESC LIMIT 1")
+    asks = ctx.db.query("SELECT count(*) as count FROM _pending_asks WHERE status = 'pending'")[0]["count"]
+    inbox_qty = ctx.db.query("SELECT count(*) as count FROM _inbox WHERE processed = 0")[0]["count"]
+    locks = ctx.db.query("SELECT target FROM _claims WHERE expires_at > strftime('%s','now')")
     
     return {
         "low_stock_alerts": low_stock,
         "pending_orders": pending,
-        "active_spend_usd": float(budget[0]["consumed_spend_usd"]) if budget else 0.0,
-        "pending_human_asks": active_asks,
+        "active_spend_usd": float(spend[0]["consumed_spend_usd"]) if spend else 0.0,
+        "pending_human_asks": asks,
+        "inbox_backlog": inbox_qty,
+        "active_locks": [l["target"] for l in locks],
         "system_status": "nominal"
     }
 EOF
@@ -760,6 +764,8 @@ capcli run overview --json
   "pending_orders": 0,
   "active_spend_usd": 0.0,
   "pending_human_asks": 0,
+  "inbox_backlog": 0,
+  "active_locks": [],
   "system_status": "nominal"
 }
 ```
@@ -813,6 +819,8 @@ capcli run overview --json
   "pending_orders": 0,
   "active_spend_usd": 0.0,
   "pending_human_asks": 0,
+  "inbox_backlog": 0,
+  "active_locks": [],
   "system_status": "nominal"
 }
 ```
@@ -1268,7 +1276,7 @@ Simulation qualification complete:
 Next step: Final promotion to 'pinned' trust so the routine can run unattended in production under automated crons and webhooks.
 Invariant Check (trust.md & space.md):
 - Pinned trust CANNOT be granted on an uncommitted or dirty git tree.
-- Must switch to prod branch, commit schema + routines + lockfile, execute git merge, and generate cryptographic attestation.
+- Run env merge dev --into prod to auto-commit artifacts, snapshot, merge git, and lock schema.
 </thinking>
 ```
 
@@ -1283,14 +1291,12 @@ Invariant Check (trust.md & space.md):
 **[Fresh Harness Turn 10]**
 ```text
 <thinking>
-Commit changes on dev and execute atomic environment promotion to prod.
-The 'env merge' command will snapshot prod, merge git branches, and apply physical DDL to envs/prod/workspace.db.
+Execute atomic environment promotion to prod.
+The 'env merge' command auto-commits dev artifacts, snapshots prod, merges git branches, and applies physical DDL.
 </thinking>
 ```
 **Tool Call:** `bash`
 ```bash
-git add schema.yaml capcli.lock routines/
-git commit -m "feat(coffee-erp): release validated schema and wholesale routines"
 capcli env merge dev --into prod --intent "promote validated wholesale coffee erp to prod"
 ```
 
@@ -1301,6 +1307,7 @@ capcli env merge dev --into prod --intent "promote validated wholesale coffee er
 [PASS] env_merge
   source:          dev
   target:          prod
+  auto_commit:     dev workspace committed (commit: 4c89a0b1)
   pre_snapshot:    snap_prod_pre_v1 generated
   git_merge:       dev -> prod (commit: 4c89a0b1)
   physical_ddl:    applied 2 tables to envs/prod/workspace.db

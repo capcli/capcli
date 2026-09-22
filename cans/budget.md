@@ -16,7 +16,7 @@
       - Declared limits
         - declared_max_ops: int — primitive-execution ceiling
         - declared_max_duration_ms: int — wall-clock ceiling
-        - Defaults come from routine_shape.execution unless an override commit applies
+        - Defaults configured in routine_shape.execution
       - Consumed counters
         - consumed_ops: int=0
         - consumed_duration_ms: int=0
@@ -41,9 +41,8 @@
     - PWA Layer 5 frame tree — frames, cascades, consumption, exhaustion, pools: see interface.md#PWA-layers
   - Cascade
     - min() law
-      - Child effective limit = min(declared need, governance ceiling, override, parent_remaining, session_ceiling)
+      - Child effective limit = min(declared need, governance ceiling, parent_remaining, session_ceiling)
       - Governance ceiling comes from routine_shape.execution limits (artifacts/governance.yaml)
-      - Override values enter through approved override commits: see trust.md#Overrides
       - The kernel enforces the tightest constraint at every frame — the cage tightens, never widens
       - Splitting is not escaping
         - Session-level counters never reset through composition
@@ -120,7 +119,6 @@
         - max_result_tokens 500 — summaries crossing to the model truncate
         - truncation structure — emits valid JSON envelope with truncated: true and next_cursor; inline raw string corruption banned
         - serve response max_result_tokens 500 — inherited routine cap
-        - Overrides may raise it: weekly_report max_result_tokens 1500
       - Ping surfaces
         - notify message_max_tokens 300 — notifications are summaries, not essays
         - ask question_max_tokens 100, max_options 5

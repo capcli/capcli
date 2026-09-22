@@ -18,7 +18,8 @@
           - writers — serialized atomic transactions via busy-timeout queue
         - access perimeter
           - direct sockets — agent connection denied
-          - direct filesystem — agent file open denied
+          - direct db file — raw open on workspace.db denied via chmod 600
+          - workspace files — open read and write for schemas, routines, and scripts
           - sole gateway — kernel mediation mandatory
       - world.sql
         - format

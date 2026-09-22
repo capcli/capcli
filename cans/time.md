@@ -25,7 +25,7 @@
         - similarity calculation — code-text similarity comparison at birth
         - duplicate nag — similarity >= 0.85 requires justification in --reason
         - threshold nag — similarity warning: see artifacts/governance.yaml#maintenance
-        - override — bypass requires justification in --reason
+        - bypass — requires justification in --reason
     - prove stage
       - command — capcli routine prove <name> [-p k=v] [--env sim]
       - verification checks

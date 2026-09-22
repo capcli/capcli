@@ -19,7 +19,7 @@
       - travel law — routines travel dev → sim → prod via manifest migration pipelines
     - Policy overlays
       - mechanism — unified engine parameterized per environment
-      - endpoint overrides — base_url swapped via apis/<provider>.sim.yaml
+      - endpoint remap — base_url swapped via apis/<provider>.sim.yaml
       - notification routing — sim notification primitives rerouted to #sim-notifications
       - capacity limits — max 5 concurrent environments (prod, dev, sim, 2 experiments)
       - sim defaults — mode resolution: see artifacts/governance.yaml#api

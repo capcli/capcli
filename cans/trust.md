@@ -38,7 +38,7 @@
         - dev world — draft trust baseline
         - sim world — reviewed trust proving ground
         - prod world — pinned trust production floor
-      - travel rule — routines cross environments via git worktree merges
+      - travel rule — routines cross environments via kernel env merge pipeline
     - Ladder laws
       - human authority floor
         - production writes — every mutating write in prod requires human approval
@@ -118,29 +118,15 @@
     - Provenance evidence
       - version pinning — code_hash and manifest_hash permanently linked
       - edit prohibition — code edits force new version; silent edits banned
-  - Overrides
-    - Governance mechanism
-      - definition location — artifacts/governance.yaml#overrides
-      - format — human git commits; CLI override flags banned
-      - CI validation — rule validate compiles overrides prior to merge
+  - Limits & refusals
     - Precedence calculation
-      - min cascade rule — min(declared, governance ceiling, override, parent_remaining)
-      - ceiling tightening — overrides can enforce stricter caps than defaults
-      - physical immutability — overrides cannot loosen SQLite authorizer or jail walls
+      - min cascade rule — min(declared, governance ceiling, parent_remaining)
+      - physical immutability — configuration cannot loosen SQLite authorizer or jail walls
     - Banned override flags
-      - --force — banned; exceptions require git commits in governance.yaml
-      - --override-budget — banned; budgets governed strictly by frame cascade
-      - --force-prod — banned; authorizer physically blocks prod-only calls in sim
       - --force — banned unconditionally
       - --override-budget — banned; budgets governed structurally
       - --force-prod — banned; authorizer physically denies prod-only verbs in sim
   - Trust receipts
-    - Verified receipt lines
-      - audited operations — exact count of bounded leaf operations recorded
-      - pre-execution denials — count of explained policy rejections with zero state mutation
-      - unaudited writes — verified strictly zero
-      - secret protection — verified zero unmasked tokens exposed
-      - recovery validation — confirmation that snapshot restore and git replay drills passed
     - Receipt generation
       - command — capcli sys doctor --report
       - provenance — computed directly from kernel _audit mirror
