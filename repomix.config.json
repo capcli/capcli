@@ -29,7 +29,8 @@
   },
   "include": [
       "cans/",
-      "artifacts/capcli.playbook.md"
+ //     "artifacts/capcli.playbook.md",
+  //     "artifacts/governance.yaml"
   ],
   "ignore": {
     "useGitignore": true,
@@ -41,7 +42,8 @@
 	"cans/_adr",
 	"cans/_collab",
     "cans/AGENTS.md",
-    "cans/assembly.md"
+ //   "cans/assembly.md",
+ 
 		]
   },
   "security": {
