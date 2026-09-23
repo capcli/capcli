@@ -913,7 +913,7 @@ Check audit logs to see if this payment-order pattern has repeated across dev ex
 ```
 **Tool Call:** `bash`
 ```bash
-capcli sys audit query "SELECT sequence, occurrences FROM shared_subsequences WHERE occurrences >= 3;"
+capcli sys audit query "SELECT sequence, occurrences FROM shared_subsequences WHERE occurrences >= 3 AND total_domain_events >= 50;"
 ```
 
 ---

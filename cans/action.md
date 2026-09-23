@@ -167,7 +167,7 @@
         - reading secrets or masked columns
         - bypassing run via raw HTTP
         - cross-session result caching
-      - Evidence prerequisite — proposal requires >= 3 identical audit sequences
+      - Evidence prerequisite — proposal requires >= 3 identical audit sequences across >= 50 logged domain events
     - Invariants and anti-decisions
       - Anti-decisions
         - no YAML procedures — control flow belongs in code
@@ -277,7 +277,7 @@
       - Verification — proof of execution path rather than simple crash status
   - External APIs
     - Boundary characteristics
-      - routine encapsulation — external egress strictly prohibited from ad-hoc CLI commands
+      - egress perimeter — raw unmanaged socket egress blocked; exploratory calls route via activated catalog verbs (capcli run)
       - Authorizer separation — authorizer protects SQLite; egress proxy protects HTTP
       - Irreversibility — HTTP writes lack rollback and transactions
       - Pre-call policy — checks enforced before egress leaves kernel

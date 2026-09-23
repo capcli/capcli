@@ -58,7 +58,8 @@
       - startup — invalid configuration or version mismatch aborts boot
       - runtime — unparseable SQL, missing principals, or quota breaches deny
     - Capability lifecycle
-      - exploration — autonomous bounded SQL queries and simulated API probes establish baseline behavior
+      - exploration — raw bounded SQL mutations and standalone activated API calls accumulate telemetry in dev
+      - sufficiency — pattern mining remains dormant until 50 raw audit events accumulate
       - codification — repeated DB and API call sequences compiled into governed routines
       - trust progression — earned autonomy moves routines from draft to reviewed to pinned via synthetic proof
     - Autonomous authority

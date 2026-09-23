@@ -76,7 +76,7 @@
     - Discovery arc
       - dual exploration — worker agents execute raw SQL reads and simulated API probes
       - tracking — kernel logs all database and egress attempts with intent and parameters
-      - sufficiency floor — log analysis triggers only after minimum audit sample density
+      - sufficiency floor — log analysis triggers only after 50 raw audit events accumulate in target domain
       - analysis views — deterministic kernel SQL views surface op frequencies and n-grams
       - extraction — specialized analysis agent inspects surfaced DB and API sequences
     - Routine codification
