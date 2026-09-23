@@ -10,11 +10,12 @@
     - Host system dependencies
       - git binary — host git >= 2.30 for worktrees: see space.md#Environment-axis
       - python runtime — host python >= 3.11 for sandboxed routines: see action.md#Routines
-      - bubblewrap binary — host bwrap for unprivileged Linux jails: see action.md#Sandbox-execution
-      - musl toolchain — musl-tools for compiling static Linux executables: see physics.md#Fail-closed-stance
+      - bubblewrap binary — host bwrap >= 0.8.0 mandatory on Tier 1; optional on Tier 2: see physics.md#Platform-tier-taxonomy
+      - target toolchains — musl (Linux Tier 1), apple-darwin (macOS Tier 2), android (Termux Tier 2), msvc (Windows Tier 2)
     - Root management commands
       - compile development — cargo build --workspace: see physics.md#Exit-code-law
       - compile static release — cargo build --release --target x86_64-unknown-linux-musl
+      - compile termux release — cargo build --release --target aarch64-linux-android
       - run test suite — cargo test --workspace --all-targets: see cans/assembly.md#Monorepo-test-architecture
       - run linter checks — cargo clippy --workspace -- -D warnings
       - build pwa assets — bun run --cwd packages/pwa build: see interface.md#PWA-layers
@@ -127,8 +128,8 @@
     - Domain 2: Routine engine & sandboxing (routine/)
       - Subsystem modules
         - runner.rs — manages child Python processes and exits: see action.md#Routines
-        - jail.rs — builds bwrap isolation and tmpfs /scratch: see action.md#Sandbox-execution
-        - ipc_socket.rs — Unix socket JSON-Lines protocol broker: see cans/assembly.md#Python-runtime-harness-package
+        - jail.rs — builds bwrap isolation for Tier 1 or process broker for Tier 2: see action.md#Sandbox-execution
+        - ipc_socket.rs — cross-platform IPC (UDS on POSIX/Termux, Named Pipes on Windows): see action.md#Sandbox-execution
         - manifest.rs — extracts declared static manifests: see action.md#Manifests-&-fingerprints
         - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
       - Execution gates
@@ -199,11 +200,11 @@
         - mirror.rs — streams rows to daily JSONL export files: see effect.md#Storage-hierarchy
         - hashchain.rs — calculates sha256 links with sha2 crate: see recovery.md#Hash-chains
         - witness.rs — checkpoints root hash to KMS or S3 WORM: see effect.md#Event-integrity
-        - doctor.rs — probes host runtimes (git, python, bwrap, ntp), verifies drift, and emits trust receipts
+        - doctor.rs — probes host runtimes, detects platform tier, verifies drift, and emits trust receipts: see physics.md#Platform-tier-taxonomy
         - recover.rs — coordinates snapshot or commit rollbacks: see recovery.md#Restore-path
       - Execution gates
         - sink_gate.rs — denies writes if audit write fails (exit 5): see physics.md#Fail-closed-stance
-        - boot_gate.rs — aborts on missing host runtimes, clock drift > 500ms, or lockfile mismatch
+        - boot_gate.rs — aborts on missing host runtimes, unmitigated Tier 1 sandbox absence, clock drift > 500ms, or lockfile mismatch: see physics.md#Boot-refusals
     - Domain 10: Capability execution & discovery (run/)
       - Subsystem modules
         - registry.rs — Universal Resource Pointer dispatcher: see action.md#Global-pointer-registry

@@ -107,21 +107,21 @@
       - output envelope — max 500 result tokens; oversized results return truncated: true
     - Sandbox execution
       - Jail architecture
-        - process model — jailed subprocess or pre-forked warm sandbox pool in daemon
+        - provider resolution — auto selects bwrap on Tier 1; selects broker on Tier 2: see physics.md#Platform-tier-taxonomy
+        - tier 1 execution — bwrap namespaces, tmpfs /scratch wiped at exit, seccomp-bpf blocking raw network and fork
+        - tier 2 execution — child Python subprocess mediated strictly via IPC broker; scratch mapped to host tmpdir; network unconfined warning emitted
         - latency floor — warm runner recycling ensures execution overhead < 50ms
-        - network — unshared namespace or host loopback
-        - filesystem — workspace mounted read-only, tmpfs /scratch wiped at exit
-        - syscalls — default-deny seccomp-bpf filter blocking raw network and spawn
       - Provider backends
-        - linux default — bwrap with network isolation and host userns doctor checks
-        - container engine — podman or docker rootless container
-        - disposable host — process mode without OS namespace isolation
+        - bwrap — Linux/WSL2 unprivileged namespace sandbox with host userns doctor check: see physics.md#Platform-tier-taxonomy
+        - broker — Tier 2 process runner relying on ctx wrapper isolation and C authorizer: see physics.md#Platform-tier-taxonomy
+        - podman — rootless container runner for unprivileged container environments
       - Jail defenses
-        - runner engine — tokio::process::Command spawning bwrap namespaces
-        - IPC protocol — streaming JSON-Lines over /run/capcli/kernel.sock via LinesCodec
-        - filter derivation — AST deny-list compiled directly from seccomp-bpf
-        - process hierarchy — fork and exec blocked at seccomp filter layer
-        - path restriction — writes outside scratch blocked at syscall boundary
+        - runner engine — tokio::process::Command dispatching bwrap (Tier 1) or broker (Tier 2)
+        - IPC transport — streaming JSON-Lines over platform socket:
+          - Linux / macOS — $XDG_RUNTIME_DIR/capcli/kernel.sock or /run/capcli/kernel.sock
+          - Termux — $PREFIX/var/run/capcli/kernel.sock
+          - Windows — \\.\pipe\capcli-kernel
+        - path restriction — Tier 1 blocks via pivot_root mount table; Tier 2 blocks via process cwd jail
       - Execution limits
         - ops ceiling — see artifacts/governance.yaml#routine_shape
         - timeout — watchdog kill: see artifacts/governance.yaml#routine_shape
@@ -236,7 +236,8 @@
         - pre-call quota — deny before network dispatch: see budget.md#Quotas
         - idempotency — kernel-minted key persisted before egress
       - Sandbox boundaries
-        - runtime isolation — unshared network namespace blocks raw sockets; AF_UNIX permitted for /run/capcli/kernel.sock
+        - runtime isolation — Tier 1 unshares network namespace; Tier 2 unsets outbound proxy env vars and relies on ctx mediation: see physics.md#Platform-tier-taxonomy
+        - transport bridge — local IPC permitted exclusively to kernel endpoint
         - interface definition — Param typing enforces input validation
     - Data protection
       - Context confinement — raw records stay inside sandbox

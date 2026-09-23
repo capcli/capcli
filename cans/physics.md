@@ -1,5 +1,15 @@
 - Physics
-  - Dual-engine enforcement
+  - Platform tiering and dual-engine enforcement
+    - Platform tier taxonomy
+      - tier 1 (hardened) — Linux bare-metal, VPS, Docker (with userns), WSL2
+        - sandbox — unprivileged bwrap namespaces + tmpfs scratch: see action.md#Sandbox-execution
+        - network jail — seccomp-bpf filter trapping raw socket connect (syscall 42)
+        - trust bounds — all rungs permitted (draft, reviewed, pinned): see trust.md#The-ladder
+      - tier 2 (degraded) — macOS (Darwin), Android (Termux), Windows native
+        - sandbox — out-of-jail process mediated via IPC broker and C authorizer: see action.md#Sandbox-execution
+        - network jail — process-level egress block via unshared proxy env and ctx mediation
+        - diagnostic alert — boot emits [WARN] host.degraded_isolation: see interface.md#CLI-surface
+        - trust bounds — draft and reviewed in dev/sim only; pinned execution denied: see trust.md#Ladder-laws
     - parity principle — local state mutations and external API egress share equal gate severity
     - local engine — C authorizer and AST parse intercept SQLite commands at prepare time
     - egress engine — token-bucket quotas, secret boundaries, and sim routing intercept network calls
@@ -53,7 +63,9 @@
   - Fail-closed stance
     - Anchor principle — default: deny (artifacts/policy.yaml)
     - Boot refusals
-      - missing host dependencies — python < 3.11, git < 2.30, or unexecutable bwrap aborts boot (exit 3)
+      - missing host dependencies — python < 3.11 or git < 2.30 aborts boot on all tiers (exit 3)
+      - sandbox missing on tier 1 — absent or unexecutable bwrap on Linux aborts boot (exit 3)
+      - sandbox degraded on tier 2 — missing bwrap downgrades to provider=broker with warning
       - clock drift — host clock delta vs NTP > 500ms aborts boot to prevent claim corruption
       - unconfigured git identity — missing user.name/email triggers auto-fallback to capcli[bot] or aborts
       - missing configuration — policy.yaml or governance.yaml absent
