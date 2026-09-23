@@ -68,6 +68,9 @@
       - sandbox degraded on tier 2 — missing bwrap downgrades to provider=broker with warning
       - clock drift — host clock delta vs NTP > 500ms aborts boot to prevent claim corruption
       - unconfigured git identity — missing user.name/email triggers auto-fallback to capcli[bot] or aborts
+      - template incompatibility — template min_kernel_version or policy_version mismatch aborts intake (exit 3)
+      - unbundled world template — template missing routines/overview.py aborts initialization (exit 3)
+      - malformed template AST — routine template failing Python AST parse aborts intake (exit 3)
       - missing configuration — policy.yaml or governance.yaml absent
       - lockfile mismatch — compiled capcli.lock SHA256 mismatch aborts boot in prod and sim
       - schema integrity — system_schema hash mismatch aborts boot

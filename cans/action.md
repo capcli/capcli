@@ -9,6 +9,7 @@
         - audit:// — causal DAG events, failures, and sequence patterns
         - bind:// — cron schedules, webhooks, and endpoint ingress routes
         - vault:// — secret references and in-memory injection status
+        - tpl:// — world and routine blueprints, structural scaffolds, and patterns
         - ask:// — pending human inquiries and suspensions
         - snap:// — VACUUM recovery snapshots and migration restore points
         - quota:// — provider rate-bucket balances and spend ceilings
@@ -105,6 +106,15 @@
       - signatures — max 8 typed Param declarations; description min 5 words
       - execution caps — max 50 ops per run; max 300s duration; max 10 txn statements
       - output envelope — max 500 result tokens; oversized results return truncated: true
+  - Routine templates
+    - Invariant authoring laws
+      - AST-level injection — kernel parses Python AST to rewrite routine name and signature; string or regex substitution banned
+      - unproven intake — templated routines register strictly at draft trust, version 1
+      - shape compliance — intake parses through shape_gate.rs; non-compliant stubs rejected before disk write
+    - Scaffolding pipeline
+      - command — routine draft <name> --template <ptr|path> [--intent "..."]
+      - verification — checks Param typings, ctx boundaries, and imports <= 3
+      - audit payload — records routine.draft with template_source and template_hash
     - Sandbox execution
       - Jail architecture
         - provider resolution — auto selects bwrap on Tier 1; selects broker on Tier 2: see physics.md#Platform-tier-taxonomy
