@@ -9,9 +9,10 @@
       - physics — two-layer compile-time and runtime policy enforcement
       - memory — append-only SQLite _audit table mirrored to JSONL
     - Harness consumers
-      - agent harness — autonomous reasoning via open bash shell and CLI contract
-      - human harness — oversight, authorization, and recovery via PWA
-      - client boundary — PWA consumes @capcli/client over HTTP/WS
+      - agent harness — autonomous reasoning via open bash subshell: see interface.md#CLI-surface
+      - human harness — oversight, authorization, and recovery via PWA: see interface.md#PWA-layers
+      - client boundary — PWA consumes kernel JSON-RPC daemon over HTTP/WS: see interface.md#Client-RPC-contract
+      - execution separation — harness reasons while kernel enforces: see physics.md#Fail-closed-stance
   - Core philosophy
     - Zero trust agent
       - premise — agent intentions are never inherently trusted

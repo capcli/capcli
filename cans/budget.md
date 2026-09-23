@@ -2,10 +2,10 @@
 <!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, time.md, trust.md, world.md -->
   - Frames
     - Lifecycle
-      - Every routine invocation pushes a budget frame onto the call stack
-      - Frame opens on invoke, closes on outcome — active until success/exhausted/denied/error
-      - parent_frame links each frame to its caller — one frame tree per session
-      - `sys.budget.service.ts` in `@capcli/kernel` owns frame push/pop and cascade enforcement
+      - frame push — routine invocation pushes frame onto call stack: see budget.md#Record
+      - frame close — frame closes on outcome (success, denied, exhausted): see budget.md#Record
+      - parent link — parent_frame links each frame to caller in tree: see budget.md#Record
+      - engine owner — capcli-core::budget owns push, pop, and cascade: see cans/assembly.md#Core-domain-subsystems
     - Record
       - `_budget_frames` system table, kernel-managed — schema: see world.md#Dual-schema
       - Identity

@@ -22,10 +22,10 @@
       - scaffolding — capcli routine draft <name>
       - authoring — direct filesystem writes in routines/
       - near-duplicate scan
-        - similarity calculation — code-text similarity comparison at birth
-        - duplicate nag — similarity >= 0.85 requires justification in --reason
-        - threshold nag — similarity warning: see artifacts/governance.yaml#maintenance
-        - bypass — requires justification in --reason
+        - similarity engine — strsim crate calculates normalized Levenshtein distance: see time.md#draft-stage
+        - similarity threshold — similarity >= 0.85 requires justification in --reason: see artifacts/governance.yaml#maintenance
+        - threshold nag — similarity warning alerts author prior to drafting: see artifacts/governance.yaml#maintenance
+        - bypass control — justification mandatory in --reason flag: see interface.md#Universal-flags
     - prove stage
       - command — capcli routine prove <name> [-p k=v] [--env sim]
       - verification checks
@@ -90,8 +90,9 @@
       - diagnostic cadence — weekly scan flags duplicate proposals via sys doctor
       - autonomous limits — proposes diffs; never merges executable code automatically
     - Merge clustering
-      - text similarity — threshold: see artifacts/governance.yaml#maintenance
-      - fingerprint similarity — threshold: see artifacts/governance.yaml#maintenance
+      - text similarity — strsim Levenshtein distance check: see artifacts/governance.yaml#maintenance
+      - fingerprint similarity — dynamic leaf sequence match threshold: see artifacts/governance.yaml#maintenance
+      - clustering engine — petgraph clusters nearest routine graphs: see cans/assembly.md#Core-domain-subsystems
     - Merge mechanics
       - draft — harness generates consolidated routine code
       - verification — automated gate tests candidate against test suite

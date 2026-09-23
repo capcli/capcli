@@ -27,10 +27,10 @@
       - archive — full immutable history retained in object storage
   - Hash chains
     - Line linking
-      - source — generated in DB _audit table rows and mirrored to JSONL export
+      - source — generated in DB _audit table rows and mirrored to JSONL
       - calculation — prev_hash: sha256:<previous_row_hash>
-      - engine — Bun.CryptoHasher("sha256") in sys.audit.service.ts
-      - tamper evidence — modifying any line breaks all subsequent hashes
+      - engine — sha2::Sha256 in crates/capcli-core/src/sys/hashchain.rs
+      - tamper evidence — modifying any row invalidates all future hashes
     - Integrity checks
       - ledger verification — local hash chain validated against S3 WORM immutable ledger root, independent of git squashes
       - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata
@@ -43,9 +43,10 @@
       - offsite archive — disaster recovery pull from object storage
     - Emergency recovery mode
       - activation — CAPCLI_RECOVERY=1 environment variable
-      - components — loads schema and audit sink only; policy and routines disabled
+      - handler — native recover command in crates/capcli-cli/src/commands/
+      - components — loads schema and audit sink only; policy disabled
       - allowlist — db query, db dump, sys audit tail, sys backup
-      - audit trail — logs recovery_mode_entered on startup
+      - audit trail — logs recovery_mode_entered event on startup
     - Re-entry context
       - context reinstatement
         - ground zero — execute capcli run overview for instant situational state

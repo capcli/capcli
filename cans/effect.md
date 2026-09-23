@@ -19,7 +19,7 @@
       - outcome — rows_affected, result_hash, duration_ms
     - Kernel event payloads
       - capability.search — query, results_count, resolution_stage, gap_signal
-      - db.exec — sql, params, ast_parse {ok, node_count, statement_type}, rows, hash
+      - db.exec — sql, params, vdbe_inspect {ok, opcodes_analyzed, write_trapped}, rows
       - db.exec — sql, params, rules_matched, rows_affected, result_hash
       - routine.run — routine, version, hashes, triggered_by, outcome, ops, duration
       - api.sync — provider, added, removed, changed, unchanged
