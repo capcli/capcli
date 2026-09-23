@@ -59,6 +59,7 @@
     - Vault storage
       - table — secrets system table in workspace.db
       - schema — name unique, value, scope, expires_at, sens: true
+      - audit contract — all secret mutations emit vault.set with masked values and SHA-256 fingerprint
       - two-tier secrets — root secrets held in vault; ephemeral egress tokens derived
       - access — agent read-only; value masked in all outputs
       - encryption — AES-256-GCM at rest; cached in memory by daemon or decrypted ephemerally per CLI run

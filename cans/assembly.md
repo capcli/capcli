@@ -5,7 +5,7 @@
       - Cargo.toml — defines workspace members, musl targets, and release profiles
       - rust-toolchain.toml — pins MSRV 1.85+ with rustfmt and clippy components
       - Cargo.lock — deterministic dependency lockfile across all workspace crates
-      - .gitignore — ignores workspace.db, target/, dist/, and tmpfs scratch
+      - .gitignore — ignores **/workspace.db*, *.snap.db, target/, dist/, and tmpfs scratch
       - repomix.config.json — context packing configuration for LLM code review
     - Host system dependencies
       - git binary — host git >= 2.30 for worktrees: see space.md#Environment-axis
@@ -199,11 +199,11 @@
         - mirror.rs — streams rows to daily JSONL export files: see effect.md#Storage-hierarchy
         - hashchain.rs — calculates sha256 links with sha2 crate: see recovery.md#Hash-chains
         - witness.rs — checkpoints root hash to KMS or S3 WORM: see effect.md#Event-integrity
-        - doctor.rs — verifies system health and emits receipts: see trust.md#Trust-receipts
+        - doctor.rs — probes host runtimes (git, python, bwrap, ntp), verifies drift, and emits trust receipts
         - recover.rs — coordinates snapshot or commit rollbacks: see recovery.md#Restore-path
       - Execution gates
         - sink_gate.rs — denies writes if audit write fails (exit 5): see physics.md#Fail-closed-stance
-        - boot_gate.rs — aborts startup on lockfile mismatch: see physics.md#Fail-closed-stance
+        - boot_gate.rs — aborts on missing host runtimes, clock drift > 500ms, or lockfile mismatch
     - Domain 10: Capability execution & discovery (run/)
       - Subsystem modules
         - registry.rs — Universal Resource Pointer dispatcher: see action.md#Global-pointer-registry

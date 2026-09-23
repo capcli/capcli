@@ -196,7 +196,7 @@ backup:
   max_drift_minutes: 30               # doctor alarms if commits fall behind
   push: true
   include_audit: true
-  trigger_on: [draft, apply, promote, migrate, merge, import, register, restore, serve.add]
+  trigger_on: [draft, apply, promote, migrate, merge, import, register, restore, serve.add, bind, vault]
   git_max_age_days: 90
 
 # ───────────────────────────────────────────────────────────────
