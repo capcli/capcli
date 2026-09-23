@@ -1,4 +1,5 @@
 - Action
+<!-- ref-by: assembly.md, budget.md, effect.md, interface.md, overview.md, physics.md, recovery.md, time.md, trust.md, world.md -->
   - Global pointer registry
     - Unifying concept
       - Universal Resource Pointers (URP) — typed URN pointers across entire workspace
@@ -171,13 +172,13 @@
       - Result constraint — computed summaries only (<= 500 tokens)
       - Provenance pass — skill name recorded in triggered_by_skill
       - Protocol bans
-        - unproven drafting — routine draft and ship forbidden within skills
+        - unproven drafting — routine draft and ship forbidden within skills: see trust.md#The-ladder
         - raw SQL instruction
         - routine ship or draft within skills
         - reading secrets or masked columns
         - bypassing run via raw HTTP
         - cross-session result caching
-      - Evidence prerequisite — proposal requires >= 3 identical audit sequences across >= 50 logged domain events
+      - Evidence prerequisite — sequence threshold required: see time.md#Discovery-arc
     - Invariants and anti-decisions
       - Anti-decisions
         - no YAML procedures — control flow belongs in code
@@ -223,10 +224,10 @@
         - ctx.api.call(verb, params, intent) — governed HTTP egress
         - egress retry — automatic backoff and jitter on 429/503 upstream responses
         - ctx.api.verify(verb, key) — key validation check
-        - Blob storage methods
-          - ctx.storage.put(name, data, mime) — uploads blob and returns metadata
-          - ctx.storage.get(key) — retrieves stream and verified sha256
-          - ctx.storage.url(key, ttl) — mints signed temporary access url
+      - Blob storage methods
+        - ctx.storage.put(name, data, mime) — uploads blob and returns metadata
+        - ctx.storage.get(key) — retrieves stream and verified sha256
+        - ctx.storage.url(key, ttl) — mints signed temporary access url
       - Hand triggers
         - ctx.bind.cron — time declaration
         - ctx.bind.webhook — async event subscription
@@ -324,8 +325,8 @@
         - intent present and passes anti-junk validation
       - Initial trust — draft
       - Training wheels
-        - target verbs — un-simulated third-party verbs
-        - autonomous graduation — synthetic mock verification with valid OpenAPI contracts graduates verbs on first rehearsal
+        - target verbs — un-simulated third-party verbs: see trust.md#Simulation-gaps
+        - autonomous graduation — rehearsal promotion rules: see trust.md#Gates-&-promotion
         - window expiration — 24-hour approval window per unapproved call
         - graduation — fourth call enters normal governance
     - Live quota tracking

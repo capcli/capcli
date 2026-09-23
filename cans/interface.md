@@ -1,19 +1,19 @@
 - Interface
+<!-- ref-by: action.md, assembly.md, budget.md, overview.md, physics.md, recovery.md, time.md, trust.md -->
   - CLI surface
     - Design laws
+      - exit code laws — strict integer contract (0, 2, 3, 4, 5): see physics.md#Exit-code-law
       - Command shape — capcli <noun> <verb> [target] [--flags]
       - Subcommand tree — ten nouns (run, db, routine, api, bind, ping, rule, env, sys, doc)
       - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json
       - Prefix standard — [env:tier] prepended to all output streams (e.g. [dev:tier_2], [prod:tier_1])
-      - Tier 2 banner — running on Tier 2 emits non-blocking warning: [WARN] host.degraded_isolation (broker mode active; pinned trust disabled): see physics.md#Platform-tier-taxonomy
+      - Tier 2 banner — emits host.degraded_isolation warning: see physics.md#Platform-tier-taxonomy
       - Caller categories
         - [harness] — safe for autonomous agent execution
         - [human] — requires interactive human approval
         - [both] — dual execution permitted depending on flags
-    - Exit codes
-      - exit code laws — strict integer contract (0, 2, 3, 4, 5): see physics.md#Exit-code-law
     - Hot path: run noun
       - Commands
         - execute — run <capability> [-p k=v]
@@ -91,7 +91,7 @@
       - Identity control — sys agent register, list, revoke
       - Vault provisioning — sys vault set <key> <val>, sys vault import-env
       - Diagnostics — sys doctor [--boot-check] [--json]
-        - platform probe — reports host OS, detected platform_tier (tier_1 | tier_2), sandbox_provider (bwrap | broker), and filesystem lock compliance: see physics.md#Platform-tier-taxonomy
+        - platform probe — reports host OS, platform tier, and sandbox: see physics.md#Platform-tier-taxonomy
       - Backups — sys backup [--push], recover <commit>
       - Sandboxing — sys exec <cmd> --sandbox
       - Daemon control — sys serve --start, --stop, --restart, --status
@@ -149,23 +149,14 @@
         - schema models — streaming JSON schemas and system tables: see world.md#Dual-schema
         - routine contract — routine decorator and ctx surface: see action.md#The-ctx-contract
   - PWA layers
-    - Core principles
+    - Presentation principles
       - hosting runtime — axum serves static Vite bundle from memory: see cans/assembly.md#Persistent-daemon-crate
       - client boundary — client outside workspace with zero authority: see overview.md#Zero-trust-agent
       - data source — renders daemon JSON-RPC outputs without invented metrics: see effect.md#Audit-spine
-      - navigation model — causal DAG drill-down without dead ends: see effect.md#Causal-DAG
-      - interaction set — browse, approve, answer, recover, observe: see trust.md#Promotion-queue
-    - Ten layer architecture
-      - navigation model — causal DAG drill-down without dead ends
-        - drill sequence — row → event → routine → manifest → verb → quota → frame → session → agent → principal
-      - UI rendering mechanics
-        - cell redaction — mask=true columns rendered as locked cells ████
-        - usage telemetry — governance caps rendered as live progress bars (e.g. 47/300)
-        - integrity alerts — quad-lock version mismatch renders red banner
-        - veto countdown — 1-hour active countdown timer displayed on promotions
+      - drill sequence — row → event → routine → manifest → verb → quota → frame → session → agent → principal
+      - UI rendering mechanics — mask=true cells rendered as ████; caps as progress bars
       - Offline support — service worker caches last-known world state and schemas
-      - Tool analogs — Prisma Studio (L1), Datadog (L4), IAM (L3/L10), GitHub PR (L7)
-      - Banned builders — no SQL editors, chart builders, alert builders, or ad-hoc dashboards
+    - Layer directory
       - Layer 1: World — table schema trees, masked data cells, column header clicks deep-link to policy
       - Layer 2: Capability — routine versions, manifest vs fingerprint diffs, api states
       - Layer 3: Governance — policy rules, live governance quotas, lockfile integrity status
@@ -201,7 +192,7 @@
       - pedagogy — designed denial teaches gate constraints before write success
       - safety order — read → dry-run → denial → write → recovery proof
     - Human journey stages
-      - S0 verify — sys doctor system check (verifies host dependencies, identifies Tier 1 vs Tier 2 platform profile, and validates POSIX filesystem locks): see cans/assembly.md#Host-system-dependencies
+      - S0 verify — doctor check probes host profile and locks: see cans/assembly.md#Host-system-dependencies
       - S1 intent — natural language goal capture
       - S2 proposal — preview dev schema via dry-run
       - S3 read — initial safe select query

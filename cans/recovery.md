@@ -1,4 +1,5 @@
 - Recovery
+<!-- ref-by: assembly.md, effect.md, interface.md, overview.md, space.md, world.md -->
   - Snapshots
     - Local point-in-time
       - mechanics — db.snapshot.rs executes VACUUM INTO
@@ -10,16 +11,20 @@
       - identification — human-readable names (e.g. snap_migration_004)
       - naming convention — snap_auto_*, snap_migration_*, snap_onboarding_*
       - trigger bindings — auto-created by schedule or migration gates
+      - Snapshot lifecycle
+        - trigger automation — snapshots precede migrations: see world.md#Migration-invariants
+        - retention rules — rolling local retention managed by maintenance: see artifacts/governance.yaml#backup
+        - catalog inspection — CLI inspection surface: see interface.md#Storage-path:-db-noun
   - Git integration
     - Commit automation
-      - kernel stewardship — kernel automates 100% of git lifecycle for governed files
+      - kernel stewardship — kernel automates git lifecycle for governed files: see cans/assembly.md#Persistent-daemon-crate
       - no raw git — agents execute capcli verbs; manual git add and commit prohibited
       - cadence — commits every 15 minutes; drift > 30 minutes raises doctor alarm
       - mutation triggers — commands auto-commit on draft, apply, promote, migrate, merge
       - tracked artifacts — world.sql, audit logs, and configuration YAMLs
     - Dual storage guarantee
       - git repository — operational source code, schema declarations, world.sql DDL, and audit mirrors
-      - object storage — append-only S3, GCS, or R2 bucket holding binary VACUUM INTO database snapshots
+      - object storage — append-only S3 or R2 bucket holding binary VACUUM INTO snapshots: see space.md#World-governance
       - push command — sys backup --push writes to git and object store
     - History retention
       - squash cadence — 90-day git squash keeps repo small under ~35k commits/year
@@ -36,13 +41,17 @@
       - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata
       - boot gate — require_hash_verify verifies system-schema hash at boot
       - replay gate — replay re-verifies code_hash before execution
+      - Attestation checkpoints
+        - notary witness — periodic KMS signature stamped to witness.log: see effect.md#Event-integrity
+        - boot validation — kernel halts on chain divergence: see physics.md#Boot-refusals
+        - verification walks — scheduled integrity scans walk chain: see artifacts/governance.yaml#maintenance
   - Restore path
     - Recovery tiers
       - local snapshot — instant rollback via db restore <id>
       - git revision — workspace reconstruction via sys recover <commit>
       - offsite archive — disaster recovery pull from object storage
     - Emergency recovery mode
-      - activation — CAPCLI_RECOVERY=1 environment variable
+      - activation — CAPCLI_RECOVERY=1 environment variable: see physics.md#Break-glass-paths
       - handler — native recover command in crates/capcli-cli/src/commands/
       - components — loads schema and audit sink only; policy disabled
       - allowlist — db query, db dump, sys audit tail, sys backup
@@ -58,9 +67,13 @@
     - Lifecycle stance
       - retirement — capabilities uncallable; historical provenance preserved
       - reversal — rollback un-retires routines by reinstating pointer
+      - DAG retention — retired pointers remain immutable in historical DAG: see effect.md#Causal-DAG
     - Offboarding sequence
       - strict ordering — backup first, revoke identities second, dump state third, remove envs last
-      - Stage 1: Survey — inspect prod state and remove active endpoint binds
-      - Stage 2: Preserve — sys backup --push, export db dump, revoke agents
-      - Stage 3: Teardown — remove environments; prod demands dual confirmation
-        - confirmation flags — --confirm-backup and --confirm-prod both required
+      - Stage 1: Survey — inspect prod state and remove active endpoint binds: see action.md#Serve-lifecycle-split
+      - Stage 2: Preserve — push backup, export dump, revoke identities: see agent.md#System-agent-registry
+      - Stage 3: Teardown — remove environments with dual confirmation flags: see space.md#Safety-controls
+    - Teardown invariants
+      - identity revocation — sys agent revoke invalidates all tokens: see agent.md#System-agent-registry
+      - backup verification — push dry-run required before deletion: see #Commit-automation
+      - confirmation flags — dual flags mandatory for prod teardown: see space.md#Safety-controls

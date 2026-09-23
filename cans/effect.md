@@ -1,4 +1,5 @@
 - Effect
+<!-- ref-by: action.md, assembly.md, budget.md, interface.md, overview.md, recovery.md, space.md, world.md -->
   - Audit spine
     - Storage hierarchy
       - _audit table (SSOT)
@@ -18,21 +19,20 @@
       - policy — decision (allow/denied), rules_matched
       - outcome — rows_affected, result_hash, duration_ms
     - Kernel event payloads
-      - bind.create/delete — target_urp, trigger_type, schedule_or_source, intent
-      - vault.set — secret_name, secret_hash_prefix, action: injected (value masked)
-      - env.switch/merge — source_env, target_env, git_commit, ddl_status
-      - sys.agent.register/revoke — agent_id, principal, status, capability_token_hash
-      - capability.search — query, results_count, resolution_stage, gap_signal
-      - db.exec — sql, params, vdbe_inspect {ok, opcodes_analyzed, write_trapped}, rows
-      - db.exec — sql, params, rules_matched, rows_affected, result_hash
-      - routine.run — routine, version, hashes, triggered_by, outcome, ops, duration
-      - api.sync — provider, added, removed, changed, unchanged
-      - api.activate — verb, state transition, trust, intent
+      - bind.create/delete — target_urp, trigger_type, schedule_or_source: see action.md#Bindings
+      - vault.set — secret_name, secret_hash_prefix, action: injected: see agent.md#Secrets
+      - env.switch/merge — source_env, target_env, git_commit, ddl_status: see space.md#Environment-axis
+      - sys.agent.register/revoke — agent_id, principal, token_hash: see agent.md#System-agent-registry
+      - capability.search — query, results_count, resolution_stage: see action.md#Search-surface
+      - db.exec — sql, params, vdbe_inspect, rules_matched, rows_affected, result_hash
+      - routine.run — routine, version, hashes, triggered_by, outcome: see action.md#Routines
+      - api.sync — provider, added, removed, changed, unchanged: see action.md#Catalog-synchronization
+      - api.activate — verb, state transition, trust, intent: see action.md#State-machine
       - api.token_refresh — provider, token_type, expires_in, refresh_outcome
-      - api.call sim — sim_mode, http_called, fixture_used, fixture_path
-      - api.first_prod_call — call_number, calls_remaining, human_approved, approver
-      - budget.frame_push/pop — declared, consumed, remaining balances
-      - serve.request — endpoint, routine@version, api_key_id, principal, status
+      - api.call sim — sim_mode, http_called, fixture_used: see space.md#Sim-mode-taxonomy
+      - api.first_prod_call — call_number, calls_remaining, approver: see trust.md#Simulation-gaps
+      - budget.frame_push/pop — declared, consumed, remaining: see budget.md#Frames
+      - serve.request — endpoint, routine@version, api_key_id, status: see action.md#Serve-lifecycle-split
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
       - failure buffer — audit sink error queues writes in memory for 5m before fail
@@ -64,23 +64,28 @@
       - http integration — inbound HTTP requests bind via serve.request
   - Denials
     - Denial event structure
+      - enforcement layer — authorizer, AST, governance, or budget: see physics.md#Two-layer-enforcement
       - violation — rule id (e.g. policy.query.update_delete.require_where)
       - layer — authorizer, AST, governance, or budget
       - measured value — observed count vs ceiling (e.g. 342 LOC vs 150 cap)
       - remediation — explicit fix instructions printed
       - mutation — state change strictly none
     - Learning and alerting
+      - telemetry feed — denial streams route to diagnosis: see cans/assembly.md#Core-domain-subsystems
       - thrashing detector — 20 sustained denials triggers agent thrashing alert
       - training data — denial patterns inform harness prompt and code adjustments
       - thrashing alert — threshold: see artifacts/policy.yaml#rate
+    - Denial remediation — machine diagnostic and fix suggestions: see physics.md#Diagnostic-output-law
   - Failure forensics
     - Leaf-level localization
       - trace diagnostics — sys audit trace pinpoints exact failing leaf in DAG
       - partial execution — execution halts immediately at first failing leaf
       - separation — distinguishes between code failures and policy cap breaches
     - Forensic mirror views
+      - diagnostic trace — causal tree walk for failures: see #Query-surfaces
       - primitive_failures — aggregates failures by version, leaf seq, and capability
       - primitive_cost — aggregates duration and spend per leaf primitive
+    - Forensic quarantine — prevents auto-retry on unhandled runtime faults: see physics.md#Exit-code-law
   - Provenance
     - Artifact lineage
       - version stamp — code_hash, manifest_hash, created_by, promoted_by
@@ -88,6 +93,7 @@
       - merge lineage — consolidated_from preserves origins of merged routines
       - retention bounds — versions kept: see artifacts/governance.yaml#routine_shape
     - Replay invariants
+      - integrity anchoring — ledger roots checkpointed offsite: see recovery.md#Hash-chains
       - policy enforcement — replay executes under current policy, not historical
       - external effects — external API calls flagged replay: manual; auto-replay strictly forbidden
       - idempotency — environment-scoped idempotency keys prevent duplicate execution

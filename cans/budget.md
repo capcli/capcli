@@ -7,7 +7,10 @@
       - parent link — parent_frame links each frame to caller in tree: see budget.md#Record
       - engine owner — capcli-core::budget owns push, pop, and cascade: see cans/assembly.md#Core-domain-subsystems
     - Record
-      - `_budget_frames` system table, kernel-managed — schema: see world.md#Dual-schema
+      - Table specification
+        - table identity — kernel-managed _budget_frames: see world.md#Dual-schema
+        - access isolation — writes restricted to kernel core: see cans/assembly.md#Core-domain-subsystems
+        - mirror sync — frame push/pop stream to JSONL: see effect.md#Storage-hierarchy
       - Identity
         - frame_id: text, unique per invocation (frame_003)
         - routine: text plus version: int — the exact pinned routine@version
@@ -38,7 +41,10 @@
         - returned_to_parent: { ops: 34, duration_ms: 253600, spend_usd: 40.80 }
         - Parent sees exactly what the child burned — pools reconcile per frame
       - Frame push/pop are audit events; tailable live via `sys audit tail --follow`
-    - PWA Layer 5 frame tree — frames, cascades, consumption, exhaustion, pools: see interface.md#PWA-layers
+    - Presentation integration
+      - UI telemetry — Layer 5 renders session frame trees: see interface.md#PWA-layers
+      - streaming updates — consumption pushes via WebSocket: see effect.md#Audit-spine
+      - denial markers — visual badges signal quota blocks: see #Exhaustion
   - Cascade
     - min() law
       - Child effective limit = min(declared need, governance ceiling, parent_remaining, session_ceiling)

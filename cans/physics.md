@@ -1,4 +1,5 @@
 - Physics
+<!-- ref-by: action.md, assembly.md, budget.md, interface.md, overview.md, recovery.md, space.md, trust.md, world.md -->
   - Platform tiering and dual-engine enforcement
     - Platform tier taxonomy
       - tier 1 (hardened) — Linux bare-metal, VPS, Docker (with userns), WSL2
@@ -103,6 +104,7 @@
     - Baseline stance
       - exploration — raw SQL permitted for data exploration
       - abstractions — ORMs and custom query builders banned
+      - gate interception — prepare-time checks enforce physics: see #Layer-1:-sqlite3_set_authorizer
     - Syntax constraints
       - parameterization — positional or named bindings mandatory; interpolation banned
       - write limits — UPDATE and DELETE require WHERE and LIMIT

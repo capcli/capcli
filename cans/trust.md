@@ -1,4 +1,5 @@
 - Trust
+<!-- ref-by: action.md, assembly.md, budget.md, interface.md, physics.md, space.md, time.md -->
   - The ladder
     - Rungs
       - draft
@@ -128,12 +129,17 @@
       - edit prohibition — code edits force new version; silent edits banned
   - Limits & refusals
     - Precedence calculation
-      - min cascade rule — min(declared, governance ceiling, parent_remaining)
+      - min cascade rule — cage tightens downward: see budget.md#Cascade
       - physical immutability — configuration cannot loosen SQLite authorizer or jail walls
+      - inheritance ceiling — child frames inherit parent pool bounds: see budget.md#Cascade
     - Banned override flags
-      - --force — banned unconditionally
-      - --override-budget — banned; budgets governed structurally
-      - --force-prod — banned; sim rehearsals strictly isolate via local mock fixtures
+      - --force — banned unconditionally: see interface.md#Refusals
+      - --override-budget — banned; budgets governed structurally: see budget.md#Exhaustion
+      - --force-prod — banned; sim rehearsals isolate via mocks: see space.md#Sim-mode-taxonomy
+    - Invariant enforcement
+      - authorizer immutability — rules cannot loosen SQLite C authorizer: see physics.md#Layer-1:-sqlite3_set_authorizer
+      - jail perimeter — execution containment enforced at OS level: see action.md#Sandbox-execution
+      - gate integrity — policy checks fail closed on ambiguity: see physics.md#Fail-closed-stance
   - Trust receipts
     - Receipt generation
       - command — capcli sys doctor --report

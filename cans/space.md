@@ -1,4 +1,5 @@
 - Space
+<!-- ref-by: action.md, assembly.md, budget.md, effect.md, interface.md, recovery.md, trust.md, world.md -->
   - Environment axis
     - World definitions
       - dev world
@@ -26,26 +27,26 @@
     - World governance
       - worktree boundary — envs/<name>/ is an isolated git worktree branch containing declarative files
       - substrate isolation — envs/<name>/workspace.db is gitignored uncommitted local runtime state
-      - filesystem mandate — workspace root must reside on POSIX-locking-compliant filesystem (chmod 600 support); FAT32, exFAT, and Android emulated /sdcard paths denied at initialization (exit 3)
-      - prod promotion gate — env merge --into prod checks host tier; unattended daemons in prod barred on Tier 2 hosts: see trust.md#Ladder-laws
+      - filesystem mandate — POSIX locking compliance required: see physics.md#Platform-tier-taxonomy
+      - prod promotion gate — Tier 1 host required for prod merge: see trust.md#Ladder-laws
       - prod protection — removal flags: see artifacts/governance.yaml#env
       - backup mandate — git and object push required on mutation
   - Primitive scoping
     - Event identity
-      - stamping — leaf events stamped with env and stage
+      - stamping — leaf events stamped with env and stage: see effect.md#Event-anatomy
       - segregation — sim and prod events maintain distinct namespaces
       - denial logging — rejected operations record world context
     - Idempotency boundaries
-      - key formulation — key = f(routine_version, params, env)
+      - key formulation — key = f(routine_version, params, env): see agent.md#Concurrency-scope
       - isolation — sim replay execution cannot collide with prod keys
       - scope mandate — cross-environment key sharing denied
     - Quota isolation
-      - accounting — _api_quota tracks usage partitioned by env
+      - accounting — _api_quota tracks usage partitioned by env: see budget.md#Quotas
       - independence — sim rehearsals consume sim quota only
       - gating — exhaustion denies calls at target world gate
     - Composition propagation
-      - cascade — child verb constraints propagate up call stack
-      - unproven gaps — prod-only children resolve to contract-validated mock fixtures in sim; verified against schemas
+      - cascade — child verb constraints propagate up call stack: see budget.md#Cascade
+      - unproven gaps — prod-only children route to schema-validated mocks: see #Sim-mode-taxonomy
   - Rehearsal & sim
     - Rehearsal workflow
       - environment selection — capcli env use sim
