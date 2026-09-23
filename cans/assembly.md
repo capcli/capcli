@@ -1,473 +1,293 @@
+```markdown
 - Assembly
   - Monorepo root layout
-    - Root configuration files
-      - package.json — defines workspace packages, scripts, and engine bounds
-      - bunfig.toml — native Bun test configuration and workspace resolver
-      - tsconfig.base.json — base TypeScript compilation and strict path aliases
-      - .gitignore — ignores workspace.db, node_modules, dist, and tmpfs scratch
-      - repomix.config.json — context packing configuration for LLM review
+    - Workspace configuration files
+      - Cargo.toml — defines workspace members, musl targets, and release profiles
+      - rust-toolchain.toml — pins MSRV 1.85+ with rustfmt and clippy components
+      - Cargo.lock — deterministic dependency lockfile across all workspace crates
+      - .gitignore — ignores workspace.db, target/, dist/, and tmpfs scratch
+      - repomix.config.json — context packing configuration for LLM code review
     - Host system dependencies
       - git binary — host git >= 2.30 for worktrees: see space.md#Environment-axis
       - python runtime — host python >= 3.11 for sandboxed routines: see action.md#Routines
-      - sandbox provider — bwrap or podman for Linux jails: see action.md#Sandbox-execution
+      - bubblewrap binary — host bwrap for unprivileged Linux jails: see action.md#Sandbox-execution
+      - musl toolchain — musl-tools for compiling static Linux executables: see physics.md#Fail-closed-stance
     - Root management commands
-      - development — bun run --filter @capcli/kernel dev
-      - builds — bun run --filter '*' build
-      - test runs — bun run --filter '*' test
-      - native compile — napi build --release in packages/native
-      - lockfile compile — bun run --filter @capcli/kernel lock:compile
+      - compile development — cargo build --workspace: see physics.md#Exit-code-law
+      - compile static release — cargo build --release --target x86_64-unknown-linux-musl
+      - run test suite — cargo test --workspace --all-targets: see cans/assembly.md#Monorepo-test-architecture
+      - run linter checks — cargo clippy --workspace -- -D warnings
+      - build pwa assets — bun run --cwd packages/pwa build: see interface.md#PWA-layers
   - Declarative artifacts directory
-    - Path definition
-      - artifacts/ — repository-level declarative blueprints and governance defaults
-      - lockfile SSOT — capcli.lock compiled root target: see world.md#Validation-gates
-      - immutability — static templates, never modified at runtime: see overview.md#Governance-line
+    - Path and target definitions
+      - artifacts/ — repository declarative blueprints: see overview.md#Governance-line
+      - lockfile compiler target — capcli.lock compiled SSOT: see world.md#Validation-gates
+      - static template immutability — uneditable at runtime: see overview.md#Governance-line
     - Schema specifications
-      - schema.yaml — domain tables, columns, indexes, and views: see world.md#Dual-schema
-      - system-schema.yaml — kernel-managed surfaces (_audit, quotas): see world.md#Dual-schema
-      - lockfile.sig — compiler signature checking boot integrity: see physics.md#Fail-closed-stance
+      - schema.yaml — domain models, columns, constraints, and views: see world.md#Dual-schema
+      - system-schema.yaml — kernel-managed system surfaces: see world.md#Dual-schema
+      - world.sql — deterministic DDL export for fresh instances: see world.md#SQLite-as-SSOT
     - Governance specifications
-      - governance.yaml — structural limits, LOC, and spend caps: see overview.md#Governance-line
-      - policy.yaml — behavioral default-deny authorizer rules: see physics.md#Two-layer-enforcement
+      - governance.yaml — structural limits, LOC, and spend caps: see artifacts/governance.yaml
+      - policy.yaml — behavioral authorizer and AST rules: see physics.md#Two-layer-enforcement
       - sealing.rules — cross-domain boundaries and sealing laws: see cans/_rules.yaml
   - Instance workspace substrate
     - Static configuration files
-      - capcli.lock — compiled root hash SSOT of all configs: see world.md#Validation-gates
-      - world.sql — deterministic DDL and seed export: see world.md#SQLite-as-SSOT
-      - schema.yaml — active workspace copy synced from artifacts: see world.md#Dual-schema
+      - capcli.lock — root hash SSOT of compiled configs: see world.md#Validation-gates
+      - world.sql — deterministic DDL schema snapshot: see world.md#SQLite-as-SSOT
+      - schema.yaml — active workspace schema copy: see world.md#Dual-schema
       - system-schema.yaml — read-only system schema copy: see world.md#Dual-schema
       - policy.yaml — active runtime behavioral policy: see physics.md#Two-layer-enforcement
-      - governance.yaml — active runtime structural boundaries: see overview.md#Governance-line
+      - governance.yaml — active runtime structural boundaries: see artifacts/governance.yaml
     - Live transactional databases
       - workspace.db — live SQLite in WAL mode (chmod 600): see world.md#SQLite-as-SSOT
-      - workspace.db-wal — SQLite write-ahead log for serializing commits: see agent.md#Coordination
-      - workspace.db-shm — SQLite shared-memory index for readers: see world.md#SQLite-as-SSOT
+      - workspace.db-wal — write-ahead log for serializing commits: see agent.md#Coordination
+      - workspace.db-shm — shared-memory index for concurrent readers: see world.md#SQLite-as-SSOT
     - Functional data directories
-      - audit/ — append-only historical JSONL exports: see effect.md#Audit-spine
-        - audit/audit.2026-09-19.jsonl — daily audit mirror holding hashed rows
-        - audit/checkpoint.sig — signed external notary attestation: see effect.md#Audit-spine
+      - audit/ — append-only historical JSONL export files: see effect.md#Audit-spine
+        - audit/audit.YYYY-MM-DD.jsonl — daily audit mirror holding hashed rows
+        - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
         - audit/witness.log — remote KMS witness attestation logs: see recovery.md#Hash-chains
       - routines/ — agent-authored procedural Python scripts: see action.md#Routines
-        - routines/order_refund.py — multi-step refund routine: see action.md#Anatomy-and-decorator
-        - routines/inventory_reorder.py — stock reorder loop routine: see action.md#Routines
-        - routines/customer_sync.py — external CRM sync routine: see action.md#Routines
-      - apis/ — imported OpenAPI catalog and rehearsal files: see action.md#External-APIs
-        - apis/stripe.yaml — compiled OpenAPI verb definitions: see action.md#Catalog-synchronization
-        - apis/stripe.sim.yaml — simulation base URL overrides: see space.md#Policy-overlays
-        - apis/stripe.mock.yaml — canned mock fixtures for offline sim: see space.md#Sim-mode-taxonomy
+        - routines/overview.py — dense system situational health routine: see action.md#Session-Overview-Primer
+        - routines/order_refund.py — sandboxed multi-step refund script: see action.md#Anatomy-and-decorator
+        - routines/inventory_sync.py — stock reorder loop routine: see action.md#Routines
+      - apis/ — imported OpenAPI catalogs and simulation mocks: see action.md#External-APIs
+        - apis/stripe.yaml — compiled OpenAPI provider verbs: see action.md#Catalog-synchronization
+        - apis/stripe.sim.yaml — simulation base URL overlays: see space.md#Policy-overlays
+        - apis/stripe.mock.yaml — offline canned simulation fixtures: see space.md#Sim-mode-taxonomy
       - envs/ — isolated git worktrees and partition roots: see space.md#Environment-axis
         - envs/dev/ — local development world with isolated DB: see space.md#World-definitions
-        - envs/sim/ — simulation replay world with masked data: see space.md#World-definitions
+        - envs/sim/ — simulation replay world with masked see space.md#World-definitions
         - envs/prod/ — live production world for pinned trust: see space.md#World-definitions
-  - Shared contracts package
-    - Package identity — packages/types (@capcli/types)
-    - Package configuration
-      - package.json — exports types.entry.ts with zero runtime dependencies
-      - tsconfig.json — strict type configuration targeting ESNext
-      - types.entry.ts — root package export aggregating all type interfaces
-    - Source contracts (packages/types/src/)
-      - exit.types.ts — strict integer exit codes (0, 2, 3, 4, 5): see physics.md#Exit-code-law
-      - capability.types.ts — capability record and cost models: see action.md#Capability-record
-      - audit.types.ts — event anatomy and causal DAG links: see effect.md#Event-anatomy
-      - schema.types.ts — shorthand AST and table definitions: see world.md#Shorthand-expansion
-      - policy.types.ts — authorizer and AST query constraints: see physics.md#Two-layer-enforcement
-      - governance.types.ts — routine shape, spend, and schedule models: see artifacts/governance.yaml
-      - budget.types.ts — budget frame, cascade counter, and quota models: see budget.md#Record
-      - storage.types.ts — blob metadata, upload specs, and leases: see action.md#The-ctx-contract
-      - rpc.types.ts — JSON-RPC 2.0 command and notification models: see interface.md#Client-contract
-  - Native SQLite bridge package
-    - Package identity — packages/native (@capcli/native)
-    - Build configuration
-      - Cargo.toml — napi-rs, rusqlite bundled, optional libsql crate: see world.md#SQLite-as-SSOT
-      - package.json — maps native capcli_db.node binary export
-      - build.rs — native C build script linking SQLite authorizer hooks
-    - Rust source engine (packages/native/src/)
-      - lib.rs — napi module initialization and Rust-to-JS function bindings
-      - db.connection.rs — rusqlite/libsql pool in WAL mode: see world.md#SQLite-as-SSOT
-      - db.authorizer.rs — sqlite3_set_authorizer C hook: see physics.md#Layer-1:-sqlite3_set_authorizer
-      - db.query.rs — read query execution returning JSON arrays: see world.md#Command-surface-db
-      - db.execute.rs — write query execution in transactions: see world.md#Command-surface-db
-      - db.snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
-      - db.explain.rs — SQLite bytecode parser for OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
-      - db.sync.rs — LibSQL remote replica sync: see world.md#SQLite-as-SSOT
+  - Rust workspace packages layout
+    - Shared contracts crate
+      - crate identity — crates/capcli-types (@capcli/types)
+      - configuration — Cargo.toml with serde, valibot-free zero runtime bloat
+      - models module (crates/capcli-types/src/)
+        - exit.rs — strict integer exit codes (0, 2, 3, 4, 5): see physics.md#Exit-code-law
+        - capability.rs — Universal Resource Pointer models: see action.md#Global-pointer-registry
+        - audit.rs — causal event anatomy and hash chain links: see effect.md#Event-anatomy
+        - schema.rs — shorthand AST definitions and table models: see world.md#Shorthand-expansion
+        - governance.rs — routine shape and budget limits: see artifacts/governance.yaml
+        - rpc.rs — streaming JSON-RPC 2.0 lines models: see cans/assembly.md#Python-runtime-harness-package
+    - Core domain engine crate
+      - crate identity — crates/capcli-core
+      - configuration — Cargo.toml linking rusqlite bundled, petgraph, sha2, aes-gcm
+      - engine module (crates/capcli-core/src/)
+        - db/ — rusqlite WAL pool and authorizer callbacks: see world.md#SQLite-as-SSOT
+        - parse/ — VDBE explain bytecode and query validation: see physics.md#Layer-1.5:-prepare-time-cross-check
+        - compile/ — YAML AST compilation and petgraph acyclic check: see world.md#Gate-2:-Semantics
+        - budget/ — budget frame push/pop and min() cascade: see budget.md#Cascade
+        - audit/ — sha256 hash chains and JSONL mirror writer: see effect.md#Storage-hierarchy
+        - vault/ — zeroize-protected in-memory secret decryption: see agent.md#Secrets
+    - CLI executable crate
+      - crate identity — crates/capcli-cli
+      - configuration — Cargo.toml linking clap derive, tokio, capcli-core, capcli-types
+      - command surface (crates/capcli-cli/src/)
+        - main.rs — entrypoint routing subcommands and exit codes: see interface.md#CLI-surface
+        - commands/ — clap subcommand handlers for ten nouns: see interface.md#CLI-surface
+        - terminal/ — rustc-style diagnostics and json emitter: see physics.md#Diagnostic-output-law
+    - Persistent daemon crate
+      - crate identity — crates/capcli-daemon
+      - configuration — Cargo.toml linking axum, tower, croner, rust-embed
+      - daemon surface (crates/capcli-daemon/src/)
+        - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#PWA-layers
+        - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
+        - cron.rs — croner schedule evaluator daemon: see time.md#Schedule-&-maintenance
+        - webhook.rs — inbound HMAC signature verification: see action.md#Bindings
+        - assets.rs — rust-embed static bundle serving PWA UI: see interface.md#PWA-layers
+
   - Python runtime harness package
-    - Package identity — packages/py (capcli-py)
-    - Package configuration
-      - pyproject.toml — zero-dependency Python build definition: see action.md#Routines
-      - setup.py — package distribution setup exposing capcli module
-      - capcli.entry.py — package entrypoint exporting routine, Param, and ctx
+    - Package identity and layout
+      - package root — packages/py (published locally as capcli-py): see action.md#Routines
+      - pyproject.toml — zero-dependency Python packaging standard targeting >= 3.11
+      - setup.py — minimal wheel distribution setup exposing capcli package
+      - capcli/__init__.py — exports @routine, Param, and ctx wrappers: see action.md#Anatomy-and-decorator
     - Python SDK modules (packages/py/capcli/)
-      - __init__.py — exposes routine, Param, and ctx to scripts: see action.md#Anatomy-and-decorator
-      - routine.decorator.py — @routine decorator storing manifests: see action.md#Anatomy-and-decorator
-      - param.schema.py — Param[T] generic typing for input schemas: see action.md#Anatomy-and-decorator
-      - context.db.py — ctx.db query, execute, txn, and lock wrappers: see action.md#The-ctx-contract
-      - context.api.py — ctx.api call and verify egress wrappers: see action.md#The-ctx-contract
-      - context.storage.py — ctx.storage put, get, and url wrappers: see action.md#The-ctx-contract
-      - context.bind.py — ctx.bind cron, webhook, and endpoint handlers: see action.md#The-ctx-contract
-      - context.ping.py — ctx.ping notify and ask suspension handlers: see action.md#The-ctx-contract
-      - ipc.client.py — stdio JSON-RPC bridge for kernel jails: see action.md#Sandbox-execution
-  - Kernel core engine package
-    - Package identity — packages/kernel (@capcli/kernel)
-    - Package configuration
-      - package.json — CLI scripts and runtime dependencies: see artifacts/governance.yaml
-      - tsconfig.json — strict TypeScript configuration: see cans/assembly.md#Shared-contracts-package
-      - kernel.entry.ts — programmatic core entry point exposing kernel dispatchers
-    - Command entrypoints
-      - cli.entry.ts — CLI executable entrypoint compiled to dist/cli.js: see interface.md#CLI-surface
-      - daemon.entry.ts — persistent Bun.serve() background daemon runner: see action.md#Serve-lifecycle-split
-      - recovery.entry.ts — emergency mode runner triggered by CAPCLI_RECOVERY=1: see recovery.md#Restore-path
-    - Domain 1: Database & storage engine (packages/kernel/src/db/)
-      - CLI command handlers
-        - db.query.ts — executes db query <sql> with limit and count: see world.md#Command-surface-db
-        - db.exec.ts — executes db exec <sql> with intent and dry-run: see world.md#Command-surface-db
-        - db.lock.ts — handles db lock <table>:<ref> with lease TTL: see agent.md#Coordination
-        - db.unlock.ts — handles db unlock <target> lease release: see world.md#Command-surface-db
-        - db.schema.ts — introspects live schema vs declared tables: see world.md#Schema-introspection
-        - db.snapshot.ts — triggers VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
-        - db.restore.ts — reverses database state from snapshot id: see recovery.md#Restore-path
-        - db.dump.ts — exports deterministic world DDL and seed data: see world.md#SQLite-as-SSOT
-      - Domain services
-        - db.authorizer.service.ts — translates policy to C callbacks: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - db.ast.service.ts — parses and analyzes SQL via node-sql-parser: see physics.md#Layer-2:-SQL-AST-check
-        - db.pool.service.ts — manages WAL connection pool and busy timeouts: see world.md#SQLite-as-SSOT
-        - db.txn.service.ts — enforces atomic transaction boundaries: see physics.md#Raw-SQL-rules
-      - Domain policy gates
-        - db.ast.gate.ts — denies multi-statement and unparseable SQL: see physics.md#Layer-2:-SQL-AST-check
-        - db.authorizer.gate.ts — enforces table and column allowlists: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - db.limit.gate.ts — enforces WHERE clause and LIMIT presence: see artifacts/policy.yaml#query.update_delete
-      - Domain contract types
-        - db.types.ts — query execution options, AST structures, and result descriptors
-    - Domain 2: Routine engine & sandboxing (packages/kernel/src/routine/)
-      - CLI command handlers
-        - routine.draft.ts — scaffolds routines/ with near-duplicate scans: see time.md#draft-stage
-        - routine.prove.ts — executes simulation tests against candidate: see time.md#prove-stage
-        - routine.ship.ts — validates evidence and promotes trust ladder: see trust.md#Ship-gate
-        - routine.sweep.ts — scans for dead, failing, and merge candidates: see time.md#decay-and-subtraction
-        - routine.stats.ts — profiles p50/p95 latency, spend, and failures: see action.md#Capability-record
-        - routine.rollback.ts — reverses routine pointer to prior version: see time.md#decay-and-subtraction
-        - routine.retire.ts — deactivates routines while keeping provenance: see recovery.md#Destruction-as-transition
-      - Domain services
-        - routine.jail.service.ts — configures bwrap and podman namespaces: see action.md#Sandbox-execution
-        - routine.runner.service.ts — executes Python child processes and stdio: see action.md#Routines
-        - routine.manifest.service.ts — extracts manifests from @routine: see action.md#Manifests-&-fingerprints
-        - routine.fingerprint.service.ts — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
-        - routine.ipc.service.ts — handles stdio JSON-RPC requests from routines: see action.md#The-ctx-contract
-      - Domain policy gates
-        - routine.shape.gate.ts — verifies LOC, token size, and parameters: see artifacts/governance.yaml#routine_shape
-        - routine.trust.gate.ts — denies draft writes in production worktree: see trust.md#The-ladder
-        - routine.drift.gate.ts — detects divergence between manifest and leaves: see space.md#Manifest-drift
-      - Domain contract types
-        - routine.types.ts — jail descriptors, manifest models, and telemetry records
-    - Domain 3: Blob storage subsystem (packages/kernel/src/storage/)
-      - Storage provider drivers
-        - storage.local.driver.ts — manages workspace uploads in local mode: see artifacts/governance.yaml#storage
-        - storage.s3.driver.ts — manages AWS S3 operations via native Bun.s3: see artifacts/governance.yaml#storage
-        - storage.r2.driver.ts — manages Cloudflare R2 bucket transactions: see artifacts/governance.yaml#storage
-      - Domain services
-        - storage.service.ts — routes storage operations per governance: see action.md#The-ctx-contract
-        - storage.url.service.ts — mints HMAC-signed pre-signed object URLs: see action.md#The-ctx-contract
-        - storage.metadata.service.ts — validates object SHA256 and MIME headers: see world.md#Shorthand-expansion
-      - Domain policy gates
-        - storage.mime.gate.ts — denies unlisted MIME types per allowlist: see artifacts/governance.yaml#storage
-        - storage.size.gate.ts — blocks uploads exceeding max_upload_bytes: see artifacts/governance.yaml#storage
-        - storage.trust.gate.ts — gates blob write operations by trust rung: see trust.md#The-ladder
-      - Domain contract types
-        - storage.types.ts — storage provider configs, bucket definitions, and leases
-    - Domain 4: External API gateway (packages/kernel/src/api/)
-      - CLI command handlers
-        - api.sync.ts — fetches and compiles OpenAPI specs into catalog: see action.md#Catalog-synchronization
-        - api.diff.ts — inspects upstream OpenAPI spec hash drift: see action.md#Catalog-synchronization
-        - api.catalog.ts — displays verbs, lifecycle states, and trust: see action.md#State-machine
-        - api.activate.ts — activates dormant OpenAPI verbs into draft: see action.md#Activation-gate
-        - api.prove.ts — verifies API calls against mocks or sandbox: see trust.md#Evidence
-        - api.ship.ts — promotes API verbs to reviewed or pinned rungs: see trust.md#Ship-gate
-        - api.stats.ts — inspects latency, error rates, and spend: see action.md#Capability-record
-        - api.retire.ts — transitions active verbs into retired state: see action.md#State-machine
-        - api.rollback.ts — reverts API verb configuration to prior version: see action.md#State-machine
-      - Domain services
-        - api.openapi.service.ts — normalizes OpenAPI 3.x specifications: see action.md#Catalog-synchronization
-        - api.quota.service.ts — client token bucket tracking in _api_quota: see budget.md#Quotas
-        - api.reconcile.service.ts — recalibrates bucket from response headers: see budget.md#Quotas
-        - api.egress.service.ts — dispatches HTTP with boundary secret injection: see agent.md#Egress-injection
-        - api.mock.service.ts — loads fixtures from apis/*.mock.yaml: see space.md#Sim-mode-taxonomy
-      - Domain policy gates
-        - api.quota.gate.ts — fails closed before dispatch if tokens < 1: see budget.md#Quotas
-        - api.spend.gate.ts — enforces daily USD limits and spend confirms: see artifacts/policy.yaml#api.spend
-        - api.idempotency.gate.ts — verifies key presence for external writes: see artifacts/policy.yaml#api.retry
-        - api.sim.gate.ts — denies prod-only verbs in dev and sim worlds: see space.md#Policy-overlays
-      - Domain contract types
-        - api.types.ts — token buckets, OpenAPI schemas, and HTTP egress envelopes
-    - Domain 5: Event & schedule bindings (packages/kernel/src/bind/)
-      - CLI command handlers
-        - bind.cron.ts — schedules routines on cron patterns with intent: see time.md#Schedule-&-maintenance
-        - bind.webhook.ts — maps incoming webhooks to target routines: see action.md#Bindings
-        - bind.endpoint.ts — exposes routine@version over governed HTTP: see action.md#Serve-lifecycle-split
-        - bind.list.ts — enumerates registered triggers and active listeners: see interface.md#Trigger-path:-bind-noun
-        - bind.inspect.ts — inspects execution history and health of binding: see interface.md#Trigger-path:-bind-noun
-        - bind.pause.ts — suspends trigger execution without unregistering: see action.md#Binding-management
-        - bind.resume.ts — reinstates paused trigger binding: see action.md#Binding-management
-        - bind.remove.ts — permanently unregisters trigger binding: see action.md#Binding-management
-        - bind.keys.ts — issues and manages principal API keys: see artifacts/governance.yaml#serve
-      - Domain services
-        - bind.cron.service.ts — evaluates cron patterns via croner: see time.md#Schedule-&-maintenance
-        - bind.webhook.service.ts — verifies incoming HMAC provider signatures: see artifacts/policy.yaml#watch
-        - bind.serve.service.ts — hosts Bun.serve() router for endpoint traffic: see action.md#Serve-lifecycle-split
-        - bind.keys.service.ts — validates SHA256 hashed API keys and rotation: see artifacts/governance.yaml#serve
-      - Domain policy gates
-        - bind.trust.gate.ts — requires pinned trust for served endpoints: see artifacts/governance.yaml#serve
-        - bind.signature.gate.ts — rejects unsigned external provider webhooks: see artifacts/policy.yaml#watch
-        - bind.rate.gate.ts — enforces DDoS request throttles on webhooks: see artifacts/governance.yaml#watch
-      - Domain contract types
-        - bind.types.ts — webhook route configs, cron tasks, and endpoint contracts
-    - Domain 6: Human interaction & inquiry (packages/kernel/src/ping/)
-      - CLI command handlers
-        - ping.notify.ts — sends structured notices to named principals: see overview.md#Topology
-        - ping.ask.ts — submits question with choices and timeout: see overview.md#Topology
-        - ping.list.ts — lists pending inquiries awaiting human answers: see interface.md#Interaction-path:-ping-noun
-        - ping.resolve.ts — records principal choice to resume routine: see interface.md#Interaction-path:-ping-noun
-        - ping.expire.ts — manually expires stale pending inquiries: see interface.md#Interaction-path:-ping-noun
-      - Domain services
-        - ping.notify.service.ts — formats and routes alerts to channels: see artifacts/governance.yaml#notify
-        - ping.ask.service.ts — records question rows to _pending_asks: see artifacts/system-schema.yaml#_pending_asks
-        - ping.timeout.service.ts — monitors expiration timers and fails asks: see artifacts/policy.yaml#notify
-      - Domain policy gates
-        - ping.quiet_hours.gate.ts — suppresses non-urgent notices at night: see artifacts/policy.yaml#notify
-        - ping.options.gate.ts — enforces structured array options and tokens: see artifacts/governance.yaml#notify
-        - ping.fail_closed.gate.ts — denies suspended routines on ask timeout: see artifacts/policy.yaml#notify
-      - Domain contract types
-        - ping.types.ts — notification envelopes, inquiry options, and answer schemas
-    - Domain 7: Governance & rule compilation (packages/kernel/src/rule/)
-      - CLI command handlers
-        - rule.show.ts — prints active schema, policy, or governance: see interface.md#Governance-path:-rule-noun
-        - rule.diff.ts — displays drift between declared configs and state: see interface.md#Governance-path:-rule-noun
-        - rule.apply.ts — applies schema changes inside snapshot rollback: see interface.md#Governance-path:-rule-noun
-        - rule.validate.ts — verifies syntax and semantic gates in CI: see physics.md#Break-glass-paths
-      - Domain services
-        - rule.loader.service.ts — loads and parses YAML specifications: see world.md#Validation-gates
-        - rule.shorthand.service.ts — expands schema shorthands into DDL: see world.md#Shorthand-expansion
-        - rule.compiler.service.ts — compiles combined DDL, views, and triggers: see world.md#Schema-evolution
-        - rule.lock.service.ts — verifies root SHA256 against capcli.lock: see world.md#Validation-gates
-      - Domain policy gates
-        - rule.syntax.gate.ts — enforces strict YAML structure (Gate 1): see world.md#Gate-1:-Syntax
-        - rule.semantic.gate.ts — validates references and views (Gate 2): see world.md#Gate-2:-Semantics
-        - rule.migration.gate.ts — validates rollback on snapshot (Gate 5): see world.md#Gate-5:-Migration-safety
-      - Domain contract types
-        - rule.types.ts — AST nodes, DDL compile plans, and lockfile manifests
-    - Domain 8: Environment & worktree management (packages/kernel/src/env/)
-      - CLI command handlers
-        - env.new.ts — provisions new git worktree with isolated DB: see space.md#env-command
-        - env.use.ts — switches active working environment context: see space.md#env-command
-        - env.list.ts — lists registered worlds and operational statuses: see space.md#env-command
-        - env.inspect.ts — inspects schema version and seed provenance: see space.md#env-command
-        - env.doctor.ts — runs health checks and schema drift scans: see space.md#Drift
-        - env.merge.ts — merges worktree branches into production: see space.md#env-command
-        - env.remove.ts — tears down environment worktree and partition DB: see space.md#env-command
-      - Domain services
-        - env.worktree.service.ts — orchestrates git worktrees and branches: see space.md#Environment-axis
-        - env.mask.service.ts — masks sens: true columns on simulation fork: see space.md#Data-masking
-        - env.drift.service.ts — checks schema and data staleness vs prod: see space.md#Environment-drift
-      - Domain policy gates
-        - env.prod_protect.gate.ts — mandates dual confirmation flags for prod: see space.md#World-governance
-        - env.merge.gate.ts — enforces policy check passes before prod merge: see space.md#Safety-controls
-      - Domain contract types
-        - env.types.ts — worktree contexts, masking schemas, and merge manifests
-    - Domain 9: System, audit & diagnostics (packages/kernel/src/sys/)
-      - CLI command handlers
-        - sys.audit.tail.ts — streams real-time leaf audit events: see effect.md#Query-surfaces
-        - sys.audit.trace.ts — traverses causal DAG from leaf to root intent: see effect.md#Trace-traversal
-        - sys.audit.query.ts — executes read-only SQL queries on _audit: see effect.md#Query-surfaces
-        - sys.audit.replay.ts — replays historical audit streams in sim: see space.md#Historical-replay
-        - sys.agent.register.ts — registers harness identity with UID link: see agent.md#System-agent-registry
-        - sys.agent.list.ts — displays registered harness identities: see agent.md#System-agent-registry
-        - sys.agent.revoke.ts — revokes agent execution authority instantly: see agent.md#System-agent-registry
-        - sys.doctor.ts — runs diagnostics and emits signed receipts: see trust.md#Trust-receipts
-        - sys.backup.ts — triggers git and object store backup sync: see recovery.md#Git-integration
-        - sys.recover.ts — executes recovery from snapshot or commit: see recovery.md#Restore-path
-        - sys.exec.ts — executes raw system commands inside jail wrapper: see action.md#Sandbox-execution
-        - sys.serve.ts — controls persistent background daemon lifecycle: see action.md#Serve-lifecycle-split
-      - Domain services
-        - sys.audit.service.ts — writes append-only rows to _audit: see effect.md#Storage-hierarchy
-        - sys.mirror.service.ts — flushes transactional rows to daily JSONL: see effect.md#Storage-hierarchy
-        - sys.hashchain.service.ts — calculates sha256 previous row links: see recovery.md#Hash-chains
-        - sys.witness.service.ts — checkpoints root hash to notary or KMS: see effect.md#Event-integrity
-        - sys.budget.service.ts — pushes and pops frames on _budget_frames: see budget.md#Lifecycle
-        - sys.backup.service.ts — commits state and pushes to offsite store: see recovery.md#Dual-storage-guarantee
-        - sys.doctor.service.ts — verifies boot gates and boundary health: see physics.md#Break-glass-paths
-      - Domain policy gates
-        - sys.audit_sink.gate.ts — denies writes outright if audit write fails: see physics.md#Fail-closed-stance
-        - sys.fail_closed.gate.ts — aborts boot on lock mismatch or missing rule: see physics.md#Fail-closed-stance
-        - sys.budget.gate.ts — blocks calls with exit 2 on frame exhaustion: see budget.md#Exhaustion
-      - Domain contract types
-        - sys.types.ts — audit event models, frame trees, and doctor receipts
-    - Domain 10: Capability execution & discovery (packages/kernel/src/run/)
-      - CLI command handlers
-        - run.execute.ts — dispatches execution by capability name: see action.md#Unifying-concept
-        - run.search.ts — performs multi-stage discovery search: see action.md#Search-surface
-        - run.gaps.ts — identifies queries that yielded zero results: see action.md#Analytics-and-gaps
-        - run.inspect.ts — outputs unified inspection envelope: see action.md#Capability-record
-      - Domain services
-        - run.registry.service.ts — unifies db, routine, api, and view lookups: see action.md#Unifying-concept
-        - run.search.service.ts — cascades exact, prefix, and fuzzy searches: see action.md#Search-surface
-        - run.fuzzy.service.ts — calculates Levenshtein query distances: see artifacts/governance.yaml#api.search
-        - run.preflight.service.ts — verifies locks, budgets, and quotas: see budget.md#Pre-flight
-      - Domain policy gates
-        - run.preflight.gate.ts — denies execution if can_invoke_now is false: see budget.md#Pre-flight
-        - run.trust.gate.ts — enforces caller trust floors on target: see trust.md#The-ladder
-      - Domain contract types
-        - run.types.ts — registry index records, query parameters, and inspect envelopes
-    - Domain 11: Identity & process security (packages/kernel/src/identity/)
-      - Domain services
-        - identity.process.service.ts — verifies OS UID against --by flag: see agent.md#Credential-binding
-        - identity.skill.service.ts — records triggered_by_skill provenance: see agent.md#Harness-skill-origin
-        - identity.vault.service.ts — memory-decrypts vault via master key: see agent.md#Secrets
-      - Domain policy gates
-        - identity.process.gate.ts — denies call if OS UID mismatches caller: see agent.md#Credential-binding
-        - identity.principal.gate.ts — enforces --as on scoped views: see agent.md#Credential-binding
-        - identity.revocation.gate.ts — halts execution for revoked agents: see agent.md#System-agent-registry
-      - Domain models
-        - identity.claims.ts — distributed lease TTL acquisition logic: see agent.md#Coordination
-        - identity.session.ts — session context binding and lifecycle counters: see agent.md#Session-lifecycle
-        - identity.types.ts — principal credentials and vault memory contracts: see agent.md#Identity-hierarchy
-  - Browser JSON-RPC client package
-    - Package identity — packages/client (@capcli/client)
-    - Package configuration files
-      - package.json — browser exports targeting client.entry.ts: see interface.md#Client-contract
-      - tsconfig.json — strict DOM resolution with no native deps: see cans/assembly.md#Shared-contracts-package
-      - client.entry.ts — root package export exposing createClient: see interface.md#Client-contract
-    - Transport engine (packages/client/src/transport/)
-      - transport.http.ts — HTTP POST dispatcher for JSON-RPC 2.0: see interface.md#Client-contract
-      - transport.ws.ts — WebSocket streaming listener for audit tail: see interface.md#Real-time-and-polling-intervals
-      - transport.sse.ts — fallback Server-Sent Events stream listener: see interface.md#Client-contract
-      - transport.envelope.ts — message serialization and exit unwrapper: see interface.md#Client-contract
-    - Domain client modules (packages/client/src/modules/)
-      - module.run.ts — run execution, search, and inspect client: see action.md#Unifying-concept
-      - module.db.ts — remote SQL query execution and lock client: see world.md#Command-surface-db
-      - module.routine.ts — prove, ship, and rollback dispatch client: see trust.md#Ship-gate
-      - module.api.ts — OpenAPI sync, activate, and catalog client: see action.md#External-APIs
-      - module.audit.ts — audit tailing and DAG trace walk client: see effect.md#Query-surfaces
-      - module.ping.ts — inquiry resolution and notice poll client: see interface.md#Interaction-path:-ping-noun
-      - module.env.ts — worktree context switching and doctor client: see space.md#env-command
-      - module.sys.ts — diagnostic report and backup trigger client: see recovery.md#Restore-path
+      - routine.py — @routine decorator storing manifests: see action.md#Anatomy-and-decorator
+      - param.py — Param[T] generic typing for input schemas: see action.md#Anatomy-and-decorator
+      - context_db.py — ctx.db query, execute, txn, and lock wrappers: see action.md#The-ctx-contract
+      - context_api.py — ctx.api call and verify egress wrappers: see action.md#The-ctx-contract
+      - context_storage.py — ctx.storage put, get, and url wrappers: see action.md#The-ctx-contract
+      - context_ping.py — ctx.ping notify and ask suspension handlers: see action.md#The-ctx-contract
+      - ipc_client.py — streaming JSON-RPC over /run/capcli/kernel.sock: see action.md#Sandbox-execution
+  - Core domain subsystems (crates/capcli-core/src/)
+    - Domain 1: Database & storage engine (db/)
+      - Subsystem modules
+        - connection.rs — rusqlite connection pool in WAL mode: see world.md#SQLite-as-SSOT
+        - authorizer.rs — sqlite3_set_authorizer C callback: see physics.md#Layer-1:-sqlite3_set_authorizer
+        - bytecode.rs — EXPLAIN opcode parser checking OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
+        - snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
+        - claims.rs — distributed lease locks via _claims: see agent.md#Coordination
+      - Execution gates
+        - authorizer_gate.rs — table and column write allowlists: see physics.md#Layer-1:-sqlite3_set_authorizer
+        - write_gate.rs — mandates WHERE clause and LIMIT: see physics.md#Raw-SQL-rules
+        - isolation_gate.rs — denies ctx.api.call inside txn: see physics.md#Layer-2:-SQL-AST-check
+    - Domain 2: Routine engine & sandboxing (routine/)
+      - Subsystem modules
+        - runner.rs — manages child Python processes and exits: see action.md#Routines
+        - jail.rs — builds bwrap isolation and tmpfs /scratch: see action.md#Sandbox-execution
+        - ipc_socket.rs — Unix socket JSON-Lines protocol broker: see cans/assembly.md#Python-runtime-harness-package
+        - manifest.rs — extracts declared static manifests: see action.md#Manifests-&-fingerprints
+        - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
+      - Execution gates
+        - shape_gate.rs — checks LOC, tokens, and param limits: see artifacts/governance.yaml#routine_shape
+        - trust_gate.rs — denies draft writes in prod worktree: see trust.md#The-ladder
+        - drift_gate.rs — catches manifest and fingerprint divergence: see space.md#Manifest-drift
+    - Domain 3: Blob storage subsystem (storage/)
+      - Subsystem modules
+        - local.rs — local filesystem uploads under storage/ namespace
+        - s3.rs — AWS S3 and Cloudflare R2 object dispatcher: see artifacts/governance.yaml#storage
+        - signer.rs — mints HMAC-signed temporary access URLs: see action.md#The-ctx-contract
+        - metadata.rs — validates SHA256 and MIME headers: see artifacts/governance.yaml#storage
+      - Execution gates
+        - mime_gate.rs — denies unlisted MIME types per allowlist: see artifacts/governance.yaml#storage
+        - size_gate.rs — blocks uploads exceeding 10MB ceiling: see artifacts/governance.yaml#storage
+        - trust_gate.rs — gates blob writes by caller trust rung: see trust.md#The-ladder
+    - Domain 4: External API gateway (api/)
+      - Subsystem modules
+        - catalog.rs — manages OpenAPI YAML specs in apis/: see action.md#Catalog-synchronization
+        - quota.rs — client token bucket tracking in _api_quota: see budget.md#Quotas
+        - egress.rs — reqwest HTTP proxy with secret injection: see agent.md#Egress-injection
+        - sim_mock.rs — serves canned fixtures from apis/*.mock.yaml: see space.md#Sim-mode-taxonomy
+        - refresh.rs — auto-rotates ephemeral bearer tokens: see artifacts/governance.yaml#api
+      - Execution gates
+        - quota_gate.rs — fails closed if bucket tokens < 1: see budget.md#Quotas
+        - spend_gate.rs — enforces daily USD limits: see artifacts/policy.yaml#api.spend
+        - sim_gate.rs — denies prod-only verbs in dev and sim: see space.md#Policy-overlays
+    - Domain 5: Event & schedule bindings (bind/)
+      - Subsystem modules
+        - cron.rs — evaluates cron patterns via croner crate: see time.md#Schedule-&-maintenance
+        - webhook.rs — verifies provider HMAC signatures: see action.md#Bindings
+        - endpoint.rs — routes pinned HTTP calls via axum: see action.md#Serve-lifecycle-split
+        - keys.rs — hashes and validates partner API keys: see artifacts/governance.yaml#serve
+      - Execution gates
+        - trust_gate.rs — mandates pinned trust for endpoints: see artifacts/governance.yaml#serve
+        - signature_gate.rs — rejects unsigned webhook payloads: see artifacts/policy.yaml#watch
+        - rate_gate.rs — throttles incoming requests per minute: see artifacts/governance.yaml#watch
+    - Domain 6: Human interaction & inquiry (ping/)
+      - Subsystem modules
+        - notify.rs — formats alerts to configured channels: see artifacts/governance.yaml#notify
+        - ask.rs — records suspensions to _pending_asks: see artifacts/system-schema.yaml#_pending_asks
+        - timeout.rs — manages timeout timers and fail-closed: see artifacts/policy.yaml#notify
+      - Execution gates
+        - option_gate.rs — limits question choices to max 5: see artifacts/governance.yaml#notify
+        - length_gate.rs — enforces question token caps: see artifacts/governance.yaml#notify
+        - fail_closed_gate.rs — fails suspended routine on timeout: see artifacts/policy.yaml#notify
+    - Domain 7: Governance & rule compilation (rule/)
+      - Subsystem modules
+        - loader.rs — deserializes YAML configs with serde_yml: see world.md#Validation-gates
+        - petgraph_check.rs — checks relational cycles and targets: see world.md#Gate-2:-Semantics
+        - shorthand.rs — expands schema shorthands into SQLite DDL: see world.md#Shorthand-expansion
+        - lockfile.rs — verifies compiled root sha256 checksum: see world.md#Validation-gates
+      - Execution gates
+        - syntax_gate.rs — validates YAML layout (Gate 1): see world.md#Gate-1:-Syntax
+        - semantic_gate.rs — petgraph verifies graph (Gate 2): see world.md#Gate-2:-Semantics
+        - migration_gate.rs — test transaction on snapshot (Gate 5): see world.md#Gate-5:-Migration-safety
+    - Domain 8: Environment & worktree management (env/)
+      - Subsystem modules
+        - worktree.rs — provisions and merges git worktrees: see space.md#Environment-axis
+        - masking.rs — executes format-preserving anonymization: see space.md#Data-masking
+        - drift.rs — checks schema and data staleness vs prod: see space.md#Environment-drift
+      - Execution gates
+        - prod_protect_gate.rs — demands dual confirmation flags: see space.md#World-governance
+        - merge_gate.rs — verifies rehearsal proof before merge: see space.md#Safety-controls
+    - Domain 9: System, audit & diagnostics (sys/)
+      - Subsystem modules
+        - audit.rs — append-only transactional writes to _audit: see effect.md#Storage-hierarchy
+        - mirror.rs — streams rows to daily JSONL export files: see effect.md#Storage-hierarchy
+        - hashchain.rs — calculates sha256 links with sha2 crate: see recovery.md#Hash-chains
+        - witness.rs — checkpoints root hash to KMS or S3 WORM: see effect.md#Event-integrity
+        - doctor.rs — verifies system health and emits receipts: see trust.md#Trust-receipts
+        - recover.rs — coordinates snapshot or commit rollbacks: see recovery.md#Restore-path
+      - Execution gates
+        - sink_gate.rs — denies writes if audit write fails (exit 5): see physics.md#Fail-closed-stance
+        - boot_gate.rs — aborts startup on lockfile mismatch: see physics.md#Fail-closed-stance
+    - Domain 10: Capability execution & discovery (run/)
+      - Subsystem modules
+        - registry.rs — Universal Resource Pointer dispatcher: see action.md#Global-pointer-registry
+        - search.rs — cascades exact, prefix, FTS5, and fuzzy: see action.md#Search-surface
+        - preflight.rs — evaluates can_invoke_now verdict: see budget.md#Pre-flight
+      - Execution gates
+        - preflight_gate.rs — denies call if preflight fails: see budget.md#Pre-flight
+        - trust_floor_gate.rs — blocks caller lacking rung authority: see trust.md#The-ladder
+    - Domain 11: Identity & process security (identity/)
+      - Subsystem modules
+        - process.rs — verifies host OS UID against --by flag: see agent.md#Credential-binding
+        - vault.rs — zeroize-protected AES-256-GCM memory decryption: see agent.md#Secrets
+        - session.rs — binds HMAC capability token to session: see agent.md#Credential-binding
+      - Execution gates
+        - process_gate.rs — denies call if OS UID mismatches: see agent.md#Credential-binding
+        - revocation_gate.rs — aborts calls from revoked agents: see agent.md#System-agent-registry
+
   - Client PWA application package
-    - Package identity — packages/pwa (@capcli/pwa)
-    - Application build configuration
+    - Build pipeline configuration
       - package.json — React 19, Tailwind CSS 4, and Vite 6 setup: see interface.md#PWA-layers
-      - vite.config.ts — Vite SPA bundler configuration with asset hashing: see interface.md#PWA-layers
-      - tsconfig.json — React JSX and ESNext module resolution: see cans/assembly.md#Shared-contracts-package
-      - index.html — static HTML mounting point for single-page app: see interface.md#PWA-layers
-    - Application core shell (packages/pwa/src/shell/)
-      - pwa.entry.tsx — React DOM root application bootstrap: see interface.md#PWA-layers
-      - pwa.router.tsx — React Router 7 route definitions for all layers: see interface.md#PWA-layers
-      - pwa.layout.tsx — primary navigation bar, world badge, and alerts: see interface.md#PWA-layers
-      - pwa.client.ts — singleton @capcli/client connection hook: see interface.md#Client-contract
-      - pwa.theme.css — Tailwind CSS 4 design token and layout classes: see interface.md#PWA-layers
-    - Atomic layer features (packages/pwa/src/features/)
-      - layer1-world/ — state substrate components
-        - world.store.ts — Zustand store for schemas and cell masks: see world.md#Dual-schema
-        - world.hook.ts — TanStack Query hook for schema structures: see world.md#Schema-introspection
-        - world.table-tree.tsx — collapsible table and column list component
-        - world.cell-masked.tsx — redacted data cell display component: see world.md#Shorthand-expansion
-        - world.view.tsx — composite world schema introspection view: see interface.md#PWA-layers
-      - layer2-capability/ — routine & API components
-        - capability.store.ts — catalog search state and filters: see action.md#Capability-record
-        - capability.hook.ts — queries unified capability registry entries: see action.md#Search-surface
-        - capability.diff-badge.tsx — manifest divergence alert badge: see space.md#Manifest-drift
-        - capability.card.tsx — atomic routine cost and limit display card: see action.md#Capability-record
-        - capability.view.tsx — capability explorer and catalog view: see interface.md#PWA-layers
-      - layer3-governance/ — policy & bounds components
-        - governance.store.ts — active rule sets and lockfile hashes: see physics.md#Policy-vs-governance-split
-        - governance.hook.ts — polls rule diffs and quota status: see artifacts/governance.yaml
-        - governance.lock-badge.tsx — capcli.lock integrity indicator: see world.md#Validation-gates
-        - governance.authorizer-matrix.tsx — table-by-action permission grid: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - governance.view.tsx — active rules and policy inspector view: see interface.md#PWA-layers
-      - layer4-audit/ — forensic stream components
-        - audit.store.ts — store holding streaming leaf audit records: see effect.md#Audit-spine
-        - audit.hook.ts — WebSocket audit tail subscription hook: see effect.md#Query-surfaces
-        - audit.dag-node.tsx — atomic visual causal DAG graph node: see effect.md#Causal-DAG
-        - audit.denial-modal.tsx — explain dialog with rule remediation: see effect.md#Denials
-        - audit.view.tsx — live virtualized audit tail view: see interface.md#PWA-layers
-      - layer5-budget/ — resource cascade components
-        - budget.store.ts — call frames and spend meters state: see budget.md#Frames
-        - budget.hook.ts — polls quota buckets and frame limits: see budget.md#Quotas
-        - budget.cascade-waterfall.tsx — min() cage execution tree component: see budget.md#Cascade
-        - budget.gauge-meter.tsx — proactive token bucket gauge: see budget.md#Quotas
-        - budget.view.tsx — session budget waterfall view: see interface.md#PWA-layers
-      - layer6-environment/ — world partition components
-        - env.store.ts — active environment and worktree status: see space.md#Environment-axis
-        - env.hook.ts — checks worktree status and seed provenance: see space.md#env-command
-        - env.world-switcher.tsx — dev/sim/prod switch bar component: see space.md#World-definitions
-        - env.drift-banner.tsx — unmerged changes alert banner: see space.md#Drift
-        - env.view.tsx — worktree status cards view: see interface.md#PWA-layers
-      - layer7-approval/ — promotion & ask components
-        - approval.store.ts — promotion queues and ask records: see trust.md#Promotion-queue
-        - approval.hook.ts — 30s poll on pending inquiries: see artifacts/governance.yaml#maintenance
-        - approval.ask-dialog.tsx — structured choice prompt component: see artifacts/governance.yaml#notify
-        - approval.diff-preview.tsx — DDL and code migration review preview: see trust.md#Evidence
-        - approval.view.tsx — promotion queue and sign-off view: see interface.md#PWA-layers
-      - layer8-recovery/ — snapshot & rollback components
-        - recovery.store.ts — recovery points and commit catalog: see recovery.md#Snapshots
-        - recovery.hook.ts — fetches snapshot lineage and backup drift: see recovery.md#Restore-path
-        - recovery.point-card.tsx — atomic VACUUM snapshot card with timestamp: see recovery.md#Snapshots
-        - recovery.witness-badge.tsx — KMS notary attestation status tag: see recovery.md#Hash-chains
-        - recovery.view.tsx — point-in-time restore view: see interface.md#PWA-layers
-      - layer9-learning/ — gap & decay components
-        - learning.store.ts — zero-hit gaps and decay candidates: see time.md#Learning-loop
-        - learning.hook.ts — polls similarity clusters and drift: see artifacts/governance.yaml#maintenance
-        - learning.gap-card.tsx — atomic zero-result query indicator: see action.md#Analytics-and-gaps
-        - learning.sweep-proposal.tsx — consolidation merge proposal card: see time.md#Consolidation
-        - learning.view.tsx — capability lifecycle trends view: see interface.md#PWA-layers
-      - layer10-identity/ — security & principal components
-        - identity.store.ts — active principal claims and agent state: see agent.md#Identity-hierarchy
-        - identity.hook.ts — fetches registered agent directory: see agent.md#System-agent-registry
-        - identity.claim-timer.tsx — active lease countdown lock indicator: see agent.md#Coordination
-        - identity.skill-badge.tsx — triggered_by_skill provenance tag: see agent.md#Harness-skill-origin
-        - identity.view.tsx — principal directory view: see interface.md#PWA-layers
-      - reliability-demo/ — example workload components
-        - demo.orders-card.tsx — sample orders metric bound to view: see artifacts/schema.yaml#views
-        - demo.inventory-card.tsx — sample stock alerts bound to table: see artifacts/schema.yaml#tables
-        - demo.revenue-card.tsx — sample revenue metric bound to view: see artifacts/schema.yaml#views
-        - demo.view.tsx — sample dashboard proving governed view reliability: see interface.md#PWA-layers
+      - vite.config.ts — bundles static SPA assets to dist: see interface.md#PWA-layers
+      - tsconfig.json — strict browser type configuration: see cans/assembly.md#Shared-contracts-crate
+      - asset embedding — rust-embed bakes dist into binary: see interface.md#PWA-layers
+    - Application shell and transport
+      - entry.tsx — React DOM root application bootstrap: see interface.md#PWA-layers
+      - router.tsx — React Router 7 route definitions: see interface.md#PWA-layers
+      - layout.tsx — navigation shell and world status badge: see interface.md#PWA-layers
+      - client.ts — JSON-RPC 2.0 HTTP and WS transport: see interface.md#Client-contract
+      - theme.css — Tailwind CSS 4 layout design tokens: see interface.md#PWA-layers
+    - Domain navigation views
+      - overview.tsx — situational KPIs and ERP health summary: see action.md#Session-Overview-Primer
+      - explorer.tsx — unified schema tree and capability inspector: see world.md#Dual-schema
+      - audit.tsx — live virtualized audit tail and denial modals: see effect.md#Audit-spine
+      - budget.tsx — session frame cascade and quota meters: see budget.md#Frames
+      - worktrees.tsx — dev, sim, and prod worktree status cards: see space.md#Environment-axis
+      - approvals.tsx — promotion queue, ask cards, and secret dialog: see trust.md#Promotion-queue
+      - recovery.tsx — snapshot catalog and point-in-time restores: see recovery.md#Snapshots
+    - Shared interactive components
+      - dag_visualizer.tsx — causal DAG traversal graph node: see effect.md#Causal-DAG
+      - cell_masked.tsx — format-preserving anonymization renderer: see world.md#Shorthand-expansion
+      - diff_preview.tsx — DDL and code migration review card: see trust.md#Evidence
+      - denial_dialog.tsx — policy violation explain dialog: see effect.md#Denials
+      - ask_prompt.tsx — structured choice prompt with timeout: see artifacts/governance.yaml#notify
+      - quota_gauge.tsx — proactive token bucket meter component: see budget.md#Quotas
   - Monorepo test architecture
-    - Unit test tier (packages/kernel/__tests__/unit/)
-      - db.ast.unit.test.ts — verifies AST structural analysis: see physics.md#Layer-2:-SQL-AST-check
-      - db.authorizer.unit.test.ts — tests authorizer mapping: see physics.md#Layer-1:-sqlite3_set_authorizer
-      - routine.shape.unit.test.ts — tests LOC and param limits: see artifacts/governance.yaml#routine_shape
-      - api.quota.unit.test.ts — tests token bucket calculations: see budget.md#Quotas
-      - rule.shorthand.unit.test.ts — tests DDL expansions: see world.md#Shorthand-expansion
-      - sys.hashchain.unit.test.ts — tests sha256 link calculations: see recovery.md#Hash-chains
-      - identity.uid.unit.test.ts — tests OS UID credential validation: see agent.md#Credential-binding
-    - Integration test tier (packages/kernel/__tests__/integration/)
-      - db.authorizer.integration.test.ts — tests C authorizer denials: see physics.md#Layer-1:-sqlite3_set_authorizer
-      - routine.jail.integration.test.ts — tests bwrap scratch wipe: see action.md#Sandbox-execution
-      - storage.driver.integration.test.ts — tests S3/local put and get: see action.md#The-ctx-contract
-      - api.reconcile.integration.test.ts — tests response quota sync: see budget.md#Quotas
-      - bind.webhook.integration.test.ts — tests signature gates: see artifacts/policy.yaml#watch
-      - ping.ask.integration.test.ts — tests inquiry suspension timeouts: see artifacts/policy.yaml#notify
-      - sys.mirror.integration.test.ts — tests JSONL mirror stream: see effect.md#Storage-hierarchy
-    - End-to-end test tier (packages/kernel/__tests__/e2e/)
-      - onboarding.human.e2e.test.ts — tests S0 to S10 sequence: see interface.md#Human-journey-stages
-      - onboarding.harness.e2e.test.ts — tests H0 to H7 sequence: see interface.md#Harness-journey-stages
-      - budget.cascade.e2e.test.ts — proves min() pool inheritance: see budget.md#Cascade
-      - recovery.disaster.e2e.test.ts — tests database recovery drills: see recovery.md#Restore-path
-      - api.lifecycle.e2e.test.ts — tests OpenAPI sync to ship: see action.md#State-machine
-      - env.worktree.e2e.test.ts — tests dev fork to prod merge: see space.md#Environment-axis
-    - Test fixtures & mocks (packages/kernel/__tests__/fixtures/)
-      - schema.fixture.yaml — test schema with domain tables: see world.md#Dual-schema
-      - policy.fixture.yaml — test policy with strict authorizer: see physics.md#Two-layer-enforcement
-      - governance.fixture.yaml — test limits and tight caps: see artifacts/governance.yaml
+    - Unit test tier (crates/capcli-core/tests/unit/)
+      - test_bytecode.rs — verifies EXPLAIN OpenWrite detection: see physics.md#Layer-1.5:-prepare-time-cross-check
+      - test_authorizer.rs — validates SQLite C authorizer callbacks: see physics.md#Layer-1:-sqlite3_set_authorizer
+      - test_routine_shape.rs — enforces LOC, token, and param bounds: see artifacts/governance.yaml#routine_shape
+      - test_api_quota.rs — validates token bucket calculations: see budget.md#Quotas
+      - test_petgraph.rs — checks relational cycle rejection: see world.md#Gate-2:-Semantics
+      - test_hashchain.rs — verifies sha256 link calculations: see recovery.md#Hash-chains
+      - test_vault.rs — tests zeroize and AES-256-GCM decryption: see agent.md#Secrets
+    - Integration test tier (crates/capcli-core/tests/integration/)
+      - test_bwrap.rs — verifies bwrap network isolation and scratch wipe: see action.md#Sandbox-execution
+      - test_ipc_socket.rs — tests JSON-Lines over /run/capcli/kernel.sock: see cans/assembly.md#Python-runtime-harness-package
+      - test_storage_s3.rs — tests object uploads and HMAC presigned URLs: see action.md#The-ctx-contract
+      - test_api_proxy.rs — tests header reconciliation and secret injection: see agent.md#Egress-injection
+      - test_webhook.rs — verifies HMAC signature check gates: see artifacts/policy.yaml#watch
+      - test_ping_timeout.rs — validates fail-closed inquiry timeouts: see artifacts/policy.yaml#notify
+      - test_mirror.rs — tests transactional JSONL stream flushing: see effect.md#Storage-hierarchy
+    - End-to-end test tier (crates/capcli-cli/tests/e2e/)
+      - test_onboarding_human.rs — validates human S0 to S10 sequence: see interface.md#Human-journey-stages
+      - test_onboarding_harness.rs — validates agent H0 to H7 sequence: see interface.md#Harness-journey-stages
+      - test_budget_cascade.rs — tests min() pool inheritance down call stack: see budget.md#Cascade
+      - test_recovery_drill.rs — tests VACUUM snapshot restore flows: see recovery.md#Restore-path
+      - test_api_lifecycle.rs — tests OpenAPI spec sync through shipping: see action.md#State-machine
+      - test_env_worktree.rs — tests dev worktree fork to prod merge: see space.md#Environment-axis
+    - Test fixtures and mock catalogs (crates/capcli-core/tests/fixtures/)
+      - schema.fixture.yaml — test schema declaring tables and checks: see world.md#Dual-schema
+      - policy.fixture.yaml — test policy declaring authorizer rules: see physics.md#Two-layer-enforcement
+      - governance.fixture.yaml — test governance limits and shape bounds: see artifacts/governance.yaml
   - Build outputs & runtime contracts
     - Distribution build artifacts
-      - kernel binary — dist/cli.js (Bun executable for CLI and daemon): see interface.md#CLI-surface
-      - client bundle — dist/client.entry.js (browser ESM package): see interface.md#Client-contract
-      - pwa bundle — packages/pwa/dist/ (static Vite assets): see interface.md#PWA-layers
-      - native bridge — packages/native/capcli_db.node: see cans/assembly.md#Native-SQLite-bridge-package
-      - python package — packages/py/dist/capcli.whl: see cans/assembly.md#Python-runtime-harness-package
-    - Inter-package dependency flow
-      - types package — @capcli/types imported by kernel, client, and pwa
-      - client package — @capcli/client consumed exclusively by pwa
-      - kernel isolation — @capcli/kernel is self-contained without imports
-      - native bridge — packages/native loaded exclusively by kernel
-    - External runtime dependency manifest
-      - kernel packages — node-sql-parser, yaml, valibot, citty, croner, fastest-levenshtein, @readme/openapi-parser
-      - native packages — napi, napi-derive, rusqlite, optional libsql
-      - pwa packages — react, react-dom, react-router-dom, @tanstack/react-query, zustand, tailwindcss
-      - bun engine primitives — Bun.serve, Bun.s3, Bun.CryptoHasher, Bun.spawn
+      - kernel binary — single musl binary at /usr/local/bin/capcli: see physics.md#Fail-closed-stance
+      - python sdk wheel — packages/py/dist/capcli.whl for sandboxed routines: see action.md#Routines
+      - embedded web bundle — compiled static Vite assets baked inside kernel: see interface.md#PWA-layers
+    - Binary composition & linkage
+      - target architecture — static compilation for x86_64 and aarch64 musl: see cans/assembly.md#Host-system-dependencies
+      - static linkage — links libc, bundled SQLite C engine, and axum: see world.md#SQLite-as-SSOT
+      - embedded webserver — rust-embed serves PWA assets from memory: see interface.md#PWA-layers
+      - runtime dependencies — zero host npm, zero Bun, zero node_modules: see overview.md#Zero-trust-agent
+    - Inter-crate dependency flow
+      - types package — capcli-types imported across core, cli, and daemon: see cans/assembly.md#Shared-contracts-crate
+      - core engine — capcli-core imported exclusively by cli and daemon: see cans/assembly.md#Core-domain-engine-crate
+      - runtime boundary — Python subprocess mediated solely via kernel.sock: see action.md#Sandbox-execution
+```
