@@ -18,6 +18,10 @@
       - policy — decision (allow/denied), rules_matched
       - outcome — rows_affected, result_hash, duration_ms
     - Kernel event payloads
+      - bind.create/delete — target_urp, trigger_type, schedule_or_source, intent
+      - vault.set — secret_name, secret_hash_prefix, action: injected (value masked)
+      - env.switch/merge — source_env, target_env, git_commit, ddl_status
+      - sys.agent.register/revoke — agent_id, principal, status, capability_token_hash
       - capability.search — query, results_count, resolution_stage, gap_signal
       - db.exec — sql, params, vdbe_inspect {ok, opcodes_analyzed, write_trapped}, rows
       - db.exec — sql, params, rules_matched, rows_affected, result_hash
@@ -30,6 +34,7 @@
       - budget.frame_push/pop — declared, consumed, remaining balances
       - serve.request — endpoint, routine@version, api_key_id, principal, status
     - Event integrity
+      - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
       - failure buffer — audit sink error queues writes in memory for 5m before fail
       - genesis sequence — world starts with rule.apply, db.query, db.exec deny, db.exec ok
       - no synthetic types — onboarding.* and fake lifecycle events denied

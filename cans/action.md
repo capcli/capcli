@@ -336,7 +336,7 @@
         - dead letter queue — FIFO retention for 30 days or max 1,000 items
     - Serve lifecycle split
       - Daemon server architecture
-        - CLI configuration — bind endpoint writes config to workspace.db and exits
+        - CLI configuration — bind commands commit to workspace.db and emit bind.* events to _audit
         - Daemon process — sys serve --start launches persistent axum HTTP and WS server
         - Policy parity — HTTP requests pass identical authorizer, AST, and budget gates
         - Audit trail — HTTP requests emit serve.request events into audit log

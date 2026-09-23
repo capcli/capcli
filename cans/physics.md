@@ -53,6 +53,9 @@
   - Fail-closed stance
     - Anchor principle — default: deny (artifacts/policy.yaml)
     - Boot refusals
+      - missing host dependencies — python < 3.11, git < 2.30, or unexecutable bwrap aborts boot (exit 3)
+      - clock drift — host clock delta vs NTP > 500ms aborts boot to prevent claim corruption
+      - unconfigured git identity — missing user.name/email triggers auto-fallback to capcli[bot] or aborts
       - missing configuration — policy.yaml or governance.yaml absent
       - lockfile mismatch — compiled capcli.lock SHA256 mismatch aborts boot in prod and sim
       - schema integrity — system_schema hash mismatch aborts boot

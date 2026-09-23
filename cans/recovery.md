@@ -18,8 +18,8 @@
       - mutation triggers — commands auto-commit on draft, apply, promote, migrate, merge
       - tracked artifacts — world.sql, audit logs, and configuration YAMLs
     - Dual storage guarantee
-      - git repository — operational developer experience, world.sql DDL, and workspace snapshots
-      - object storage — append-only S3, GCS, or B2 bucket with versioning for binary DB backups
+      - git repository — operational source code, schema declarations, world.sql DDL, and audit mirrors
+      - object storage — append-only S3, GCS, or R2 bucket holding binary VACUUM INTO database snapshots
       - push command — sys backup --push writes to git and object store
     - History retention
       - squash cadence — 90-day git squash keeps repo small under ~35k commits/year

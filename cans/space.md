@@ -24,7 +24,8 @@
       - capacity limits — max 5 concurrent environments (prod, dev, sim, 2 experiments)
       - sim defaults — mode resolution: see artifacts/governance.yaml#api
     - World governance
-      - namespace allocation — isolated directories under envs/<name>/workspace.db
+      - worktree boundary — envs/<name>/ is an isolated git worktree branch containing declarative files
+      - substrate isolation — envs/<name>/workspace.db is gitignored uncommitted local runtime state
       - prod protection — removal flags: see artifacts/governance.yaml#env
       - backup mandate — git and object push required on mutation
   - Primitive scoping
@@ -82,4 +83,5 @@
       - deletion — env remove <name>
     - Safety controls
       - prod removal flags — --confirm-backup and --confirm-prod mandatory
-      - merge gate — prod promotion blocked without verified state sync and pinned overview
+      - git push gate — prod merge requires verified remote push credentials via git push --dry-run
+      - merge pipeline — env merge executes git branch merge for code/schema, snapshots target DB, then applies forward DDL diff

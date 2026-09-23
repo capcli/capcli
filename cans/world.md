@@ -10,8 +10,8 @@
             - libsql replica — embedded replica with Turso cloud sync
             - remote refusal — pure HTTP databases without C authorizer denied
         - tracking
-          - git status — snapshots and world.sql tracked in git; binary workspace.db committed via git LFS/backups
-          - persistence — partitioned at envs/<name>/workspace.db and backed up to object store
+          - git status — world.sql and schema migrations tracked in git; workspace.db strictly gitignored
+          - persistence — partitioned at envs/<name>/workspace.db; binary snapshots synced to object store
         - concurrency
           - journal mode — WAL mode enabled
           - readers — concurrent non-blocking reads

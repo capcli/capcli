@@ -42,12 +42,16 @@ Inspect runtime structure to verify kernel capabilities, sandbox limits, and DB 
 {
   "status": "ok",
   "kernel_version": "8.4.1",
+  "python_runtime": "3.12.2",
+  "git_version": "2.43.0",
+  "git_identity": "configured (user.name, user.email)",
   "engine": "sqlite_3.45.1",
   "wal_mode": true,
   "c_authorizer": "active",
   "sandbox_provider": "bwrap",
   "unprivileged_userns": "supported",
   "seccomp_bpf": "active",
+  "ntp_drift_ms": 14,
   "audit_sink": "online",
   "layout": {
     "envs_dir": "envs/<name>/workspace.db",
@@ -73,6 +77,7 @@ Kernel verified. Initialize coffee-erp workspace and switch to dev environment.
 [dev] Environment initialized: envs/dev/workspace.db
 [dev] Dual-schema compiled: system-schema.yaml (v3) -> locked
 [dev] Context active: env=dev | principal=user:local | agent=agt_init_01 | session=ses_boot_01 (token: active)
+[dev] AUDIT_LOG:    _audit updated [prev:sha256:00000000... -> curr:sha256:7f9a1b2c...]
 ```
 
 ---
@@ -643,6 +648,7 @@ capcli ping ask human "Missing Stripe credentials (API secret key & webhook sign
   secrets:     [stripe_secret_key, stripe_webhook_secret]
   encryption:  aes-256-gcm (in-memory only, masked in outputs)
   resolving:   ask_8812 -> "keys_injected"
+  audit_log:   _audit updated [prev:sha256:55aa128b... -> curr:sha256:77cc901f...]
 
 [SUSPENSION_LIFTED]
 ASK_ID:       ask_8812 resolved.
@@ -1382,6 +1388,7 @@ capcli sys serve --start
   pid:          50211
   tx_queue:     kernel.tx_queue active (fifo write serialization enabled)
   status:       listening on 127.0.0.1:4040
+  audit_log:    _audit updated [prev:sha256:90aa18bc... -> curr:sha256:cc71d49e...]
 ```
 
 ---
