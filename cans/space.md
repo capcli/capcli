@@ -26,6 +26,8 @@
     - World governance
       - worktree boundary — envs/<name>/ is an isolated git worktree branch containing declarative files
       - substrate isolation — envs/<name>/workspace.db is gitignored uncommitted local runtime state
+      - filesystem mandate — workspace root must reside on POSIX-locking-compliant filesystem (chmod 600 support); FAT32, exFAT, and Android emulated /sdcard paths denied at initialization (exit 3)
+      - prod promotion gate — env merge --into prod checks host tier; unattended daemons in prod barred on Tier 2 hosts: see trust.md#Ladder-laws
       - prod protection — removal flags: see artifacts/governance.yaml#env
       - backup mandate — git and object push required on mutation
   - Primitive scoping

@@ -6,7 +6,8 @@
       - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json
-      - Prefix standard — [env] prepended to all output streams
+      - Prefix standard — [env:tier] prepended to all output streams (e.g. [dev:tier_2], [prod:tier_1])
+      - Tier 2 banner — running on Tier 2 emits non-blocking warning: [WARN] host.degraded_isolation (broker mode active; pinned trust disabled): see physics.md#Platform-tier-taxonomy
       - Caller categories
         - [harness] — safe for autonomous agent execution
         - [human] — requires interactive human approval
@@ -89,7 +90,8 @@
       - Log replay — sys audit replay --from <point> [--dry-run]
       - Identity control — sys agent register, list, revoke
       - Vault provisioning — sys vault set <key> <val>, sys vault import-env
-      - Diagnostics — sys doctor [--boot-check]
+      - Diagnostics — sys doctor [--boot-check] [--json]
+        - platform probe — reports host OS, detected platform_tier (tier_1 | tier_2), sandbox_provider (bwrap | broker), and filesystem lock compliance: see physics.md#Platform-tier-taxonomy
       - Backups — sys backup [--push], recover <commit>
       - Sandboxing — sys exec <cmd> --sandbox
       - Daemon control — sys serve --start, --stop, --restart, --status
@@ -199,7 +201,7 @@
       - pedagogy — designed denial teaches gate constraints before write success
       - safety order — read → dry-run → denial → write → recovery proof
     - Human journey stages
-      - S0 verify — sys doctor system check
+      - S0 verify — sys doctor system check (verifies host dependencies, identifies Tier 1 vs Tier 2 platform profile, and validates POSIX filesystem locks): see cans/assembly.md#Host-system-dependencies
       - S1 intent — natural language goal capture
       - S2 proposal — preview dev schema via dry-run
       - S3 read — initial safe select query

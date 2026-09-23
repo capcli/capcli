@@ -24,6 +24,7 @@
           - audit logging — full payload recording
       - pinned
         - status — hardened operational production baseline
+        - host prerequisite — execution requires Tier 1 host: see physics.md#Platform-tier-taxonomy
         - bounds
           - row ceiling — see artifacts/policy.yaml#trust.pinned
         - operational autonomy
@@ -40,6 +41,8 @@
         - prod world — pinned trust production floor
       - travel rule — routines cross environments via kernel env merge pipeline
     - Ladder laws
+      - platform ceiling — Tier 2 hosts capped at reviewed rung: see physics.md#Platform-tier-taxonomy
+      - pinned execution refusal — invoking pinned routine on Tier 2 throws exit 2 (E045_TIER2_PINNED_DENIED)
       - autonomous authority floor
         - production writes — fully autonomous; governed by pinned trust rungs and AST limits
         - bulk modifications — autonomous up to declared routine row ceilings
@@ -133,6 +136,8 @@
       - command — capcli sys doctor --report
       - provenance — computed directly from kernel _audit mirror
     - Verified receipt lines
+      - host execution tier — tier_1 (hardened) or tier_2 (degraded): see physics.md#Platform-tier-taxonomy
+      - sandbox provider — bwrap, podman, or broker: see action.md#Sandbox-execution
       - audited operations — total count of recorded events
       - policy denials — total count of explained pre-execution denials
       - unaudited writes — verified exactly zero

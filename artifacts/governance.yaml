@@ -35,9 +35,13 @@ routine_shape:
     max_txn_statements: 10            # one transaction stays one thought
     session_ops_ceiling: 500          # session-level hard cap; frames cascade within this
     sandbox:
-      provider: bwrap                 # bwrap | podman | process
+      provider: auto                  # auto | bwrap | podman | broker
       scratch_mb: 64                  # tmpfs ceiling
-      allow_unconfined: false         # true permits provider=process in dev/sim
+      allow_unconfined: false         # true permits broker mode on Tier 2 in dev/sim
+      tiers:
+        tier_1: [linux, wsl2]         # see: cans/physics.md#Platform-tier-taxonomy
+        tier_2: [darwin, termux, win] # see: cans/physics.md#Platform-tier-taxonomy
+      pinned_requires_tier_1: true    # see: cans/trust.md#Ladder-laws
     composition:
       budget_inheritance: min          # child effective = min(declared, parent_remaining)
       ops_cascade: true                # child ops consume from parent's pool
