@@ -83,7 +83,7 @@
       - physical arbiter — shared workspace.db with WAL-mode serialized commits
       - event tailing — agents observe sibling effects via sys audit tail
     - Harness split
-        - worker agent — executes task mutations, raw queries, and exploratory operations
-        - analysis agent — mines audit logs to synthesize and draft candidate routines
+        - worker agent — executes raw queries, bounded mutations, and activated API probes until 50 events accumulate
+        - analysis agent — mines audit log subsequences once 50 events exist to scaffold candidate routines
       - human harness — observation, authorization, answering, recovery
       - kernel role — mechanical policy enforcement, dispatch, audit logging

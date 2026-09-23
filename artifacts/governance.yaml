@@ -69,6 +69,10 @@ maintenance:
     fingerprint_similarity: 0.90      # identical primitive sequences = merge candidates
     merge_requires_human: false       # autonomous merge when regression test suite passes 100%
     auto_retire_dead: false           # propose, never auto-destroy
+  discovery:
+    sufficiency_floor_events: 50      # minimum raw audit events before sequence mining triggers
+    min_sequence_occurrences: 3       # minimum repeated n-gram patterns to scaffold a routine
+    max_exploratory_ops: 200          # session budget reserved for raw ad-hoc exploration
   decay:
     dead_after_days: 30               # unused → retire candidate
     fail_threshold: 0.7               # success rate below → rollback candidate
