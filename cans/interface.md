@@ -126,33 +126,33 @@
     - Scoped flags
       - --lock <ref> — exclusive claim lease on run
       - --sandbox — jail wrapper on sys exec
-  - Client contract (@capcli/client)
-    - Instantiation
-      - entry point — import { createClient } from '@capcli/client'
-      - config parameters — createClient({ endpoint, token, brand })
-      - transport — HTTP POST for commands; WebSocket / SSE for live audit tail
-    - White-label engine
-      - brand schema — name string, cli binary name, optional tagline
-      - noun aliasing — surface aliases for nouns (e.g. routine→flow, db→store, run→exec)
-      - locked nouns — kernel sys noun cannot be aliased (lockedNouns default: ['sys'])
-      - branding scope — human text output only; JSON, audit logs, and exit codes never rebranded
-      - discovery model — embedder configuration discovered via TypeScript types; invisible in docs
-    - Method surface
-      - execution — client.run(), client.db.query(), client.routine.prove()
-      - discovery — client.search(), client.inspect()
-      - auditing — client.audit.tail(), client.audit.trace()
-      - return envelope — { exit: number, json: object, text: string }
-    - Unchangeable elements
-      - exit code definitions
-      - JSON schemas and streaming events
-      - ctx routine surface
-      - audit log structures and system table names
+  - Client RPC contract
+    - Client instantiation and transport
+      - Connection setup
+        - entry point — in-tree module in packages/pwa/src/client.ts: see cans/assembly.md#Application-shell-and-transport
+        - config parameters — createClient({ endpoint, token, brand }): see interface.md#Client-RPC-contract
+        - transport engine — HTTP POST for RPC; WebSocket / SSE for tail: see action.md#Serve-lifecycle-split
+      - White-label customization
+        - brand schema — custom name string, binary alias, and tagline: see interface.md#Client-RPC-contract
+        - noun aliasing — configurable aliases for surface nouns: see interface.md#CLI-surface
+        - locked nouns — kernel sys noun cannot be aliased: see interface.md#CLI-surface
+        - branding scope — human text output only; JSON never rebranded: see physics.md#Diagnostic-output-law
+      - Invocation method surface
+        - execution — client.run(), client.db.query(), client.routine.prove(): see action.md#Unifying-concept
+        - discovery — client.search(), client.inspect(): see action.md#Search-surface
+        - auditing — client.audit.tail(), client.audit.trace(): see effect.md#Query-surfaces
+        - return envelope — { exit: number, json: object, text: string }: see physics.md#Exit-code-law
+      - Immutable core contracts
+        - exit codes — strict integer exit code definitions: see physics.md#Exit-code-law
+        - schema models — streaming JSON schemas and system tables: see world.md#Dual-schema
+        - routine contract — routine decorator and ctx surface: see action.md#The-ctx-contract
   - PWA layers
     - Core principles
-      - client boundary — client outside workspace; zero authority creation
-      - data source — renders @capcli/client JSON-RPC outputs; zero invented metrics
-      - navigation — causal DAG traversal without dead ends
-      - interaction set — browse, approve, answer, recover, observe
+      - hosting runtime — axum serves static Vite bundle from memory: see cans/assembly.md#Persistent-daemon-crate
+      - client boundary — client outside workspace with zero authority: see overview.md#Zero-trust-agent
+      - data source — renders daemon JSON-RPC outputs without invented metrics: see effect.md#Audit-spine
+      - navigation model — causal DAG drill-down without dead ends: see effect.md#Causal-DAG
+      - interaction set — browse, approve, answer, recover, observe: see trust.md#Promotion-queue
     - Ten layer architecture
       - navigation model — causal DAG drill-down without dead ends
         - drill sequence — row → event → routine → manifest → verb → quota → frame → session → agent → principal

@@ -117,10 +117,11 @@
         - container engine — podman or docker rootless container
         - disposable host — process mode without OS namespace isolation
       - Jail defenses
+        - runner engine — tokio::process::Command spawning bwrap namespaces
+        - IPC protocol — streaming JSON-Lines over /run/capcli/kernel.sock via LinesCodec
         - filter derivation — AST deny-list compiled directly from seccomp-bpf
-        - IPC restriction — mounted Unix socket /run/capcli/kernel.sock is sole bridge for ctx RPC calls
-        - process hierarchy — fork and exec blocked
-        - path restriction — writes outside scratch blocked at syscall
+        - process hierarchy — fork and exec blocked at seccomp filter layer
+        - path restriction — writes outside scratch blocked at syscall boundary
       - Execution limits
         - ops ceiling — see artifacts/governance.yaml#routine_shape
         - timeout — watchdog kill: see artifacts/governance.yaml#routine_shape
@@ -334,10 +335,11 @@
         - webhook limits — payload max 65,536 bytes; 100 events/minute ceiling
         - dead letter queue — FIFO retention for 30 days or max 1,000 items
     - Serve lifecycle split
-      - CLI configuration — bind endpoint writes config to workspace.db and exits
-      - Daemon process — sys serve --start launches persistent Bun.serve() listener
-      - Policy parity — HTTP requests pass identical authorizer, AST, and budget gates
-      - Audit trail — HTTP requests emit serve.request events into audit log
+      - Daemon server architecture
+        - CLI configuration — bind endpoint writes config to workspace.db and exits
+        - Daemon process — sys serve --start launches persistent axum HTTP and WS server
+        - Policy parity — HTTP requests pass identical authorizer, AST, and budget gates
+        - Audit trail — HTTP requests emit serve.request events into audit log
     - Endpoint governance
       - Minimum trust — pinned: see artifacts/governance.yaml#serve
       - Version locking — explicit routine@version required

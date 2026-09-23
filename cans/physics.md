@@ -5,36 +5,36 @@
     - egress engine — token-bucket quotas, secret boundaries, and sim routing intercept network calls
   - Two-layer enforcement
     - Layer 1: sqlite3_set_authorizer
-      - engine — C-level callback inside sqlite3_prepare_v2 via Rust rusqlite napi-rs
-      - scope — access control only (SQLITE_OK, SQLITE_DENY, SQLITE_IGNORE); row masking executed in kernel result serializer
-      - binding — Rust rusqlite via napi-rs closure
-      - granularity — 3D action × table × column tuple evaluated on every prepared statement
+      - engine — native C callback inside sqlite3_prepare_v2 via rusqlite crate
+      - binding — native Rust closure passed directly to rusqlite authorizer
+      - scope — access control only (SQLITE_OK, SQLITE_DENY, SQLITE_IGNORE)
+      - granularity — 3D action × table × column tuple evaluated per statement
       - intercepted actions
         - table mutations — read, insert, update, delete allowlists
         - column writes — deny_columns_write protection on immutable keys
         - schema operations — drop, alter, vacuum restrictions
         - engine safety — attach and detach unconditionally denied
-        - pragmas — query_only and foreign_keys strictly permitted; all others denied
-        - function allowlist — count, sum, min, max, avg, json_extract, date, strftime
-        - function denylist — load_extension, writefile, readfile, fts3_tokenizer denied
+        - pragmas — query_only and foreign_keys strictly permitted
+        - function allowlist — count, sum, min, max, avg, json_extract, date
+        - function denylist — load_extension, writefile, readfile denied
       - compilation — authorizer table compiled from artifacts/policy.yaml
       - ddl trust floors
-        - alter table — requires reviewed trust; draft attempts exit with code 2
-        - vacuum — requires pinned trust; denied unconditionally in prod overlay
+        - alter table — requires reviewed trust; draft attempts exit with 2
+        - vacuum — requires pinned trust; denied unconditionally in prod
     - Layer 2: SQL AST check
-      - engine — TypeScript node-sql-parser cross-checked against Rust rusqlite prepare/EXPLAIN bytecode
+      - engine — sqlparser crate cross-checked against SQLite EXPLAIN bytecode
       - checks
-        - parameterization — bound parameters mandatory; string interpolation denied
-        - transaction isolation — ctx.api.call inside ctx.db.txn blocks rejected at compile
-        - execution mode — multi-statement executescript strings denied structurally
-        - intent gate — writes require valid intent: see artifacts/policy.yaml#query
-        - structure — multi-statement denied, unparseable denied
-        - update/delete — require_where and require_limit mandatory; statement limit capped at 1000
-        - row bounds — select max 10000, insert max 500, update/delete base max 100
+        - parameterization — bound parameters mandatory; interpolation denied
+        - transaction isolation — ctx.api.call in ctx.db.txn blocks rejected
+        - execution mode — multi-statement raw query strings denied structurally
+        - intent gate — mutating writes require valid non-empty causal intent
+        - structure — unparseable SQL and schema bypass sequences denied
+        - update/delete — require_where and require_limit mandatory up to 1000
+        - row bounds — select max 10000, insert max 500, update/delete max 100
         - deny patterns
           - boolean injections — UPDATE * SET * WHERE * OR 1=1 denied
           - unconditional deletions — DELETE FROM * WHERE NOT EXISTS * denied
-        - deny patterns — boolean bypass attacks (e.g. WHERE 1=1) denied
+          - tautology bypass — boolean bypass attacks (e.g. WHERE 1=1) denied
     - Layer 1.5: prepare-time cross-check
       - engine — sqlite3_prepare_v2 dry-run in test transaction
       - cross-check — compares AST classification against SQLite EXPLAIN
@@ -73,9 +73,10 @@
       - exit 4 — mid-execution runtime crash
       - exit 5 — audit sink failure; write aborted
     - Diagnostic output law
-      - machine style — text output emits rustc-style diagnostics; conversational filler banned
-      - denial format — [FAIL] rule code, rejected statement, expected syntax, code template
-      - structural purity — machine consumers receiving --json receive parseable envelopes without banner chrome
+      - engine — native terminal diagnostics rendered via miette and codespan
+      - machine style — text output emits rustc-style diagnostics; no filler
+      - denial format — [FAIL] rule code, rejected statement, expected syntax
+      - structural purity — machine consumers pass --json for pure envelopes
     - Break-glass paths
       - recovery shell — CAPCLI_RECOVERY=1 loads schema and audit sink only
       - diagnostic check — sys doctor --boot-check verifies boot without daemon
