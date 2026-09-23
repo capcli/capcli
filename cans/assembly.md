@@ -132,8 +132,8 @@
         - runner.rs — manages child Python processes and exits: see action.md#Routines
         - jail.rs — builds bwrap isolation for Tier 1 or process broker for Tier 2: see action.md#Sandbox-execution
         - ipc_socket.rs — cross-platform IPC (UDS on POSIX/Termux, Named Pipes on Windows): see action.md#Sandbox-execution
-        - scaffold.rs — AST-based routine template rewriter and validator: see action.md#Routine-templates
-        - manifest.rs — extracts declared static manifests: see action.md#Manifests-&-fingerprints
+        - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
+        - manifest.rs — receives declared manifests via runner IPC: see action.md#Manifests-&-fingerprints
         - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
       - Execution gates
         - shape_gate.rs — checks LOC, tokens, and param limits: see artifacts/governance.yaml#routine_shape

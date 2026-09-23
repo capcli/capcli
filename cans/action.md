@@ -109,12 +109,12 @@
       - output envelope — max 500 result tokens; oversized results return truncated: true
   - Routine templates
     - Invariant authoring laws
-      - AST-level injection — kernel parses Python AST to rewrite routine name and signature; string or regex substitution banned
+      - string templating — kernel writes scaffolds via string substitution; decorator reflects manifest over IPC
       - unproven intake — templated routines register strictly at draft trust, version 1
       - shape compliance — intake parses through shape_gate.rs; non-compliant stubs rejected before disk write
     - Scaffolding pipeline
       - command — routine draft <name> --template <ptr|path> [--intent "..."]
-      - verification — checks Param typings, ctx boundaries, and imports <= 3
+      - verification — checks import line counts and py_compile syntax
       - audit payload — records routine.draft with template_source and template_hash
     - Sandbox execution
       - Jail architecture
@@ -262,7 +262,7 @@
       - Schema boundary — see world.md#Dual-schema
   - Manifests & fingerprints
     - Declared manifest (static)
-      - Extraction — declared explicitly in @routine decorator manifest argument
+      - Extraction — reflected by @routine decorator over kernel.sock during prove
       - Manifest contents
         - call sequence — provider.verb, db targets with access mode
         - txn wrappers — ordered list of nested execution leaves
