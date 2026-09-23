@@ -20,6 +20,20 @@ registry:
     require_description: true         # unsearchable = unregistrable
 
 # ───────────────────────────────────────────────────────────────
+# 1.5 TEMPLATES — blueprints are unproven proposals
+# ───────────────────────────────────────────────────────────────
+template:
+  max_bundle_size_mb: 5               # bundle transfer ceiling
+  require_kernel_compat: true         # refuses outdated templates at boot
+  require_policy_match: true          # template policy_version == runtime policy_version
+  world:
+    mandatory_files: ["schema.yaml", "routines/overview.py"]
+    max_seed_rows_per_table: 50       # prevent bulk data injection via template
+  routine:
+    ast_rewrite_name: true            # AST-level routine naming; string-replace banned
+    enforce_shape_on_intake: true     # fails intake if template violates routine_shape
+
+# ───────────────────────────────────────────────────────────────
 # 2. ROUTINE SHAPE — defaults every file must satisfy
 # ───────────────────────────────────────────────────────────────
 routine_shape:

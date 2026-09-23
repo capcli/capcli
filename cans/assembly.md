@@ -69,6 +69,7 @@
         - exit.rs — strict integer exit codes (0, 2, 3, 4, 5): see physics.md#Exit-code-law
         - capability.rs — Universal Resource Pointer models: see action.md#Global-pointer-registry
         - audit.rs — causal event anatomy and hash chain links: see effect.md#Event-anatomy
+        - template.rs — template manifest, compatibility headers, and bundle models: see world.md#World-templates
         - schema.rs — shorthand AST definitions and table models: see world.md#Shorthand-expansion
         - governance.rs — routine shape and budget limits: see artifacts/governance.yaml
         - rpc.rs — streaming JSON-RPC 2.0 lines models: see cans/assembly.md#Python-runtime-harness-package
@@ -130,6 +131,7 @@
         - runner.rs — manages child Python processes and exits: see action.md#Routines
         - jail.rs — builds bwrap isolation for Tier 1 or process broker for Tier 2: see action.md#Sandbox-execution
         - ipc_socket.rs — cross-platform IPC (UDS on POSIX/Termux, Named Pipes on Windows): see action.md#Sandbox-execution
+        - scaffold.rs — AST-based routine template rewriter and validator: see action.md#Routine-templates
         - manifest.rs — extracts declared static manifests: see action.md#Manifests-&-fingerprints
         - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
       - Execution gates
@@ -180,6 +182,7 @@
       - Subsystem modules
         - loader.rs — deserializes YAML configs with serde_yml: see world.md#Validation-gates
         - petgraph_check.rs — checks relational cycles and targets: see world.md#Gate-2:-Semantics
+        - template_bundle.rs — unpacks and validates world template bundles: see world.md#World-templates
         - shorthand.rs — expands schema shorthands into SQLite DDL: see world.md#Shorthand-expansion
         - lockfile.rs — verifies compiled root sha256 checksum: see world.md#Validation-gates
       - Execution gates

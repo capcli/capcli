@@ -186,6 +186,20 @@
       - forward only — down-migrations banned; snapshots serve as rollbacks
       - snapshot pairing — snapshot taken before physical DDL execution
       - lockfile check — capcli.lock verification at boot: see physics.md#Fail-closed-stance
+  - World templates
+    - Invariant bundle laws
+      - atomic pairing — world template must bundle both schema.yaml AND routines/overview.py
+      - missing overview rejection — omitting routines/overview.py aborts initialization with exit 3
+      - version lock — template must declare min_kernel_version and policy_version matching active runtime
+    - Intake pipeline
+      - provisioning command — env new <name> --from <path|git-url|urp>
+      - destination isolation — template unpacks strictly into dev worktree; prod direct-init denied
+      - validation sequence — passes Gate 1 (Syntax) and Gate 2 (Semantics) before disk write
+      - dry-run migration — Gate 5 test migration executes on temporary snapshot
+      - seed constraints — table seed arrays capped at 50 rows per table
+    - Audit and provenance
+      - event type — env.init_from_template
+      - audit payload — source_uri, bundle_sha256, schema_version, seed_tables_count
   - Validation gates
     - Gate 1: Syntax
       - timing — parse-time on file load

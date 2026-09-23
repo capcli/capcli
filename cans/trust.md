@@ -43,6 +43,9 @@
     - Ladder laws
       - platform ceiling — Tier 2 hosts capped at reviewed rung: see physics.md#Platform-tier-taxonomy
       - pinned execution refusal — invoking pinned routine on Tier 2 throws exit 2 (E045_TIER2_PINNED_DENIED)
+      - template trust floor — imported routines and world templates enter strictly at draft trust
+      - zero trust inheritance — blueprints confer zero promotional credit; pre-pinned imports banned
+      - rehearsal mandate — templated routines must satisfy the 10-run rehearsal law in sim before promotion
       - autonomous authority floor
         - production writes — fully autonomous; governed by pinned trust rungs and AST limits
         - bulk modifications — autonomous up to declared routine row ceilings

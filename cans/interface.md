@@ -39,7 +39,7 @@
       - Schema — db schema [--table]
       - Snapshots — db snapshot, restore <id>, dump
     - Routine path: routine noun
-      - Authoring — routine draft <name> [--reason]
+      - Authoring — routine draft <name> [--template <ptr|path>] [--reason]
       - Verification — routine prove <name> [-p k=v] [--env sim]
       - Promotion — routine ship <name> --to reviewed|pinned [--env X] --reason "..."
       - Maintenance — routine sweep [--since 30d]
@@ -77,7 +77,7 @@
       - Application — rule apply [--type schema] [--dry-run]
       - Validation — rule validate
     - World path: env noun
-      - Provisioning — env new <name> --seed prod [--from-branch <b>]
+      - Provisioning — env new <name> [--seed prod] [--from <path|git-url|ptr>] [--from-branch <b>]
       - Switching — env use <name>
       - Audit — env list, inspect, doctor
       - Promotion — env merge <name> --into prod
