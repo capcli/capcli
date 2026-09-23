@@ -1,4 +1,5 @@
 - Agent
+<!-- ref-by: assembly.md, budget.md, effect.md, interface.md, overview.md, recovery.md, space.md, world.md -->
   - Identity hierarchy
     - Identity chain
       - principal — human or root authority holder (user:alice, partner:stripe)
@@ -83,7 +84,7 @@
       - physical arbiter — shared workspace.db with WAL-mode serialized commits
       - event tailing — agents observe sibling effects via sys audit tail
     - Harness split
-        - worker agent — executes raw queries, bounded mutations, and activated API probes until 50 events accumulate
-        - analysis agent — mines audit log subsequences once 50 events exist to scaffold candidate routines
+      - worker agent — executes raw exploratory queries and probes: see time.md#Discovery-arc
+      - analysis agent — mines audit subsequences to scaffold candidate routines: see time.md#Discovery-arc
       - human harness — observation, authorization, answering, recovery
       - kernel role — mechanical policy enforcement, dispatch, audit logging

@@ -1,4 +1,5 @@
 - Time
+<!-- ref-by: action.md, assembly.md, budget.md, effect.md, interface.md, overview.md -->
   - Stage map
     - Lifecycle pipeline
       - draft — filesystem authoring, ungated creation
@@ -45,14 +46,9 @@
       - metric prerequisites — success rates queried from routine_stats
       - production promotion — automated upon passing synthetic fuzz and replay suite
     - auto-promotion path — qualifying low-risk routines: see trust.md#Gates-&-promotion
-      - risk-weighted conjunction
-        - execution volume — 1 run (reads), 3 runs (writes), 10 runs (egress)
-        - latency floor — p95 duration <= 0.70 * declared_max_duration
-        - declaration match — strict subset verification; defensive early-returns pass without penalty
-        - stability bounds — exactly 0 policy denials and 0 drift events
-      - audit payload
-        - event type — routine.auto_promoted
-        - event fields — from_trust: draft, to_trust: reviewed, 5-point metric record
+      - promotion conjunction — risk-weighted pass metrics: see trust.md#Auto-promotion-(draft-to-reviewed)
+      - audit payload — records routine.auto_promoted with 5-point metric record
+      - veto window — 1-hour canary telemetry rollback trigger: see trust.md#Promotion-queue
     - promotion queue
       - queue enqueue — capcli routine ship <name> --to reviewed --queue
       - queue inspection — capcli routine pending

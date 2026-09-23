@@ -1,5 +1,5 @@
-```markdown
 - Assembly
+<!-- ref-by: action.md, budget.md, effect.md, interface.md, physics.md, recovery.md -->
   - Monorepo root layout
     - Workspace configuration files
       - Cargo.toml — defines workspace members, musl targets, and release profiles
@@ -16,7 +16,7 @@
       - compile development — cargo build --workspace: see physics.md#Exit-code-law
       - compile static release — cargo build --release --target x86_64-unknown-linux-musl
       - compile termux release — cargo build --release --target aarch64-linux-android
-      - run test suite — cargo test --workspace --all-targets: see cans/assembly.md#Monorepo-test-architecture
+      - run test suite — cargo test --workspace --all-targets: see #Monorepo-test-architecture
       - run linter checks — cargo clippy --workspace -- -D warnings
       - build pwa assets — bun run --cwd packages/pwa build: see interface.md#PWA-layers
   - Declarative artifacts directory
@@ -72,7 +72,7 @@
         - template.rs — template manifest, compatibility headers, and bundle models: see world.md#World-templates
         - schema.rs — shorthand AST definitions and table models: see world.md#Shorthand-expansion
         - governance.rs — routine shape and budget limits: see artifacts/governance.yaml
-        - rpc.rs — streaming JSON-RPC 2.0 lines models: see cans/assembly.md#Python-runtime-harness-package
+        - rpc.rs — streaming JSON-RPC 2.0 lines models: see #Python-runtime-harness-package
     - Core domain engine crate
       - crate identity — crates/capcli-core
       - configuration — Cargo.toml linking rusqlite bundled, petgraph, sha2, aes-gcm
@@ -126,6 +126,7 @@
         - authorizer_gate.rs — table and column write allowlists: see physics.md#Layer-1:-sqlite3_set_authorizer
         - write_gate.rs — mandates WHERE clause and LIMIT: see physics.md#Raw-SQL-rules
         - isolation_gate.rs — denies ctx.api.call inside txn: see physics.md#Layer-2:-SQL-AST-check
+      - Domain telemetry — tracks VDBE opcode analysis counts and connection lease durations
     - Domain 2: Routine engine & sandboxing (routine/)
       - Subsystem modules
         - runner.rs — manages child Python processes and exits: see action.md#Routines
@@ -138,6 +139,7 @@
         - shape_gate.rs — checks LOC, tokens, and param limits: see artifacts/governance.yaml#routine_shape
         - trust_gate.rs — denies draft writes in prod worktree: see trust.md#The-ladder
         - drift_gate.rs — catches manifest and fingerprint divergence: see space.md#Manifest-drift
+      - Domain telemetry — tracks runner spin-up latencies and memory high-water marks
     - Domain 3: Blob storage subsystem (storage/)
       - Subsystem modules
         - local.rs — local filesystem uploads under storage/ namespace
@@ -148,6 +150,7 @@
         - mime_gate.rs — denies unlisted MIME types per allowlist: see artifacts/governance.yaml#storage
         - size_gate.rs — blocks uploads exceeding 10MB ceiling: see artifacts/governance.yaml#storage
         - trust_gate.rs — gates blob writes by caller trust rung: see trust.md#The-ladder
+      - Domain telemetry — monitors upload throughput, presigned link counts, and storage caps
     - Domain 4: External API gateway (api/)
       - Subsystem modules
         - catalog.rs — manages OpenAPI YAML specs in apis/: see action.md#Catalog-synchronization
@@ -159,6 +162,7 @@
         - quota_gate.rs — fails closed if bucket tokens < 1: see budget.md#Quotas
         - spend_gate.rs — enforces daily USD limits: see artifacts/policy.yaml#api.spend
         - sim_gate.rs — denies prod-only verbs in dev and sim: see space.md#Policy-overlays
+      - Domain telemetry — tracks rate bucket token drain, egress spend, and retry counts
     - Domain 5: Event & schedule bindings (bind/)
       - Subsystem modules
         - cron.rs — evaluates cron patterns via croner crate: see time.md#Schedule-&-maintenance
@@ -169,6 +173,7 @@
         - trust_gate.rs — mandates pinned trust for endpoints: see artifacts/governance.yaml#serve
         - signature_gate.rs — rejects unsigned webhook payloads: see artifacts/policy.yaml#watch
         - rate_gate.rs — throttles incoming requests per minute: see artifacts/governance.yaml#watch
+      - Domain telemetry — monitors trigger lag, cron schedule drift, and webhook arrival rates
     - Domain 6: Human interaction & inquiry (ping/)
       - Subsystem modules
         - notify.rs — formats alerts to configured channels: see artifacts/governance.yaml#notify
@@ -178,6 +183,7 @@
         - option_gate.rs — limits question choices to max 5: see artifacts/governance.yaml#notify
         - length_gate.rs — enforces question token caps: see artifacts/governance.yaml#notify
         - fail_closed_gate.rs — fails suspended routine on timeout: see artifacts/policy.yaml#notify
+      - Domain telemetry — tracks ask response latencies, pending queues, and expiry counts
     - Domain 7: Governance & rule compilation (rule/)
       - Subsystem modules
         - loader.rs — deserializes YAML configs with serde_yml: see world.md#Validation-gates
@@ -189,6 +195,7 @@
         - syntax_gate.rs — validates YAML layout (Gate 1): see world.md#Gate-1:-Syntax
         - semantic_gate.rs — petgraph verifies graph (Gate 2): see world.md#Gate-2:-Semantics
         - migration_gate.rs — test transaction on snapshot (Gate 5): see world.md#Gate-5:-Migration-safety
+      - Domain telemetry — tracks YAML AST compilation cycles and lockfile validation time
     - Domain 8: Environment & worktree management (env/)
       - Subsystem modules
         - worktree.rs — provisions and merges git worktrees: see space.md#Environment-axis
@@ -197,17 +204,19 @@
       - Execution gates
         - prod_protect_gate.rs — demands dual confirmation flags: see space.md#World-governance
         - merge_gate.rs — verifies rehearsal proof before merge: see space.md#Safety-controls
+      - Domain telemetry — measures worktree creation overhead and anonymization durations
     - Domain 9: System, audit & diagnostics (sys/)
       - Subsystem modules
         - audit.rs — append-only transactional writes to _audit: see effect.md#Storage-hierarchy
         - mirror.rs — streams rows to daily JSONL export files: see effect.md#Storage-hierarchy
         - hashchain.rs — calculates sha256 links with sha2 crate: see recovery.md#Hash-chains
         - witness.rs — checkpoints root hash to KMS or S3 WORM: see effect.md#Event-integrity
-        - doctor.rs — probes host runtimes, detects platform tier, verifies drift, and emits trust receipts: see physics.md#Platform-tier-taxonomy
+        - doctor.rs — probes host runtimes, tier status, and receipts: see physics.md#Platform-tier-taxonomy
         - recover.rs — coordinates snapshot or commit rollbacks: see recovery.md#Restore-path
       - Execution gates
         - sink_gate.rs — denies writes if audit write fails (exit 5): see physics.md#Fail-closed-stance
-        - boot_gate.rs — aborts on missing host runtimes, unmitigated Tier 1 sandbox absence, clock drift > 500ms, or lockfile mismatch: see physics.md#Boot-refusals
+        - boot_gate.rs — aborts on missing runtimes, drift, or lock mismatch: see physics.md#Boot-refusals
+      - Domain telemetry — records sink buffer flush lag, root ledger drift, and drill status
     - Domain 10: Capability execution & discovery (run/)
       - Subsystem modules
         - registry.rs — Universal Resource Pointer dispatcher: see action.md#Global-pointer-registry
@@ -216,6 +225,7 @@
       - Execution gates
         - preflight_gate.rs — denies call if preflight fails: see budget.md#Pre-flight
         - trust_floor_gate.rs — blocks caller lacking rung authority: see trust.md#The-ladder
+      - Domain telemetry — monitors query resolution time, cache hit ratios, and gap frequencies
     - Domain 11: Identity & process security (identity/)
       - Subsystem modules
         - process.rs — verifies host OS UID against --by flag: see agent.md#Credential-binding
@@ -224,12 +234,13 @@
       - Execution gates
         - process_gate.rs — denies call if OS UID mismatches: see agent.md#Credential-binding
         - revocation_gate.rs — aborts calls from revoked agents: see agent.md#System-agent-registry
+      - Domain telemetry — tracks vault zeroize events, active sessions, and HMAC verifications
 
   - Client PWA application package
     - Build pipeline configuration
       - package.json — React 19, Tailwind CSS 4, and Vite 6 setup: see interface.md#PWA-layers
       - vite.config.ts — bundles static SPA assets to dist: see interface.md#PWA-layers
-      - tsconfig.json — strict browser type configuration: see cans/assembly.md#Shared-contracts-crate
+      - tsconfig.json — strict browser type configuration: see #Shared-contracts-crate
       - asset embedding — rust-embed bakes dist into binary: see interface.md#PWA-layers
     - Application shell and transport
       - entry.tsx — React DOM root application bootstrap: see interface.md#PWA-layers
@@ -263,7 +274,7 @@
       - test_vault.rs — tests zeroize and AES-256-GCM decryption: see agent.md#Secrets
     - Integration test tier (crates/capcli-core/tests/integration/)
       - test_bwrap.rs — verifies bwrap network isolation and scratch wipe: see action.md#Sandbox-execution
-      - test_ipc_socket.rs — tests JSON-Lines over /run/capcli/kernel.sock: see cans/assembly.md#Python-runtime-harness-package
+      - test_ipc_socket.rs — tests JSON-Lines over /run/capcli/kernel.sock: see #Python-runtime-harness-package
       - test_storage_s3.rs — tests object uploads and HMAC presigned URLs: see action.md#The-ctx-contract
       - test_api_proxy.rs — tests header reconciliation and secret injection: see agent.md#Egress-injection
       - test_webhook.rs — verifies HMAC signature check gates: see artifacts/policy.yaml#watch
@@ -286,12 +297,11 @@
       - python sdk wheel — packages/py/dist/capcli.whl for sandboxed routines: see action.md#Routines
       - embedded web bundle — compiled static Vite assets baked inside kernel: see interface.md#PWA-layers
     - Binary composition & linkage
-      - target architecture — static compilation for x86_64 and aarch64 musl: see cans/assembly.md#Host-system-dependencies
+      - target architecture — static compilation for x86_64 and aarch64 musl: see #Host-system-dependencies
       - static linkage — links libc, bundled SQLite C engine, and axum: see world.md#SQLite-as-SSOT
       - embedded webserver — rust-embed serves PWA assets from memory: see interface.md#PWA-layers
       - runtime dependencies — zero host npm, zero Bun, zero node_modules: see overview.md#Zero-trust-agent
     - Inter-crate dependency flow
-      - types package — capcli-types imported across core, cli, and daemon: see cans/assembly.md#Shared-contracts-crate
-      - core engine — capcli-core imported exclusively by cli and daemon: see cans/assembly.md#Core-domain-engine-crate
+      - types package — capcli-types imported across core, cli, and daemon: see #Shared-contracts-crate
+      - core engine — capcli-core imported exclusively by cli and daemon: see #Core-domain-engine-crate
       - runtime boundary — Python subprocess mediated solely via kernel.sock: see action.md#Sandbox-execution
-```

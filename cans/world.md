@@ -1,11 +1,12 @@
 - World
+<!-- ref-by: action.md, assembly.md, budget.md, effect.md, interface.md, overview.md, physics.md, recovery.md, space.md -->
   - SQLite as SSOT
     - Storage trinity
       - workspace.db
-          - ssot role — primary source of truth for domain state AND _audit events
-          - process — capcli kernel-managed
-          - permissions — chmod 600
-          - engine substrate
+        - ssot role — primary source of truth for domain state AND _audit events
+        - process — capcli kernel-managed
+        - permissions — chmod 600
+        - engine substrate
             - sqlite local — standalone local embedded database
             - libsql replica — embedded replica with Turso cloud sync
             - remote refusal — pure HTTP databases without C authorizer denied
@@ -33,9 +34,7 @@
           - cadence — see artifacts/governance.yaml#backup
         - disaster recovery
           - restoration — sys recover: see recovery.md#Restore-path
-        - role — secondary read-only export view streamed from _audit table
-        - persistence — flushed to disk and git for offline diffing only
-        - attestation — signed by external notary checkpoint; DB remains SSOT
+      - object snapshots — binary VACUUM INTO backups in object store: see recovery.md#Snapshots
     - Mutation pipeline
       - execution flow
         - step 1 — causal intent declaration
@@ -188,8 +187,7 @@
       - lockfile check — capcli.lock verification at boot: see physics.md#Fail-closed-stance
   - World templates
     - Invariant bundle laws
-      - atomic pairing — world template must bundle both schema.yaml AND routines/overview.py
-      - missing overview rejection — omitting routines/overview.py aborts initialization with exit 3
+      - atomic pairing — world template bundles schema.yaml with overview routine: see action.md#Session-Overview-Primer
       - version lock — template must declare min_kernel_version and policy_version matching active runtime
     - Intake pipeline
       - provisioning command — env new <name> --from <path|git-url|urp>
