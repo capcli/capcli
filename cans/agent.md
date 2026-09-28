@@ -31,6 +31,7 @@
     - Concurrency scope
       - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE with busy_timeout
       - application locks — business-level leases tracked in _claims table with daemon TTL cleanup
+      - authoring mutex — routine draft acquires target claim; concurrent edits exit 2
       - collision handling — writers queue sequentially; immediate exit 2 occurs on queue timeout only
       - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
       - callee floor — cross-agent routine calls demand trust >= reviewed
@@ -55,7 +56,7 @@
       - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)
       - session persistence — CAPCLI_SESSION env var or workspace.db active context preserves session across turns
       - exit contract — process exit codes (0, 2, 3, 4, 5) return status to subshell
-      - pwa boundary — HTTP/WS daemon serving JSON-RPC 2.0 strictly for PWA client
+      - client boundary — HTTP/WS daemon serving JSON-RPC 2.0 for external harnesses and tools
   - Secrets
     - Vault storage
       - table — secrets system table in workspace.db
@@ -64,13 +65,13 @@
       - two-tier secrets — root secrets held in vault; ephemeral egress tokens derived
       - access — agent read-only; value masked in all outputs
       - encryption — AES-256-GCM at rest; cached in memory by daemon or decrypted ephemerally per CLI run
-      - ingestion — provisioned via CLI (`capcli sys vault set`), environment variables (`CAPCLI_SECRET_*`), or PWA
+      - ingestion — provisioned via CLI (`capcli sys vault set`), environment variables (`CAPCLI_SECRET_*`), or external client RPC
     - Provisioning workflow
       - Lifecycle steps
         - detection — missing secret_ref trips pre-call check before egress
         - auto-refresh — daemon auto-rotates tokens in memory; stateless CLI decrypts root, rotates, and commits updated ciphertext
         - env resolution — kernel checks process env vars (`CAPCLI_SECRET_<NAME>`) before raising suspension
-        - injection channels — headless CLI (`capcli sys vault set`), env auto-binding, or PWA Layer 10 UI
+        - injection channels — headless CLI (`capcli sys vault set`), env auto-binding, or external client RPC
         - suspension — headless execution exits with code 3 on missing secrets; interactive sessions pause via ask
     - Egress injection
       - injection point — Authorization headers inserted at kernel egress boundary
@@ -83,8 +84,6 @@
       - dependency tracking — _routine_deps graph blocks retirement of active deps
       - physical arbiter — shared workspace.db with WAL-mode serialized commits
       - event tailing — agents observe sibling effects via sys audit tail
-    - Harness split
-      - worker agent — executes raw exploratory queries and probes: see time.md#Discovery-arc
-      - analysis agent — mines audit subsequences to scaffold candidate routines: see time.md#Discovery-arc
-      - human harness — observation, authorization, answering, recovery
+    - Harness neutrality
+      - uniform actor model — kernel treats all callers uniformly by PID, principal, agent ID, and session
       - kernel role — mechanical policy enforcement, dispatch, audit logging

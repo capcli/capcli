@@ -17,7 +17,8 @@
       - causality — caused_by, intent, intent_chain
       - payload — capability, sql, params (recorded verbatim for replay)
       - policy — decision (allow/denied), rules_matched
-      - outcome — rows_affected, result_hash, duration_ms
+      - outcome — rows_affected, result_hash, duration_ms, exit_code
+      - terminal boundary — raw stdout/stderr discarded; canonical JSON outcome hashed exclusively
     - Kernel event payloads
       - bind.create/delete — target_urp, trigger_type, schedule_or_source: see action.md#Bindings
       - vault.set — secret_name, secret_hash_prefix, action: injected: see agent.md#Secrets

@@ -18,7 +18,7 @@
       - compile termux release — cargo build --release --target aarch64-linux-android
       - run test suite — cargo test --workspace --all-targets: see #Monorepo-test-architecture
       - run linter checks — cargo clippy --workspace -- -D warnings
-      - build pwa assets — bun run --cwd packages/pwa build: see interface.md#PWA-layers
+      - build cockpit assets — bun run --cwd packages/pwa build: see interface.md#Administrative-cockpit-pwa
   - Declarative artifacts directory
     - Path and target definitions
       - artifacts/ — repository declarative blueprints: see overview.md#Governance-line
@@ -94,18 +94,18 @@
       - crate identity — crates/capcli-daemon
       - configuration — Cargo.toml linking axum, tower, croner, rust-embed
       - daemon surface (crates/capcli-daemon/src/)
-        - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#PWA-layers
+        - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#Administrative-cockpit-pwa
         - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
         - cron.rs — croner schedule evaluator daemon: see time.md#Schedule-&-maintenance
         - webhook.rs — inbound HMAC signature verification: see action.md#Bindings
-        - assets.rs — rust-embed static bundle serving PWA UI: see interface.md#PWA-layers
+        - assets.rs — rust-embed static bundle serving administrative cockpit: see interface.md#Administrative-cockpit-pwa
 
   - Python runtime harness package
     - Package identity and layout
       - package root — packages/py (published locally as capcli-py): see action.md#Routines
       - pyproject.toml — zero-dependency Python packaging standard targeting >= 3.11
       - setup.py — minimal wheel distribution setup exposing capcli package
-      - capcli/__init__.py — exports @routine, Param, and ctx wrappers: see action.md#Anatomy-and-decorator
+      - capcli/__init__.py — exports @routine, Param, ctx: see action.md#Sandbox-execution
     - Python SDK modules (packages/py/capcli/)
       - routine.py — @routine decorator storing manifests: see action.md#Anatomy-and-decorator
       - param.py — Param[T] generic typing for input schemas: see action.md#Anatomy-and-decorator
@@ -235,34 +235,24 @@
         - process_gate.rs — denies call if OS UID mismatches: see agent.md#Credential-binding
         - revocation_gate.rs — aborts calls from revoked agents: see agent.md#System-agent-registry
       - Domain telemetry — tracks vault zeroize events, active sessions, and HMAC verifications
+  - Administrative cockpit package (packages/pwa)
+    - Purpose — zero-authority administrative frontend for human oversight, vault injection, and audit inspection
+    - Build configuration
+      - package.json — React 19, Tailwind CSS 4, Vite 6, TanStack Query 5
+      - bundle target — compiled static SPA embedded into capcli-daemon via rust-embed
+    - Telemetry views (packages/pwa/src/views/)
+      - state.tsx — raw relational schema inspector, masked cell renderer, and table row counts
+      - capability.tsx — routine version inspector, static manifest diffs, and dynamic leaf fingerprints
+      - audit.tsx — live virtualized audit tail, causal DAG breadcrumbs, and denial explanation dialogs
+      - budget.tsx — session frame cascade tree, spend gauges, and live proactive token-bucket meters
+      - approvals.tsx — human promotion queue, canary veto timers, and interactive ping.ask dialogs
+      - vault.tsx — out-of-band credential injection with mobile biometric/FaceID authorization
+      - recovery.tsx — VACUUM snapshot catalog and point-in-time rollback trigger
+    - Architecture constraints
+      - zero domain awareness — no business logic, custom dashboards, or e-commerce widgets
+      - read boundary — operates exclusively over daemon JSON-RPC 2.0 and WebSocket streams
 
-  - Client PWA application package
-    - Build pipeline configuration
-      - package.json — React 19, Tailwind CSS 4, and Vite 6 setup: see interface.md#PWA-layers
-      - vite.config.ts — bundles static SPA assets to dist: see interface.md#PWA-layers
-      - tsconfig.json — strict browser type configuration: see #Shared-contracts-crate
-      - asset embedding — rust-embed bakes dist into binary: see interface.md#PWA-layers
-    - Application shell and transport
-      - entry.tsx — React DOM root application bootstrap: see interface.md#PWA-layers
-      - router.tsx — React Router 7 route definitions: see interface.md#PWA-layers
-      - layout.tsx — navigation shell and world status badge: see interface.md#PWA-layers
-      - client.ts — JSON-RPC 2.0 HTTP and WS transport: see interface.md#Client-contract
-      - theme.css — Tailwind CSS 4 layout design tokens: see interface.md#PWA-layers
-    - Domain navigation views
-      - overview.tsx — situational KPIs and ERP health summary: see action.md#Session-Overview-Primer
-      - explorer.tsx — unified schema tree and capability inspector: see world.md#Dual-schema
-      - audit.tsx — live virtualized audit tail and denial modals: see effect.md#Audit-spine
-      - budget.tsx — session frame cascade and quota meters: see budget.md#Frames
-      - worktrees.tsx — dev, sim, and prod worktree status cards: see space.md#Environment-axis
-      - approvals.tsx — promotion queue, ask cards, and secret dialog: see trust.md#Promotion-queue
-      - recovery.tsx — snapshot catalog and point-in-time restores: see recovery.md#Snapshots
-    - Shared interactive components
-      - dag_visualizer.tsx — causal DAG traversal graph node: see effect.md#Causal-DAG
-      - cell_masked.tsx — format-preserving anonymization renderer: see world.md#Shorthand-expansion
-      - diff_preview.tsx — DDL and code migration review card: see trust.md#Evidence
-      - denial_dialog.tsx — policy violation explain dialog: see effect.md#Denials
-      - ask_prompt.tsx — structured choice prompt with timeout: see artifacts/governance.yaml#notify
-      - quota_gauge.tsx — proactive token bucket meter component: see budget.md#Quotas
+
   - Monorepo test architecture
     - Unit test tier (crates/capcli-core/tests/unit/)
       - test_bytecode.rs — verifies EXPLAIN OpenWrite detection: see physics.md#Layer-1.5:-prepare-time-cross-check
@@ -295,11 +285,9 @@
     - Distribution build artifacts
       - kernel binary — single musl binary at /usr/local/bin/capcli: see physics.md#Fail-closed-stance
       - python sdk wheel — packages/py/dist/capcli.whl for sandboxed routines: see action.md#Routines
-      - embedded web bundle — compiled static Vite assets baked inside kernel: see interface.md#PWA-layers
     - Binary composition & linkage
       - target architecture — static compilation for x86_64 and aarch64 musl: see #Host-system-dependencies
       - static linkage — links libc, bundled SQLite C engine, and axum: see world.md#SQLite-as-SSOT
-      - embedded webserver — rust-embed serves PWA assets from memory: see interface.md#PWA-layers
       - runtime dependencies — zero host npm, zero Bun, zero node_modules: see overview.md#Zero-trust-agent
     - Inter-crate dependency flow
       - types package — capcli-types imported across core, cli, and daemon: see #Shared-contracts-crate

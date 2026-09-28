@@ -11,8 +11,8 @@
       - memory — append-only SQLite _audit table mirrored to JSONL
     - Harness consumers
       - agent harness — autonomous reasoning via open bash subshell: see interface.md#CLI-surface
-      - human harness — oversight, authorization, and recovery via PWA: see interface.md#PWA-layers
-      - client boundary — PWA consumes kernel JSON-RPC daemon over HTTP/WS: see interface.md#Client-RPC-contract
+      - human harness — oversight, authorization, and recovery via CLI or external clients
+      - client boundary — external tools consume kernel JSON-RPC daemon over HTTP/WS: see interface.md#Daemon-API-&-telemetry-surface
       - execution separation — harness reasons while kernel enforces: see physics.md#Fail-closed-stance
   - Core philosophy
     - Zero trust agent

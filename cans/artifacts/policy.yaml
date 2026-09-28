@@ -44,18 +44,7 @@ authorizer:
       allow: [read]
       deny: [insert, update, delete]
 
-  views:
-    pending_orders:
-      allow: [read]
-      exposes: [orders, customers]
-    my_orders:
-      allow: [read]
-      exposes: [orders]
-      scoped: principal
-    customer_lifetime_value:
-      allow: [read]
-      exposes: [orders, payments, customers]
-      scoped: principal
+  # Domain views are declared dynamically in schema.yaml and compiled into workspace.db
 
   global:
     attach: deny                               # no side-databases, ever
@@ -240,7 +229,6 @@ serve:
 notify:
   require_intent: true
   quiet_hours:
-    timezone: America/New_York
     deny_between: ["22:00", "07:00"]
     except: [ask]                              # urgent asks bypass quiet hours
   ask:
