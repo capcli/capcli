@@ -41,11 +41,16 @@
         - returned_to_parent: { ops: 34, duration_ms: 253600, spend_usd: 40.80 }
         - Parent sees exactly what the child burned — pools reconcile per frame
       - Frame push/pop are audit events; tailable live via `sys audit tail --follow`
-    - Presentation integration
-      - UI telemetry — Layer 5 renders session frame trees: see interface.md#PWA-layers
+    - Telemetry streaming — frame lifecycle pushes over WebSocket/SSE: see interface.md#Daemon-API-&-telemetry-surface
       - streaming updates — consumption pushes via WebSocket: see effect.md#Audit-spine
       - denial markers — visual badges signal quota blocks: see #Exhaustion
   - Cascade
+    - Proactive Brokerage
+      - Hard Earmarks — `_budget_earmarks` locks quota slices pre-execution; invisible to global pool
+      - Priority Classes — Critical, Standard, Background (see artifacts/governance.yaml#priority)
+      - Preemption — Critical tasks physically pause Background tasks if global pool is dry
+      - Decaying Leases — Earmarks carry TTL; daemon tick auto-dissolves unburned tokens to global pool
+
     - min() law
       - Child effective limit = min(declared need, governance ceiling, parent_remaining, session_ceiling)
       - Governance ceiling comes from routine_shape.execution limits (artifacts/governance.yaml)
@@ -149,7 +154,9 @@
       - attempted_op: db.exec — exit 2 mid-DAG
       - Session had 488 ops left — the routine frame was the tightest constraint
     - Policy
-      - budget_exhaustion: deny — exit 2, never silent truncation (artifacts/governance.yaml)
+      - budget_exhaustion: yield_or_deny — governed by priority class (artifacts/governance.yaml)
+      - Yield signal — dry pool + Background/Standard task returns `yield_until` timestamp (exit 6)
+      - Hard deny — dry pool + Critical task throws exit 2 (see physics.md#Exit-code-law)
       - No partial execution past budget — routine fails cleanly, no half-executed side effects
       - Runtime: op #51 aborts (limit_exceeded), watchdog kills past 300s, results truncated: true
     - Pre-flight

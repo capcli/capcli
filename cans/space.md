@@ -21,7 +21,7 @@
     - Policy overlays
       - mechanism — unified engine parameterized per environment
       - endpoint remap — base_url swapped via apis/<provider>.sim.yaml
-      - notification routing — sim notification primitives rerouted to #sim-notifications
+      - notification routing — sim notification primitives rerouted to isolated simulation sink
       - capacity limits — max 5 concurrent environments (prod, dev, sim, 2 experiments)
       - sim defaults — mode resolution: see artifacts/governance.yaml#api
     - World governance

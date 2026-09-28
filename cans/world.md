@@ -187,7 +187,7 @@
       - lockfile check — capcli.lock verification at boot: see physics.md#Fail-closed-stance
   - World templates
     - Invariant bundle laws
-      - atomic pairing — world template bundles schema.yaml with overview routine: see action.md#Session-Overview-Primer
+      - atomic pairing — world template bundles valid schema.yaml and declared starter configurations
       - version lock — template must declare min_kernel_version and policy_version matching active runtime
     - Intake pipeline
       - provisioning command — env new <name> --from <path|git-url|urp>

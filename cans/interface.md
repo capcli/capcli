@@ -148,37 +148,28 @@
         - exit codes — strict integer exit code definitions: see physics.md#Exit-code-law
         - schema models — streaming JSON schemas and system tables: see world.md#Dual-schema
         - routine contract — routine decorator and ctx surface: see action.md#The-ctx-contract
-  - PWA layers
-    - Presentation principles
-      - hosting runtime — axum serves static Vite bundle from memory: see cans/assembly.md#Persistent-daemon-crate
-      - client boundary — client outside workspace with zero authority: see overview.md#Zero-trust-agent
-      - data source — renders daemon JSON-RPC outputs without invented metrics: see effect.md#Audit-spine
-      - drill sequence — row → event → routine → manifest → verb → quota → frame → session → agent → principal
-      - UI rendering mechanics — mask=true cells rendered as ████; caps as progress bars
-      - Offline support — service worker caches last-known world state and schemas
-    - Layer directory
-      - Layer 1: World — table schema trees, masked data cells, column header clicks deep-link to policy
-      - Layer 2: Capability — routine versions, manifest vs fingerprint diffs, api states
-      - Layer 3: Governance — policy rules, live governance quotas, lockfile integrity status
-      - Layer 4: Audit — live event tail, DAG breadcrumbs, denial explanations
-      - Layer 5: Budget — session frame trees, spend pools, live rate gauges
-      - Layer 6: Environment — dev/sim/prod status cards, seed tracking, drift flags
-      - Layer 7: Approval — promotion queues, DDL previews, ask cards, secret prompt dialogs, veto countdowns
-      - Layer 8: Recovery — snapshots, rollback chains, git targets, recovery drills
-      - Layer 9: Learning — search gap trends, similarity clusters, decay candidates
-      - Layer 10: Identity — principal directories, agent allocations, skill origins, and PWA mirror of vault credentials
-    - Real-time and polling intervals
-      - real-time stream — audit tail and frame lifecycle via WebSocket/SSE
-      - rapid polls — _api_quota (30s), pending asks (30s)
-      - slow polls — stats (5m), drift (15m), backup (15m), search gaps (1h)
-    - Mini ERP module
-      - card metrics — orders today, revenue 7d, inventory levels
-      - data discipline — cards map directly to governed views
-      - alert generation — cron routines emitting ping notify
-    - Technology stack
-      - framework — React 19, Vite 6, Tailwind CSS 4, Zustand 5
-      - routing and data — React Router 7, TanStack Query 5
-      - engine restrictions — zero client-side LLM inference; zero ad-hoc SQL
+  - Administrative cockpit PWA
+    - Architecture & serving
+      - distribution — embedded static bundle served by capcli-daemon at 127.0.0.1:4040
+      - client authority — strictly zero authority; communicates solely via authenticated JSON-RPC and WS
+      - presentation stance — neutral kernel inspector; renders engine primitives without domain abstractions
+    - Cockpit functional layers
+      - Layer 1: State Inspector — renders schema tables, columns, indexes, and format-preserved masked cells (████)
+      - Layer 2: Capability Inspector — routine catalog, version diffs, OpenAPI verb states, and manifest-vs-fingerprint graphs
+      - Layer 3: Policy & Governance — live policy authorizer rules, lockfile SHA256 integrity, and rate ceilings
+      - Layer 4: Audit Spine — live streaming event tail, causal DAG trace explorer, and machine denial decoders
+      - Layer 5: Budget & Telemetry — call stack frame trees, spend consumption meters, and token-bucket drain gauges
+      - Layer 6: Promotion & Approvals — staged routine promotions, DDL forward migration previews, and canary veto timers
+      - Layer 7: Human Interaction (Ask) — structured question resolution cards with fail-closed timeout indicators
+      - Layer 8: Vault & Biometrics — out-of-band credential injection screen with mobile biometric/FaceID support
+    - Transport streams
+      - rpc endpoint — HTTP POST http://127.0.0.1:4040/rpc
+      - websocket tail — WS ws://127.0.0.1:4040/ws/audit (streams live leaf events and frame transitions)
+    - Interaction primitives
+      - Inspect — drill from causal op -> routine manifest -> budget frame -> audit entry
+      - Authorize — sign off on promotion candidates or resolve ping.ask suspensions
+      - Inject — input raw third-party secrets directly into encrypted in-memory daemon vault
+      - Rollback — trigger snapshot restore with mandatory dual confirmation
   - Interaction patterns
     - Browse — read-only drill-down through tables, events, and rules
     - Approve — gate execution with evidence inspection; one card per decision

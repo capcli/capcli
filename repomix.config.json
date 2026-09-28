@@ -29,8 +29,9 @@
   },
   "include": [
       "cans/",
- //     "artifacts/capcli.playbook.md",
-  //     "artifacts/governance.yaml"
+      "cans/artifacts/capcli.playbook.md",
+      "cans/artifacts/governance.yaml",
+      "cans/artifacts/capcli.landing-copy.md"
   ],
   "ignore": {
     "useGitignore": true,
@@ -42,6 +43,12 @@
 	"cans/_adr",
 	"cans/_collab",
     "cans/AGENTS.md",
+ //   "cans/artifacts/system-schema.yaml",
+    "cans/artifacts/schema.yaml",
+ //   "cans/artifacts/policy.yaml",
+  // "cans/artifacts/governance.yaml",
+  // "cans/artifacts/",
+  //  "cans/artifacts/"
  //   "cans/assembly.md",
  
 		]

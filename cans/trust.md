@@ -57,6 +57,7 @@
       - verified promotion — promotion automated upon passing synthetic sim replay and invariant suite
       - dependency floor — cross-agent callee routines must hold trust >= reviewed
       - demotion priority — demotion commands execute without gate resistance
+      - circuit demotion — sustained routine failure auto-demotes to draft: see time.md#decay-and-subtraction
   - Gates & promotion
     - Ship gate
       - command — capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."
@@ -67,7 +68,6 @@
         - git status — branch merged into prod worktree
         - synthetic proof — 100% replay invariant pass and fuzzing in sim
         - simulation proof — success rate threshold: >= 0.90
-        - root overview — verified overview routine registered and pinned
     - Auto-promotion (draft to reviewed)
       - risk-weighted qualification criteria
         - read-only routines — sim_runs >= 1

@@ -122,6 +122,10 @@
         - tier 1 execution — bwrap namespaces, tmpfs /scratch wiped at exit, seccomp-bpf blocking raw network and fork
         - tier 2 execution — child Python subprocess mediated strictly via IPC broker; scratch mapped to host tmpdir; network unconfined warning emitted
         - latency floor — warm runner recycling ensures execution overhead < 50ms
+      - Yield handling
+        - Signal capture — runner catches exit 6 from kernel
+        - Reschedule — runner reads `yield_until` payload and re-queues via daemon cron (see time.md#Schedule)
+        - State preservation — zero partial side effects committed before yield
       - Provider backends
         - bwrap — Linux/WSL2 unprivileged namespace sandbox with host userns doctor check: see physics.md#Platform-tier-taxonomy
         - broker — Tier 2 process runner relying on ctx wrapper isolation and C authorizer: see physics.md#Platform-tier-taxonomy
@@ -249,6 +253,7 @@
       - Sandbox boundaries
         - runtime isolation — Tier 1 unshares network namespace; Tier 2 unsets outbound proxy env vars and relies on ctx mediation: see physics.md#Platform-tier-taxonomy
         - transport bridge — local IPC permitted exclusively to kernel endpoint
+        - harness confinement — SDK import traps missing frame token: see physics.md#Runtime-refusals
         - interface definition — Param typing enforces input validation
     - Data protection
       - Context confinement — raw records stay inside sandbox

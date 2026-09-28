@@ -70,7 +70,6 @@
       - clock drift — host clock delta vs NTP > 500ms aborts boot to prevent claim corruption
       - unconfigured git identity — missing user.name/email triggers auto-fallback to capcli[bot] or aborts
       - template incompatibility — template min_kernel_version or policy_version mismatch aborts intake (exit 3)
-      - unbundled world template — template missing routines/overview.py aborts initialization (exit 3)
       - template syntax error — routine template failing py_compile validation aborts intake (exit 3)
       - missing configuration — policy.yaml or governance.yaml absent
       - lockfile mismatch — compiled capcli.lock SHA256 mismatch aborts boot in prod and sim
@@ -82,12 +81,14 @@
       - session errors — missing, forged, or expired session token aborts execution (exit 3)
       - latency SLA breach — rehearsal P95 exceeding 70% of timeout ceiling denies promotion
       - ambiguity — unclassified read/write treated as write
+      - standalone bypass — routine invocation outside kernel runner exits 3
       - principal missing — scoped view invoked without --as rejected
       - audit sink error — unaudited writes denied outright (exit 5)
-      - quota exhaustion — remaining <= deny_at_remaining throws exit 2
+      - quota exhaustion — remaining <= deny_at_remaining throws exit 6 (Background) or exit 2 (Critical)
     - Exit code law
       - exit 0 — execution success with audit event recorded
-      - exit 2 — policy, trust rung, or budget quota denial; state untouched
+      - exit 2 — hard policy, trust rung, or critical budget denial; state untouched
+      - exit 6 — budget yield; task suspended until `yield_until`; state untouched (see budget.md#Exhaustion)
       - exit 3 — validation error, syntax error, missing parameter, boot refusal, drift
       - exit 4 — mid-execution runtime crash
       - exit 5 — audit sink failure; write aborted
@@ -96,6 +97,7 @@
       - machine style — text output emits rustc-style diagnostics; no filler
       - denial format — [FAIL] rule code, rejected statement, expected syntax
       - structural purity — machine consumers pass --json for pure envelopes
+      - buffer isolation — stdout/stderr unlogged; effect engine hashes json: see effect.md#Event-anatomy
     - Break-glass paths
       - recovery shell — CAPCLI_RECOVERY=1 loads schema and audit sink only
       - diagnostic check — sys doctor --boot-check verifies boot without daemon

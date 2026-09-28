@@ -20,6 +20,7 @@
       - execution — gated per call by policy and budget
   - Stage details
     - draft stage
+      - authoring claim — routine draft acquires lease in _claims; concurrent writers exit 2: see agent.md#Concurrency-scope
       - scaffolding — capcli routine draft <name>
       - authoring — direct filesystem writes in routines/
       - near-duplicate scan
@@ -61,26 +62,29 @@
       - frame tracking — each call pushes frame to _budget_frames
       - drift monitoring — runtime fingerprint compared to manifest continuously
     - decay and subtraction
+      - pipeline — active to candidate to quarantined to retired: see #decay-thresholds
       - sweep command — capcli routine sweep [--since 30d]
       - rollback command — capcli routine rollback <name> --to-version N
       - retire command — capcli routine retire <name> [--reason]
+      - dependency protection — _routine_deps blocks retirement of active dependencies
       - decay thresholds
-        - inactivity — unused for 30 days triggers retirement candidate
-        - failure rate — success below 0.70 triggers rollback candidate
+        - inactivity — unused for 30 days flags retirement candidate
+        - failure rate — success below 0.70 over 20 runs triggers demotion to draft
+        - structural rot — dropped tables or deprecated APIs force quarantine
         - versioning caps — max 25 versions retained; max rollback depth 5
   - Learning loop
     - Discovery arc
-      - dual exploration — worker agents execute raw SQL reads and simulated API probes
+      - telemetry accumulation — agents execute bounded exploratory SQL queries and simulated API probes
       - tracking — kernel logs all database and egress attempts with intent and parameters
       - sufficiency floor — log analysis triggers only after 50 raw audit events accumulate in target domain
       - analysis views — deterministic kernel SQL views surface op frequencies and n-grams
-      - extraction — specialized analysis agent inspects surfaced DB and API sequences
+      - pattern extraction — harness inspects surfaced DB and API sequence views
     - Routine codification
       - threshold — minimum identical primitive sequences: >= 3
       - hybrid composition — routines bundle atomic DB transactions with external API verbs
-      - synthesis — specialized analysis agent scaffolds routine from mined sequences
+      - synthesis — harness scaffolds routine definitions from mined sequences
       - verification — routine prove executes real historical audit inputs
-      - exploitation — worker agents call routine via run, replacing ad-hoc primitives
+      - invocation — routine invoked via run, replacing ad-hoc primitives
   - Consolidation
     - Maintenance cadence
       - diagnostic cadence — weekly scan flags duplicate proposals via sys doctor

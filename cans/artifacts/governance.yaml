@@ -27,7 +27,7 @@ template:
   require_kernel_compat: true         # refuses outdated templates at boot
   require_policy_match: true          # template policy_version == runtime policy_version
   world:
-    mandatory_files: ["schema.yaml", "routines/overview.py"]
+    mandatory_files: ["schema.yaml"]
     max_seed_rows_per_table: 50       # prevent bulk data injection via template
   routine:
     ast_rewrite_name: true            # AST-level routine naming; string-replace banned
@@ -48,6 +48,13 @@ routine_shape:
     max_result_tokens: 500            # summary cap crossing to the model
     max_txn_statements: 10            # one transaction stays one thought
     session_ops_ceiling: 500          # session-level hard cap; frames cascade within this
+
+  # Proactive Brokerage
+  priority_classes: [critical, standard, background]
+  preemption_enabled: true
+  yield_enabled: true
+  earmark_max_ttl_hours: 4
+  yield_max_deferments: 5
     sandbox:
       provider: auto                  # auto | bwrap | podman | broker
       scratch_mb: 64                  # tmpfs ceiling
