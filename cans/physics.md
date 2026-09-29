@@ -90,7 +90,7 @@
       - exit 2 — invariant or governance block; state untouched (state_modified: false)
         - domain db.engine — SQLite check constraints, foreign key violations, busy timeout
         - domain policy.authorizer — C-level table/column write denied
-        - domain policy.budget — frame limits or session op/spend ceilings exhausted
+        - domain policy.budget — frame limits or session op/fuel ceilings exhausted
         - domain policy.trust — action forbidden by caller trust rung (e.g. draft touching prod)
       - exit 3 — compile-time refusal, validation failure, boot lockfile mismatch, or missing parameter
       - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back

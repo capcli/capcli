@@ -44,7 +44,7 @@ It is the **unbreakable physical execution kernel** that sits between Hermes and
 
 It provides the three things an LLM can never give itself:
 1. **Physical Laws:** A C-level database authorizer and OS sandboxes that make catastrophic writes physically impossible.
-2. **Hard Budget Cages:** Spend, ops, and duration ceilings that halt runaway processes instantly (`exit 2`).
+2. **Hard Budget Cages:** Fuel, wire bytes, ops, and duration ceilings that halt runaway processes instantly (`exit 2`).
 3. **An Immutable Spine:** A tamper-evident SHA256 audit log where every intent, query, and leaf event is permanently recorded.
 
 ---
@@ -67,7 +67,7 @@ Whether you bring an existing database or an empty directory, **the world builds
 | The Scenario | Hermes Alone | Hermes + Capcli |
 | :--- | :--- | :--- |
 | **Unbounded State Mutation** | **Corrupts production.** Blindly overwrites records across table boundaries without constraints. | **Impossible.** Killed at C-authorizer & AST layers before statement execution (`exit 2`). |
-| **An Infinite Error Loop** | **Drains your bank account.** Burns hundreds in token compute unnoticed. | **Killed instantly.** Watchdog timer cuts execution at the exact spend ceiling. |
+| **An Infinite Error Loop** | **Drains your bank account.** Burns hundreds in token compute unnoticed. | **Killed instantly.** Watchdog timer cuts execution at the exact fuel and op ceiling. |
 | **Handling API Credentials** | **Leaks keys.** Plaintext tokens dumped into context or local bash files. | **Zero leaks.** Keys injected by kernel at perimeter; agent never sees raw strings. |
 | **Repeated Daily Operations** | **High token waste.** Re-reasons the same workflow daily from scratch. | **Zero token burn.** Invokes hash-pinned routines like compiled muscle memory. |
 | **Testing a Risky New Action** | **Tests on live users.** Real customers get bad refunds and broken links. | **Forced rehearsal.** Must pass invariant replay simulation before promotion. |

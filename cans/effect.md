@@ -90,7 +90,7 @@
     - Forensic mirror views
       - diagnostic trace — causal tree walk for failures: see #Query-surfaces
       - primitive_failures — aggregates failures by version, leaf seq, and capability
-      - primitive_cost — aggregates duration and spend per leaf primitive
+      - primitive_cost — aggregates duration, fuel, and wire payload bytes per leaf primitive
     - Forensic quarantine — prevents auto-retry on unhandled runtime faults: see physics.md#Exit-code-law
   - Provenance
     - Artifact lineage

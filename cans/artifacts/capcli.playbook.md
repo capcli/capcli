@@ -697,7 +697,7 @@ from capcli import routine, ctx
 def overview():
     low_stock = ctx.db.query("SELECT sku, stock FROM products WHERE stock < 20 LIMIT 5")
     pending = ctx.db.query("SELECT count(*) as count FROM orders WHERE status = 'pending'")[0]["count"]
-    spend = ctx.db.query("SELECT consumed_spend_usd FROM _budget_frames WHERE outcome = 'active' ORDER BY created_at DESC LIMIT 1")
+    fuel = ctx.db.query("SELECT consumed_fuel FROM _budget_frames WHERE outcome = 'active' ORDER BY created_at DESC LIMIT 1")
     asks = ctx.db.query("SELECT count(*) as count FROM _pending_asks WHERE status = 'pending'")[0]["count"]
     inbox_qty = ctx.db.query("SELECT count(*) as count FROM _inbox WHERE processed = 0")[0]["count"]
     locks = ctx.db.query("SELECT target FROM _claims WHERE expires_at > strftime('%s','now')")
@@ -705,7 +705,7 @@ def overview():
     return {
         "low_stock_alerts": low_stock,
         "pending_orders": pending,
-        "active_spend_usd": float(spend[0]["consumed_spend_usd"]) if spend else 0.0,
+        "consumed_fuel": fuel[0]["consumed_fuel"] if fuel else 0,
         "pending_human_asks": asks,
         "inbox_backlog": inbox_qty,
         "active_locks": [l["target"] for l in locks],
@@ -734,7 +734,7 @@ capcli run overview --json
 {
   "low_stock_alerts": [],
   "pending_orders": 0,
-  "active_spend_usd": 0.0,
+  "consumed_fuel": 0,
   "pending_human_asks": 0,
   "inbox_backlog": 0,
   "active_locks": [],
@@ -789,7 +789,7 @@ capcli run overview --json
 {
   "low_stock_alerts": [],
   "pending_orders": 0,
-  "active_spend_usd": 0.0,
+  "consumed_fuel": 0,
   "pending_human_asks": 0,
   "inbox_backlog": 0,
   "active_locks": [],
@@ -1010,7 +1010,7 @@ FRAME_PUSH:        frame_008 (process_wholesale_order@1)
 PARENT_FRAME:      session_root
 OPS_LIMIT:         min(declared: 8, session_remaining: 50)   -> 8 ops
 DURATION_LIMIT:    min(declared: 15s, session_remaining: 300s) -> 15s
-SPEND_LIMIT:       min(declared: $5.00, session_remaining: $20.00) -> $5.00
+FUEL_LIMIT:        min(declared: 5000, session_remaining: 50000) -> 5000 fuel
 
 [ROUTINE_EXECUTED]
 STATUS:            SUCCESS (Exit 0)
@@ -1018,8 +1018,8 @@ RESULT:            {"status": "success", "order_id": 1, "charge_id": "pi_mock_99
 
 [BUDGET_CASCADE]
 FRAME_POP:         frame_008 closed.
-CONSUMED:          5 ops, 0.42s duration, $0.44 spend
-RECONCILED:        Returned to session pool -> ops_remaining: 45, spend_remaining: $19.56
+CONSUMED:          5 ops, 0.42s duration, 850 fuel (1420 bytes egress)
+RECONCILED:        Returned to session pool -> ops_remaining: 45, fuel_remaining: 49150
 AUDIT_LOG:         budget.frame_pop committed to _audit [event_id: op_009]
 ```
 
@@ -1088,7 +1088,7 @@ capcli env use sim
   workspace:     envs/sim/workspace.db (forked from snap_migration_001)
   masking:       fpa_active (customer_email -> anon_*@sim.local)
   egress_engine: mock_local (apis/stripe.sim.yaml)
-  spend_cap:     $0.00 (isolated)
+  egress_mode:   isolated (mock_local)
 ```
 
 ---
@@ -1389,7 +1389,7 @@ No Slack pings. No terminal panics. No runaway credit card bills.
 Opens phone PWA dashboard (`https://capcli.local:4040`):
 * **Orders Processed Overnight:** 4 ($612.00 captured).
 * **Inventory Stock:** Decremented accurately; zero negative drift.
-* **Token Spend:** $0.02 (Zero exploratory burn; overview baseline held).
+* **Session Fuel Burned:** 3,400 (Zero exploratory burn; overview baseline held).
 * **Unreviewed Code in Prod:** Exactly 0 lines.
 
 *(Closes phone. Doesn't open terminal. The coffee business is running itself.)*
