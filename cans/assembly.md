@@ -29,7 +29,7 @@
       - system-schema.yaml — kernel-managed system surfaces: see world.md#Dual-schema
       - world.sql — deterministic DDL export for fresh instances: see world.md#SQLite-as-SSOT
     - Governance specifications
-      - governance.yaml — structural limits, LOC, and spend caps: see artifacts/governance.yaml
+      - governance.yaml — structural limits, LOC, and fuel caps: see artifacts/governance.yaml
       - policy.yaml — behavioral authorizer and AST rules: see physics.md#Two-layer-enforcement
       - sealing.rules — cross-domain boundaries and sealing laws: see cans/_rules.yaml
   - Instance workspace substrate
@@ -96,6 +96,8 @@
       - configuration — Cargo.toml linking axum, tower, croner, rust-embed
       - daemon surface (crates/capcli-daemon/src/)
         - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#Administrative-cockpit-pwa
+        - yield_queue.rs — evaluates _suspended_tasks and re-dispatches tasks on quota refill
+        - earmark_sweeper.rs — periodic daemon worker dissolving expired earmarks back to available quota
         - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
         - cron.rs — croner schedule evaluator daemon: see time.md#Schedule-&-maintenance
         - webhook.rs — inbound HMAC signature verification: see action.md#Bindings
@@ -112,6 +114,8 @@
       - param.py — Param[T] generic typing for input schemas: see action.md#Anatomy-and-decorator
       - context_db.py — ctx.db query, execute, txn, and lock wrappers: see action.md#The-ctx-contract
       - context_api.py — ctx.api call and verify egress wrappers: see action.md#The-ctx-contract
+      - context_api.py — exposes poll_until IPC bridge to kernel runtime
+      - context_quota.py — ctx.quota inspect, earmark, and release SDK wrappers
       - context_storage.py — ctx.storage put, get, and url wrappers: see action.md#The-ctx-contract
       - context_ping.py — ctx.ping notify and ask suspension handlers: see action.md#The-ctx-contract
       - ipc_client.py — streaming JSON-RPC over /run/capcli/kernel.sock: see action.md#Sandbox-execution
@@ -155,15 +159,17 @@
     - Domain 4: External API gateway (api/)
       - Subsystem modules
         - catalog.rs — manages OpenAPI YAML specs in apis/: see action.md#Catalog-synchronization
-        - quota.rs — client token bucket tracking in _api_quota: see budget.md#Quotas
+        - quota.rs — dual-window token bucket and rolling window accounting in _api_quota: see budget.md#Quotas
+        - earmark.rs — atomic reservation transactions and earmark balance ledger: see budget.md#Cascade
+        - header_parser.rs — extracts RFC headers and parses nested JSON usage payloads: see artifacts/policy.yaml#api
         - egress.rs — reqwest HTTP proxy with secret injection: see agent.md#Egress-injection
         - sim_mock.rs — serves canned fixtures from apis/*.mock.yaml: see space.md#Sim-mode-taxonomy
         - refresh.rs — auto-rotates ephemeral bearer tokens: see artifacts/governance.yaml#api
       - Execution gates
         - quota_gate.rs — fails closed if bucket tokens < 1: see budget.md#Quotas
-        - spend_gate.rs — enforces daily USD limits: see artifacts/policy.yaml#api.spend
+        - fuel_gate.rs — enforces session fuel and wire payload caps: see artifacts/policy.yaml#api.fuel
         - sim_gate.rs — denies prod-only verbs in dev and sim: see space.md#Policy-overlays
-      - Domain telemetry — tracks rate bucket token drain, egress spend, and retry counts
+      - Domain telemetry — tracks rate bucket token drain, wire egress bytes, fuel consumption, and retry counts
     - Domain 5: Event & schedule bindings (bind/)
       - Subsystem modules
         - cron.rs — evaluates cron patterns via croner crate: see time.md#Schedule-&-maintenance
@@ -245,7 +251,7 @@
       - state.tsx — raw relational schema inspector, masked cell renderer, and table row counts
       - capability.tsx — routine version inspector, static manifest diffs, and dynamic leaf fingerprints
       - audit.tsx — live virtualized audit tail, causal DAG breadcrumbs, and denial explanation dialogs
-      - budget.tsx — session frame cascade tree, spend gauges, and live proactive token-bucket meters
+      - budget.tsx — session frame cascade tree, fuel gauges, wire byte meters, and live proactive token-bucket meters
       - approvals.tsx — human promotion queue, canary veto timers, and interactive ping.ask dialogs
       - vault.tsx — out-of-band credential injection with mobile biometric/FaceID authorization
       - recovery.tsx — VACUUM snapshot catalog and point-in-time rollback trigger

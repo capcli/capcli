@@ -99,7 +99,7 @@
         - input typing — order_id: Param[str]
         - api read — ctx.api.call with secret injection
         - db read — ctx.db.query with AST check
-        - api write — ctx.api.call with pre-call spend check
+        - api write — ctx.api.call with pre-call fuel check
         - db write — ctx.db.txn context wrapping ctx.db.execute
         - return value — summary-sized dict
     - Shape constraints
@@ -155,6 +155,7 @@
       - Interior rules
         - execution model — strictly sequential
         - transaction integrity — ctx.api.call strictly forbidden inside ctx.db.txn blocks
+        - transient polling — atomic ctx.api.poll_until permitted; raw time.sleep loops banned
         - banned patterns — ctx.on listeners, reactive streams, subscriptions
         - failure modes — callbacks break DAG linearity, txn boundaries, replay
         - architecture law — events start routines, routines never consume events
@@ -165,7 +166,7 @@
         - nesting ceiling — see artifacts/governance.yaml#routine_shape
         - import ceiling — see artifacts/governance.yaml#routine_shape
         - cross-agent deduplication — near-duplicate across agents forces merge or fork
-        - counter scopes — spend, rate, rows session-scoped
+        - counter scopes — fuel, wire bytes, rate, rows session-scoped
         - constraint direction — cages tighten downward
         - min cascade law — see budget.md#Cascade
         - sim mode propagation — child gaps propagate up: see space.md#Rehearsal-&-sim
@@ -212,7 +213,7 @@
         - pending asks — queries _pending_asks count and unresolved vault requests
         - sensory inbox — queries queued inbound events without pulling payloads
         - active locks — reads active lease locks from claims and db locks
-        - budget headroom — reads consumed spend and remaining session quota
+        - budget headroom — reads consumed fuel and remaining session quota
         - system health — returns nominal status, drift alarms, or thrash warnings
         - result constraint — dense summary strictly under 500 tokens
         - invocation trigger — standard zero-step executed at session boot
@@ -224,9 +225,14 @@
         - ctx.db.txn() — transaction context manager
         - ctx.db.lock(target, ttl) — application-level lease claim in _claims; auto-expired by daemon tick
       - External api methods
-        - ctx.api.call(verb, params, intent) — governed HTTP egress
+        - ctx.api.call(verb, params, intent, earmark_id=None) — governed HTTP egress (draws from earmark if provided)
+        - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) — kernel-managed in-flight polling (1 aggregate op)
         - egress retry — automatic backoff and jitter on 429/503 upstream responses
         - ctx.api.verify(verb, key) — key validation check
+      - Quota brokerage methods
+        - ctx.quota.inspect(verb) — returns total, available, earmarked, and unreserved headroom
+        - ctx.quota.earmark(provider, verb, tokens, ttl_hours, intent) — claims and ring-fences token allocation
+        - ctx.quota.release(earmark_id) — explicitly dissolves unburned reservation back to global pool
       - Blob storage methods
         - ctx.storage.put(name, data, mime) — uploads blob and returns metadata
         - ctx.storage.get(key) — retrieves stream and verified sha256
@@ -248,7 +254,9 @@
         - token refresh — daemon auto-refreshes bearer tokens; stateless CLI refreshes on demand and persists updated token to encrypted vault
         - missing secret fallback — missing secret_ref auto-binds from CAPCLI_SECRET_* before triggering headless exit 3 or ask prompt
         - pre-call quota — deny before network dispatch: see budget.md#Quotas
+        - earmark debit — if earmark_id present, debits tokens_consumed from _budget_earmarks; bypasses global bucket check
         - idempotency — kernel-minted key persisted before egress
+        - in-flight wait — poll_until executes sleep in Rust runtime; Python interpreter never busy-waits
       - Sandbox boundaries
         - runtime isolation — Tier 1 unshares network namespace; Tier 2 unsets outbound proxy env vars and relies on ctx mediation: see physics.md#Platform-tier-taxonomy
         - transport bridge — local IPC permitted exclusively to kernel endpoint
@@ -284,7 +292,7 @@
     - Architectural purpose
       - Mirror view definitions
         - shared_subsequences — aggregates frequent n-grams to propose routines
-        - primitive_cost — groups duration p50/p95 and USD spend per leaf
+        - primitive_cost — groups duration p50/p95, fuel, and wire bytes per leaf
         - primitive_failures — isolates leaf failures by version and sequence
         - op_frequency — tracks atomic op calls across sessions
       - Consolidation — merge clustering via fingerprint similarity: see time.md#Consolidation

@@ -53,8 +53,11 @@ routine_shape:
   priority_classes: [critical, standard, background]
   preemption_enabled: true
   yield_enabled: true
-  earmark_max_ttl_hours: 4
+  earmark_max_ttl_hours: 24            # aligned with 24h rolling windows
   yield_max_deferments: 5
+  max_active_earmarks: 50              # registry-wide active earmark ceiling
+  max_in_flight_poll_seconds: 30       # async 2-step media/container polling duration cap
+  max_suspended_tasks: 100             # daemon queue capacity for yielded frames
     sandbox:
       provider: auto                  # auto | bwrap | podman | broker
       scratch_mb: 64                  # tmpfs ceiling
@@ -67,14 +70,14 @@ routine_shape:
       budget_inheritance: min          # child effective = min(declared, parent_remaining)
       ops_cascade: true                # child ops consume from parent's pool
       duration_cascade: true           # child time consumes from parent's clock
-      spend_scope: session             # spend is session-level, not per-routine
+      fuel_scope: session              # fuel is session-level, not per-routine
       rate_scope: session              # rate is session-level, not per-routine
       rows_scope: trust_session        # rows per trust level per session
       result_tokens_scope: routine     # each routine caps its own output independently
       max_nesting_depth: 5             # composition depth hygiene
       budget_exhaustion: deny          # exhausted budget = exit 2, never silent truncation
       cascade: true
-      session_scoped: [spend_usd, writes_per_minute, capability_calls_per_minute, rows_affected]
+      session_scoped: [fuel, egress_bytes, writes_per_minute, capability_calls_per_minute, rows_affected]
       routine_scoped_cascade: [ops, duration_ms]
       routine_scoped_independent: [result_tokens]
   versions:
@@ -175,7 +178,7 @@ watch:
     max_payload_bytes: 65536
     events_per_minute: 100            # DDoS guard on the mailbox
   poll:
-    min_interval_minutes: 5           # no tight-loop polling
+    min_interval_minutes: 5           # no tight-loop polling (in-flight api.poll_until exempt)
     max_poll_watches: 10              # polling costs egress budget
   dead_letter:
     max_age_days: 30

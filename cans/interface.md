@@ -30,7 +30,7 @@
         - duration — p50, p95, timeout ceiling
         - storage — writes, reads, max rows affected
         - concurrency — active locks, max ops per run
-        - api metrics — quota, daily spend remaining, sim mode
+        - api metrics — quota, session fuel remaining, sim mode
         - composition — nesting depth, child routines, budget cascade
         - pre-flight check — can_invoke_now boolean verdict
     - Storage path: db noun
@@ -163,7 +163,7 @@
       - Layer 2: Capability Inspector — routine catalog, version diffs, OpenAPI verb states, and manifest-vs-fingerprint graphs
       - Layer 3: Policy & Governance — live policy authorizer rules, lockfile SHA256 integrity, and rate ceilings
       - Layer 4: Audit Spine — live streaming event tail, causal DAG trace explorer, and machine denial decoders
-      - Layer 5: Budget & Telemetry — call stack frame trees, spend consumption meters, and token-bucket drain gauges
+      - Layer 5: Budget & Telemetry — call stack frame trees, fuel consumption meters, wire byte counters, and token-bucket drain gauges
       - Layer 6: Promotion & Approvals — staged routine promotions, DDL forward migration previews, and canary veto timers
       - Layer 7: Human Interaction (Ask) — structured question resolution cards with fail-closed timeout indicators
       - Layer 8: Vault & Biometrics — out-of-band credential injection screen with mobile biometric/FaceID support

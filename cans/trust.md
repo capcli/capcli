@@ -79,7 +79,7 @@
       - retroactive control — human veto via rollback --to-trust draft
     - Pinned promotion
       - full autonomy — autonomous pin unlocked via invariant & mutation tests
-      - boundary safety — high spend or schema migrations governed by hard-coded budget caps
+      - boundary safety — high fuel consumption or schema migrations governed by hard-coded budget caps
     - Promotion queue
       - mechanics — capcli routine ship <name> reviewed --queue
       - inspection — capcli routine pending surfaces batch candidates
@@ -116,7 +116,7 @@
     - Cost evidence
       - profiling metrics
         - latency — p50 and p95 duration per leaf primitive
-        - spend — USD incurred per primitive
+        - fuel — integer compute fuel and socket wire bytes incurred per primitive
       - parameter sampling
         - source — real historical values from capcli sys audit sample
         - synthetic fixtures — banned for ship evidence

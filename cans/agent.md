@@ -49,7 +49,7 @@
   - Sessions and boundaries
     - Session lifecycle
       - scoping — session id rides every budget frame, audit event, and claim
-      - tracking — session counters govern spend, rate, and rows affected
+      - tracking — session counters govern fuel, wire bytes, rate, and rows affected
       - workspace anchor — CAPCLI_WORKSPACE env var or --workspace flag anchors root; cd reliance banned
     - Harness execution boundary
       - execution environment — bash subshell isolated via IPC socket to kernel daemon; direct workspace.db file access blocked

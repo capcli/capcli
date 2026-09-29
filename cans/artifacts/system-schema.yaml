@@ -46,7 +46,11 @@ tables:
       env: text!                       # sim and prod track quotas independently
       bucket_capacity: int!            # max token burst size
       tokens_available: int!           # current proactive client-side token count
+      tokens_earmarked: int=0          # reserved tokens ring-fenced from global pool
       refill_rate_per_s: real!         # token drip rate per second
+      window_seconds: int=0            # rolling window size in seconds (0 = steady token bucket)
+      quota_type: text=token_bucket    # token_bucket or sliding_window
+      cost_per_call: int=1             # token weight consumed per call
       last_provider_remaining: int=-1  # last observed provider X-RateLimit-Remaining
       reset_at: int=0                  # unix epoch seconds for quota reset
       last_reconciled_at: int!         # timestamp of last header reconciliation
@@ -54,6 +58,7 @@ tables:
       last_updated: int!               # timestamp of last header extraction
     chk:
       - "last_provider_remaining >= -1"
+      - "quota_type IN ('token_bucket', 'sliding_window')"
     idx:
       - [[provider, env]]
       - [[provider, scope_key, env]]
@@ -106,14 +111,16 @@ tables:
       declared_max_duration_ms: int!   # declared timeout ceiling
       consumed_ops: int=0              # primitive executions consumed
       consumed_duration_ms: int=0      # wall-clock milliseconds consumed
-      consumed_spend_usd: text=0.00    # egress USD consumed (stored as fixed-point text)
+      consumed_fuel: int=0             # normalized gas consumed (integer)
+      consumed_egress_bytes: int=0     # physical wire egress payload bytes
       consumed_rows: int=0             # rows affected consumed
       consumed_api_calls: int=0        # HTTP egress operations consumed
+      yield_until: int=0               # unix epoch seconds for scheduled resumption on exit 6
       outcome: text=active             # frame completion state
       created_at: int!
       closed_at: int
     chk:
-      - "outcome IN ('active', 'success', 'exhausted', 'denied', 'error')"
+      - "outcome IN ('active', 'success', 'exhausted', 'denied', 'error', 'yielded')"
     idx:
       - [[session, env]]
       - [[routine, version]]
@@ -212,3 +219,48 @@ tables:
       last_run_at: int=0
     idx:
       - [[capability, version]]
+
+  _suspended_tasks:
+    description: "Daemon-managed background tasks paused via exit 6 awaiting quota refill"
+    sys: true
+    columns:
+      id: pk
+      frame_id: text! ref=_budget_frames.frame_id
+      session: text!
+      routine: text!
+      version: int!
+      params: json!
+      priority: text=standard          # critical, standard, background
+      resume_at: int!                  # unix epoch seconds
+      deferments: int=0                # deferral count against yield_max_deferments
+      status: text=pending             # pending, dispatched, aborted
+    chk:
+      - "status IN ('pending', 'dispatched', 'aborted')"
+    idx:
+      - [[status, resume_at]]
+      - [frame_id]
+
+  _budget_earmarks:
+    description: "Proactive quota reservations ring-fencing tokens for planned tasks"
+    sys: true
+    columns:
+      id: pk
+      earmark_id: text!~              # unique reservation handle (e.g. emk_sched_01)
+      provider: text!                 # provider slug (e.g. threads, stripe)
+      verb: text!                     # target API verb
+      scope_key: text=global          # per-account partition (e.g. act_123)
+      agent: text!                    # agent claiming the allocation
+      session: text!                  # session context
+      priority: text=standard         # critical, standard, background
+      tokens_reserved: int!           # count of reserved slots
+      tokens_consumed: int=0          # count already burned
+      expires_at: int!                # unix epoch seconds (TTL)
+      status: text=active             # active, released, expired, exhausted
+    chk:
+      - "status IN ('active', 'released', 'expired', 'exhausted')"
+      - "priority IN ('critical', 'standard', 'background')"
+      - "tokens_consumed <= tokens_reserved"
+    idx:
+      - [[provider, verb, status]]
+      - [[expires_at, status]]
+      - [earmark_id]

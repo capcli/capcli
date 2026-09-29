@@ -22,6 +22,8 @@ authorizer:
       allow: [read]
     _api_catalog:
       allow: [read]
+    _budget_earmarks:
+      allow: [read]
     _budget_frames:
       allow: [read]
     secrets:
@@ -95,7 +97,7 @@ query:
     confirm_above: { rows: 50000 }             # raised: human gate only on massive blast radius
 
   system_tables:
-    deny_write: [_audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats, _system_schema]
+    deny_write: [_audit, _api_quota, _api_catalog, _budget_earmarks, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats, _system_schema]
     deny_read: []                              # reads allowed; writes are kernel-internal
 
 # ───────────────────────────────────────────────────────────────
@@ -167,10 +169,10 @@ api:
   prod_first_calls:
     enforce: false                       # killed: un-simulated calls proven via synthetic contracts
     require_contract_proof: true         # OpenAPI schema + dry-run verification replaces human sign-off
-  spend:
-    per_day_usd: 50
-    confirm_above_usd: 100                     # human gate reserved strictly for real budget impact
-    per_call_confirm_usd: 25
+  fuel:
+    per_session_fuel: 100000             # integer gas allocation per session
+    max_call_egress_bytes: 5242880       # 5MB physical wire limit per egress dispatch
+    confirm_above_fuel: 50000            # gate reserved for high wire/compute impact
   rate_limit:                                    # live quota from provider responses
     model: proactive_token_bucket                # client-side bucket is PRIMARY authority
     default_capacity: 60                         # burst ceiling
@@ -178,12 +180,31 @@ api:
     pre_call_gate: true                          # fail-closed: tokens < 1 → exit 2 immediately
     header_calibration:                          # reactive headers used ONLY to recalibrate bucket
       reconcile_on_response: true                # sync local bucket down if provider reports lower
+      parser_engine: dynamic                     # standard_rfc or json_path
       reset_header: "X-RateLimit-Reset"
       remaining_header: "X-RateLimit-Remaining"
+      json_usage_header: "X-Business-Use-Case-Usage" # structured JSON header support
+      utilization_jsonpath: "$.*.call_count"
+      wait_seconds_jsonpath: "$.*.estimated_time_to_regain_access"
+  in_flight_polling:
+    allow_transient: true                        # permits short-interval status polling in routines
+    max_poll_duration_seconds: 30                # hard ceiling for async container/job verification
+    min_poll_interval_seconds: 2                 # prevents tight busy-waiting
+    count_as_single_op: true                     # whole poll loop registers as 1 aggregate op
     audit:
       record_before_after: true                  # quota_before/quota_after on every api.call event
       denial_cites_remaining: true               # exit 2 message includes remaining + reset_at
     env_scoped: true                             # sim and prod track independently
+  brokerage:
+    min_trust_to_earmark: reviewed               # drafts cannot lock enterprise quota
+    max_earmark_ratio: 0.8                       # no single reservation can lock > 80% of bucket
+    max_earmarks_per_session: 10                 # anti-hoarding per session
+    preemption:
+      background_yield_threshold: 15             # background tasks yield (exit 6) if unreserved tokens < 15
+      critical_bypass_earmark: true              # critical tasks can borrow unburned earmarks in emergency
+    lease:
+      max_ttl_hours: 24                          # max lifespan for a reserved slice
+      decay_sweep_interval_minutes: 5            # daemon sweeper frequency
   external_writes:
     require_intent: true
     require_trust: reviewed
@@ -264,7 +285,7 @@ env:
     intent: required                           # reads too? no — writes; reads stay free
     confirm_above: { rows: 10 }                # tighter thresholds
     vacuum: deny
-    api: { spend: { per_day_usd: 200 } }
+    api: { fuel: { per_session_fuel: 500000 } }
     serve: { bind: "127.0.0.1" }               # public lives behind a proxy
   sim:
     rate: { writes_per_minute: 1000 }          # fast iteration
