@@ -66,7 +66,8 @@
       - crate identity — crates/capcli-types (@capcli/types)
       - configuration — Cargo.toml with serde, valibot-free zero runtime bloat
       - models module (crates/capcli-types/src/)
-        - exit.rs — strict integer exit codes (0, 2, 3, 4, 5): see physics.md#Exit-code-law
+        - exit.rs — strict integer exit codes (0, 2, 3, 4, 5, 6): see physics.md#Exit-code-law
+        - error.rs — typed ErrorDomain enum (Routine, DbEngine, Policy, ApiUpstream, Kernel) and diagnostic envelope
         - capability.rs — Universal Resource Pointer models: see action.md#Global-pointer-registry
         - audit.rs — causal event anatomy and hash chain links: see effect.md#Event-anatomy
         - template.rs — template manifest, compatibility headers, and bundle models: see world.md#World-templates

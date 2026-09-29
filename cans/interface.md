@@ -5,6 +5,7 @@
       - exit code laws — strict integer contract (0, 2, 3, 4, 5): see physics.md#Exit-code-law
       - Command shape — capcli <noun> <verb> [target] [--flags]
       - Subcommand tree — ten nouns (run, db, routine, api, bind, ping, rule, env, sys, doc)
+      - Ergonomic alias — `capcli apply` directly aliases `capcli rule apply schema`
       - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json
@@ -72,9 +73,9 @@
       - Resolution — ping resolve <ask-id> --choice <opt>
       - Expiry — ping expire <ask-id>
     - Governance path: rule noun
-      - Inspection — rule show [--type schema|system-schema|policy|governance]
-      - Comparison — rule diff [--git] [--type schema|system-schema] vs HEAD or live DB PRAGMAs
-      - Application — rule apply [--type schema] [--dry-run]
+      - Inspection — rule show [target=schema]
+      - Comparison — rule diff [target=schema] [--git] vs HEAD or live DB PRAGMAs
+      - Application — rule apply [target=schema] [--dry-run] [-m|--intent "<why>")
       - Validation — rule validate
     - World path: env noun
       - Provisioning — env new <name> [--seed prod] [--from <path|git-url|ptr>] [--from-branch <b>]
@@ -116,14 +117,18 @@
     - Global flags
       - --json — stable machine-readable output
       - --as <principal> — target execution principal for scoped access
-      - --env <name> — target environment selection
+      - --env <name> — target environment override (defaults to sticky context set by `env use`)
+      - -m, --intent "<why>|@<path>" — causal motivation for mutating actions (short flag supported)
       - --workspace <path> — project root anchor (overrides CAPCLI_WORKSPACE env var)
       - --session <token> — cryptographic session handle binding principal and frame
-      - flag ceiling — universal flags frozen at exactly ten; no per-noun growth
+      - --in <path> — file or stdin (@-) source for primary command payload
+      - --out <path> — writes execution payload to disk; returns token-lean summary to stdout
+      - at-symbol expansion — all string arguments (-p, --intent, --reason, query) accept @<path> or @- (stdin)
+      - flag ceiling — universal flags frozen at exactly twelve; no per-noun growth
     - Mutating flags
       - --dry-run — plan execution without applying state changes
-      - --intent "<why>" — causal motivation, validated against anti-junk rules
-      - --reason "<why>" — threshold crossing justification
+      - --intent "<why>|@<path>" — causal motivation, accepts inline text or file
+      - --reason "<why>|@<path>" — threshold crossing justification, accepts inline text or file
       - --by <agent-id> — acting identity verified via process credentials
     - Scoped flags
       - --lock <ref> — exclusive claim lease on run

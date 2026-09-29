@@ -92,7 +92,7 @@ def dispatch_order(order_id: Param[str], carrier: Param[str]):
 
 | Law | Mechanism | What Happens on Breach |
 | :--- | :--- | :--- |
-| **1. The Database Floor** | `sqlite3_set_authorizer` in native C | Missing `WHERE`? Dropping tables? **Killed instantly (`exit 2`).** |
+| **1. The Database Floor** | `sqlite3_set_authorizer` in native C | Unbounded writes? Cross-table mutation? Invariant breach? **Killed instantly (`exit 2`).** |
 | **2. The Network Jail** | `bwrap` namespaces + `seccomp-bpf` | Raw socket connection? Unwhitelisted IP? **Trapped at syscall 42 (`exit 2`).** |
 | **3. The Budget Cage** | Downward cascading frames ($\min$) | Op #51 on a 50-op run? **Halted at frame boundary (`exit 6`/`exit 2`).** |
 | **4. The Memory Spine** | Append-only SHA-256 causal DAG | Broken link? Modified history? **Kernel refuses to boot (`exit 3`).** |

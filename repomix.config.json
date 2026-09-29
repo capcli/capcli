@@ -28,6 +28,7 @@
     }
   },
   "include": [
+      "README.md",
       "cans/",
       "cans/artifacts/capcli.playbook.md",
       "cans/artifacts/governance.yaml",

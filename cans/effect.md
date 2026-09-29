@@ -65,15 +65,20 @@
       - http integration — inbound HTTP requests bind via serve.request
   - Denials
     - Denial event structure
-      - enforcement layer — authorizer, AST, governance, or budget: see physics.md#Two-layer-enforcement
+      - domain classification — routine.runtime, db.engine, policy.*, api.upstream, kernel.*
       - violation — rule id (e.g. policy.query.update_delete.require_where)
       - layer — authorizer, AST, governance, or budget
       - measured value — observed count vs ceiling (e.g. 342 LOC vs 150 cap)
       - remediation — explicit fix instructions printed
-      - mutation — state change strictly none
+      - state_modified — strictly boolean false on non-zero exit
+      - canonical error payload
+        - domain: string — exact fault layer
+        - culprit: string — failing line, constraint, rule, or provider
+        - remedy: string — actionable resolution path for agent or human
     - Learning and alerting
       - telemetry feed — denial streams route to diagnosis: see cans/assembly.md#Core-domain-subsystems
       - thrashing detector — 20 sustained denials triggers agent thrashing alert
+      - canonical error payload — machine diagnostic and fix suggestions: see physics.md#Diagnostic-output-law
       - training data — denial patterns inform harness prompt and code adjustments
       - thrashing alert — threshold: see artifacts/policy.yaml#rate
     - Denial remediation — machine diagnostic and fix suggestions: see physics.md#Diagnostic-output-law
