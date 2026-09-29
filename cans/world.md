@@ -157,17 +157,17 @@
         - trust requirement — alter: see artifacts/policy.yaml#authorizer.global
         - evaluation — draft trust throws exit 2
       - step 4: approval — human inspects DDL plan and rollback preview
-      - step 5: ship — routine ship schema_<v> --to reviewed --reason "..."
+      - step 5: ship — routine ship schema_<v> reviewed
       - step 6: apply dev
         - command — rule apply --type schema --env dev --intent "..."
         - execution — snapshot taken, DDL executed in transaction
         - audit — schema migration event emitted
       - step 7: atomic prod promotion
-        - command — env merge dev --into prod --intent "..."
+        - command — env merge dev prod -m "..."
         - mechanics — snapshots prod, merges git, applies physical DDL, locks lockfile
     - Agent denial rules
       - raw DDL execution
-        - command — db.exec "ALTER TABLE ..."
+        - command — sql "ALTER TABLE ..."
         - decision — denied: see artifacts/policy.yaml#authorizer.global
       - table destruction
         - command — DROP TABLE
@@ -239,13 +239,10 @@
       - rollback check — verifies transaction rollback cleanly reverses DDL
       - failure code — auto-restores snapshot and throws exit 3
   - Command surface db
-    - Query commands
-      - reads
-        - command — db query <sql> [-p k=v] [--limit N] [--count]
-        - bounds — row ceiling: see artifacts/policy.yaml#query.select
-      - writes
-        - command — db exec <sql> -p k=v --intent "..." [--dry-run]
-        - bounds — row ceiling: see artifacts/policy.yaml#query.update_delete
+    - Unified SQL command
+      - syntax — capcli sql "<statement>" [-p k=v] [-m "<intent>"] [--dry-run]
+      - read dispatch — SELECT statements execute read-only without intent requirement
+      - write dispatch — INSERT/UPDATE/DELETE enforce AST bounds and require intent
     - Concurrency commands
       - acquisition — db lock <table>:<ref> --ttl <duration> --reason "..."
       - release — db unlock <target>
@@ -253,5 +250,5 @@
       - ddl display — db schema [--table]
       - state management — db snapshot, db restore <id>, db dump
     - Boundary laws
-      - dead commands — db count banned; replaced by db query --count
+      - dead commands — db count, db query, db exec banned; replaced by unified sql
       - enforcement depth — all commands cross AST and authorizer layers

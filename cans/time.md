@@ -10,7 +10,7 @@
       - subtraction — sweep, rollback, or retire
     - Enforcement gates
       - register — namespace and creation rate validation
-      - draft — shape and declared manifest registration
+      - prove — shape, static manifest, and invariant verification
       - runtime — ops, timeout, and drift verification
       - monitor — dead and failing threshold detection
       - sweep — deduplication and consolidation proposals
@@ -20,8 +20,8 @@
       - execution — gated per call by policy and budget
   - Stage details
     - draft stage
-      - authoring claim — routine draft acquires lease in _claims; concurrent writers exit 2: see agent.md#Concurrency-scope
-      - scaffolding — capcli routine draft <name>
+      - authoring claim — file lock on routines/<name>.py; concurrent edits exit 2
+      - scaffolding — direct creation in routines/<name>.py or optional routine new <name>
       - authoring — direct filesystem writes in routines/
       - near-duplicate scan
         - similarity engine — strsim crate calculates normalized Levenshtein distance: see time.md#draft-stage
@@ -42,7 +42,7 @@
       - trust execution — prove runs at draft trust regardless of declaration
       - data inputs — test parameters sampled via capcli sys audit sample
     - ship stage
-      - command — capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."
+      - command — capcli routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
       - authority model — see overview.md#Human-authority
       - metric prerequisites — success rates queried from routine_stats
       - production promotion — automated upon passing synthetic fuzz and replay suite
@@ -51,7 +51,7 @@
       - audit payload — records routine.auto_promoted with 5-point metric record
       - veto window — 1-hour canary telemetry rollback trigger: see trust.md#Promotion-queue
     - promotion queue
-      - queue enqueue — capcli routine ship <name> --to reviewed --queue
+      - queue enqueue — capcli routine ship <name> reviewed --queue
       - queue inspection — capcli routine pending
       - batch approval — human approves queue batch via single audit event
       - expiration SLA — age alert: see artifacts/governance.yaml#maintenance
@@ -76,11 +76,12 @@
     - Discovery arc
       - telemetry accumulation — agents execute bounded exploratory SQL queries and simulated API probes
       - tracking — kernel logs all database and egress attempts with intent and parameters
-      - sufficiency floor — log analysis triggers only after 50 raw audit events accumulate in target domain
+      - sufficiency floor — background n-gram miner triggers after floor events; direct routine drafting remains ungated from day zero
       - analysis views — deterministic kernel SQL views surface op frequencies and n-grams
       - pattern extraction — harness inspects surfaced DB and API sequence views
     - Routine codification
-      - threshold — minimum identical primitive sequences: >= 3
+      - intentional authoring — direct scaffolding permitted immediately from declared requirements
+      - passive mining — opportunistic routine proposals triggered when frequent sequences detected
       - hybrid composition — routines bundle atomic DB transactions with external API verbs
       - synthesis — harness scaffolds routine definitions from mined sequences
       - verification — routine prove executes real historical audit inputs

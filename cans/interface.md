@@ -18,6 +18,7 @@
     - Hot path: run noun
       - Commands
         - execute — run <capability> [-p k=v]
+        - sql — sql "<query>" [-p k=v] [-m "intent"] [--dry-run] — unified AST-gated query & execution
         - overview — run overview [--as <principal>] — single-shot domain situational briefing
         - search — search <query> [--type <domain>] [--trust X] [--env X]
         - gap detection — run search gaps --since 7d
@@ -33,34 +34,33 @@
         - composition — nesting depth, child routines, budget cascade
         - pre-flight check — can_invoke_now boolean verdict
     - Storage path: db noun
-      - Read — db query <sql> [-p k=v] [--limit N] [--count]
-      - Write — db exec <sql> -p k=v --intent "..."
+      - SQL — sql <query> [-p k=v] [-m "intent"] (unified read/write via AST detection)
       - Locking — db lock <table>:<ref> --ttl <duration> --reason "..."
       - Release — db unlock <target>
       - Schema — db schema [--table]
       - Snapshots — db snapshot, restore <id>, dump
     - Routine path: routine noun
-      - Authoring — routine draft <name> [--template <ptr|path>] [--reason]
+      - Authoring — direct write in routines/<name>.py (or optional scaffold via routine new <name>)
       - Verification — routine prove <name> [-p k=v] [--env sim]
-      - Promotion — routine ship <name> --to reviewed|pinned [--env X] --reason "..."
+      - Promotion — routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
       - Maintenance — routine sweep [--since 30d]
       - Profiling — routine stats <name> [--deep]
-      - Recovery — routine rollback <name> --to-version N
+      - Recovery — routine rollback <name> [version]
       - Retirement — routine retire <name> [--reason]
     - API path: api noun
-      - Sync — api sync <provider> --from <url> [--interval 7d] [--dry-run]
+      - Sync — api sync <provider> <url> [--interval 7d] [--dry-run]
       - Drift — api diff <provider>
       - Catalog — api catalog <provider> [--state <state>]
       - Activation — api activate <provider.verb> --intent "..."
       - Verification — api prove <provider.verb> [-p k=v] [--env sim]
-      - Promotion — api ship <provider.verb> --to reviewed|pinned --reason "..."
+      - Promotion — api ship <provider.verb> <reviewed|pinned> [--reason "..."]
       - Profiling — api stats <provider> [--deep] [--summary]
       - Retirement — api retire | deactivate <provider.verb> [--reason]
-      - History — api rollback <provider.verb> --to-version N
+      - History — api rollback <provider.verb> [version]
     - Trigger path: bind noun
       - Bindings
-        - bind cron <name> --run <cap> --cron "<expr>" --intent "..."
-        - bind webhook <name> --provider <p> --event <e> --run <cap> [--ingress <url>|--tunnel] --intent "..."
+        - bind cron <name> <capability> "<cron_expr>" [-m "<why>"]
+        - bind webhook <name> <provider> <event> <capability> [--ingress <url>|--tunnel] [-m "<why>"]
         - bind endpoint <routine@version> --auth api-key [--rate <r>]
       - Webhook ingress
         - route verification — external webhooks require valid public --ingress url or active tunnel; raw 127.0.0.1 denied
@@ -81,7 +81,7 @@
       - Provisioning — env new <name> [--seed prod] [--from <path|git-url|ptr>] [--from-branch <b>]
       - Switching — env use <name>
       - Audit — env list, inspect, doctor
-      - Promotion — env merge <name> --into prod
+      - Promotion — env merge <name> [target=prod] [-m "<why>"]
       - Deprovisioning — env remove <name>
     - System path: sys noun
       - Sensory inbox — sys inbox pop [--channel <name>]
@@ -105,7 +105,7 @@
       - manual schema edits — schema edit banned; edit schema.yaml
       - banned bypass flags — --force, --override-budget, --force-prod banned
       - retired verbs
-        - db count — banned; use db query --count
+        - db count, db query, db exec — banned; use unified sql
         - claim — banned; use db lock or run --lock
         - jail — banned; use sys exec --sandbox
         - policy explain — banned; use sys audit trace --explain
@@ -145,7 +145,7 @@
         - locked nouns — kernel sys noun cannot be aliased: see interface.md#CLI-surface
         - branding scope — human text output only; JSON never rebranded: see physics.md#Diagnostic-output-law
       - Invocation method surface
-        - execution — client.run(), client.db.query(), client.routine.prove(): see action.md#Unifying-concept
+        - execution — client.run(), client.sql(), client.routine.prove(): see action.md#Unifying-concept
         - discovery — client.search(), client.inspect(): see action.md#Search-surface
         - auditing — client.audit.tail(), client.audit.trace(): see effect.md#Query-surfaces
         - return envelope — { exit: number, json: object, text: string }: see physics.md#Exit-code-law
@@ -203,7 +203,7 @@
       - H0 contract — parse machine boundaries via sys doctor --json
       - H1 discovery — inspect catalog verbs and existing schema views via run search
       - H2 rehearsal — execute plan with run --dry-run
-      - H3 dual probe — query local state via db query and inspect remote verbs via api catalog
+      - H3 dual probe — query local state via sql and inspect remote verbs via api catalog
       - H4 hybrid rehearsal — test composite write and simulated egress via routine prove
       - H5 feedback — parse denial rules via sys audit trace --explain
       - H6 codification — author mandatory overview routine to ground future agents in domain state

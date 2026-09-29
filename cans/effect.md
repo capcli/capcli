@@ -37,7 +37,7 @@
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
       - failure buffer — audit sink error queues writes in memory for 5m before fail
-      - genesis sequence — world starts with rule.apply, db.query, db.exec deny, db.exec ok
+      - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok
       - no synthetic types — onboarding.* and fake lifecycle events denied
       - tamper blast radius — broken sha256 link invalidates all subsequent events
       - write priority — unaudited writes denied outright (exit 5)
