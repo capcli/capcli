@@ -82,7 +82,7 @@
       - provisioning — env new <name> [--seed prod]
       - activation — env use <name>
       - audit — env list, env inspect, env doctor
-      - merge — env merge <name> --into prod
+      - merge — env merge <name> [target=prod]
       - deletion — env remove <name>
     - Safety controls
       - prod removal flags — --confirm-backup and --confirm-prod mandatory

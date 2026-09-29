@@ -54,7 +54,7 @@
         - semantic — harness-side embedding ranking
         - did-you-mean — nearest candidates proposed on zero hits
       - Progressive disclosure
-        - 3-step discipline — DISCOVER (search) -> INSPECT (inspect <ptr>) -> ACT / DEREF
+        - on-demand discovery — search and inspect optional; direct invocation permitted whenever signature is known
         - payload constraint — search returns pointers and summaries (<60 tokens), never raw blobs
         - doc inspection — inspect on doc:// returns outline nodes; doc read fetches targeted leaf
         - relevance floor — semantic matches below 0.60 rejected
@@ -74,7 +74,7 @@
         - learning input — see time.md#Learning-loop
       - Registry ceilings
         - limits — see artifacts/governance.yaml#registry
-        - enforcement point — routine draft, api activate
+        - enforcement point — routine prove, api activate
         - creation freedom — filesystem writes ungated
   - Routines
     - Procedure layer
@@ -93,7 +93,7 @@
         - name — registry id, validated at registration
         - trust — ladder rung (draft, reviewed, pinned)
         - idempotent — boolean prerequisite for retries
-        - description — word length: see artifacts/governance.yaml#routine_shape
+        - description — required summary string
         - limits — declared caps, must stay under governance ceiling
       - Call pattern: refund_and_archive.py
         - input typing — order_id: Param[str]
@@ -103,8 +103,8 @@
         - db write — ctx.db.txn context wrapping ctx.db.execute
         - return value — summary-sized dict
     - Shape constraints
-      - file size — 5 to 150 lines of code; 50 to 2,000 tokens
-      - signatures — max 8 typed Param declarations; description min 5 words
+      - file size — max 150 lines of code; max 2,000 tokens
+      - signatures — max 8 typed Param declarations; description required
       - execution caps — max 50 ops per run; max 300s duration; max 10 txn statements
       - output envelope — max 500 result tokens; oversized results return truncated: true
   - Routine templates
@@ -113,7 +113,7 @@
       - unproven intake — templated routines register strictly at draft trust, version 1
       - shape compliance — intake parses through shape_gate.rs; non-compliant stubs rejected before disk write
     - Scaffolding pipeline
-      - command — routine draft <name> --template <ptr|path> [--intent "..."]
+      - optional scaffolding — routine new <name> [--template <ptr|path>] (filesystem write in routines/ is draft SSOT)
       - verification — checks import line counts and py_compile syntax
       - audit payload — records routine.draft with template_source and template_hash
     - Sandbox execution
@@ -170,19 +170,18 @@
         - min cascade law — see budget.md#Cascade
         - sim mode propagation — child gaps propagate up: see space.md#Rehearsal-&-sim
     - Skill invocation protocol
-      - Pipeline stages — DISCOVER (search) → INSPECT (inspect) → INVOKE (run)
+      - Pipeline stages — direct invocation via capcli run; search/inspect used only on cache miss or signature ambiguity
       - Mapping contract — skill frontmatter maps 1:1 to Param declarations
         - validation failure — signature mismatch exits with code 3
       - Result constraint — computed summaries only (<= 500 tokens)
       - Provenance pass — skill name recorded in triggered_by_skill
       - Protocol bans
-        - unproven drafting — routine draft and ship forbidden within skills: see trust.md#The-ladder
+        - unproven shipping — shipping unproven routines forbidden within skills: see trust.md#The-ladder
         - raw SQL instruction
         - routine ship or draft within skills
         - reading secrets or masked columns
         - bypassing run via raw HTTP
         - cross-session result caching
-      - Evidence prerequisite — sequence threshold required: see time.md#Discovery-arc
     - Invariants and anti-decisions
       - Anti-decisions
         - no YAML procedures — control flow belongs in code
@@ -300,7 +299,7 @@
       - Pre-call policy — checks enforced before egress leaves kernel
       - Idempotency mandate — non-idempotent retries denied
     - Catalog synchronization
-      - Sync trigger — capcli api sync <provider> --from <url> --interval <cadence>
+      - Sync trigger — capcli api sync <provider> <url> [--interval <cadence>]
       - Spec quarantine — kernel alone parses OpenAPI specs; harness never reads raw spec
       - Compilation — kernel parses OpenAPI spec and generates apis/<provider>.yaml
       - Spec pruning — specs exceeding 10MB auto-prune unreferenced paths during compilation
@@ -339,8 +338,8 @@
       - pre-call gate — remaining <= deny_at_remaining denies egress with exit 2
   - Bindings
     - Trigger types
-      - cron — bind cron <name> --run <cap> --cron "<expr>" --intent "..."
-      - webhook — bind webhook <name> --provider <p> --event <e> --run <cap> --intent "..."
+      - cron — bind cron <name> <capability> "<cron_expr>" [-m "intent"]
+      - webhook — bind webhook <name> <provider> <event> <capability> [-m "intent"]
       - endpoint — bind endpoint <routine@version> --auth api-key [--rate <r>]
     - Binding management
       - Lifecycle commands — bind list, inspect, pause, resume, remove

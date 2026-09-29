@@ -90,7 +90,7 @@ query:
     masked_columns_redacted: true
 
   bulk:
-    require_pre_count: true                    # db query --count before mass ops
+    require_pre_count: true                    # capcli sql --count before mass ops
     require_trust: reviewed
     confirm_above: { rows: 50000 }             # raised: human gate only on massive blast radius
 

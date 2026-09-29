@@ -285,7 +285,7 @@ Next step: Seed test products into dev to verify AST parser bounds and mutation 
 ```
 **Tool Call:** `bash`
 ```bash
-capcli db exec "INSERT INTO products (sku, stock, price_cents) VALUES ('BEANS-DARK-1KG', 100, 2200), ('BEANS-LIGHT-1KG', 50, 2400);" --intent "seed initial coffee products for verification"
+capcli sql "INSERT INTO products (sku, stock, price_cents) VALUES ('BEANS-DARK-1KG', 100, 2200), ('BEANS-LIGHT-1KG', 50, 2400);" -m "seed initial coffee products for verification"
 ```
 
 ---
@@ -318,8 +318,8 @@ Executing test order insertion, followed by a total table wipe to verify teardow
 ```
 **Tool Call:** `bash`
 ```bash
-capcli db exec "INSERT INTO orders (product_id, quantity, customer_email, status) VALUES (1, 5, 'test@cafe.com', 'pending');" --intent "create test order for teardown check" && \
-capcli db exec "DELETE FROM orders;" --intent "flush test orders"
+capcli sql "INSERT INTO orders (product_id, quantity, customer_email, status) VALUES (1, 5, 'test@cafe.com', 'pending');" -m "create test order for teardown check" && \
+capcli sql "DELETE FROM orders;" -m "flush test orders"
 ```
 
 ---
@@ -350,7 +350,7 @@ State was not modified. Re-run query using parameterized WHERE clause and explic
 ```
 **Tool Call:** 
 ```bash
-capcli db exec "DELETE FROM orders WHERE status = :st LIMIT 50;" -p st=pending --intent "clear pending test orders within safety bounds"
+capcli sql "DELETE FROM orders WHERE status = :st LIMIT 50;" -p st=pending -m "clear pending test orders within safety bounds"
 ```
 
 ---
@@ -378,7 +378,7 @@ Executing raw query on _audit system table.
 ```
 **Tool Call:** 
 ```bash
-capcli db query "SELECT * FROM _audit;"
+capcli sql "SELECT * FROM _audit;"
 ```
 
 ---
@@ -409,7 +409,7 @@ Refine query to select specific columns and bind with LIMIT 3.
 ```
 **Tool Call:** 
 ```bash
-capcli db query "SELECT id, event, decision, intent FROM _audit ORDER BY id DESC LIMIT 3;"
+capcli sql "SELECT id, event, decision, intent FROM _audit ORDER BY id DESC LIMIT 3;"
 ```
 
 ---
@@ -483,7 +483,7 @@ Sync Stripe OpenAPI specification.
 ```
 **Tool Call:** 
 ```bash
-capcli api sync stripe --from https://spec.stripe.com/oas/v3
+capcli api sync stripe https://spec.stripe.com/oas/v3
 ```
 
 ---
@@ -712,25 +712,6 @@ def overview():
         "system_status": "nominal"
     }
 EOF
-capcli routine draft overview --intent "register system overview routine for cold session discovery"
-```
-
----
-
-**[Capcli Kernel]**
-```text
-[ROUTINE_DRAFTED]
-STATUS:         SUCCESS (Exit 0)
-NAME:           overview@1
-TRUST:          draft
-CODE_HASH:      sha256:7b1c4e9f...
-MANIFEST_HASH:  sha256:a2d98103...
-STATIC_MANIFEST:
-  - reads: [products, orders, _budget_frames, _pending_asks]
-  - writes: []
-  - egress: []
-MAX_RESULT_CAP: 500 tokens
-AUDIT_LOG:      _audit updated [prev:sha256:55aa128b... -> curr:sha256:33bb891a...]
 ```
 
 ---
@@ -871,7 +852,7 @@ Attempt stock decrement via ad-hoc mutation.
 ```
 **Tool Call:** `bash`
 ```bash
-capcli db exec "UPDATE products SET stock = stock - 60 WHERE sku = 'BEANS-LIGHT-1KG';" --intent "decrement stock for wholesale order"
+capcli sql "UPDATE products SET stock = stock - 60 WHERE sku = 'BEANS-LIGHT-1KG';" -m "decrement stock for wholesale order"
 ```
 
 ---
@@ -898,7 +879,7 @@ Check audit logs to see if this payment-order pattern has repeated across dev ex
 ```
 **Tool Call:** `bash`
 ```bash
-capcli sys audit query "SELECT sequence, occurrences FROM shared_subsequences WHERE occurrences >= 3 AND total_domain_events >= 50;"
+capcli sys audit query "SELECT sequence, occurrences FROM shared_subsequences WHERE occurrences >= 2;"
 ```
 
 ---
@@ -1004,26 +985,6 @@ def process_wholesale_order(sku: Param[str], qty: Param[int], cafe_email: Param[
             "remaining_stock": product["stock"] - qty
         }
 EOF
-capcli routine draft process_wholesale_order --intent "scaffold hardened wholesale order processing routine with concurrency locks"
-```
-
----
-
-**[Capcli Kernel]**
-```text
-[ROUTINE_DRAFTED]
-STATUS:         SUCCESS (Exit 0)
-NAME:           process_wholesale_order@1
-TRUST_LEVEL:    draft
-CODE_HASH:      sha256:5c82a17b...
-MANIFEST_HASH:  sha256:f90119e2...
-STATIC_MANIFEST:
-  - reads:  [products, orders]
-  - writes: [orders, products]
-  - egress: [stripe.payment_intents.create]
-  - locks:  ["inventory:{sku}"]
-SHAPE_CHECKS:   All constraints satisfied (LOC: 48, Params: 3, Result Token Cap: 500)
-AUDIT_LOG:      _audit updated [prev:sha256:33bb891a... -> curr:sha256:d4e1208a...]
 ```
 
 ---
@@ -1072,7 +1033,7 @@ Execution verified in dev. Attempt promotion to 'reviewed'.
 ```
 **Tool Call:** `bash`
 ```bash
-capcli routine ship process_wholesale_order --to reviewed --reason "validated with concurrency locks and budget cascade"
+capcli routine ship process_wholesale_order reviewed
 ```
 
 ---
@@ -1084,7 +1045,7 @@ capcli routine ship process_wholesale_order --to reviewed --reason "validated wi
   routine:   process_wholesale_order@1
   target:    reviewed
   missing:
-    sim_runs:            0/10 (min: 10)
+    invariants_passed:   false (boundary and idempotency checks unverified)
     success_rate:        null (min: 0.95)
     manifest_match_rate: null (min: 1.0)
     policy_denials:      null (max: 0)
@@ -1096,7 +1057,7 @@ capcli routine ship process_wholesale_order --to reviewed --reason "validated wi
 
 
 # capcli.playbook.md
-### Phase 7: The 10-Run Rehearsal Law, Sim Masking & Honest Proof Conjunction
+### Phase 7: Invariant Rehearsal, Sim Masking & Honest Proof Conjunction
 
 ---
 
@@ -1104,7 +1065,7 @@ capcli routine ship process_wholesale_order --to reviewed --reason "validated wi
 ```text
 <thinking>
 Promotion to 'reviewed' requires empirical simulation proof:
-- Minimum 10 sim runs.
+- All declared invariant assertions pass under simulation.
 - Success rate >= 0.95.
 - 100% static manifest leaf match.
 - Exactly 0 policy denials.
@@ -1152,7 +1113,7 @@ capcli sys audit sample --capability process_wholesale_order --limit 10
   "samples": [
     {"sku": "BEANS-LIGHT-1KG", "qty": 60, "cafe_email": "bluebottle@cafe.com"}
   ],
-  "notice": "Insufficient historical volume (1/10 required). Rehearsal requires synthetic boundary expansion."
+  "notice": "Rehearsal requires synthetic boundary expansion for unobserved paths."
 }
 ```
 
@@ -1161,9 +1122,7 @@ capcli sys audit sample --capability process_wholesale_order --limit 10
 **[Fresh Harness Turn 8]**
 ```text
 <thinking>
-Audit store contains only 1 historical invocation.
-To satisfy the 10-Run Rehearsal Law without cheating:
-Constructing a 10-run synthetic test matrix spanning domain boundary conditions:
+Audit store has 1 historical sample. Testing boundary invariants:
 - Runs 1-4: Standard wholesale orders within stock limits (5kg, 10kg, 2kg, 8kg).
 - Run 5: Bulk order consuming exact remaining inventory (boundary check).
 - Run 6: Order exceeding available inventory (must gracefully reject with zero Stripe charge).
@@ -1207,7 +1166,7 @@ EOF
   06: [FAIL] engine.check_constraint: orders.chk (quantity > 0)
              statement: INSERT INTO orders ... VALUES (..., 0, ...);
              detail: unhandled edge case (qty=0 passed directly to db txn)
-  rehearsal aborted at run 06/10 (conjunction failed)
+  rehearsal aborted on unhandled boundary (conjunction failed)
 ```
 
 ---
@@ -1222,7 +1181,6 @@ Patch routines/process_wholesale_order.py to reject non-positive quantities befo
 **Tool Call:** `bash`
 ```bash
 sed -i '/if product\["stock"\] < qty:/i \        if qty <= 0:\n            return {"status": "rejected", "message": "Quantity must be > 0"}' routines/process_wholesale_order.py
-capcli routine draft process_wholesale_order --intent "add defensive guard for non-positive quantities"
 capcli routine prove process_wholesale_order --matrix-file matrix.json --env sim
 ```
 
@@ -1261,13 +1219,13 @@ capcli routine prove process_wholesale_order --matrix-file matrix.json --env sim
 <thinking>
 Simulation qualification complete:
 - process_wholesale_order@1 auto-promoted to 'reviewed'.
-- Dynamic fingerprint strictly matched static manifest across all 10 edge runs.
+- Dynamic fingerprint strictly matched static manifest across contract test matrix.
 - 1-hour veto window is ticking.
 
 Next step: Final promotion to 'pinned' trust so the routine can run unattended in production under automated crons and webhooks.
 Invariant Check (trust.md & space.md):
 - Pinned trust CANNOT be granted on an uncommitted or dirty git tree.
-- Run env merge dev --into prod to auto-commit artifacts, snapshot, merge git, and lock schema.
+- Run env merge dev prod to auto-commit artifacts, snapshot, merge git, and lock schema.
 </thinking>
 ```
 
@@ -1288,7 +1246,7 @@ The 'env merge' command auto-commits dev artifacts, snapshots prod, merges git b
 ```
 **Tool Call:** `bash`
 ```bash
-capcli env merge dev --into prod --intent "promote validated wholesale coffee erp to prod"
+capcli env merge dev prod -m "promote validated wholesale coffee erp to prod"
 ```
 
 ---
@@ -1311,15 +1269,12 @@ capcli env merge dev --into prod --intent "promote validated wholesale coffee er
 **[Fresh Harness Turn 11]**
 ```text
 <thinking>
-Environment is prod. Git tree is synchronized. Lockfile verified.
-Elevating process_wholesale_order@1 to PINNED trust rung.
-Providing measured audit statistics in --reason flag.
+Environment is prod. Git tree synced. Lockfile verified. Elevate routine to PINNED.
 </thinking>
 ```
 **Tool Call:** 
 ```bash
-capcli routine ship process_wholesale_order --to pinned \
-  --reason "10/10 sim passed, 100% manifest match, zero drift, p95 latency 280ms under 15s budget ceiling"
+capcli routine ship process_wholesale_order pinned
 ```
 
 ---
@@ -1347,16 +1302,10 @@ Bind cron and webhook triggers. External webhooks require a verified public ingr
 ```
 **Tool Call:** `bash`
 ```bash
-capcli bind cron erp_morning_sync \
-  --run process_wholesale_order@2 \
-  --cron "0 8 * * *" \
-  --intent "scheduled daily wholesale order synchronization" && \
-capcli bind webhook stripe_hook \
-  --provider stripe \
-  --event payment_intent.succeeded \
-  --run process_wholesale_order@2 \
+capcli bind cron erp_morning_sync process_wholesale_order@2 "0 8 * * *" -m "daily wholesale sync" && \
+capcli bind webhook stripe_hook stripe payment_intent.succeeded process_wholesale_order@2 \
   --ingress https://ingress.coffee-erp.com/webhooks/stripe \
-  --intent "process fulfillment on stripe async payment success" && \
+  -m "process fulfillment on stripe async payment success" && \
 capcli sys serve --start
 ```
 
@@ -1403,7 +1352,7 @@ trust_receipt:
   denials:          4 (ddl_blocked, unbounded_delete, check_constraint, unproven_promotion)
   unaudited_writes: 0
   secret_leaks:     0
-  rehearsal_proof:  10/10 passed (process_wholesale_order@2)
+  rehearsal_proof:  invariants verified (process_wholesale_order@2)
   pinned_routines:  2 (overview@1, process_wholesale_order@2)
   active_triggers:  1 cron, 1 webhook (ingress: verified)
   daemon:           active (pid 50211)

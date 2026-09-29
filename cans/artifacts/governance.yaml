@@ -37,8 +37,8 @@ template:
 # 2. ROUTINE SHAPE — defaults every file must satisfy
 # ───────────────────────────────────────────────────────────────
 routine_shape:
-  loc:        { min: 5,    max: 150 }    # split big routines; no stubs
-  tokens:     { min: 50,   max: 2000 }   # file size in tokens (context cost)
+  loc:        { max: 150 }               # split big routines
+  tokens:     { max: 2000 }              # file size ceiling (context cost)
   params:     { max: 8 }                  # interface bloat guard
   description:{ min_words: 5 }            # searchable or it doesn't ship
   imports:    { max_routine_imports: 3 }  # composition depth hygiene
@@ -95,8 +95,8 @@ maintenance:
     merge_requires_human: false       # autonomous merge when regression test suite passes 100%
     auto_retire_dead: false           # propose, never auto-destroy
   discovery:
-    sufficiency_floor_events: 50      # minimum raw audit events before sequence mining triggers
-    min_sequence_occurrences: 3       # minimum repeated n-gram patterns to scaffold a routine
+    passive_mining_floor_events: 20   # background suggestion trigger only; never blocks direct authoring
+    min_sequence_occurrences: 2       # n-gram threshold for consolidation proposals
     max_exploratory_ops: 200          # session budget reserved for raw ad-hoc exploration
   decay:
     dead_after_days: 30               # unused → retire candidate
@@ -225,7 +225,7 @@ backup:
   max_drift_minutes: 30               # doctor alarms if commits fall behind
   push: true
   include_audit: true
-  trigger_on: [draft, apply, promote, migrate, merge, import, register, restore, serve.add, bind, vault]
+  trigger_on: [save, apply, promote, migrate, merge, import, register, restore, serve.add, bind, vault]
   git_max_age_days: 90
 
 # ───────────────────────────────────────────────────────────────

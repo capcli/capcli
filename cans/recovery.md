@@ -20,7 +20,7 @@
       - kernel stewardship — kernel automates git lifecycle for governed files: see cans/assembly.md#Persistent-daemon-crate
       - no raw git — agents execute capcli verbs; manual git add and commit prohibited
       - cadence — commits every 15 minutes; drift > 30 minutes raises doctor alarm
-      - mutation triggers — commands auto-commit on draft, apply, promote, migrate, merge
+      - mutation triggers — commands auto-commit on apply, promote, migrate, merge
       - tracked artifacts — world.sql, audit logs, and configuration YAMLs
     - Dual storage guarantee
       - git repository — operational source code, schema declarations, world.sql DDL, and audit mirrors
@@ -54,7 +54,7 @@
       - activation — CAPCLI_RECOVERY=1 environment variable: see physics.md#Break-glass-paths
       - handler — native recover command in crates/capcli-cli/src/commands/
       - components — loads schema and audit sink only; policy disabled
-      - allowlist — db query, db dump, sys audit tail, sys backup
+      - allowlist — sql (read-only), db dump, sys audit tail, sys backup
       - audit trail — logs recovery_mode_entered event on startup
     - Re-entry context
       - context reinstatement

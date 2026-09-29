@@ -46,7 +46,7 @@
       - pinned execution refusal — invoking pinned routine on Tier 2 throws exit 2 (E045_TIER2_PINNED_DENIED)
       - template trust floor — imported routines and world templates enter strictly at draft trust
       - zero trust inheritance — blueprints confer zero promotional credit; pre-pinned imports banned
-      - rehearsal mandate — templated routines must satisfy the 10-run rehearsal law in sim before promotion
+      - rehearsal mandate — templated routines must pass contract invariant suite in sim before promotion
       - autonomous authority floor
         - production writes — fully autonomous; governed by pinned trust rungs and AST limits
         - bulk modifications — autonomous up to declared routine row ceilings
@@ -60,19 +60,15 @@
       - circuit demotion — sustained routine failure auto-demotes to draft: see time.md#decay-and-subtraction
   - Gates & promotion
     - Ship gate
-      - command — capcli routine ship <name> --to reviewed|pinned [--env X] --reason "..."
-      - justification rules
-        - argument — --reason flag mandatory
-        - content — must cite measured audit mirror statistics
+      - command — capcli routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
+      - verification — kernel checks routine_stats and audit mirror directly; --reason optional for human context
       - production prerequisites
         - git status — branch merged into prod worktree
         - synthetic proof — 100% replay invariant pass and fuzzing in sim
         - simulation proof — success rate threshold: >= 0.90
     - Auto-promotion (draft to reviewed)
-      - risk-weighted qualification criteria
-        - read-only routines — sim_runs >= 1
-        - internal db write routines — sim_runs >= 3
-        - external egress / payment routines — sim_runs >= 10
+      - contract verification criteria
+        - invariant_suite_passed: true (boundary and idempotency assertions pass)
         - reliability — success_rate >= 0.95
         - declaration match — manifest_subset_match: true (executed leaves subset of declared manifest; zero undeclared leaves)
         - policy compliance — policy_denials: exactly 0
@@ -85,14 +81,14 @@
       - full autonomy — autonomous pin unlocked via invariant & mutation tests
       - boundary safety — high spend or schema migrations governed by hard-coded budget caps
     - Promotion queue
-      - mechanics — capcli routine ship <name> --to reviewed --queue
+      - mechanics — capcli routine ship <name> reviewed --queue
       - inspection — capcli routine pending surfaces batch candidates
       - SLA monitoring
         - breach trigger — queue age threshold: see artifacts/governance.yaml#maintenance
         - alarm — sys doctor emits promotion.sla_breached
       - veto window
         - duration — 1-hour automated canary telemetry window
-        - action — anomaly spikes or policy denials trigger autonomous circuit-breaker rollback to draft
+        - action — anomaly spikes or policy denials trigger autonomous circuit-breaker rollback draft
     - API activation gate
       - trigger — capcli api activate <verb> --intent "..."
       - initial rung — activates at draft trust: see artifacts/policy.yaml#api.activation

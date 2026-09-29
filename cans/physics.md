@@ -132,7 +132,7 @@
       - transaction scope — each chunk forms independent transaction and audit event
       - execution bounds — max rows per chunk: see artifacts/policy.yaml#query
     - Pre-flight checks
-      - count query — db query --count mandatory before mass updates
+      - count query — sql --count mandatory before mass updates
       - environment exemptions — dev and sim waive mandatory pre-counts
     - Trust thresholds
       - prod confirmation — bulk updates in prod require approval above 10 rows

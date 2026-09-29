@@ -56,7 +56,7 @@ You don’t need an existing enterprise setup or months of configuration to star
 * **Start From a Blank Void:** Give Hermes a single sentence (*"Manage my store logistics and vendor invoices"*).
 * **The Footprints Form:** Hermes explores, queries, and probes APIs. Capcli silently records every single attempt, denial, and parameter into the audit spine.
 * **The World Crystallizes:** A background analysis agent mines the audit footprints. It spots repeated sequences and automatically crafts the data schema, defines the tables, and packages the workflows into governed Python routines.
-* **Safe Rehearsal:** Before any new routine touches live money, Capcli forks your state into a masked simulation sandbox. Hermes must replay 10 clean runs against historical traffic before it ever touches production.
+* **Safe Rehearsal:** Before any new routine touches live money, Capcli forks your state into a masked simulation sandbox. Hermes must verify contract invariants against historical traffic before it ever touches production.
 
 Whether you bring an existing database or an empty directory, **the world builds itself out of actual work—safely.**
 
@@ -70,7 +70,7 @@ Whether you bring an existing database or an empty directory, **the world builds
 | **An Infinite Error Loop** | **Drains your bank account.** Burns hundreds in token compute unnoticed. | **Killed instantly.** Watchdog timer cuts execution at the exact spend ceiling. |
 | **Handling API Credentials** | **Leaks keys.** Plaintext tokens dumped into context or local bash files. | **Zero leaks.** Keys injected by kernel at perimeter; agent never sees raw strings. |
 | **Repeated Daily Operations** | **High token waste.** Re-reasons the same workflow daily from scratch. | **Zero token burn.** Invokes hash-pinned routines like compiled muscle memory. |
-| **Testing a Risky New Action** | **Tests on live users.** Real customers get bad refunds and broken links. | **Forced rehearsal.** Must pass 10 masked simulation runs before promotion. |
+| **Testing a Risky New Action** | **Tests on live users.** Real customers get bad refunds and broken links. | **Forced rehearsal.** Must pass invariant replay simulation before promotion. |
 | **What You Own After 6 Months** | **Tech debt wasteland.** A mess of fragile scripts and lost chat history. | **Permanent capital.** A living, governed operational OS of proven code. |
 | **Your Actual Sleep Quality** | **Zero.** You check terminal logs every 15 minutes in panic. | **Total.** You close your laptop, walk away, and sleep 8 full hours. |
 

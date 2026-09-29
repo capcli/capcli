@@ -55,7 +55,7 @@
       - recovery — emergency break-glass restricts verbs to audit-only: see recovery.md#Restore-path
     - Capability lifecycle
       - exploration — raw bounded SQL mutations and standalone activated API calls accumulate telemetry in dev
-      - sufficiency — pattern mining threshold: see time.md#Discovery-arc
+      - sufficiency — optional pattern mining for consolidation: see time.md#Discovery-arc
       - codification — repeated DB and API call sequences compiled into governed routines
       - trust progression — earned autonomy moves routines from draft to reviewed to pinned via synthetic proof
     - Autonomous authority

@@ -31,7 +31,7 @@
     - Concurrency scope
       - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE with busy_timeout
       - application locks — business-level leases tracked in _claims table with daemon TTL cleanup
-      - authoring mutex — routine draft acquires target claim; concurrent edits exit 2
+      - authoring mutex — filesystem lock on routines/<name>.py during edits; concurrent edits exit 2
       - collision handling — writers queue sequentially; immediate exit 2 occurs on queue timeout only
       - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
       - callee floor — cross-agent routine calls demand trust >= reviewed

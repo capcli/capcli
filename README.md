@@ -41,7 +41,7 @@ In 2025, people gave LLMs raw bash subshells and prayed.
 * **The Void:** Drop an agent into a blank directory with a single sentence.
 * **The Footprint:** The agent queries, mutates, and probes APIs. Capcli logs every attempt into an immutable SHA-256 audit ledger.
 * **Crystallization:** Background pattern mining isolates repeated sequences and compiles them into governed Python `@routine` files.
-* **Hardening:** After 10 consecutive flawless simulation runs against masked historical traffic, the routine is hash-pinned to production.
+* **Hardening:** After passing contract invariants against masked historical traffic in simulation, the routine is hash-pinned to production.
 
 **Your backend writes, tests, and deploys itself out of actual work.**
 
