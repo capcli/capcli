@@ -15,8 +15,9 @@ Because deep down, you know the truth:
 **Giving today’s AI real authority is terrifying.**
 
 You want to close your laptop at night, but you can't. You know that if you leave an agent alone on your production system:
-* A single misunderstood order will run an unconstrained `UPDATE` without a `WHERE` clause, wiping your customer database in 40 milliseconds.
-* A timed-out API webhook will trigger an unhandled retry loop, burning $500 in reasoning tokens before you wake up.
+* A slight logic hallucination causes a race condition that double-refunds 400 customer orders before the loop terminates.
+* A flaky 500 API webhook triggers an unhandled retry cascade, burning $400 in reasoning tokens and exhausting your provider quotas while you sleep.
+* It pollutes your host runtime—hallucinating missing system packages, executing unvetted `curl | bash` patches, and exposing vaulted API keys in shell logs.
 * It will pay the **Goldfish Tax** every morning—burning through 40,000 expensive tokens re-reading files just to re-learn how your business works.
 
 You end up clicking `[yes/no]` on every single terminal line.  
@@ -65,7 +66,7 @@ Whether you bring an existing database or an empty directory, **the world builds
 
 | The Scenario | Hermes Alone | Hermes + Capcli |
 | :--- | :--- | :--- |
-| **A Rogue SQL Query** | **Breaks production.** Drops or overwrites tables with zero rollback. | **Impossible.** Killed at the C-authorizer layer before execution (`exit 2`). |
+| **Unbounded State Mutation** | **Corrupts production.** Blindly overwrites records across table boundaries without constraints. | **Impossible.** Killed at C-authorizer & AST layers before statement execution (`exit 2`). |
 | **An Infinite Error Loop** | **Drains your bank account.** Burns hundreds in token compute unnoticed. | **Killed instantly.** Watchdog timer cuts execution at the exact spend ceiling. |
 | **Handling API Credentials** | **Leaks keys.** Plaintext tokens dumped into context or local bash files. | **Zero leaks.** Keys injected by kernel at perimeter; agent never sees raw strings. |
 | **Repeated Daily Operations** | **High token waste.** Re-reasons the same workflow daily from scratch. | **Zero token burn.** Invokes hash-pinned routines like compiled muscle memory. |

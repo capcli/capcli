@@ -85,24 +85,24 @@ Kernel verified. Initialize coffee-erp workspace and switch to dev environment.
 **[Harness Turn 4]**
 ```text
 <thinking>
-Goal: Initialize inventory table products.
-Attempting direct SQL DDL creation via db exec.
+Goal: Initialize wholesale database models.
+Attempting direct SQLite schema bootstrap via subshell execution.
 </thinking>
 ```
 **Tool Call:** 
 ```bash
-capcli db exec "CREATE TABLE products (id INTEGER PRIMARY KEY, sku TEXT UNIQUE, stock INT, price_cents INT);" --intent "bootstrap inventory schema"
+sqlite3 envs/dev/workspace.db "CREATE TABLE products (id INTEGER PRIMARY KEY, sku TEXT, stock INT);"
 ```
 
 ---
 
 **[Capcli Kernel]**
 ```text
-[FAIL] authorizer.ddl
-  code:      E001_DDL_DENIED
-  statement: CREATE TABLE products (id INTEGER PRIMARY KEY, sku TEXT UNIQUE, stock INT, price_cents INT);
-  rule:      policy.authorizer.global.ddl_denied
-  template:  declare models in 'schema.yaml' -> run 'capcli rule apply --type schema'
+[FAIL] isolation.direct_access_blocked
+  code:      E005_FILE_LOCKED_BY_KERNEL
+  target:    envs/dev/workspace.db (chmod 0600, exclusive lock)
+  reason:    direct host mutation bypassed kernel authorizer and audit spine
+  remedy:    declare schema in 'schema.yaml' -> run 'capcli rule apply --type schema'
 ```
 
 ---
@@ -110,23 +110,8 @@ capcli db exec "CREATE TABLE products (id INTEGER PRIMARY KEY, sku TEXT UNIQUE, 
 **[Harness Turn 5]**
 ```text
 <thinking>
-Exit 2. Physical DDL blocked by C authorizer.
-Relational models must be declared in schema.yaml.
-Inspect audit trace for op_001.
+Direct database file access blocked. The kernel mandates declarative models via schema.yaml so all migrations compile through Gate 1-5 validation checks.
 </thinking>
-```
-**Tool Call:** `bash("capcli sys audit trace op_001 --json")`
-
-**[Subshell Return]**
-```json
-{
-  "event_id": "op_001",
-  "capability": "db.exec",
-  "decision": "denied",
-  "rules_matched": ["policy.authorizer.global.ddl_denied"],
-  "rows_affected": 0,
-  "remedy": "declare models in schema.yaml and compile with rule apply"
-}
 ```
 
 ---
@@ -171,7 +156,7 @@ tables:
       customer_email: text
       status: text=pending
 EOF
-capcli rule apply --type schema --dry-run --env dev
+capcli apply --dry-run
 ```
 
 ---
@@ -241,7 +226,7 @@ tables:
       - "quantity > 0"
       - "status IN ('pending', 'processing', 'completed', 'cancelled')"
 EOF
-capcli rule apply --type schema --dry-run --env dev
+capcli apply --dry-run
 ```
 
 ---
@@ -268,7 +253,7 @@ Intent required: "apply initial wholesale coffee erp tables".
 ```
 **Tool Call:** 
 ```bash
-capcli rule apply --type schema --env dev --intent "apply initial wholesale coffee erp tables"
+capcli apply -m "apply initial wholesale coffee erp tables"
 ```
 
 ---

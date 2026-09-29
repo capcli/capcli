@@ -86,15 +86,24 @@
       - audit sink error — unaudited writes denied outright (exit 5)
       - quota exhaustion — remaining <= deny_at_remaining throws exit 6 (Background) or exit 2 (Critical)
     - Exit code law
-      - exit 0 — execution success with audit event recorded
-      - exit 2 — hard policy, trust rung, or critical budget denial; state untouched
-      - exit 6 — budget yield; task suspended until `yield_until`; state untouched (see budget.md#Exhaustion)
-      - exit 3 — validation error, syntax error, missing parameter, boot refusal, drift
-      - exit 4 — mid-execution runtime crash
-      - exit 5 — audit sink failure; write aborted
+      - exit 0 — success with audit event recorded; upstream HTTP failures handled gracefully in envelope
+      - exit 2 — invariant or governance block; state untouched (state_modified: false)
+        - domain db.engine — SQLite check constraints, foreign key violations, busy timeout
+        - domain policy.authorizer — C-level table/column write denied
+        - domain policy.budget — frame limits or session op/spend ceilings exhausted
+        - domain policy.trust — action forbidden by caller trust rung (e.g. draft touching prod)
+      - exit 3 — compile-time refusal, validation failure, boot lockfile mismatch, or missing parameter
+      - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
+      - exit 5 — domain kernel.panic; audit sink unreachable or host resource failure; execution refused
+      - exit 6 — domain api.quota; proactive rate yield; task suspended until yield_until timestamp
+      - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
       - engine — native terminal diagnostics rendered via miette and codespan
       - machine style — text output emits rustc-style diagnostics; no filler
+      - machine envelope — --json returns structured domain, culprit, remedy, and state_modified keys
+      - payload redirection law — when --out is set, payload writes to file; stdout emits minimal receipt (<30 tokens)
+      - shell escaping defense — all arguments support @<path> to bypass shell string escaping, injection, and ARG_MAX limits
+      - stdin piping — @- consumes from process stdin until EOF; rejects multi-statement unless explicit batch mode
       - denial format — [FAIL] rule code, rejected statement, expected syntax
       - structural purity — machine consumers pass --json for pure envelopes
       - buffer isolation — stdout/stderr unlogged; effect engine hashes json: see effect.md#Event-anatomy
