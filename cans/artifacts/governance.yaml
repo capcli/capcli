@@ -42,6 +42,25 @@ routine_shape:
   params:     { max: 8 }                  # interface bloat guard
   description:{ min_words: 5 }            # searchable or it doesn't ship
   imports:    { max_routine_imports: 3 }  # composition depth hygiene
+  
+  # ─── GUEST RUNTIMES ──────────────────────────────────────────
+  runtime:
+    default: typescript                   # default guest engine if undeclared
+    allowed: [typescript, python]         # system-wide permitted runtime whitelist
+    providers:
+      typescript:
+        engine: bun                       # bun | node
+        min_version: "1.1.0"
+        ext: [".ts"]
+      javascript:
+        engine: node                      # node | bun
+        min_version: "20.0.0"
+        ext: [".js"]
+      python:
+        engine: python3
+        min_version: "3.11"
+        ext: [".py"]
+
   execution:
     max_ops_per_run: 50               # primitive DAG ceiling — op 51 aborts
     max_duration_seconds: 300         # sandbox watchdog kill

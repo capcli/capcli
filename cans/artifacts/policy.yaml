@@ -286,6 +286,7 @@ env:
     confirm_above: { rows: 10 }                # tighter thresholds
     vacuum: deny
     api: { fuel: { per_session_fuel: 500000 } }
+    allowed_runtimes: [typescript]             # prod locked to single engine
     serve: { bind: "127.0.0.1" }               # public lives behind a proxy
   sim:
     rate: { writes_per_minute: 1000 }          # fast iteration
@@ -295,8 +296,10 @@ env:
       mock_fixtures_from: apis/*.mock.yaml
       deny_sim_mode: [prod-only]           # prod-only verbs physically denied in sim
     notify: { route_to: "#sim-notifications" }
+    allowed_runtimes: [typescript, python]
   dev:
     bulk: { require_pre_count: false }
+    allowed_runtimes: [typescript, javascript, python] # permissive exploration
     confirm_above: { rows: 1000 }              # looser: dev is cheap
     trust_overlay:                               # draft relaxation for onboarding seeding
       draft:
@@ -346,6 +349,8 @@ fail_closed:
   no_policy: refuse_boot
   lockfile_mismatch: refuse_boot           # abort if hash(schema+system+policy+gov) != capcli.lock
   system_schema_hash_mismatch: refuse_boot # kernel integrity check
+  unauthorized_runtime: deny               # exit 2 if routine targets banned engine
+  runtime_binary_missing: refuse_boot      # exit 3 if declared provider missing on host
   unparseable_sql: deny
   authorizer_callback_error: deny
   ambiguous_read_write_classification: treat_as_write

@@ -78,7 +78,7 @@
         - creation freedom — filesystem writes ungated
   - Routines
     - Procedure layer
-      - Substrate — python files in routines/
+      - Substrate — TypeScript (.ts), JavaScript (.js), or Python (.py) files in routines/ or declared binaries
       - Purpose — branching, retries, multi-step composition
       - Mental model — see overview.md#Mental-model
       - Evolution — raw SQL exploration becomes routine exploitation
@@ -88,6 +88,9 @@
         - event — immutable audit log record
         - routine — learned composition with version and code_hash
     - Anatomy and decorator
+      - TypeScript contract example: routines/refund.ts
+        - exports default routine({ name, trust, limits }, handler)
+        - companion schema: auto-inferred via Param<T> or explicit refund.schema.json
       - Structure — @routine(name, trust, idempotent, description, limits)
       - Decorator fields
         - name — registry id, validated at registration
@@ -117,9 +120,16 @@
       - verification — checks import line counts and py_compile syntax
       - audit payload — records routine.draft with template_source and template_hash
     - Sandbox execution
+      - Runtime resolution ladder
+        - 1. Routine tag — explicit runtime parameter declared in @routine wrapper
+        - 2. Agent policy — identity.agent_runtimes whitelist in policy.yaml
+        - 3. Environment overlay — env.<name>.allowed_runtimes in policy.yaml
+        - 4. Workspace default — routine_shape.runtime.default in governance.yaml
+        - Mismatch resolution — breach at any level halts immediately with exit 2 (E050_RUNTIME_DISALLOWED)
       - Jail architecture
         - provider resolution — auto selects bwrap on Tier 1; selects broker on Tier 2: see physics.md#Platform-tier-taxonomy
         - tier 1 execution — bwrap namespaces, tmpfs /scratch wiped at exit, seccomp-bpf blocking raw network and fork
+        - tier 2 execution — child Python subprocess mediated strictly via IPC broker; scratch mapped to host tmpdir; network unconfined warning emitted
         - tier 2 execution — child Python subprocess mediated strictly via IPC broker; scratch mapped to host tmpdir; network unconfined warning emitted
         - latency floor — warm runner recycling ensures execution overhead < 50ms
       - Yield handling

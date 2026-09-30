@@ -4,7 +4,11 @@
     - Platform tier taxonomy
       - tier 1 (hardened) — Linux bare-metal, VPS, Docker (with userns), WSL2
         - sandbox — unprivileged bwrap namespaces + tmpfs scratch: see action.md#Sandbox-execution
-        - network jail — seccomp-bpf filter trapping raw socket connect (syscall 42)
+        - network jail — seccomp-bpf filter trapping raw socket connect (syscall 42) across all engines
+        - syscall profiles — dynamic seccomp filters per engine:
+          - profile_python: allow clone, futex, basic POSIX signals
+          - profile_bun_node: allow epoll_create1, epoll_ctl, eventfd2, io_uring_setup
+          - profile_binary: allow clone3, futex, rseq, rt_sigreturn
         - trust bounds — all rungs permitted (draft, reviewed, pinned): see trust.md#The-ladder
       - tier 2 (degraded) — macOS (Darwin), Android (Termux), Windows native
         - sandbox — out-of-jail process mediated via IPC broker and C authorizer: see action.md#Sandbox-execution

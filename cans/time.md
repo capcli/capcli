@@ -82,8 +82,9 @@
     - Routine codification
       - intentional authoring — direct scaffolding permitted immediately from declared requirements
       - passive mining — opportunistic routine proposals triggered when frequent sequences detected
+      - synthesis — harness scaffolds routine code using governance synthesis_target language
       - hybrid composition — routines bundle atomic DB transactions with external API verbs
-      - synthesis — harness scaffolds routine definitions from mined sequences
+      - synthesis — harness scaffolds routine code using governance synthesis_target language
       - verification — routine prove executes real historical audit inputs
       - invocation — routine invoked via run, replacing ad-hoc primitives
   - Consolidation

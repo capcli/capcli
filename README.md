@@ -40,7 +40,7 @@ In 2025, people gave LLMs raw bash subshells and prayed.
 ### You don’t write backends anymore. Your agent discovers them, runs them, and Capcli hardens them into permanent code.
 * **The Void:** Drop an agent into a blank directory with a single sentence.
 * **The Footprint:** The agent queries, mutates, and probes APIs. Capcli logs every attempt into an immutable SHA-256 audit ledger.
-* **Crystallization:** Background pattern mining isolates repeated sequences and compiles them into governed Python `@routine` files.
+* **Crystallization:** Background pattern mining isolates repeated sequences and compiles them into governed TypeScript or Python routines.
 * **Hardening:** After passing contract invariants against masked historical traffic in simulation, the routine is hash-pinned to production.
 
 **Your backend writes, tests, and deploys itself out of actual work.**
@@ -49,41 +49,23 @@ In 2025, people gave LLMs raw bash subshells and prayed.
 
 ## The Code
 
-Your agent stops hallucinating ad-hoc scripts. It invokes compiled operational muscle memory:
+Routines execute in your preferred language (TypeScript or Python). The Rust kernel enforces the physics:
 
-```python
-from capcli import routine, ctx, Param
+```typescript
+import { routine, ctx, Param } from "@capcli/sdk";
 
-@routine(
-    name="dispatch_order",
-    trust="pinned",
-    idempotent=True,
-    limits={"max_ops": 8, "max_duration_seconds": 15}
-)
-def dispatch_order(order_id: Param[str], carrier: Param[str]):
-    # 1. Distributed hardware lease lock
-    with ctx.db.lock(f"order:{order_id}", ttl=10):
-        
-        # 2. Governed read with AST check
-        order = ctx.db.query("SELECT * FROM orders WHERE id = :id", {"id": order_id})[0]
-        if order["status"] != "paid":
-            return {"status": "rejected", "reason": "unpaid_order"}
+export default routine({
+  name: "dispatch_order",
+  trust: "pinned",
+  limits: { max_ops: 8, max_duration_seconds: 15 }
+}, async (order_id: Param<string>, carrier: Param<string>) => {
+  const [order] = await ctx.db.query("SELECT * FROM orders WHERE id = :id", { id: order_id });
+  if (order.status !== "paid") return { status: "rejected", reason: "unpaid" };
 
-        # 3. Network egress with kernel secret injection (agent never sees tokens)
-        shipment = ctx.api.call("logistics.shipments.create", {
-            "order_id": order_id,
-            "carrier": carrier
-        }, intent="dispatch fulfillment package")
-
-        # 4. Atomic SQLite transaction
-        with ctx.db.txn():
-            ctx.db.execute(
-                "UPDATE orders SET status = 'shipped', tracking = :tr WHERE id = :id LIMIT 1;",
-                {"tr": shipment["tracking_number"], "id": order_id},
-                intent="mark order dispatched"
-            )
-
-        return {"status": "dispatched", "tracking": shipment["tracking_number"]}
+  const ship = await ctx.api.call("logistics.shipments.create", { order_id, carrier });
+  await ctx.db.execute("UPDATE orders SET status = 'shipped' WHERE id = :id", { id: order_id });
+  return { status: "dispatched", tracking: ship.tracking_number };
+});
 ```
 
 ---

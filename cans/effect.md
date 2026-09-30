@@ -12,7 +12,7 @@
         - sync freshness — mirror lag hard SLA capped at 5 minutes
         - format — daily append-only files
     - Event anatomy
-      - identity — event, ts, env, stage
+      - identity — event, ts, env, stage, channel, trace_id
       - actor — agent, session, principal
       - causality — caused_by, intent, intent_chain
       - payload — capability, sql, params (recorded verbatim for replay)
@@ -33,7 +33,7 @@
       - api.call sim — sim_mode, http_called, fixture_used: see space.md#Sim-mode-taxonomy
       - api.first_prod_call — call_number, calls_remaining, approver: see trust.md#Simulation-gaps
       - budget.frame_push/pop — declared, consumed, remaining: see budget.md#Frames
-      - serve.request — endpoint, routine@version, api_key_id, status: see action.md#Serve-lifecycle-split
+      - serve.request — endpoint, channel (rest|mcp), trace_id, routine@version, api_key_id, status
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
       - failure buffer — audit sink error queues writes in memory for 5m before fail
@@ -60,6 +60,7 @@
       - forensics — corruption traced to specific routine, world, agent, and version
       - explain — --explain flag prints exact policy rules and remediation
     - Structural invariants
+      - distributed tracing — incoming W3C traceparent captured in trace_id links external caller to root DAG
       - linearity — sequential routine interiors guarantee acyclic DAG
       - frame integration — budget frames bind via parent_frame
       - http integration — inbound HTTP requests bind via serve.request

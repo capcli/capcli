@@ -20,6 +20,8 @@ tables:
       agent: text!                     # acting agent instance id (e.g. agt_7f3k)
       session: text!                   # engagement session id (e.g. ses_a9)
       principal: text!                 # human or kernel authority holder
+      trace_id: text                   # external W3C traceparent or MCP parent context
+      channel: text=direct             # rest, mcp, cron, webhook, or direct
       capability: text                 # target capability or SQL table
       intent: text                     # causal intent declaration
       caused_by: text                  # parent event ID in causal DAG
