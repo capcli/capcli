@@ -30,9 +30,9 @@
   "include": [
       "README.md",
       "cans/",
-      "cans/artifacts/capcli.playbook.md",
+  //    "cans/artifacts/capcli.playbook.md",
       "cans/artifacts/governance.yaml",
-      "cans/artifacts/capcli.landing-copy.md"
+  //    "cans/artifacts/capcli.landing-copy.md"
   ],
   "ignore": {
     "useGitignore": true,
@@ -45,9 +45,11 @@
 	"cans/_collab",
     "cans/AGENTS.md",
  //   "cans/artifacts/system-schema.yaml",
+ "cans/artifacts/capcli.playbook.md",
     "cans/artifacts/schema.yaml",
- //   "cans/artifacts/policy.yaml",
+//    "cans/artifacts/policy.yaml",
   // "cans/artifacts/governance.yaml",
+   "cans/artifacts/capcli.landing-copy.md"
   // "cans/artifacts/",
   //  "cans/artifacts/"
  //   "cans/assembly.md",

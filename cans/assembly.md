@@ -10,6 +10,7 @@
     - Host system dependencies
       - git binary — host git >= 2.30 for worktrees: see space.md#Environment-axis
       - python runtime — host python >= 3.11 for sandboxed routines: see action.md#Routines
+      - javascript runtime — host bun >= 1.1 or node >= 20 for polyglot execution
       - bubblewrap binary — host bwrap >= 0.8.0 mandatory on Tier 1; optional on Tier 2: see physics.md#Platform-tier-taxonomy
       - target toolchains — musl (Linux Tier 1), apple-darwin (macOS Tier 2), android (Termux Tier 2), msvc (Windows Tier 2)
     - Root management commands
@@ -49,10 +50,10 @@
         - audit/audit.YYYY-MM-DD.jsonl — daily audit mirror holding hashed rows
         - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
         - audit/witness.log — remote KMS witness attestation logs: see recovery.md#Hash-chains
-      - routines/ — agent-authored procedural Python scripts: see action.md#Routines
-        - routines/overview.py — dense system situational health routine: see action.md#Session-Overview-Primer
-        - routines/order_refund.py — sandboxed multi-step refund script: see action.md#Anatomy-and-decorator
-        - routines/inventory_sync.py — stock reorder loop routine: see action.md#Routines
+      - routines/ — agent-authored procedural guest scripts (.ts, .js, .py): see action.md#Routines
+        - routines/overview.ts — dense system situational health routine
+        - routines/order_refund.ts — sandboxed multi-step refund script
+        - routines/inventory_sync.py — legacy or data-heavy Python script
       - apis/ — imported OpenAPI catalogs and simulation mocks: see action.md#External-APIs
         - apis/stripe.yaml — compiled OpenAPI provider verbs: see action.md#Catalog-synchronization
         - apis/stripe.sim.yaml — simulation base URL overlays: see space.md#Policy-overlays
@@ -92,6 +93,17 @@
         - commands/ — clap subcommand handlers for ten nouns: see interface.md#CLI-surface
         - terminal/ — rustc-style diagnostics and json emitter: see physics.md#Diagnostic-output-law
     - Persistent daemon crate
+  - TypeScript runtime harness package
+    - Package identity and layout
+      - package root — packages/ts (published locally as @capcli/sdk)
+      - package.json — zero runtime dependencies, exports routine, Param, ctx
+    - TypeScript SDK modules (packages/ts/src/)
+      - routine.ts — routine() wrapper emitting JSON-RPC manifest over IPC
+      - param.ts — Param<T> type definitions for runtime validation
+      - ctx.ts — ctx.db, ctx.api, ctx.storage, ctx.quota wrappers
+      - ipc.ts — streaming JSON-RPC client over /run/capcli/kernel.sock
+
+  - Python runtime harness package
       - crate identity — crates/capcli-daemon
       - configuration — Cargo.toml linking axum, tower, croner, rust-embed
       - daemon surface (crates/capcli-daemon/src/)
@@ -134,8 +146,12 @@
       - Domain telemetry — tracks VDBE opcode analysis counts and connection lease durations
     - Domain 2: Routine engine & sandboxing (routine/)
       - Subsystem modules
-        - runner.rs — manages child Python processes and exits: see action.md#Routines
-        - jail.rs — builds bwrap isolation for Tier 1 or process broker for Tier 2: see action.md#Sandbox-execution
+        - runner.rs — multi-runtime process supervisor (bun, python3, native)
+        - jail.rs — bwrap wrapper mounting host engines and applying runtime seccomp profile
+        - shape_gate.rs — AST parser for source mode; JSON schema validator for contract mode
+        - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
+        - manifest.rs — receives declared manifests via runner IPC: see action.md#Manifests-&-fingerprints
+        - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
         - ipc_socket.rs — cross-platform IPC (UDS on POSIX/Termux, Named Pipes on Windows): see action.md#Sandbox-execution
         - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
         - manifest.rs — receives declared manifests via runner IPC: see action.md#Manifests-&-fingerprints

@@ -33,16 +33,16 @@
       - structural governance — governance.yaml governs artifact shapes (nouns)
       - compilation — compiled together at startup; runtime mutation denied
   - Mental model
-    - three-surface law — state in SQLite, procedure in Python, experience in JSONL
+    - three-surface law — state in SQLite, capabilities in guest scripts, experience in JSONL
     - Storage trinity
       - state — SQLite workspace.db: see world.md#SQLite-as-SSOT
-      - procedure — Python routines and OpenAPI catalogs: see action.md#Routines
+      - capabilities — operational muscle memory served over REST and MCP: see action.md#Routines
       - experience — append-only _audit mirrored to JSONL: see effect.md#Audit-spine
     - Language law
-      - format axiom — YAML declares, Python executes, JSONL records
-      - procedural boundary — control flow, branching, and loops forbidden in YAML
-      - YAML — static declarative configuration and schema definitions
-      - Python — procedural control flow, composition, and error branching
+      - format axiom — YAML declares, guest runtime executes, JSONL records
+      - procedural boundary — control flow isolated to sandboxed routines
+      - YAML — declarative state schema and governance boundaries
+      - Guest Code — procedural control flow and atomic domain execution
       - JSONL — immutable linear historical record of world mutations
     - Topology
       - outbound channels — db mutations, isolated routines, external HTTP egress

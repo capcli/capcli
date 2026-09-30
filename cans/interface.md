@@ -61,7 +61,8 @@
       - Bindings
         - bind cron <name> <capability> "<cron_expr>" [-m "<why>"]
         - bind webhook <name> <provider> <event> <capability> [--ingress <url>|--tunnel] [-m "<why>"]
-        - bind endpoint <routine@version> --auth api-key [--rate <r>]
+        - bind endpoint <routine@version> --auth api-key [--rate <r>] [--channel all|rest|mcp]
+        - export — export openapi [--out path], export mcp [--out path]
       - Webhook ingress
         - route verification — external webhooks require valid public --ingress url or active tunnel; raw 127.0.0.1 denied
       - Management — bind list, inspect, pause, resume, remove
