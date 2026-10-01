@@ -2,7 +2,7 @@
 
 This document lays out how Capcli scales from an open-source terminal utility into a high-margin enterprise infrastructure standard. 
 
-No MBA buzzwords. No hand-waving growth hacks. Just cold, tactical operational mechanics.
+No MBA buzzwords. Just cold, tactical operational mechanics.
 
 ---
 
