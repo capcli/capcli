@@ -81,6 +81,17 @@ $ capcli routine ship refund_order reviewed \
     --reason "passed quarterly compliance rehearsal"
 ```
 
+```text
+[dev:tier_1]  refund_order@1  ✓  promoted
+
+  capability:  cap://refund_order@1
+  rung:        draft → reviewed
+  evidence:    invariants 100% · success 97.8% · manifest 100% subset
+  denials:     0 · drift 0 · p95 within 70% ceiling
+  parole:      60-minute canary window armed
+  audit:       op_9c31
+```
+
 ### The 5-Point Autonomous Auto-Promotion Math
 If you configure automated shipping, the kernel checks cold, hard telemetry in `routine_stats`. **Every single metric must pass:**
 
