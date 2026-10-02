@@ -23,6 +23,10 @@ curl -fsSL https://capcli.dev/install.sh | bash
 | **Open the local web cockpit.** | [Administrative Cockpit →](concepts/cockpit.md) |
 | **Hit an exit code or denial? Check the ceilings.** | [Hard Limits & Ceilings →](reference/limits.md) |
 | **Look up exact CLI command contracts (10 surface nouns).** | [Command Reference →](reference/index.md) |
+| **You're an agent reading the docs.** | [Agent Contracts →](agents/index.md) |
+| **Something specific went wrong.** | [Guides →](guides/index.md) |
+| **"I keep doing this" — turn repetition into routines.** | [Automate →](automate/index.md) |
+| **Want the mental model, not the manual?** | [Understand →](understand/index.md) |
 
 ---
 

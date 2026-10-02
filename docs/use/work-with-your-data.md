@@ -180,4 +180,4 @@ If the harness bypasses Capcli, it bypasses the authorizer, the budget, and the 
 
 **Hit a boundary?** → [boundaries.md](boundaries.md)
 
-**Want to know what the harness actually did?** → [audit.md](audit.md)
+**Want to know what the harness actually did?** → [audit.md](../understand/audit.md)
