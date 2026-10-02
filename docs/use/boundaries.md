@@ -211,6 +211,6 @@ When you see `exit 2`, don't panic. Don't retry blindly. Read the `remedy`. Your
 
 ---
 
-**Want to see what actually happened?** → [audit.md](audit.md)
+**Want to see what actually happened?** → [audit.md](../understand/audit.md)
 
-**Need to undo something?** → [recover.md](recover.md)
+**Need to undo something?** → [recover.md](../understand/recovery.md)

@@ -166,3 +166,49 @@ $ capcli routine rollback dispatch_order --to-version 3 \
 * **`--force` is banned:** Passing `--force` to `routine ship` is an immediate syntax error.
 * **Direct filesystem tampering:** Editing a versioned file directly in `routines/` without bumping the version or running through intake triggers an instant lockfile mismatch (`exit 3`).
 * **Self-Promotion:** A running routine cannot invoke `routine ship` on itself. Trust escalation requires human or CI principal authority.
+
+---
+
+## Live examples
+
+```bash
+$ capcli routine new archive_old_orders
+```
+
+```text
+[dev:tier_1]  ✓  scaffolded
+
+  file:       routines/archive_old_orders.ts
+  template:   standard (db.query → db.execute)
+  trust:      draft
+  next:       edit logic, then `routine prove archive_old_orders`
+```
+
+```bash
+$ capcli routine ship order_refund reviewed --reason "89 runs, 97.8% success in sim"
+```
+
+```text
+[dev:tier_1]  ✓  promoted
+
+  capability:  cap://order_refund@7
+  trust:       draft → reviewed
+  evidence:    89 sim runs · 97.8% success · p95 1100ms (within envelope)
+  ceiling:     rows_affected cap now 100/run
+```
+
+```bash
+$ capcli routine sweep --since 30d
+```
+
+```text
+[dev:tier_1]  1 of 12 routines flagged
+
+  routine              runs   success   signal
+  ───────────────────  ─────  ────────  ─────────────────────────
+  archive_old_orders   41     68.3%     below 70% floor — demote candidate
+  dispatch_order       214    99.1%     healthy
+  order_refund         89     97.8%     healthy
+```
+
+The narrative walkthrough of the full lifecycle (author → prove → ship → operate) lives at [../../automate/routines.md](../../automate/routines.md).
