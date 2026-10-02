@@ -49,7 +49,7 @@ Every atomic operation in Capcli answers to four distinct layers of accountabili
 When an audit event is signed, it doesn't just log *"an agent did this."* 
 It records: **`user:alice`** authorized **`agt_7f3k`** inside **`ses_a992f`** to execute **`op_4f8a`**. 
 
-If any link in the chain is forged or missing, the kernel fails closed (`exit 3`).
+If any link in the chain is forged or missing, the kernel fails closed ([exit 3](../reference/exit-codes.md#exit-3)).
 
 ---
 
@@ -59,9 +59,9 @@ In a standard bash script, an agent could type `--by agt_admin` to impersonate a
 
 Capcli intercepts this at the operating system level (`crates/capcli-core/src/identity/process.rs`):
 * When an agent passes `--by <agent-id>`, the kernel inspects the **host OS process UID, PID, and parent process tree**.
-* If the process UID does not match the credentials stamped during agent registration, the kernel aborts with **`exit 3` (`identity.process_mismatch`)**.
+* If the process UID does not match the credentials stamped during agent registration, the kernel aborts with **[exit 3](../reference/exit-codes.md#exit-3)** (`identity.process_mismatch`).
 
-You don't get to pretend you're a different agent. The Linux kernel kernel-checks who is running the command before SQLite or the network proxy even loads.
+You don't get to pretend you're a different agent. The OS kernel checks who is actually running the command before SQLite or the network proxy even loads.
 
 ---
 
@@ -156,7 +156,7 @@ $ capcli sql "SELECT name, value FROM secrets"
   github_pat       [REDACTED]
 ```
 
-* **Draft trust:** Reading the `value` column throws an instant **`exit 2`**.
+* **Draft trust:** Reading the `value` column throws an instant **[exit 2](../reference/exit-codes.md#exit-2)**.
 * **Reviewed / Pinned trust:** The authorizer masks the output with `[REDACTED]`.
 * **Subshell Core Dumps:** The Rust kernel uses the `zeroize` memory trait. The microsecond an HTTP packet leaves the network socket, the memory address holding the plaintext credential is wiped with physical zeros. You cannot dump RAM to find the key.
 
@@ -181,7 +181,7 @@ $ capcli sys agent revoke agt_7f3k -m "rogue query loops detected"
 ```
 
 The revocation takes effect in **under 10 milliseconds**:
-* Every subsequent command run by `agt_7f3k` is refused (`exit 2`).
+* Every subsequent command run by `agt_7f3k` is refused ([exit 2](../reference/exit-codes.md#exit-2)).
 * Active distributed claims and lease locks held by the agent in `_claims` are terminated.
 * Live sessions bound to the agent are invalidated.
 
@@ -199,15 +199,7 @@ The kernel provisions **Built-In Kernel Principals**:
 These principals operate with immutable, hardcoded boundaries:
 * They can **only** execute routines that have achieved **Pinned** trust.
 * They cannot execute ad-hoc raw SQL.
-* Every action they fire is logged with their specific kernel principal ID, so you can filter your audit trail between biological human actions and automated system actions in a single query.
-
----
-
-## The One Rule
-
-**Identity is validated by the machine. Credentials stay in the vault.**
-
-No self-proclaimed superusers. No exposed API keys in terminal logs. If an agent goes rogue, one command cuts the cord permanently.
+* Every action they fire is logged with their specific kernel principal ID, so you can filter the [audit trail](memory-spine.md) between biological human actions and automated system actions in a single query.
 
 ---
 

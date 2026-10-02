@@ -1,8 +1,8 @@
 # Install
 
-You're not going to type this yourself. Let's be honest. You're going to say "hey, install capcli" to your harness and go make coffee. Fine. That's what it's for.
+You're not going to type this yourself. Let's be honest. You're going to say "hey, install capcli" to your harness and let it run. Fine. That's what it's for.
 
-But you should know what's happening so you can verify it didn't lie to you.
+But you should know what a correct install looks like, so you can verify it didn't improvise.
 
 ---
 
@@ -47,7 +47,7 @@ $ capcli sys doctor
   status:     ready
 ```
 
-If you see `ready`, you're installed. If you see `exit 3`, something's missing and the doctor tells you what.
+If you see `ready`, you're installed. If you see [`exit 3`](../reference/exit-codes.md#exit-3), something's missing and the doctor names exactly what.
 
 ---
 
@@ -68,12 +68,10 @@ You don't need to understand any of these yet. They exist. They'll matter later.
 
 ## Tier check
 
-Your harness is running somewhere. That somewhere has a tier.
+Your harness is running somewhere. That somewhere has a [tier](../concepts/sandboxing.md#tiers).
 
-| Tier | Where | What it means |
-|---|---|---|
-| **1** | Linux, VPS, Docker, WSL2 | Full sandbox. bwrap namespaces. seccomp-bpf. All trust rungs. |
-| **2** | macOS, Termux, Windows | Degraded isolation. IPC broker instead of bwrap. Pinned routines denied. |
+- **Tier 1** — Linux, VPS, Docker, WSL2: full bwrap namespaces, seccomp-bpf, all trust rungs.
+- **Tier 2** — macOS, Termux, Windows: degraded isolation (IPC broker instead of namespaces); pinned routines denied.
 
 The doctor tells you which one you're on. If you're on Tier 2, you'll see:
 
@@ -81,7 +79,7 @@ The doctor tells you which one you're on. If you're on Tier 2, you'll see:
 [dev:tier_2]  ⚠ host.degraded_isolation
 ```
 
-That's not an error. It's physics. macOS doesn't do unprivileged namespaces. Capcli adapts. You just can't run pinned routines here. Dev and sim work fine.
+That's not an error. It's physics: macOS doesn't do unprivileged namespaces, so the kernel adapts. Dev and sim work fine; you just can't run pinned routines there. The full tier taxonomy and the machine invariants behind it live in [concepts/sandboxing.md](../concepts/sandboxing.md#tiers) and [reference/limits.md](../reference/limits.md#invariants).
 
 ---
 
@@ -91,7 +89,24 @@ That's not an error. It's physics. macOS doesn't do unprivileged namespaces. Cap
 $ capcli sys doctor --json
 ```
 
-Machine-readable. Your harness can parse this and fix whatever's broken. That's its job. You made coffee. Let it earn its keep.
+Machine-readable. Your harness parses this and fixes whatever's broken:
+
+```json
+{
+  "status": "refused",
+  "exit": 3,
+  "checks": {
+    "binary":      "ok",
+    "lockfile":    "ok",
+    "sandbox":     "missing: bwrap",
+    "engine":      "ok",
+    "python":      "ok"
+  },
+  "remedy": "apt install bubblewrap"
+}
+```
+
+That's its job — hand it the JSON and let it work.
 
 Common failures:
 

@@ -2,7 +2,7 @@
 
 **The compiled execution firewall between probabilistic AI agents and live enterprise state.**
 
-Your LLM reasons. Capcli enforces what it can touch, how much it can burn, and cryptographically signs every attempt—allowed or denied.
+Your LLM reasons. The kernel enforces what it can touch, how much it can burn, and cryptographically signs every attempt — allowed or denied. Nothing reaches your database, your APIs, or your audit trail without passing through compiled physics first.
 
 ```bash
 curl -fsSL https://capcli.dev/install.sh | bash
@@ -16,13 +16,14 @@ curl -fsSL https://capcli.dev/install.sh | bash
 |---|---|
 | **Zero setup. See it work in 60 seconds.** | [Start Here →](start/index.md) |
 | **Run a bounded query or safe mutation right now.** | [First Task →](start/first-task.md) |
-| **Make safe API calls without leaking keys or burning quotas.** | [Call APIs →](use/call-apis.md) |
-| **Handle incoming webhooks, crons, or export an MCP server.** | [Inbox & Triggers →](use/inbox-and-triggers.md) |
-| **Pause execution and ask a human a structured question.** | [Ask Human →](use/ask-human.md) |
-| **Understand the token-bucket brokerage & multi-day limits.** | [Budgets & Brokerage →](understand/budgets.md) |
-| **Open the local web cockpit.** | [Administrative Cockpit →](concepts/cockpit.md) |
-| **Hit an exit code or denial? Check the ceilings.** | [Hard Limits & Ceilings →](reference/limits.md) |
-| **Look up exact CLI command contracts (10 surface nouns).** | [Command Reference →](reference/index.md) |
+| **Make safe API calls without leaking keys or burning quotas.** | [Call APIs →](workflows/apis.md) |
+| **Handle incoming webhooks, crons, or export an MCP server.** | [Triggers →](workflows/triggers.md) |
+| **Pause execution and ask a human a structured question.** | [Ask a Human →](workflows/approvals.md) |
+| **Understand the token-bucket brokerage & multi-day limits.** | [Budgets →](concepts/budgets.md) |
+| **Open the local web cockpit.** | [Cockpit →](../cans/interface.md) |
+| **Decode an exit code or a denial.** | [Exit Codes →](reference/exit-codes.md) |
+| **Check a hard ceiling (ops, rows, LOC, fuel, drift).** | [Hard Limits →](reference/limits.md) |
+| **Look up exact CLI command contracts (10 surface nouns).** | [Command Reference →](reference/cli/index.md) |
 
 ---
 
@@ -57,20 +58,19 @@ curl -fsSL https://capcli.dev/install.sh | bash
 
 ## The Dual Floor Principle
 
-An autonomous agent doesn't just destroy your company by dropping a table. It also destroys you by double-charging 4,000 customers on Stripe in an infinite `while(true)` loop, or leaking your production credentials into a public terminal log.
-
-Capcli enforces **The Dual Floor**:
+An autonomous agent doesn't just destroy your company by dropping a table. It also destroys you by double-charging 4,000 customers on Stripe in an infinite `while(true)` loop, or leaking production credentials into a public terminal log.
 
 ### Floor 1: The Database Floor
-* **Native C Authorizer:** Intercepts statements inside `sqlite3_set_authorizer` at prepare-time.
-* **AST Semantic Traps:** Queries with missing `WHERE`, missing `LIMIT`, or tautology bypasses (`WHERE 1=1`) die before SQLite allocates a single byte of RAM.
+* **Native C Authorizer:** Intercepts statements inside [`sqlite3_set_authorizer`](concepts/authorizer.md) at prepare-time.
+* **AST Semantic Traps:** Missing `WHERE`, missing `LIMIT`, or tautology bypasses (`WHERE 1=1`) die before SQLite allocates a single byte of RAM.
 * **Guaranteed Clean State:** Non-zero exits mathematically guarantee `state_modified: false`.
 
 ### Floor 2: The Wire Floor
-* **Processor-Level Syscall Trapping:** `seccomp-bpf` intercepts raw network calls (`connect`, Syscall 42). A guest script trying to run `requests.post()` is killed by the CPU (`exit 2`).
+* **Processor-Level Trapping:** [`seccomp-bpf`](concepts/sandboxing.md) intercepts raw network calls (`connect`, Syscall 42). A guest script trying to run `requests.post()` is killed by the CPU ([`exit 2`](reference/exit-codes.md#exit-2)).
 * **Quarantined Catalogs:** Egress routes strictly through imported OpenAPI catalog verbs. The agent never reads raw 5MB Swagger files.
-* **Proactive Token-Bucket Quotas:** Client-side rate buckets meter requests before packets leave your machine. Complex rolling windows (like Meta's nested JSON headers) dynamically throttle the gate.
-* **Zeroize Memory Sanitation:** Secrets decrypted from the AES-256-GCM vault are injected at the wire proxy. Plaintext buffers are overwritten with physical zeros immediately post-dispatch. The agent never sees the key.
+* **Metered Egress:** Client-side token buckets meter requests before packets leave your machine. Vault secrets are decrypted at the wire proxy, injected, and zeroized immediately post-dispatch. The agent never sees the key.
+
+Two cages close the perimeter: the [budget cage](concepts/budgets.md#the-min-law) and the [memory spine](concepts/memory-spine.md).
 
 ---
 
@@ -80,23 +80,12 @@ No prompt engineering. No *"please be careful"*. These are compiled into native 
 
 | Law | Enforcement Mechanism | What Happens on Breach |
 | :--- | :--- | :--- |
-| **1. Database Floor** | Native C `sqlite3_set_authorizer` + AST | Unbounded writes or missing `LIMIT` are **killed at prepare-time (`exit 2`)**. Zero rows touched. |
-| **2. Wire Floor** | `bwrap` namespaces + `seccomp-bpf` + Quota | Raw sockets trapped at **Syscall 42 (`exit 2`)**. Quota exhausted? Tasks **yield cleanly (`exit 6`)**. |
-| **3. Budget Cage** | Downward cascading frames ($\min$) | Op #51 on a 50-op run? **Halted at frame boundary (`exit 2`)**. No half-executed side effects. |
-| **4. Memory Spine** | Append-only SHA-256 Causal DAG | Tampered audit log or broken link? **Kernel refuses to boot (`exit 3`)**. Unaudited writes panic (`exit 5`). |
+| **1. Database Floor** | Native C `sqlite3_set_authorizer` + AST | [Killed at prepare-time](reference/exit-codes.md#exit-2) |
+| **2. Wire Floor** | `bwrap` namespaces + `seccomp-bpf` + quotas | [Trapped at Syscall 42](reference/exit-codes.md#exit-2) · [yield on dry quota](reference/exit-codes.md#exit-6) |
+| **3. Budget Cage** | Downward cascading `min()` frames | [Halted at frame boundary](reference/exit-codes.md#exit-2) |
+| **4. Memory Spine** | Append-only SHA-256 causal DAG | [Kernel refuses to boot](reference/exit-codes.md#exit-3) · [unaudited writes panic](reference/exit-codes.md#exit-5) |
 
----
-
-## Subshell Exit Code Contract
-
-Machines communicate via exit codes, not conversational apologies:
-
-* **`exit 0`** $\rightarrow$ **Success.** Committed to relational state, hashed into the causal ledger.
-* **`exit 2`** $\rightarrow$ **Policy Denial.** Blocked by C authorizer, AST, trust rung, or budget. **State untouched.**
-* **`exit 3`** $\rightarrow$ **Refusal / Drift.** Missing intent (`-m`), lockfile mismatch, or NTP clock drift >500ms. **State untouched.**
-* **`exit 4`** $\rightarrow$ **Crash.** Sandbox runtime exception. Transaction cleanly rolled back.
-* **`exit 5`** $\rightarrow$ **Kernel Panic.** Audit sink unreachable. Hard halt. Kernel refuses to run unaudited.
-* **`exit 6`** $\rightarrow$ **Yield.** Provider quota dry. Task safely parked in `_suspended_tasks` until token refill epoch.
+The full exit-code contract — definitions, denial anatomy, remedy patterns — lives in [reference/exit-codes.md](reference/exit-codes.md).
 
 ---
 
@@ -111,13 +100,10 @@ Machines communicate via exit codes, not conversational apologies:
 
 ## Quick Diagnostics
 
-Check your local host isolation tier (Tier 1 Hardened vs Tier 2 Degraded) right now:
+Check your host isolation tier ([Tier 1 hardened vs Tier 2 degraded](concepts/sandboxing.md#tiers)) right now:
 
 ```bash
 $ capcli sys doctor
 ```
 
-Open the local Administrative Cockpit to inspect live telemetry and authorize actions:
-```text
-http://127.0.0.1:4040
-```
+Open the [Administrative Cockpit](../cans/interface.md) — the local web admin served at `http://127.0.0.1:4040` — to inspect live telemetry and authorize actions.

@@ -1,26 +1,58 @@
-# Boundaries
+# Exit Codes & Denial Anatomy
 
-Your harness is going to hit walls. That's the point.
+Denials don't crash your system; they teach the caller how to pass the gate. When an LLM hits a generic bash error it hallucinates excuses; when it hits a Capcli boundary it gets a structured, machine-parseable receipt. Six codes, one law: **non-zero means the state is untouched** — a partial commit would be a critical kernel bug, not a degraded success.
 
-The walls teach. They say *no*, they say *why*, and they say *what to do instead*. Your harness reads the denial, fixes its approach, and retries. You watch it learn.
+| Code | Name | State Guarantee |
+|---|---|---|
+| [0](#exit-0) | Success | Committed, audit event recorded |
+| [2](#exit-2) | Policy Denial | Untouched (`state_modified: false`) |
+| [3](#exit-3) | Refusal | Untouched |
+| [4](#exit-4) | Crash | Rolled back |
+| [5](#exit-5) | Kernel Panic | Untouched |
+| [6](#exit-6) | Yield | Untouched — task suspended, not failed |
 
----
-
-## The shape of a denial
-
-Every denial looks like this:
-
-```
-attempt → decision → explanation → next action
-```
-
-Not a crash. Not a mystery. Not a stack trace. A structured teaching moment with an exit code.
+There is no exit 1. Generic failure is not part of the contract.
 
 ---
 
-## AST denial: "you're too greedy"
+<a id="exit-0"></a>
 
-Your harness writes a lazy UPDATE.
+## exit 0 — Success
+
+The operation committed and its receipt is on the [memory spine](../concepts/memory-spine.md). Upstream HTTP failures are handled gracefully inside the result envelope — a provider 429 during a routine does not turn your `run` into a crash; it returns a structured envelope with the outcome inside.
+
+**Harness behavior:** proceed. The result summary is capped by the [result-token ceiling](limits.md#execution-budget); pull deeper payloads with `--out` when you need them.
+
+---
+
+<a id="exit-2"></a>
+
+## exit 2 — Policy Denial
+
+The workhorse. A governance invariant, the C authorizer, an AST rule, a budget frame, or a trust rung said no — and the denial itself is a first-class [audit event](audit.md). Domains: `db.engine` (SQLite constraint, foreign key violation, busy timeout), `policy.authorizer` (table/column gate), `policy.budget` (frame or session ceiling), `policy.trust` (rung forbids the action — draft touching prod, pinned on [Tier 2](../concepts/sandboxing.md#tiers)).
+
+**Harness behavior:** read the [FAIL payload](#fail-payload), apply the `remedy`, change the approach. Retrying the identical input is how you trip the [thrashing detector](limits.md#rate-governance).
+
+<a id="fail-payload"></a>
+
+### Anatomy of a Denial
+
+Every exit 2 carries six guarantees:
+
+| Guarantee | What it tells you |
+|---|---|
+| **`FAIL` + rule id** | The exact rule that fired, e.g. `policy.query.update_delete.require_limit` |
+| **Offending snippet** | Exactly what was rejected, with a caret marker under the problem |
+| **`state_modified: false`** | Nothing changed. Guaranteed, not hoped. |
+| **`layer`** | Which enforcement layer caught it: [AST](../concepts/authorizer.md), [VDBE bytecode trap](../concepts/authorizer.md#vdbe), C authorizer, or [budget frame](../concepts/budgets.md#the-min-law) |
+| **`measured` vs cap** | The value that crossed the line — "file has 342 LOC, max is 150" — never a vague shrug |
+| **`remedy`** | What to do instead |
+
+Five walls, five receipts:
+
+### AST blast guard — "no LIMIT"
+
+Your harness writes a lazy UPDATE:
 
 ```bash
 $ capcli sql "UPDATE orders SET status = 'shipped' WHERE status = 'processing'" \
@@ -41,9 +73,9 @@ $ capcli sql "UPDATE orders SET status = 'shipped' WHERE status = 'processing'" 
   remedy: add LIMIT, or target specific primary key
 ```
 
-The SQL never touched SQLite. The AST parser killed it at parse time. Zero rows changed. The denial tells the harness exactly what's wrong and how to fix it.
+The SQL never touched SQLite. The [AST parser](../concepts/authorizer.md) killed it at parse time. Zero rows changed. The denial names the rule, the offending clause, the measured blast radius against the [rows-affected cap](limits.md#database-ceilings), and the fix.
 
-Your harness retries:
+Your harness retries, bounded:
 
 ```bash
 $ capcli sql "UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100" \
@@ -58,11 +90,9 @@ $ capcli sql "UPDATE orders SET status = 'shipped' WHERE status = 'processing' L
 
 Done. It learned. You didn't have to explain anything.
 
----
+### Vault wall — trust gate on `secrets.value`
 
-## Authorizer denial: "you don't have the key"
-
-Your harness tries to read secrets.
+Your harness tries to read credentials directly:
 
 ```bash
 $ capcli sql "SELECT value FROM secrets WHERE name = 'stripe_key'"
@@ -78,16 +108,14 @@ $ capcli sql "SELECT value FROM secrets WHERE name = 'stripe_key'"
 
   state_modified: false
   layer: authorizer
-  remedy: draft trust cannot read secrets; promote routine to reviewed
+  remedy: draft trust cannot read secrets; promote the routine to reviewed
 ```
 
-The C authorizer intercepted this at `sqlite3_prepare_v2`. The query never executed. The harness doesn't get to see the secret. Doesn't get to try a workaround. The door is locked at the engine level.
+The C authorizer intercepted this at `sqlite3_prepare_v2`. The query never executed. No secret exposure, no workaround to try — the door is locked at the engine level, and only the [trust ladder](../concepts/trust-engine.md#reviewed) opens it. How secrets actually reach egress → [apis.md](../workflows/apis.md#vault).
 
----
+### Budget cage — ops 50/50
 
-## Budget denial: "you're out of gas"
-
-Your harness is mid-routine, op 20 of 20. It tries one more thing.
+Your harness is mid-routine, op 50 of 50. It tries one more thing:
 
 ```bash
 $ capcli run archive_old_orders -p cutoff_days=90 \
@@ -100,24 +128,20 @@ $ capcli run archive_old_orders -p cutoff_days=90 \
   FAIL  policy.budget.ops_exhausted
         routine archive_old_orders@3 (frame_005)
         attempted_op: db.exec
-        ops: 20/20
+        ops: 50/50
 
   state_modified: false
   layer: budget
   blocking_frame: frame_005 (archive_old_orders@3)
   session_remaining: 488 ops
-  remedy: increase declared_max_ops in routine limits, or split work
+  remedy: increase declared_max_ops in the routine limits, or split the work
 ```
 
-The session had 488 ops left. But the routine's own frame was the tightest cage. The `min()` cascade held. The denial names the exact frame, the exact dimension, and the remaining headroom at every level.
+The session had 488 ops left. But the routine's own frame was the tightest cage — the [`min()` cascade](../concepts/budgets.md#the-min-law) held. The denial names the exact frame, the exact dimension, and the remaining headroom at every level. The harness either splits the work, raises the declaration, or yields. Headroom for every dimension is visible before you commit: `capcli inspect <ptr>` → `can_invoke_now` ([run.md](cli/run.md)).
 
-Your harness reads this. It either splits the work, increases the declaration, or yields.
+### Trust denial — draft in prod
 
----
-
-## Trust denial: "you're not ready for this room"
-
-Your harness tries to run a draft routine in prod.
+Your harness tries to run a draft routine in prod:
 
 ```bash
 $ capcli run experimental_cleanup -p dry=true \
@@ -138,13 +162,11 @@ $ capcli run experimental_cleanup -p dry=true \
   remedy: promote to reviewed via routine ship, or run in dev/sim
 ```
 
-Draft routines cannot touch prod. Period. No `--force`. No override. The overlay says no, the authorizer says no, the kernel says no. Three locks on the same door.
+Draft routines cannot touch prod. No `--force`, no override. The overlay says no, the authorizer says no, the kernel says no — three locks on the same door. How code earns the key → [trust-engine.md](../concepts/trust-engine.md); how worlds stay isolated → [environments.md](../concepts/environments.md).
 
----
+### Network jail — syscall 42
 
-## Network jail: "there is no door"
-
-Your harness tries to open a raw socket inside a routine.
+Your harness tries to open a raw socket inside a routine:
 
 ```python
 # inside a sandboxed routine
@@ -165,13 +187,60 @@ s.connect(("10.0.0.5", 5432))
   remedy: use ctx.api.call with an activated catalog verb
 ```
 
-The process never saw the network. `seccomp-bpf` killed the syscall before it reached the kernel's TCP stack. The routine got an exit code. No timeout. No connection refused. Just: *this path does not exist.*
+The process never saw the network. `seccomp-bpf` killed the syscall before it reached the kernel's TCP stack. No timeout, no connection refused — just: *this path does not exist.* The only door out is a catalog verb through the kernel ([api.md](cli/api.md)); the jail itself is described in [sandboxing.md](../concepts/sandboxing.md).
 
 ---
 
-## What happens if your harness keeps hitting the wall
+<a id="exit-3"></a>
 
-Twenty sustained denials triggers a thrashing alert.
+## exit 3 — Refusal
+
+Compile-time refusal, validation failure, or boot integrity. The caller is malformed, not the policy. Common triggers:
+
+* Missing `-m` intent on a mutating write — the audit trail demands causality.
+* Unparseable SQL — parser failure fails closed.
+* Lockfile mismatch — `capcli.lock` hash diverges from the YAML on disk ([lockfile law](../concepts/compiler.md)).
+* NTP drift beyond the [boot gate](limits.md#invariants).
+* Sub-5-minute cron registration ([cron floor](limits.md#triggers)).
+* Missing parameter, missing secret in headless mode, scoped view invoked without `--as`.
+
+State untouched. **Harness behavior:** fix the input — add the intent, repair the syntax, sync the clock — then retry. Retrying without changing anything just spends your [rate budget](limits.md#rate-governance).
+
+---
+
+<a id="exit-4"></a>
+
+## exit 4 — Crash
+
+`routine.runtime`: an uncaught exception or type crash inside the sandbox. The transaction is cleanly rolled back — no half-written rows survive.
+
+**Harness behavior:** don't blind-retry; forensic quarantine blocks auto-retry on unhandled runtime faults. Walk the trace (`capcli sys audit trace <op-id>` → [sys.md](cli/sys.md)), fix the code, bump the version — silent edits are banned, every change is a new version.
+
+---
+
+<a id="exit-5"></a>
+
+## exit 5 — Kernel Panic
+
+The audit sink is unreachable or a host resource failed, so execution is refused outright: **unaudited writes are physically impossible.** The sink gets a short in-memory failure buffer before the kernel pulls the cord — the exact window is a [machine invariant](limits.md#invariants).
+
+**Harness behavior:** stop and surface to a human immediately. There is nothing to retry — the machine is telling you it cannot guarantee a receipt, so it refuses to act.
+
+---
+
+<a id="exit-6"></a>
+
+## exit 6 — Yield
+
+`api.quota`: the proactive rate broker yielded instead of denying. The frame is marked `yielded`, persisted to the daemon's suspended-task queue, and re-queued automatically when tokens refill (`resume_at`). Background tasks yield when unreserved headroom drops below the [yield threshold](limits.md#api-wire); critical tasks get a hard exit 2 instead.
+
+**Harness behavior:** do not retry and do not spawn a replacement — the task is already scheduled. Check `capcli inspect` for when headroom returns, or watch the queue drain via [sys.md](cli/sys.md). The suspension mechanics are covered in [budgets.md](../concepts/budgets.md).
+
+---
+
+## Thrashing detection
+
+Capcli doesn't just block — it notices when blocking becomes a loop. [Twenty sustained denials in five minutes](limits.md#rate-governance) fires an `agent.thrashing` warning:
 
 ```
 [dev:tier_1]  ⚠  agent.thrashing
@@ -182,35 +251,10 @@ Twenty sustained denials triggers a thrashing alert.
   remedy: harness appears stuck; consider changing approach or escalating to human
 ```
 
-Capcli doesn't just block. It notices when blocking becomes a loop. Your harness gets the alert. You get the alert. Something needs to change.
+The harness gets the alert. You get the alert. Something needs to change — and the pattern line usually tells you exactly what.
 
 ---
 
-## The denial contract
+## The state guarantee
 
-Every denial gives you:
-
-| Field | What it tells you |
-|---|---|
-| `FAIL` + rule code | Which specific rule you hit |
-| Rejected statement | Exactly what you tried, with the offending part highlighted |
-| `state_modified: false` | Nothing changed. You're safe. |
-| `layer` | Which enforcement layer caught you (AST, authorizer, budget, trust, sandbox) |
-| `measured` | The actual value that crossed the line |
-| `remedy` | What to do instead |
-
-This isn't an error message. It's a teaching payload. Your harness parses it. Fixes the approach. Retries. You don't intervene unless you want to.
-
----
-
-## The one rule
-
-**A denial is not a failure. It's the system talking.**
-
-When you see `exit 2`, don't panic. Don't retry blindly. Read the `remedy`. Your harness reads it too. The wall just told you where the door is.
-
----
-
-**Want to see what actually happened?** → [audit.md](audit.md)
-
-**Need to undo something?** → [recover.md](recover.md)
+Every non-zero exit guarantees `state_modified: false`. This is the contract that makes autonomy safe: when your harness reads an exit code, it is reading a promise about the database. If it isn't 0, nothing happened — and the [audit spine](../concepts/memory-spine.md) can prove it.
