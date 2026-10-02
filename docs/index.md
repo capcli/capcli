@@ -26,6 +26,23 @@ curl -fsSL https://capcli.dev/install.sh | bash
 
 ---
 
+## The Full Map
+
+Every section answers one reader need. Pick yours:
+
+| Section | It answers |
+|---|---|
+| [Start](start/index.md) | «What is this, and can I use it?» |
+| [Use](use/index.md) | «I need to get something done.» |
+| [Understand](understand/index.md) | «I want to understand what I'm working with.» |
+| [Automate](automate/index.md) | «I keep doing this.» |
+| [Agents](agents/index.md) | «I need an agent to operate it.» |
+| [Reference](reference/index.md) | «I need the exact contract.» |
+| [Guides](guides/index.md) | «Something specific went wrong.» |
+| [Concepts](concepts/index.md) | «I need to understand a deeper idea.» |
+
+---
+
 ## The 10-Second Mental Model
 
 ```
