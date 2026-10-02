@@ -29,7 +29,7 @@
   },
   "include": [
       "README.md",
-      "docs/",
+      "docs",
       "cans/",
   //    "cans/artifacts/capcli.playbook.md",
       "cans/artifacts/governance.yaml",
