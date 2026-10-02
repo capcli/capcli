@@ -9,7 +9,7 @@ Follow along. Type these. Watch what happens.
 ## You walk in blind
 
 ```bash
-$ capcli run search "order"
+$ capcli search "order"
 ```
 
 ```
@@ -88,7 +88,7 @@ $ capcli sql "DELETE FROM orders"
 
 You tried to nuke the table. Capcli said no. Not "are you sure?" Not "maybe don't." *No.* The SQL never reached SQLite. The authorizer killed it at `sqlite3_prepare_v2`. State untouched.
 
-And it told you *why* and *what to do instead*. Denials teach.
+And it told you *why* and *what to do instead*. Denials teach. Every denial carries the same [FAIL payload — rule, culprit, state, remedy](../reference/exit-codes.md#exit-2) — so your harness can self-correct instead of guessing.
 
 ---
 
@@ -122,7 +122,7 @@ $ capcli sys audit tail --since 5m
 ```
 
 ```
-[dev:tier_1]  4 events
+[dev:tier_1]  6 events
 
   ts          event                    decision   agent      capability
   ──────────  ───────────────────────  ─────────  ─────────  ──────────────────
@@ -134,7 +134,7 @@ $ capcli sys audit tail --since 5m
   ...         sql.query                denied     agt_7f3k   orders (update)
 ```
 
-Six rows. Every attempt — successful or blocked. Agent, capability, decision. Hash-chained. Append-only. You can't edit this. You can't delete rows. You can't pretend the `DELETE FROM orders` never happened.
+Six rows. Every attempt — successful or blocked. Agent, capability, decision. [Hash-chained, append-only](../concepts/memory-spine.md). You can't edit this. You can't delete rows. You can't pretend the `DELETE FROM orders` never happened.
 
 ---
 

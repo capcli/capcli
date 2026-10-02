@@ -52,12 +52,12 @@ An autonomous agent will destroy your company in one of two ways:
 Capcli treats **local state mutations and external network egress with equal gate severity**:
 
 ### 1. The Database Floor
-* **Prepare-Time Interception:** Evaluated inside native C (`sqlite3_set_authorizer`) before SQLite executes.
-* **AST Blast-Radius Guards:** Unbounded `UPDATE` and `DELETE` queries without an explicit `WHERE` and `LIMIT` die instantly at prepare-time (`exit 2`).
+* **Prepare-Time Interception:** Evaluated inside native C ([`sqlite3_set_authorizer`](docs/concepts/authorizer.md)) before SQLite executes.
+* **AST Blast-Radius Guards:** Unbounded `UPDATE` and `DELETE` queries without an explicit `WHERE` and `LIMIT` die instantly at prepare-time ([`exit 2`](docs/reference/exit-codes.md#exit-2)).
 * **Zero Mutation on Breach:** `state_modified: false` is mathematically guaranteed on any non-zero exit code.
 
 ### 2. The Wire Floor
-* **Syscall 42 Trapping:** Raw socket calls (`connect`) triggered by `requests.get()` or `fetch()` are intercepted at the processor level via `seccomp-bpf` (`exit 2`). 
+* **Syscall 42 Trapping:** Raw socket calls (`connect`) triggered by `requests.get()` or `fetch()` are intercepted at the processor level via [`seccomp-bpf`](docs/concepts/sandboxing.md) (`exit 2`). 
 * **Quarantined OpenAPI Catalogs:** The agent never reads raw 5MB Swagger files. Outbound traffic routes exclusively through imported, activated catalog verbs (`capcli api sync`).
 * **Proactive Token Buckets:** Client-side rate buckets block or yield tasks *before* packets touch the physical network. Downstream rate-limit headers (even nested JSONPath headers) dynamically sync the gate.
 * **Zero-Knowledge Vault:** API credentials live in an AES-256-GCM vault. The kernel injects `Authorization` headers at the socket edge, and memory buffers are zeroized (`zeroize`) immediately post-dispatch. The agent never sees the secret in plaintext.
@@ -96,10 +96,10 @@ export default routine({
 
 | Law | Enforcement Mechanism | What Happens on Breach |
 | :--- | :--- | :--- |
-| **1. The Database Floor** | Native C `sqlite3_set_authorizer` + AST parser | Unbounded writes or missing `LIMIT` are **killed at prepare-time (`exit 2`)**. Zero rows touched. |
-| **2. The Wire Floor** | `bwrap` namespaces + `seccomp-bpf` + Token Buckets | Raw socket call? **Trapped at Syscall 42 (`exit 2`)**. Quota dry? Background tasks **park cleanly (`exit 6`)**. |
-| **3. The Budget Cage** | Downward cascading frames ($\min$) | Op #51 on a 50-op run? **Terminated at frame boundary (`exit 2`)**. No half-executed side effects. |
-| **4. The Memory Spine** | Append-only SHA-256 Causal DAG | Tampered audit row or broken hash link? **Kernel refuses to boot (`exit 3`)**. Unaudited writes fail closed (`exit 5`). |
+| **1. The Database Floor** | Native C `sqlite3_set_authorizer` + AST parser | [Killed at prepare-time](docs/reference/exit-codes.md#exit-2) |
+| **2. The Wire Floor** | `bwrap` namespaces + `seccomp-bpf` + token buckets | [Trapped at Syscall 42](docs/reference/exit-codes.md#exit-2) · [yield on dry quota](docs/reference/exit-codes.md#exit-6) |
+| **3. The Budget Cage** | Downward cascading `min()` frames | [Halted at frame boundary](docs/reference/exit-codes.md#exit-2) |
+| **4. The Memory Spine** | Append-only SHA-256 causal DAG | [Kernel refuses to boot](docs/reference/exit-codes.md#exit-3) · [unaudited writes panic](docs/reference/exit-codes.md#exit-5) |
 
 ---
 
@@ -107,12 +107,16 @@ export default routine({
 
 Machines communicate via exit codes, not polite English apologies. Capcli never prints ambiguous success when state failed:
 
-* **`exit 0`** $\rightarrow$ **Success.** Committed to relational state, hashed into the causal ledger.
-* **`exit 2`** $\rightarrow$ **Policy Denial.** Blocked by C authorizer, AST, trust rung, or op budget. **State untouched.**
-* **`exit 3`** $\rightarrow$ **Refusal / Drift.** Unparseable syntax, missing intent (`-m`), lockfile mismatch, or NTP clock drift >500ms. **State untouched.**
-* **`exit 4`** $\rightarrow$ **Crash.** Sandbox runtime exception. Transaction cleanly rolled back.
-* **`exit 5`** $\rightarrow$ **Kernel Panic.** Audit sink unreachable. Hard halt. Kernel refuses to run unaudited.
-* **`exit 6`** $\rightarrow$ **Yield.** Provider quota dry. Task safely parked in `_suspended_tasks` until token refill epoch.
+| Code | Name |
+| :--- | :--- |
+| [`exit 0`](docs/reference/exit-codes.md#exit-0) | Success |
+| [`exit 2`](docs/reference/exit-codes.md#exit-2) | Policy Denial |
+| [`exit 3`](docs/reference/exit-codes.md#exit-3) | Refusal / Drift |
+| [`exit 4`](docs/reference/exit-codes.md#exit-4) | Crash |
+| [`exit 5`](docs/reference/exit-codes.md#exit-5) | Kernel Panic |
+| [`exit 6`](docs/reference/exit-codes.md#exit-6) | Yield |
+
+Full definitions, denial anatomy, and remedy patterns: [docs/reference/exit-codes.md](docs/reference/exit-codes.md)
 
 ---
 
@@ -150,10 +154,13 @@ Docker isolates the host OS from a container escape. It does nothing to stop an 
 Have fun with that at 3:00 AM. Prompts are probabilistic suggestions. `sqlite3_set_authorizer` and `seccomp-bpf` are compiled C machine code. Prompts drift; physics do not.
 
 #### Can the LLM modify its own policies?
-No. `schema.yaml`, `policy.yaml`, and `governance.yaml` are compiled into `capcli.lock` (a root SHA-256 hash). Any runtime drift between disk YAML and the lockfile triggers an instant `exit 3` boot refusal. Policy changes require signed Git commits.
+No. `schema.yaml`, `policy.yaml`, and `governance.yaml` are [compiled into `capcli.lock`](docs/concepts/compiler.md) (a root SHA-256 hash). Any runtime drift between disk YAML and the lockfile triggers an instant [`exit 3`](docs/reference/exit-codes.md#exit-3) boot refusal. Policy changes require signed Git commits.
 
 #### What Harnesses does this work with?
 All of them. Claude Code, Hermes, OpenAI Swarms, DeepSeek, custom LangChain loops, or a naked `curl` bash script. If your system can type a command into a terminal, it can run inside Capcli.
+
+#### Is there a UI, or is this all terminal?
+Both. The CLI is the contract; the [Administrative Cockpit](cans/interface.md) is a zero-authority web inspector the kernel serves at `http://127.0.0.1:4040` — live audit tail, causal DAG traces, budget gauges, approval cards. It can look at everything and command nothing.
 
 ---
 
@@ -162,10 +169,11 @@ All of them. Claude Code, Hermes, OpenAI Swarms, DeepSeek, custom LangChain loop
 | Documentation | What you'll find |
 |---|---|
 | **[Start Tour](docs/start/index.md)** | Install the static binary and run your first bounded task in 60 seconds. |
-| **[Daily Use](docs/use/index.md)** | Discovering capabilities, calling APIs, handling webhooks, and asking humans. |
-| **[Understand Physics](docs/understand/index.md)** | The Causal DAG, proactive token brokerage, and the 3-rung trust ladder. |
-| **[CLI & Command Reference](docs/reference/index.md)** | Machine-grade contracts for all 10 surface nouns (`run`, `api`, `bind`, etc.). |
-| **[Deep Concepts](docs/concepts/index.md)** | `seccomp-bpf` profiles, the 5-Gate compiler, and the embedded Cockpit. |
+| **[Workflows](docs/workflows/index.md)** | Discovering capabilities, calling APIs, handling webhooks, and asking humans. |
+| **[Deep Concepts](docs/concepts/index.md)** | The authorizer, the sandbox, the causal DAG, token budgets, and the trust ladder. |
+| **[CLI & Command Reference](docs/reference/cli/index.md)** | Machine-grade contracts for all 10 surface nouns (`run`, `db`, `api`, `bind`, etc.). |
+| **[Hard Limits](docs/reference/limits.md)** | Every compiled ceiling: ops, rows, LOC, fuel, and clock drift. |
+| **[Exit Codes](docs/reference/exit-codes.md)** | The strict integer contract and denial anatomy. |
 
 ---
 
@@ -176,5 +184,5 @@ git clone https://github.com/capcli/capcli
 cd capcli && cargo build --release --target x86_64-unknown-linux-musl
 ```
 
-[MIT](LICENSE) © 2026 capcli contributors.  
+MIT © 2026 capcli contributors.  
 **Build an enterprise that runs while you sleep.**

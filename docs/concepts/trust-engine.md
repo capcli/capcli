@@ -1,85 +1,82 @@
 # The Trust Engine
 
-Your AI agent will look you dead in your virtual eyes and say, *"I have thoroughly tested this script, it is completely safe to run in production."*
+Agents hallucinate safety. Capcli ignores claims and enforces an integer trust ladder:
 
-Then it drops your production customer table because it got confused by a subquery.
+```
+[PINNED]    → Unattended production. Tier 1 Linux only.
+   ▲
+[REVIEWED]  → Supervised prod & live APIs. Survived sim replay.
+   ▲
+[DRAFT]     → Default entry. Sandboxed, no secrets, dev/sim only.
+```
 
-In Capcli, **trust is not a feeling, a prompt, or an apology.** Trust is an integer ladder backed by cold, unblinking math. You don't grant trust because an LLM sounds confident; the kernel grants trust when code survives simulation without breaking a single physical law.
+Trust is earned through deterministic simulation metrics — not prompts, human vibes, or `--force` flags. (Passing `--force` in Capcli is a syntax error. Don't embarrass yourself.)
+
+Every routine, query, and API verb sits on exactly one rung, and the kernel — not the model — decides which one.
 
 ---
 
 ## The Three Rungs
 
-Think of trust as security clearances for code. Every routine, query, and API verb sits on one of three rungs:
+### 1. Draft: Unproven
 
-```
-[ PINNED ]    → Battle-hardened machine. Runs unattended at 3 AM.
-     ▲
-[ REVIEWED ]  → Proven intern. Survived simulation; allowed to touch real APIs.
-     ▲
-[ DRAFT ]     → Toddler with plastic scissors. Can't touch prod, can't see secrets.
-```
+Every newly written routine, imported template, or freshly activated API verb starts here. Zero exceptions, zero inherited credit — a template that claims to be production-ready enters at draft anyway.
 
----
+* **Rows affected:** capped at the draft ceiling — 10 rows, relaxed to 100 in dev for seeding, denied outright in prod ([figures](../reference/limits.md#database-ceilings)).
+* **Secrets:** invisible. `SELECT value FROM secrets` throws [exit 2](../reference/exit-codes.md#exit-2) before a row returns.
+* **Production:** physically banned. Running a draft routine in prod throws `exit 2` before bytecode even evaluates.
+* **Network:** sandboxed socket jail ([sandboxing.md](sandboxing.md)).
 
-### 1. Draft: Toddler Mode
-Every newly written routine, imported template, or freshly activated API verb starts here. Zero exceptions.
-
-* **Max rows affected:** 10 (Dev allows 100 so you can seed test data without crying).
-* **Secrets:** Completely invisible. Try to `SELECT value FROM secrets` and the C authorizer laughs in your face (`exit 2`).
-* **Production:** Physically banned. Running a draft routine in `prod` throws `exit 2` before the code even compiles.
-* **Network:** Sandboxed socket jail.
-
-Draft is your sandbox within a sandbox. The harness can make typos, hallucinate arguments, and fail all day. Reality won't notice.
+Draft is a sandbox within the sandbox. The harness can make typos, hallucinate arguments, and fail all day. Reality won't notice.
 
 ---
 
-### 2. Reviewed: The Proven Intern
-Code that passed rehearsal in the `sim` environment. It knows the rules and hasn't broken anything lately.
+<a id="reviewed"></a>
 
-* **Max rows affected:** 100 rows.
-* **Bulk queries:** Unlocked. Mass updates work (with mandatory `WHERE` and `LIMIT`).
-* **Secrets:** Can access masked credentials for outbound API egress.
-* **Production:** Can run in prod, but **requires an active human supervisor** (no headless cron jobs yet).
+### 2. Reviewed: Proven in Sim
 
----
+Code that passed rehearsal in the `sim` environment against masked, production-shaped data — real historical inputs, zero policy denials. It knows the rules and hasn't broken anything lately.
 
-### 3. Pinned: The Autopilot
-Hardened, battle-tested code. The routine's source code and its execution manifest are cryptographically hashed and version-locked (`dispatch_order@4`).
-
-* **Max rows affected:** 500 rows.
-* **Unattended schedules:** Can be wired to automated crons and webhooks (`may_run_unattended: true`).
-* **Public endpoints:** Only pinned routines can be served over HTTP to partners.
-* **Audit level:** High-level summary (it runs so fast and so often that full payload dumping would drown the disk).
+* **Rows affected:** the reviewed ceiling — 100 rows ([figures](../reference/limits.md#database-ceilings)).
+* **Bulk queries:** unlocked. Mass updates work — `WHERE` and `LIMIT` stay mandatory.
+* **Secrets:** masked credentials visible for outbound API egress.
+* **Production:** allowed, but requires an active human supervisor. No headless crons yet.
 
 ---
 
-## How Code Earns Its Wings: The 5-Point Math
+### 3. Pinned: Unattended
 
-You don't promote code by typing `--force`. (Fun fact: passing `--force` in Capcli is an immediate syntax error. Don't embarrass yourself).
+Hardened, battle-tested code. Source and execution manifest are cryptographically hashed and version-locked (`cap://dispatch_order@4` — the `@4` is permanent; silent edits force a new version).
 
-To auto-promote a routine from `draft` to `reviewed`, the kernel runs a zero-tolerance conjunction algorithm against simulation history. **Every single metric must pass:**
+* **Rows affected:** the pinned ceiling — 500 rows ([figures](../reference/limits.md#database-ceilings)).
+* **Unattended schedules:** `may_run_unattended: true` — crons and webhooks can fire at 03:00 with nobody watching.
+* **Public endpoints:** only pinned routines can be served over HTTP to partners.
+* **Audit level:** high-level summary — it runs so fast and so often that full payload dumps would drown the disk.
+
+---
+
+## How Code Earns Its Rung: The Auto-Promotion Math
+
+You don't promote code by asking. To move a routine from draft to reviewed, the kernel runs a zero-tolerance conjunction against simulation history. Every metric must pass — fail one by 0.01% and auto-promotion aborts, routing the candidate to the human queue (`capcli routine pending` → [reference/cli/routine.md](../reference/cli/routine.md)). No negotiation.
 
 | Metric | Threshold | Fail Result |
 |---|---|---|
-| **1. Invariant Suite** | `100% pass` | Rehearsal failure $\rightarrow$ human queue |
-| **2. Success Rate** | $\ge 95.0\%$ | 94.9%? Blocked. No rounding up. |
-| **3. Manifest Match** | `100% subset` | Executed a single undeclared query? Denied. |
-| **4. Policy Denials** | **Exactly 0** | Hit one AST wall? Back to the drawing board. |
-| **5. Fingerprint Drift** | **Exactly 0** | Runtime leaf divergence $\rightarrow$ Denied. |
-| **6. Latency Ceiling** | $\text{p95} \le 70\%$ of max timeout | Too slow in sim? Denied. |
-
-Fail even one check by 0.01%? Auto-promotion aborts, and the candidate gets tossed into the human approval queue (`capcli routine pending`). No negotiation.
+| **Invariant suite** | 100% pass | Rehearsal failure → human queue |
+| **Success rate** | ≥ 95.0% | 94.9%? Blocked. No rounding up. |
+| **Manifest match** | 100% subset | Executed a single undeclared query? Denied. |
+| **Policy denials** | Exactly 0 | Hit one authorizer wall? Back to the drawing board. |
+| **Fingerprint drift** | Exactly 0 | Runtime leaf divergence → denied. |
+| **Latency ceiling** | p95 ≤ 70% of declared max duration | Too slow in sim? Denied. |
 
 ---
 
 ## The 1-Hour Parole Window (Canary Veto)
 
-Congratulations! Your routine passed the 5-point math and got promoted. It's live!
+Congratulations — the conjunction passed and the routine was promoted. It's live.
 
 **Now it's on parole.**
 
-The moment a routine is promoted, the kernel starts a silent **60-minute canary timer**. 
+The moment a routine is promoted, the kernel starts a silent **60-minute canary timer**:
 
 ```
 Promotion Approved
@@ -98,63 +95,32 @@ AUTONOMOUS DEMOTION   PERMANENT RUNG
 (Back to Draft)       (Survives parole)
 ```
 
-If the routine triggers a policy denial, latency spike, or runtime panic during those first 60 minutes, the kernel doesn't page you. It fires an **autonomous circuit breaker**, cancels the promotion, and drops the routine straight back to `draft`. 
+If the routine triggers a policy denial, latency spike, or runtime panic during those first 60 minutes, the kernel doesn't page you. It fires an **autonomous circuit breaker**, cancels the promotion, and drops the routine straight back to `draft`.
 
 You fix the bug. You try again.
 
 ---
 
-## The Tier 2 Permanent Nerf (Mac & Windows Tears)
+## Tier 2: The Pinned Ceiling
 
-Here is a cold, hard pill to swallow:
+Pinned execution requires hardware-level containment: unprivileged Linux namespaces and syscall trapping via `seccomp-bpf`. Hosts without those primitives — macOS, Windows native, Termux — are classified [Tier 2 (degraded isolation)](sandboxing.md#tiers): draft and reviewed run fine in dev and sim, but invoking a pinned routine there throws [exit 2](../reference/exit-codes.md#exit-2) (`E045_TIER2_PINNED_DENIED`). The machine invariant row: [reference/limits.md#invariants](../reference/limits.md#invariants).
 
-If you are developing on a **MacBook Pro, Windows machine, or Android Termux**, your machine is classified as **Tier 2 (Degraded Isolation)**.
-
-```bash
-$ capcli run dispatch_order@4 --env prod
-```
-```text
-[prod:tier_2]  ✗  exit 2
-
-  FAIL  E045_TIER2_PINNED_DENIED
-        Pinned execution refused on Tier 2 host.
-        macOS does not support unprivileged user namespaces (bwrap).
-```
-
-### Why?
-It’s not elitism; it’s physics. 
-
-Running a `pinned` production routine unattended requires hardware-level containment: unprivileged Linux namespaces (`bwrap`) and system-call trapping via `seccomp-bpf` (trapping raw socket calls at syscall 42). 
-
-macOS and Windows simply do not have unprivileged kernel namespaces. An agent running locally on Darwin can bypass network proxies if it tries hard enough.
-
-### The Rule
-* **Tier 1 (Linux bare-metal, VPS, Docker with userns, WSL2):** Can run everything (`draft`, `reviewed`, `pinned`).
-* **Tier 2 (macOS, Windows native, Termux):** Hard-capped at **Reviewed** in `dev` and `sim`.
-
-You write code on your Mac. You test it in simulation on your Mac. But when it's time to pin it to live production state, it runs on Linux. Physics wins every time.
+It isn't elitism; it's physics. Write code on your Mac, rehearse it in sim on your Mac — but when it's time to run unattended against live production state, it runs on Linux.
 
 ---
+
+<a id="training-wheels"></a>
 
 ## Training Wheels for APIs
 
-When your agent activates a brand new external API verb (e.g. `stripe.refund_charge`) that has no simulation mock fixture:
+When your agent activates a brand-new external API verb (e.g. `stripe.refund_charge`) that has no simulation mock fixture, it gets tagged with **training wheels**:
 
-* It gets tagged with **Training Wheels**.
-* Calls 1, 2, and 3 require synthetic contract replay proofs against historical audit logs.
-* On **Call 4**, it automatically graduates to standard governance.
+* The first calls must pass synthetic contract replay proofs against historical audit logs.
+* On **call 4**, the verb automatically graduates to standard governance.
 
-The system assumes every new external effect is a potential disaster until proven routine.
-
----
-
-## The One Rule
-
-**Prompts ask for trust. Physics enforces it.**
-
-Never rely on an agent promising to be careful. Check its rung, inspect its manifest, and let the kernel handle the leash.
+The system assumes every new external effect is a potential disaster until proven routine. The step-by-step workflow — including the vault that feeds it — lives in [workflows/apis.md#training-wheels](../workflows/apis.md#training-wheels).
 
 ---
 
-**Want to see what happens when trust is breached?** → [boundaries.md](../use/boundaries.md)  
-**Inspect an envelope before running it?** → [inspect.md](../use/inspect.md)
+**See the rung on any capability:** → `capcli inspect cap://dispatch_order@4`
+**Watch a routine climb the ladder end-to-end:** → [workflows/routines.md](../workflows/routines.md)

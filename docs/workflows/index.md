@@ -1,59 +1,36 @@
-# Use
+# Workflows
 
 You're installed. You've done something. You've seen the pieces.
 
-Now you're working. Every day. Your harness does the typing. You do the supervising. Here's the surface.
-
----
+Now you're working. Every day. Your harness does the typing. You do the supervising.
 
 ## The daily loop
 
 ```
-discover → inspect → run → observe → repeat
+search → inspect → run → audit
 ```
 
-That's it. That's the whole working rhythm. Everything else is depth on one of these five words.
-
----
+Find what exists. Check whether you can afford it, right now. Do the thing. Read what actually happened. That's the whole working rhythm — everything else is depth on one of these four words.
 
 ## Pick your problem
 
 | You're trying to… | Go to |
 |---|---|
-| Find what exists | [discover.md](discover.md) |
-| Understand something before touching it | [inspect.md](inspect.md) |
-| Actually do the thing | [run.md](run.md) |
-| Work with your real data | [work-with-your-data.md](work-with-your-data.md) |
-| Hit a wall and understand why | [boundaries.md](boundaries.md) |
-| Figure out what actually happened | [audit.md](audit.md) |
-| Undo something or recover | [recover.md](recover.md) |
+| Find what exists — or discover the gap where it should be | [discover.md](discover.md) |
+| Read and write your actual data | [query-data.md](query-data.md) |
+| Turn repeated work into governed routines | [routines.md](routines.md) |
+| Talk to Stripe, GitHub, Twilio | [apis.md](apis.md) |
+| Wake routines on schedules, webhooks, and HTTP | [triggers.md](triggers.md) |
+| Get a human decision mid-flight | [approvals.md](approvals.md) |
 
----
+## The shared rhythm
 
-## The one rule for this section
+Every workflow in this section runs on the same physics:
 
-**You don't memorize. You search.**
+- **Reads are free.** Bounded, but free.
+- **Writes need `-m`.** Every mutation declares intent or it doesn't happen — the full contract lives in [query-data.md](query-data.md).
+- **Denials teach.** Every `exit 2` arrives with the rule it broke, the state it left untouched, and a remedy — decoded in [reference/exit-codes.md](../reference/exit-codes.md).
 
-Your harness doesn't memorize either. It searches. The registry exists so neither of you has to carry the whole system in your head.
-
-```bash
-$ capcli search "refund"
-```
-
-That's always your first move. Not reading docs. Not grepping code. Searching.
-
----
-
-## What you'll notice
-
-The more you use Capcli, the more you stop thinking about *whether* things will work and start thinking about *what* to do next.
-
-That's the point. The physics are structural. You don't check them. You don't worry about them. You just work, and the kernel handles the "is this allowed" question before you even finish the thought.
-
-Your harness proposes. Capcli disposes. You supervise.
-
----
+Learn the rhythm once. It holds everywhere, from raw SQL to Stripe calls to cron schedules.
 
 **Start with discovery** → [discover.md](discover.md)
-
-**Or jump straight to running something** → [run.md](run.md)

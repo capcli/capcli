@@ -1,50 +1,30 @@
-
 # The Memory Spine & Causal DAG
 
-AI agents are world-class gaslighters.
-
-When an LLM hallucinates and drops your customer table, it doesn't say *"I am a broken script that made an illegal SQL call."* It looks you in your virtual eyes and says:
+When an LLM hallucinates and drops your customer table, it doesn't file a bug report. It says:
 
 > *"I apologize for any inconvenience! I have optimized the database by removing redundant user records to improve latency."*
 
-In traditional software, developers can SSH into the box, edit log files, run `rm -rf /var/log/app.log`, and pretend the incident never happened.
+In traditional software, a developer can SSH into the box, edit log files, run `rm -rf /var/log/app.log`, and pretend the incident never happened.
 
-In Capcli, **your agent cannot gaslight you, and you cannot gaslight the ledger.**
-
-Every thought, query, HTTP dispatch, and policy denial is cryptographically hash-chained into an append-only memory spine. Here is how reality records itself.
+In Capcli, **your agent cannot gaslight you, and you cannot gaslight the ledger.** Every thought, query, HTTP dispatch, and policy denial is cryptographically hash-chained into an append-only memory spine. Here is how reality records itself.
 
 ---
 
 ## 1. The Immutable Spine: `_audit`
 
-Inside `workspace.db` sits the primary system table: **`_audit`**. 
+Inside `workspace.db` sits the primary system table: **`_audit`**.
 
-Unlike domain tables (`orders`, `customers`) where you can run bounded `UPDATE` or `DELETE` statements, the `_audit` table has physical row immutability compiled into native C:
+Unlike domain tables (`orders`, `customers`), where bounded `UPDATE` and `DELETE` are legal, `_audit` has physical row immutability compiled into native C. Try to cover your tracks:
 
-```sql
--- You or your agent trying to cover your tracks:
+```bash
 capcli sql "DELETE FROM _audit WHERE decision = 'denied'"
 ```
 
-```text
-[dev:tier_1]  ✗  exit 2
-
-  FAIL  policy.authorizer.immutable_system_table
-        DELETE FROM _audit WHERE decision = 'denied'
-        ^^^^^^^^^^^^^^^^^^
-        System table '_audit' is strictly append-only. 
-        Mutations and deletions are physically denied by the C authorizer.
-
-  state_modified: false
-  layer: authorizer
-```
-
-The C authorizer laughs in your face. The query never executes. 
+The C authorizer kills the statement at prepare time — [exit 2](../reference/exit-codes.md#exit-2) (`policy.authorizer.immutable_system_table`), state untouched. The spine is strictly append-only; the query never executes.
 
 ### The `exit 5` Panic Law
-What happens if the disk fills up or the audit file is locked by host permissions? 
 
-Traditional software swallows the error and keeps running silently in the dark. Capcli executes **`exit 5` (Kernel Panic)**. 
+What happens if the disk fills up or the audit file is locked by host permissions? Traditional software swallows the error and keeps running silently in the dark. Capcli executes **[exit 5 (Kernel Panic)](../reference/exit-codes.md#exit-5)**.
 
 **Unaudited writes are physically impossible.** If the kernel cannot guarantee a cryptographic receipt for an action, execution halts instantly. Nothing mutates off the record.
 
@@ -52,7 +32,7 @@ Traditional software swallows the error and keeps running silently in the dark. 
 
 ## 2. The Tamper-Evident Hash Chain
 
-Every single row written to `_audit` contains a cryptographic link to the row before it:
+Every row written to `_audit` carries a cryptographic link to the row before it:
 
 $$\text{prev\_hash}_N = \text{SHA-256}(\text{Row}_{N-1})$$
 
@@ -67,20 +47,22 @@ $$\text{prev\_hash}_N = \text{SHA-256}(\text{Row}_{N-1})$$
 ```
 
 ### What happens if someone hacks the database?
-Let’s say an attacker gets root access to your server, opens `workspace.db` with a raw SQLite binary, and changes a `refunded` amount from `$10,000` to `$10`.
 
-The moment Capcli boots up:
-1. The kernel runs an integrity walk from Genesis to the head.
-2. It discovers that Row #102 doesn't hash to `c92e4a...`.
-3. **The kernel commits suicide on boot (`exit 3`).**
+An attacker gets root on your server, opens `workspace.db` with a raw SQLite binary, and changes a `refunded` amount from `$10,000` to `$10`.
 
-It refuses to run in prod, refuses to execute routines, and sounds the alarm: **Tamper evidence detected.** You don’t have to wonder if your logs were modified. The math screams at you.
+The moment Capcli boots:
+
+1. The kernel runs an integrity walk from genesis to the head.
+2. Row #102 no longer hashes to `c92e4a...` — and neither does anything after it, because one broken link invalidates every subsequent event.
+3. **The kernel refuses to boot ([exit 3](../reference/exit-codes.md#exit-3)).** No routines, no prod execution, and an alarm: *tamper evidence detected.*
+
+You never have to wonder whether your logs were modified. The math screams at you. And because the ledger root is checkpointed offsite to WORM storage, even rewriting local files can't forge the witness — see [recovery.md](recovery.md).
 
 ---
 
 ## 3. The Causal DAG: "Why Did You Do That?"
 
-Flat log files are useless for debugging agents. You get 40,000 lines of JSON logs, and you have no idea *which* prompt triggered *which* script, which called *which* API, which updated *which* row.
+Flat log files are useless for debugging agents. You get 40,000 lines of JSON and no idea *which* prompt triggered *which* script, which called *which* API, which updated *which* row.
 
 Capcli structures history as a **Causal Directed Acyclic Graph (DAG)** via the `caused_by` pointer:
 
@@ -103,13 +85,15 @@ Capcli structures history as a **Causal Directed Acyclic Graph (DAG)** via the `
                               caused_by: api.call
 ```
 
-Every single leaf event knows its entire family tree:
-* **`session`**: The broad engagement turn (`ses_a992f`).
-* **`caused_by`**: The exact operation ID that birthed this specific action.
-* **`intent`**: The mandatory causal reason passed via the `-m` flag.
+Every leaf event knows its entire family tree:
+
+* **`session`** — the broad engagement turn (`ses_a992f`).
+* **`caused_by`** — the exact operation ID that birthed this action.
+* **`intent`** — the mandatory causal reason passed via `-m`.
 
 ### Trace Forensics: `sys audit trace`
-If an order gets cancelled unexpectedly, you don't grep through gigabytes of text. You ask Capcli to walk the family tree:
+
+If an order gets cancelled unexpectedly, you don't grep gigabytes of text. You ask Capcli to walk the family tree ([full syntax](../reference/cli/sys.md)):
 
 ```bash
 $ capcli sys audit trace op_9f2e --explain
@@ -131,7 +115,7 @@ $ capcli sys audit trace op_9f2e --explain
   Integrity:   valid hash link (chain verified)
 ```
 
-You get the complete causal lineage in under 20ms. Zero mystery.
+Complete causal lineage, zero mystery.
 
 ---
 
@@ -139,36 +123,31 @@ You get the complete causal lineage in under 20ms. Zero mystery.
 
 Autonomous agents don't live on islands. They get triggered by webhooks from GitHub, messages from Slack, or RPC calls from external microservices.
 
-When an inbound request hits Capcli, the kernel extracts the **W3C `traceparent` header** and stamps it into `_audit.trace_id`.
+When an inbound request hits Capcli, the kernel extracts the **W3C `traceparent` header** and stamps it into `_audit.trace_id`. If your upstream Go or Java service triggers an agent routine via MCP, your Datadog or OpenTelemetry APM can follow the distributed request:
 
-If your upstream Go or Java service triggers an agent routine via MCP, your Datadog or OpenTelemetry APM can trace the distributed request:
+$$\text{User clicks button} \rightarrow \text{Backend API} \rightarrow \text{Capcli Agent Routine} \rightarrow \text{SQLite Mutation}$$
 
-$$\text{User clicks button in UI} \longrightarrow \text{Backend API} \longrightarrow \text{Capcli Agent Routine} \longrightarrow \text{SQLite Mutation}$$
-
-The agent’s internal local database operations become a seamless node in your enterprise distributed trace graph.
+The agent's internal database operations become a seamless node in your enterprise distributed trace graph.
 
 ---
 
 ## 5. Harness Provenance: `SKILL.md` Tracking
 
-When an LLM agent uses an orchestration framework (like Claude Code, Hermes, or Swarms), it executes tasks by invoking "Skills" (defined in open `SKILL.md` files).
+When an LLM agent runs under an orchestration framework (Claude Code, Hermes, Swarms), it executes tasks by invoking "Skills" defined in open `SKILL.md` files. Capcli bridges that cognitive metadata down into the mechanical audit log:
 
-Capcli bridges this cognitive metadata down into the mechanical audit log:
 * The harness passes the triggering skill name via the `--by` context.
-* The kernel validates the skill name against strict safety rules (lowercase, hyphens only, no directory traversal, max 64 characters).
-* It stamps the identifier into the **`triggered_by_skill`** column of every generated audit row.
+* The kernel validates the name against strict safety rules: lowercase, hyphens only, no directory traversal, max 64 characters. Malformed names are stripped with a warning — never denied, since skills cannot grant authority.
+* The identifier is stamped into the **`triggered_by_skill`** column of every generated audit row.
 
-**Why this matters:** When you audit your system, you can group your telemetry by cognitive skill: *"Which skill triggered the most policy denials this week? The customer-support skill or the inventory-sync skill?"*
+**Why this matters:** when you audit the system, you can group telemetry by cognitive skill — *which skill triggered the most policy denials this week, customer-support or inventory-sync?* — and fix the harness prompt, not just the code.
 
 ---
 
 ## 6. Denials Are First-Class Citizens
 
-In most systems, if a query is rejected, nothing is logged. The request simply fails, leaving zero trace of the attempt.
+In most systems, a rejected query leaves zero trace. The request fails and nobody knows it was attempted.
 
-In Capcli, **denials are pedagogical evidence.** 
-
-Every time an agent tries to drop a table, bypass a `WHERE` clause, exceed an op budget, or call an unactivated API, the kernel records a full denial receipt:
+In Capcli, **denials are pedagogical evidence.** Every time an agent tries to drop a table, bypass a `WHERE` clause, exceed an op budget, or call an unactivated API, the kernel records a full denial event:
 
 ```json
 {
@@ -176,29 +155,19 @@ Every time an agent tries to drop a table, bypass a `WHERE` clause, exceed an op
   "decision": "denied",
   "capability": "db://orders",
   "rules_matched": ["policy.query.update_delete.require_limit"],
-  "payload": {
-    "sql": "UPDATE orders SET status = 'shipped' WHERE status = 'pending'"
-  },
+  "payload": { "sql": "UPDATE orders SET status = 'shipped' WHERE status = 'pending'" },
   "rows_affected": 0,
   "effect": "none"
 }
 ```
 
 * **`rows_affected: 0`** and **`effect: none`** are mathematically guaranteed.
-* The failed query text is preserved.
-* The exact rule violation is cited.
+* The failed query text is preserved verbatim, for replay and forensics.
+* The exact rule violation is cited by code, with a remedy.
 
-You don't just audit what changed. **You audit every single wall your agent bumped into while trying to change things.**
-
----
-
-## The One Rule
-
-**State mutates only after the ledger agrees.**
-
-The hash chain is the ground truth of your company. If it isn't in the memory spine, it didn't happen. If it is in the memory spine, it cannot be erased.
+You don't just audit what changed. **You audit every single wall your agent bumped into while trying to change things.** The field-by-field specification for every event type: [reference/audit.md](../reference/audit.md).
 
 ---
 
-**Inspect the live audit stream right now:** → `capcli sys audit tail --follow`  
+**Inspect the live audit stream:** → `capcli sys audit tail --follow` ([reference/cli/sys.md](../reference/cli/sys.md))
 **Run a forensic trace on a recent operation:** → `capcli sys audit trace <op-id>`

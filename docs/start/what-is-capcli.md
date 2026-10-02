@@ -1,6 +1,6 @@
 # What is Capcli?
 
-Your AI agent is smart. It's also a toddler with root access.
+Your AI agent is brilliant and unsupervised. That combination has a body count.
 
 You *want* it to query your orders table, call Stripe, update inventory. You *don't* want it to `DELETE FROM users` because it misread a prompt, or double-charge 4,000 customers in a `while(true)` loop because it got confused about idempotency.
 
@@ -44,10 +44,10 @@ Capcli is the vault, the limit, and the ledger. Compiled into machine code. Not 
 
 ## The four laws (the short version)
 
-1. **Database floor** — unbounded writes die at the C authorizer. `exit 2`.
-2. **Network jail** — raw sockets get trapped at the syscall level. `exit 2`.
-3. **Budget cage** — op #51 on a 50-op run halts. No partial execution.
-4. **Audit spine** — broken hash chain? Kernel refuses to boot. `exit 3`.
+1. **Database floor** — unbounded writes die at the [C authorizer](../concepts/authorizer.md). `exit 2`.
+2. **Network jail** — raw sockets get trapped at the [syscall level](../concepts/sandboxing.md). `exit 2`.
+3. **Budget cage** — [op #51 on a 50-op run](../concepts/budgets.md) halts. No partial execution.
+4. **Audit spine** — broken [hash chain](../concepts/memory-spine.md)? Kernel refuses to boot. `exit 3`.
 
 You'll meet these properly later. For now: they exist, they're non-negotiable, and they're why you can close your laptop while your agent works.
 

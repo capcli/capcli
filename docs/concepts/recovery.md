@@ -17,7 +17,7 @@ If recovering from a botched batch update takes more than five seconds, your arc
 
 When your database is taking active read and write traffic, you cannot simply run `cp workspace.db backup.db`. You will get a corrupted file with torn pages.
 
-Capcli uses native SQLite **`VACUUM INTO`** via `capcli db snapshot`:
+Capcli uses native SQLite **`VACUUM INTO`** via `capcli db snapshot` ([full syntax](../reference/cli/db.md)):
 
 ```bash
 $ capcli db snapshot -m "pre-migration safety snapshot"
@@ -35,7 +35,7 @@ $ capcli db snapshot -m "pre-migration safety snapshot"
 
 ### Why this matters:
 * **Zero Locking:** It creates an atomic, transactionally clean, byte-identical copy of `workspace.db` without locking readers or interrupting active writers.
-* **Automatic Triggers:** Capcli automatically creates a snapshot before every schema migration (`snap_migration_*`), before world merges, and every 15 minutes via automated background maintenance.
+* **Automatic Triggers:** Capcli automatically creates a snapshot before every schema migration (`snap_migration_*`), before world merges, and on the automated background maintenance cadence ([figures](../reference/limits.md#workspace-storage)).
 
 ### The 2-Second Rollback:
 If an agent messes up an update:
@@ -80,7 +80,7 @@ Capcli enforces a **Dual-Storage Guarantee**:
 └───────────────────────────────┘  └─────────────────────────────────────┘
 ```
 
-* **The Git Repo** stays small and human-readable. It tracks code, declarative schemas, and JSONL text logs. To handle automated commits (~35,000 commits/year), Git history is cleanly squashed every 90 days.
+* **The Git Repo** stays small and human-readable. It tracks code, declarative schemas, and JSONL text logs. To handle automated commits (~35,000 commits/year), Git history is cleanly squashed on the retention cadence ([figures](../reference/limits.md#workspace-storage)).
 * **The Object Store** (S3/Cloudflare R2) holds the heavy binary payloads: the raw `VACUUM INTO` snapshots and append-only audit archives.
 
 ---
@@ -96,7 +96,7 @@ Capcli prevents this with **Offsite WORM Checkpointing**:
 
 **Result:** Even if someone force-pushes your Git repository and deletes your local SQLite file, the offsite KMS witness signature remains immutable in cloud object storage. 
 
-When you restore, the kernel verifies the local hash chain against the offsite WORM checkpoint. If they don't match, **the kernel refuses to boot (`exit 3`)**.
+When you restore, the kernel verifies the local hash chain against the offsite WORM checkpoint. If they don't match, **the kernel refuses to boot ([exit 3](../reference/exit-codes.md#exit-3))**.
 
 ---
 
@@ -109,7 +109,7 @@ If the behavioral policy engine is refusing all commands, how do you fix it?
 You use the **Emergency Recovery Mode**:
 
 ```bash
-$ CAPCLI_RECOVERY=1 capcli recover snap_migration_042
+$ CAPCLI_RECOVERY=1 capcli sys recover snap_migration_042
 ```
 
 ```text
@@ -126,7 +126,7 @@ $ CAPCLI_RECOVERY=1 capcli recover snap_migration_042
    * `capcli sql` (strictly read-only `SELECT`)
    * `capcli db dump`
    * `capcli sys audit tail`
-   * `capcli sys backup` / `recover`
+   * `capcli sys backup` / `capcli sys recover`
 3. **The Alarm Bell:** The instant `CAPCLI_RECOVERY=1` is loaded, the kernel stamps a **`recovery_mode_entered`** event directly into the immutable audit sink. You can break the glass, but you cannot hide that you broke it.
 
 ---
@@ -155,7 +155,7 @@ $ capcli run overview
   next_step:   ready for incoming triggers
 ```
 
-Every session begins with this dense, sub-500-token situational briefing:
+Every session begins with this dense situational briefing (capped at the routine result ceiling — [figures](../reference/limits.md#execution-budget); command reference: [reference/cli/run.md](../reference/cli/run.md)):
 * What environment am I in?
 * What was the exact last intent successfully committed to the causal DAG?
 * Are there any active lease locks in `claims`?
@@ -165,13 +165,5 @@ The agent grounds its reasoning in deterministic reality before proposing its ne
 
 ---
 
-## The One Rule
-
-**If you cannot recover from a mistake in two commands, you shouldn't be running autonomous agents in production.**
-
-Snapshots take 20ms. Git tracks declarative intention. S3 WORM guarantees cryptographic truth. You test boldly because reality can be rewound with a single hash.
-
----
-
 **See how environments separate blast radius:** → [environments.md](environments.md)  
-**Inspect available recovery snapshots:** → `capcli sys recover --list`
+**Inspect available recovery snapshots:** → `capcli sys recover --list` ([reference/cli/sys.md](../reference/cli/sys.md))

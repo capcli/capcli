@@ -1,6 +1,6 @@
 # What Just Happened
 
-You told your harness to do a thing. It did the thing. You drank coffee.
+You told your harness to do a thing. It did the thing. You watched.
 
 But five distinct pieces of machinery fired under the hood. You don't need to master them yet. You just need names for what you saw.
 
@@ -10,11 +10,11 @@ But five distinct pieces of machinery fired under the hood. You don't need to ma
 
 | You saw… | That was… | It lives in… |
 |---|---|---|
-| `capcli search "order"` | **Discovery** — the search surface | [use/discover.md](../use/discover.md) |
-| `capcli sql "SELECT …"` | **Gated read** — AST + authorizer said "fine, go ahead" | [use/run.md](../use/run.md) |
-| `exit 2` on sloppy UPDATE | **A denial** — physics said "absolutely not" | [use/boundaries.md](../use/boundaries.md) |
-| `capcli sql "UPDATE … WHERE id=…"` | **Bounded write** — intent declared, limits respected | [use/run.md](../use/run.md) |
-| `capcli sys audit tail` | **The memory spine** — append-only hash-chained log | [use/audit.md](../use/audit.md) |
+| `capcli search "order"` | **Discovery** — the search surface | [workflows/discover.md](../workflows/discover.md) |
+| `capcli sql "SELECT …"` | **Gated read** — AST + authorizer said "fine, go ahead" | [concepts/authorizer.md](../concepts/authorizer.md) |
+| `exit 2` on sloppy UPDATE | **A denial** — physics said "absolutely not" | [reference/exit-codes.md](../reference/exit-codes.md) |
+| `capcli sql "UPDATE … WHERE id=…"` | **Bounded write** — intent declared, limits respected | [workflows/query-data.md](../workflows/query-data.md) |
+| `capcli sys audit tail` | **The memory spine** — append-only hash-chained log | [concepts/memory-spine.md](../concepts/memory-spine.md) |
 
 That's the whole mental model. Five pieces. Everything else is depth on one of these five.
 
@@ -37,7 +37,7 @@ cap://dispatch_order@4      → a routine at version 4
 
 You don't memorize. You search. Your harness doesn't memorize either. It searches.
 
-→ Deeper: [use/discover.md](../use/discover.md)
+→ Deeper: [workflows/discover.md](../workflows/discover.md)
 
 ---
 
@@ -56,6 +56,8 @@ Both passed. SQLite executed. Rows came back.
 
 Your harness didn't write a try/catch. Didn't check permissions. Didn't remember to add LIMIT. The kernel enforced all of it because it *can't not*.
 
+→ Deeper: [concepts/authorizer.md](../concepts/authorizer.md)
+
 ---
 
 ## The denial: "absolutely not"
@@ -73,12 +75,12 @@ state_modified: false
 Three things happened:
 
 1. **AST caught the blast radius.** No primary key. No LIMIT. Could hit hundreds of rows.
-2. **The denial was structural.** Not a warning. Not a suggestion. `exit 2` means the SQL never reached SQLite. Zero rows touched.
+2. **The denial was structural.** Not a warning. Not a suggestion. [`exit 2`](../reference/exit-codes.md#exit-2) means the SQL never reached SQLite. Zero rows touched.
 3. **The denial taught.** `remedy: target specific primary key or add LIMIT`. Your harness read that, fixed the query, retried.
 
 Denials aren't errors. They're the system saying "here's the wall, here's the door."
 
-→ Deeper: [use/boundaries.md](../use/boundaries.md)
+→ Deeper: [reference/exit-codes.md](../reference/exit-codes.md)
 
 ---
 
@@ -93,7 +95,7 @@ Four gates passed:
 
 | Gate | What it checked |
 |---|---|
-| Intent | `-m` flag present. Writes without intent get `exit 3`. |
+| Intent | `-m` flag present. Writes without intent get [`exit 3`](../reference/exit-codes.md#exit-3). |
 | AST | WHERE clause targets a specific ID. LIMIT 1. Blast radius: one row. |
 | Authorizer | Write on `orders` table? Allowed for this trust level. |
 | Budget | Ops consumed: 1 of 50. Plenty of headroom. |
@@ -101,6 +103,8 @@ Four gates passed:
 SQLite executed. One row changed. Audit event emitted.
 
 Your harness didn't think about any of this. It just ran the command. The kernel did the thinking about *whether it should run*.
+
+→ Deeper: [workflows/query-data.md](../workflows/query-data.md)
 
 ---
 
@@ -114,9 +118,9 @@ Three rows. The read. The denied write. The successful write.
 
 Each row is **hash-chained**. Row N contains the SHA-256 of row N-1. Tamper with one row, every subsequent hash breaks. The kernel verifies this chain at boot. Broken chain = `exit 3` = kernel refuses to start.
 
-You didn't configure logging. You didn't write middleware. You didn't remember to audit. The spine is *structural*. Unaudited writes are physically impossible (`exit 5`).
+You didn't configure logging. You didn't write middleware. You didn't remember to audit. The spine is *structural*. Unaudited writes are physically impossible ([`exit 5`](../reference/exit-codes.md#exit-5)).
 
-→ Deeper: [use/audit.md](../use/audit.md)
+→ Deeper: [concepts/memory-spine.md](../concepts/memory-spine.md)
 
 ---
 
@@ -149,7 +153,7 @@ YOUR HARNESS          CAPCLI KERNEL           REALITY
                       Budget: ops 1/50? ✓
                       Intent: declared? ✓
                       Audit: hash-chained? ✓
-                      
+
                       → execute
 ```
 
@@ -163,8 +167,7 @@ You've done something. You've seen the pieces. Now pick your next direction:
 
 | You want to… | Go to |
 |---|---|
-| Do more everyday work | [use/index.md](../use/index.md) |
-| Understand the deeper model | [understand/index.md](../understand/index.md) |
-| Automate something you keep doing | [automate/index.md](../automate/index.md) |
-| Wire up an agent integration | [agents/index.md](../agents/index.md) |
+| Do more everyday work | [workflows/index.md](../workflows/index.md) |
+| Understand the deeper model | [concepts/index.md](../concepts/index.md) |
+| Automate something you keep doing | [workflows/routines.md](../workflows/routines.md) |
 | Look up exact syntax | [reference/index.md](../reference/index.md) |

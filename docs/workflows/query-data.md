@@ -1,183 +1,120 @@
 # Work With Your Data
 
-Your harness loves your data. It wants to aggregate it, join it, and occasionally `DROP` it because it misinterpreted a pronoun.
+Your harness loves your data. It wants to aggregate it, join it, and occasionally `DROP` it because it misinterpreted a pronoun. Capcli puts a glass wall between your agent and the SQLite file: the harness can look, it can touch, but only through the kernel. `capcli sql` is the only door — no `sqlite3 workspace.db`, no raw Python `sqlite3` imports. Bypass Capcli and you bypass the authorizer, the budget, and the audit spine, so the lockfile and file permissions (`chmod 600`) make it structurally difficult.
 
-Capcli puts a glass wall between your agent and the SQLite file. The harness can look, it can touch, but it can't break the glass.
+## Where data lives
 
----
+`capcli env current` → `env: dev · workspace: envs/dev/workspace.db · 14 tables, 3 views`.
 
-## Where does it live?
+You're in `dev` — the environment where the harness is allowed to make mistakes. Sim and prod are separate worlds ([environment theory](../concepts/environments.md)). Need the shape first? `capcli db schema --table orders`, or `capcli inspect db://orders` ([discover.md](discover.md)).
 
-Right now, your data lives in a **World**. A World is just Capcli's term for "the governed workspace and database you are currently looking at."
+## Read: free, bounded
+
+Reads don't need intent. They're free — bounded, but free.
 
 ```bash
-$ capcli env current
+$ capcli sql "SELECT id, total, status FROM orders WHERE status = 'pending' LIMIT 10"
+```
+
+AST checked it. [Authorizer](../concepts/authorizer.md) allowed it. SQLite executed it — `✓ 12ms · rows: 10`. Rows came back. (SELECT ceiling: [limits](../reference/limits.md#database-ceilings).)
+
+## Write: intent required
+
+**Writes need intent. Reads don't.** Every mutating command takes `-m` — the causal motivation that lands in the audit trail. No `-m`, no write:
+
+```bash
+$ capcli sql "UPDATE orders SET status = 'processing' WHERE id = 'ord_9885' LIMIT 1" \
+    -m "mark oldest pending order as processing"
 ```
 
 ```text
-[dev:tier_1]  env: dev
-  workspace:  envs/dev/workspace.db
-  schema:     14 tables, 3 views
-  trust:      draft baseline
+[dev:tier_1]  ✓  18ms
+  rows_affected: 1  ·  ops_used: 1/50  ·  audit: op_4f8a
 ```
 
-You're in `dev`. The database is `workspace.db`. The harness is allowed to make mistakes here.
-
----
-
-## Looking at the shape
-
-Your harness needs to know what tables exist before it writes a query. It doesn't read `.sql` files. It asks Capcli.
-
-```bash
-$ capcli db schema
-```
+Forgot the `-m`?
 
 ```text
-[dev:tier_1]  14 tables
-
-  table             rows     cols   indexes   constraints
-  ────────────────  ───────  ─────  ────────  ───────────
-  orders            4,281    12     3         4 chk, 2 fk
-  customers         1,102    8      2         1 chk
-  inventory         8,492    9      4         3 chk, 1 fk
-  ...
+[dev:tier_1]  ✗  exit 3
+  FAIL  policy.query.writes_require_intent
+        Mutating write without causal intent declaration.
+  state_modified: false · remedy: add -m "why you're doing this"
 ```
 
-Need details on one?
+[Exit 3](../reference/exit-codes.md#exit-3), every time. The kernel doesn't care *what* your intent is. It cares that you *have* one — the audit trail demands causality.
+
+Long intent? Skip the shell-escaping lottery: `-m @intent.txt` reads a file, `-p data=@payload.json` does the same for params, and `@-` pulls from stdin. It also bypasses ARG_MAX.
+
+## Dry-run: what would happen?
+
+Before you mutate, see the plan — same command, plus `--dry-run`:
 
 ```bash
-$ capcli db schema --table orders
-```
-
-```text
-[dev:tier_1]  db://orders
-
-  col              type      nullable   default   fk
-  ───────────────  ────────  ─────────  ────────  ─────────────
-  id               text      no         —         —
-  customer_id      text      no         —         customers(id)
-  total            integer   no         0         —
-  status           text      no         'pending' —
-
-  indexes: idx_orders_status, idx_orders_customer
-```
-
-The harness reads this, builds the SQL, and runs it. You don't have to memorize your own schema.
-
----
-
-## Changing the shape (Schema Evolution)
-
-Your harness decides `orders` needs a `priority` column. It drafts the `ALTER TABLE`.
-
-```bash
-$ capcli sql "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0" \
-    -m "add priority flag for rush shipping" --dry-run
+$ capcli sql "UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50" \
+    -m "batch ship processing orders" --dry-run
 ```
 
 ```text
 [dev:tier_1]  dry-run  ✓
-
-  statement:      ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0
-  ast_check:      pass
-  authorizer:     pass (alter on orders allowed in dev)
-  intent:         declared
-  schema_impact:  +1 column (priority)
-
+  ast_check: pass  ·  authorizer: pass  ·  intent: declared
+  estimated_rows: 34  ·  blast_radius: bounded (LIMIT 50)
   state_modified: false
 ```
 
-It's safe. The harness runs it for real (without `--dry-run`). Capcli records the schema change in the audit spine.
+You see the plan. Nothing touched. Happy? Run it again without `--dry-run`.
 
-If the harness tries something stupid, like dropping a table with foreign keys pointing to it:
+## Locks: exclusive access
+
+Multi-step operations that can't be interrupted take a lease:
 
 ```bash
-$ capcli sql "DROP TABLE customers" -m "cleaning up"
+$ capcli run reconcile_inventory -p warehouse=WEST -m "nightly warehouse reconciliation" \
+    --lock inventory:WEST --ttl 300
 ```
 
-```text
-[dev:tier_1]  ✗  exit 2
+The lock is a lease in `_claims` — acquired, held for the run, released on exit. Crash mid-run and it expires after TTL. No orphaned locks. No deadlocks.
 
-  FAIL  policy.schema.drop.referenced
-        DROP TABLE customers
-        ^^^^^^^^^^^^^^^^^^^^
-        Table is referenced by foreign key: orders(customer_id).
+## Snapshots & restore: the "Oh Shit" button
 
-  state_modified: false
-  remedy: drop dependent tables first, or remove foreign key constraints
-```
-
-Glass wall. Intact.
-
----
-
-## The "Oh Shit" Button (Snapshots)
-
-Your harness is about to run a massive batch update. You're nervous. Tell it to take a snapshot first.
+Big batch update coming. You're nervous. Snapshot first:
 
 ```bash
 $ capcli db snapshot -m "before harness touches inventory pricing"
 ```
 
 ```text
-[dev:tier_1]  ✓  snapshot created
-
-  id:       snap_8f2a9c
-  size:     14.2 MB
-  tables:   14
-  audit:    op_9a1b
+[dev:tier_1]  ✓  snapshot created  ·  snap_8f2a9c  ·  14.2 MB  ·  14 tables
 ```
 
-The harness runs the batch update. It messes up. It halves all prices instead of increasing them by 10%. Panic? No.
+The harness runs the batch. It halves all prices instead of raising them 10%. Panic? No.
 
 ```bash
 $ capcli db restore snap_8f2a9c -m "reverting botched pricing update"
 ```
 
 ```text
-[dev:tier_1]  ✓  restored
-
-  snapshot:  snap_8f2a9c
-  tables:    14 restored
-  audit:     op_9a2c
+[dev:tier_1]  ✓  restored  ·  snap_8f2a9c  ·  14 tables
 ```
 
-State rewound. The audit log records the snapshot *and* the restore. Nothing is hidden.
+State rewound. The audit spine records the snapshot *and* the restore. Nothing is hidden. ([Recovery theory](../concepts/recovery.md).)
 
----
+## Changing the shape
 
-## Moving to Sim and Prod
-
-Eventually, the data and the routines need to go to production.
+Schema changes don't happen through ad-hoc DDL from your agent. Edit `schema.yaml`, then apply:
 
 ```bash
-$ capcli env use sim
+$ capcli apply -m "add priority flag for rush shipping"
 ```
 
-```text
-[sim:tier_1]  env: sim
-  workspace:  envs/sim/workspace.db
-  note:       prod-only API verbs physically denied here
+`capcli apply` is the alias for `capcli rule apply schema` — the [compiler](../concepts/compiler.md) diffs `schema.yaml` against the live database, generates the DDL, and records every migration in the audit spine. Add `--dry-run` to preview first. ([rule syntax](../reference/cli/rule.md) · [db syntax](../reference/cli/db.md).)
+
+## Moving to sim and prod
+
+```bash
+$ capcli env use sim                                    # rehearse against masked, production-shaped data
+$ capcli env merge prod -m "quarterly schema migration" # when sim proof is in
 ```
 
-In `sim`, the harness rehearses against mocked API fixtures and production-shaped data.
-In `prod`, the harness is on a tight leash. Draft routines can't run. Unbounded writes are physically impossible.
+In prod, draft writes are denied outright — unproven code can't touch it. ([Environments](../concepts/environments.md).)
 
-You don't touch `prod` until the harness has proven it won't break things in `sim`.
-
----
-
-## The one rule
-
-**The harness never touches the SQLite file directly.**
-
-No `sqlite3 workspace.db`. No raw Python `sqlite3` imports. Everything goes through `capcli sql` or `capcli db`.
-
-If the harness bypasses Capcli, it bypasses the authorizer, the budget, and the audit spine. Capcli's lockfile and file permissions (`chmod 600`) make this structurally difficult, but the rule is absolute: *Capcli is the only door to the data.*
-
----
-
-**Hit a boundary?** → [boundaries.md](boundaries.md)
-
-**Want to know what the harness actually did?** → [audit.md](audit.md)
+Hit a wall? [Every exit code, decoded](../reference/exit-codes.md). Want to see what the harness actually did? → [reference/audit.md](../reference/audit.md)

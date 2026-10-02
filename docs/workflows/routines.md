@@ -1,50 +1,45 @@
-# Command: `capcli routine`
+# Routines
 
 This is where sloppy ad-hoc bash scripts go to become hardened, immortal civil servants.
 
-A routine is a versioned, sandboxed, multi-step script (TypeScript or Python). It bundles database queries, external API calls, and business logic into an atomic unit with cryptographically locked manifests.
+A routine is a versioned, sandboxed, multi-step script (TypeScript or Python) that bundles database queries, external API calls, and business logic into an atomic unit with a cryptographically locked manifest.
 
-```bash
-capcli routine <verb> [args] [--flags]
+| Verb | What it does |
+|---|---|
+| `new` | Scaffolds a compliant starter in `routines/<name>.ts` (optional) |
+| `prove` | Runs synthetic replay tests against masked sim data |
+| `ship` | Submits the candidate for promotion up the trust ladder |
+| `stats` | p50/p95 latency, run counts, historical success rates |
+| `rollback` | Rewinds the capability pointer to a prior verified version |
+| `sweep` | Scans for dead, failing, or duplicate routine candidates |
+| `retire` | Decommissions without destroying provenance |
+
+(Exact syntax for every verb: [reference/cli/routine.md](../reference/cli/routine.md).)
+
+---
+
+## Authoring
+
+Write the file. That's it — the filesystem is the draft SSOT, and the two notations mean two different things:
+
+```
+routines/refund_order.ts     ← on disk in development: file notation
+cap://refund_order@1         ← registered in the kernel: URP, version pinned
 ```
 
----
-
-## Subcommands
-
-| Verb | Syntax | Description |
-|---|---|---|
-| **`new`** | `capcli routine new <name> [--template <ptr>]` | Scaffolds a compliant starter script in `routines/<name>.ts`. |
-| **`prove`** | `capcli routine prove <name> [-p k=v] [--env sim]` | Runs synthetic replay tests against masked simulation data. |
-| **`ship`** | `capcli routine ship <name> <reviewed\|pinned> [--reason "..."]` | Submits candidate for promotion up the trust ladder. |
-| **`stats`** | `capcli routine stats <name> [--deep]` | Displays p50/p95 latency, run counts, and historical success rates. |
-| **`rollback`**| `capcli routine rollback <name> [--to-version <v>]` | Rewinds capability pointer to a prior verified version hash. |
-| **`sweep`** | `capcli routine sweep [--since 30d]` | Scans for dead, failing (<70%), or duplicate routine candidates. |
-| **`retire`** | `capcli routine retire <name> [--reason "..."]` | Decommissions a routine without destroying historical provenance. |
+Direct writes to `routines/` are ungated; `capcli routine new` just scaffolds a starter if you want one. Every routine declares `name`, `trust`, `limits`, and a description of at least 5 words — if an agent can't search for it, it doesn't ship. Unsearchable code is dead code.
 
 ---
 
-## The Shape Police (Governance Bounds)
+## The shape police
 
-Your LLM loves writing 600-line monolithic scripts full of custom utility classes. 
-
-**Capcli hates that.** 
-
-Before a routine can be registered, proved, or shipped, the Rust kernel measures its physical dimensions. If it violates any of these, it dies at the intake gate (`exit 2`):
-
-* **Max 150 Lines of Code (LOC):** If it's 151 lines, split it. You are writing an atomic procedure, not Django.
-* **Max 2,000 Tokens:** Keeps file sizes small so inspecting them doesn't bankrupt your LLM context window.
-* **Max 8 Parameters (`Param`):** If a routine needs 14 arguments, your design is bad and you should feel bad. Use an object or break up the task.
-* **Max 3 Routine Imports:** Routines can import other routines, but composition depth is capped. No 12-layer lasagna code.
-* **Mandatory Description (Min 5 words, max 60 tokens):** If an agent can’t search for it, it doesn’t ship. Unsearchable code is dead code.
+Your LLM loves writing 600-line monolithic scripts full of custom utility classes. The kernel disagrees. Before a routine can be registered, proved, or shipped, its physical dimensions are measured — **150 lines, 2,000 tokens, 8 params, 3 routine imports.** Violate any one and it dies at the intake gate ([`exit 2`](../reference/exit-codes.md#exit-2)), with the measured value in the denial. The full table: [routine shape limits](../reference/limits.md#routine-shape).
 
 ---
 
-## 1. Proving It: `routine prove`
+## Prove it
 
-You wrote `routines/refund_order.ts`. You think it works. 
-
-The kernel doesn't care what you think. It demands proof in simulation:
+You wrote `routines/refund_order.ts`. You think it works. The kernel doesn't care what you think — it demands proof in simulation:
 
 ```bash
 $ capcli routine prove refund_order -p order_id=ORD-9912 -p amount=50 \
@@ -59,64 +54,54 @@ $ capcli routine prove refund_order -p order_id=ORD-9912 -p amount=50 \
   match:             100% subset
   policy_denials:    0
   drift_events:      0
-  audit:             op_992a → op_992b → op_992c
 ```
 
-### What just happened:
-1. The script was locked inside a `bwrap` container (tmpfs scratch space, no host network).
-2. It executed against masked data in `sim` (sensitive emails were scrambled to `anon_*@sim.local`).
-3. Outbound HTTP calls routed to simulation sandbox fixtures (`apis/stripe.sim.yaml`).
-4. The kernel compared what the code **declared** it would do against the **actual leaf events** emitted to the audit trail. If it touched an undeclared table, it fails.
+What just happened: the script ran locked in a sandbox against [masked sim data](../concepts/environments.md), outbound HTTP routed to fixtures, and the kernel compared what the code **declared** it would do against the leaf events it **actually emitted**. Touch an undeclared table? Fail. ([Why manifests and fingerprints exist](../concepts/trust-engine.md).)
 
 ---
 
-## 2. Climbing the Ladder: `routine ship`
-
-Code doesn't get to touch production just because a developer typed `"please"`. 
-
-To elevate a routine from `draft` to `reviewed` or `pinned`, you run `ship`:
+## Ship it
 
 ```bash
 $ capcli routine ship refund_order reviewed \
     --reason "passed quarterly compliance rehearsal"
 ```
 
-### The 5-Point Autonomous Auto-Promotion Math
-If you configure automated shipping, the kernel checks cold, hard telemetry in `routine_stats`. **Every single metric must pass:**
-
-| Metric | Threshold | What happens if you get 94.9%? |
-|---|---|---|
-| **Invariant Suite** | 100% pass | Denied. Goes to human review queue. |
-| **Historical Success Rate** | $\ge 95.0\%$ | Denied. |
-| **Manifest Match** | 100% subset | Denied (ran an undeclared primitive). |
-| **Policy Denials** | **Exactly 0** | Denied (hit an AST or authorizer wall). |
-| **Fingerprint Drift** | **Exactly 0** | Denied (diverged from manifest). |
-| **Latency Ceiling** | $\text{p95} \le 70\%$ of timeout | Denied (too slow in simulation). |
-
-Fail even one metric? The promotion is blocked, and the routine is thrown into the human approval queue (`capcli routine pending`).
+Code doesn't get to touch production because a developer typed "please." If you configure auto-shipping, the kernel checks cold telemetry and **every gate must pass**: invariant suite 100%, success rate ≥ 95%, manifest match 100% subset, zero policy denials, zero fingerprint drift, and p95 under 70% of the timeout ceiling. Fail even one metric and the promotion is blocked — it goes to the human approval queue instead. (Why promotion is evidence-based, not vibe-based: [the trust engine](../concepts/trust-engine.md).)
 
 ---
 
-## 3. The 1-Hour Parole Window (Canary Veto)
+## The 1-hour canary window
 
-Let's say your routine passed the math and was promoted to `reviewed`.
-
-**It is now on probation for 60 minutes.**
-
-During the first hour of production traffic, the kernel watches error rates and latency like a hawk. If the routine triggers a policy denial, unexpected spike, or runtime crash:
-* The kernel fires an autonomous circuit breaker.
-* The promotion is instantly revoked.
-* The routine drops straight back to `draft` trust.
-
-You fix the bug. You rehearse again. Reality remains intact.
+Passed the math? Promoted to `reviewed`? You're on probation for 60 minutes. During the first hour of production traffic, the kernel watches error rates and latency. Policy denial, unexpected spike, or runtime crash — the autonomous circuit breaker fires, the promotion is instantly revoked, and the routine drops straight back to `draft`. You fix the bug, you rehearse again, reality remains intact. ([Canary veto theory](../concepts/trust-engine.md).)
 
 ---
 
-## 4. Deleting Without Deleting: `routine retire`
+## Invoking routines
 
-In traditional engineering, someone runs `git rm routines/old_script.py`, commits it, and breaks three cron jobs and two API endpoints.
+From your terminal or your harness, anywhere, any time:
 
-In Capcli, **you never delete code.** 
+```bash
+$ capcli run dispatch_order -p order_id=ORD-8842 -p carrier=fedex \
+    -m "fulfill paid order for customer checkout"
+```
+
+```text
+[dev:tier_1]  dispatch_order@4  ✓  1.2s
+
+  status:    dispatched
+  tracking:  794644790133
+  ops_used:  3/8
+  audit:     op_9f2c → op_9f2d → op_9f2e
+```
+
+Three primitives fired. Under budget. Logged. If the routine mutates state, `-m` is required — the same intent law as SQL writes ([query-data.md](query-data.md)). Fat params? `-p data=@payload.json` reads the file; `@-` pulls from stdin. (Exact syntax: [reference/cli/run.md](../reference/cli/run.md).)
+
+---
+
+## Retire it
+
+In traditional engineering, someone runs `git rm routines/old_script.py` and breaks three cron jobs. In Capcli you never delete code:
 
 ```bash
 $ capcli routine retire legacy_billing -m "superseded by billing_v2"
@@ -128,18 +113,15 @@ $ capcli routine retire legacy_billing -m "superseded by billing_v2"
   capability:  cap://legacy_billing@8
   status:      retired
   dependents:  0 active dependencies verified
-  audit:       op_11d4
 ```
 
-### Retirement Invariants:
-1. **Dependency Protection:** If another routine or cron schedule still calls `cap://legacy_billing@8`, the authorizer **refuses to retire it (`exit 2`)**. You must detach the consumers first.
-2. **Permanent Provenance:** The script is marked `retired` in the registry and becomes uncallable. But its historical version hashes (`code_hash`, `manifest_hash`) remain in the causal DAG forever. Historical replays will always work.
+Two invariants. First: if anything still calls `cap://legacy_billing@8`, the authorizer [refuses the retirement (`exit 2`)](../reference/exit-codes.md#exit-2) — detach the consumers first. Second: the retired version's hashes stay in the causal DAG forever. Historical replays always work. ([The memory spine](../concepts/memory-spine.md).)
 
 ---
 
-## 5. The Time Machine: `routine rollback`
+## Roll it back
 
-Did an updated routine ship with a subtle edge-case bug? Don't push a frantic hotfix commit at midnight:
+Did v4 ship with a subtle edge-case bug? Don't push a frantic hotfix at midnight:
 
 ```bash
 $ capcli routine rollback dispatch_order --to-version 3 \
@@ -152,17 +134,14 @@ $ capcli routine rollback dispatch_order --to-version 3 \
   pointer:     cap://dispatch_order
   active:      version 3 (hash: sha256:88a1b...)
   superseded:  version 4 (deactivated)
-  audit:       op_77c2
 ```
 
-* One command restores the pointer.
-* **Max Rollback Depth:** 5 versions.
-* **Max Versions Kept:** 25 historical versions (older versions are pruned from disk while audit hashes stay pinned).
+One command restores the pointer. Rollback depth and version retention are governed — see [limits](../reference/limits.md).
 
 ---
 
-## Banned Operations
+## Banned operations
 
-* **`--force` is banned:** Passing `--force` to `routine ship` is an immediate syntax error.
-* **Direct filesystem tampering:** Editing a versioned file directly in `routines/` without bumping the version or running through intake triggers an instant lockfile mismatch (`exit 3`).
-* **Self-Promotion:** A running routine cannot invoke `routine ship` on itself. Trust escalation requires human or CI principal authority.
+- **`--force` doesn't exist.** Passing it to `routine ship` is an immediate syntax error.
+- **No silent edits** — touching a versioned file in `routines/` without a version bump trips the lockfile ([`exit 3`](../reference/exit-codes.md#exit-3)).
+- **No self-promotion** — a running routine can't `ship` itself. Trust escalation needs a human or CI principal.

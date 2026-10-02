@@ -79,11 +79,11 @@ $ capcli sql "UPDATE orders SET status = 'processing' WHERE status = 'pending'"
   remedy: target specific primary key or add LIMIT
 ```
 
-**Boom. `exit 2`.** 
+**Boom. [`exit 2`](../reference/exit-codes.md#exit-2).** 
 
 The C authorizer intercepted it at prepare-time. The SQL never touched the database engine. Zero rows were updated. State is untouched. 
 
-Capcli didn't just block it; it told the harness *why* and *how to fix it*. 
+Capcli didn't just block it; it told the harness *why* and *how to fix it*. The full anatomy of that denial — every guarantee that fired — lives at the other end of that link.
 
 ---
 
@@ -141,10 +141,12 @@ Hash-chained. Append-only.
 6. Capcli allowed the precise write.
 7. Everything was logged to the append-only spine.
 
-You didn't write a try/catch block. You didn't check row counts. You didn't manually write an audit log. 
-
-You drank your coffee.
+You didn't write a try/catch block. You didn't check row counts. You didn't manually write an audit log. You gave one sentence of intent. The kernel did the rest.
 
 ---
 
 **Ready to unpack the pieces?** → [what-just-happened.md](what-just-happened.md)
+
+**Find what else exists?** → [workflows/discover.md](../workflows/discover.md)
+
+**Work with real data next?** → [workflows/query-data.md](../workflows/query-data.md)
