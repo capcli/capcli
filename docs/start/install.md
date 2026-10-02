@@ -117,12 +117,6 @@ Common failures:
 | `exit 3` on boot | Lockfile mismatch | You edited a YAML by hand. `git checkout` it. |
 | Tier 2 warning | macOS / Windows | Expected. Not a bug. |
 
----
-
-## That's it
-
-You're installed. The binary is on disk. The doctor says ready.
-
-Your harness is now sitting in front of a governed execution kernel. It can discover things, run things, and get denied things. All without you reading a single architecture doc.
+You're installed. The binary is on disk. The doctor says ready. Your harness is now sitting in front of a governed execution kernel — it can discover things, run things, and get denied things, all without you reading a single architecture doc.
 
 **Next:** actually do something → [first-task.md](first-task.md)

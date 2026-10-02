@@ -28,7 +28,7 @@ Routines are TypeScript or Python files in `routines/` — decorated with `@rout
 
 ## Shipping
 
-The ship gate reads `routine_stats` and the audit mirror directly — it verifies the five-point conjunction (invariant suite, success rate, manifest subset match, zero policy denials, zero fingerprint drift) described in [trust-engine.md](../../concepts/trust-engine.md). Qualifying candidates auto-promote with a one-hour canary veto window; everything else routes to the human queue (`capcli routine ship <name> reviewed --queue`, inspected via `capcli routine pending`). Production promotion additionally requires a merged branch and sim proof.
+The ship gate reads `routine_stats` and the audit mirror directly — it verifies the six-metric conjunction (invariant suite, success rate, manifest subset match, zero policy denials, zero fingerprint drift, latency p95 ≤ 70% of declared max) described in [trust-engine.md](../../concepts/trust-engine.md). Qualifying candidates auto-promote with a one-hour canary veto window; everything else routes to the human queue (`capcli routine ship <name> reviewed --queue`, inspected via `capcli routine pending`). Production promotion additionally requires a merged branch and sim proof.
 
 ## Subtraction
 
