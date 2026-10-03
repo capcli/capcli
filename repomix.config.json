@@ -29,7 +29,7 @@
   },
   "include": [
       "README.md",
-      "docs",
+   //   "docs",
       "cans/",
   //    "cans/artifacts/capcli.playbook.md",
       "cans/artifacts/governance.yaml",
@@ -44,17 +44,17 @@
 	"repomix.md",
 	"cans/_adr",
 	"cans/_collab",
+    "cans/_rules.yaml",
     "cans/AGENTS.md",
  //   "cans/artifacts/system-schema.yaml",
  "cans/artifacts/capcli.playbook.md",
     "cans/artifacts/schema.yaml",
 //    "cans/artifacts/policy.yaml",
   // "cans/artifacts/governance.yaml",
-   "cans/artifacts/capcli.landing-copy.md"
+   "cans/artifacts/capcli.landing-copy.md",
   // "cans/artifacts/",
   //  "cans/artifacts/"
- //   "cans/assembly.md",
- 
+    "cans/assembly.md",
 		]
   },
   "security": {
