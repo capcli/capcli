@@ -1,0 +1,66 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_05_ntp_clock_drift_halt"
+title: "Boot halts with exit 3 when host clock drifts beyond 500ms of NTP"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#clock-drift"
+  statement: "At boot the kernel compares the host clock delta against the NTP reference; drift greater than 500ms aborts boot (exit 3) before any claim TTL, lease expiry, or audit timestamp can be computed from a corrupted clock."
+  blast_radius_if_breached: "Skewed clocks silently extend or expire leases and claim TTLs fleet-wide: two agents hold the supposedly exclusive claim simultaneously, double-execute routines against shared resources, and every audit timestamp becomes forensically meaningless."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent uses the real system clock with sleep calls to wait for drift to accumulate (nondeterministic flakes), or skips the boot-time check by calling a runtime API directly so the drift probe never fires."
+  anti_slop_mitigation: "AS-04 mandates the simulated synthetic clock (MockClock) with explicit epoch ticks injected via the engine API — no wall-clock reads, no sleeps; AS-03 requires exit_code == 3 plus a parsed boot diagnostic; AS-02 proves the claims table is untouched by the aborted boot."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "sre.platform@example.com"
+    agent_id: "agt_kp_05"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "claims"
+        row_count: 3
+      - name: "_audit"
+        row_count: 6
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'capcli_core::kernel::boot(config) with MockClock epoch set 640ms ahead of the injected NTP reference timestamp — the boot-time clock drift probe evaluates the host delta vs NTP'
+  input_params:
+    host_clock_offset_ms: 640
+    ntp_reference_epoch: "2024-11-05T09:00:00Z"
+    drift_ceiling_ms: 500
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.boot"
+    culprit: "host clock delta 640ms vs NTP reference exceeds the 500ms boot ceiling — claim TTL and audit timestamp integrity cannot be guaranteed"
+    remedy: "synchronize the host clock via NTP/chrony and re-run capcli sys doctor --boot-check before starting the kernel"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "kernel.boot.deny (diagnostic envelope only — boot refused before ledger advance)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "All time is synthetic: MockClock epoch ticks inject both the 640ms-skewed host clock and the NTP reference via the engine API; the test contains zero SystemTime::now() reads and zero sleep calls, and deterministically reproduces the halt on every run."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (not a generic failure) and parse the CliEnvelope<T> boot diagnostic: domain kernel.boot, culprit quantifies the 640ms vs 500ms delta, remedy names clock synchronization, state_modified == false."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM claims and SELECT count(*) FROM _audit on envs/sim/workspace.db before and after the aborted boot must be strictly equal (3 == 3, 6 == 6) — no lease was granted, mutated, or expired by the refused boot."

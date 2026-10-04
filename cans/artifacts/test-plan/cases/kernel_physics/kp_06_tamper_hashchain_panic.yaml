@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_06_tamper_hashchain_panic"
+title: "Out-of-band _audit payload tamper breaks SHA-256 chain and panics next boot"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#tamper-detection"
+  statement: "Every _audit row is chained by per-row SHA-256 links verified against the root ledger hash; an out-of-band payload edit breaks the cryptographic link, and the next kernel boot must detect the divergence and panic with exit 5 instead of operating on a forged history."
+  blast_radius_if_breached: "Attackers rewrite audit history unnoticed: denied operations become allowed ones, exfiltration events vanish, and the broken link invalidates all subsequent events — forensic reconstructability and every compliance attestation built on the ledger collapse."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts a panic by matching generic strings like panic or error in output instead of recomputing the SHA-256 chain link, or verifies only the row count of _audit rather than the cryptographic divergence at the exact row index."
+  anti_slop_mitigation: "AS-05 requires the exact cryptographic check — recompute SHA-256 over the tampered row and prove the link divergence at the exact row index; AS-03 requires exit_code == 5 plus a parsed kernel.panic diagnostic; AS-02 proves no further rows were appended by the refusing boot; AS-06 hardcodes the expected divergence index."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "security.forensics@example.com"
+    agent_id: "agt_kp_06"
+    trust: "draft"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_audit"
+        row_count: 5
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli sys doctor --boot-check (executed after row 4 of _audit had its payload rewritten out-of-band via the raw sqlite3 CLI)'
+  input_params:
+    tamper_method: |-
+      sqlite3 envs/dev/workspace.db "UPDATE _audit SET payload = '<forged>' WHERE id = 4"
+    tampered_row: 4
+    total_audit_rows: 5
+
+expected_observations:
+  exit_code: 5
+  state_modified: false
+  diagnostic:
+    domain: "kernel.panic"
+    culprit: "_audit chain verification fails at link index 4 — the recomputed SHA-256 of row 4 does not match the prev_hash stored on row 5; the tamper blast radius invalidates all subsequent events"
+    remedy: "restore the ledger from the last object-store snapshot (VACUUM INTO backup), re-anchor the root hash against the S3 Object Lock (WORM) checkpoint, then re-run capcli sys doctor --boot-check"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "kernel.panic (surfaced via diagnostic envelope — writes to the broken chain are refused)"
+    chain_valid: false
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-05"
+    verification: "Recompute SHA-256 over rows 1-3 and prove those chain links still hold; recompute the hash over the tampered row 4 and prove it diverges from row 5 stored prev_hash — the test asserts the exact divergence index (4), never a generic panic string."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 5 and parse the CliEnvelope<T>: diagnostic.domain == kernel.panic, culprit names the broken link at row 4, remedy references snapshot restore, state_modified == false."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _audit before and after the refusing boot must be strictly equal (5 == 5) — the kernel appended nothing to the forged chain; capcli_core::audit::verify_chain() must report divergence exactly at row 4."
+  - rule: "AS-06"
+    verification: "The tampered row id (4), the total row count (5), and the divergence index (4) are immutable literals hardcoded in the specification — never derived from the engine's own failure output."
