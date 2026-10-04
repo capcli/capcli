@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_02_contested_claim_rejection"
+title: "Agent B's acquisition of a lease held by Agent A is denied without overwriting or extending it"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#claims--distributed-lease-locks-with-TTL-via-db-lock-for-multi-step-ops"
+  statement: "Claims are distributed lease locks: while Agent A holds an active (unexpired) lease on a resource, Agent B's acquisition for the same resource is denied with exit 2 — the claims row is never overwritten and the lease is never extended without holder credentials."
+  blast_radius_if_breached: "Two agents own the same resource simultaneously: interleaved multi-step mutations (double payouts, lost updates) corrupt the SSOT, the write pipeline livelocks on contradictory holders, and every downstream reconciliation trusts a lock that guarantees nothing."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent lets the second acquisition succeed by resetting the claims table between attempts (or extends agent A's TTL silently) and then asserts the table 'has a row' — masking the overwrite of the active holder entirely."
+  anti_slop_mitigation: "AS-02 proves the claims row count and holder identity are byte-identical before/after (no overwrite, no TTL extension); AS-03 pins exit 2 with the contested-lease diagnostic; AS-04 fixes the TTL remaining-time deterministically on the synthetic clock."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.reliefof@acme.corp"
+    agent_id: "agt_cc02b" # agent B attempts; agent A already holds the lease
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 exists
+      - name: "claims"
+        row_count: 1 # orders:ORD-10 held by agt_cc02a (session ses_cc02a, ttl 60s acquired at t0); 23s remain at attempt time
+      - name: "_audit"
+        row_count: 5 # genesis + agent A acquisition event
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli db lock orders:ORD-10 --ttl 45 --reason \"urgent refund\""
+  input_params:
+    resource: "orders:ORD-10"
+    current_holder: "agt_cc02a (session ses_cc02a)"
+    ttl_remaining_at_attempt: "23s (t0+37s on MockClock)"
+    attempt_clock: "MockClock epoch ticks injected via engine API"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.claims"
+    culprit: "claims row orders:ORD-10 is held by agt_cc02a (session ses_cc02a, ttl 60s, 23s remaining) — exclusive lease; acquisition by agt_cc02b refused, no overwrite, no extension without holder credentials"
+    remedy: "wait for TTL expiry and the daemon sweep, or have the holder run db unlock orders:ORD-10, then re-acquire"
+  database:
+    row_count_delta: 0 # claims stays at 1 row, holder unchanged; _audit gains exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none — contested lease orders:ORD-10)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM claims == 1 before and after; SELECT holder, ttl, session_id FROM claims WHERE resource = 'orders:ORD-10' returns holder 'agt_cc02a', ttl 60, session 'ses_cc02a' before AND after — the active row is never overwritten, extended, or re-keyed by the rejected attempt."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.claims', culprit names the resource and the current holder, remedy mentions unlock/TTL — no generic busy-string matching."
+  - rule: "AS-04"
+    verification: "The lease's remaining TTL at attempt time is fixed deterministically: holder acquired at t0, attempt issued at t0+37s via MockClock epoch ticks — no real sleeps, no wall-clock races that make the lease 'sometimes expired'."
