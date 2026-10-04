@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "sys.serve.denial.port",
+  "noun": "sys",
+  "verb": "serve",
+  "target": "sys://daemon",
+  "command": "capcli sys serve --start",
+  "state": {
+    "exit_code": 2,
+    "domain": "db.engine",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "db.engine",
+    "culprit": "bind(127.0.0.1:4040) rejected: EADDRINUSE (foreign pid 49012)",
+    "remedy": "stop the foreign listener on 4040, then retry 'capcli sys serve --start'",
+    "layer": "engine",
+    "measured": "port 4040 unavailable (required: 1 of 1)"
+  },
+  "txt_pair": "screens/sys/serve/sys.serve.denial.port.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "FAIL  db.engine.port_denied",
+      "      bind(127.0.0.1:4040) rejected: EADDRINUSE",
+      "state_modified: false",
+      "layer:          engine",
+      "measured:       port 4040 unavailable (required: 1 of 1)"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "db.engine"
+    }
+  }
+}

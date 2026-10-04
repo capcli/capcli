@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 3
+
+FAIL  compile.port_bound
+      127.0.0.1:4040 is already bound by an active capcli-daemon.
+      holder: pid 50211 (uptime: 2h 14m, listening)
+      candidate: pid 51288 (start aborted)
+
+      One daemon per workspace; duplicate start refused at port check.
+
+state_modified: false
+layer:          daemon
+remedy:         inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'
