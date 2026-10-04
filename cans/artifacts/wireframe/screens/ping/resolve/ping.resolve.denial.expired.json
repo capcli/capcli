@@ -1,0 +1,45 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "ping.resolve.denial.expired",
+  "noun": "ping",
+  "verb": "resolve",
+  "target": "ask_88a",
+  "command": "capcli ping resolve ask_88a --choice approve",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.notify",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.notify",
+    "culprit": "Timeout elapsed; resolution window closed (fail-closed).",
+    "remedy": "re-issue the ask if still relevant; expired inquiries never assume consent",
+    "layer": "notify",
+    "measured": "ask_88a deadline passed 2h 14m ago (timeout: 24h, fail-closed)"
+  },
+  "txt_pair": "screens/ping/resolve/ping.resolve.denial.expired.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "FAIL  policy.notify.ask_expired",
+      "Timeout elapsed; resolution window closed (fail-closed).",
+      "state_modified:  false",
+      "layer:           notify",
+      "remedy:          re-issue the ask if still relevant; expired inquiries never assume consent"
+    ],
+    "stdout_not_contains": ["--force", "--override-budget", "--force-prod", "--verbose"],
+    "stderr_empty": true,
+    "json_keys_required": ["domain", "culprit", "remedy", "layer", "state_modified"],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.notify"
+    }
+  }
+}

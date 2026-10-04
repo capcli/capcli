@@ -1,0 +1,10 @@
+[dev:tier_1]  ✓  resolved
+
+  ask_id:          ask_88a
+  choice:          approve
+  question:        "Approve refund for order ORD-10?"
+  resolved_by:     user:alice
+  resumed_task:    task_99a8b1
+  resumed_frame:   frame_018
+  audit_op:        op_9f34a
+  state_modified:  true
