@@ -8,7 +8,7 @@
   "state": {
     "exit_code": 3,
     "domain": "validation",
-    "trust": null,
+    "trust": "reviewed",
     "env": "dev",
     "tier": "tier_1",
     "state_modified": false,
