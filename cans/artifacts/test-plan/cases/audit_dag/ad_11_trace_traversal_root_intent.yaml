@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_11_trace_traversal_root_intent"
+title: "sys audit trace walks the DAG upward through routine frames to the initial session intent, never truncating"
+domain: "audit_dag"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#inspection--sys-audit-trace-<op-id>-walks-DAG-to-root-intent"
+  statement: "sys audit trace <op-id> walks the caused_by DAG upward through multiple routine frames to output the initial user session intent (op -> routine -> session goal); the rendered output is the full causal path (archetype B tree: unicode branches) — a partial trace that truncates at the first subroutine boundary is a violation."
+  blast_radius_if_breached: "Operators debug from a truncated causal window: the actual initiating intent (and the agent/principal behind it) stays hidden, wrong routines get blamed, rollback decisions are made on partial forensics, and corruption cannot be traced to the specific routine, world, agent, and version."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts only that the leaf op id appears in the output (a trace truncated at the first subroutine boundary passes), or matches the first N lines of output instead of the complete root-to-leaf path."
+  anti_slop_mitigation: "AS-06 hardcodes the complete literal op-id walk including the session root intent string; AS-03 verifies the archetype B tree rendering (unicode branches, full path); AS-05 verifies the trace verb itself advances the chain."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_ad_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 2
+      - name: "_audit"
+        row_count: 20 # session ses_ad_11 root intent + 2 nested routine.run frames + leaf db.exec ops; op-1042 is a leaf inside the nested frame
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys audit trace op-1042"
+  input_params:
+    leaf_op: "op-1042 (db.exec INSERT inside routine cap://orders/notify)"
+    frame_1: "op-1039 — routine.run cap://orders/notify"
+    frame_2: "op-1031 — routine.run cap://orders/ship"
+    session_root: "op-1001 — session ses_ad_11 intent 'settle february payout batch'"
+
+expected_observations:
+  exit_code: 0
+  state_modified: false # read-only traversal; the CLI verb itself advances the hash chain (zero ghost actions)
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — full causal path rendered from leaf op-1042 to session root op-1001"
+    remedy: "n/a — success; complete traversal verified by the assertions below"
+  database:
+    row_count_delta: 0 # business tables untouched; _audit gains exactly 1 chained trace-read event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "trace read event — CLI verb advances the hash chain (zero ghost actions)"
+    # NOTE: not located in cans/ specs — sys audit trace event name is absent from the effect.md kernel payload list; the chain-advance duty comes from effect.md#Event-integrity zero ghost actions
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Hardcoded literal walk, complete and in order: op-1042 -> caused_by op-1039 (routine.run cap://orders/notify) -> caused_by op-1031 (routine.run cap://orders/ship) -> caused_by op-1001 (session ses_ad_11, intent 'settle february payout batch'); assert the terminal node is the session root with that exact intent string — truncation at any subroutine boundary fails."
+  - rule: "AS-03"
+    verification: "Parse the CliEnvelope (exit_code == 0) and verify the human rendering is archetype B: unicode tree branches ('├──', '└──', '│') present with the root intent as the terminal node; no table pipes ('|') anywhere in the output."
+  - rule: "AS-05"
+    verification: "The trace verb's own audit event chains: _audit grows from 20 to exactly 21 with prev_hash == SHA-256 of row 20; run capcli-core::audit::verify_chain() over rows 1..21 — zero ghost actions means even reads advance the ledger."
