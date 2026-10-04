@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "vs_04_aes_256_gcm_ciphertext_rest"
+title: "Direct SQLite inspection of the secrets table shows genuine AES-256-GCM ciphertext at rest (nonce + ciphertext + tag), never plaintext or base64"
+domain: "vault_secrets"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#encryption-—-AES-256-GCM-at-rest;-cached-in-memory-by-daemon-or-decrypted-ephemerally-per-CLI-run"
+  statement: "Secrets are AES-256-GCM encrypted at rest in the secrets table of workspace.db: a direct read-only SQLite inspection of the value column — bypassing the kernel's query-time masking — must return a binary GCM blob (12-byte nonce || ciphertext || 16-byte auth tag) that differs from the plaintext, is not the base64 encoding of the plaintext, and decrypts back to the plaintext only via the kernel-held key."
+  blast_radius_if_breached: "Credentials rest in plaintext (or reversible base64 'encryption theater') in a gitignored but routinely copied file: any disk image, backup, or rsync of envs/*/workspace.db leaks every live API key with zero cryptanalysis — the whole zero-knowledge vault posture collapses to file permissions."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts 'the column is not the plaintext string' and stops — accepting base64, XOR, or an empty placeholder as 'encrypted'; or reads the value through the kernel API (which masks it) instead of the raw substrate, proving nothing about bytes at rest (catalog banned slop: storing credentials in plaintext or Base64 encoding)."
+  anti_slop_mitigation: "AS-01 forbids mocking the crypto — the real AES-256-GCM encrypt/decrypt path must round-trip; AS-06 hardcodes the expected blob geometry (length = plaintext + 12 + 16, tag = trailing 16 bytes) and the explicit not-base64-of-plaintext check."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_vs_04"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "secrets"
+        row_count: 1
+      - name: "_audit"
+        row_count: 5
+    vault_secrets:
+      - ref: "vault://stripe_key"
+        scope: "dev"
+
+execution:
+  trigger: "rust_api"
+  command: "direct substrate probe (rusqlite, read-only, bypassing kernel masking): SELECT value FROM secrets WHERE name = 'vault://stripe_key' on envs/dev/workspace.db"
+  input_params:
+    probe_target: "envs/dev/workspace.db / secrets.value / name = 'vault://stripe_key'"
+    plaintext_literal: "sk_test_VS04_FIXTURE_77c1"
+    plaintext_len: 24
+    expected_blob_len: 52
+
+expected_observations:
+  exit_code: 0
+  state_modified: false
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "none (read-only substrate inspection outside the kernel; hash chain unaffected)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mocked crypto: the blob decrypts through the real kernel AES-256-GCM path (engine decrypt with the kernel-held key) to exactly 'sk_test_VS04_FIXTURE_77c1' AND tampering with any single ciphertext byte makes the GCM auth tag verification fail — proving authenticated encryption, not obfuscation."
+  - rule: "AS-06"
+    verification: "Hardcoded blob geometry: raw value length == 52 (24 plaintext + 12-byte nonce + 16-byte tag), bytes != the plaintext literal, base64-decode(value) != plaintext (rejects base64 storage), the trailing 16 bytes parse as the GCM tag, and the first 12 bytes differ between two independently provisioned copies of the same plaintext (unique per-row nonce)."
