@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "bind.keys.denial.cap",
+  "noun": "bind",
+  "verb": "keys",
+  "target": "partner_hook",
+  "command": "capcli bind keys issue partner_hook --principal partner:acme",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.authorizer",
+    "trust": "pinned",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.authorizer",
+    "culprit": "Max 25 keys reached. Key issuance refused.",
+    "remedy": "remove an idle endpoint binding to release its keys, or await 90d rotation",
+    "layer": "authorizer",
+    "measured": "25 active keys (cap: 25)"
+  },
+  "txt_pair": "screens/bind/keys/bind.keys.denial.cap.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "FAIL  policy.authorizer.key_cap_exceeded",
+      "Max 25 keys reached. Key issuance refused.",
+      "state_modified: false",
+      "layer:          authorizer",
+      "remedy:         remove an idle endpoint binding to release its keys, or await 90d rotation"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.authorizer"
+    }
+  }
+}
