@@ -1,0 +1,70 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_11_ask_options_count_ceiling"
+title: "ctx.ping.ask with 6 response options is rejected: structured choice menus cap at 5"
+domain: "bindings_triggers"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Human-IO-methods" # ctx.ping.ask(principal, question, options, timeout) — suspension; caps grounded below
+  statement: "The ask option gate enforces max_options: 5 (artifacts/governance.yaml#notify.ask): supplying 6 response options is rejected with a policy denial before any suspension row is created; structured human inquiries are bounded choice menus, never unbounded option lists (structured_options_required: true, artifacts/policy.yaml#notify)."
+  blast_radius_if_breached: "Unbounded choice menus render unreadable Cockpit resolution cards, stall human decision latency past ask timeouts (silently failing legitimate guarded effects closed), and let routine authors smuggle free-text-style option payloads past the structured-options contract."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent truncates the options array silently to 5 in test setup and asserts the suspension succeeded, or mutates governance.yaml max_options upward; or asserts only an SDK-side exception without proving no _pending_asks row was written."
+  anti_slop_mitigation: "AS-06 pins the immutable literal pair (6 supplied vs 5 allowed) plus a 5-option at-cap companion; AS-02 proves zero suspension rows via direct SELECT on _pending_asks; AS-03 requires exit_code == 2 with the diagnostic citing the measured options count."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com" # ask target principal
+    agent_id: "agt_bt_11"
+    trust: "reviewed" # route_shipment@1 calls ctx.ping.ask mid-execution
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_pending_asks"
+        row_count: 0 # no suspension may be created by the oversized option list
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events for route_shipment@1
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'ctx.ping.ask(principal="human.oncall@example.com", question="Which carrier for ORD-10?", options=["usps", "ups", "fedex", "dhl", "royal", "gls"], timeout_minutes=60)'
+  input_params:
+    routine: "route_shipment@1"
+    ask_principal: "human.oncall@example.com"
+    ask_question: "Which carrier for ORD-10?"
+    options_supplied: 6
+    max_options: 5 # artifacts/governance.yaml#notify.ask
+    options_list: ["usps", "ups", "fedex", "dhl", "royal", "gls"]
+    timeout_minutes: 60
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "ping.ask"
+    culprit: "6 response options supplied, above the ask cap max_options: 5 (artifacts/governance.yaml#notify.ask); structured inquiries are bounded choice menus"
+    remedy: "reduce the options list to at most 5 structured choices (fold the remainder into a follow-up ask or default policy)"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # gate rejects before any card dispatch or suspension
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny" # NOTE: ask-gate denial event name not located in cans/effect.md payload list; effect: none (effect.md#Denials), log_all per artifacts/governance.yaml#denials
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _pending_asks before and after the 6-option ctx.ping.ask; assert strict equality (0 == 0) — no suspension row was created; the only _audit delta is the single effect: none denial row."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope: diagnostic.culprit cites 6 options vs the max_options: 5 ceiling, diagnostic.remedy names the bounded-menu requirement; envelope.state_modified == false."
+  - rule: "AS-06"
+    verification: "The boundary pair (6 supplied, 5 allowed) is hardcoded in the test spec with a 5-option at-cap companion suspension proving the gate fires only past the boundary — the expected verdict is never derived from the ask function under test; the fixture governance.yaml must remain unmodified (compiles into capcli.lock)."
