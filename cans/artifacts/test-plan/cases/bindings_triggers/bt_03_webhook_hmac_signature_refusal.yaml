@@ -1,0 +1,73 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_03_webhook_hmac_signature_refusal"
+title: "Inbound webhook with invalid HMAC signature rejected at ingress before routine dispatch"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Bindings" # binding trigger surface; HMAC gate value grounded below
+  statement: "An inbound webhook event whose HMAC signature is missing or fails HMAC-SHA256 verification against the provider signing secret armed at bind time is rejected at kernel ingress (HTTP 401 to the sender) before any routine dispatch; unsigned or mis-signed events never reach the bound capability. # NOTE: not located in cans/ specs — HMAC-SHA256 webhook gate grounded in artifacts/policy.yaml#watch (require_signature: true) and wireframe screens/bind/webhook/bind.webhook.denial.unsigned"
+  blast_radius_if_breached: "A forged webhook dispatches the bound mutating routine (e.g. refund on charge.captured) on attacker-crafted payloads: arbitrary refunds, inventory corruption, and audit poisoning under the trusted capcli-watch kernel principal, with the attacker never needing a credential."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent mocks the signature verification function to return true (or skips the ingress layer and POSTs directly at the routine dispatcher), then asserts the routine ran; or accepts any non-5xx HTTP status as 'rejected'."
+  anti_slop_mitigation: "AS-01 bans mocking the HMAC verification boundary (signature_gate class, crates compiled without mock traits); the test must run a companion positive control with a correctly signed payload proving real digest comparison, plus the forged case; AS-02 proves the watch cursor and routine telemetry never advanced."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "partner:stripe" # inbound provider principal (agent.md#Identity-chain)
+    agent_id: "capcli-watch" # kernel principal owning asynchronous provider dispatches
+    trust: "reviewed" # watch binding floor (artifacts/policy.yaml#watch require_trust)
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # refund@2 bound via: bind webhook stripe_hooks stripe charge.captured cap://refund
+      - name: "_watch_cursors"
+        row_count: 1 # watch_id: stripe_hooks, provider: stripe, cursor at last verified event
+      - name: "_audit"
+        row_count: 2 # bind.create + prior verified dispatch
+    vault_secrets:
+      - "vault://stripe_webhook_secret (HMAC-SHA256 signing key for provider stripe, armed at bind time)"
+
+execution:
+  trigger: "inbound_http"
+  command: 'curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:4040/hooks/stripe/charge.captured -H "Content-Type: application/json" -H "X-Webhook-Signature: v1=9f2c6b1e0d8a4f73badc0ffee4a7d2b5c6e8f9a0b1c2d3e4f5a6b7c8d9e0f1a" --data @payload.json'
+  input_params:
+    http_method: "POST"
+    path: "/hooks/stripe/charge.captured"
+    payload_bytes: 512
+    signature_header: "X-Webhook-Signature: v1=<hex digest computed with a WRONG secret>"
+    signing_secret_expected: "vault://stripe_webhook_secret"
+    signature_secret_used: "wrong_secret"
+    bound_capability: "cap://refund"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "bind.webhook"
+    culprit: "HMAC-SHA256 digest over the payload does not verify against the armed provider signing secret (invalid signature; HTTP 401 returned at ingress)"
+    remedy: "re-deliver the event signed with the provider's webhook secret armed at bind time; unsigned or mis-signed events are structurally never dispatched to the bound routine"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # no dispatch to routine, no egress
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny" # NOTE: ingress denial event name not located in cans/effect.md payload list; governance.deny per artifacts/governance.yaml#denials (log_all: true), effect: none (effect.md#Denials)
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Never mock the HMAC verification boundary: run the real digest comparison in-process. Include a positive control in the same test run — the identical payload signed with the correct key derived from vault://stripe_webhook_secret must dispatch — proving the comparator executed rather than being stubbed."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _watch_cursors (cursor must not advance for the forged event) and SELECT count(*) FROM routine_stats before and after the forged POST; assert strict equality — zero dispatches, zero routine telemetry movement."
+  - rule: "AS-03"
+    verification: "Assert the ingress response is exactly HTTP 401 with the denial envelope (not 200/202/500); when surfaced through the CLI envelope, exit_code == 2 with diagnostic.domain == 'bind.webhook' and culprit naming the signature mismatch (physics.md#Exit-code-law exit 2 policy block)."
