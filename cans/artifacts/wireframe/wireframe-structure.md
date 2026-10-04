@@ -105,10 +105,13 @@ cans/artifacts/wireframe/
         recover/
         exec/
         serve/
+    doc/
+      read/
+      outline/
 ```
 
 ### 1.1 Structural Invariants
-* **Active Nouns:** Exactly 9 CLI nouns (`run`, `db`, `routine`, `api`, `bind`, `ping`, `rule`, `env`, `sys`).
+* **Active Nouns:** Exactly 10 CLI nouns (`run`, `db`, `routine`, `api`, `bind`, `ping`, `rule`, `env`, `sys`, `doc`).
 * **Pairing Law:** Every `.json` fixture has an identical `.txt` companion in the same folder. No orphan files. No empty directories.
 * **Depth Ceiling:** File paths relative to `screens/` must remain between 3 and 5 directory components.
 * **Sibling Invariants:** Min 3, max 12 siblings per branch node.
@@ -133,7 +136,7 @@ cans/artifacts/wireframe/
   "compiled_at": "2026-03-31T00:00:00Z",
   "nouns": [
     "run", "db", "routine", "api", "bind",
-    "ping", "rule", "env", "sys"
+    "ping", "rule", "env", "sys", "doc"
   ],
   "state_axes": {
     "exit_code": [0, 2, 3, 4, 5, 6],
@@ -672,6 +675,15 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
 | `sys.core.serve.success.running` | success | 0 | — | running | IPC/WS/HTTP daemon active |
 | `sys.core.serve.refusal.already_running`| refusal| 3 | compile | port_bound | Daemon process already running |
 | `sys.core.serve.denial.port` | denial | 2 | db.engine | port_denied | Port 4040 binding rejected |
+
+### 4.10 `doc/` (2 verbs → 4 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `doc.read.success.populated` | success | 0 | — | populated | Document leaf content returned bounded |
+| `doc.read.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
+| `doc.outline.success.populated` | success | 0 | — | populated | Outline node tree rendered |
+| `doc.outline.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
 
 ---
 

@@ -4,7 +4,7 @@ db: workspace.db                       # managed runtime database
 readonly_for_agent: true               # kernel-upgrades only; agent write throws exit 2
 
 # ───────────────────────────────────────────────────────────────
-# SYSTEM TABLES (11 KERNEL-MANAGED SURFACES)
+# SYSTEM TABLES (13 KERNEL-MANAGED SURFACES)
 # ───────────────────────────────────────────────────────────────
 tables:
   _audit:

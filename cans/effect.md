@@ -31,7 +31,7 @@
       - api.activate — verb, state transition, trust, intent: see action.md#State-machine
       - api.token_refresh — provider, token_type, expires_in, refresh_outcome
       - api.call sim — sim_mode, http_called, fixture_used: see space.md#Sim-mode-taxonomy
-      - api.first_prod_call — call_number, calls_remaining, approver: see trust.md#Simulation-gaps
+      - api.first_prod_call — call_number, calls_remaining, contract_proof_hash: see trust.md#Simulation-gaps
       - budget.frame_push/pop — declared, consumed, remaining: see budget.md#Frames
       - serve.request — endpoint, channel (rest|mcp), trace_id, routine@version, api_key_id, status
     - Event integrity

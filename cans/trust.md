@@ -110,8 +110,7 @@
         - execution — prod-only and un-simulated verbs resolve to schema-validated mock fixtures in sim
       - training wheels
         - target verbs — skip and prod-only verbs
-        - human approval — call cap: see artifacts/governance.yaml#api.prod_first_calls
-        - window expiration — 24-hour approval TTL on each first prod call
+        - synthetic contract proof — contract replay replaces human sign-off: see artifacts/governance.yaml#api.prod_first_calls
         - tracking — remaining calls decremented in _api_catalog
     - Cost evidence
       - profiling metrics

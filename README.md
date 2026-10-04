@@ -66,28 +66,29 @@ Capcli treats **local state mutations and external network egress with equal gat
 
 ## The Code
 
-Routines execute in your preferred language (TypeScript or Python). The Rust kernel enforces the physics:
+Routines execute in Python (1st class), JavaScript (2nd), or TypeScript (3rd). The Rust kernel enforces the physics:
 
-```typescript
-import { routine, ctx, Param } from "@capcli/sdk";
+```python
+from capcli import routine, ctx, Param
 
-export default routine({
-  name: "dispatch_order",
-  trust: "pinned",
-  limits: { max_ops: 8, max_duration_seconds: 15 }
-}, async (order_id: Param<string>, carrier: Param<string>) => {
-  // 1. Gated Read: AST-validated, bounded query
-  const [order] = await ctx.db.query("SELECT * FROM orders WHERE id = :id", { id: order_id });
-  if (order.status !== "paid") return { status: "rejected", reason: "unpaid" };
+@routine(
+    name="dispatch_order",
+    trust="pinned",
+    limits={"max_ops": 8, "max_duration_seconds": 15}
+)
+def dispatch_order(order_id: Param[str], carrier: Param[str]):
+    # 1. Gated Read: AST-validated, bounded query
+    order = ctx.db.query("SELECT * FROM orders WHERE id = :id", {"id": order_id})
+    if not order or order[0]["status"] != "paid":
+        return {"status": "rejected", "reason": "unpaid"}
 
-  // 2. Governed Egress: Quota-metered HTTP call with vaulted secret injection
-  const ship = await ctx.api.call("logistics.shipments.create", { order_id, carrier });
+    # 2. Governed Egress: Quota-metered HTTP call with vaulted secret injection
+    ship = ctx.api.call("logistics.shipments.create", {"order_id": order_id, "carrier": carrier})
 
-  // 3. Bounded Write: Mandatory intent, checked against declared manifest
-  await ctx.db.execute("UPDATE orders SET status = 'shipped' WHERE id = :id", { id: order_id });
-  
-  return { status: "dispatched", tracking: ship.tracking_number };
-});
+    # 3. Bounded Write: Mandatory intent, checked against declared manifest
+    ctx.db.execute("UPDATE orders SET status = 'shipped' WHERE id = :id", {"id": order_id}, intent="dispatch order")
+    
+    return {"status": "dispatched", "tracking": ship["tracking_number"]}
 ```
 
 ---

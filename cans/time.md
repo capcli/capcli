@@ -66,7 +66,7 @@
       - sweep command — capcli routine sweep [--since 30d]
       - rollback command — capcli routine rollback <name> --to-version N
       - retire command — capcli routine retire <name> [--reason]
-      - dependency protection — _routine_deps blocks retirement of active dependencies
+      - dependency protection — routine dependency graph (in-memory DAG) blocks retirement of active dependencies
       - decay thresholds
         - inactivity — unused for 30 days flags retirement candidate
         - failure rate — success below 0.70 over 20 runs triggers demotion to draft
@@ -84,7 +84,6 @@
       - passive mining — opportunistic routine proposals triggered when frequent sequences detected
       - synthesis — harness scaffolds routine code using governance synthesis_target language
       - hybrid composition — routines bundle atomic DB transactions with external API verbs
-      - synthesis — harness scaffolds routine code using governance synthesis_target language
       - verification — routine prove executes real historical audit inputs
       - invocation — routine invoked via run, replacing ad-hoc primitives
   - Consolidation

@@ -15,7 +15,7 @@ default: deny                         # THE anchor. everything below carves exce
 # ───────────────────────────────────────────────────────────────
 authorizer:
   tables:
-    # System tables (11 kernel-managed surfaces)
+    # System tables (13 kernel-managed surfaces)
     _audit:
       allow: [read]
     _api_quota:
@@ -42,6 +42,8 @@ authorizer:
       allow: [read]
     routine_stats:
       allow: [read]
+    _suspended_tasks:
+      allow: [read]
     _system_schema:
       allow: [read]
       deny: [insert, update, delete]
@@ -52,8 +54,8 @@ authorizer:
     attach: deny                               # no side-databases, ever
     detach: deny
     drop: deny
-    vacuum: require_trust: pinned              # maintenance only
-    alter: require_trust: reviewed             # schema ops gated by trust
+    vacuum: { require_trust: pinned }          # maintenance only
+    alter: { require_trust: reviewed }         # schema ops gated by trust
     pragma: [query_only, foreign_keys]         # whitelist, never blacklist
     functions:
       allow: [count, sum, min, max, avg, json_extract, date, strftime]
@@ -70,8 +72,8 @@ query:
   multi_statement: deny
   unparseable: deny                            # parser failure fails CLOSED
   writes_require_intent: true                  # no intent → exit 3, cited in explain
-    enforce_target_scope: true                 # AST tables/columns must match declared intent target
-    max_unrelated_tables: 0                    # zero writes outside intent boundary
+  enforce_target_scope: true                   # AST tables/columns must match declared intent target
+  max_unrelated_tables: 0                      # zero writes outside intent boundary
 
   update_delete:
     require_where: true
@@ -97,7 +99,7 @@ query:
     confirm_above: { rows: 50000 }             # raised: human gate only on massive blast radius
 
   system_tables:
-    deny_write: [_audit, _api_quota, _api_catalog, _budget_earmarks, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats, _system_schema]
+    deny_write: [_audit, _api_quota, _api_catalog, _budget_earmarks, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats, _suspended_tasks, _system_schema]
     deny_read: []                              # reads allowed; writes are kernel-internal
 
 # ───────────────────────────────────────────────────────────────
@@ -286,7 +288,7 @@ env:
     confirm_above: { rows: 10 }                # tighter thresholds
     vacuum: deny
     api: { fuel: { per_session_fuel: 500000 } }
-    allowed_runtimes: [typescript]             # prod locked to single engine
+    allowed_runtimes: [python, javascript, typescript] # ranked: python 1st, js 2nd, ts 3rd
     serve: { bind: "127.0.0.1" }               # public lives behind a proxy
   sim:
     rate: { writes_per_minute: 1000 }          # fast iteration
@@ -296,10 +298,10 @@ env:
       mock_fixtures_from: apis/*.mock.yaml
       deny_sim_mode: [prod-only]           # prod-only verbs physically denied in sim
     notify: { route_to: "#sim-notifications" }
-    allowed_runtimes: [typescript, python]
+    allowed_runtimes: [python, javascript, typescript]
   dev:
     bulk: { require_pre_count: false }
-    allowed_runtimes: [typescript, javascript, python] # permissive exploration
+    allowed_runtimes: [python, javascript, typescript] # permissive exploration
     confirm_above: { rows: 1000 }              # looser: dev is cheap
     trust_overlay:                               # draft relaxation for onboarding seeding
       draft:
