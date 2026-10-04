@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_09_broken_tmpfs_scratch_isolation"
+title: "Guest /scratch tmpfs wiped from host after sandboxed routine completion"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#sandbox"
+  statement: "Sandboxed routines execute inside unprivileged bwrap namespaces with a private tmpfs /scratch: when the routine exits, the scratch directory UUID must not exist anywhere on the host filesystem — no guest file survives the teardown."
+  blast_radius_if_breached: "Guest routines leak working files (exports, intermediate datasets, cached secrets) onto the host: cross-tenant data bleed between routine runs, host disk exhaustion, and forensic artifacts that outlive their session."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts the routine exit code and the row insertion but never probes the host filesystem for the scratch directory — leaked files remain undetected because the success assertion masks the missing teardown."
+  anti_slop_mitigation: "AS-08 mandates the physical host-side probe — the scratch directory UUID must not exist post-execution; AS-01 bans mocking the bwrap jail; AS-05 verifies the routine.run audit event and chain link; AS-03 requires exit_code == 0 with state_modified == true."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "data.export@example.com"
+    agent_id: "agt_kp_09"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 1
+      engine: sqlite
+      db: workspace
+      tables:
+        exports:
+          cols:
+            id: pk
+            kind: 'text=csv'
+            rows_written: int
+          idx: [kind]
+    tables:
+      - name: "exports"
+        row_count: 0
+      - name: "_audit"
+        row_count: 2
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run csv_export -p range=2024-11 -m "export november ledger rows" (the routine stages intermediate files in /scratch inside its bwrap namespace, then commits one audited exports row)'
+  input_params:
+    routine_engine: "python"
+    scratch_artifacts: ["/scratch/<run-uuid>/page_0.csv", "/scratch/<run-uuid>/page_1.csv"]
+    audited_write: "INSERT INTO exports (kind, rows_written) VALUES (:k, :r)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "kernel.jail"
+    culprit: "/scratch tmpfs run-UUID directory — the host-side probe target that must not exist after routine teardown"
+    remedy: "none required on the success path — bwrap tmpfs teardown is automatic on routine exit; verification is the post-run host filesystem probe"
+  database:
+    row_count_delta: 1
+    tables_mutated: ["exports"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-08"
+    verification: "After the run completes, physically probe the host filesystem: the per-run /scratch/<run-uuid> directory and every listed artifact path must not exist — asserted via stat/lstat failure on the host, never via an in-kernel API response."
+  - rule: "AS-01"
+    verification: "The routine must execute inside the real bwrap namespace with a real tmpfs mount — no fake jail and no harness tmpdir shim that would make the teardown assertion vacuous."
+  - rule: "AS-05"
+    verification: "SELECT count(*) FROM exports returns 1; _audit advances 2 -> 3 with a routine.run row whose prev_hash equals the SHA-256 of the prior row and whose result_hash matches the canonical JSON hash of the routine outcome."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 and parse CliEnvelope<T>: state_modified == true, data receipt present, audit_op set; a success-only assertion without the AS-08 host probe is rejected."
