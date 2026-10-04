@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "api.prove.denial.sim_gap",
+  "noun": "api",
+  "verb": "prove",
+  "target": "cap://threads.create_media_post",
+  "command": "capcli api prove threads.create_media_post --env sim",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.authorizer",
+    "trust": "draft",
+    "env": "sim",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.authorizer",
+    "culprit": "Missing mock fixture in sim for prod-only verb.",
+    "remedy": "add a schema-validated mock fixture for 'threads.create_media_post' to apis/threads.mock.yaml, then re-run the prove",
+    "layer": "authorizer",
+    "measured": "mock fixtures for provider 'threads': 0 (contract replay requires 1)"
+  },
+  "txt_pair": "screens/api/prove/api.prove.denial.sim_gap.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[sim:tier_1]  ✗  exit 2",
+      "  FAIL  policy.authorizer.sim_gap",
+      "        Missing mock fixture in sim for prod-only verb.",
+      "  state_modified:  false",
+      "  layer:           authorizer",
+      "  remedy:          add a schema-validated mock fixture for 'threads.create_media_post' to apis/threads.mock.yaml, then re-run the prove"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.authorizer"
+    }
+  }
+}
