@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_11_promotion_queue_sla_breach_alert"
+title: "Routine sitting 49 hours in the human promotion review queue trips the 48h SLA and sys doctor raises the promotion.sla_breached alarm"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/time.md#breach-notification-—-queue-age->-48h-triggers-promotion.sla_breached"
+  statement: "A routine enqueued for human review ('routine ship <name> reviewed --queue') that ages past the 48-hour SLA threshold causes 'sys doctor' to raise the promotion.sla_breached alarm (exit 2 with a diagnostic alarm card citing the measured queue age) — review queues can never let candidates languish silently."
+  blast_radius_if_breached: "Promotion candidates pile up unreviewed for days: unattended automation pipelines stall behind an invisible human queue, operators believe promotions are 'in progress' while nothing moves, and the batch-approval backlog grows unbounded with zero alerting (catalog banned slop: silently letting routines languish in pending review queues indefinitely)."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts the alarm using a real 48-hour wall-clock wait (test never runs) or derives the queue age from the engine's own clock read instead of a MockClock-injected instant, so a clock bug self-validates; or checks only stdout text without the typed alarm id (catalog banned slop: silently letting routines languish in pending review queues indefinitely)."
+  anti_slop_mitigation: "AS-04 forces queue aging through the deterministic MockClock at t0+49h with the enqueue instant pinned at t0; AS-03 forces the typed alarm id promotion.sla_breached with the measured 49h vs 48h citation; AS-06 hardcodes the 47h59m negative control that must stay silent."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:maya"
+    agent_id: "agt_tl_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        routines:
+          description: "routine registry with review queue state"
+          columns:
+            name: text!~
+            version: int!
+            trust: text!
+            queued_at: int
+          idx: [[name, version]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "_audit"
+        row_count: 5
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys doctor --json"
+  input_params:
+    routine: "payout@7"
+    queue_entry_instant: "MockClock t0 (routine ship payout reviewed --queue committed at t0)"
+    doctor_instant: "MockClock t0 + 49h"
+    sla_threshold_hours: 48
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "promotion.sla"
+    culprit: "routine payout@7 pending in the human review queue for 49h (SLA threshold 48h); promotion.sla_breached alarm raised — measured: queue_age 49h vs threshold 48h"
+    remedy: "inspect the queue via 'capcli routine pending' and approve or reject the batch (single audit event per batch approval)"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "promotion.sla_breached (sys doctor alarm; diagnostic observation, no state mutation)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Age the queue exclusively via MockClock: enqueue at t0, advance to t0+176400s (49h) before invoking sys doctor — zero wall-clock sleeps, zero SystemTime::now(); the alarm is a deterministic function of the injected instant."
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope: exit_code == 2, state_modified == false, diagnostic.domain == 'promotion.sla', alarm id 'promotion.sla_breached' present in output with the measured pair (queue_age 49h, threshold 48h), diagnostic.remedy names 'capcli routine pending'; the doctor alarm does not mutate the queue itself."
+  - rule: "AS-06"
+    verification: "Hardcoded boundary control: re-run with MockClock at t0+47h59m (172740s) — no alarm, doctor nominal; the 48h threshold is an immutable literal expectation on both sides of the boundary, never derived from the engine's own aging computation."

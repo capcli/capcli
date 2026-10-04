@@ -1,0 +1,83 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_12_human_veto_rollback_trust"
+title: "Human inspector vetoing a promoted routine during the 1-hour canary window rolls it back to draft and unpins it immediately — no rebuild, no version bump"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/trust.md#retroactive-control-—-human-veto-via-rollback---to-trust-draft"
+  statement: "A human inspector's veto during the 1-hour canary window ('routine rollback <name> --to-trust draft') immediately rolls the routine back to draft and unpins it: the rung write executes on the existing version with unchanged code_hash and manifest_hash — no code rebuild, no new version, no re-prove required for the demotion itself (demotion priority: zero gate resistance)."
+  blast_radius_if_breached: "A vetoed routine stays pinned until someone rebuilds and re-versions it: unattended schedules keep firing the vetoed code (may_run_unattended survives), endpoint serving continues exposing it, and the human's canary-window authority is theater — the exact period in which the flagged defect keeps executing in prod."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent implements the veto as a version rollback (routine rollback --to-version N) or re-prove cycle and asserts eventual demotion, hiding that the trust write itself was skipped; or bumps the version in the fixture so the 'no rebuild' claim cannot fail (catalog banned slop: requiring a code rebuild or new version bump to execute human veto rollback)."
+  anti_slop_mitigation: "AS-06 hardcodes the no-rebuild contract — version stays 9 and code_hash/manifest_hash are byte-identical literals before and after the veto; AS-05 verifies the rung write plus unattended-flag revocation on the hash chain; AS-04 pins the veto inside the canary window via the MockClock."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:iris"
+    agent_id: "agt_tl_12"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        routines:
+          description: "routine registry with trust rung, unattended flag and provenance hashes"
+          columns:
+            name: text!~
+            version: int!
+            trust: text!
+            may_run_unattended: int=0
+            code_hash: text!
+            manifest_hash: text!
+            promoted_at: int
+          idx: [[name, version]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "routine_stats"
+        row_count: 1
+      - name: "_audit"
+        row_count: 5
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli routine rollback payout --to-trust draft --reason \"human veto: p95 4.6x baseline during canary window\""
+  input_params:
+    routine: "payout@9"
+    from_rung: "pinned"
+    to_rung: "draft"
+    canary_window_position: "MockClock t0+20m (veto inside the 1-hour window opened at promotion t0)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 1
+    tables_mutated:
+      - "routines"
+      - "_audit"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.rollback (human veto inside 1h canary window: pinned -> draft, unpinned)"  # NOTE: not located in cans/ specs — exact veto event verb beyond the routine.canary_rollback autonomous precedent; chain advance mandated by the zero-ghost-actions law
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "No-rebuild contract with immutable literals: after the veto, SELECT version, code_hash, manifest_hash FROM routines WHERE name='payout' returns exactly (9, '<pre-command code_hash snapshot>', '<pre-command manifest_hash snapshot>') — byte-identical to the pre-command read; only trust ('draft') and may_run_unattended (0) changed, proving the veto is a rung write, not a re-version."
+  - rule: "AS-05"
+    verification: "Hash-chain and flag verification: _audit gains exactly 1 veto event whose prev_hash equals the SHA-256 of the prior row, capcli-core::audit::verify_chain() passes, and SELECT trust, may_run_unattended FROM routines WHERE name='payout' returns ('draft', 0) — the unattended privilege is revoked with the rung."
+  - rule: "AS-04"
+    verification: "Position the veto deterministically inside the window: promotion at MockClock t0, veto command executed at t0+1200s (20m) — the window boundary (t0+3600s) and the veto instant are injected constants, so the veto's validity can never flake on wall-clock timing."
