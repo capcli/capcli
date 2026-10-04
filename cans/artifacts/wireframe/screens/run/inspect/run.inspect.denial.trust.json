@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.inspect.denial.trust",
+  "noun": "run",
+  "verb": "inspect",
+  "target": "cap://refund_and_archive@1",
+  "command": "capcli inspect cap://refund_and_archive@1",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.trust",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.trust",
+    "culprit": "Draft routines cannot read secrets (trust.draft.can_read.secrets: false).",
+    "remedy": "promote via capcli routine ship refund_and_archive reviewed, then re-inspect",
+    "layer": "trust",
+    "measured": "1 envelope section masked (cost_envelope.secret_refs)"
+  },
+  "txt_pair": "screens/run/inspect/run.inspect.denial.trust.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "  FAIL  policy.trust.secrets_unreadable",
+      "        Draft routines cannot read secrets (trust.draft.can_read.secrets: false).",
+      "  state_modified:  false",
+      "  layer:           trust",
+      "  remedy:          promote via capcli routine ship refund_and_archive reviewed, then re-inspect"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified",
+      "layer"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.trust"
+    }
+  }
+}

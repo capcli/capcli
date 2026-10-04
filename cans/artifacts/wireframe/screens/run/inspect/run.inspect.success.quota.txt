@@ -1,0 +1,23 @@
+[dev:tier_1]  ✓  quota://threads headroom
+
+  provider:  threads
+  window:    24h rolling
+  status:    tracked
+
+  headroom:
+    total:       50
+    available:   28
+    earmarked:   7
+    unreserved:  21
+
+  reservations:
+    earmark_01c3 5 tokens   ttl 3h    "newsletter batch send"
+    earmark_01d8 2 tokens   ttl 45m   "story reply sweep"
+
+  rate:
+    burst_bucket:       10 (refill 1.0/s)
+    writes_per_minute:  12 of 60 remaining
+
+  can_invoke_now: true
+  deny_at:        5 tokens (pre-call deny floor)
+  reset_at:       18:00:00 UTC (in 4h 12m)

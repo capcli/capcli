@@ -1,0 +1,11 @@
+[dev:tier_1]  ✗  exit 3
+
+  FATAL  missing_param.unrecognized_ptr
+         target: 'dispatch_order@4'
+
+         Unrecognized pointer format: missing scheme prefix.
+         Expected a typed URP: cap://, db://, quota://, doc://, ...
+
+  state_modified: false
+  layer: cli
+  remedy: restate as a typed URP, e.g. cap://dispatch_order@4

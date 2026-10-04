@@ -1,0 +1,34 @@
+[dev:tier_1]  capcli inspect cap://dispatch_order@4
+
+  trust:       pinned
+  runtime:     typescript (bun)
+  params:      order_id: string, carrier: string
+  description: "Dispatch paid order to carrier and update status"
+
+  limits:      8 ops · 15s · 500 result tokens
+
+  manifest:
+    1. db.query    orders (read)
+    2. api.call    logistics.shipments.create
+    3. db.execute  orders (write)
+
+  budget_status:
+    can_invoke_now:             true
+    session_ops_remaining:      488
+    session_duration_remaining: 555000ms
+    session_fuel_remaining:     80400
+    session_egress_remaining:   4181824 bytes
+    session_rate_remaining:     287
+    tightest_constraint:        null
+
+  composition:
+    max_nesting_depth:   5
+    budget_inheritance:  min
+    child_routines:      []
+
+  stats:
+    total_runs:    214
+    success_rate:  99.1%
+    p50_duration:  340ms
+    p95_duration:  890ms
+    last_run_at:   2m ago
