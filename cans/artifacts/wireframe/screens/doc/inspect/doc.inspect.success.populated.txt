@@ -1,0 +1,12 @@
+[dev:tier_1]  ✓  inspect doc://refund-policy
+
+  document: doc://refund-policy
+  title:    Refund Policy
+  trust:    pinned
+  source:   git:docs/policies/refund-policy.md@2f6110a
+  sha256:   9c1f04ab37e6d2f5c8a01b74e93d6f2a5b8c0d17e4f92a6b3c5d8e0f1a2b4c69
+  mtime:    2026-10-02T14:18:33Z
+  nodes:    8
+  sections: 5
+  tokens:   312 (cap: 500)
+  has_more: false
