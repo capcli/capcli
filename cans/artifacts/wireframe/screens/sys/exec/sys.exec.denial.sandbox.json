@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "sys.exec.denial.sandbox",
+  "noun": "sys",
+  "verb": "exec",
+  "target": "sys://sandbox",
+  "command": "capcli sys exec \"python3 etl.py\" --sandbox",
+  "state": {
+    "exit_code": 2,
+    "domain": "kernel.sandbox",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "kernel.sandbox",
+    "culprit": "Attempted unconfined escape: bwrap pivot_root remount plus ptrace (syscall 101) outside profile_python",
+    "remedy": "strip escape attempts from the command; raw host access is never granted inside the jail",
+    "layer": "sandbox",
+    "measured": "2 containment violations (tolerated: 0)"
+  },
+  "txt_pair": "screens/sys/exec/sys.exec.denial.sandbox.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "FAIL  kernel.sandbox.escape_attempt",
+      "      violation: ptrace (syscall 101) outside profile_python allowlist",
+      "state_modified: false",
+      "layer:          sandbox",
+      "measured:       2 containment violations (tolerated: 0)"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "kernel.sandbox"
+    }
+  }
+}
