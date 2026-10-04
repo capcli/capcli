@@ -1,0 +1,16 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  validation.routine.shape_violation
+        template: tpl://routine/legacy_sync
+        shape_gate report (routines/legacy_sync.py):
+          loc:    214 (max: 150)
+                  ^^^
+          params: 11 (max: 8)
+                  ^^
+          tokens: 1840 (max: 2000)
+
+        Scaffold violates routine_shape ceilings: 214 LOC (max: 150), 11 params (max: 8).
+        Non-compliant stubs are rejected before disk write; the routines/ tree stays clean.
+
+  state_modified: false
+  remedy: split the scaffold into composed routines under 150 LOC with at most 8 params each
