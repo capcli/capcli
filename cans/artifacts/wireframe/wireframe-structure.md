@@ -33,6 +33,7 @@ cans/artifacts/wireframe/
       prove/
       ship/
       pending/
+      sweep/
       stats/
       rollback/
       retire/
@@ -40,6 +41,7 @@ cans/artifacts/wireframe/
       sync/
       diff/
       catalog/
+      activate/
       prove/
       ship/
       stats/
@@ -284,7 +286,7 @@ cans/artifacts/wireframe/
       "color": "#3fb950",
       "entry": "routine.prove.success.passed",
       "terminal": "routine.ship.success.shipped",
-      "description": "Sim replay verification -> ship promotion queue -> Tier 1 pinned lock"
+      "description": "Sim replay verification -> ship promotion queue -> 1-hour canary telemetry window -> Tier 1 pinned lock"
     },
     "journey_quota_preemption": {
       "name": "Wire Quota Starvation, Yield & Auto-Resume",
@@ -689,7 +691,7 @@ cans/artifacts/wireframe/
 | `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
 | `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
 
-### 4.3 `routine/` (7 verbs $\rightarrow$ 22 screen pairs)
+### 4.3 `routine/` (8 verbs $\rightarrow$ 26 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -708,6 +710,8 @@ cans/artifacts/wireframe/
 | `routine.ship.denial.trust` | denial | 2 | policy.trust | tier2_refusal | Pinned promotion denied on Tier 2 |
 | `routine.pending.success.populated` | success | 0 | — | populated | Batch promotion candidates listed |
 | `routine.pending.success.empty` | success | 0 | — | empty | No routines pending promotion |
+| `routine.sweep.success.populated` | success | 0 | — | populated | Deduplication proposals generated |
+| `routine.sweep.success.empty` | success | 0 | — | empty | No duplicate routines detected |
 | `routine.stats.success.populated` | success | 0 | — | populated | Routine p50/p95 execution metrics |
 | `routine.stats.refusal.not_found` | refusal | 3 | validation | not_found | Routine name does not exist |
 | `routine.rollback.success.completed`| success | 0 | — | completed | Reverts pointer to prior version |
@@ -717,7 +721,7 @@ cans/artifacts/wireframe/
 | `routine.retire.denial.active_deps` | denial | 2 | policy.authorizer | deps_exist | Callee dependencies block retirement |
 | `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
 
-### 4.4 `api/` (8 verbs $\rightarrow$ 19 screen pairs)
+### 4.4 `api/` (9 verbs $\rightarrow$ 24 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -729,6 +733,11 @@ cans/artifacts/wireframe/
 | `api.catalog.success.populated` | success | 0 | — | populated | Imported catalog verbs listed |
 | `api.catalog.success.empty` | success | 0 | — | empty | Zero APIs configured |
 | `api.catalog.success.truncated` | success | 0 | — | truncated | Truncated at 500 verbs |
+| `api.activate.success.activated` | success | 0 | — | activated | Dormant verb shifted to active draft |
+| `api.activate.success.training_wheels`| success| 0 | — | probation | Activated with 3 synthetic contract checks |
+| `api.activate.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active verbs reached |
+| `api.activate.denial.rate` | denial | 2 | policy.authorizer | rate_limit | Exceeded 10 activations/hour |
+| `api.activate.refusal.missing_intent`| refusal| 3 | compile | no_intent | Missing intent flag on activation |
 | `api.prove.success.passed` | success | 0 | — | passed | Rehearsal in sim verified |
 | `api.prove.denial.sim_gap` | denial | 2 | policy.authorizer | sim_gap | Missing mock fixture in sim |
 | `api.prove.denial.policy` | denial | 2 | policy.authorizer | forbidden | Verb egress rule rejected |
