@@ -1,0 +1,79 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_13_kms_witness_signature_checkpoint"
+title: "Witness worker KMS-signs the ledger root hash and appends the checkpoint to witness.log"
+domain: "audit_dag"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/effect.md#external-attestation--ledger-root-hash-checkpointed-to-S3-Object-Lock-(WORM)-storage-with-KMS-signatures"
+  statement: "The kernel witness worker periodically checkpoints the current ledger root hash to S3 Object Lock (WORM) storage with KMS signatures (recovery.md#Attestation-checkpoints: notary witness — periodic KMS signature stamped to witness.log): every checkpoint carries a real digital signature over the root hash — stamping a bare hash without cryptographic signature is a violation."
+  blast_radius_if_breached: "Unsigned 'checkpoints' are forgeable: an attacker who tampers the local chain can also fabricate matching witness anchors, and offsite attestation stops being independent proof — the entire tamper-evidence story (root-worm walks, receipt anchoring, replay gates) collapses into theater."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts only that witness.log gained a line (a stamped-but-unsigned checkpoint passes) or verifies the signature with a mocked signer that always returns true — never performing real public-key verification of the KMS signature."
+  anti_slop_mitigation: "AS-01 bans mocking the KMS signing boundary — the signature is produced and verified with real key material; AS-05 recomputes the root hash and cryptographically verifies the signature; AS-04 steps the periodic witness tick on MockClock; AS-06 pins the checkpoint epoch and root-hash prefix literals."
+
+setup:
+  env: "dev" # offsite S3 WORM endpoint simulated via wiremock; KMS signing is real crypto
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.maintainer@acme.corp"
+    agent_id: "agt_ad_13"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 5
+      - name: "_audit"
+        row_count: 24 # pre-existing chained events; root hash over rows 1..24 is the checkpoint target
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "daemon witness worker tick (MockClock advanced to the checkpoint epoch): sign the current ledger root hash (SHA-256 over _audit rows 1..24) with the KMS key, PUT the checkpoint to the S3 Object Lock (WORM) endpoint, and append the signed entry to witness.log"
+  input_params:
+    ledger_rows: 24
+    kms_signature: "real KMS key signature over (root_hash, checkpoint_epoch) — no mocked signer"
+    worm_endpoint: "wiremock-simulated offsite S3 Object Lock store"
+    witness_log: "witness.log (recovery.md#Attestation-checkpoints notary witness)"
+    witness_clock: "MockClock epoch ticks injected via engine API (periodic schedule)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: false # ledger rows unchanged; the checkpoint lands offsite (WORM PUT + witness.log append)
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — signed checkpoint appended to witness.log and PUT to the WORM endpoint"
+    remedy: "n/a — success; signature verified by the assertions below"
+  database:
+    row_count_delta: 0 # _audit stays at 24; attestation is external, not a ledger mutation
+    tables_mutated: []
+  wire:
+    packets_transmitted: 1 # the checkpoint PUT to the offsite WORM endpoint; no business egress
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "witness checkpoint — external attestation of the ledger root hash"
+    # NOTE: not located in cans/ specs — witness checkpoint event name is absent from the effect.md kernel payload list; the attestation duty comes from effect.md#Event-integrity external attestation
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "The KMS signature is produced and verified with real asymmetric key material (real crypto operations per the integration tier) — no mocked signer, no stubbed verify() that returns true; static lint bans mock traits on the witness/KMS boundary."
+  - rule: "AS-05"
+    verification: "Cryptographic verification: recompute the ledger root hash with sha2::Sha256 over _audit rows 1..24, read the last witness.log entry, and verify the KMS signature over (root_hash, checkpoint_epoch) with the public key — recomputed root must equal the signed root exactly; run capcli-core::audit::verify_chain() alongside."
+  - rule: "AS-04"
+    verification: "The periodic witness tick is stepped via MockClock epoch ticks injected through the engine API at the scheduled checkpoint epoch; no wall-clock sleeps waiting for the next witness period."
+  - rule: "AS-06"
+    verification: "Immutable literals hardcoded: _audit row count 24 at checkpoint time, the checkpoint epoch value, the first 16 hex chars of the expected root hash, and witness.log line count increment of exactly 1 — none derived from the witness worker's own output."
