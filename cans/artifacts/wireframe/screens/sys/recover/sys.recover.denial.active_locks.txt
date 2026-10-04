@@ -1,0 +1,13 @@
+[dev:tier_1]  ✗  exit 2
+
+FAIL  db.claims.active_locks
+      Active claim leases prevent state reversal to commit 3f9c2ab.
+      lock: orders:ORD-10 held by agt_7f3k (ttl: 4m 12s remaining)
+      lock: ledger:TXN-WRITE held by daemon (ttl: 55s remaining)
+
+      Restoring under live claims would orphan lease holders.
+
+state_modified: false
+layer:          claims
+measured:       2 active locks (tolerated for reversal: 0)
+remedy:         wait for TTL expiry or release via 'capcli db unlock', then retry 'capcli sys recover 3f9c2ab'

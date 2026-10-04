@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "sys.recover.denial.active_locks",
+  "noun": "sys",
+  "verb": "recover",
+  "target": "git:3f9c2ab",
+  "command": "capcli sys recover 3f9c2ab",
+  "state": {
+    "exit_code": 2,
+    "domain": "db.claims",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "db.claims",
+    "culprit": "Active claim leases prevent state reversal to commit 3f9c2ab (orders:ORD-10, ledger:TXN-WRITE)",
+    "remedy": "wait for TTL expiry or release via 'capcli db unlock', then retry 'capcli sys recover 3f9c2ab'",
+    "layer": "claims",
+    "measured": "2 active locks (tolerated for reversal: 0)"
+  },
+  "txt_pair": "screens/sys/recover/sys.recover.denial.active_locks.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "FAIL  db.claims.active_locks",
+      "      lock: orders:ORD-10 held by agt_7f3k (ttl: 4m 12s remaining)",
+      "state_modified: false",
+      "layer:          claims",
+      "measured:       2 active locks (tolerated for reversal: 0)"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "db.claims"
+    }
+  }
+}

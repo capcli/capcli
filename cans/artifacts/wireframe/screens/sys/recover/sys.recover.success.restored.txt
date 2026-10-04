@@ -1,0 +1,14 @@
+[dev:tier_1]  ✓  restored
+
+recover:
+  commit:            3f9c2ab
+  source:            object store (s3://capcli-worm/envs-dev/)
+  workspace:         envs/dev/workspace.db
+  schema_version:    3 (system-schema hash verified)
+  ledger_root_hash:  sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c
+  events_restored:   14290 rows from _audit mirror
+  chain_walk:        passed (0 broken links)
+  drift_discarded:   local uncommitted mutations dropped
+
+state_modified: true
+note:           workspace reconstructed from offsite archive
