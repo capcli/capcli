@@ -1,0 +1,71 @@
+$schema: "test-plan/case/v1"
+case_id: "se_09_seed_data_volume_cap_breach"
+title: "Table definition with 51 seed rows is rejected by the seed volume cap (max 50 rows per table)"
+domain: "schema_evolution"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Seed-data"
+  statement: "Seed data is declared as a seed: [...] array executed inside the migration DDL transaction with a volume cap of max 50 rows per table to prevent draft bulk loading (governance.yaml template.world.max_seed_rows_per_table: 50); 51 rows refuses the schema at the shorthand compiler gate with exit 3."
+  blast_radius_if_breached: "Large datasets bypass every migration gate disguised as seed data: a draft template ships a 100k-row 'seed' straight into prod through the intake pipeline, dodging chunking, pre-counts, and blast-radius caps."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent allows the oversized seed array through by splitting it across two tables of 26+26 rows (or 51 single-row INSERT statements) in the fixture - the per-table cap is never actually evaluated against the declared array."
+  anti_slop_mitigation: "AS-06 hardcodes the literal 51-row seed array and asserts the diagnostic cites measured 51 vs cap 50; AS-03 requires the typed exit code 3; AS-02 proves the live DB never received seed rows."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.template-author@acme.corp"
+    agent_id: "agt_se_09"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        fixture_table:
+          description: "Template starter lookup data"
+          columns:
+            id: pk
+            tag: text!
+          seed:
+            - { tag: "row_01" }
+            - { tag: "row_02" }
+      # the fixture enumerates the full literal seed array row_01 .. row_51 (51 entries) - one row above the cap
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "Gate 1 shorthand compile of the fixture schema.yaml whose fixture_table declares a 51-entry seed array"
+  input_params:
+    gate: "Gate 1: Syntax (shorthand expansion incl. seed volume cap)"
+    seed_rows_declared: 51
+    seed_rows_cap: 50
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; seed cap is enforced by the schema compile gates
+    culprit: "fixture_table seed array length 51 > max 50 rows per table (volume cap prevents draft bulk loading); measured value 51 vs ceiling 50"
+    remedy: "Trim the seed array to <= 50 rows; ship bulk starter data through the governed migration path (chunked inserts, pre-count, reviewed trust) instead of seed."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny (effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "The test seed array is a hardcoded literal of exactly 51 entries (counted length == 51, tags row_01..row_51, all in one table - no fixture splitting); the diagnostic must cite measured 51 vs cap 50 (denials cite the measured value)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) and parse the diagnostic envelope: domain, culprit citing the seed cap, remedy present - not a generic YAML parse error."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 500 before and after; SELECT count(*) FROM sqlite_master WHERE name = 'fixture_table' == 0 (no table materialized, zero seed rows executed)."
