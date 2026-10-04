@@ -1,0 +1,88 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_10_demotion_zero_resistance_pass"
+title: "Trust demotion (rollback --to-trust draft) executes immediately with zero gate resistance even while every promotion metric is failing"
+domain: "trust_ladder"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/trust.md#demotion-priority-—-demotion-commands-execute-without-gate-resistance"
+  statement: "Demotion commands execute without gate resistance: 'capcli routine rollback <name> --to-trust draft' applies the rung change immediately at t0 — no metric consultation, no approval queue, no confirmation window, no waiting on gate telemetry — even when the routine's routine_stats are pristine, and symmetrically regardless of how bad they are. Safety pulls down instantly; only elevation is gated."
+  blast_radius_if_breached: "An incident responder facing a misbehaving pinned routine must wait for a confirmation window or approval queue: the broken routine keeps unattended production privileges (500-row ceilings, summary-only audit) for every minute the friction adds — the exact window in which runaway mutations compound."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent adds artificial friction to make the test 'realistic' (an approval queue, a confirmation prompt, a metrics wait) and asserts the eventual demotion instead of immediacy, or restarts the world between command and verification (catalog banned slop: adding artificial friction or approval queues to demotion paths)."
+  anti_slop_mitigation: "AS-06 hardcodes the immediacy expectation — the demotion command returns exit 0 with no intervening approval step, seeded with deliberately green metrics to prove no metric gate is consulted; AS-05 verifies the rung write and hash-chain advance; AS-04 pins execution at t0 with the MockClock untouched."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:iris"
+    agent_id: "agt_tl_10"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        routines:
+          description: "routine registry with trust rung and provenance hashes"
+          columns:
+            name: text!~
+            version: int!
+            trust: text!
+            code_hash: text!
+            manifest_hash: text!
+            created_by: text!
+            promoted_by: text
+          idx: [[name, version]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "routine_stats"
+        row_count: 1
+      - name: "_pending_asks"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli routine rollback payout --to-trust draft --reason \"incident 1141: demote immediately\""
+  input_params:
+    routine: "payout@9"
+    from_rung: "pinned"
+    to_rung: "draft"
+    seeded_metrics_deliberately_green:
+      success_rate: 0.99
+      policy_denials: 0
+      fingerprint_drift_events: 0
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 1
+    tables_mutated:
+      - "routines"
+      - "_audit"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.rollback (pinned -> draft; advances the hash chain)"  # NOTE: not located in cans/ specs — exact demotion event verb beyond the routine.canary_rollback / routine.auto_promoted / routine.ship precedents; chain advance mandated by the zero-ghost-actions law
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Immediacy is a hardcoded expectation, not derived: the command returns exit 0 with zero intervening prompts — assert SELECT count(*) FROM _pending_asks stays 0 (no approval ask was created) and the seeded pristine metrics (success_rate 0.99) prove no metric gate was consulted on the way down."
+  - rule: "AS-05"
+    verification: "Post-command: SELECT trust FROM routines WHERE name='payout' AND version=9 returns the literal 'draft'; _audit gained exactly 1 row whose prev_hash equals the SHA-256 of the prior row and capcli-core::audit::verify_chain() passes."
+  - rule: "AS-04"
+    verification: "The MockClock is NOT advanced between command and verification (execution at t0): the rung read immediately after the command already returns 'draft' — no window, TTL, or telemetry wait is involved in demotion."

@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_09_monotonic_ascent_skip_denial"
+title: "Human shipping a draft routine directly to pinned is rejected — the ladder is climbed sequentially and elevation skips are denied"
+domain: "trust_ladder"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/trust.md#monotonic-ascent-—-ladder-climbed-sequentially;-elevation-skips-denied"
+  statement: "The trust ladder is climbed sequentially (draft -> reviewed -> pinned): a human running 'routine ship <name> pinned' on a routine currently holding draft trust is rejected before any gate metric is even evaluated, because the draft -> pinned elevation skip is structurally denied — the routine must first graduate to reviewed."
+  blast_radius_if_breached: "A human pins unproven code in one command: a routine that never passed sim replay, canary evidence, or invariant suites gains may_run_unattended, 500-row ceilings, summary-only audit, and endpoint-serving rights — the entire promotion evidence chain is bypassed by a single flag."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent pre-promotes the fixture routine to reviewed (so the ship-to-pinned legitimately proceeds to metric checks and fails there with a different diagnostic), or asserts a generic failure without proving the rung stayed at draft — masking that the skip itself, not the metrics, was the blocker (catalog banned slop: permitting elevation skips directly from draft to pinned)."
+  anti_slop_mitigation: "AS-02 forces a registry re-read proving trust is still the literal 'draft' and promoted_through was not extended; AS-03 forces the typed exit 2 with the monotonic-ascent diagnostic naming the sequential requirement, distinct from a metrics denial."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:iris"
+    agent_id: "agt_tl_09"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        routines:
+          description: "routine registry with trust rung and promotion journey"
+          columns:
+            name: text!~
+            version: int!
+            trust: text!
+            promoted_through: json
+            code_hash: text!
+            manifest_hash: text!
+          idx: [[name, version]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "routine_stats"
+        row_count: 1
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli routine ship payout pinned --env prod --reason \"hotfix pin skip\""
+  input_params:
+    routine: "payout@7"
+    current_rung: "draft"
+    requested_rung: "pinned"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "elevation skip denied: payout@7 currently holds draft trust; the ladder is climbed sequentially (draft -> reviewed -> pinned) and direct draft -> pinned promotion is structurally refused before gate metrics are evaluated"
+    remedy: "ship to reviewed first ('capcli routine ship payout reviewed'), satisfy the canary and invariant evidence, then pin"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.ship (decision: denied, effect: none; rule policy.trust.monotonic_ascent)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "After the denied ship: SELECT trust FROM routines WHERE name='payout' AND version=7 returns the literal 'draft', promoted_through is unchanged (SELECT promoted_through equality against the pre-command snapshot), and SELECT count(*) FROM _audit reflects only the denial event — no promotion row, no version bump."
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit cites the sequential ladder (draft -> reviewed -> pinned) rather than ship-gate metrics — proving the skip check fired first, before routine_stats evaluation; stdout prefix '[prod:tier_1]'."
