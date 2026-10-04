@@ -1,0 +1,13 @@
+[dev:tier_1]  ✓  in lockstep (schema vs HEAD)
+
+  base:       git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)
+  working:    compiled schema.yaml v12 (lockfile verified)
+  scope:      4 tables · 22 columns · 7 indexes · 2 triggers
+
+  added:      0
+  changed:    0
+  removed:    0
+
+  workspace is in lockstep with declared rules; no drift found.
+
+  state_modified: false
