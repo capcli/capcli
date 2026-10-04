@@ -1,0 +1,80 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_09_session_fork_token_inheritance"
+title: "Forked child agent inherits a scoped HMAC token bound to its sub-budget frame"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#session-fork--child-agents-inherit-scoped-parent-token-via-session-fork"
+  statement: "When the parent session forks a child agent, the child inherits a scoped parent token via the session fork: the capability token is kernel-minted (tokens and ids kernel-issued; self-declaration denied) and bound to the child's active _budget_frames row — the child never generates a new un-scoped root capability token."
+  blast_radius_if_breached: "Child agents mint root-scoped tokens: a forked subprocess escapes its sub-budget frame, burns the parent's (or the session's) full fuel and wire quota, executes outside its intended capability envelope, and per-frame blast-radius accounting turns into fiction."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts only that the child got 'a' token (any token passes — including a fresh un-scoped root mint), or reads the child's frame binding from the child's own runtime state instead of the kernel's _budget_frames and token registry."
+  anti_slop_mitigation: "AS-06 pins the child token's frame binding to the literal sub-frame row id and runs the out-of-scope control (child op beyond its sub-frame is denied); AS-05 verifies the fork chains into _audit; AS-03 parses the fork envelope."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_cc09a" # parent session owner; child forked below
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 0
+      - name: "agents"
+        row_count: 1 # agt_cc09a registered (parent)
+      - name: "_budget_frames"
+        row_count: 1 # parent frame fr_001 (session ses_a9)
+      - name: "_audit"
+        row_count: 6 # genesis + register + parent session events
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "engine session fork: parent session ses_a9 (agent agt_cc09a, frame fr_001) forks child agent agt_cc09b with a sub-budget frame; child's inherited HMAC token is validated against the token registry and frame binding"
+  input_params:
+    parent_session: "ses_a9 (agent agt_cc09a, frame fr_001)"
+    child_agent: "agt_cc09b"
+    child_frame: "fr_002 (sub-frame of fr_001, declared ops ceiling 20)"
+    control_out_of_scope: "child op beyond fr_002 scope must be denied exit 2"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — child agent registered with an inherited scoped token bound to sub-frame fr_002"
+    remedy: "n/a — success; scoping verified by the assertions below"
+  database:
+    row_count_delta: 1 # agents 1 -> 2; _budget_frames 1 -> 2; _audit gains the chained fork event
+    tables_mutated: ["agents", "_budget_frames", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "sys.agent.register (child agent agt_cc09b, principal, token_hash of the inherited scoped token)"
+    # NOTE: not located in cans/ specs — a fork-specific event name is absent from the effect.md kernel payload list; sys.agent.register (agent_id, principal, token_hash) is the nearest grounded registry event
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Hardcoded literals: the child's token resolves in the token registry to frame binding fr_002 (the sub-frame), NOT fr_001 or a root scope; control run: an op from agt_cc09b beyond fr_002's declared ceiling (ops 21 under ceiling 20) is denied with exit 2 — an un-scoped root token would pass and must fail the test."
+  - rule: "AS-05"
+    verification: "The fork chains: the new _audit row (sys.agent.register shape with token_hash) links via prev_hash == SHA-256 of the prior row; run capcli-core::audit::verify_chain() — a silent fork with no ledger trace is a ghost action."
+  - rule: "AS-03"
+    verification: "Parse the fork CliEnvelope: exit_code == 0, state_modified == true, and the returned child identity fields (agent_id agt_cc09b, frame fr_002, session lineage ses_a9) match the hardcoded literals — token and id are kernel-issued, never self-declared."
