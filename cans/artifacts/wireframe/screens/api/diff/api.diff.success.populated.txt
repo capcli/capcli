@@ -1,0 +1,19 @@
+[dev:tier_1]  ✓  populated
+
+  provider:     stripe
+  local_hash:   sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa
+  remote_hash:  sha256:2b7e8f1a4c6d9e3f5a7b1c8d2e4f6a9b3c5d7e1f
+  drift:        spec divergence detected
+
+  added_verbs:    3
+    ├── stripe.refund_charge
+    ├── stripe.issue_credit_note
+    └── stripe.void_invoice
+
+  changed_verbs:  1
+    └── stripe.create_payment_intent (amount: string → integer)
+
+  removed_verbs:  1
+    └── stripe.capture_charge → flagged deprecated (auto_deprecate_removed)
+
+  state_modified:  false
