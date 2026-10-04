@@ -1,0 +1,369 @@
+{
+  "$schema": "wireframe/flows/v2",
+  "version": 2,
+  "journeys": {
+    "journey_human_onboarding": {
+      "name": "S0–S10 Human Onboarding & First Write",
+      "color": "#58a6ff",
+      "entry": "sys.doctor.success.nominal",
+      "terminal": "sys.doctor.success.report",
+      "description": "Host probe -> search capabilities -> pre-flight inspect -> deliberate AST denial -> bounded write -> snapshot creation -> state corruption -> restore proof -> trust receipt"
+    },
+    "journey_harness_onboarding": {
+      "name": "H0–H7 Autonomous Harness Machine Onboarding",
+      "color": "#79c0ff",
+      "entry": "sys.doctor.success.nominal",
+      "terminal": "routine.prove.success.passed",
+      "description": "Parse machine contract (--json) -> catalog discovery -> dry-run rehearsal -> dual probe -> composite prove -> parse denial feedback -> overview codification -> sim proving"
+    },
+    "journey_execution_crucible": {
+      "name": "Cascade Starvation, Jail Traps & Contention",
+      "color": "#f85149",
+      "entry": "run.inspect.success.routine",
+      "terminal": "run.execute.success.populated",
+      "description": "Exhaustion at child frame boundary -> syscall 42 trap -> concurrency lease recovery -> thrashing detection -> vault resolution"
+    },
+    "journey_trust_promotion": {
+      "name": "Draft to Pinned Canary Promotion",
+      "color": "#3fb950",
+      "entry": "routine.prove.success.passed",
+      "terminal": "routine.ship.success.shipped",
+      "description": "Sim replay verification -> ship promotion queue -> Tier 1 pinned lock"
+    },
+    "journey_quota_preemption": {
+      "name": "Wire Quota Starvation, Yield & Auto-Resume",
+      "color": "#d29922",
+      "entry": "run.execute.yield.quota",
+      "terminal": "run.execute.resume.quota",
+      "description": "Background task reaches dry pool -> Exit 6 suspension -> daemon parks frame -> refill epoch -> daemon auto-resume"
+    },
+    "journey_schema_evolution": {
+      "name": "Forward DDL & Snapshot Auto-Reversal",
+      "color": "#a371f7",
+      "entry": "rule.diff.success.populated",
+      "terminal": "env.merge.success.merged",
+      "description": "YAML diff -> Gate 2 circular ref block -> dry-run impact envelope -> snapshot commit -> atomic migration merge"
+    },
+    "journey_tamper_forensics": {
+      "name": "Integrity Panic & Break-Glass Recovery",
+      "color": "#f0883e",
+      "entry": "sys.doctor.panic.tamper",
+      "terminal": "sys.doctor.recovery_mode",
+      "description": "Broken SHA-256 chain -> emergency panic (exit 5) -> CAPCLI_RECOVERY=1 diagnostic re-entry"
+    },
+    "journey_human_in_the_loop": {
+      "name": "Ping Ask Suspension & Resolution",
+      "color": "#bc8cff",
+      "entry": "run.execute.suspended.ask",
+      "terminal": "run.execute.success.populated",
+      "description": "Routine hits ctx.ping.ask -> task suspends -> Cockpit inquiry card -> human resolves choice -> frame execution resumes"
+    }
+  },
+  "transitions": [
+    {
+      "id": "t_human_doctor_to_search",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["sys.doctor.success.nominal"],
+      "to": ["run.search.success.populated"],
+      "trigger": "exec_search",
+      "label": "capcli search 'order'",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_search_to_inspect",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.search.success.populated"],
+      "to": ["run.inspect.success.routine"],
+      "trigger": "exec_inspect",
+      "label": "capcli inspect cap://dispatch_order@4",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_inspect_to_read",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.inspect.success.routine"],
+      "to": ["run.sql.success.populated"],
+      "trigger": "exec_read",
+      "label": "capcli sql 'SELECT id FROM orders LIMIT 5'",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_deliberate_denial",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.sql.success.populated"],
+      "to": ["run.sql.denial.ast"],
+      "trigger": "exec_unbounded_write",
+      "label": "capcli sql 'UPDATE orders SET status = shipped'",
+      "arrow_type": "denial",
+      "ui": {
+        "button_text": "Trigger Deliberate Denial",
+        "hotkey": "x"
+      }
+    },
+    {
+      "id": "t_human_denial_to_trace",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.sql.denial.ast"],
+      "to": ["sys.trace.success.populated"],
+      "trigger": "inspect_trace",
+      "label": "capcli sys trace op_9f2e --explain",
+      "arrow_type": "denial",
+      "ui": {
+        "button_text": "Diagnose Cause (--explain)",
+        "hotkey": "d"
+      }
+    },
+    {
+      "id": "t_human_trace_to_dry_run",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["sys.trace.success.populated"],
+      "to": ["run.sql.success.dry_run"],
+      "trigger": "preview_remedy",
+      "label": "capcli sql 'UPDATE orders ...' --dry-run",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_dry_run_to_commit",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.sql.success.dry_run"],
+      "to": ["run.sql.success.populated"],
+      "trigger": "exec_bounded_write",
+      "label": "Execute Remediated Write (-m)",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_human_commit_to_snapshot",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.sql.success.populated"],
+      "to": ["db.snapshot.success.created"],
+      "trigger": "take_snapshot",
+      "label": "capcli db snapshot",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_snapshot_to_corrupt",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["db.snapshot.success.created"],
+      "to": ["db.restore.success.restored"],
+      "trigger": "test_restore",
+      "label": "capcli db restore snap_onboarding_01",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_restore_to_report",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["db.restore.success.restored"],
+      "to": ["sys.doctor.success.report"],
+      "trigger": "emit_receipt",
+      "label": "capcli sys doctor --report",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_harness_contract_to_search",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["sys.doctor.success.nominal"],
+      "to": ["run.search.success.populated"],
+      "trigger": "harness_search",
+      "label": "capcli search '' --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_search_to_dry_run",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["run.search.success.populated"],
+      "to": ["run.sql.success.dry_run"],
+      "trigger": "harness_dry_run",
+      "label": "capcli sql 'SELECT ...' --dry-run --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_dry_run_to_catalog",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["run.sql.success.dry_run"],
+      "to": ["api.catalog.success.populated"],
+      "trigger": "probe_api_catalog",
+      "label": "capcli api catalog stripe --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_catalog_to_prove_draft",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["api.catalog.success.populated"],
+      "to": ["routine.prove.success.passed"],
+      "trigger": "prove_hybrid",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_prove_to_trace_explain",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["routine.prove.success.passed"],
+      "to": ["sys.trace.success.populated"],
+      "trigger": "explain_feedback",
+      "label": "capcli sys trace op_prove_01 --explain --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_trace_to_overview",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["sys.trace.success.populated"],
+      "to": ["run.overview.success.populated"],
+      "trigger": "codify_overview",
+      "label": "capcli run overview",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_overview_to_final_prove",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["run.overview.success.populated"],
+      "to": ["routine.prove.success.passed"],
+      "trigger": "final_prove_sim",
+      "label": "capcli routine prove overview --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_crucible_inspect_to_cascade",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["run.inspect.success.routine"],
+      "to": ["run.execute.denial.budget_cascade"],
+      "trigger": "invoke_child_frame",
+      "label": "Child frame crosses min() bounds",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crucible_cascade_to_jail",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["run.execute.denial.budget_cascade"],
+      "to": ["run.execute.denial.network_jail"],
+      "trigger": "raw_socket_attempt",
+      "label": "Syscall 42 connect() trapped",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crucible_jail_to_claims",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["run.execute.denial.network_jail"],
+      "to": ["db.lock.denial.claim_held"],
+      "trigger": "contested_claim",
+      "label": "capcli db lock orders:ORD-10",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crucible_claims_to_thrashing",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["db.lock.denial.claim_held"],
+      "to": ["sys.doctor.alarm.thrashing"],
+      "trigger": "sustained_denials",
+      "label": "20 sustained denials in 5m",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crucible_thrashing_to_missing_secret",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["sys.doctor.alarm.thrashing"],
+      "to": ["run.execute.refusal.missing_secret"],
+      "trigger": "execute_without_vault",
+      "label": "capcli run cap://stripe.refund",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crucible_secret_to_vault",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["run.execute.refusal.missing_secret"],
+      "to": ["sys.vault_set.success.vaulted"],
+      "trigger": "inject_vault_secret",
+      "label": "capcli sys vault_set stripe_key",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_crucible_vault_resume_exec",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["sys.vault_set.success.vaulted"],
+      "to": ["run.execute.success.populated"],
+      "trigger": "retry_execution",
+      "label": "capcli run cap://stripe.refund",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_promotion_prove_to_queue",
+      "journeys": ["journey_trust_promotion"],
+      "from": ["routine.prove.success.passed"],
+      "to": ["routine.pending.success.populated"],
+      "trigger": "enqueue_promotion",
+      "label": "capcli routine ship order_sync reviewed --queue",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_promotion_queue_to_ship",
+      "journeys": ["journey_trust_promotion"],
+      "from": ["routine.pending.success.populated"],
+      "to": ["routine.ship.success.shipped"],
+      "trigger": "commit_ship",
+      "label": "capcli routine ship order_sync pinned",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_quota_yield_to_park",
+      "journeys": ["journey_quota_preemption"],
+      "from": ["run.execute.yield.quota"],
+      "to": ["run.execute.resume.quota"],
+      "trigger": "daemon_auto_refill",
+      "label": "Daemon token refill tick",
+      "arrow_type": "yield"
+    },
+    {
+      "id": "t_schema_diff_to_apply_dry",
+      "journeys": ["journey_schema_evolution"],
+      "from": ["rule.diff.success.populated"],
+      "to": ["rule.apply.success.dry_run"],
+      "trigger": "exec_dry_run_ddl",
+      "label": "capcli rule apply schema --dry-run",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_schema_apply_dry_to_merge",
+      "journeys": ["journey_schema_evolution"],
+      "from": ["rule.apply.success.dry_run"],
+      "to": ["env.merge.success.merged"],
+      "trigger": "exec_env_merge",
+      "label": "capcli env merge dev prod -m 'forward DDL'",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_tamper_panic_to_recovery",
+      "journeys": ["journey_tamper_forensics"],
+      "from": ["sys.doctor.panic.tamper"],
+      "to": ["sys.doctor.recovery_mode"],
+      "trigger": "boot_recovery_shell",
+      "label": "CAPCLI_RECOVERY=1 capcli sys doctor",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ask_suspended_to_list",
+      "journeys": ["journey_human_in_the_loop"],
+      "from": ["run.execute.suspended.ask"],
+      "to": ["ping.list.success.populated"],
+      "trigger": "view_inquiries",
+      "label": "capcli ping list --pending",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ask_list_to_resolve",
+      "journeys": ["journey_human_in_the_loop"],
+      "from": ["ping.list.success.populated"],
+      "to": ["ping.resolve.success.resolved"],
+      "trigger": "resolve_inquiry",
+      "label": "capcli ping resolve ask_88a --choice approve",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ask_resolve_to_resumed_exec",
+      "journeys": ["journey_human_in_the_loop"],
+      "from": ["ping.resolve.success.resolved"],
+      "to": ["run.execute.success.populated"],
+      "trigger": "resume_routine",
+      "label": "Routine frame auto-resumes",
+      "arrow_type": "success"
+    }
+  ]
+}

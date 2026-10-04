@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>capcli State Machine & Wireframe Engine</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #c9d1d9; --green: #3fb950; --red: #f85149;
+    --yellow: #d29922; --purple: #a371f7; --blue: #58a6ff;
+  }
+  body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; overflow: hidden; display: flex; height: 100vh; }
+  #canvas-container { flex: 1; height: 100%; position: relative; cursor: grab; }
+  #canvas-container:active { cursor: grabbing; }
+  svg { width: 100%; height: 100%; }
+  #hud { position: absolute; top: 16px; left: 16px; display: flex; gap: 8px; z-index: 10; flex-wrap: wrap; max-width: 60%; }
+  .hud-btn { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; cursor: pointer; border-radius: 4px; font-family: monospace; font-size: 11px; }
+  .hud-btn:hover { border-color: var(--blue); color: #fff; }
+  #terminal-panel { width: 620px; height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+  #terminal-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  #terminal-body { padding: 16px; flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; color: #c9d1d9; }
+  #terminal-actions { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
+  .action-btn { background: #21262d; border: 1px solid var(--border); color: #fff; padding: 6px 10px; cursor: pointer; border-radius: 4px; font-size: 11px; font-family: monospace; }
+  .action-btn:hover { border-color: var(--green); }
+  .node rect { stroke-width: 2px; rx: 6px; cursor: pointer; }
+  .node text { font-size: 11px; fill: var(--text); pointer-events: none; font-family: monospace; }
+  .edge { stroke: var(--border); stroke-width: 2px; marker-end: url(#arrow); fill: none; }
+  .edge.denial { stroke: var(--red); stroke-dasharray: 4; }
+  .edge.yield { stroke: var(--yellow); stroke-dasharray: 6; }
+</style>
+</head>
+<body>
+
+<div id="canvas-container">
+  <div id="hud">
+    <button class="hud-btn" onclick="focusJourney('journey_human_onboarding')">1. Human Onboarding (S0-S10)</button>
+    <button class="hud-btn" onclick="focusJourney('journey_harness_onboarding')">2. Harness Onboarding (H0-H7)</button>
+    <button class="hud-btn" onclick="focusJourney('journey_execution_crucible')">3. Execution Crucible</button>
+    <button class="hud-btn" onclick="focusJourney('journey_trust_promotion')">4. Trust Ladder</button>
+    <button class="hud-btn" onclick="focusJourney('journey_quota_preemption')">5. Quota Yield/Resume</button>
+    <button class="hud-btn" onclick="focusJourney('journey_schema_evolution')">6. DDL Evolution</button>
+    <button class="hud-btn" onclick="focusJourney('journey_tamper_forensics')">7. Forensics & Panic</button>
+    <button class="hud-btn" onclick="focusJourney('journey_human_in_the_loop')">8. Ask & Resolution</button>
+  </div>
+  <svg id="viewport">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#30363d" />
+      </marker>
+    </defs>
+    <g id="scene"></g>
+  </svg>
+</div>
+
+<div id="terminal-panel">
+  <div id="terminal-header">
+    <span id="screen-id-display" style="font-weight: 600;">select a state node</span>
+    <span id="exit-badge"></span>
+  </div>
+  <div id="terminal-body">Click any node on the canvas to inspect real CLI diagnostic output...</div>
+  <div id="terminal-actions"></div>
+</div>
+
+<script>
+let transform = { x: 0, y: 0, k: 1 };
+const scene = document.getElementById('scene');
+const viewport = document.getElementById('viewport');
+let isPanning = false, startPoint = { x: 0, y: 0 };
+let flowsData = null;
+
+viewport.addEventListener('mousedown', (e) => {
+  isPanning = true;
+  startPoint = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+});
+window.addEventListener('mousemove', (e) => {
+  if (!isPanning) return;
+  transform.x = e.clientX - startPoint.x;
+  transform.y = e.clientY - startPoint.y;
+  updateTransform();
+});
+window.addEventListener('mouseup', () => isPanning = false);
+viewport.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  transform.k *= factor;
+  updateTransform();
+});
+
+function updateTransform() {
+  scene.setAttribute('transform', `matrix(${transform.k} 0 0 ${transform.k} ${transform.x} ${transform.y})`);
+}
+
+fetch('flows.json')
+  .then(r => r.json())
+  .then(data => { flowsData = data; });
+
+function loadScreen(screenId, txtPath, exitCode) {
+  document.getElementById('screen-id-display').textContent = screenId;
+  const badge = document.getElementById('exit-badge');
+  badge.textContent = `Exit ${exitCode}`;
+  badge.style.color = exitCode === 0 ? 'var(--green)' : (exitCode === 6 ? 'var(--yellow)' : 'var(--red)');
+  
+  fetch(txtPath)
+    .then(r => r.text())
+    .then(text => {
+      document.getElementById('terminal-body').textContent = text;
+      renderOutActions(screenId);
+    })
+    .catch(() => {
+      document.getElementById('terminal-body').textContent = "Failed to load fixture transcript.";
+    });
+}
+
+function renderOutActions(screenId) {
+  const container = document.getElementById('terminal-actions');
+  container.innerHTML = '';
+  if (!flowsData) return;
+
+  const transitions = flowsData.transitions.filter(t => t.from.includes(screenId));
+  transitions.forEach(t => {
+    t.to.forEach(targetId => {
+      const btn = document.createElement('button');
+      btn.className = 'action-btn';
+      btn.textContent = t.ui?.button_text || `Transition -> ${targetId}`;
+      btn.onclick = () => {
+        const parts = targetId.split('.');
+        const txtPath = `screens/${parts[0]}/${parts[1]}/${targetId}.txt`;
+        loadScreen(targetId, txtPath, 0);
+      };
+      container.appendChild(btn);
+    });
+  });
+}
+
+function focusJourney(journeyId) {
+  if (!flowsData) return;
+  const journey = flowsData.journeys[journeyId];
+  if (journey) {
+    document.getElementById('screen-id-display').textContent = `Journey: ${journey.name}`;
+    document.getElementById('terminal-body').textContent = journey.description;
+    const parts = journey.entry.split('.');
+    const txtPath = `screens/${parts[0]}/${parts[1]}/${journey.entry}.txt`;
+    loadScreen(journey.entry, txtPath, 0);
+  }
+}
+</script>
+</body>
+</html>
