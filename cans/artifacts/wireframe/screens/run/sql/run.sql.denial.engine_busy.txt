@@ -1,0 +1,11 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  db.engine.txn_queue_timeout
+        UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50
+        write lock on db://orders held by op_9f1c; wait exceeded the 5000ms ceiling
+
+  audit_op:        op_9f2l
+  state_modified:  false
+  layer:           engine
+  measured:        waited 5001ms (ceiling: 5000ms); holder op_9f1c still active
+  remedy:          retry after holder commits, or inspect the claim via capcli inspect db://orders

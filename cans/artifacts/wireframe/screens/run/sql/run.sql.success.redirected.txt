@@ -1,0 +1,6 @@
+[dev:tier_1]  ✓  redirected
+
+  rows:      14290
+  out:       out/orders_export.json (412 KB)
+  sha256:    9c1f77ab02d4e8f1
+  audit_op:  op_9f2h

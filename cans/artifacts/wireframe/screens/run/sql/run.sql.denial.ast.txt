@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.query.update_delete.require_limit
+        UPDATE orders SET status = 'shipped' WHERE status = 'processing'
+                                                                   ^^^^^^
+        No LIMIT clause. Blast radius unbounded.
+
+  audit_op: op_9f2e
+  state_modified: false
+  layer: AST
+  measured: matches potentially 847 rows (cap: 100)
+  remedy: add LIMIT, or target specific primary key

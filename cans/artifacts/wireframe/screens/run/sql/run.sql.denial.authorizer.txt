@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.drop_table
+        DROP TABLE orders
+        ^^^^^^^^^^
+        Table destruction denied at the C authorizer; DDL flows through schema evolution.
+
+  audit_op:        op_9f2k
+  state_modified:  false
+  layer:           authorizer
+  measured:        statement rejected at prepare; 0 rows touched
+  remedy:          declare removal in schema.yaml and apply via capcli rule apply schema
