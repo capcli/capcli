@@ -1,0 +1,43 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "db.schema.success.populated",
+  "noun": "db",
+  "verb": "schema",
+  "target": "db://orders",
+  "command": "capcli db schema --table orders",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/db/schema/db.schema.success.populated.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  populated",
+      "table:          orders",
+      "├── customer_id     int ref=customers.id",
+      "├── status          text=pending",
+      "└── modified_by     text (prov)",
+      "state_modified: false"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}
