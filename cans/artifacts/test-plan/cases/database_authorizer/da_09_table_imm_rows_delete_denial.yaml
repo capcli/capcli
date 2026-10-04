@@ -1,0 +1,70 @@
+$schema: "test-plan/case/v1"
+case_id: "da_09_table_imm_rows_delete_denial"
+title: "DELETE against a table tagged imm_rows is physically denied by the SQLite authorizer"
+domain: "database_authorizer"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#row-locking"
+  statement: "The imm_rows: true table shorthand makes the authorizer deny UPDATE and DELETE physically (SQLITE_DENY) - row mutation is blocked at the C layer, with no soft-delete fallback path."
+  blast_radius_if_breached: "Immutable line items and order history become deletable; a single bulk DELETE erases the append-only transaction record that snapshots, replay, and audits were all predicated on."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent lets the DELETE succeed at the engine layer and afterwards checks a soft-delete flag or an is_deleted column in application state - the physical imm_rows invariant is never actually verified."
+  anti_slop_mitigation: "AS-01 requires the raw SQLITE_DELETE authorizer action to return SQLITE_DENY with no engine-layer delete occurring; AS-02 proves row count and the targeted row still exist; AS-03 requires the typed exit code plus authorizer-domain diagnostic."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.retentionbot@acme.corp"
+    agent_id: "agt_da_09"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        order_items:
+          description: "Immutable line items appended to finalized orders"
+          imm_rows: true
+          columns:
+            id: pk
+            order_id: int ref=orders.id
+            sku: text ref=inventory.sku
+            quantity: int=1
+            price_cents: int!
+    tables:
+      - name: "order_items"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "DELETE FROM order_items WHERE id = 5 LIMIT 1"
+  input_params:
+    table_tag: "imm_rows: true"
+    statement_shape: "WHERE + LIMIT present - passes Layer-2 AST bounds, must still die at Layer 1"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "DELETE FROM order_items - table tagged imm_rows: true; authorizer denies row mutation physically (SQLITE_DENY)"
+    remedy: "Immutable rows are append-only; correct via a compensating insert, or for catastrophic recovery use capcli db restore <snapshot-id> (VACUUM INTO point-in-time restore)."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Assert the authorizer callback sees action SQLITE_DELETE on table order_items and returns SQLITE_DENY; static lint bans mocks on authorizer.rs and any test-time removal of the imm_rows tag from the compiled schema."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM order_items == 500 before and after; SELECT count(*) FROM order_items WHERE id = 5 == 1 (the targeted row still physically present, no soft-delete flag substitution)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the diagnostic envelope: domain 'policy.authorizer', culprit cites imm_rows: true, remedy present."
