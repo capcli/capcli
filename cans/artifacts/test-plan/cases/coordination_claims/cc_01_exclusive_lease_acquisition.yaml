@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_01_exclusive_lease_acquisition"
+title: "Agent acquires an exclusive claims lease on orders:ORD-10 with TTL 60s and mandatory reason"
+domain: "coordination_claims"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/world.md#Concurrency-commands"
+  statement: "Acquiring a distributed lease via db lock <table>:<ref> --ttl <duration> --reason \"...\" inserts an exclusive claims row (resource, holder agent, session, TTL, reason) — business-level leases tracked in the claims table for multi-step ops, with session id riding every claim; --reason and --ttl are mandatory parts of the acquisition contract."
+  blast_radius_if_breached: "Locks without holder identity, TTL bound, or recorded reason: two agents 'both' own the same resource and interleave multi-step mutations on it, deadlock the write pipeline, and leave forensic trails that cannot answer who locked what or why — silent double-payment and lost-update corruption."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent acquires a claim with a missing --reason or without --ttl and still asserts success (or derives the claims row contents from the acquisition receipt rather than the table), letting reasonless/TTL-less locks enter the system."
+  anti_slop_mitigation: "AS-06 hardcodes the claims row literals (holder, ttl 60, reason, session) and mandates the missing-argument control; AS-05 verifies the acquisition chains into _audit; AS-03 pins the exit code and typed envelope."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_cc01"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 exists
+      - name: "claims"
+        row_count: 0 # resource orders:ORD-10 is unlocked
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli db lock orders:ORD-10 --ttl 60 --reason \"payout batch\""
+  input_params:
+    resource: "orders:ORD-10"
+    ttl_seconds: 60
+    reason: "payout batch"
+    session: "ses_cc01"
+    control_missing_reason: "capcli db lock orders:ORD-10 --ttl 60 (no --reason) must be refused"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — exclusive claims row inserted for orders:ORD-10 held by agt_cc01"
+    remedy: "n/a — success; lease row verified by the assertions below"
+  database:
+    row_count_delta: 1 # claims 0 -> 1; _audit gains the chained acquisition event
+    tables_mutated: ["claims", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec" # NOTE: db lock acquisition event name not located in cans/effect.md payload list; db.exec is the nearest grounded payload (sql, params, rows_affected, result_hash) for the kernel-mediated INSERT INTO claims; zero ghost actions guarantees the verb advances the chain
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-05"
+    verification: "The acquisition chains into the ledger: _audit grows by 1 with prev_hash == SHA-256 of the prior row and result_hash == SHA-256 of the canonical JSON outcome; run capcli-core::audit::verify_chain() — an acquisition that skips audit is a ghost action."
+  - rule: "AS-06"
+    verification: "SELECT the claims row and assert immutable literals: resource == 'orders:ORD-10', holder == 'agt_cc01', session_id == 'ses_cc01', ttl == 60, reason == 'payout batch' (all NOT NULL); row count == 1 — never derived from the acquisition receipt."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 and parse the --json CliEnvelope (state_modified == true, lease receipt data present); control run: capcli db lock orders:ORD-10 --ttl 60 without --reason must fail with exit 3 (missing parameter) — a reasonless acquisition may never succeed."
