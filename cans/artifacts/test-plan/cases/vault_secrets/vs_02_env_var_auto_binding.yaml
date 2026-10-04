@@ -6,7 +6,7 @@ target_tier: "integration"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/agent.md#env-resolution-—-kernel-checks-process-env-vars-(CAPCLI_SECRET_<NAME>)-before-raising-suspension"
+  law_reference: "cans/agent.md#env-resolution-—-kernel-checks-process-env-vars-(`CAPCLI_SECRET_<NAME>`)-before-raising-suspension"
   statement: "The kernel checks process environment variables (CAPCLI_SECRET_<NAME>) before raising a missing-secret suspension: 'sys vault import-env' scans the environment, auto-binds each match to its vault:// reference, encrypts the value with AES-256-GCM into the secrets table, commits a vault.set audit event with a masked value and SHA-256 fingerprint, and zeroizes the ingested plaintext — the value is never printed to stdout, audit, or any output stream."
   blast_radius_if_breached: "Environment-variable credentials are echoed into logs: CI job logs, shell transcripts, and the audit mirror permanently capture live API keys — every downstream reader of the JSONL mirror (git-committed and offsite-replicated) gains plaintext credential access."
 
