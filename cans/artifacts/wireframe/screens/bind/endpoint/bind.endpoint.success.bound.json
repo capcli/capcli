@@ -1,0 +1,43 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "bind.endpoint.success.bound",
+  "noun": "bind",
+  "verb": "endpoint",
+  "target": "cap://dispatch_order@4",
+  "command": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "pinned",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": true,
+    "data_shape": null
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/bind/endpoint/bind.endpoint.success.bound.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": true,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  bound",
+      "binding_id: bnd_2m7p",
+      "url:        http://127.0.0.1:4040/endpoints/dispatch_order",
+      "auth:       api-key",
+      "rate:       60 req/min",
+      "state_modified: true"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": true
+    }
+  }
+}

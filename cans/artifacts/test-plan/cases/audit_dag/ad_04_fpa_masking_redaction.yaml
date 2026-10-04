@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_04_fpa_masking_redaction"
+title: "mask=true column reads return format-preserving anonymized values in every machine payload"
+domain: "audit_dag"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/world.md#redaction--mask=true-marks-column-for-format-preserving-anonymization-(FPA)"
+  statement: "A column declared mask=true is redacted by the kernel serializer on read (access control: authorizer permits/denies read; kernel serializer redacts mask=true columns): the audit payload and the machine CLI output carry synthetic typed valid format-preserving values, never the plaintext; black-box glyphs (████) are a UI rendering choice only (fpa behavior: synthetic typed valid values in sim data layer; UI free to render glyphs)."
+  blast_radius_if_breached: "PII (tax ids, IBANs) leaks verbatim into machine-readable audit payloads, terminal transcripts, and the JSONL export mirror — a silent GDPR/PCI-class exposure across every downstream system that tails, queries, or replays the ledger."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts redaction by grepping machine JSON payloads for black-box unicode glyphs (████) — glyphs are UI-only rendering — or merely asserts the field is non-empty, letting the plaintext value pass through unnoticed."
+  anti_slop_mitigation: "AS-03 parses the --json CliEnvelope and asserts a typed FPA value that preserves the original format with zero █ glyphs in machine JSON; AS-06 hardcodes the plaintext literal and the format regex; AS-05 verifies the audit row chains with the redacted (not raw) payload."
+
+setup:
+  env: "sim" # FPA: synthetic typed valid values are served from the sim data layer
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.auditor@acme.corp"
+    agent_id: "agt_ad_04"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 5
+      engine: sqlite
+      db: workspace.db
+      tables:
+        customers:
+          columns:
+            id: int pk
+            name: text
+            tax_id: text mask=true
+    tables:
+      - name: "customers"
+        row_count: 1 # id=7, name 'Dana Lopez', tax_id '123-45-6789' present on the forked sim state
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"SELECT id, name, tax_id FROM customers WHERE id = :id\" -p id=7"
+  input_params:
+    bound_parameter: "id=7"
+    stored_plaintext: "123-45-6789" # the literal that must never appear in any machine payload
+    fpa_format_regex: "^[0-9]{3}-[0-9]{2}-[0-9]{4}$"
+
+expected_observations:
+  exit_code: 0
+  state_modified: false # read dispatch; the query itself still advances the hash chain (zero ghost actions)
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — read served with serializer FPA redaction on tax_id"
+    remedy: "n/a — success; redaction verified by the assertions below"
+  database:
+    row_count_delta: 0 # customers untouched; _audit gains exactly 1 chained query event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (sql query; params and result fields carry the FPA-redacted tax_id)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope: the returned row's tax_id is a typed value that is != '123-45-6789' (hardcoded plaintext literal), matches ^[0-9]{3}-[0-9]{2}-[0-9]{4}$ (format preserved), and the serialized machine JSON contains zero '█' glyphs — glyph rendering is UI-only, never payload."
+  - rule: "AS-05"
+    verification: "The new _audit query event chains (prev_hash == SHA-256 of the prior row) and its recorded params/result contain the FPA-redacted value: recompute result_hash over the canonical JSON carrying the redacted value and assert equality; run capcli-core::audit::verify_chain()."
+  - rule: "AS-06"
+    verification: "Immutable literals hardcoded in the spec: plaintext '123-45-6789', the format regex, expected customers row count 1, expected _audit delta 1 — none derived from the query output under test."

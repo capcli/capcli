@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  api.quota.rate_limit
+        capcli api sync stripe https://api.stripe.com/openapi.json
+                        ^^^^^^
+        Sync call within 24h cooldown for provider 'stripe'.
+        min_interval_hours: 24 (governance.yaml api.sync)
+
+  state_modified:  false
+  layer:           quota
+  measured:        last sync completed 18h 24m ago (cooldown remaining: 5h 36m)
+  remedy:          wait for the 24h cooldown to reset, or inspect the live catalog via 'capcli api catalog stripe'

@@ -1,0 +1,81 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_12_ctx_db_lock_distributed_lease"
+title: "ctx.db.lock records the lease in the claims table and auto-clears it on routine exit"
+domain: "sdk_harness"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Database-methods"
+  statement: "ctx.db.lock(target, ttl) is an application-level lease claim recorded in the claims table and auto-expired by the daemon tick (action.md#Database-methods): acquiring ctx.db.lock(\"inventory:10\") must persist a row in claims (target, holder, ttl, created_at) visible to every process on the workspace, and the lock is cleared when the routine frame exits — locks are never managed exclusively in memory."
+  blast_radius_if_breached: "In-memory-only locks are invisible to other agents and daemons: two routines concurrently mutate inventory:10 believing they hold the lease, the daemon sweeper cannot dissolve stale locks after crashes (cc_11 cleanup law), and distributed mutual exclusion silently degrades to a per-process gentleman's agreement."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts only that ctx.db.lock returned a truthy handle (memory lock), never querying claims; or acquires the lock via a direct SQL INSERT in test setup instead of the ctx method, then verifies its own insert — a tautology on the fixture, not the API."
+  anti_slop_mitigation: "AS-02-style substrate proof is inverted for TP: the test must observe the claims row via direct SELECT during execution (count 1, holder = the agent id) and its absence after frame exit; AS-05 verifies the run's audit chain; AS-06 pins the literal target string and row lifecycle as immutable expectations."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_sh_12"
+    trust: "reviewed" # restock_check@3 runs at reviewed; claims require validated holder identity
+  initial_state:
+    schema_yaml: |
+      tables:
+        inventory:
+          columns:
+            id: pk
+            sku: text!~
+            stock: int=0
+            reorder_point: int=10
+          seed:
+            - { sku: "WIDGET-01", stock: 120, reorder_point: 25 }
+    tables:
+      - name: "inventory"
+        row_count: 1 # WIDGET-01, stock 120 — the guarded restock check targets inventory:10
+      - name: "claims"
+        row_count: 0 # lease acquired during execution, cleared on exit
+      - name: "_audit"
+        row_count: 3 # routine.draft + prove + prior run events
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'lock = ctx.db.lock("inventory:10", ttl=300); result = ctx.db.query("SELECT stock FROM inventory WHERE id = :i", {"i": 10}); lock released at frame exit'
+  input_params:
+    routine: "restock_check@3"
+    lock_target: "inventory:10" # resource lock URI form (system-schema.yaml claims.target)
+    lock_ttl_seconds: 300
+    holder: "agt_sh_12"
+    daemon_sweeper: "daemon tick dissolves expired leases for crashed holders (action.md#Database-methods)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "sdk.harness"
+    culprit: "none (nominal) — lease persisted to claims during execution and cleared on frame exit"
+    remedy: "no action; crashed holders are recovered by the daemon TTL sweep, never by manual database surgery"
+  database:
+    row_count_delta: 1 # net: +1 routine.run audit row; claims row is transient (1 during execution, 0 after exit)
+    tables_mutated: ["claims", "_audit", "routine_stats"]
+  wire:
+    packets_transmitted: 0 # local read guarded by the lease; no egress
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run" # outcome: success; lock acquire/release visible in the run's leaf events
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "The claims lifecycle is asserted against immutable literals: mid-execution SELECT count(*) FROM claims WHERE target = 'inventory:10' == 1 with holder = 'agt_sh_12' and ttl = 300; post-exit SELECT count(*) FROM claims WHERE target = 'inventory:10' == 0 — hardcoded expectations, never derived from the lock handle under test."
+  - rule: "AS-02"
+    verification: "Acquisition must go through the genuine ctx.db.lock method (no direct SQL INSERT in the test path); world substrate stability: SELECT stock FROM inventory WHERE id = 10 == 120 before and after (the guarded read mutates nothing), and a second concurrent acquirer during the lease window must be denied per the claims exclusivity model."
+  - rule: "AS-04"
+    verification: "Crash-recovery path driven by MockClock: a companion frame holding the lease is killed mid-run; advancing MockClock past ttl (300s) lets the daemon sweeper tick dissolve the orphaned claims row — no wall-clock sleeps (action.md#Database-methods auto-expired by daemon tick)."
+  - rule: "AS-05"
+    verification: "The routine.run row chains: prev_hash equals the SHA-256 of the prior _audit row and result_hash matches the canonical JSON hash of the envelope; run capcli-core::audit::verify_chain() over the full ledger."

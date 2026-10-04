@@ -1,0 +1,10 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  compile.intent_missing
+        command: capcli bind cron nightly_sync cap://sync_orders "0 3 * * *"
+        flag:    -m / --intent
+
+        Mutating bind requires an intent declaration. Unattributed triggers are refused.
+
+  state_modified: false
+  remedy:         re-run with -m "why this trigger exists"

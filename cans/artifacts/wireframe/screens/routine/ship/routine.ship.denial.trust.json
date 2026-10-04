@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "routine.ship.denial.trust",
+  "noun": "routine",
+  "verb": "ship",
+  "target": "order_sync",
+  "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.trust",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_2",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.trust",
+    "culprit": "Pinned promotion denied on Tier 2; the platform ceiling caps this host at reviewed.",
+    "remedy": "run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)",
+    "layer": "trust",
+    "measured": "platform ceiling reviewed (requested: pinned on tier_2 host)"
+  },
+  "txt_pair": "screens/routine/ship/routine.ship.denial.trust.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_2]  ✗  exit 2",
+      "FAIL  policy.trust.tier2_refusal",
+      "Pinned promotion denied on Tier 2; the platform ceiling caps this host at reviewed.",
+      "state_modified: false",
+      "layer: trust",
+      "remedy: run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.trust"
+    }
+  }
+}

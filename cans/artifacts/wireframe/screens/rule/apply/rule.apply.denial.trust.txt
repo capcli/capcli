@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.trust.alter_requires_reviewed
+        ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0
+        ^^^^^
+        DDL trust floor: alter requires reviewed trust; caller rung is draft.
+
+  audit_op: op_13fa
+  state_modified: false
+  layer: trust
+  measured: caller trust rung draft (required: reviewed)
+  remedy: ship the schema change for human review: capcli routine ship schema_13 reviewed

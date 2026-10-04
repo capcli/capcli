@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "we_12_ephemeral_bearer_auto_refresh"
+title: "Egress proxy auto-refreshes the expired ephemeral bearer token before dispatching the main request"
+domain: "wire_egress"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#API-call-boundaries"
+  statement: "'Token refresh — daemon auto-refreshes bearer tokens; stateless CLI refreshes on demand and persists updated token to encrypted vault' (agent.md#Egress-injection 'boundary rotation — egress proxy silently refreshes expired bearer tokens'; governance.yaml#api.token_refresh: auto_refresh true, refresh_buffer_seconds 300, max_retries 3): when expires_at < now, the refresh flow runs BEFORE the main request is dispatched, so the remote API never sees an expired token."
+  blast_radius_if_breached: "Passing expired bearers upstream would surface as provider 401s at scale, burn retry budget on doomed dispatches, and — if 401 handling leaked into routine logic — let agents mishandle credential rotation mid-transaction for payment-critical calls."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by passing the expired token and 'expecting the remote API 401 handling' — asserting the 401 envelope proves the provider rejected it, while the kernel's pre-dispatch refresh contract is never exercised."
+  anti_slop_mitigation: "AS-04 fixes expires_at deterministically in the past with the MockClock, so the refresh decision is not wall-clock flaky. AS-05 verifies the audit ordering: the api.token_refresh event row precedes the api.call row, and the wire observed exactly 2 dispatches with zero 401 responses. AS-01 bans mocking the refresh flow or vault decryption."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.finance@example.com"
+    agent_id: "agt_we_12"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'stripe': 48 of 50 tokens available
+    vault_secrets:
+      - ref: "vault://stripe_oauth_root"
+        scope: "prod"   # root secret held in vault; the ephemeral egress bearer is derived from it (agent.md two-tier secrets)
+
+execution:
+  trigger: "json_rpc"
+  command: 'ctx.api.call("stripe.charges", params={"amount": 2000, "currency": "usd"}, intent="settle payment for ORD-10") with the vaulted ephemeral bearer at expires_at < now (MockClock-fixed); the egress proxy refresh.rs executes the OAuth token refresh via the vaulted root before dispatching the main request'
+  input_params:
+    verb: "stripe.charges"
+    bearer_state: "expired"
+    refresh_buffer_seconds: 300
+    max_retries: 3
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "wire.egress"
+    culprit: "none — nominal path: expired bearer detected at the boundary (expires_at < now); OAuth refresh executed via the vaulted root BEFORE the main dispatch; refreshed token persisted as ciphertext to the encrypted vault"
+    remedy: "none required — auto_refresh: true (governance.yaml#api.token_refresh) rotates ephemeral bearers at the boundary; intermediate decrypted buffers are zeroized post-dispatch"
+  database:
+    row_count_delta: 0
+    tables_mutated: ["secrets"]   # refreshed bearer ciphertext committed in place to the vault row; row count unchanged; _audit gains the api.token_refresh + api.call event rows
+  wire:
+    packets_transmitted: 2   # 1 OAuth token refresh call + 1 main stripe.charges request
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.token_refresh"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mock of refresh.rs, the OAuth flow, or the AES-256-GCM vault decryption: the real boundary rotation path runs — the derived bearer, the refresh request, and the ciphertext commit are all produced by production code paths (assembly.md#Core-domain-subsystems refresh.rs)."
+  - rule: "AS-04"
+    verification: "Deterministic MockClock: expires_at is fixed to a literal synthetic instant strictly in the past and the refresh window boundary (refresh_buffer_seconds: 300) is evaluated on synthetic ticks — no SystemTime::now, no real sleeps, so the expiry decision cannot flake."
+  - rule: "AS-05"
+    verification: "Audit ordering and chain: the api.token_refresh event row (provider, token_type, expires_in, refresh_outcome — effect.md#Kernel-event-payloads) precedes the api.call row in _audit sequence; prev_hash links verify via capcli-core::audit::verify_chain(); exactly 2 wire dispatches observed and zero 401 responses received from the provider."

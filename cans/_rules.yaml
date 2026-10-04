@@ -1,5 +1,5 @@
 structure:
-  node_length: { min: 3, max: 200 }   # FIX #26: was 120, conflicted with overflow.max_node_chars 200 and AGENTS.md
+  node_length: { min: 3, max: 120 }   
   siblings: { min: 3, max: 12 }
   depth: { min: 5, max: 7 }
   single_child_collapse: true
@@ -7,8 +7,6 @@ structure:
 
 style:
   prefer: nested
-  force_nested_above: 6
-  force_sibling_below: 3
   shared_prefix_detection: true
 
 content:

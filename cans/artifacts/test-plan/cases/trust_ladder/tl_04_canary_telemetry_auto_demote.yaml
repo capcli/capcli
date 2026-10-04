@@ -1,0 +1,87 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_04_canary_telemetry_auto_demote"
+title: "Error spike during the 1-hour post-promotion canary window triggers the autonomous watchdog circuit-breaker rollback to draft, and the demoted routine is refused in prod"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/time.md#veto-canary-—-1-hour-autonomous-telemetry-window-triggers-auto-rollback-on-error-spikes"
+  statement: "Every promotion opens a 1-hour automated canary telemetry window; anomaly spikes (p95 4.6x baseline) or policy denials during the window trigger the autonomous circuit-breaker rollback to draft with no human intervention required. After the watchdog demotion the routine holds draft trust, so a prod invocation is denied by the prod trust floor."
+  blast_radius_if_breached: "A freshly promoted routine whose canary telemetry is spiking keeps elevated (reviewed/pinned) privileges in production indefinitely while failing — bulk-update rights and 100/500-row ceilings granted to demonstrably broken code until a human happens to notice, mutating live tables at scale throughout the outage."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent leaves the failing routine at the promoted rung awaiting a manual human rollback command (catalog banned slop: leaving failing routine in pinned state awaiting manual intervention), or advances the canary window with real sleeps (flaky 1-hour CI waits), or asserts the demotion without re-reading the trust rung from the registry."
+  anti_slop_mitigation: "AS-04 forces the 1-hour canary window to elapse via the deterministic MockClock (no wall-clock sleeps); AS-02 forces a direct registry query proving trust = 'draft' after the watchdog tick plus zero orders rows mutated by the denied probe; AS-03 forces the typed exit 2 with the canary rollback cited in the diagnostic."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:maya"
+    agent_id: "agt_tl_04"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        routines:
+          description: "routine registry with trust rung and provenance hashes"
+          columns:
+            name: text!~
+            version: int!
+            trust: text!
+            code_hash: text!
+            manifest_hash: text!
+            created_by: text!
+            promoted_by: text
+          idx: [[name, version]]
+        orders:
+          description: "customer fulfillment orders"
+          columns:
+            id: pk
+            status: text!
+          idx: [[status]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "routine_stats"
+        row_count: 1
+      - name: "orders"
+        row_count: 12
+      - name: "_audit"
+        row_count: 5
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://payout@9 -p order_id=ORD-2210 -m \"post-canary verification probe\""
+  input_params:
+    order_id: "ORD-2210"
+    pre_execution_phase: "payout@9 promoted to reviewed at MockClock t0 (canary window armed); MockClock advances to t0+3600s while canary telemetry records p95_duration 4120ms vs 890ms baseline (4.6x spike) and 2 fingerprint drift events; the capcli-daemon canary watchdog evaluates the window and auto-demotes payout@9 to draft (routine.canary_rollback committed) before this probe command executes"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "payout@9 auto-demoted to draft by the autonomous canary circuit-breaker (1h veto window: p95 4.6x baseline, 2 drift events); draft trust cannot execute in prod"
+    remedy: "fix the error source, re-prove in sim ('capcli routine prove payout --env sim'), then re-ship to reviewed"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (decision: denied, effect: none) — preceded by the watchdog's routine.canary_rollback demotion event"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Advance the canary window exclusively via MockClock::advance(Duration::from_secs(3600)) with injected telemetry; assert the watchdog tick fires at window evaluation deterministically — zero wall-clock sleeps, zero SystemTime::now() reads, so the test cannot flake on CI timing."
+  - rule: "AS-02"
+    verification: "After the watchdog tick and the denied probe: SELECT trust FROM routines WHERE name='payout' AND version=9 returns the literal 'draft'; SELECT count(*) FROM orders is strictly 12 before and after the probe; SELECT count(*) FROM _budget_frames with routine='payout' and outcome='active' is 0 (the probe frame never dispatched)."
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit cites the canary auto-demotion (1h veto window, p95 4.6x baseline), diagnostic.remedy names the re-prove path; the demotion itself required no approval queue — verify no _pending_asks row exists for the rollback."

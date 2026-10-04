@@ -1,0 +1,58 @@
+$schema: "test-plan/case/v1"
+case_id: "se_08_system_schema_tamper_boot_refusal"
+title: "Tampered system-schema.yaml fails the boot hash check and halts the kernel with exit 3"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#system-schema.yaml"
+  statement: "system-schema.yaml is kernel-maintainer-owned with agent read-only permission; hash verification is mandatory at boot (require_hash_verify: true) and a mismatch refuses boot - runtime alterations to kernel system tables are structurally impossible."
+  blast_radius_if_breached: "A tampered system schema redefines the 13 kernel-managed tables (including _audit and secrets) with agent-writable permissions; the audit spine, claims, and vault boundaries are all disarmed in one edit."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent permits the boot to continue with a warning, or re-hashes the tampered file into the expected hash slot during fixture setup - the integrity comparison is neutralized and the tamper goes undetected."
+  anti_slop_mitigation: "AS-03 requires the typed exit code 3 with an integrity diagnostic; AS-02 proves the system tables (e.g. _audit) are untouched by the refused boot; AS-06 verifies the tampered file is reported, never rewritten or re-hashed."
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.sre-oncall@acme.corp"
+    agent_id: "agt_se_08"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_audit"
+        row_count: 42
+    vault_secrets: []
+  # fixture: a trailing line is appended to cans/artifacts/system-schema.yaml on disk (simulated tamper); the kernel's pinned expected hash still corresponds to the pristine file
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys doctor --boot-check --json"
+  input_params:
+    integrity_check: "system_schema hash mismatch aborts boot (physics.md#Boot-refusals)"
+    tamper_seed: "append one line to system-schema.yaml on disk in the test fixture"
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.boot" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; system-schema hash verification is a boot-time gate
+    culprit: "sha256(system-schema.yaml on disk) != kernel-expected hash for the running kernel version (require_hash_verify: true); system schema integrity mismatch - boot refused"
+    remedy: "Restore system-schema.yaml from the release binary (kernel upgrades are release-only); investigate how the kernel-owned file was mutated - agent writes to it are permission-denied."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny (effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) and parse the --json CliEnvelope: diagnostic names the system-schema hash mismatch; a warn-and-continue boot (exit 0) or a panic fails the test."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _audit == 42 before and after the refused boot check; no kernel system table (registry roster: _audit, claims, agents, secrets, ...) was created, dropped, or altered by the refused boot."
+  - rule: "AS-06"
+    verification: "Byte-compare the tampered system-schema.yaml before and after the refusal - the kernel must report the mismatch and never rewrite or re-hash the file; recompute sha256 in the test and assert it differs from the literal expected hash pinned by the kernel version."

@@ -1,0 +1,14 @@
+[dev:tier_1]  ✓  committed
+
+  statement:      UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1
+  bound_params:   {"id": "4127"}
+  ast_check:      pass (WHERE + LIMIT present, blast radius 1)
+  authorizer:     pass (update on orders allowed in dev)
+  intent:         declared ("mark order 4127 shipped after carrier pickup")
+  rows_affected:  1
+  txn:            committed
+  audit_op:       op_9f2g
+
+  ────────────────────────────────────────────────────────────────────────────
+  state_modified: true
+  result_hash:    sha256:3d91c4e7a8b2f0c5d9e6a1b7f834c2ad

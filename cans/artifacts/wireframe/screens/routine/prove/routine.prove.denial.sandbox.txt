@@ -1,0 +1,14 @@
+[sim:tier_1]  ✗  exit 2
+
+  FAIL  kernel.sandbox.breach
+        syscall 42 (connect) trapped by seccomp-bpf
+        target:  10.0.0.5:5432
+        caller:  routines/sync_orders.py:47 (raw socket in sim test pass)
+
+        Jail containment boundary violated; raw network egress prohibited from guest sandboxes.
+
+  audit_op: op_prove_06
+  state_modified: false
+  layer: sandbox
+  measured: 1 containment violation (connect trapped at 0 bytes egress)
+  remedy: use ctx.api.call with an activated catalog verb

@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_10_posix_locking_compliance_probe"
+title: "Volume lacking POSIX advisory lock support rejected for the WAL workspace"
+domain: "kernel_physics"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/space.md#filesystem-mandate"
+  statement: "Environments demand POSIX locking compliance: the kernel probes the target volume for advisory lock support before opening workspace.db in WAL mode, and non-compliant network mounts (NFS/CIFS without lock support) are rejected outright — the SSOT never lands on a lock-less filesystem."
+  blast_radius_if_breached: "SQLite WAL relies on POSIX advisory locks: on a lock-less NFS/CIFS mount two kernels open the same database concurrently, silently double-write the SSOT, and corrupt every environment mounted across the fleet — split-brain state with no recovery point."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the probe against a local tmpfs/ext4 directory (which always supports locks) and claims the network-mount rejection is covered, or mocks the statfs/lock result instead of exercising the probe decision on a genuinely non-compliant volume."
+  anti_slop_mitigation: "AS-01 bans mocking the lock probe itself; AS-06 pins the expected verdict literals; AS-03 requires exit_code == 3 plus a parsed kernel.boot diagnostic; AS-02 proves no WAL sidecar files materialized on the rejected volume."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "storage.ops@example.com"
+    agent_id: "agt_kp_10"
+    trust: "draft"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'capcli_core::db::volume::probe_posix_lock_support(path "/mnt/cifs/envs/dev/workspace.db") — fcntl(F_SETLK, F_WRLCK) advisory lock probe executed against the CIFS-mounted volume holding the relocated dev world'
+  input_params:
+    target_volume: "/mnt/cifs"
+    filesystem: "CIFS"
+    lock_probe_result: "ENOLCK — advisory locks unavailable" # NOTE: not located in cans/ specs
+    wal_requirement: "POSIX advisory locking compliance"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.boot"
+    culprit: "target volume /mnt/cifs (CIFS network mount) fails the fcntl POSIX advisory lock probe — WAL serialized-writer concurrency cannot be guaranteed"
+    remedy: "move envs/dev/workspace.db to a POSIX-compliant local volume (ext4/xfs) or export the network mount with functional lock support, then re-run capcli sys doctor --boot-check"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "kernel.boot.deny (diagnostic envelope only — volume rejected before WAL open)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "The lock probe must genuinely execute fcntl(F_SETLK) against the mounted volume — mocking the probe function, faking the errno, or substituting a compliant local directory is rejected."
+  - rule: "AS-06"
+    verification: "Expected values are immutable literals: the probe verdict (non-compliant), the filesystem identity (CIFS network mount), and the refusal exit code (3) are hardcoded in the test, never derived from the probe's own output."
+  - rule: "AS-02"
+    verification: "Zero-mutation proof: after the refusal, /mnt/cifs/envs/dev/ must contain no workspace.db-wal and no workspace.db-shm sidecar files (WAL never opened); SELECT count(*) FROM _audit on the CIFS-mounted database remains 4 before and after the refused boot."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 and parse the CliEnvelope<T>: diagnostic.domain == kernel.boot, culprit names the non-compliant volume and the lock probe failure, remedy names a compliant volume, state_modified == false."

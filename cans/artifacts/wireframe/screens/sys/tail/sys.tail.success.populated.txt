@@ -1,0 +1,17 @@
+[dev:tier_1]  ✓  tailing
+
+  mirror:  audit/2026-10-03.jsonl (synced, lag 0s)
+  since:   1h window (from 23:04:11Z)
+  follow:  live stream active — Ctrl-C to detach
+  events:  6 in window
+
+  ├── 23:41:07Z  op_9f2c  routine.run  dispatch_order@4  allowed  340ms
+  ├── 23:41:07Z  op_9f2d  db.query     orders            allowed   12ms
+  ├── 23:41:08Z  op_9f2e  api.call     fedex.ship        allowed  340ms
+  │     └── tracking: 794644790133
+  ├── 23:41:08Z  op_9f2f  db.execute    orders            allowed   18ms
+  ├── 23:52:30Z  op_c44d1  db.execute   orders            denied      1ms
+  │     └── rule: policy.query.update_delete.require_limit
+  └── 23:58:44Z  op_a11c7  ping.ask     user:alice        allowed     2ms
+
+  integrity:  hash chain valid (root sha256:7f9a1b2c...)

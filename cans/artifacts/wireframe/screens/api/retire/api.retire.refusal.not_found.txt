@@ -1,0 +1,11 @@
+[dev:tier_1]  ✗  exit 3
+
+  FATAL  validation.not_found
+         command:  capcli api retire stripe.refund_charges --reason "deprecated upstream"
+         verb:     cap://stripe.refund_charges
+
+         Target verb not found.
+         No verb 'stripe.refund_charges' in provider catalog 'stripe' (verbs: 418).
+
+  state_modified:  false
+  remedy:          list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id

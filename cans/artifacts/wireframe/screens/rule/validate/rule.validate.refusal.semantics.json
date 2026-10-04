@@ -1,0 +1,53 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "rule.validate.refusal.semantics",
+  "noun": "rule",
+  "verb": "validate",
+  "target": "schema://orders",
+  "command": "capcli rule validate",
+  "state": {
+    "exit_code": 3,
+    "domain": "compile",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "compile",
+    "culprit": "Dependency cycle detected: orders -> order_items -> orders.",
+    "remedy": "break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate"
+  },
+  "txt_pair": "screens/rule/validate/rule.validate.refusal.semantics.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 3,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 3",
+      "FAIL  compile.gate_2_circular_ref",
+      "first_item: int ref=order_items.id",
+      "Dependency cycle detected: orders -> order_items -> orders.",
+      "state_modified: false",
+      "remedy: break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "compile"
+    }
+  }
+}

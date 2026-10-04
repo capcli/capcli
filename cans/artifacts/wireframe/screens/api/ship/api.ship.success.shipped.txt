@@ -1,0 +1,11 @@
+[dev:tier_1]  ✓  shipped
+
+  verb:         cap://threads.create_media_post
+  rung:         draft → reviewed
+  evidence:     synthetic contract replay 3/3 passed
+                sim success rate 1.00 (floor: 0.90)
+                policy_denials: 0
+  promoted_by:  agt_7f3k
+  audit_op:     op_9f2e
+
+  state_modified:  true

@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "vs_03_cli_parameter_injection_banned"
+title: "Inline credential parameter (--secret sk_live_123) on the CLI is rejected at the parser — secrets enter only through the three injection channels"
+domain: "vault_secrets"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#injection-channels-—-headless-CLI-(`capcli-sys-vault-set`),-env-auto-binding,-or-external-client-RPC"
+  statement: "Secret injection channels are an exhaustive enumeration — headless CLI ('capcli sys vault set'), environment auto-binding (CAPCLI_SECRET_*), or external client RPC — and the universal flag set is frozen at twelve with no per-noun growth: a '--secret' (or any inline credential) parameter is structurally absent from the parser and rejected at parse time before the kernel dispatches anything."
+  blast_radius_if_breached: "API keys travel on process command lines: 'ps aux', shell history, CI logs, and orchestration manifests capture live credentials in plaintext, defeating the entire encrypted-vault design at the point of entry."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent 'helpfully' adds a --secret flag to the parser to make the test pass, or interprets the rejection as a runtime denial (exit 2) instead of the parser-level usage refusal, or asserts the error without proving the credential never reached the vault, audit, or any buffer (catalog banned slop: permitting --secret or inline API tokens in CLI argument lists)."
+  anti_slop_mitigation: "AS-03 forces the typed exit 3 parser refusal with the policy.secrets domain naming the three legal channels; AS-02 proves the secrets table and audit chain are untouched; AS-06 hardcodes zero occurrences of the credential literal in any output or log."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_vs_03"
+    trust: "draft"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "secrets"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://pay --secret sk_live_123"
+  input_params:
+    banned_flag: "--secret"
+    banned_value: "sk_live_123"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "policy.secrets"
+    culprit: "inline credential parameter '--secret' rejected at the CLI parser; secrets enter exclusively via 'capcli sys vault set', CAPCLI_SECRET_* env auto-binding, or authenticated external client RPC — the universal flag set is frozen and admits no credential flags"
+    remedy: "provision via 'capcli sys vault set vault://pay_key --in @-' (pipe the value on stdin) or bind CAPCLI_SECRET_PAY_KEY in the environment"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "none (parser-level rejection before kernel dispatch — no op to audit)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Invoke the real argument parser with the argv ['run', 'cap://pay', '--secret', 'sk_live_123'] and match the typed result: exit 3 (compile/usage refusal at the parser, per the banned-flag rejection law that returns exit 3 for --force/--override-budget/--force-prod/--verbose), diagnostic.domain == 'policy.secrets', culprit names the three legal injection channels, remedy names the stdin or env path."
+  - rule: "AS-02"
+    verification: "Post-rejection substrate proof: SELECT count(*) FROM secrets returns 0 and SELECT count(*) FROM _audit is unchanged — the parser refusal happens before kernel dispatch, so no vault row, no audit row, and no frame exists."
+  - rule: "AS-06"
+    verification: "Hardcoded negative: the literal 'sk_live_123' occurs 0 times in stdout, stderr, the diagnostic envelope, and any log file; additionally assert the parsed argv's flag set contains none of the frozen twelve universal flags matching a credential semantic — proving the flag never exists rather than merely being ignored."

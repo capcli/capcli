@@ -1,0 +1,71 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_10_ctx_storage_hmac_presigned_url"
+title: "ctx.storage.url mints a valid HMAC-signed temporary access URL with enforced TTL"
+domain: "sdk_harness"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Blob-storage-methods"
+  statement: "ctx.storage.url(key, ttl) mints a signed temporary access url (action.md#Blob-storage-methods): the link carries a valid HMAC signature over the key and expiry, is honored only until now+ttl elapses, and private objects are unreachable without it — unsigned or public direct URLs to private object storage are structurally unavailable. # NOTE: HMAC algorithm name not located in the four core cans specs — grounded in cans/assembly.md signer.rs (mints HMAC-signed temporary access URLs)"
+  blast_radius_if_breached: "Private invoices and receipts become world-readable blobs: a leaked or guessed direct URL bypasses every access decision (no principal scoping, no audit trail), and without TTL enforcement a single leaked presigned link grants permanent read access to sensitive financial documents."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts only that a non-empty URL string was returned (any string passes), verifies the signature with a re-implementation that always returns true, or tests the URL against a mock object store that serves everything 200 — proving nothing about signing or expiry."
+  anti_slop_mitigation: "AS-01 requires the real HMAC verification with a known key and a real (local provider) object store: an unsigned variant of the same URL must be refused; AS-06 pins the TTL literal 3600 and the expiry epoch; AS-04 steps MockClock past the TTL to prove the expired link is refused."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_sh_10"
+    trust: "reviewed" # invoice_fetch@2 runs at reviewed; blob access is read-path
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # invoice_fetch@2 proven; fixture object invoice.pdf uploaded via ctx.storage.put
+      - name: "_audit"
+        row_count: 3 # routine.draft + prove + storage.put events
+    vault_secrets: []
+    # fixture: blob invoice.pdf exists in local provider storage (storage.provider: local, artifacts/governance.yaml#storage)
+
+execution:
+  trigger: "rust_api"
+  command: "url = ctx.storage.url('invoice.pdf', ttl=3600)"
+  input_params:
+    routine: "invoice_fetch@2"
+    storage_key: "invoice.pdf"
+    ttl_seconds: 3600
+    storage_provider: "local" # artifacts/governance.yaml#storage
+    max_upload_bytes: 10485760
+
+expected_observations:
+  exit_code: 0
+  state_modified: false # URL minting is read-path bookkeeping: the blob and world tables are unchanged
+  diagnostic:
+    domain: "sdk.harness"
+    culprit: "none (nominal) — signed temporary URL minted with expiry now+3600s"
+    remedy: "no action; link expires at TTL; re-mint via ctx.storage.url for renewed access"
+  database:
+    row_count_delta: 1 # leaf audit event for the URL mint; blob bytes unchanged
+    tables_mutated: ["_audit"]
+  wire:
+    packets_transmitted: 0 # minting is local to the kernel signer; the URL is handed back in-process
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run" # outcome: success; the minted URL recorded in the run envelope (effect.md#Kernel-event-payloads)
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Verify the signature with the known signing key using an independent HMAC implementation in the test: recompute the digest over the canonical (key, expiry) material and assert equality; negative control — the same URL with the signature stripped (or one byte flipped) must be refused by the real object store with an auth failure, never 200."
+  - rule: "AS-04"
+    verification: "TTL semantics are driven by MockClock epoch ticks: at now+3599s the URL serves the object; advance to now+3601s and the identical URL must be refused — no wall-clock sleeps."
+  - rule: "AS-06"
+    verification: "The TTL literal 3600 and the expected expiry epoch (now+3600 per the injected clock) are immutable hardcoded values; the expected verification verdicts (valid at 3599, expired at 3601) are literals, never derived from the signer under test."
+  - rule: "AS-05"
+    verification: "The mint leaf event chains into _audit: prev_hash equals the SHA-256 of the prior row and result_hash matches the canonical JSON hash of the run envelope; run capcli-core::audit::verify_chain()."

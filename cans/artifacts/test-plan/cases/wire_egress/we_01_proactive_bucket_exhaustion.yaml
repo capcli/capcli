@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "we_01_proactive_bucket_exhaustion"
+title: "Proactive token-bucket pre-call gate denies egress at 0 tokens before any packet leaves the kernel"
+domain: "wire_egress"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Proactive-rate-limiting"
+  statement: "The client-side token-bucket throttle is the primary authority: when the local bucket is empty (tokens < 1) the pre-call gate aborts dispatch with exit 2 BEFORE the packet reaches the wire ('Gate decision — local bucket empty pauses dispatch up to timeout; hard limit exhaustion throws exit 2'; policy.yaml#api.rate_limit.pre_call_gate: fail-closed, tokens < 1 -> exit 2 immediately)."
+  blast_radius_if_breached: "A drained provider quota bucket would keep receiving dispatch attempts anyway, triggering upstream 429 storms, provider-side bans of enterprise API keys, and cascading routine failures in every session that shares the provider."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by asserting a network timeout or generic connection error instead of the local client-side rate refusal — e.g. mocking the HTTP client to return a timeout and asserting .is_err(), which proves nothing about the pre-call gate."
+  anti_slop_mitigation: "AS-03 forbids .is_err()/.is_ok() assertions: the integer exit code must equal 2 and the CliEnvelope diagnostic block (domain, culprit, remedy) must be parsed. AS-01 bans mocking the token-bucket counters (quota_gate.rs path). AS-02 physically queries _api_quota to prove the row and every table are untouched and no packet was dispatched."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_01"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'threads': 24h rolling window 50/50 consumed, remaining 0, status tracked
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'ctx.api.call("threads.posts", params={"text": "daily ops digest"}, intent="daily ops digest") invoked through the capcli-core engine API with the proactive bucket pre-drained to 0 tokens'
+  input_params:
+    verb: "threads.posts"
+    tokens_available: 0
+    refill_rate_per_sec: 1.0
+    pre_call_gate: true
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "proactive token bucket exhausted for threads.posts: 0 tokens available (24h window 50/50 used); pre-call deny at deny_at_remaining before egress"
+    remedy: "wait for the 1.0 token/s refill or the 24h window reset_at before re-invoking; do not retry in a tight loop — the local bucket is the primary authority"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mock of the token-bucket counter or the quota gate: the 0-token state is a real _api_quota row read by the engine and the denial must be produced by the production pre-call gate path (assembly.md#Core-domain-subsystems quota_gate.rs 'fails closed if bucket tokens < 1'), never by a stubbed client error."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _api_quota returns 1 before and after execution (strict equality); the threads row's remaining field still reads 0; no business tables exist in the world, so zero side effects are provable."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 (not a timeout, not exit 4/5) and parse the CliEnvelope JSON: diagnostic.domain == 'policy.budget', the culprit cites 0 tokens / deny_at_remaining, and a non-empty remedy is present; a bare .is_err() assertion is a linter failure."

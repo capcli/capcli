@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_06_historical_replay_idempotency"
+title: "Historical replay re-executes DB ops idempotently and refuses auto-dispatch of external HTTP mutations"
+domain: "audit_dag"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#external-effects--external-API-calls-flagged-replay:-manual;-auto-replay-strictly-forbidden"
+  statement: "Replaying a historical session executes under current policy with environment-scoped idempotency keys preventing duplicate execution: database operations succeed deterministically without duplicating live rows, while external API calls are flagged replay: manual and never auto-dispatched — auto-replay of external effects is strictly forbidden and halts the replay (execution halts immediately at the first failing leaf)."
+  blast_radius_if_breached: "A replay physically re-charges credit cards, re-sends webhook mutations, or re-provisions cloud resources: money moves twice, partners receive duplicate shipments, and every historical incident replay becomes a live production incident."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent replays with a mocked HTTP client that silently drops requests (faking non-dispatch), or asserts only that the replay command returned while never counting rows to catch duplicated DB execution of the historical session."
+  anti_slop_mitigation: "AS-02 proves orders row count is identical before/after (idempotency) and the egress proxy records zero outbound requests; AS-03 pins exit 2 with a policy.replay diagnostic naming the flagged external leaf; AS-06 hardcodes the pre-replay row counts."
+
+setup:
+  env: "sim" # historical sessions replay in sim
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.auditor@acme.corp"
+    agent_id: "agt_ad_06"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 6
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+            idempotency_key: text!
+    tables:
+      - name: "orders"
+        row_count: 12 # historical session ses_hist already wrote 12 orders with idempotency keys
+      - name: "_audit"
+        row_count: 20 # genesis + 12 db.exec + 1 external api.call (seq 18, POST https://api.stripe.com/v1/charges) + lifecycle events
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys audit replay --from 2026-02-01T09:00:00Z"
+  input_params:
+    source_session: "ses_hist"
+    dry_run: false
+    historical_external_leaf: "seq 18 — api.call POST https://api.stripe.com/v1/charges (replay: manual)"
+    replay_clock: "MockClock epoch ticks injected via engine API"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.replay"
+    culprit: "historical leaf seq 18 api.call POST https://api.stripe.com/v1/charges — external effects are flagged replay: manual; auto-replay strictly forbidden, walk halts at the first external leaf"
+    remedy: "re-dispatch the external mutation manually under a fresh intent, or re-run with --dry-run to preview the replay without side effects"
+  database:
+    row_count_delta: 0 # idempotency keys prevent duplicate execution; live orders stay at 12
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # the replayed external call is never dispatched to the wire
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none) — external re-dispatch refused, leaf flagged replay: manual"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 12 before and after the replay (no duplicate execution of the historical DB ops); the egress proxy records zero outbound requests to api.stripe.com — no mocked HTTP client may stand in for the proxy, the non-dispatch must be physically observed."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.replay', culprit names seq 18 and the external api.call leaf, remedy offers --dry-run or manual re-dispatch."
+  - rule: "AS-06"
+    verification: "Immutable literals hardcoded: orders count 12, _audit pre-replay count 20, historical idempotency key set size 12 — none derived from the replay output; assert _audit delta is exactly 1 (the denial event with effect: none)."

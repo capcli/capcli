@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "db.snapshot.denial.prod_draft",
+  "noun": "db",
+  "verb": "snapshot",
+  "target": "db://orders",
+  "command": "capcli db snapshot --env prod -m \"nightly safety point\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.trust",
+    "trust": "draft",
+    "env": "prod",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.trust",
+    "culprit": "Draft identity cannot snapshot prod; unproven code cannot touch prod.",
+    "remedy": "prove the acting identity in sim and promote to reviewed, then retry the snapshot",
+    "layer": "trust",
+    "measured": "caller trust rung is draft; prod floor is reviewed"
+  },
+  "txt_pair": "screens/db/snapshot/db.snapshot.denial.prod_draft.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[prod:tier_1]  ✗  exit 2",
+      "FAIL  policy.trust.forbidden",
+      "Draft identity cannot snapshot prod; unproven code cannot touch prod.",
+      "state_modified: false",
+      "layer: trust",
+      "measured: caller trust rung is draft; prod floor is reviewed"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.trust"
+    }
+  }
+}

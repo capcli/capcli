@@ -1,0 +1,81 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_08_cross_agent_callee_reviewed_floor"
+title: "Routine authored by Agent A calling a draft-trust routine authored by Agent B is rejected — drafts cannot be cross-agent dependencies"
+domain: "trust_ladder"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/trust.md#cross-agent-floor-—-cross-agent-calls-require-callee-trust->=-reviewed;-drafts-cannot-be-dependencies"
+  statement: "Cross-agent routine calls demand callee trust >= reviewed: when a routine authored by one registered agent imports or invokes a routine authored by a different agent, the engine resolves the callee's trust rung from the registry and rejects the frame push if the callee is currently in draft — the caller's own rung is irrelevant to this floor."
+  blast_radius_if_breached: "Autonomous agents cross-import each other's unproven code: agent B's half-finished draft routine becomes a hidden dependency of agent A's reviewed production routine — unreviewed code executes under a caller's elevated privileges, and a draft edit to the callee silently changes reviewed production behavior with no gate."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent authors both routines under the same agent id (making the call intra-agent, so the floor never applies) or pre-promotes the callee to reviewed in the fixture setup, then asserts a pass; or mocks the trust resolver so the registry lookup never runs (catalog banned slop: permitting draft routines to be cross-imported between autonomous agents)."
+  anti_slop_mitigation: "AS-01 forbids mocking the trust-floor resolver — the engine must read the real routines registry; AS-02 proves zero frames were pushed (no _budget_frames row, no routines row mutated); AS-03 forces the typed exit 2 with the callee's draft rung and author identity cited."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:aria"
+    agent_id: "agt_tl_08a"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        routines:
+          description: "routine registry with author identity and trust rung"
+          columns:
+            name: text!~
+            version: int!
+            trust: text!
+            created_by: text!
+            code_hash: text!
+            manifest_hash: text!
+          idx: [[name, version]]
+    tables:
+      - name: "routines"
+        row_count: 2
+      - name: "_budget_frames"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "engine frame-push API: RoutineLinker::push(caller=cap://enrich_order@3 [agent agt_tl_08a, trust=reviewed], callee=cap://normalize_addr@1 [agent agt_tl_08b, trust=draft])"
+  input_params:
+    caller_routine: "cap://enrich_order@3"
+    caller_agent: "agt_tl_08a"
+    callee_routine: "cap://normalize_addr@1"
+    callee_agent: "agt_tl_08b"
+    callee_trust: "draft"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "callee cap://normalize_addr@1 (authored by agt_tl_08b) holds draft trust; cross-agent calls require callee trust >= reviewed and drafts cannot be dependencies"
+    remedy: "promote normalize_addr to reviewed ('capcli routine prove normalize_addr --env sim' then ship), or remove the cross-agent import from enrich_order"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (decision: denied, effect: none; rule policy.trust.cross_agent_callee_floor)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "The trust-floor resolution runs against the real routines registry (two rows, distinct created_by agents) with no mock of the resolver, registry, or authorizer — the engine performs the actual callee lookup by (name, version) and reads agt_tl_08b's draft rung from disk."
+  - rule: "AS-02"
+    verification: "After the rejected push: SELECT count(*) FROM _budget_frames returns 0 (no frame was pushed for the callee), SELECT count(*) FROM routines returns 2, and both rows' trust values are unchanged ('reviewed', 'draft') — zero state side effects."
+  - rule: "AS-03"
+    verification: "Match the typed engine result: exit code 2, diagnostic.domain == 'policy.trust', diagnostic.culprit names the callee pointer and its draft rung, diagnostic.remedy offers the promote-or-remove path — not a generic error or panic."

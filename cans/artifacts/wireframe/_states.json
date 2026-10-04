@@ -1,0 +1,74 @@
+{
+  "0": {
+    "label": "success",
+    "variants": {
+      "committed": { "state_modified": true },
+      "dry_run": { "state_modified": false },
+      "suspended": { "state_modified": false },
+      "resumed": { "state_modified": true }
+    },
+    "diagnostic": null,
+    "audit": "committed to _audit with result_hash"
+  },
+  "2": {
+    "label": "denial",
+    "state_modified": false,
+    "domains": [
+      "policy.authorizer",
+      "policy.ast",
+      "policy.budget",
+      "policy.trust",
+      "policy.notify",
+      "db.engine",
+      "db.claims",
+      "api.quota",
+      "kernel.sandbox",
+      "agent.thrashing"
+    ],
+    "diagnostic_required": ["domain", "culprit", "remedy", "layer", "state_modified"],
+    "denial_ux": {
+      "cite_measured_value": true,
+      "suggest_remediation": true,
+      "budget_cites_level": true,
+      "budget_cites_remaining": true,
+      "budget_cites_ancestors": true
+    }
+  },
+  "3": {
+    "label": "refusal",
+    "state_modified": false,
+    "domains": [
+      "compile",
+      "validation",
+      "kernel.boot",
+      "missing_param",
+      "lockfile_mismatch",
+      "schema_hash_mismatch",
+      "host.ntp",
+      "policy.secrets"
+    ],
+    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
+  },
+  "4": {
+    "label": "crash",
+    "state_modified": false,
+    "domains": ["routine.runtime"],
+    "rollback": "clean",
+    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
+  },
+  "5": {
+    "label": "panic",
+    "state_modified": false,
+    "domains": ["kernel.panic"],
+    "boot_refusal": true,
+    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
+  },
+  "6": {
+    "label": "yield",
+    "state_modified": false,
+    "domains": ["api.quota"],
+    "suspension": true,
+    "diagnostic_required": ["domain", "culprit", "remedy", "tokens_left", "reset_at", "suspended_frame", "state_modified"],
+    "resume": "daemon re-queues via _suspended_tasks on token refill"
+  }
+}

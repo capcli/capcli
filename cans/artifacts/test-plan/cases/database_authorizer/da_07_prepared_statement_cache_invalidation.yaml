@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "da_07_prepared_statement_cache_invalidation"
+title: "Cached VDBE prepared statement detects schema change and recompiles cleanly across a migration"
+domain: "database_authorizer"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/physics.md#Layer-1.5:-prepare-time-cross-check"
+  statement: "Every statement crosses sqlite3_prepare_v2 / EXPLAIN bytecode at prepare time; after a schema migration bumps the SQLite schema version the cached VDBE program recompiles cleanly and re-executes correctly against the new shape (no stale bytecode, no mid-transaction crash)."
+  # NOTE: "schema cookie" term not located in cans/ specs - SQLite schema-version bump is the mechanism; behavior grounded in the prepare-time cross-check pipeline.
+  blast_radius_if_breached: "Stale VDBE bytecode reads pre-migration column offsets after DDL lands; every long-lived connection silently returns garbage columns and mis-writes rows into the wrong slots."
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent restarts the entire process (or opens a fresh connection) between migration and re-execution, wiping the statement cache - the in-flight invalidation path is never tested."
+  anti_slop_mitigation: "AS-01 forces a single in-process connection whose prepared statement handle survives the migration; AS-06 hardcodes the expected post-migration column list; AS-05 verifies the migration audit event and chain link; AS-03 checks the typed exit code."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.migrationbot@acme.corp"
+    agent_id: "agt_da_07"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+      # migration under test: version 13 adds orders.rush (boolean flag)
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "prepare(\"SELECT id, status FROM orders\") -> apply schema v12->v13 (ALTER TABLE orders ADD COLUMN rush) via in-process rule-apply path -> re-execute the cached statement handle on the same connection"
+  input_params:
+    migration: "v12 -> v13: orders gains column rush"
+    cached_statement: "SELECT id, status FROM orders"
+    connection_lifetime: "single in-process connection held across the migration"
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none"
+    culprit: "none"
+    remedy: "none"
+  database:
+    row_count_delta: 0
+    tables_mutated:
+      - "orders"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "rule.apply (allow; schema migration event for v13)"
+    chain_valid: true
+    state_modified_field: true
+anti_slop_assertions:
+  - rule: "AS-05"
+    verification: "After the migration apply, _audit sequence id incremented by exactly 1 with a rule.apply event; capcli-core::audit::verify_chain() returns true; prev_hash equals SHA-256 of the prior row."
+  - rule: "AS-06"
+    verification: "Expected post-migration PRAGMA table_info(orders) column list hardcoded as immutable literal [id, ref, customer_id, total_cents, discount_cents, status, receipt, rush] - never derived from compiler output; the cached SELECT still returns exactly (id, status) tuples for 500 rows."
+  - rule: "AS-01"
+    verification: "The prepared statement handle and its connection must survive in-process across the migration (assert handle/connection identity equality before and after); process restart or cache wipe between steps fails the test; no mocks on authorizer.rs."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 (integer) and the success envelope: state_modified == true, data block non-null; the recompiled statement executes without SQLITE_SCHEMA or misaligned-column errors."

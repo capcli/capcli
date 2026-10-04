@@ -1,0 +1,52 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "routine.ship.refusal.missing_reason",
+  "noun": "routine",
+  "verb": "ship",
+  "target": "order_sync",
+  "command": "capcli routine ship order_sync pinned",
+  "state": {
+    "exit_code": 3,
+    "domain": "validation",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "validation",
+    "culprit": "Elevation to pinned requires a --reason justification; threshold crossings need evidence.",
+    "remedy": "re-run with --reason, e.g. capcli routine ship order_sync pinned --reason \"30d clean canary\""
+  },
+  "txt_pair": "screens/routine/ship/routine.ship.refusal.missing_reason.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 3,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 3",
+      "FAIL  validation.promotion.reason_required",
+      "Elevation to pinned requires a --reason justification; threshold crossings need evidence.",
+      "state_modified: false",
+      "remedy: re-run with --reason, e.g. capcli routine ship order_sync pinned --reason \"30d clean canary\""
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "validation"
+    }
+  }
+}

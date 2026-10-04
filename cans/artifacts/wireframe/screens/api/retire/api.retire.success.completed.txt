@@ -1,0 +1,9 @@
+[dev:tier_1]  ✓  completed
+
+  verb:        cap://stripe.refund_charge
+  transition:  active → dormant
+  reason:      deprecated upstream
+  callable:    false (dormant verbs are discoverable, inspectable, uncallable)
+  audit_op:    op_3d8a2
+
+  state_modified:  true

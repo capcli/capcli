@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_04_param_type_mismatch_exit3"
+title: "String argument against a Param[int] declaration is rejected at input validation with exit 3"
+domain: "sdk_harness"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Mapping-contract"
+  statement: "Param typing enforces input validation (action.md#Execution-guards interface definition): a routine declaring order_id: Param[int] invoked with the string \"abc\" is rejected at the SDK validation boundary with exit 3 (signature mismatch exits with code 3, action.md#Mapping-contract) — unvalidated types never reach the routine body, so no runtime type crash (exit 4) can occur."
+  blast_radius_if_breached: "Untyped garbage flows into routine bodies: \"abc\" hits arithmetic inside the sandbox and dies as exit 4 mid-transaction (partial local state rolled back but the failure surfaces as a runtime crash, not a validation refusal), polluting the forensic separation between code failures and policy/validation breaches (effect.md#Failure-forensics separation)."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent converts the input inside the routine stub (int(\"abc\") never happens because the test passes 42 instead of \"abc\"), or asserts a broad 'validation error' string without pinning exit 3 and the Param schema cited in the diagnostic; or lets the call fall through to a runtime crash and calls it 'rejected'."
+  anti_slop_mitigation: "AS-03 requires the exact pair (exit_code == 3, diagnostic citing order_id declared int vs supplied \"abc\"); AS-02 proves the routine body never executed (zero rows, zero frames); AS-06 pins the literal mismatch pair in the test spec."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.dev@example.com"
+    agent_id: "agt_sh_04"
+    trust: "draft" # input validation fires before any trust-gated effect; draft is sufficient to make the scenario valid
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 0 # validation refusal fires before frame push
+      - name: "routine_stats"
+        row_count: 1 # refund@2 declares order_id: Param[int]
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://refund -p order_id=abc -m "process refund for order abc"'
+  input_params:
+    capability: "cap://refund"
+    declared_param: "order_id: Param[int]" # per the routine signature
+    supplied_value: "abc" # string, not int
+    intent: "process refund for order abc"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "sdk.harness"
+    culprit: 'parameter order_id declared as Param[int] but supplied non-integer value "abc" — input validation refusal (signature mismatch)'
+    remedy: "pass a typed integer for order_id (e.g. -p order_id=8842); the routine body is unreachable until the Param schema validates"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny" # NOTE: param-validation refusal event name not located in cans/effect.md payload list; effect: none (effect.md#Denials), log_all per artifacts/governance.yaml#denials
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 3 (validation refusal class, physics.md#Exit-code-law — not exit 4 runtime crash) and parse the CliEnvelope: diagnostic.culprit cites order_id declared int vs supplied \"abc\", diagnostic.remedy prescribes the typed input; envelope.state_modified == false."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _budget_frames and routine_stats before and after the invocation; assert strict equality — the routine body never executed, no frame was pushed, no ops consumed; the only _audit delta is the single refusal row with effect: none."
+  - rule: "AS-06"
+    verification: "The mismatch pair (declared int, supplied \"abc\") is an immutable literal hardcoded in the test spec, with a companion -p order_id=8842 positive control proving the gate is type-aware, not a blanket parameter refusal — expected verdicts never derived from the validator under test."

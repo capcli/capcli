@@ -1,0 +1,68 @@
+$schema: "test-plan/case/v1"
+case_id: "vs_02_env_var_auto_binding"
+title: "CAPCLI_SECRET_STRIPE_KEY in the host environment is auto-ingested and bound to a vault reference as AES-256-GCM ciphertext without any prompt or echo"
+domain: "vault_secrets"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#env-resolution-—-kernel-checks-process-env-vars-(`CAPCLI_SECRET_<NAME>`)-before-raising-suspension"
+  statement: "The kernel checks process environment variables (CAPCLI_SECRET_<NAME>) before raising a missing-secret suspension: 'sys vault import-env' scans the environment, auto-binds each match to its vault:// reference, encrypts the value with AES-256-GCM into the secrets table, commits a vault.set audit event with a masked value and SHA-256 fingerprint, and zeroizes the ingested plaintext — the value is never printed to stdout, audit, or any output stream."
+  blast_radius_if_breached: "Environment-variable credentials are echoed into logs: CI job logs, shell transcripts, and the audit mirror permanently capture live API keys — every downstream reader of the JSONL mirror (git-committed and offsite-replicated) gains plaintext credential access."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent prints or logs the environment variable value while verifying the binding (assert output contains the key), or mocks the vault so the AES-256-GCM path never runs and asserts only a row count (catalog banned slop: printing environment variable value into audit log or stdout)."
+  anti_slop_mitigation: "AS-01 forbids mocking the vault encryption boundary — the real AES-256-GCM path must run and a decrypt round-trip must equal the fixture literal; AS-05 verifies the vault.set event, hash chain, and SHA-256 fingerprint; AS-06 hardcodes zero occurrences of the plaintext literal across every output stream and the ciphertext column."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_vs_02"
+    trust: "draft"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "secrets"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "CAPCLI_SECRET_STRIPE_KEY=sk_test_VS02_FIXTURE_9f3a capcli sys vault import-env"
+  input_params:
+    env_var: "CAPCLI_SECRET_STRIPE_KEY"
+    value_literal: "sk_test_VS02_FIXTURE_9f3a"
+    expected_bound_ref: "vault://stripe_key"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 1
+    tables_mutated:
+      - "secrets"
+      - "_audit"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "vault.set (secret_name: stripe_key, secret_hash_prefix, action: injected; plaintext zeroized after ingest)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mock of the vault or crypto layer: the real AES-256-GCM encrypt path writes the secrets row and an engine decrypt round-trip on that row returns exactly 'sk_test_VS02_FIXTURE_9f3a' — proving the ciphertext is genuine, not a placeholder or base64 of the literal."
+  - rule: "AS-05"
+    verification: "SELECT count(*) FROM secrets returns 1 with name 'stripe_key'; _audit gained exactly 1 vault.set event whose prev_hash equals the SHA-256 of the prior row; the event payload carries a secret_hash_prefix matching sha256('sk_test_VS02_FIXTURE_9f3a')[0:12] = '354882e2e25b' and a masked value; capcli-core::audit::verify_chain() passes."
+  - rule: "AS-06"
+    verification: "Hardcoded zero-leak expectation: the literal 'sk_test_VS02_FIXTURE_9f3a' occurs 0 times in stdout, stderr, the _audit payload JSON, and the JSONL mirror file; SELECT value FROM secrets WHERE name='stripe_key' returns bytes that differ from the literal (ciphertext, length = literal + 12-byte nonce + 16-byte tag)."

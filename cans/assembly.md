@@ -1,218 +1,314 @@
 - Assembly
-<!-- ref-by: overview.md, physics.md -->
-  - Monorepo layout
-    - Tooling
-      - Bun IS the monorepo: no turborepo, nx, pnpm, lerna — `bunfig.toml` plus workspace globs
-      - Bun resolves, links, runs, tests — one tool, zero orchestration overhead
-      - bunfig.toml
-        - [install] peer = false — no peer-dependency ceremony
-        - [test] coverage = true, coverageReporter text + lcov
-        - [workspace] packages = packages/* — single source of workspace truth
-      - Root package.json
-        - private: true, workspaces packages/* — scripts only, never published
-        - dev runs the kernel watcher: `bun run --filter @capcli/kernel dev`
-        - build, test → `bun run --filter '*' build|test`
-        - test:unit, test:integration, test:e2e — same filter, tier folder
-        - lint runs per package: `bun run --filter '*' lint`
-        - native:build → `cd packages/native && napi build --release`
-    - Layout
-      - packages/ holds all code: types, kernel, sdk, pwa, native
-      - workspace/ contains both git-tracked and gitignored files:
-        - Git-tracked: world.sql, audit/, schema.yaml, system-schema.yaml, policy.yaml, governance.yaml
-        - Gitignored: workspace.db (live SQLite)
-        # FIX #31: workspace/ is not wholesale gitignored
-      - workspace/ also holds apis/, routines/, workspace.db, world.sql, audit/
-      - The repo contains architecture, code, and config templates — never live data
-      - Root law docs: architecture.md plus seven *.architecture.md siblings
-    - Sealing law: domain seals the package, feature seals the file — no file crosses domains, no package leaks
-    - Anti-decisions
-      - Turborepo/Nx/Lerna: refused — Bun workspaces suffice; pnpm: refused — Bun resolves natively
-      - index.ts barrels: refused — `*.*.*` naming imports by filename
-      - NestJS decorators/DI: refused — direct imports, three layers max: handler → service → gate
-      - dto/ folders: refused — types live in `@capcli/types` plus noun.types.ts
-      - Co-located tests in src/: refused — tests live in __tests__/ tier subfolders
-      - Vitest/Jest: refused — `bun:test` is built-in, fast, zero-config
-      - Next.js/Remix: refused — Vite + React suffices, no SSR
-      - CSS-in-JS: refused — Tailwind utilities; Storybook: refused — the ten layers are the story
-      - Monorepo-wide tsconfig: refused — per-package tsconfig, tsconfig.base.json for shared options
-      - stack.md: dead — its content lives here, once, forever
-    - Invariants
-      - The package line never cycles — every import points toward @capcli/types
-      - Tests mirror source: every handler unit, every domain integration, every lifecycle e2e
-      - Build outputs deterministic — same source + deps = same binary, no timestamps
-      - Zero orchestration tools — if Bun can't do it, the task is wrong
-      - Doc bundling configured at artifacts/repomix.config.json — markdown style, token tree
-  - Naming law
-    - `*.*.*` — every src file is domain.feature.ext: three dot-separated segments
-    - Test files exempt: `domain.feature.tier.test.ts` (four segments) — tier folder decides tier
-      # FIX #2: naming law contradicted test naming convention
-    - Patterns
-      - Handlers and services
-        - `noun.verb.ts` = command handler, one CLI verb: db.query.ts
-        - `noun.service.ts` = shared domain logic; `noun.gate.ts` = enforcement
-        - `noun.config.ts` = config loader; `noun.types.ts` = domain re-exports
-      - Test naming
-        - db.query.ts → db.query.unit/integration/e2e.test.ts — tier folder decides tier
-        - No orphan tests — a test exists only if its source exists
-      - PWA-only suffixes
-        - `noun.store.ts` (Zustand), `noun.view.tsx` (React), `noun.hook.ts`
-        - These suffixes never appear outside packages/pwa/src
-    - Forbidden
-      - Forbidden: index.ts, utils.ts, helpers.ts, constants.ts, bare types.ts, App.tsx
-      - A forbidden name hides what the file does — the name is the map
-      - Entry points are the sole exception: main.ts at package root, app.tsx in the PWA
-  - Packages
-    - @capcli/types
-      - Single source of shared contracts — zero runtime code, types and const enums only
-      - Imports nothing; every other package imports from it; breaking change = major bump
-      - Contracts
-        - exit.codes, kernel.contract, audit.event, capability, policy, governance, schema
-        - budget.types (frame, cascade, session pool), identity, env, api, routine, bind, ping
-        - sdk.contract (createKernel return type) and cli.types (args, flags, output shapes)
-      - src/main.ts is the barrel export — the sole entry-point exception here
-    - @capcli/kernel
-      - The gate: handler (noun.verb.ts) → service → gate; direct imports, no decorators, no DI
-      - boot.ts: quad-lock compile, refuse-or-serve; config/citty.commands.ts defines the CLI tree
-      - Domains
-        - db — the SQL gate
-          - Files: db.query, db.exec, db.lock, db.unlock, db.snapshot, db.restore, db.dump, db.schema
-          - Gates: db.authorizer (rusqlite bridge), db.ast (node-sql-parser), db.prepare cross-check
-          - db.service shared logic; db.types re-exports from @capcli/types
-        - routine
-          - Verbs: draft, prove, ship, sweep, stats, rollback, retire
-          - routine.manifest.ts AST-extracts ctx.* calls; routine.fingerprint.ts diffs runtime
-          - routine.sandbox.ts is the jail orchestrator — file only: see action.md#Routines
-        - api
-          - Verbs: sync, diff, catalog, activate, prove, ship, stats, retire, deactivate, rollback, list
-          - api.quota.ts reads/enforces _api_quota; api.egress.ts dispatches with secret injection
-          - api.sim.ts resolves sim_mode and serves fixtures
-        - bind
-          - Verbs: cron, webhook, endpoint, list, inspect, pause, resume, remove, keys
-          - bind.daemon.ts — the Bun.serve() HTTP listener
-        - ping
-          - Verbs: notify, ask, list, resolve, expire
-          - Smallest domain — five verbs, one service
-        - rule
-          - Four loaders: schema, system (read-only), policy, governance
-          - Verbs: rule.show, rule.diff, rule.apply, rule.validate
-        - env
-          - Verbs: new, use, list, inspect, doctor, merge, remove — worktree management
-          - Envs are git worktrees: see space.md#Environment-axis
-        - sys
-          - audit tail/trace/query/replay; agent register/list/revoke
-          - doctor, backup, recover, exec; sys.serve daemon lifecycle
-          - sys.audit.service (JSONL + mirror + hash chain); sys.budget.service (frames, cascade)
-        - run
-          - run.exec, run.search; run.inspect builds the cost envelope
-          - run.resolver resolves capability names against the registry
-        - identity
-          - principal/agent/session resolution; identity.socket.ts SO_PEERCRED binding
-          - identity.skill.ts propagates skill_origin
-      - shared/
-        - intent.validator (min words, blacklist), trust.ladder, config.validator (valibot)
-        - output.formatter (pretty vs --json), git.service (commit, push, worktree, recover)
-      - config/
-        - citty.commands.ts — CLI tree definition
-        - kernel.config.ts — workspace path, env detection
-    - @capcli/sdk
-      - Thin wrapper, no logic — delegates everything to the kernel
-      - createKernel() entry in main.ts; sdk.kernel.ts implements it
-      - File surface: sdk.run, sdk.db, sdk.routine, sdk.search, sdk.inspect, sdk.audit
-      - sdk.brand.ts resolves white-label nouns; sdk.stream.ts: WebSocket/SSE for audit.tail({follow: true})
-      - sdk.architecture.md lives here — embedder-facing: see interface.md#SDK-contract
-    - @capcli/pwa
-      - PWA stack law: see interface.md#PWA-layers
-      - TanStack Query polls the kernel; React Router navigates the ten layers
-      - src/layers/
-        - Ten folders: world, capability, governance, audit, budget, environment
-        - Plus approval, recovery, learning, identity — mirroring the PWA layers
-        - Each folder: layer shell, feature views, hooks, types — sealed per layer
-      - Stores: kernel, audit, approval, budget, env, navigation
-      - Components: ui.dag, ui.diff, ui.denial, ui.masked, ui.quadlock, ui.confirm — governed renderers
-      - Also ui.table, ui.card, ui.gauge, ui.badge, ui.breadcrumb
-      - Hooks: kernel.call (SDK wrapper, exit mapping), audit.poll, quota.poll 30s, approval.poll 2m
-    - @capcli/native
-      - Rust crate `capcli_db` — napi 2, napi-derive 2, rusqlite 0.31 bundled, cdylib
-      - Crate files: Cargo.toml, build.rs, src/lib.rs (napi entry), db.*.rs modules
-      - One module per native function: db.open, db.authorizer, db.query, db.execute
-      - Plus db.snapshot (VACUUM INTO), db.restore, db.types bridges; lib.rs is the napi entry
-      - Exposes exactly six functions: open, set_authorizer, query, execute, snapshot, restore
-      - db.authorizer.rs builds the set_authorizer closure from compiled policy
-      - `napi build --release` → capcli_db.node
-      - Tests run from TS through napi: authorizer unit + real deny-path integration
-  - Test architecture
-    - Three tiers, one law
-      - unit
-        - One function, one decision — <50ms, pure mocks, no I/O
-        - Proves logic in isolation — AST rejects UPDATE without WHERE
-        - Also covers intent.validator junk rejection, trust.ladder resolution
-        - Run: `bun run test:unit` → `bun test __tests__/unit/`
-      - integration
-        - One domain, real I/O — <5s, real SQLite, temp fs, no network
-        - Proves enforcement on real substrate — authorizer denies ATTACH on real SQLite
-        - Covers db exec, routine prove, api sync, rule apply, boot quad-lock, env merge
-        - How: same harness over __tests__/integration/ — `bun run test:integration`
-      - e2e
-        - Full journey, all layers — <60s, real workspace, git, sandbox
-        - Proves the full path through all gates — intent → world → deny → write → recover
-        - Run: `bun run test:e2e` — the kernel journey tier
-      - Runner is `bun:test` everywhere; Playwright enters only for PWA e2e
-    - Kernel e2e suite
-      - onboarding.journey, routine.lifecycle, api.lifecycle, multi.env
-      - budget.cascade (nested routines, exhaustion), recovery.worst.case (wipe → clone → recover)
-      - Workspace strategy
-        - Temp workspaces
-          - createTempWorkspace() per test — git init, schema.yaml, policy.yaml, cleanup
-          - No shared fixtures — a leaked workspace never poisons the next test
-        - Real kernel process
-          - webServer: `bun run packages/kernel/src/main.ts --env test`
-          - Playwright drives a real browser against a real kernel — never mocked
-    - PWA e2e
-      - onboarding.render (all 11 stages), approval.flow, audit.drill, recovery.confirm
-      - Playwright config lives in packages/pwa — run via the test:pwa:e2e script
-  - Build & run
-    - Commands
-      - Native crate once or on Rust change: `cd packages/native && napi build --release`
-      - Dev: root script dev for the kernel; same script with @capcli/pwa for the PWA
-      - Build all and test all: root scripts build, test — filtered to every package
-      - One tier: `bun run test:unit | test:integration | test:e2e`
-      - SDK publish: `cd packages/sdk && bun build src/main.ts --outdir dist --target node`
-    - Build outputs
-      - Per package
-        - @capcli/kernel → dist/cli.js (Bun single-file)
-        - @capcli/sdk → dist/index.js + dist/index.d.ts (ESM + types)
-        - @capcli/pwa → dist/ static Vite build
-        - @capcli/native → capcli_db.node (NAPI binary)
-      - Determinism
-        - No timestamps, no build-path leakage in artifacts
-        - Outputs diffable across builds — a changed binary means changed inputs
-    - Stack (absorbed from dead stack.md)
-      - Runtime Bun; SQLite via rusqlite through napi-rs → capcli_db.node
-      - Authorizer L1: conn.authorizer closure — C-level; prepare cross-check L1.5: sqlite3_prepare_v2 + EXPLAIN
-      - AST gate L2: node-sql-parser (sqlite dialect); CLI: citty; YAML: yaml (eemeli); validation: valibot
-      - PWA: React 19, Vite 6, Tailwind 4, Zustand 5, TanStack Query 5, React Router 7, Playwright
-      - Bun built-ins, zero deps: Bun.serve, Bun.spawn, Bun.file().writer(), Bun.CryptoHasher sha256
-      - Also built-in: crypto.randomUUID, bun:test, Bun.env, bunfig.toml workspace resolution
-      - Dependency count: 4 npm kernel deps + PWA dev deps + 3 rust = 7 kernel deps
-      - Kernel npm deps: node-sql-parser, yaml, valibot, citty
-      - PWA deps (not kernel): react, zustand, tanstack-query, react-router, tailwind
-        # FIX #24: react and zustand are PWA libs, not kernel deps
-  - Dependency graph
-    - Direction
-      - @capcli/types ← @capcli/kernel ← @capcli/sdk ← @capcli/pwa — acyclic, unidirectional
-      - Edges
-        - types imported by all, imports none
-        - kernel imports types + native (capcli_db.node)
-        - sdk imports types + kernel; pwa imports types + sdk (runtime only)
-      - Violations
-        - No circular deps — the arrow points one way only
-        - No kernel importing PWA; the PWA never imports the kernel directly — SDK only
-    - File ownership
-      - Per-package owners
-        - kernel domains: kernel devs, agent read-only reference
-        - pwa src: frontend devs; native src: Rust devs
-      - Workspace files
-        - schema.yaml: agent, governed, read-write via gate; routines/*.py: agent, governed
-        - system-schema.yaml: kernel releases only, read-only for agent; apis/*.yaml: kernel-compiled
-        - policy.yaml and governance.yaml: human-owned, read-only for the agent
-      - src/** is out of agent reach — the gate is the only write surface
+<!-- ref-by: action.md, budget.md, effect.md, interface.md, physics.md, recovery.md -->
+  - Monorepo root layout
+    - Workspace configuration files
+      - Cargo.toml — defines workspace members, musl targets, and release profiles
+      - rust-toolchain.toml — pins MSRV 1.85+ with rustfmt and clippy components
+      - Cargo.lock — deterministic dependency lockfile across all workspace crates
+      - .gitignore — ignores **/workspace.db*, *.snap.db, target/, dist/, and tmpfs scratch
+      - repomix.config.json — context packing configuration for LLM code review
+    - Host system dependencies
+      - git binary — host git >= 2.30 for worktrees: see space.md#Environment-axis
+      - python runtime — host python >= 3.11 for sandboxed routines: see action.md#Routines
+      - javascript runtime — host bun >= 1.1 or node >= 20 for polyglot execution
+      - bubblewrap binary — host bwrap >= 0.8.0 mandatory on Tier 1; optional on Tier 2: see physics.md#Platform-tier-taxonomy
+      - target toolchains — musl (Linux Tier 1), apple-darwin (macOS Tier 2), android (Termux Tier 2), msvc (Windows Tier 2)
+    - Root management commands
+      - compile development — cargo build --workspace: see physics.md#Exit-code-law
+      - compile static release — cargo build --release --target x86_64-unknown-linux-musl
+      - compile termux release — cargo build --release --target aarch64-linux-android
+      - run test suite — cargo test --workspace --all-targets: see #Monorepo-test-architecture
+      - run linter checks — cargo clippy --workspace -- -D warnings
+      - build cockpit assets — bun run --cwd packages/pwa build: see interface.md#Administrative-cockpit-pwa
+  - Declarative artifacts directory
+    - Path and target definitions
+      - artifacts/ — repository declarative blueprints: see overview.md#Governance-line
+      - artifacts/wireframe/ — offline golden test fixtures and edgeless canvas assets; excluded from runtime binary: see wireframe-structure.md
+      - lockfile compiler target — capcli.lock compiled SSOT: see world.md#Validation-gates
+      - static template immutability — uneditable at runtime: see overview.md#Governance-line
+    - Schema specifications
+      - schema.yaml — domain models, columns, constraints, and views: see world.md#Dual-schema
+      - system-schema.yaml — kernel-managed system surfaces: see world.md#Dual-schema
+      - world.sql — deterministic DDL export for fresh instances: see world.md#SQLite-as-SSOT
+    - Governance specifications
+      - governance.yaml — structural limits, LOC, and fuel caps: see artifacts/governance.yaml
+      - policy.yaml — behavioral authorizer and AST rules: see physics.md#Two-layer-enforcement
+      - sealing.rules — cross-domain boundaries and sealing laws: see cans/_rules.yaml
+  - Instance workspace substrate
+    - Static configuration files
+      - capcli.lock — root hash SSOT of compiled configs: see world.md#Validation-gates
+      - world.sql — deterministic DDL schema snapshot: see world.md#SQLite-as-SSOT
+      - schema.yaml — active workspace schema copy: see world.md#Dual-schema
+      - system-schema.yaml — read-only system schema copy: see world.md#Dual-schema
+      - policy.yaml — active runtime behavioral policy: see physics.md#Two-layer-enforcement
+      - governance.yaml — active runtime structural boundaries: see artifacts/governance.yaml
+    - Live transactional databases
+      - workspace.db — live SQLite in WAL mode (chmod 600): see world.md#SQLite-as-SSOT
+      - workspace.db-wal — write-ahead log for serializing commits: see agent.md#Coordination
+      - workspace.db-shm — shared-memory index for concurrent readers: see world.md#SQLite-as-SSOT
+    - Functional data directories
+      - audit/ — append-only historical JSONL export files: see effect.md#Audit-spine
+        - audit/audit.YYYY-MM-DD.jsonl — daily audit mirror holding hashed rows
+        - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
+        - audit/witness.log — remote KMS witness attestation logs: see recovery.md#Hash-chains
+      - routines/ — agent-authored procedural guest scripts (.ts, .js, .py): see action.md#Routines
+        - routines/overview.ts — dense system situational health routine
+        - routines/order_refund.ts — sandboxed multi-step refund script
+        - routines/inventory_sync.py — legacy or data-heavy Python script
+      - apis/ — imported OpenAPI catalogs and simulation mocks: see action.md#External-APIs
+        - apis/stripe.yaml — compiled OpenAPI provider verbs: see action.md#Catalog-synchronization
+        - apis/stripe.sim.yaml — simulation base URL overlays: see space.md#Policy-overlays
+        - apis/stripe.mock.yaml — offline canned simulation fixtures: see space.md#Sim-mode-taxonomy
+      - envs/ — isolated git worktrees and partition roots: see space.md#Environment-axis
+        - envs/dev/ — local development world with isolated DB: see space.md#World-definitions
+        - envs/sim/ — simulation replay world with masked see space.md#World-definitions
+        - envs/prod/ — live production world for pinned trust: see space.md#World-definitions
+  - Rust workspace packages layout
+    - Shared contracts crate
+      - crate identity — crates/capcli-types (@capcli/types)
+      - configuration — Cargo.toml with serde, valibot-free zero runtime bloat
+      - models module (crates/capcli-types/src/)
+        - exit.rs — strict integer exit codes (0, 2, 3, 4, 5, 6): see physics.md#Exit-code-law
+        - error.rs — typed ErrorDomain enum (Routine, DbEngine, Policy, ApiUpstream, Kernel) and diagnostic envelope
+        - capability.rs — Universal Resource Pointer models: see action.md#Global-pointer-registry
+        - audit.rs — causal event anatomy and hash chain links: see effect.md#Event-anatomy
+        - template.rs — template manifest, compatibility headers, and bundle models: see world.md#World-templates
+        - schema.rs — shorthand AST definitions and table models: see world.md#Shorthand-expansion
+        - governance.rs — routine shape and budget limits: see artifacts/governance.yaml
+        - rpc.rs — streaming JSON-RPC 2.0 lines models: see #Python-runtime-harness-package
+    - Core domain engine crate
+      - crate identity — crates/capcli-core
+      - configuration — Cargo.toml linking rusqlite bundled, petgraph, sha2, aes-gcm
+      - engine module (crates/capcli-core/src/)
+        - db/ — rusqlite WAL pool and authorizer callbacks: see world.md#SQLite-as-SSOT
+        - parse/ — VDBE explain bytecode and query validation: see physics.md#Layer-1.5:-prepare-time-cross-check
+        - compile/ — YAML AST compilation and petgraph acyclic check: see world.md#Gate-2:-Semantics
+        - budget/ — budget frame push/pop and min() cascade: see budget.md#Cascade
+        - audit/ — sha256 hash chains and JSONL mirror writer: see effect.md#Storage-hierarchy
+        - vault/ — zeroize-protected in-memory secret decryption: see agent.md#Secrets
+    - CLI executable crate
+      - crate identity — crates/capcli-cli
+      - configuration — Cargo.toml linking clap derive, tokio, capcli-core, capcli-types
+      - command surface (crates/capcli-cli/src/)
+        - main.rs — entrypoint routing subcommands and exit codes: see interface.md#CLI-surface
+        - commands/ — clap subcommand handlers for ten nouns: see interface.md#CLI-surface
+        - terminal/ — procedural renderers for the 3 visual archetypes (Diagnostic, Tree, Receipt) over CliEnvelope<T>: see physics.md#Diagnostic-output-law
+    - Persistent daemon crate
+      - crate identity — crates/capcli-daemon
+      - configuration — Cargo.toml linking axum, tower, croner, rust-embed, capcli-core, capcli-types
+      - daemon surface (crates/capcli-daemon/src/)
+        - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#Administrative-cockpit-pwa
+        - yield_queue.rs — evaluates _suspended_tasks and re-dispatches tasks on quota refill
+        - earmark_sweeper.rs — periodic daemon worker dissolving expired earmarks back to available quota
+        - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
+        - cron.rs — croner schedule evaluator daemon: see time.md#Schedule-&-maintenance
+        - webhook.rs — inbound HMAC signature verification: see action.md#Bindings
+        - assets.rs — rust-embed static bundle serving administrative cockpit: see interface.md#Administrative-cockpit-pwa
+  - TypeScript runtime harness package
+    - Package identity and layout
+      - package root — packages/ts (published locally as @capcli/sdk)
+      - package.json — zero runtime dependencies, exports routine, Param, ctx
+    - TypeScript SDK modules (packages/ts/src/)
+      - routine.ts — routine() wrapper emitting JSON-RPC manifest over IPC
+      - param.ts — Param<T> type definitions for runtime validation
+      - ctx.ts — ctx.db, ctx.api, ctx.storage, ctx.quota wrappers
+      - ipc.ts — streaming JSON-RPC client over /run/capcli/kernel.sock
+  - Python runtime harness package
+    - Package identity and layout
+      - package root — packages/py (published locally as capcli-py): see action.md#Routines
+      - pyproject.toml — zero-dependency Python packaging standard targeting >= 3.11
+      - setup.py — minimal wheel distribution setup exposing capcli package
+      - capcli/__init__.py — exports @routine, Param, ctx: see action.md#Sandbox-execution
+    - Python SDK modules (packages/py/capcli/)
+      - routine.py — @routine decorator storing manifests: see action.md#Anatomy-and-decorator
+      - param.py — Param[T] generic typing for input schemas: see action.md#Anatomy-and-decorator
+      - context_db.py — ctx.db query, execute, txn, and lock wrappers: see action.md#The-ctx-contract
+      - context_api.py — ctx.api call, verify, and poll_until IPC bridge: see action.md#The-ctx-contract
+      - context_quota.py — ctx.quota inspect, earmark, and release SDK wrappers
+      - context_storage.py — ctx.storage put, get, and url wrappers: see action.md#The-ctx-contract
+      - context_ping.py — ctx.ping notify and ask suspension handlers: see action.md#The-ctx-contract
+      - ipc_client.py — streaming JSON-RPC over /run/capcli/kernel.sock: see action.md#Sandbox-execution
+  - Core domain subsystems (crates/capcli-core/src/)
+    - Domain 1: Database & storage engine (db/)
+      - Subsystem modules
+        - connection.rs — rusqlite connection pool in WAL mode: see world.md#SQLite-as-SSOT
+        - authorizer.rs — sqlite3_set_authorizer C callback: see physics.md#Layer-1:-sqlite3_set_authorizer
+        - bytecode.rs — EXPLAIN opcode parser checking OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
+        - snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
+        - claims.rs — distributed lease locks via _claims: see agent.md#Coordination
+      - Execution gates
+        - authorizer_gate.rs — table and column write allowlists: see physics.md#Layer-1:-sqlite3_set_authorizer
+        - write_gate.rs — mandates WHERE clause and LIMIT: see physics.md#Raw-SQL-rules
+        - isolation_gate.rs — denies ctx.api.call inside txn: see physics.md#Layer-2:-SQL-AST-check
+      - Domain telemetry — tracks VDBE opcode analysis counts and connection lease durations
+    - Domain 2: Routine engine & sandboxing (routine/)
+      - Subsystem modules
+        - runner.rs — multi-runtime process supervisor (bun, python3, native)
+        - jail.rs — bwrap wrapper mounting host engines and applying runtime seccomp profile
+        - shape_gate.rs — AST parser for source mode; JSON schema validator for contract mode
+        - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
+        - manifest.rs — receives declared manifests via runner IPC: see action.md#Manifests-&-fingerprints
+        - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
+        - ipc_socket.rs — cross-platform IPC (UDS on POSIX/Termux, Named Pipes on Windows): see action.md#Sandbox-execution
+      - Execution gates
+        - shape_gate.rs — checks LOC, tokens, and param limits: see artifacts/governance.yaml#routine_shape
+        - trust_gate.rs — denies draft writes in prod worktree: see trust.md#The-ladder
+        - drift_gate.rs — catches manifest and fingerprint divergence: see space.md#Manifest-drift
+      - Domain telemetry — tracks runner spin-up latencies and memory high-water marks
+    - Domain 3: Blob storage subsystem (storage/)
+      - Subsystem modules
+        - local.rs — local filesystem uploads under storage/ namespace
+        - s3.rs — AWS S3 and Cloudflare R2 object dispatcher: see artifacts/governance.yaml#storage
+        - signer.rs — mints HMAC-signed temporary access URLs: see action.md#The-ctx-contract
+        - metadata.rs — validates SHA256 and MIME headers: see artifacts/governance.yaml#storage
+      - Execution gates
+        - mime_gate.rs — denies unlisted MIME types per allowlist: see artifacts/governance.yaml#storage
+        - size_gate.rs — blocks uploads exceeding 10MB ceiling: see artifacts/governance.yaml#storage
+        - trust_gate.rs — gates blob writes by caller trust rung: see trust.md#The-ladder
+      - Domain telemetry — monitors upload throughput, presigned link counts, and storage caps
+    - Domain 4: External API gateway (api/)
+      - Subsystem modules
+        - catalog.rs — manages OpenAPI YAML specs in apis/: see action.md#Catalog-synchronization
+        - quota.rs — dual-window token bucket and rolling window accounting in _api_quota: see budget.md#Quotas
+        - earmark.rs — atomic reservation transactions and earmark balance ledger: see budget.md#Cascade
+        - header_parser.rs — extracts RFC headers and parses nested JSON usage payloads: see artifacts/policy.yaml#api
+        - egress.rs — reqwest HTTP proxy with secret injection: see agent.md#Egress-injection
+        - sim_mock.rs — serves canned fixtures from apis/*.mock.yaml: see space.md#Sim-mode-taxonomy
+        - refresh.rs — auto-rotates ephemeral bearer tokens: see artifacts/governance.yaml#api
+      - Execution gates
+        - quota_gate.rs — fails closed if bucket tokens < 1: see budget.md#Quotas
+        - fuel_gate.rs — enforces session fuel and wire payload caps: see artifacts/policy.yaml#api.fuel
+        - sim_gate.rs — denies prod-only verbs in dev and sim: see space.md#Policy-overlays
+      - Domain telemetry — tracks rate bucket token drain, wire egress bytes, fuel consumption, and retry counts
+    - Domain 5: Event & schedule bindings (bind/)
+      - Subsystem modules
+        - cron.rs — evaluates cron patterns via croner crate: see time.md#Schedule-&-maintenance
+        - webhook.rs — verifies provider HMAC signatures: see action.md#Bindings
+        - endpoint.rs — routes pinned HTTP calls via axum: see action.md#Serve-lifecycle-split
+        - keys.rs — hashes and validates partner API keys: see artifacts/governance.yaml#serve
+      - Execution gates
+        - trust_gate.rs — mandates pinned trust for endpoints: see artifacts/governance.yaml#serve
+        - signature_gate.rs — rejects unsigned webhook payloads: see artifacts/policy.yaml#watch
+        - rate_gate.rs — throttles incoming requests per minute: see artifacts/governance.yaml#watch
+      - Domain telemetry — monitors trigger lag, cron schedule drift, and webhook arrival rates
+    - Domain 6: Human interaction & inquiry (ping/)
+      - Subsystem modules
+        - notify.rs — formats alerts to configured channels: see artifacts/governance.yaml#notify
+        - ask.rs — records suspensions to _pending_asks: see artifacts/system-schema.yaml#_pending_asks
+        - timeout.rs — manages timeout timers and fail-closed: see artifacts/policy.yaml#notify
+      - Execution gates
+        - option_gate.rs — limits question choices to max 5: see artifacts/governance.yaml#notify
+        - length_gate.rs — enforces question token caps: see artifacts/governance.yaml#notify
+        - fail_closed_gate.rs — fails suspended routine on timeout: see artifacts/policy.yaml#notify
+      - Domain telemetry — tracks ask response latencies, pending queues, and expiry counts
+    - Domain 7: Governance & rule compilation (rule/)
+      - Subsystem modules
+        - loader.rs — deserializes YAML configs with serde_yml: see world.md#Validation-gates
+        - petgraph_check.rs — checks relational cycles and targets: see world.md#Gate-2:-Semantics
+        - template_bundle.rs — unpacks and validates world template bundles: see world.md#World-templates
+        - shorthand.rs — expands schema shorthands into SQLite DDL: see world.md#Shorthand-expansion
+        - lockfile.rs — verifies compiled root sha256 checksum: see world.md#Validation-gates
+      - Execution gates
+        - syntax_gate.rs — validates YAML layout (Gate 1): see world.md#Gate-1:-Syntax
+        - semantic_gate.rs — petgraph verifies graph (Gate 2): see world.md#Gate-2:-Semantics
+        - migration_gate.rs — test transaction on snapshot (Gate 5): see world.md#Gate-5:-Migration-safety
+      - Domain telemetry — tracks YAML AST compilation cycles and lockfile validation time
+    - Domain 8: Environment & worktree management (env/)
+      - Subsystem modules
+        - worktree.rs — provisions and merges git worktrees: see space.md#Environment-axis
+        - masking.rs — executes format-preserving anonymization: see space.md#Data-masking
+        - drift.rs — checks schema and data staleness vs prod: see space.md#Environment-drift
+      - Execution gates
+        - prod_protect_gate.rs — demands dual confirmation flags: see space.md#World-governance
+        - merge_gate.rs — verifies rehearsal proof before merge: see space.md#Safety-controls
+      - Domain telemetry — measures worktree creation overhead and anonymization durations
+    - Domain 9: System, audit & diagnostics (sys/)
+      - Subsystem modules
+        - audit.rs — append-only transactional writes to _audit: see effect.md#Storage-hierarchy
+        - mirror.rs — streams rows to daily JSONL export files: see effect.md#Storage-hierarchy
+        - hashchain.rs — calculates sha256 links with sha2 crate: see recovery.md#Hash-chains
+        - witness.rs — checkpoints root hash to KMS or S3 WORM: see effect.md#Event-integrity
+        - doctor.rs — probes host runtimes, tier status, and receipts: see physics.md#Platform-tier-taxonomy
+        - recover.rs — coordinates snapshot or commit rollbacks: see recovery.md#Restore-path
+      - Execution gates
+        - sink_gate.rs — denies writes if audit write fails (exit 5): see physics.md#Fail-closed-stance
+        - boot_gate.rs — aborts on missing runtimes, drift, or lock mismatch: see physics.md#Boot-refusals
+      - Domain telemetry — records sink buffer flush lag, root ledger drift, and drill status
+    - Domain 10: Capability execution & discovery (run/)
+      - Subsystem modules
+        - registry.rs — Universal Resource Pointer dispatcher: see action.md#Global-pointer-registry
+        - search.rs — cascades exact, prefix, FTS5, and fuzzy: see action.md#Search-surface
+        - preflight.rs — evaluates can_invoke_now verdict: see budget.md#Pre-flight
+      - Execution gates
+        - preflight_gate.rs — denies call if preflight fails: see budget.md#Pre-flight
+        - trust_floor_gate.rs — blocks caller lacking rung authority: see trust.md#The-ladder
+      - Domain telemetry — monitors query resolution time, cache hit ratios, and gap frequencies
+    - Domain 11: Identity & process security (identity/)
+      - Subsystem modules
+        - process.rs — verifies host OS UID against --by flag: see agent.md#Credential-binding
+        - vault.rs — zeroize-protected AES-256-GCM memory decryption: see agent.md#Secrets
+        - session.rs — binds HMAC capability token to session: see agent.md#Credential-binding
+      - Execution gates
+        - process_gate.rs — denies call if OS UID mismatches: see agent.md#Credential-binding
+        - revocation_gate.rs — aborts calls from revoked agents: see agent.md#System-agent-registry
+      - Domain telemetry — tracks vault zeroize events, active sessions, and HMAC verifications
+  - Administrative cockpit package (packages/pwa)
+    - Purpose — zero-authority administrative frontend for human oversight, vault injection, and audit inspection
+    - Build configuration
+      - package.json — React 19, Tailwind CSS 4, Vite 6, TanStack Query 5
+      - bundle target — compiled static SPA embedded into capcli-daemon via rust-embed
+    - Telemetry views (packages/pwa/src/views/)
+      - state.tsx — raw relational schema inspector, masked cell renderer, and table row counts
+      - capability.tsx — routine version inspector, static manifest diffs, and dynamic leaf fingerprints
+      - audit.tsx — live virtualized audit tail, causal DAG breadcrumbs, and denial explanation dialogs
+      - budget.tsx — session frame cascade tree, fuel gauges, wire byte meters, and live proactive token-bucket meters
+      - approvals.tsx — human promotion queue, canary veto timers, and interactive ping.ask dialogs
+      - vault.tsx — out-of-band credential injection with mobile biometric/FaceID authorization
+      - recovery.tsx — VACUUM snapshot catalog and point-in-time rollback trigger
+    - Architecture constraints
+      - zero domain awareness — no business logic, custom dashboards, or e-commerce widgets
+      - read boundary — operates exclusively over daemon JSON-RPC 2.0 and WebSocket streams
+
+
+  - Monorepo test architecture
+    - Unit test tier (crates/capcli-core/tests/unit/)
+      - test_bytecode.rs — verifies EXPLAIN OpenWrite detection: see physics.md#Layer-1.5:-prepare-time-cross-check
+      - test_authorizer.rs — validates SQLite C authorizer callbacks: see physics.md#Layer-1:-sqlite3_set_authorizer
+      - test_routine_shape.rs — enforces LOC, token, and param bounds: see artifacts/governance.yaml#routine_shape
+      - test_api_quota.rs — validates token bucket calculations: see budget.md#Quotas
+      - test_petgraph.rs — checks relational cycle rejection: see world.md#Gate-2:-Semantics
+      - test_hashchain.rs — verifies sha256 link calculations: see recovery.md#Hash-chains
+      - test_vault.rs — tests zeroize and AES-256-GCM decryption: see agent.md#Secrets
+    - Integration test tier (crates/capcli-core/tests/integration/)
+      - test_bwrap.rs — verifies bwrap network isolation and scratch wipe: see action.md#Sandbox-execution
+      - test_ipc_socket.rs — tests JSON-Lines over /run/capcli/kernel.sock: see #Python-runtime-harness-package
+      - test_storage_s3.rs — tests object uploads and HMAC presigned URLs: see action.md#The-ctx-contract
+      - test_api_proxy.rs — tests header reconciliation and secret injection: see agent.md#Egress-injection
+      - test_webhook.rs — verifies HMAC signature check gates: see artifacts/policy.yaml#watch
+      - test_ping_timeout.rs — validates fail-closed inquiry timeouts: see artifacts/policy.yaml#notify
+      - test_mirror.rs — tests transactional JSONL stream flushing: see effect.md#Storage-hierarchy
+    - End-to-end test tier (crates/capcli-cli/tests/e2e/)
+      - test_wireframe_fixtures.rs — golden-file engine asserting CLI stdout/exit codes against all screen fixtures: see wireframe-structure.md#Rust-Integration-Test-Runner
+      - test_onboarding_human.rs — validates human S0 to S10 sequence: see interface.md#Human-journey-stages
+      - test_onboarding_harness.rs — validates agent H0 to H7 sequence: see interface.md#Harness-journey-stages
+      - test_budget_cascade.rs — tests min() pool inheritance down call stack: see budget.md#Cascade
+      - test_recovery_drill.rs — tests VACUUM snapshot restore flows: see recovery.md#Restore-path
+      - test_api_lifecycle.rs — tests OpenAPI spec sync through shipping: see action.md#State-machine
+      - test_env_worktree.rs — tests dev worktree fork to prod merge: see space.md#Environment-axis
+    - Test fixtures and mock catalogs (crates/capcli-core/tests/fixtures/)
+      - schema.fixture.yaml — test schema declaring tables and checks: see world.md#Dual-schema
+      - policy.fixture.yaml — test policy declaring authorizer rules: see physics.md#Two-layer-enforcement
+      - governance.fixture.yaml — test governance limits and shape bounds: see artifacts/governance.yaml
+  - Build outputs & runtime contracts
+    - Distribution build artifacts
+      - kernel binary — single musl binary at /usr/local/bin/capcli: see physics.md#Fail-closed-stance
+      - python sdk wheel — packages/py/dist/capcli.whl for sandboxed routines: see action.md#Routines
+    - Binary composition & linkage
+      - target architecture — static compilation for x86_64 and aarch64 musl: see #Host-system-dependencies
+      - static linkage — links libc, bundled SQLite C engine, and axum: see world.md#SQLite-as-SSOT
+      - zero template bundling — wireframe screens excluded from binary; CLI renders output procedurally
+      - runtime dependencies — zero host npm, zero Bun, zero node_modules: see overview.md#Zero-trust-agent
+    - Inter-crate dependency flow
+      - types package — capcli-types imported across core, cli, and daemon: see #Shared-contracts-crate
+      - core engine — capcli-core imported exclusively by cli and daemon: see #Core-domain-engine-crate
+      - runtime boundary — Python subprocess mediated solely via kernel.sock: see action.md#Sandbox-execution

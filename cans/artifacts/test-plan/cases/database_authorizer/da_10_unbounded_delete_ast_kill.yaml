@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "da_10_unbounded_delete_ast_kill"
+title: "Unconditional DELETE without WHERE is killed at prepare-time with exit 2"
+domain: "database_authorizer"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+invariant:
+  law_reference: "cans/physics.md#Layer-2:-SQL-AST-check"
+  statement: "DELETE statements require WHERE and LIMIT (require_where / require_limit mandatory up to 1000); an unconditional DELETE is killed at prepare-time (pipeline Stage 3 prepare-time cross-check and authorizer callback) before any row is deleted - no dry-run mode is ever assumed."
+  blast_radius_if_breached: "A routine 'cleanup' call wipes an entire staging table mid-transaction; downstream pipelines starve, backfills re-ingest duplicated data, and the blast radius audit can no longer bound what was destroyed."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent catches the error only after the DELETE has executed (asserting on stderr text), or assumes the CLI auto-applies a dry-run mode, so the prepare-time kill ordering is never proven."
+  anti_slop_mitigation: "AS-03 requires the typed exit code plus a policy.query diagnostic; AS-02 proves the row count is byte-identical before and after; AS-01 forbids mocking the authorizer or relying on a dry-run default."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.stagingcleaner@acme.corp"
+    agent_id: "agt_da_10"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        audit_staging:
+          description: "Inbound audit event staging queue awaiting mirror flush"
+          columns:
+            id: pk
+            source: text!
+            payload: json
+    tables:
+      - name: "audit_staging"
+        row_count: 750
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"DELETE FROM audit_staging\" -m \"purge staging queue\""
+  input_params:
+    statement_class: "DELETE"
+    where_clause: null
+    limit_clause: null
+    dry_run_flag: false
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.query"
+    culprit: "DELETE FROM audit_staging - no WHERE predicate and no LIMIT clause (rule policy.query.update_delete.require_where); killed at prepare-time before VDBE write opcodes run"
+    remedy: "Scope the purge with WHERE + LIMIT <= 100 (update/delete max 100 rows), or loop bounded chunks via ctx.db.execute with one transaction and audit event per chunk."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM audit_staging == 750 before and after the failed command (strict equality on envs/dev/workspace.db via an independent connection); no --dry-run flag is passed, proving the engine itself - not a CLI default - performs the kill."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.query', culprit cites require_where at prepare-time, remedy present."
+  - rule: "AS-01"
+    verification: "Static lint: no mock on crates/capcli-core/src/db/authorizer.rs; the denial must come from the real prepare pipeline (AST scan + authorizer callback), not from post-hoc error catching."

@@ -1,0 +1,12 @@
+[dev:tier_1]  ✓  populated
+
+  database:       envs/dev/workspace.db
+  format:         world.sql (deterministic DDL + seed)
+  tables:         6
+  views:          3
+  seed_rows:      6
+  bytes:          18432
+  sha256:         sha256:1c8b0e3d5a7f294c6e0b8d2a4f6c1e3b5d7a9f0c
+
+  state_modified: false
+  note:           deterministic; identical world yields identical bytes

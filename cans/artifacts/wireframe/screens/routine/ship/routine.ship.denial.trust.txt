@@ -1,0 +1,14 @@
+[dev:tier_2]  ✗  exit 2
+
+  FAIL  policy.trust.tier2_refusal
+        routine: order_sync@2 (current rung: reviewed)
+        target:  pinned
+        host:    tier_2 (degraded isolation; broker-mediated sandbox)
+
+        Pinned promotion denied on Tier 2; the platform ceiling caps this host at reviewed.
+
+  audit_op: op_ship_03
+  state_modified: false
+  layer: trust
+  measured: platform ceiling reviewed (requested: pinned on tier_2 host)
+  remedy: run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)

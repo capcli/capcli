@@ -1,0 +1,12 @@
+[dev:tier_1]  ✓  popped
+
+  channel:    email
+  popped:     3 events
+  remaining:  0 queued on channel
+
+  events:
+  ├── evt_ord_901  2m ago  order: 60x BEANS-LIGHT-1KG (bluebottle@cafe.com)
+  ├── evt_ord_902  5m ago  order: 12x ESPRESSO-DARK-250G (heretical@roasters.io)
+  └── evt_ord_903  9m ago  refund request: charge ch_1N2x (ORD-1042)
+
+  note:  queue advanced; events delivered to caller exactly once

@@ -1,0 +1,11 @@
+[dev:tier_1]  ✓  0 matches for 'kombucha supplier sync'
+
+  exact: 0 · prefix: 0 · fuzzy: 0 · semantic: below 0.60 floor
+
+  did_you_mean:
+    'supplier':     cap://process_wholesale_order@2 (routine, pinned)
+    'sync':         api sync for providers: stripe, fedex
+    'schedule':     bind cron bindings (3 active)
+
+  gap_signal:  1 of 3 zero-hit searches toward gap_threshold
+  audit_op:    op_9f2s

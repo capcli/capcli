@@ -1,0 +1,17 @@
+[sim:tier_1]  ✓  passed
+
+  routine:      sync_orders@1
+  fingerprint:  sha256:9e1b7c04... (dynamic leaf sequence from _audit mirror)
+  manifest:     sha256:4d2f8a11... (declared call sequence via @routine over kernel.sock)
+  match:        5 executed / 5 declared (subset; 0 undeclared leaves)
+
+  checks:
+    sandbox_rules:       pass (subprocess, os, raw socket trapped by jail)
+    param_typing:        pass (order_id: string, carrier: string)
+    policy_reachability: pass (orders read/write; logistics.shipments.create egress)
+    shape_limits:        pass (74 LOC, 1180 tokens, 2 params)
+    invariant_suite:     pass (boundary + idempotency assertions)
+
+  state_modified: false
+  note:           verification only; no sim world state committed
+  audit:          op_prove_01

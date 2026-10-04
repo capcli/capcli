@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_02_sink_failure_kernel_panic"
+title: "Audit sink commit failure (disk full) refuses the business write and halts the kernel with exit 5"
+domain: "audit_dag"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#audit-sink-error--unaudited-writes-denied-outright-(exit-5)"
+  statement: "When the _audit sink cannot commit (local disk full / read-only filesystem), unaudited writes are denied outright: the kernel queues the failed audit write in its in-memory failure buffer for 5 minutes (effect.md#Event-integrity failure buffer) and, still undrainable, triggers the emergency halt with exit 5 (domain kernel.panic) — the business mutation never executes."
+  blast_radius_if_breached: "Mutations silently land with no audit record (ghost actions): denials and writes become unprovable, replay and forensics diverge from physical state, offsite WORM attestation no longer matches the local ledger, and compliance evidence is permanently incomplete while operators believe the ledger is whole."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent mocks the audit sink to return success (or catches the sink error and lets the business transaction continue), asserting exit 0 with rows inserted and calling the fail-closed path 'covered' by a logged warning string."
+  anti_slop_mitigation: "AS-01 bans mocking the audit sink — the ENOSPC failure is physically induced on a 1 KiB tmpfs quota; AS-02 proves zero rows mutated in orders and _audit; AS-03 pins exit 5 exactly with a kernel.panic diagnostic; AS-04 steps the 5-minute failure-buffer window on the synthetic clock."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_ad_02"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 2
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"INSERT INTO orders (id, status) VALUES (99, 'new')\" -m \"overflow disk test\""
+  input_params:
+    disk_exhaustion: "envs/dev/ mounted on a 1 KiB tmpfs quota — real ENOSPC (errno 28) on the _audit append, not a mocked sink error"
+    failure_buffer: "5-minute in-memory write queue before fail (effect.md#Event-integrity)"
+    mock_clock: "MockClock stepped t0 -> t0+300s to drain the failure buffer deterministically"
+
+expected_observations:
+  exit_code: 5
+  state_modified: false
+  diagnostic:
+    domain: "kernel.panic"
+    culprit: "audit sink commit failure: SQLITE_FULL / ENOSPC (errno 28) appending the db.exec event to _audit in envs/dev/workspace.db; failure buffer undrainable after the 5m window"
+    remedy: "free disk space or remount the workspace read-write, then re-run the write; break-glass CAPCLI_RECOVERY=1 loads schema and audit sink only for inspection"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "none — audit sink unavailable; the denied write cannot be chained (write priority: unaudited writes denied outright)"
+    chain_valid: true # pre-existing chain untouched, no new rows appended
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "ENOSPC is physically induced via a 1 KiB tmpfs quota holding envs/dev/workspace.db — the audit sink, the SQLite commit path, and the failure buffer are all real; no mocked sink error, no swallowed io::Error, no catch-and-continue."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 2 and SELECT count(*) FROM _audit == 4 before and after the failed command — business row id=99 never lands and no partial audit row is written (state rollback law)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 5 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'kernel.panic', culprit names SQLITE_FULL/ENOSPC and the sink, remedy present; asserting .is_err() or matching a generic panic string is a linter failure."
+  - rule: "AS-04"
+    verification: "The 5-minute failure-buffer window is stepped with MockClock epoch ticks injected via the engine API; no tokio::time::sleep, no SystemTime::now, no real wall-clock wait anywhere in the test path."

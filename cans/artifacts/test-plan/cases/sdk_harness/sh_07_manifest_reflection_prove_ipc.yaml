@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_07_manifest_reflection_prove_ipc"
+title: "@routine decorator reflects the declared manifest over kernel.sock during prove"
+domain: "sdk_harness"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Declared-manifest-(static)"
+  statement: "The declared manifest is extracted by the @routine decorator reflecting over kernel.sock during prove (action.md#Declared-manifest-(static) Extraction node): the decorator introspects the function AST and parameters and streams the manifest — call sequence (provider.verb, db targets with access mode), txn wrappers, estimated cost class, sim modes — as JSON-Lines IPC to the kernel, which pins it as manifest_hash (sha256) alongside code_hash. Manifests are never produced by regex-parsing raw source text (action.md#Routine-templates string templating ban)."
+  blast_radius_if_breached: "A regex-derived manifest drifts from what the code actually declares: cost estimation, sim routing, and subset validation (executed <= declared) all gate on the wrong contract, so undeclared network/db effects pass as 'declared' — the fingerprint anomaly detector (governance.anomaly) is blinded at the source."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent hand-writes the expected manifest as a string fixture and compares the fixture to itself (tautology), or parses routines/refund.py source with regex in the test to derive the expected manifest — the exact banned pattern; or stubs kernel.sock with a loopback echo that returns whatever was sent."
+  anti_slop_mitigation: "AS-01 bans mocking the IPC transport: the prove must stream over the real platform socket; AS-06 pins manifest fields as immutable literals (declared ops: 2x http + 1x db write) rather than deriving them from source text; AS-05 verifies the stored manifest_hash equals the SHA-256 of the streamed declaration."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.dev@example.com"
+    agent_id: "agt_sh_07"
+    trust: "draft" # prove runs at draft trust regardless of declaration (time.md#prove-stage trust execution)
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+    tables:
+      - name: "orders"
+        row_count: 1
+      - name: "routine_stats"
+        row_count: 0 # refund@1 not yet proven — prove performs registration
+      - name: "_audit"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli routine prove refund -p order_id=8842 --env sim' # decorator reflection streams manifest over kernel.sock
+  input_params:
+    routine: "refund" # routines/refund.py: @routine(name="refund", trust="pinned", limits={"max_ops": 8}), order_id: Param[int]
+    prove_env: "sim"
+    param: "order_id=8842"
+    ipc_transport: "JSON-Lines over $XDG_RUNTIME_DIR/capcli/kernel.sock (action.md#Jail-defenses IPC transport)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "sdk.harness"
+    culprit: "none (nominal) — manifest reflected over kernel.sock; manifest_hash and code_hash pinned with the version"
+    remedy: "no action; subsequent runs gate runtime fingerprint comparison against this declaration (action.md#Manifests-&-fingerprints)"
+  database:
+    row_count_delta: 2 # prove registration event + sim-run terminal event; routine_stats upsert in place (+0 rows)
+    tables_mutated: ["_audit", "routine_stats"]
+  wire:
+    packets_transmitted: 0 # sim environment: api leaf served from fixture, no physical egress (space.md sim taxonomy)
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run" # NOTE: prove-stage registration event name not located in cans/effect.md payload list; routine.run covers the sim execution during prove
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mocking of the IPC transport: the manifest must physically stream as JSON-Lines over the real kernel.sock platform socket; stubbing the socket, or bypassing the decorator with a hand-loaded manifest blob, fails the test."
+  - rule: "AS-06"
+    verification: "Assert the reflected manifest against immutable literals hardcoded in the test spec: call sequence contains provider.verb 'stripe.refunds.create' and db target 'orders' with write access, estimated cost class '2x http, 1x write', sim modes declared per verb — never derived by regex-scanning routines/refund.py (banned pattern)."
+  - rule: "AS-05"
+    verification: "Verify the pinned hashes: manifest_hash equals SHA-256 of the canonical declared manifest JSON and code_hash equals SHA-256 of the routine file as registered; confirm via capcli inspect cap://refund (single JSON payload with manifest definition, cost envelope, budget state, action.md#Capability-record)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 with a parsed CliEnvelope; the prove receipt reports the reflected manifest fields and the pinned version — a prove that 'succeeds' while the envelope lacks manifest_hash is a failure."

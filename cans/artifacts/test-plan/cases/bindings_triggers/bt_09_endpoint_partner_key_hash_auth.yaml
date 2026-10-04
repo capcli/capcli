@@ -1,0 +1,74 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_09_endpoint_partner_key_hash_auth"
+title: "Bound endpoint rejects an invalid Bearer partner key with HTTP 401 against hashed key store"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Key-management" # bind keys issue <name> --principal partner:<id>; hashed storage note below
+  statement: "Requests to a bound endpoint must present Authorization: Bearer <key> that validates against the hashed partner key records issued via bind keys issue (90-day rotation, artifacts/governance.yaml#serve key_rotation_days: 90); an invalid key is rejected with HTTP 401 at the serve boundary before the pinned routine executes (auth_required: anonymous = nonexistent, artifacts/policy.yaml#serve), and partner keys are never stored in plaintext. # NOTE: not located in cans/ specs — hashed partner-key storage grounded in catalog row + agent.md#Vault-storage (SHA-256 fingerprint / ciphertext-at-rest pattern)"
+  blast_radius_if_breached: "Key material readable in plaintext from workspace.db leaks in every backup/git mirror of the database; forged bearer keys execute the pinned routine under the serve.request audit trail, mutating production world state while appearing as a legitimate partner."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent stubs the key validator to accept any string (or tests with the raw key echoed from the fixture), skips the hash comparison entirely; or asserts 401 on a typo'd URL (routing 404 masquerading as auth denial); or writes the real key into the test log."
+  anti_slop_mitigation: "AS-01 bans mocking the credential validation boundary; the test runs a companion positive control with the correctly issued key (proving real hash comparison) plus the invalid-key case; AS-02 proves the pinned routine never executed; AS-03 pins the exact 401 + serve.request status pair."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "partner:logistics_co" # claimed principal of the requester presenting a forged key
+    agent_id: "capcli-serve" # kernel principal owning synchronous endpoint requests
+    trust: "pinned" # the bound routine order_status@12 must be pinned (artifacts/governance.yaml#serve min_trust)
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # order_status@12: pinned routine bound via: bind endpoint order_status@12 --auth api-key --rate 60
+      - name: "_audit"
+        row_count: 3 # bind.create + bind.keys issue + prior serve.request success
+      - name: "secrets"
+        row_count: 0 # partner endpoint keys live as hashed digests, not vault secrets
+    vault_secrets: [] # partner key issued via bind keys issue order_status --principal partner:logistics_co (hash digest stored, 90d rotation)
+
+execution:
+  trigger: "inbound_http"
+  command: 'curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:4040/endpoints/order_status -H "Authorization: Bearer pk_forge_deadbeefdeadbeefdeadbeefdeadbeef" -H "Content-Type: application/json" --data @query.json'
+  input_params:
+    http_method: "POST"
+    path: "/endpoints/order_status"
+    authorization_header: "Bearer pk_forge_deadbeefdeadbeefdeadbeefdeadbeef" # never issued; forged
+    issued_key_principal: "partner:logistics_co" # the real key was issued to this principal
+    endpoint: "order_status@12"
+    routine_trust: "pinned"
+    key_rotation_days: 90
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "bind.endpoint"
+    culprit: "Bearer key does not validate against any hashed partner key record for endpoint order_status (auth_required: anonymous = nonexistent); HTTP 401 returned at the serve boundary"
+    remedy: "present the key issued via capcli bind keys issue order_status --principal partner:<id>; expired keys must be re-issued by a human (90-day rotation, artifacts/governance.yaml#serve)"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # rejected at auth gate: the pinned routine never executes, no egress
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "serve.request" # endpoint, channel: rest, trace_id, routine@version, api_key_id, status: 401 (effect.md#Kernel-event-payloads)
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Never mock the credential validator: run the real hash comparison against the stored digest. Include a companion positive control in the same run — the correctly issued key for partner:logistics_co must dispatch and return 200 — proving the comparator executed rather than being stubbed."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM routine_stats and any world table row counts before and after the forged POST; assert strict equality with the pre-request snapshot — zero dispatches (the pinned routine never ran); the only _audit delta is the serve.request denial row with status 401."
+  - rule: "AS-03"
+    verification: "Assert the ingress response is exactly HTTP 401 with the serve.request envelope parsed from _audit (api_key_id: null / rejected, status: 401); when surfaced through the CLI envelope, exit_code == 2 with diagnostic.domain == 'bind.endpoint' and culprit naming the failed key validation."
+  - rule: "AS-06"
+    verification: "Verify at-rest hygiene with immutable expectations: the stored partner key record contains only a hash digest (no plaintext, no reversible encoding) — inspect the storage substrate directly and assert the raw key string does not appear; expected outcome hardcoded, never derived from the auth function under test."

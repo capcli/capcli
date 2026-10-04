@@ -1,0 +1,13 @@
+[dev:tier_1]  ✗  exit 2
+
+FAIL  kernel.sandbox.escape_attempt
+      command: python3 etl.py
+      violation: bwrap pivot_root remount from inside the jail
+      violation: ptrace (syscall 101) outside profile_python allowlist
+
+      Attempted unconfined escape; jail torn down mid-execution.
+
+state_modified: false
+layer:          sandbox
+measured:       2 containment violations (tolerated: 0)
+remedy:         strip escape attempts from the command; raw host access is never granted inside the jail

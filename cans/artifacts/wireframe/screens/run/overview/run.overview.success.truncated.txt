@@ -1,0 +1,18 @@
+[dev:tier_1]  ✓  overview (500 tokens, clipped)
+
+  domain_kpis:
+    pending_orders:   142 (11 rush)
+    shipped_today:    893
+    low_stock_alerts: 17
+    inbox_backlog:    42 events queued
+
+  blockers:
+    pending_asks:     3 (ask_8812, ask_8830, ask_8831)
+    unresolved_vault: 2 (stripe_secret_key, fedex_api_key)
+    active_locks:     4 (db://orders, db://products, db://claims, db://shipments)
+
+  ────────────────────────────────────────────────────────────────────────────
+  truncated:   true
+  token_cap:   500 (max_result_tokens)
+  next_cursor: budget_headroom
+  audit_op:    op_9f2q

@@ -1,0 +1,12 @@
+[dev:tier_1]  ✓  completed
+
+  routine:   legacy_etl@6
+  state:     active -> retired
+  reason:    "replaced by unified pipeline"
+
+  schedule:  legacy_etl_nightly auto-disabled (orphan protection)
+  callers:   none (dependency graph clear)
+
+  state_modified: true
+  audit:          op_retire_01 (routine.retire committed; provenance graph preserved)
+  note:           routine remains inspectable via cap://legacy_etl for provenance

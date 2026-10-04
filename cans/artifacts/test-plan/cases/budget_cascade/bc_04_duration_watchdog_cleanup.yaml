@@ -1,0 +1,74 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_04_duration_watchdog_cleanup"
+title: "Duration watchdog kills the runaway routine at 300s and rolls back its open transaction"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Execution-limits"
+  statement: "'Timeout — watchdog kill' (governance.yaml#routine_shape.execution.max_duration_seconds: 300; budget.md#Runtime: 'watchdog kills past 300s'): a guest routine stuck in an infinite loop is killed at the 300s boundary, its open transaction is rolled back (physics.md#Exit-code-law state rollback law), and no orphaned child processes or leaked scratch state survive the kill."
+  blast_radius_if_breached: "A runaway loop that survives the watchdog would hold a SQLite write transaction open indefinitely, block every other enterprise session on the WAL, leak zombie processes on the host, and consume unbounded CPU while appearing 'busy' to operators."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by using real wall-clock sleeps and asserting 'eventually died', which is flaky and proves nothing about the exact 300s boundary — or by never checking for orphaned child processes and zombie threads after the kill."
+  anti_slop_mitigation: "AS-04 forces the deterministic MockClock: the watchdog must trip at exactly the 300,000ms synthetic tick. AS-02 proves the transaction rolled back via direct SQL. AS-08 verifies the sandbox scratch directory is wiped and the guest PID is reaped — no zombies."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_04"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        - name: orders
+          columns:
+            id: "int~"
+            status: "text"
+    tables:
+      - name: "orders"
+        row_count: 0   # the loop writes one row inside an open txn that must never commit
+      - name: "_budget_frames"
+        row_count: 1   # active frame for watchdog_probe@1 (declared_max_duration_ms = 300000)
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://watchdog_probe@1 -p order_id=ORD-10 -m "probe watchdog kill boundary" (routine enters an infinite loop inside `with ctx.db.txn():` after one staged insert)'
+  input_params:
+    routine: "watchdog_probe@1"
+    declared_max_duration_ms: 300000
+    loop: "infinite"
+    txn_open: true
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "duration watchdog: watchdog_probe@1 exceeded max_duration_seconds 300 (governance routine_shape.execution) inside an infinite loop with an open transaction; process killed and transaction rolled back"
+    remedy: "fix the loop — use ctx.api.poll_until for waits (raw time.sleep loops are banned); the watchdog guarantees no frame runs past 300s"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted (dimension: duration_ms)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders is identical before and after (the staged insert rolled back with the killed transaction) and the WAL holds no uncommitted frames from the dead PID (physics.md#Exit-code-law: non-zero exit guarantees state_modified false)."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.budget', culprit names the 300s watchdog kill and the rolled-back transaction, remedy points at poll_until."
+  - rule: "AS-04"
+    verification: "Deterministic MockClock: step the synthetic clock and assert the kill fires at exactly the 300,000ms tick (not 299,999, not wall-clock-drifted); no tokio::time::sleep / SystemTime::now anywhere in the path."
+  - rule: "AS-08"
+    verification: "Post-kill host probes: the guest runner PID is reaped (no orphaned child processes or zombie threads remain under the kernel's process tree) and the /scratch tmpfs UUID directory for the run does not exist on the host filesystem."

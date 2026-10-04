@@ -1,0 +1,11 @@
+[dev:tier_1]  ✓  revoked
+
+  agent_id:   agt_7f3k
+  principal:  user:alice
+  status:     revoked — credentials killed
+  sessions:   1 active session terminated instantly (ses_a992f)
+  tokens:     capability token invalidated; in-flight op halted at leaf boundary
+
+  state_modified: true
+  audit_op:       op_r703
+  note:           revoked_agent: deny_all — no grace period, no further dispatch under this identity

@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_03_daemon_ttl_lease_dissolution"
+title: "Daemon sweeper tick purges the expired claim and unlocks the resource without manual unlock"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/agent.md#application-locks--business-level-leases-tracked-in-claims-table-with-daemon-TTL-cleanup"
+  statement: "Business-level leases are tracked in the claims table with daemon TTL cleanup: once a claim's TTL expires, the daemon sweeper tick purges the expired row and the resource unlocks automatically — no manual db unlock call, no manual database intervention."
+  blast_radius_if_breached: "Expired leases pile up as zombie locks: resources stay 'held' forever after holder crashes or forgotten unlocks, every multi-step op grinds to a halt waiting on dead holders, and on-call must hand-edit the claims table (the one surface agents must never touch) to unblock work."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent clears the claim manually inside the test (capcli db unlock) and then credits the daemon sweep for the unlock, or advances real wall-clock time hoping the TTL lapses — faking the automatic dissolution entirely."
+  anti_slop_mitigation: "The test path must not contain any manual unlock; AS-04 steps the sweep tick deterministically past the TTL via MockClock; AS-05 verifies the sweep event chains; AS-06 proves re-acquisition succeeds with no manual intervention."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "capcli-cron"
+    agent_id: "capcli-daemon" # daemon-owned maintenance sweep; scheduler principal owns automated time triggers
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 exists
+      - name: "claims"
+        row_count: 1 # orders:ORD-10 held by agt_cc03a (session ses_cc03a, ttl 60s acquired at t0); holder never ran db unlock
+      - name: "_audit"
+        row_count: 5 # genesis + agent A acquisition event
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "daemon claims TTL sweeper tick at t0+61s (MockClock): purge the expired claims row for orders:ORD-10 and verify the resource is re-acquirable with no manual unlock in the test path"
+  input_params:
+    resource: "orders:ORD-10"
+    expired_holder: "agt_cc03a (ttl 60s from t0; sweep at t0+61s)"
+    sweep_clock: "MockClock epoch ticks injected via engine API"
+    manual_unlock_used: false # banned from the test path
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — expired claims row purged by the sweeper tick; resource orders:ORD-10 unlocked"
+    remedy: "n/a — success; automatic dissolution verified by the assertions below"
+  database:
+    row_count_delta: -1 # claims 1 -> 0; _audit gains the chained sweep event
+    tables_mutated: ["claims", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "claims TTL sweep event — daemon maintenance; CLI verbs, bindings, and environment transitions advance the hash chain (zero ghost actions)"
+    # NOTE: not located in cans/ specs — daemon sweep event name is absent from the effect.md kernel payload list; the TTL cleanup duty comes from agent.md#application-locks
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "TTL expiry and sweep are clocked deterministically: holder acquired at t0 (ttl 60s), sweeper tick fired at t0+61s via MockClock epoch ticks injected through the engine API; no sleeps, no wall-clock waits, and no manual db unlock anywhere in the test path."
+  - rule: "AS-05"
+    verification: "The sweep chains: _audit grows by exactly 1 with prev_hash == SHA-256 of the prior row; run capcli-core::audit::verify_chain() — a silent purge that skips the ledger is a ghost action."
+  - rule: "AS-06"
+    verification: "Immutable literals: SELECT count(*) FROM claims == 0 after the sweep; then re-acquire via capcli db lock orders:ORD-10 --ttl 30 --reason \"re-acquire after sweep\" and assert exit 0 with a fresh claims row — automatic unlock proven with zero manual intervention."

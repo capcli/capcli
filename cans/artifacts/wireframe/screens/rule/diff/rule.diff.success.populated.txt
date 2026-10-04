@@ -1,0 +1,18 @@
+[dev:tier_1]  ✓  drift detected (schema vs HEAD)
+
+  base:       git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)
+  working:    schema.yaml v13 (uncompiled draft)
+  scope:      4 tables · 23 columns · 8 indexes
+
+  orders
+  ├── added
+  │     └── priority (integer default 0)
+  ├── changed
+  │     └── version 12 -> 13
+  └── removed
+        └── none
+
+  summary:    1 added · 1 changed · 0 removed
+  next:       capcli rule apply schema --dry-run
+
+  state_modified: false

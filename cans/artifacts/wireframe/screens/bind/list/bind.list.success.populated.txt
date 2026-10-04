@@ -1,0 +1,14 @@
+[dev:tier_1]  ✓  populated
+
+  bindings: 5 total (4 active, 1 paused)
+
+  ├── cron
+  │   ├── bnd_5f8a  nightly_sync    cap://sync_orders       0 3 * * *          active
+  │   └── bnd_3k2f  weekly_digest   cap://report_summary    0 6 * * 1          paused
+  ├── webhook
+  │   └── bnd_8d3k  stripe_hook     cap://sync_orders       payment_succeeded  active
+  └── endpoint
+      ├── bnd_2m7p  dispatch_order  cap://dispatch_order@4  127.0.0.1:4040     active
+      └── bnd_9x4e  partner_hook    cap://report_summary@3  127.0.0.1:4040     active
+
+  state_modified: false

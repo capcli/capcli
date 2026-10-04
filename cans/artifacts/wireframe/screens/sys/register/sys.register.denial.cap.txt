@@ -1,0 +1,9 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.registry.agent_cap
+        registration refused: agent registry at capacity
+
+  measured:  8 registered agents (cap: 8)
+  state_modified: false
+  layer: authorizer
+  remedy: revoke a dormant agent via capcli sys revoke <agent-id>, then re-register

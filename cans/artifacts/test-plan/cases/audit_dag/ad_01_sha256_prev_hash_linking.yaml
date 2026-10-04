@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_01_sha256_prev_hash_linking"
+title: "Every new _audit row binds to the prior row via SHA-256 prev_hash, proving the immutable linear ledger"
+domain: "audit_dag"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#tamper-blast-radius--broken-sha256-link-invalidates-all-subsequent-events"
+  statement: "Each new row appended to _audit computes prev_hash as the SHA-256 of the previous row's hash over its canonical fields (recovery.md#Line-linking: prev_hash: sha256:<previous_row_hash>, engine sha2::Sha256 in crates/capcli-core/src/sys/hashchain.rs), making the ledger a linear tamper-evident chain: a broken sha256 link invalidates all subsequent events."
+  blast_radius_if_breached: "A forgeable or gapped hash chain lets any actor rewrite history unnoticed: denials vanish, mutations become un-attributable, sys audit trace forensics turn fictional, and offsite WORM attestation no longer proves anything — enterprise audit and compliance evidence (SOX-class) collapses."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts only that the _audit autoincrement sequence id incremented (1, 2, 3 ...) and treats the id sequence itself as proof of an immutable ledger, never recomputing a single SHA-256 digest; or mocks hashchain.rs and asserts a mocked digest round-trips."
+  anti_slop_mitigation: "AS-05 forces recomputation of prev_hash == SHA-256(prior row) and result_hash == canonical-JSON hash of each db.exec outcome plus a full capcli-core::audit::verify_chain() pass; AS-06 pins hardcoded digest literals; AS-01 bans mocking the hash-chain boundary."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_ad_01"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Backfilled fulfillment orders"
+          columns:
+            id: int pk
+            status: text
+            total: int
+    tables:
+      - name: "orders"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4 # genesis sequence: rule.apply, sql query, sql write deny, sql write ok (effect.md#Event-integrity)
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"INSERT INTO orders (id, status, total) VALUES (1, 'new', 2500)\" -m \"backfill order 1\" && capcli sql \"INSERT INTO orders (id, status, total) VALUES (2, 'paid', 3100)\" -m \"backfill order 2\" && capcli sql \"INSERT INTO orders (id, status, total) VALUES (3, 'shipped', 2800)\" -m \"backfill order 3\""
+  input_params:
+    sequential_writes: 3
+    expected_audit_rows_after: 7 # 4 genesis + 3 db.exec events
+    verify_chain: "capcli-core::audit::verify_chain() over _audit rows 1..7"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — three chained db.exec events appended (seq 5, 6, 7)"
+    remedy: "n/a — success; ledger links verified by the assertions below"
+  database:
+    row_count_delta: 3 # orders 0 -> 3; _audit 4 -> 7
+    tables_mutated: ["orders", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-05"
+    verification: "For _audit rows 2..7: SELECT each row's prev_hash and stored fields and recompute SHA-256 with sha2::Sha256 (crates/capcli-core/src/sys/hashchain.rs) over the prior row's canonical serialization; assert stored prev_hash == sha256:<previous_row_hash> at every link, and each db.exec row's result_hash == SHA-256 of the canonical JSON outcome; then run capcli-core::audit::verify_chain() and assert it succeeds over rows 1..7."
+  - rule: "AS-06"
+    verification: "Immutable literals hardcoded in the test spec: expected orders count 3, expected _audit count 7, and the first 16 hex characters of row 7's recomputed digest — computed offline, never derived from the output under test."
+  - rule: "AS-01"
+    verification: "Real SHA-256 digests over the real envs/dev/workspace.db _audit rows; no mock of hashchain.rs, the audit sink, or the SQLite substrate; static lint bans mock traits on crates/capcli-core/src/sys/."

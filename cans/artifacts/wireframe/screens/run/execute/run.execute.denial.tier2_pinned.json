@@ -1,0 +1,54 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.execute.denial.tier2_pinned",
+  "noun": "run",
+  "verb": "execute",
+  "target": "cap://dispatch_order@4",
+  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.trust",
+    "trust": "pinned",
+    "env": "dev",
+    "tier": "tier_2",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.trust",
+    "culprit": "Pinned routine dispatch_order@4 invoked on a tier_2 host (darwin); pinned execution requires Tier 1.",
+    "remedy": "execute on a tier_1 host (Linux, WSL2), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'",
+    "layer": "trust"
+  },
+  "txt_pair": "screens/run/execute/run.execute.denial.tier2_pinned.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_2]  ✗  exit 2",
+      "  FAIL  policy.trust.tier2_pinned",
+      "        code:     E045_TIER2_PINNED_DENIED",
+      "  state_modified: false",
+      "  remedy: execute on a tier_1 host (Linux, WSL2), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.trust"
+    }
+  }
+}

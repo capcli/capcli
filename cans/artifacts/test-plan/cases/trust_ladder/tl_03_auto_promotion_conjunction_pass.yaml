@@ -1,0 +1,90 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_03_auto_promotion_conjunction_pass"
+title: "Draft routine with all five auto-promotion metrics green in sim is auto-promoted to reviewed and emits routine.auto_promoted"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/trust.md#verified-promotion-—-promotion-automated-upon-passing-synthetic-sim-replay-and-invariant-suite"
+  statement: "Promotion from draft to reviewed is automated only when the full conjunction of auto-promotion metrics passes on the synthetic sim replay: invariant_suite_passed = true, success_rate >= 0.95, manifest_subset_match = true (zero undeclared leaves), policy_denials = 0, fingerprint_drift_events = 0, with p95_duration <= 0.70 * declared_max_duration. Failure of any single metric routes the candidate to the human queue instead."
+  blast_radius_if_breached: "A routine with a failing metric (e.g. 1 policy denial or 0.94 success rate) is silently elevated to reviewed and gains bulk-operation privileges and 100-row ceilings in prod — unproven code mass-mutating live tables with no human sign-off and no sim evidence."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent seeds routine_stats with four green metrics and one quietly failing metric (success_rate 0.94) and still asserts promotion, or derives the expected rung from the engine's own promotion output instead of a hardcoded literal (catalog banned slop: promoting when 4 of 5 metrics pass and 1 fails); or uses wall-clock sleeps to accumulate replay runs."
+  anti_slop_mitigation: "AS-06 requires the expected rung 'reviewed' and the metric thresholds (0.95, 0, 0, 0.70 factor) as immutable literals plus a failing-metric negative control routed to the human queue; AS-04 forces the deterministic MockClock for replay durations; AS-05 verifies the routine.auto_promoted audit event and hash chain."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:maya"
+    agent_id: "agt_tl_03"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        routines:
+          description: "routine registry with trust rung and provenance hashes"
+          columns:
+            name: text!~
+            version: int!
+            trust: text!
+            code_hash: text!
+            manifest_hash: text!
+            created_by: text!
+            promoted_by: text
+          idx: [[name, version]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "routine_stats"
+        row_count: 1
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli routine ship payout reviewed --env sim --reason \"5/5 conjunction metrics green on synthetic replay\""
+  input_params:
+    routine: "payout@7"
+    routine_stats_seed:
+      invariant_suite_passed: true
+      success_rate: 0.97
+      manifest_subset_match: true
+      policy_denials: 0
+      fingerprint_drift_events: 0
+      p50_duration_ms: 210
+      p95_duration_ms: 412
+      declared_max_duration_ms: 900
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 1
+    tables_mutated:
+      - "routines"
+      - "routine_stats"
+      - "_audit"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.auto_promoted (5-point metric record; promoted_by CI identity recorded)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Drive replay duration accounting (p50/p95 in routine_stats) through the engine MockClock with explicit epoch ticks; assert p95_duration_ms 412 <= 0.70 * 900 with literal constants — no SystemTime::now() and no sleep loops."
+  - rule: "AS-05"
+    verification: "After the command, SELECT count(*) FROM _audit increased by exactly 1, the new row event = 'routine.auto_promoted', its prev_hash equals the SHA-256 of the prior _audit row, and capcli-core::audit::verify_chain() passes; re-read SELECT trust FROM routines WHERE name='payout' AND version=7 — literal 'reviewed'."
+  - rule: "AS-06"
+    verification: "Negative control with hardcoded expectations: flip exactly one seeded metric to failing (success_rate 0.94 < 0.95, others green) and assert the identical command routes to the human queue (no routine.auto_promoted event, routines.trust stays the literal 'draft') — proving the conjunction rule, not 4-of-5 voting."

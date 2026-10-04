@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_08_revoked_agent_token_abort"
+title: "Call using a previously issued HMAC session token is aborted after sys agent revoke"
+domain: "coordination_claims"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#revocation--sys-agent-revoke-ends-execution-instantly"
+  statement: "sys agent revoke ends execution instantly: once an agent's identity is revoked in the agents registry, any subsequent call presenting a previously issued kernel-minted HMAC session token is rejected — revoked credentials are dead at the next invocation, with no grace period until session expiration."
+  blast_radius_if_breached: "Revoked (compromised or offboarded) agents keep operating until their tokens happen to expire: a dismissed contractor's harness keeps mutating the SSOT, quota and trust attribution keeps flowing to a dead identity, and the offboarding sequence's identity-revocation stage is decorative."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent expires the session token first (testing expiry, not revocation) and credits the registry block, or asserts only that some error occurred without pinning that the agents row remains revoked and no query executed."
+  anti_slop_mitigation: "The token must be validly signed and unexpired — only the registry status kills it; AS-02 proves zero execution and the revoked registry row intact; AS-03 pins exit 2 with the revocation diagnostic; AS-06 hardcodes the token and status literals."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:wren@example.com"
+    agent_id: "agt_7f3k" # revoked agent; token below was minted before revocation
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 3
+      - name: "agents"
+        row_count: 1 # agt_7f3k, status: revoked (sys agent revoke executed by the principal earlier)
+      - name: "_audit"
+        row_count: 6 # genesis + register + workload + revoke events
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "CAPCLI_SESSION=agt_7f3k.ses_a9.hmac_7d41c2 capcli sql \"SELECT count(*) FROM orders\""
+  input_params:
+    session_token: "agt_7f3k.ses_a9.hmac_7d41c2 — kernel-minted HMAC token, validly signed, unexpired at call time"
+    registry_status: "revoked"
+    revocation_event_seq: 6 # sys agent revoke already chained in _audit
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "agents.status = revoked for agt_7f3k — sys agent revoke ends execution instantly; HMAC session token agt_7f3k.ses_a9.hmac_7d41c2 rejected at Stage 0 (cryptographic session token verification and active frame lookup)"
+    remedy: "revoked credentials are never reactivated: the principal must re-register the agent (capcli sys agent register) and the kernel must mint a fresh session token"
+  database:
+    row_count_delta: 0 # the read never executes; agents row unchanged; _audit gains exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none — revoked agent identity)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 3 (read never executed), SELECT count(*) FROM agents == 1 with status == 'revoked' before and after (registry intact); _audit delta is exactly 1 denial event — the token was unexpired, so only the revocation could block it."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.trust', culprit names agt_7f3k, status revoked, and the token, remedy mandates re-registration — never a bare .is_err()."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: token string 'agt_7f3k.ses_a9.hmac_7d41c2', expected status 'revoked', expected orders count 3; the control contrast — the same token shape from a non-revoked agent executes normally — proves revocation (not token format) is the killer."

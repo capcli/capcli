@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.depth_limit
+        capcli api rollback threads.create_media_post 2
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+        Exceeds max rollback limit of 5.
+        Current spec version 8; rollback to version 2 spans depth 6.
+
+  state_modified:  false
+  layer:           authorizer
+  measured:        rollback depth 6 (cap: 5)
+  remedy:          roll back to version 3 or later, or re-sync the exact prior spec to pin it fresh

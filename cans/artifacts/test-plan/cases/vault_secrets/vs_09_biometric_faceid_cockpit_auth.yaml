@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "vs_09_biometric_faceid_cockpit_auth"
+title: "Cockpit vault injection RPC requires a valid WebAuthn client signature (FaceID authenticator) before the secret is encrypted into the daemon vault"
+domain: "vault_secrets"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/interface.md#Layer-8:-Vault-&-Biometrics-—-out-of-band-credential-injection-screen-with-mobile-biometric/FaceID-support"
+  statement: "Out-of-band credential injection through the Cockpit (Layer 8: Vault & Biometrics) travels solely over authenticated JSON-RPC at http://127.0.0.1:4040/rpc: the vault.inject method must present a valid WebAuthn client assertion (mobile biometric/FaceID unlock) before the daemon encrypts the secret into the in-memory vault — the PWA client itself holds strictly zero authority, so an unauthenticated POST can never inject."
+  blast_radius_if_breached: "Any process on the host (or a drive-by webpage posting to the loopback RPC) injects or replaces production credentials without a human biometric: silent credential substitution redirects live payment traffic to attacker-controlled accounts with no human in the loop."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent mocks the WebAuthn verifier to always-accept, or sends the RPC without an assertion and asserts a 2xx 'accepted' because the test only checks the happy path, or skips the invalid-signature negative control entirely (catalog banned slop: allowing vault injection via unauthenticated HTTP POST)."
+  anti_slop_mitigation: "AS-01 forbids mocking the WebAuthn signature verification — a real assertion from a software authenticator must verify; AS-06 hardcodes the unauthenticated negative control (no assertion -> rejected, no vault.set event, no secrets row); AS-05 verifies the vault.set audit trail for the authenticated leg."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:iris"
+    agent_id: "capcli-serve"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "secrets"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: "POST http://127.0.0.1:4040/rpc {\"method\": \"vault.inject\", \"params\": {\"name\": \"vault://stripe_key\", \"scope\": \"prod\", \"value\": \"<payload from PWA form>\", \"webauthn_assertion\": \"<signed challenge from FaceID authenticator>\"}}"
+  input_params:
+    rpc_method: "vault.inject"
+    transport: "authenticated JSON-RPC over loopback (cockpit client holds zero authority)"
+    webauthn_assertion: "valid client assertion signed by the registered device authenticator (FaceID unlock)"
+    secret_name: "vault://stripe_key"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 1
+    tables_mutated:
+      - "secrets"
+      - "_audit"
+  wire:
+    packets_transmitted: 1
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "vault.set (secret_name: stripe_key, secret_hash_prefix, action: injected)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mocked authenticator or verifier: the daemon's WebAuthn verification runs against a real (software) authenticator's signed challenge for the registered credential — the assertion signature is actually checked, and a tampered signature byte must fail verification."
+  - rule: "AS-06"
+    verification: "Hardcoded negative control: replay the identical RPC with the webauthn_assertion field absent (or with an invalid signature) — the RPC is rejected (authentication failure), SELECT count(*) FROM secrets stays 0, and no vault.set event appears in _audit; only the biometrically-authenticated leg mints the event."
+  - rule: "AS-05"
+    verification: "Authenticated leg audit proof: _audit gained exactly 1 vault.set event with a masked value and secret_hash_prefix, prev_hash links to the prior row, capcli-core::audit::verify_chain() passes, and the injected secret lands in the daemon's encrypted in-memory vault (decrypt round-trip equals the injected payload)."

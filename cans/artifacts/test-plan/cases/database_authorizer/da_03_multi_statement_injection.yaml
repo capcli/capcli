@@ -1,0 +1,68 @@
+$schema: "test-plan/case/v1"
+case_id: "da_03_multi_statement_injection"
+title: "Multi-statement injection string (SELECT 1; DROP TABLE users) is rejected structurally"
+domain: "database_authorizer"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/physics.md#Layer-2:-SQL-AST-check"
+  statement: "Multi-statement raw query strings are denied structurally: the AST tokenizer must yield exactly one Statement node per submission (policy.yaml query.multi_statement: deny), so a semicolon-chained second statement never reaches prepare."
+  blast_radius_if_breached: "Classic '; DROP TABLE' injection wipes the users roster in the same submission as a benign SELECT; the kernel loses its identity registry and every session token becomes unvalidatable."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent splits the payload with a Rust string .split(';') and asserts the first fragment parses - token-level quoting tricks (a ';' inside a string literal) bypass the naive splitter while the real parser would reject."
+  anti_slop_mitigation: "AS-01 forces the real sqlparser tokenizer (no string splitting, no mocks); AS-03 requires the typed exit code plus parsed diagnostic; AS-02 proves users row count is unchanged."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.injectionlab@acme.corp"
+    agent_id: "agt_da_03"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        users:
+          description: "Operator identity roster with role grants"
+          columns:
+            id: pk
+            email: text!
+            role: text=member
+    tables:
+      - name: "users"
+        row_count: 200
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "SELECT 1; DROP TABLE users;"
+  input_params:
+    submitted_to: "Layer-2 SQL AST parse (sqlparser crate)"
+    expected_statement_count: 2
+    permitted_statement_count: 1
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.query"
+    culprit: "raw query string tokenizes to 2 statements ('SELECT 1' and 'DROP TABLE users'); multi-statement execution denied (policy.query.multi_statement: deny)"
+    remedy: "Submit exactly one statement per invocation; chain bounded writes through ctx.db.execute inside explicit transactions, one audit event per statement."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Statement count must come from the sqlparser parse producing 2 Statement AST nodes; static lint bans string .split(';') pre-processing and any mock on the parser or authorizer."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the CliEnvelope diagnostic: domain 'policy.query', culprit names both detected statements, remedy present."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM users == 200 before and after the denied submission; also SELECT count(*) FROM sqlite_master WHERE name = 'users' == 1 (table object still present)."

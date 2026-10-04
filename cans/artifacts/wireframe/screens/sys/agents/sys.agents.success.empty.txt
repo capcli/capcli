@@ -1,0 +1,7 @@
+[dev:tier_1]  ✓  listed
+
+  registered:  0 agents (cap: 8)
+
+  Zero registered agents. Identity registry empty.
+
+  note:  register the first harness via capcli sys register

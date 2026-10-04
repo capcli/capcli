@@ -1,0 +1,70 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_01_draft_write_to_prod_denial"
+title: "Draft-trust caller attempting a bounded mutating write in prod is denied unconditionally by the env overlay (draft_writes: deny)"
+domain: "trust_ladder"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/space.md#policy-—-draft-writes-denied-unconditionally-by-overlay"
+  statement: "The prod environment overlay denies every mutating write from a draft-trust caller unconditionally: no intent metadata, row shape, or flag can substitute for the reviewed rung required by the prod world (authority — reviewed or pinned trust required). The statement is well-formed (WHERE + LIMIT, 1 row) so the ONLY blocking factor is the draft trust floor."
+  blast_radius_if_breached: "Unproven code mutates live production data: mass order-status corruption, drift between the git prod worktree and the runtime substrate, and financial fulfillment mistakes executed with no sim proof and no promoted_by provenance — unrecoverable without snapshot restore."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent supplies -m/--intent metadata and asserts the write succeeds, treating causal intent as a substitute for the trust rung (catalog banned slop: permitting draft writes in prod when --intent is provided); or asserts only exit 2 without proving the prod table is physically untouched, or accidentally trips exit 3 (missing intent) and still calls the test a denial pass."
+  anti_slop_mitigation: "AS-03 forces the typed exit code 2 with diagnostic.domain policy.trust (distinguishing it from the exit 3 missing-intent path), and AS-02 forces a direct pre/post SELECT count(*) equality check on envs/prod/workspace.db so a silently mutated prod row can never pass."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_tl_01"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          description: "customer fulfillment orders"
+          columns:
+            id: pk
+            status: text!
+          idx: [[status]]
+    tables:
+      - name: "orders"
+        row_count: 12
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=ORD-1042 -m \"mark order shipped after carrier pickup\" --env prod"
+  input_params:
+    id: "ORD-1042"
+    intent: "mark order shipped after carrier pickup"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "draft-trust caller agt_tl_01 attempting a mutating write on orders in env prod; env overlay env.prod.draft_writes=deny is unconditional"
+    remedy: "prove the change in sim ('capcli routine prove <name> --env sim'), ship to reviewed trust, or execute exploratory writes from env dev"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none; rule env.prod.draft_writes)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Open envs/prod/workspace.db read-only before and after the command; run SELECT count(*) FROM orders and SELECT count(*) FROM orders WHERE status = 'shipped' — both strictly identical (12 and 0), proving zero rows mutated."
+  - rule: "AS-03"
+    verification: "Run with --json and parse the CliEnvelope: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit and diagnostic.remedy non-empty; stdout prefix '[prod:tier_1]'; the banned bypass flags (--force, --force-prod) appear nowhere in output and are rejected at the parser if supplied."

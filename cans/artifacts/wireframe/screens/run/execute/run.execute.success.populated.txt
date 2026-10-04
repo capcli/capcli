@@ -1,0 +1,21 @@
+[dev:tier_1]  ✓  executed
+
+  routine:         dispatch_order@4 (pinned)
+  session:         ses_a992f
+  intent:          "fulfill urgent pending orders"
+  frame:           frame_021 (3/8 ops · 358ms)
+
+  leaves:
+    1. db.query    orders (read)               12ms
+    2. api.call    logistics.shipments.create  340ms
+    3. db.execute  orders (write)              18ms
+
+  result:
+    order_id:     ORD-1042
+    carrier:      fedex
+    tracking:     794644790133
+    status:       shipped (1 row committed)
+
+  audit_op:        op_9f2c
+  result_hash:     sha256:9c41e7b0d2a8f513c6ee
+  state_modified:  true

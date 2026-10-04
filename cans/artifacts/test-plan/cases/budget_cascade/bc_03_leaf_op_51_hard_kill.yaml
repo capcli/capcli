@@ -1,0 +1,73 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_03_leaf_op_51_hard_kill"
+title: "Op 51 hard kill at the default 50-op frame ceiling with zero half-executed mutations"
+domain: "budget_cascade"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/physics.md#Exit-code-law"
+  statement: "'State rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug' combined with the default frame ceiling: a routine without a declared custom limit gets governance max_ops_per_run 50, so 'op #51 aborts (limit_exceeded)' (budget.md#Runtime) with exit 2 at the boundary — no half-executed side effects survive."
+  blast_radius_if_breached: "A half-executed 51st operation would leave partially-written business rows committed after a 'denial' — corrupted ledger state that downstream routines trust, producing silent data divergence across the enterprise with no rollback path."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by asserting exit 2 without proving the substrate: the 51st op may have already mutated rows before the process died, and a test that never re-queries the table passes while corrupted rows persist."
+  anti_slop_mitigation: "AS-02 mandates the direct before/after SELECT count(*) on the target table — zero rows may differ. AS-03 forces the typed exit 2 plus the exact budget citation format (frame, dimension, attempted_op). AS-06 pins the literals 50/51 and the citation string."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_03"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        - name: orders
+          columns:
+            id: "int~"
+            status: "text"
+            recounted: "bool"
+    tables:
+      - name: "orders"
+        row_count: 0   # fresh staging table; the recount routine's 50 legal ops find no rows to change
+      - name: "_budget_frames"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://bulk_recount@1 -p warehouse=west -m "nightly ledger recount"'
+  input_params:
+    routine: "bulk_recount@1"
+    declared_max_ops: null   # no declared custom limit -> governance default applies
+    default_max_ops_per_run: 50
+    ops_attempted: 51
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "frame ops ceiling exhausted: bulk_recount@1 (frame) hit 50/50 ops at attempted_op db.exec — op #51 aborted (limit_exceeded); no declared custom limit so the governance default max_ops_per_run: 50 applies"
+    remedy: "split the work into chunked routines or declare a higher max_ops in a new routine version — the 51st operation never executes half-way"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders before and after execution is identical (strict equality, literal 0 -> 0) and no orders row carries recounted = true — proving the 51st op committed nothing despite the process dying at the boundary."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.budget', the culprit follows the citation format 'routine (frame) exhausted ops: 50/50' with attempted_op naming the offending primitive (db.exec), and the ancestor context line cites session remaining."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: ceiling 50 (governance default), abort at op 51, citation '50/50' — the expected frame counter values are immutable literals, never read back from the frame row the engine wrote."

@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_10_claims_lease_extension_holder_only"
+title: "Non-holder's TTL extension UPDATE on the claims system table is rejected by the authorizer"
+domain: "coordination_claims"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#system-table-writes--direct-updates-to-_audit,-agents,-claims-denied"
+  statement: "Direct updates to the claims system table are denied at the C-authorizer (system table writes: _audit, agents, claims are kernel-only): lease TTL extension is holder-only and kernel-mediated — a non-owner attempting to extend a lease by UPDATE on claims is rejected with exit 2 and the TTL is unchanged."
+  blast_radius_if_breached: "Any caller stretches arbitrary resource locks: a lease holder's competitor extends the payout-batch lock to starve the real owner (or a tampered row pins a resource forever), multi-step coordination deadlocks, and the claims surface becomes a free-for-all outside kernel arbitration."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent grants the test connection write permission on claims in fixture setup (defusing the authorizer), or asserts the UPDATE failed without checking that ttl is still the literal pre-value — letting a silent partial extension pass."
+  anti_slop_mitigation: "AS-02 proves ttl and holder are identical before/after (zero extension); AS-03 pins exit 2 with the policy.authorizer diagnostic; the authorizer must be the real C callback (AS-01 boundary) — no fixture grants on claims."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.reliefof@acme.corp"
+    agent_id: "agt_cc10b" # non-holder attempting the extension
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 exists
+      - name: "claims"
+        row_count: 1 # orders:ORD-10 held by agt_cc10a (session ses_cc10a, ttl 60, unexpired)
+      - name: "_audit"
+        row_count: 5 # genesis + agent A acquisition event
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"UPDATE claims SET ttl = 120 WHERE resource = 'orders:ORD-10' LIMIT 1\" -m \"extend payout lease\""
+  input_params:
+    target_table: "claims (system table — kernel-only writes)"
+    current_holder: "agt_cc10a (ttl 60, unexpired)"
+    attempting_agent: "agt_cc10b (non-holder)"
+    expected_ttl_unchanged: 60
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "direct UPDATE on system table claims denied (system table writes: _audit, agents, claims denied at the C-authorizer); caller agt_cc10b is not the lease holder — TTL extension is holder-only"
+    remedy: "lease extension belongs to the holder: re-run from agt_cc10a via the db lock acquisition path, or request db unlock orders:ORD-10 from the holder"
+  database:
+    row_count_delta: 0 # claims untouched (ttl still 60); _audit gains exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none, rules_matched: [system table write: claims])"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT ttl, holder FROM claims WHERE resource = 'orders:ORD-10' returns ttl == 60 and holder == 'agt_cc10a' before AND after (hardcoded literals — zero extension); SELECT count(*) FROM claims == 1; no fixture may pre-grant write permission on claims."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.authorizer', culprit names the claims system-table rule and the non-holder identity, remedy names the holder-only path."
+  - rule: "AS-01"
+    verification: "The denial comes from the real sqlite3_set_authorizer C callback at prepare_v2 (system table write interception) — no mocked AuthorizerCallback, no test-connection PRAGMA or grant that bypasses the authorizer on claims."

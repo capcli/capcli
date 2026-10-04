@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_10_ask_question_token_cap_breach"
+title: "ctx.ping.ask question over the 100-token cap is rejected before suspension is created"
+domain: "bindings_triggers"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Human-IO-methods" # ctx.ping.ask(principal, question, options, timeout) — suspension; caps grounded below
+  statement: "The ask option gate enforces question_max_tokens: 100 (artifacts/governance.yaml#notify.ask): a question string of 101 tokens is rejected with a policy denial before any suspension row is created — unbounded long-form prompts in human interactive questions are structurally impossible."
+  blast_radius_if_breached: "Oversized questions flood the Cockpit ask cards and notification channels: humans face essay-length prompts at decision time, token burn spills into notify message budgets, and slow human parsing stalls suspended frames toward their fail-closed timeouts, silently denying legitimate guarded effects."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent lowers question_max_tokens in the fixture to make a short question 'breach' the cap, or tokenizes the question with a different tokenizer than the gate uses and asserts the wrong count; or checks only that an exception was raised without verifying no _pending_asks row exists."
+  anti_slop_mitigation: "AS-06 pins the immutable literal pair (101 tokens measured vs 100 cap) with the gate's own tokenizer; AS-02 proves zero suspension rows in _pending_asks; AS-03 requires exit_code == 2 with a diagnostic citing the measured token count vs the ceiling (denials cite measured value, artifacts/governance.yaml#denials)."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com" # ask target principal
+    agent_id: "agt_bt_10"
+    trust: "reviewed" # routine refund_big@2 calls ctx.ping.ask mid-execution
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_pending_asks"
+        row_count: 0 # no suspension may be created by the oversized question
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events for refund_big@2
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'ctx.ping.ask(principal="human.oncall@example.com", question=<101-token string>, options=["approve", "deny"], timeout_minutes=60)'
+  input_params:
+    routine: "refund_big@2"
+    ask_principal: "human.oncall@example.com"
+    question_tokens: 101 # constructed string measured with the gate tokenizer
+    question_max_tokens: 100 # artifacts/governance.yaml#notify.ask
+    ask_options: ["approve", "deny"]
+    timeout_minutes: 60
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "ping.ask"
+    culprit: "question string measures 101 tokens, above the ask cap question_max_tokens: 100 (artifacts/governance.yaml#notify.ask)"
+    remedy: "shrink the question to a structured, <=100-token prompt; put detail into the routine manifest or Cockpit context, not the inquiry card"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # gate rejects before any card dispatch or suspension
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny" # NOTE: ask-gate denial event name not located in cans/effect.md payload list; effect: none (effect.md#Denials), log_all per artifacts/governance.yaml#denials
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _pending_asks before and after the oversized ctx.ping.ask; assert strict equality (0 == 0) — no suspension row, no timeout_at set; the only _audit delta is the single effect: none denial row."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope: diagnostic.culprit cites the measured 101 tokens against the 100-token cap, diagnostic.remedy names the shrink path; envelope.state_modified == false."
+  - rule: "AS-06"
+    verification: "The boundary pair (101 measured, 100 cap) is hardcoded in the test spec and measured with the same tokenizer the gate uses; include a 100-token exactly-at-cap companion proving the gate fires only past the boundary — never recompute the verdict from the ask function under test."

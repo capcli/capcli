@@ -1,0 +1,63 @@
+$schema: "test-plan/case/v1"
+case_id: "we_11_dormant_verb_egress_denial"
+title: "Dormant OpenAPI verb invocation is rejected by the egress proxy without auto-activation"
+domain: "wire_egress"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#State-machine"
+  statement: "'Dormant — discoverable, inspectable, uncallable' (action.md#Verb-default-state: 'Verb default state — dormant across entire imported spec'): invoking a verb that has not gone through the activation lifecycle step (capcli api activate <verb> --intent ...) is rejected with exit 2; verbs never auto-activate on invoke."
+  blast_radius_if_breached: "Silent auto-activation on first use would bypass the activation gate's provider ceilings (max 50 active verbs), the 10-per-hour activation cap, and the intent/anti-junk validation — allowing an agent to surface unlimited unproven attack surface against a provider."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by pre-activating the verb in the fixture setup (so the call succeeds and the 'denial' is never exercised), or by asserting a generic 404/unknown-verb error instead of the state-machine refusal."
+  anti_slop_mitigation: "AS-02 proves the _api_catalog row is unchanged and the verb state is still 'dormant' post-invocation — no silent state transition. AS-03 forces the typed exit 2 with the parsed diagnostic naming the dormant state. AS-06 pins the state literal and requires the activation lifecycle to be the only path to 'active'."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_catalog"
+        row_count: 1   # provider 'stripe' imported via api sync; verb stripe.invoices holds state 'dormant' (never activated)
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'kernel registry dispatch of cap://stripe.invoices via the run path while the verb state is dormant (no `capcli api activate stripe.invoices --intent ...` was ever performed)'
+  input_params:
+    verb: "stripe.invoices"
+    verb_state: "dormant"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.egress"
+    culprit: "verb stripe.invoices is dormant (discoverable, inspectable, uncallable — action.md#State-machine); the invocation is rejected because the activation lifecycle step (api activate at draft trust) was never performed"
+    remedy: "activate the verb explicitly via capcli api activate stripe.invoices --intent \"...\" (respecting provider ceilings and the hourly activation cap) or invoke an already-active verb; verbs never auto-activate on invoke"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _api_catalog returns 1 before and after (strict equality) AND the stripe.invoices row still reads state == 'dormant' — the failed invocation caused no state transition, no activation counter bump, and zero business-table mutations."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 (not exit 3 — the verb exists, it is merely uncallable) and parse the CliEnvelope diagnostic: domain == 'policy.egress', culprit names the dormant state and the missing activation step, remedy names `api activate`."
+  - rule: "AS-06"
+    verification: "Hardcoded literal: verb_state == 'dormant' before AND after the invocation; packets_transmitted == 0; the only accepted path to 'active' in assertions is the explicit activation command — deriving the expected state from the engine's own catalog read is banned."

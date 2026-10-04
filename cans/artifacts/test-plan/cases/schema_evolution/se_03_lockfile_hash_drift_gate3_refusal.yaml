@@ -1,0 +1,73 @@
+$schema: "test-plan/case/v1"
+case_id: "se_03_lockfile_hash_drift_gate3_refusal"
+title: "On-disk schema.yaml edited without updating capcli.lock refuses prod boot at Gate 3 with exit 3"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Gate-3:-Manifest-lock"
+  statement: "Gate 3 runs at boot-time startup in prod and sim: the compiled sha256 of schema, system-schema, policy, and governance must match the active capcli.lock entry exactly; an on-disk schema.yaml edit without a lock update refuses boot with exit 3 (lockfile mismatch aborts boot in prod and sim)."
+  blast_radius_if_breached: "Uncompiled schema changes execute silently in production; every policy decision, authorizer table, and audit rule runs against artifacts that were never hash-pinned, making the entire governance stack unauditable."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent permits execution in production with uncompiled schema changes - e.g. the test 'repairs' capcli.lock before the boot check, or asserts only a warning was printed instead of an actual refusal."
+  anti_slop_mitigation: "AS-03 requires the typed exit code 3 plus a boot-refusal diagnostic naming the hash mismatch; AS-02 proves prod rows are untouched by the refused boot; AS-06 verifies capcli.lock bytes are never silently rewritten by the refusal."
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.sre-oncall@acme.corp"
+    agent_id: "agt_se_03"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+            rush: text=no
+      # capcli.lock still pins the sha256 of schema.yaml v12 - v13 edit was made on disk without a lock update
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys doctor --boot-check --json"
+  input_params:
+    gate: "Gate 3: Manifest lock"
+    lockfile_entry: "sha256 of schema.yaml v12 (stale)"
+    on_disk_schema: "schema.yaml v13 (edited)"
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.boot" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; lockfile verification is a boot-time gate
+    culprit: "compiled sha256(schema.yaml v13 + system-schema + policy + governance) does not match the active capcli.lock entry (pinned at v12); lockfile mismatch aborts boot in prod"
+    remedy: "Recompile the lockfile through the governed path: run rule validate, human-inspect the DDL plan, routine ship schema_13 reviewed, then re-lock capcli.lock via the promotion pipeline - never hand-edit the lock."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny (effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) and parse the --json CliEnvelope: diagnostic names the lockfile mismatch (compiled hash vs capcli.lock entry); a warning-only output or exit 0 fails the test."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 500 on envs/prod/workspace.db before and after the refused boot check; no command execution occurred past the gate (zero mutations, zero DDL)."
+  - rule: "AS-06"
+    verification: "Byte-compare capcli.lock before and after the refusal - the kernel must report the mismatch, never silently re-compile or re-lock; recompute sha256 of the on-disk schema.yaml in the test and assert it differs from the literal lock entry parsed from capcli.lock."

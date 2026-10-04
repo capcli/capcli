@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.execute.denial.authorizer",
+  "noun": "run",
+  "verb": "execute",
+  "target": "cap://customer_migrate@2",
+  "command": "capcli run cap://customer_migrate@2 -p customer_id=1 -p new_email=alice+corrected@acme.corp -m \"email correction\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.authorizer",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.authorizer",
+    "culprit": "Prohibited column mutation: UPDATE on immutable column customers.email denied by the C authorizer.",
+    "remedy": "insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration",
+    "layer": "authorizer",
+    "measured": "1 column write denied (customers.email)"
+  },
+  "txt_pair": "screens/run/execute/run.execute.denial.authorizer.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "  FAIL  policy.authorizer.deny_columns_write",
+      "        column 'email' is immutable (imm_cols: [email])",
+      "  state_modified: false",
+      "  layer: authorizer",
+      "  remedy: insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.authorizer"
+    }
+  }
+}

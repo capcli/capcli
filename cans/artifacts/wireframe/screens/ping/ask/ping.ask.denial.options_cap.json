@@ -1,0 +1,45 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "ping.ask.denial.options_cap",
+  "noun": "ping",
+  "verb": "ask",
+  "target": "user:alice",
+  "command": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.authorizer",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.authorizer",
+    "culprit": "Exceeds 5 structured choices; cognitive load capped for one-card decisions.",
+    "remedy": "reduce to 5 or fewer structured options, or split into sequential asks",
+    "layer": "authorizer",
+    "measured": "options count 6 vs cap 5"
+  },
+  "txt_pair": "screens/ping/ask/ping.ask.denial.options_cap.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "FAIL  policy.authorizer.ask_options_cap",
+      "Exceeds 5 structured choices; cognitive load capped for one-card decisions.",
+      "state_modified:  false",
+      "layer:           authorizer",
+      "measured:        options count 6 vs cap 5"
+    ],
+    "stdout_not_contains": ["--force", "--override-budget", "--force-prod", "--verbose"],
+    "stderr_empty": true,
+    "json_keys_required": ["domain", "culprit", "remedy", "layer", "state_modified"],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.authorizer"
+    }
+  }
+}

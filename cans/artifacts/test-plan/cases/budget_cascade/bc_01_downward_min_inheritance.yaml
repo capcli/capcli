@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_01_downward_min_inheritance"
+title: "Downward min() inheritance clamps the child's declared 50 ops to the parent's 20 remaining ops"
+domain: "budget_cascade"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#min()-law"
+  statement: "'Child effective limit = min(declared need, governance ceiling, parent_remaining, session_ceiling)' — the kernel enforces the tightest constraint at every frame and 'the cage tightens, never widens' (governance.yaml#routine_shape.composition.budget_inheritance: min): a child declaring 50 ops inside a parent frame with 20 ops remaining runs with an effective ceiling of exactly 20."
+  blast_radius_if_breached: "A child honoring its own declared 50 instead of the parent's 20 would let composition escape caller budgets — a runaway subtree could execute 2.5x its granted ceiling, starving sibling routines and blowing session op ceilings enterprise-wide."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by asserting the child's *declared* max_ops (50) instead of the clamped *effective* limit, or by deriving the expected effective limit from the engine's own frame_push payload — a tautology that passes even when the clamp is missing."
+  anti_slop_mitigation: "AS-06 forces the hardcoded literal 20 (= min(50, 50, 20, 500)) as the expected effective limit, never the engine's output. AS-05 verifies the budget.frame_push audit event actually recorded inherited_remaining.ops == 20 with a valid chain link. AS-03 requires the typed exit 0 with the parsed envelope."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_01"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 1   # active parent frame (declared 50 ops, consumed 30) => parent_remaining = 20 ops
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'budget frame push via capcli-core::budget: child routine archive_chunk@1 (declared max_ops: 50) invoked from the parent frame holding 20 remaining ops'
+  input_params:
+    parent_remaining_ops: 20
+    child_declared_ops: 50
+    governance_ceiling_ops: 50   # routine_shape.execution.max_ops_per_run
+    session_ceiling_ops: 500     # routine_shape.execution.session_ops_ceiling
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "budget.cascade"
+    culprit: "none — nominal path: child effective ops clamped to min(declared 50, governance 50, parent 20, session 500) = 20; the cage tightens, never widens"
+    remedy: "none required — inherited_remaining is the parent-side min() already computed per dimension (budget.md#budget.frame_push)"
+  database:
+    row_count_delta: 1
+    tables_mutated: ["_budget_frames"]   # child frame row inserted with clamped effective limit
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.frame_push"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 0 and parse the CliEnvelope: state_modified true, audit_op references the frame push; no .is_ok() shortcut."
+  - rule: "AS-05"
+    verification: "_audit gains exactly one budget.frame_push event row; its payload records inherited_remaining.ops == 20 (the parent-side min() already computed per dimension) and declared.max_ops == 50; prev_hash equals the SHA-256 of the prior row; verify_chain() passes."
+  - rule: "AS-06"
+    verification: "Hardcoded literal: expected effective limit == 20 (min of the four literals 50/50/20/500), never read back from the engine's frame row; additionally the child frame's consumed_ops must cap at 20 — an executed 21st op (allowed because it 'declared 50') fails the test."

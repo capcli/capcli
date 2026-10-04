@@ -1,0 +1,57 @@
+$schema: "test-plan/case/v1"
+case_id: "da_04_system_table_write_denial"
+title: "Forged INSERT into the _audit system table is denied by the C authorizer (SQLITE_DENY)"
+domain: "database_authorizer"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/physics.md#Hard-denials"
+  statement: "System table writes are hard denials: direct updates to _audit, agents, claims are denied - the authorizer table compiles _audit to allow: [read] only, and the native C callback returns SQLITE_DENY for any insert/update/delete action on it at prepare time."
+  blast_radius_if_breached: "Forged audit rows poison the tamper-evident SHA-256 hash chain; forensic tracing, compliance attestation, and the tamper blast-radius guarantee all become worthless while the breach stays undetectable."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent grants the test fixture write permission on _audit in setup (or mocks the authorizer callback to SQLITE_OK), so the forged insert succeeds and the 'denial' test never exercises the real compiled policy table."
+  anti_slop_mitigation: "AS-01 bans mocks and fixture grants on system tables (policy.yaml must stay unmodified); AS-03 requires the typed exit code plus a diagnostic naming the protected table; AS-02 proves the _audit row count and hash chain are untouched."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.forensics-impostor@acme.corp"
+    agent_id: "agt_da_04"
+    trust: "draft"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_audit"
+        row_count: 42
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"INSERT INTO _audit (id, event, ts, env, stage, agent, session, principal) VALUES (999, 'db.exec', 1717000000000, 'dev', 'live', 'agt_da_04', 'ses_forge', 'forge@evil.io')\" -m \"append audit row\""
+  input_params:
+    targeted_system_table: "_audit"
+    compiled_allowlist: "read"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "INSERT targets system table _audit - compiled authorizer table grants read only (query.system_tables.deny_write list includes _audit); C-level table write denied"
+    remedy: "Audit rows are kernel-internal (unauditable writes are denied outright); emit events only through engine verbs that the hash chain links."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Static lint: test fixture must not alter artifacts/policy.yaml authorizer tables and must not mock AuthorizerCallback; the denial must fire inside the real sqlite3_prepare_v2 authorizer invocation."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _audit == 42 before and after the failed command (strict equality); SELECT count(*) FROM _audit WHERE id = 999 == 0; sha256 chain walk over existing 42 rows still passes."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.authorizer', culprit names _audit, remedy present."

@@ -1,0 +1,11 @@
+[dev:tier_1]  ⚠  agent.thrashing
+
+  agent:           agt_7f3k
+  denials_last_5m: 22
+  rule_hit:        policy.query.update_delete.require_limit
+  target:          db://orders
+  harness_status:  stuck in repetitive denial loop
+
+  state_modified:  false
+  layer:           governance
+  remedy:          harness execution throttled; escalate to human or inspect remedy payload

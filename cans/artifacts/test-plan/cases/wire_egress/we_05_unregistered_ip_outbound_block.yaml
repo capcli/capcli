@@ -1,0 +1,64 @@
+$schema: "test-plan/case/v1"
+case_id: "we_05_unregistered_ip_outbound_block"
+title: "Egress proxy blocks the outbound request to raw IP 192.168.1.50 outside the apis/ catalog allowlist"
+domain: "wire_egress"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Boundary-isolation"
+  statement: "'Egress allowlist — outbound calls restricted to apis/ catalog' (policy.yaml#api.egress: allowlist_from apis/, deny_public_ips true — no raw IP targets): an outbound HTTP request aimed at a raw IP address that is not a registered provider host is rejected by the kernel egress proxy before any connection is established."
+  blast_radius_if_breached: "Raw-IP egress would let a compromised or hallucinating routine exfiltrate data to arbitrary hosts (bypassing domain-based allowlists, DNS logs, and DLP), turning the kernel into an uncontrolled corporate data-leak channel."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by permitting the raw IP connection inside the test harness environment (e.g. adding the IP to a local allowlist or stubbing the proxy to 'just return an error') so the refusal is never produced by the real egress boundary."
+  anti_slop_mitigation: "AS-01 bans harness-level bypasses: the production egress proxy must run and zero TCP connections to 192.168.1.50 must be observed at the socket layer. AS-02 proves zero table mutations via direct SQL. AS-03 forces the typed exit 2 with the parsed diagnostic block."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_05"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_catalog"
+        row_count: 1   # provider 'stripe' imported via api sync; no raw IP hosts registered anywhere in the catalog
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'ctx.api.call("stripe.charges", params={"amount": 2000, "currency": "usd"}, intent="probe unregistered host") with the egress target host overridden to "http://192.168.1.50/v1/charges" (raw IP outside the apis/ catalog allowlist)'
+  input_params:
+    verb: "stripe.charges"
+    target_host: "192.168.1.50"
+    registered_provider_hosts: "apis/stripe.yaml only"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.egress"
+    culprit: "egress target http://192.168.1.50/v1/charges is a raw public IP outside the apis/ catalog allowlist (api.egress.allowlist_from: apis/; deny_public_ips: true — no raw IP targets)"
+    remedy: "route the call through an imported provider verb (capcli api sync <provider> <url>) so the target resolves from apis/<provider>.yaml; raw IP egress is structurally denied"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false   # kernel-side pre-dispatch refusal, not a guest seccomp trap
+  audit:
+    event_emitted: "api.call (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No harness-level permission for raw IP targets: the production egress proxy path runs and the socket layer records zero connection attempts to 192.168.1.50 (no SYN, no DNS bypass) — the denial must come from the allowlist gate, not a test stub."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _api_catalog returns 1 before and after (strict equality); SELECT count(*) FROM _api_quota and every business table is unchanged — zero side effects from the refused call."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.egress', culprit names 192.168.1.50 and the apis/ allowlist, remedy present; assert packets_transmitted == 0 at the transport capture, never a generic connection-error string match."

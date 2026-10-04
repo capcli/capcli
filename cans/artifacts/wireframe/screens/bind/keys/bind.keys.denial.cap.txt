@@ -1,0 +1,11 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.key_cap_exceeded
+        active keys: 25 of 25
+
+        Max 25 keys reached. Key issuance refused.
+
+  state_modified: false
+  layer:          authorizer
+  measured:       25 active keys (cap: 25)
+  remedy:         remove an idle endpoint binding to release its keys, or await 90d rotation

@@ -1,0 +1,103 @@
+# Anti-Slop Confusion Matrix, Tier Taxonomy & Linter Laws (machine-readable)
+# Formalizes test-plan-structure.md §2 (Test Hierarchy & Tier Taxonomy),
+# §3 (Anti-Slop Confusion Matrix), §4 (AS-01..AS-08) and §7.1 (CI gates).
+$schema: "test-plan/matrix/v1"
+structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
+
+confusion_matrix:
+  purpose: >-
+    Categorizes every test assertion relative to Physical World Reality (actual engine reality)
+    so AI-generated test slop — tautological assertions, mocked-away invariants, unverified
+    negative state side-effects, inverted error assertions — is structurally impossible to merge.
+  axes:
+    rows: "test_result (pass|fail)"
+    cols: "actual_engine_reality (invariant_upheld|invariant_breached)"
+  quadrants:
+    true_positive:
+      engine_state: "Engine successfully commits valid mutation within policy bounds."
+      test_assertion: "Test asserts exit 0, state_modified: true, row presence, and valid SHA-256 chain link."
+      classification: "Valid Success Assertion"
+      remediation: "Must verify subsequent state reads and ledger linkages."
+    false_positive:
+      engine_state: "Engine has a critical bypass, leak, or silent mutation."
+      test_assertion: "Test passes because the agent used .is_ok(), asserted on generic strings, or mocked the authorizer."
+      classification: "AI SLOP (CRITICAL RISK)"
+      remediation: "STRICTLY PROHIBITED. Caught by Anti-Slop Linter Laws."
+    false_negative:
+      engine_state: "Engine behaves correctly, but test fails due to nondeterminism."
+      test_assertion: "Test fails because it asserted on raw timestamps, unstable JSON key order, or unseeded randoms."
+      classification: "FLAKY TEST (DEBT)"
+      remediation: "STRICTLY PROHIBITED. Replace with normalized projections or virtual clocks."
+    true_negative:
+      engine_state: "Engine intercepts illegal mutation (e.g., unbounded UPDATE)."
+      test_assertion: "Test asserts exit 2/3, state_modified: false, diagnostic span, and proves zero rows mutated."
+      classification: "Valid Denial Assertion"
+      remediation: "Must execute direct database query to prove zero side effects occurred."
+
+tier_taxonomy:
+  tier_1_unit:
+    scope: "Pure isolated functions (AST parser, token-bucket math); petgraph acyclic graph checks, shorthand expansions; zero mocks, zero network, deterministic single-thread."
+    location: "crates/capcli-core/tests/unit/"
+  tier_2_integration:
+    scope: "Multi-subsystem coordination (e.g., SQLite WAL + C Authorizer); real IPC sockets (kernel.sock), real tmpfs, bwrap namespaces; HTTP mocking via wiremock, real crypto operations."
+    location: "crates/capcli-core/tests/integration/"
+  tier_3_e2e:
+    scope: "Black-box static binary invocation (capcli <noun> <verb>); process subshell boundary: exit codes (0, 2, 3, 4, 5, 6); golden wireframe CLI transcript validation."
+    location: "crates/capcli-cli/tests/e2e/"
+
+exit_code_law:
+  "0": "success with audit event recorded; upstream HTTP failures handled gracefully in envelope"
+  "2": "invariant or governance block; state untouched (state_modified: false) — domains db.engine, policy.authorizer, policy.budget, policy.trust"
+  "3": "compile-time refusal, validation failure, boot lockfile mismatch, or missing parameter"
+  "4": "domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back"
+  "5": "domain kernel.panic; audit sink unreachable or host resource failure; execution refused"
+  "6": "domain api.quota; proactive rate yield; task suspended until yield_until timestamp"
+  state_rollback_law: "non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug"
+
+anti_slop_laws:
+  AS-01:
+    name: "Banned Mocking Law"
+    rule: "Tests verifying security boundaries (sqlite3_set_authorizer, AST checks, seccomp-bpf, AES-256 vault decryption, token-bucket counters) must never mock the boundary mechanism."
+    slop_vector: "Agent mocks AuthorizerCallback to return SQLITE_OK in a unit test to make an invalid query pass."
+    enforcement: "Static analysis prohibits mockall or manual mock traits on any type inside crates/capcli-core/src/db/authorizer.rs or crates/capcli-core/src/routine/jail.rs."
+  AS-02:
+    name: "Zero-Mutation Verification Law"
+    rule: "Every test asserting a non-zero exit code (exit 2, exit 3, exit 4, exit 5, exit 6) must physically query the underlying SQLite substrate following the failed command to prove state_modified == false and table row counts remain identical."
+    slop_vector: "Agent asserts output.exit_code == 2 on an unbounded UPDATE, but the authorizer failed and actually mutated 500 rows before the process died."
+    enforcement: "Test must run SELECT count(*) FROM <table> directly on workspace.db before and after execution and assert strict equality."
+  AS-03:
+    name: "Typed Exit & Diagnostic Match Law"
+    rule: "Prohibit asserting .is_err() or .is_ok() without explicitly validating the integer exit code and parsing the structured CliEnvelope<T> diagnostic block."
+    slop_vector: "Agent writes assert!(cmd.is_err()). A syntax error in test setup triggers exit 3, but the test was intended to verify an AST blast-radius denial (exit 2)."
+    enforcement: "Tests must match both exit_code == N AND verify the presence of diagnostic.domain, diagnostic.culprit, and diagnostic.remedy."
+  AS-04:
+    name: "Deterministic Clock & Space Law"
+    rule: "System wall-clock dependencies (SystemTime::now(), NTP, sleep loops) are banned from tests. Tests must step through time deterministically via a simulated synthetic clock (MockClock)."
+    slop_vector: "Agent writes tokio::time::sleep(Duration::from_millis(100)) to test token bucket refills, resulting in CI race conditions and non-deterministic failures."
+    enforcement: "Token-bucket and claim TTL tests must use explicit epoch ticks injected via the engine API."
+  AS-05:
+    name: "Causal Ledger Integrity Law"
+    rule: "Every test asserting a successful mutating write (exit 0) must verify the cryptographic link in _audit: prev_hash must equal the SHA-256 of the prior row, and result_hash must match the canonical JSON hash of the output."
+    slop_vector: "Agent checks that a row was added to orders, but the audit pipeline failed silently and wrote zero audit records."
+    enforcement: "Test asserts _audit table sequence ID increment and runs capcli-core::audit::verify_chain()."
+  AS-06:
+    name: "Tautology Prohibition Law"
+    rule: "Assertions where the expected value is derived from the function output under test are banned."
+    slop_vector: "let res = calculate_fuel(&input); assert_eq!(res, calculate_fuel(&input));"
+    enforcement: "The expected value must be an immutable literal hardcoded in the test specification."
+  AS-07:
+    name: "Platform Tier Boundary Law"
+    rule: "Tests for pinned trust must explicitly run in two configurations: Tier 1 (must pass) and Tier 2 (must fail with E045_TIER2_PINNED_DENIED)."
+    slop_vector: "Agent runs pinned test on a macOS dev machine; the engine permits it because an unconfined flag was leaked, masking a Tier 2 security violation."
+    enforcement: "Mock platform probe to inject PlatformTier::Tier2 and assert immediate hard denial."
+  AS-08:
+    name: "Sandbox Scratch Wipe Law"
+    rule: "Tests executing sandboxed routines (sys exec --sandbox or run) must assert that the /scratch tmpfs directory is physically wiped clean after execution."
+    slop_vector: "Guest routine leaves leaked files or residual state on the host filesystem undetected."
+    enforcement: "Integration harness asserts that the scratch directory UUID does not exist post-execution."
+
+ci_gates:
+  - "CI pipeline runs a dedicated AST test-linter (cargo check-tests) validating all Rust tests against this test plan before cargo test."
+  - "Every test must be annotated with #[test_case(\"case_id\")] referencing an active case in cases/."
+  - "Tests tagged with quadrant: true_negative must contain an AST path executing an independent state-verification query."
+  - "Tests violating any Anti-Slop Linter Law (AS-01 to AS-08) fail CI immediately with a compile error."

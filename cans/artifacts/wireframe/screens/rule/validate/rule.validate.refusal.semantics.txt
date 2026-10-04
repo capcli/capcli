@@ -1,0 +1,15 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  compile.gate_2_circular_ref
+        --> schema.yaml:47:41
+
+        orders:
+          columns:
+            first_item: int ref=order_items.id
+                            ^^^^^^^^^^^^^^^^^^ cyclic_edge
+
+        Dependency cycle detected: orders -> order_items -> orders.
+        Topological table compile order cannot be established.
+
+  state_modified: false
+  remedy: break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate

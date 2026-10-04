@@ -1,0 +1,42 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.overview.success.truncated",
+  "noun": "run",
+  "verb": "overview",
+  "target": "cap://overview@1",
+  "command": "capcli run overview",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "truncated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/run/overview/run.overview.success.truncated.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  overview (500 tokens, clipped)",
+      "    active_locks:     4 (db://orders, db://products, db://claims, db://shipments)",
+      "  truncated:   true",
+      "  token_cap:   500 (max_result_tokens)",
+      "  next_cursor: budget_headroom"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}

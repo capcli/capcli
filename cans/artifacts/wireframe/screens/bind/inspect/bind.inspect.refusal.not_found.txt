@@ -1,0 +1,10 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  validation.binding_not_found
+        binding_id: bnd_3k2f
+        action:     inspect
+
+        Target binding ID not found in workspace.db.
+
+  state_modified: false
+  remedy:         confirm the binding ID via capcli bind list

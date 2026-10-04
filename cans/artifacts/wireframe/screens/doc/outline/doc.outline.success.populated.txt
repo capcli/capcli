@@ -1,0 +1,14 @@
+[dev:tier_1]  ✓  outline doc://refund-policy
+
+  doc://refund-policy (pinned)
+  ├── 1. Scope
+  ├── 2. Refund windows
+  │     ├── 2.1 Standard window (30 days)
+  │     └── 2.2 Extended window (120 days, supervisor approval)
+  ├── 3. Stripe integration notes
+  ├── 4. Currency handling
+  └── 5. Escalation paths
+
+  nodes:    8
+  sections: 5
+  tokens:   312 (full document)

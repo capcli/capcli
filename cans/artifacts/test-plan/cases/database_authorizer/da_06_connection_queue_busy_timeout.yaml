@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "da_06_connection_queue_busy_timeout"
+title: "Contending WAL writer queues behind busy_timeout, then fails closed with exit 2"
+domain: "database_authorizer"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#concurrency"
+  statement: "WAL mode gives concurrent non-blocking reads but writers are serialized atomic transactions via busy-timeout queue; a second write transaction that cannot acquire the write lock within busy_timeout fails cleanly with exit 2 (domain db.engine - busy timeout) and mutates nothing."
+  blast_radius_if_breached: "Uncontrolled concurrent writers deadlock the kernel or interleave partial transactions into the SSOT; every environment freezes and domain state silently diverges across replicas."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent spawns uncontrolled threads with real sleeps and races the lock; the test flakes green when the contender happens to finish first, masking the serialization invariant entirely."
+  anti_slop_mitigation: "AS-04 mandates lock-step synchronization via an injected synthetic clock (no wall-clock sleeps); AS-03 requires the typed exit code plus db.engine diagnostic; AS-02 proves the contended table is byte-identical; AS-01 bans mocked rusqlite connections."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.stockbot@acme.corp"
+    agent_id: "agt_da_06b"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        inventory:
+          description: "Physical stock tracking with immutable SKUs and non-negative bounds"
+          columns:
+            id: pk
+            sku: text!
+            stock: int=0
+    tables:
+      - name: "inventory"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"UPDATE inventory SET stock = stock - 1 WHERE id = 7 LIMIT 1\" -m \"decrement WIDGET-01 stock\""
+  input_params:
+    contending_agent: "agt_da_06a"
+    contending_transaction: "BEGIN IMMEDIATE hold on WAL write lock (no commit while victim waits)"
+    contender_outcome: "rolls back after the victim fails, so no mutation ever lands"
+    busy_timeout_ms: 5000
+    # NOTE: not located in cans/ specs - concrete busy_timeout value chosen for the harness; the busy-timeout queue behavior itself is specified in cans/world.md#concurrency
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "db.engine"
+    culprit: "SQLITE_BUSY - WAL write lock held by agt_da_06a beyond busy_timeout; serialized writers queue exhausted (domain db.engine: busy timeout)"
+    remedy: "Retry after the lock holder commits or rolls back; for explicit serialization acquire capcli db lock inventory:WIDGET-01 --ttl <duration> --reason \"...\" before the write."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "busy_timeout elapse is driven by explicit synthetic-clock ticks injected via the engine API (MockClock); tokio::time::sleep / SystemTime::now are banned; contender and victim are stepped in lock-step, never raced."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM inventory == 500 before and after; SELECT stock FROM inventory WHERE id = 7 == literal pre-seeded value (e.g. 120) before and after - the contender rolled back, so strict equality holds."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'db.engine', culprit names SQLITE_BUSY and the lock holder, remedy present."
+  - rule: "AS-01"
+    verification: "Real rusqlite connection to envs/dev/workspace.db in WAL mode; no mocked connection or authorizer; static lint bans mock traits on crates/capcli-core/src/db/."

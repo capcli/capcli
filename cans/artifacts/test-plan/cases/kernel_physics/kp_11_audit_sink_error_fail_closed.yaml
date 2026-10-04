@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_11_audit_sink_error_fail_closed"
+title: "Audit sink write failure fails closed — kernel panics with exit 5, mutation refused"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#audit-sink-error"
+  statement: "Unaudited writes are denied outright: when the audit sink cannot persist the event (disk full or read-only filesystem), the kernel immediately halts with exit 5 and the business mutation never commits — the failed event queues in the in-memory failure buffer for at most 5 minutes before the sink declares hard failure."
+  blast_radius_if_breached: "Ghost mutations: state changes land in workspace.db with zero audit records — non-replayable history, silently unenforced policy, and every compliance attestation built on the ledger becomes uncontestable in an audit."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent lets the business logic continue (or catches the sink error and returns a warning), uses a real wall-clock sleep to wait out the 5-minute failure buffer, or asserts the UPDATE succeeded while merely checking the audit table row count."
+  anti_slop_mitigation: "AS-01 requires a real environmental sink failure (read-only remount), not a mocked sink; AS-04 steps the failure-buffer window via MockClock — no real sleeping; AS-03 requires exit_code == 5 plus a parsed kernel.panic diagnostic; AS-02 proves the UPDATE committed zero rows."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "orders.ops@example.com"
+    agent_id: "agt_kp_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 1
+      engine: sqlite
+      db: workspace
+      tables:
+        orders:
+          cols:
+            id: pk
+            status: 'text=open'
+            amount: int
+          idx: [status]
+    tables:
+      - name: "orders"
+        row_count: 12
+      - name: "_audit"
+        row_count: 9
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli sql "UPDATE orders SET status = :status WHERE id = :id LIMIT 1" -p status=shipped -p id=1042 -m "mark order shipped" (the audit volume is remounted read-only before invocation)'
+  input_params:
+    sink_condition: "read-only filesystem on the audit volume (EROFS)" # NOTE: not located in cans/ specs
+    failure_buffer_window: "5m in-memory queue before the sink declares hard failure"
+    target_row: 1042
+
+expected_observations:
+  exit_code: 5
+  state_modified: false
+  diagnostic:
+    domain: "kernel.panic"
+    culprit: "audit sink write failure — the _audit commit fails on the read-only volume, so the UPDATE would be an unaudited write and is denied outright"
+    remedy: "restore audit sink writability (remount read-write or free disk space), flush the buffered audit event, then re-run the capcli sql command with the same intent; verify with capcli sys doctor --boot-check"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none) — held in the in-memory audit failure buffer, not on disk"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders before and after must be strictly equal (12 == 12); SELECT status FROM orders WHERE id = 1042 must still return open — the single targeted row provably never mutated; _audit remains at 9 rows on disk (the denial event is buffered in memory only)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 5 and parse the CliEnvelope<T>: diagnostic.domain == kernel.panic, culprit names the sink failure, remedy non-empty, state_modified == false; a warning-level envelope or exit 0 here is a critical fail-open bug."
+  - rule: "AS-04"
+    verification: "The 5-minute failure buffer is stepped deterministically: MockClock::advance injects the buffer-window ticks via the engine API (including a 301s step that tips the sink into declared hard failure) — the test contains zero real sleeps and zero SystemTime::now() reads."
+  - rule: "AS-01"
+    verification: "The sink failure must be environmental — the audit volume is genuinely remounted read-only (or filled to capacity); mocking the audit sink trait to return a fake error while the disk stays writable is rejected."

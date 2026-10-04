@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "da_01_unbounded_update_ast_kill"
+title: "Unbounded UPDATE without WHERE/LIMIT is killed at the AST gate with zero rows touched"
+domain: "database_authorizer"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+invariant:
+  law_reference: "cans/physics.md#Layer-2:-SQL-AST-check"
+  statement: "UPDATE and DELETE require WHERE and LIMIT (require_where / require_limit mandatory up to 1000); an UPDATE carrying neither is denied at AST parse and prepare-time cross-check before any VDBE write opcode executes, so zero rows are ever touched."
+  blast_radius_if_breached: "A runaway agent bulk-update rewrites all 500 order rows in a single statement; every downstream fulfillment consumer acts on corrupted status data and the audit ledger no longer describes physical reality."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts exit 2 from the CLI transcript but never verifies with SELECT count(*) that zero rows changed - the authorizer could fail open and mutate 500 rows before the process dies."
+  anti_slop_mitigation: "AS-03 forces the integer exit code plus parsed CliEnvelope diagnostic block; AS-02 forces a physical before/after SELECT count(*) FROM orders equality probe on envs/dev/workspace.db; AS-01 forbids mocking the authorizer or AST scanner."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.bulkops@acme.corp"
+    agent_id: "agt_da_01"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"UPDATE orders SET status = 'shipped'\" -m \"bulk mark shipped\""
+  input_params:
+    statement_class: "UPDATE"
+    where_clause: null
+    limit_clause: null
+    intent: "bulk mark shipped"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.query"
+    culprit: "UPDATE orders SET status = 'shipped' - no WHERE predicate and no LIMIT clause (rule policy.query.update_delete.require_where / require_limit)"
+    remedy: "Add a WHERE predicate and LIMIT <= 100 (policy.yaml query.update_delete.max_rows_affected: 100) or loop bounded chunks via ctx.db.execute, each chunk its own transaction and audit event."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Run SELECT count(*) FROM orders directly on envs/dev/workspace.db before and after the failed command; assert strict equality 500 == 500, plus SELECT count(*) FROM orders WHERE status = 'shipped' == 0."
+  - rule: "AS-03"
+    verification: "Assert process exit code == 2 as an integer, then parse the --json CliEnvelope: diagnostic.domain == 'policy.query', diagnostic.culprit cites require_where, diagnostic.remedy non-empty; bare .is_err() assertions are banned."
+  - rule: "AS-01"
+    verification: "Static lint: no mockall or manual mock traits on crates/capcli-core/src/db/authorizer.rs; authorizer table compiled from real artifacts/policy.yaml; the statement reaches the real sqlite3_prepare_v2 pipeline."

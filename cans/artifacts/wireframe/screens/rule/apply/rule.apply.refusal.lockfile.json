@@ -1,0 +1,53 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "rule.apply.refusal.lockfile",
+  "noun": "rule",
+  "verb": "apply",
+  "target": "schema://orders",
+  "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+  "state": {
+    "exit_code": 3,
+    "domain": "lockfile_mismatch",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "lockfile_mismatch",
+    "culprit": "Working tree drifted from the locked manifest; DDL application refused.",
+    "remedy": "restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path"
+  },
+  "txt_pair": "screens/rule/apply/rule.apply.refusal.lockfile.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 3,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 3",
+      "FATAL  lockfile_mismatch.root_hash_drift",
+      "capcli.lock entry:   sha256:4a8f9c2d11e9a4c0",
+      "Working tree drifted from the locked manifest; DDL application refused.",
+      "state_modified: false",
+      "remedy: restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "lockfile_mismatch"
+    }
+  }
+}

@@ -1,0 +1,80 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_08_undeclared_leaf_anomaly_event"
+title: "Undeclared database write diverges from the manifest and logs governance.anomaly"
+domain: "sdk_harness"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Match-calculation"
+  statement: "Subset validation requires executed leaves to be a subset of the declared manifest (executed <= declared, action.md#Match-calculation): a routine executing a database write absent from its declaration is halted (state untouched) and the undeclared primitive triggers a governance.anomaly event (manifest_drift: anomaly, artifacts/governance.yaml#routine_shape) — undeclared operations are never silently executed."
+  blast_radius_if_breached: "Drifting code keeps running as if it matched its proven contract: manifests rot into fiction, cost envelopes undercount real effects, and the trust ladder promotes routines whose behavior no longer matches what was proven — every downstream gate (sim routing, budget cascade, promotion metrics) certifies a lie."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent pre-declares the sneaky write in the manifest fixture (making it declared, so no drift), or asserts only that the routine exited non-zero without verifying the governance.anomaly audit event and zero rows mutated; or compares fingerprints with a mocked _audit mirror."
+  anti_slop_mitigation: "AS-02 proves the undeclared write committed zero rows via direct SELECT; AS-06 pins the anomaly event name and payload fields as literals; AS-05 verifies the anomaly row chains into _audit; the fingerprint comparison must read the genuine _audit mirror view (routine_fingerprints), never a stub."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_sh_08"
+    trust: "reviewed" # drift detection binds all rungs in live stage (time.md#live-stage drift monitoring)
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+          seed:
+            - { ref: "ORD-10", status: "pending" }
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 pending — the undeclared write targets this row
+      - name: "routine_stats"
+        row_count: 1 # refund@2: manifest declares [db read orders, api stripe.refunds.create] — NO db write
+      - name: "_audit"
+        row_count: 3 # routine.draft + prove + prior run events
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://refund -p order_id=8842 -m "process refund"' # routine body smuggles: ctx.db.execute("UPDATE orders SET status = :s WHERE ref = :r", ...) — undeclared leaf
+  input_params:
+    capability: "cap://refund@2"
+    declared_manifest_leaves: ["db:orders:read", "api:stripe.refunds.create"]
+    undeclared_leaf: "db:orders:write (UPDATE orders SET status)"
+    manifest_drift_policy: "anomaly" # artifacts/governance.yaml#routine_shape
+    intent: "process refund"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "governance.manifest"
+    culprit: "runtime fingerprint contains undeclared primitive db:orders:write — executed leaf is not a subset of the declared manifest (manifest drift)"
+    remedy: "declare the write in the routine manifest and re-prove (version bump — no silent edits, action.md anti-decisions); drift is a governed anomaly, never silent execution"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # halted at the drifting leaf: no further egress after the anomaly
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.anomaly" # grounded in action.md#Match-calculation undeclared leaves node; recorded with decision: denied, effect: none
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT status FROM orders WHERE ref = 'ORD-10' directly on the workspace database after the halted run: must still equal 'pending' (zero rows mutated by the undeclared write); SELECT count(*) FROM orders unchanged."
+  - rule: "AS-06"
+    verification: "The anomaly event is asserted against immutable literals: event name 'governance.anomaly' with payload naming the undeclared leaf (db:orders:write) and the declared manifest refuting it — expected values hardcoded, never derived from the fingerprint comparison under test."
+  - rule: "AS-05"
+    verification: "The governance.anomaly row must chain into _audit: prev_hash equals the SHA-256 of the prior row; run capcli-core::audit::verify_chain() over the full ledger including the anomaly row (broken links invalidate all subsequent events, effect.md#Event-integrity)."
+  - rule: "AS-01"
+    verification: "The fingerprint comparison must read the genuine _audit mirror / routine_fingerprints view (action.md#Runtime-fingerprint dynamic node) — no mocked mirror, no pre-seeded fingerprint rows; the manifest fixture must NOT declare the smuggled write (otherwise the case tests nothing)."

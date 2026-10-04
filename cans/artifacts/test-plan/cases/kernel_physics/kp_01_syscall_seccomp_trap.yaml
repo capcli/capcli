@@ -1,0 +1,79 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_01_syscall_seccomp_trap"
+title: "Seccomp network jail traps raw socket connect (syscall 42) inside guest routine"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#network-jail"
+  statement: "On tier 1 hosts every guest routine runs under the seccomp-bpf network jail: a raw socket connect (syscall 42) attempted by any engine is trapped and execution is killed before a single packet leaves the namespace; only kernel-mediated ctx.api.call egress is possible."
+  blast_radius_if_breached: "A compromised guest routine opens arbitrary outbound sockets, exfiltrates workspace data to attacker-controlled hosts, and receives un-brokered command-and-control traffic — the egress allowlist and secret-boundary model collapses enterprise-wide."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent mocks the guest process or the jail harness (a stubbed runner returning a fake trapped result), skips the actual bwrap + seccomp-bpf kernel jail, or asserts a generic nonzero exit without proving the trap originated from the seccomp filter."
+  anti_slop_mitigation: "AS-01 bans mocks on crates/capcli-core/src/routine/jail.rs — the trap must come from the real seccomp-bpf filter inside a real bwrap namespace; AS-03 forces exit_code == 2 plus a parsed diagnostic block; AS-02 proves zero rows mutated; AS-08 proves the /scratch tmpfs is wiped even though the guest was killed mid-run."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_kp_01"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 1
+      engine: sqlite
+      db: workspace
+      tables:
+        orders:
+          cols:
+            id: pk
+            status: 'text=open'
+            amount: int
+          idx: [status]
+    tables:
+      - name: "orders"
+        row_count: 3
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run net_reachability_probe -p host=payments.example.com -p port=443 -m "probe payment endpoint reachability"'
+  input_params:
+    routine_engine: "python"
+    routine_body: "socket.create_connection((host, port)) — direct raw connect bypassing ctx.api.call"
+    target_host: "payments.example.com"
+    target_port: 443
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "kernel.jail"
+    culprit: "seccomp-bpf network jail filter trapped raw socket connect (syscall 42) issued by guest routine net_reachability_probe (engine python)"
+    remedy: "route the call through ctx.api.call so the egress proxy applies the domain allowlist and vault injection; raw sockets are trapped across all engines on tier 1"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: true
+  audit:
+    event_emitted: "routine.run (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mock or stub may replace routine/jail.rs or the guest process: the test executes the real bwrap namespace with the real seccomp-bpf filter loaded; static analysis rejects any mockall or manual mock trait on jail types; the trap must originate from the kernel filter, not a harness-simulated error."
+  - rule: "AS-02"
+    verification: "Run SELECT count(*) FROM orders directly on envs/dev/workspace.db before and after the trapped run and assert strict equality (3 == 3); additionally assert every orders.status value is byte-identical, and _audit grows by exactly one routine.run denial row (effect: none, 4 -> 5)."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 (never .is_err() alone) and parse the CliEnvelope<T>: diagnostic.domain == kernel.jail, diagnostic.culprit names syscall 42, diagnostic.remedy is non-empty, state_modified == false."
+  - rule: "AS-08"
+    verification: "After the killed sandboxed run, probe the host filesystem and assert the per-run /scratch tmpfs UUID directory does not exist (physically wiped) — the seccomp kill must not leak guest temp files onto the host."

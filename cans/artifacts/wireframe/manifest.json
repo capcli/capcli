@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "policy_version": 5,
+  "governance_version": 8,
+  "schema_version": 3,
+  "lockfile": "capcli.lock",
+  "compiled_at": "2026-10-04T00:00:00Z",
+  "nouns": [
+    "run", "db", "routine", "api", "bind",
+    "ping", "rule", "env", "sys", "doc"
+  ],
+  "state_axes": {
+    "exit_code": [0, 2, 3, 4, 5, 6],
+    "trust": ["draft", "reviewed", "pinned"],
+    "env": ["dev", "sim", "prod"],
+    "tier": ["tier_1", "tier_2"],
+    "budget": ["active", "exhausted", "yielded"],
+    "data": ["populated", "empty", "truncated", "redirected", "dry_run"],
+    "denial_domain": [
+      "policy.authorizer",
+      "policy.ast",
+      "policy.budget",
+      "policy.trust",
+      "policy.secrets",
+      "policy.notify",
+      "db.engine",
+      "db.claims",
+      "api.upstream",
+      "api.quota",
+      "routine.runtime",
+      "kernel.sandbox",
+      "kernel.panic",
+      "kernel.boot",
+      "host.ntp",
+      "agent.thrashing"
+    ]
+  },
+  "output_contract": {
+    "prefix": "[{env}:{tier}]",
+    "human_format": "rustc-style diagnostic with atomic blocks, source spans, and indented key-values",
+    "machine_format": "--json structured envelope",
+    "tree_characters_allowed": ["├──", "└──", "│"],
+    "banned_characters": ["|", "├─", "└─"],
+    "divider_character": "─",
+    "denial_keys": ["domain", "culprit", "remedy", "state_modified", "layer"],
+    "truncation": {
+      "max_result_tokens": 500,
+      "emits": ["truncated", "next_cursor"]
+    },
+    "help_stub_max_lines": 6,
+    "banned_flags": ["--force", "--override-budget", "--force-prod", "--verbose"],
+    "payload_redirection": "--out writes payload to file; stdout emits <30 token receipt"
+  }
+}

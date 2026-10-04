@@ -1,0 +1,66 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_11_parent_frame_reconciliation_audit"
+title: "Child frame pop reconciles unburned ops and fuel back to the parent frame pool"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#budget.frame_pop"
+  statement: "'budget.frame_pop — consumed: {ops: 4, duration_ms: 1200, fuel: 1600, egress_bytes: 12480}; returned_to_parent: {ops: 34, duration_ms: 253600, fuel: 80400, egress_bytes: 4181824}; Parent sees exactly what the child burned — pools reconcile per frame': when the child routine pops, the kernel returns the unburned balance to the parent frame pool and emits the reconciliation as an audit event."
+  blast_radius_if_breached: "Dropping or corrupting the parent frame state on child exit would strand budget: parent pools that never re-absorb child remains would report phantom consumption, cascading false exhaustion denials up the enterprise call tree and starving legitimate work."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by asserting only that a frame_pop event exists (event name string match) without parsing the consumed/returned_to_parent payload numbers and without re-querying the parent frame's remaining values — a pop that returns 0 to the parent would pass."
+  anti_slop_mitigation: "AS-05 verifies the full budget.frame_pop payload and the hash-chain link. AS-06 pins the spec's literal reconciliation numbers as immutable expectations verified by direct SQL on the parent frame row. AS-03 requires the typed exit 0 with the parsed envelope."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 2   # parent frame refund_and_archive@1 + child frame archive_old_orders@3 (inherited 38 ops, 254800ms duration, 82000 fuel, 4194304 egress bytes)
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://refund_and_archive@1 -p order_id=ORD-10 -m "refund and archive order" (parent invokes child archive_old_orders@3, which consumes 4 ops / 1200ms / 1600 fuel / 12480 egress bytes and pops)'
+  input_params:
+    child_inherited_ops: 38
+    child_consumed_ops: 4
+    child_consumed_duration_ms: 1200
+    child_consumed_fuel: 1600
+    child_consumed_egress_bytes: 12480
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "budget.cascade"
+    culprit: "none — nominal path: child frame popped; unburned ops 34, duration 253600ms, fuel 80400, egress bytes 4181824 returned to the parent frame pool"
+    remedy: "none required — pools reconcile per frame; the parent sees exactly what the child burned"
+  database:
+    row_count_delta: 0
+    tables_mutated: ["_budget_frames"]   # child row closed in place (outcome success, consumed counters recorded); parent remaining updated in place — row counts unchanged
+  wire:
+    packets_transmitted: 2   # parent refund api call + child archive api call (the child's 12,480 burned egress bytes)
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.frame_pop"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 0 and parse the CliEnvelope: state_modified true, audit_op references the frame pop; no .is_ok() shortcut."
+  - rule: "AS-05"
+    verification: "_audit gains exactly one budget.frame_pop event row whose payload matches the spec contract literally — consumed {ops: 4, duration_ms: 1200, fuel: 1600, egress_bytes: 12480} and returned_to_parent {ops: 34, duration_ms: 253600, fuel: 80400, egress_bytes: 4181824}; prev_hash equals the SHA-256 of the prior row and verify_chain() passes."
+  - rule: "AS-06"
+    verification: "Hardcoded literals verified by direct SQL on the parent frame row after the pop: parent remaining ops increased by exactly 34, fuel by exactly 80400 — reconciliation, not new allocation (session totals unchanged by the pop itself); expected values are immutable literals from budget.md, never derived from the event the engine just emitted."

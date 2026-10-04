@@ -1,0 +1,66 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_08_missing_bwrap_tier1_abort"
+title: "Tier 1 Linux host missing bwrap aborts boot with exit 3, never degrades silently"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#sandbox-missing-on-tier-1"
+  statement: "On a Linux tier 1 host, an absent or unexecutable bwrap binary is a hard boot abort (exit 3) — tier 1 must never silently fall back to unconfined or brokered execution; only tier 2 hosts may degrade to the broker provider with a warning."
+  blast_radius_if_breached: "Production Linux servers silently run guest routines without namespaces: any routine escape touches the host filesystem, process table, and network directly — full host compromise on every tier 1 server in the fleet."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the boot on a machine where bwrap happens to be installed (the test never removes it), or accepts a degraded-but-successful boot because the engine returned a broker provider instead of aborting."
+  anti_slop_mitigation: "AS-07 forces the two-configuration platform matrix — tier 1 with bwrap absent must abort with exit 3 while the tier 2 counterpart only warns and downgrades to broker; AS-03 requires exit_code == 3 plus a parsed boot diagnostic naming bwrap; AS-02 proves zero ledger mutation."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "sre.platform@example.com"
+    agent_id: "agt_kp_08"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "claims"
+        row_count: 2
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli sys doctor --boot-check (Linux tier 1 host with the bwrap binary removed from PATH and no /usr/bin/bwrap present)'
+  input_params:
+    host_os: "linux"
+    bwrap_path: null
+    expected_provider: "abort"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.boot"
+    culprit: "bwrap binary absent or non-executable on a Linux tier 1 host — sandbox missing on tier 1 is a boot abort, not a degradation"
+    remedy: "install bubblewrap (bwrap) on the tier 1 host, verify its exec permission, then re-run capcli sys doctor --boot-check"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "kernel.boot.deny (diagnostic envelope only — boot refused before ledger advance)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-07"
+    verification: "Execute the dual platform matrix: injected PlatformTier::Tier1 with bwrap missing must abort with exit 3; the identical missing-bwrap condition on injected PlatformTier::Tier2 must only emit [WARN] host.degraded_isolation and downgrade the provider to broker — the tier 1 run must never succeed and never merely warn."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 and parse the CliEnvelope<T>: diagnostic.domain == kernel.boot, culprit names the bwrap binary, remedy references installation, state_modified == false; generic failed-to-start string matching is rejected."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM claims (2 == 2) and SELECT count(*) FROM _audit (4 == 4) on envs/sim/workspace.db before and after the aborted boot — strict equality proves no rows were granted or appended."

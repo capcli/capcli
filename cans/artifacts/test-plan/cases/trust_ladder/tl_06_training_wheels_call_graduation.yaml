@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_06_training_wheels_call_graduation"
+title: "Unsimulated prod-only API verb executes calls 1-3 under synthetic contract proof and graduates to standard governance exactly on call 4"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/trust.md#training-wheels-graduation-—-unapproved-calls-graduate-to-normal-governance-automatically-on-call-4"
+  statement: "Unsimulated (prod-only / skip) verbs run their first three production calls under synthetic contract proof — each emitting api.first_prod_call with call_number, calls_remaining, and contract_proof_hash, the counter decremented in _api_catalog — and graduate to normal governance automatically on call 4, after which no contract proof is demanded. Graduation must not fire on call 3, and calls 1-3 must not skip the proof."
+  blast_radius_if_breached: "A prod-only verb graduates one call early (or never proves its contract): an unverified external mutation (e.g. a live charge or refund) dispatches to the provider with neither human sign-off nor recorded contract proof, or conversely a verified verb is stuck forever behind training wheels blocking production automation."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent advances the call counter non-deterministically (sleeps between calls), asserts graduation happened by re-reading the counter the engine itself decremented (tautology), or graduates on call 3 because the test never exercised the boundary (catalog banned slop: graduating verb on call 3 or failing to enforce synthetic contract proof on calls 1-3)."
+  anti_slop_mitigation: "AS-04 forces the deterministic call sequence via engine state ticks; AS-05 verifies the exact audit sequence (3 api.first_prod_call events with contract_proof_hash, then a proof-free call 4) and hash chain; AS-06 hardcodes the graduation boundary at call 4 with a call-3 negative control that must still carry contract_proof_hash."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:maya"
+    agent_id: "agt_tl_06"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_catalog"
+        row_count: 1
+      - name: "routines"
+        row_count: 1
+      - name: "routine_stats"
+        row_count: 1
+      - name: "_audit"
+        row_count: 7
+    vault_secrets:
+      - ref: "vault://stripe_key"
+        scope: "prod"
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://pay@5 -p charge_id=ch_9d21K -p amount_cents=1500 -m \"graduation call 4 for stripe.refund_charge\""
+  input_params:
+    charge_id: "ch_9d21K"
+    amount_cents: 1500
+    verb: "stripe.refund_charge"
+    training_wheels_prior_calls:
+      - "call 1: api.first_prod_call (call_number 1, calls_remaining 3, contract_proof_hash present)"
+      - "call 2: api.first_prod_call (call_number 2, calls_remaining 2, contract_proof_hash present)"
+      - "call 3: api.first_prod_call (call_number 3, calls_remaining 1, contract_proof_hash present)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 1
+    tables_mutated:
+      - "_api_catalog"
+      - "_audit"
+  wire:
+    packets_transmitted: 1
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (standard governance — training wheels exhausted after 3 prior api.first_prod_call events; no contract_proof_hash on this call)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Step the call counter through explicit engine ticks (calls 1, 2, 3 seeded deterministically in _api_catalog before the observed call 4); no sleep loops and no wall-clock dependence — the 4-call boundary is a pure state counter, not a time window."
+  - rule: "AS-05"
+    verification: "Audit sequence proof: SELECT event, payload FROM _audit WHERE capability='stripe.refund_charge' ORDER BY id returns exactly 3 rows of api.first_prod_call (calls_remaining 3, 2, 1, each with a non-null contract_proof_hash) followed by the observed call-4 api.call row with no contract proof; prev_hash chain verifies via capcli-core::audit::verify_chain()."
+  - rule: "AS-06"
+    verification: "Hardcoded boundary control: re-run the scenario with the counter at 2 (about to execute call 3) and assert call 3 still demands a synthetic contract proof (api.first_prod_call emitted, calls_remaining 1) — graduation at exactly call 4 is an immutable literal expectation, not derived from the counter read."

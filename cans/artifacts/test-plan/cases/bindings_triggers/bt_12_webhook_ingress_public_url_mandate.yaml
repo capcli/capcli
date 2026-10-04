@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_12_webhook_ingress_public_url_mandate"
+title: "Webhook binding with a loopback ingress URL and no tunnel is refused at validation"
+domain: "bindings_triggers"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/interface.md#Webhook-ingress"
+  statement: "Route verification: external webhooks require a valid public --ingress URL or an active tunnel; a raw loopback address such as 127.0.0.1 is denied at bind-time validation (exit 3) before any binding row is committed — external providers can never be pointed at the kernel's internal-only serve surface (serve binds 127.0.0.1, artifacts/governance.yaml#serve)."
+  blast_radius_if_breached: "A loopback ingress creates a silently dead webhook route: the external provider can never reach the kernel, every real event is lost upstream while the binding appears active, and the pattern invites exposing the internal serve port through ad-hoc tunnels that bypass the authorizer/audit parity the serve path guarantees."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent registers the binding with a public URL and then edits the stored record to 127.0.0.1 directly in the database (bypassing the gate), or asserts a generic CLI error without pinning exit 3 and the no_ingress/loopback culprit; or treats the refusal as a network-layer timeout."
+  anti_slop_mitigation: "AS-03 requires exit_code == 3 (compile/validation refusal class, physics.md#Exit-code-law) with the structured diagnostic naming the loopback address; AS-02 proves zero binding rows committed via direct SELECT; the URL classification (public vs loopback) is a pure-function unit check with immutable literal inputs (AS-06)."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.dev@example.com"
+    agent_id: "agt_bt_12"
+    trust: "reviewed" # watch binding floor (artifacts/policy.yaml#watch require_trust) so the ingress rule is the only refusal trigger
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # refund@2 registered and proven, eligible as a bind target
+      - name: "_watch_cursors"
+        row_count: 0
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli bind webhook stripe_hooks stripe charge.captured cap://refund --ingress "http://127.0.0.1:9090/hook" -m "refund on captured charges"'
+  input_params:
+    binding_name: "stripe_hooks"
+    provider: "stripe"
+    event: "charge.captured"
+    capability: "cap://refund"
+    ingress_url: "http://127.0.0.1:9090/hook" # loopback, no tunnel established
+    tunnel_active: false
+    intent: "refund on captured charges"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "bind.webhook"
+    culprit: 'ingress URL "http://127.0.0.1:9090/hook" is a loopback address and no active tunnel is established; external webhooks require a valid public --ingress URL or --tunnel (raw 127.0.0.1 denied)'
+    remedy: "re-issue the binding with a public --ingress URL reachable by the external provider, or establish an active tunnel first; the kernel serve surface stays internal-first (bind: 127.0.0.1, artifacts/governance.yaml#serve)"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # refused at bind-time validation; nothing is dialed
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "bind.create" # refused attempt recorded with decision: denied, effect: none (effect.md#Event-integrity denial logging; wireframe bind.webhook.refusal.missing_ingress class)
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _watch_cursors before and after the refused bind; assert strict equality (0 == 0) — no webhook binding row committed; the only _audit delta is the single refusal record with effect: none."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 3 (validation refusal — not exit 2 policy denial, not a timeout) and parse the CliEnvelope: diagnostic.culprit names the loopback ingress address and the missing tunnel, diagnostic.remedy offers the public URL/tunnel path; envelope.state_modified == false."
+  - rule: "AS-06"
+    verification: "The URL classification is asserted against immutable literal inputs: 'http://127.0.0.1:9090/hook' must classify loopback-denied while 'https://hooks.acme.example/capcli' must classify valid-public in the same unit run — expected classifications hardcoded, never derived from the classifier under test."

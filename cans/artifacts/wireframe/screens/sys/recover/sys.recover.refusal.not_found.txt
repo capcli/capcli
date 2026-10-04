@@ -1,0 +1,8 @@
+[dev:tier_1]  ✗  exit 3
+
+FAIL  validation.recovery_point_not_found
+      commit 1a2b3c4 not found in local catalog or object store.
+      catalog: 7 recovery points indexed (newest: snap_auto_2026-10-04T0300Z)
+
+state_modified: false
+remedy:         list recovery points with 'capcli sys recover --list', then target an existing commit

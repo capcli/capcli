@@ -1,0 +1,68 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_12_earmark_ttl_sweeper_dissolution"
+title: "Daemon earmark sweeper dissolves the TTL-expired earmark and restores tokens to _api_quota without an active call"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/assembly.md#Daemon-surface"
+  statement: "'earmark_sweeper.rs — periodic daemon worker dissolving expired earmarks back to available quota' (governance.yaml#routine_shape.earmark_max_ttl_hours: 24, aligned with 24h rolling windows): the sweeper detects an earmark past its TTL and restores its tokens to the _api_quota bucket autonomously — relying on the caller routine to return cleanly is not required."
+  blast_radius_if_breached: "If expired earmarks required their (possibly crashed or retired) owner routine to release them, ring-fenced tokens would accumulate forever after every routine crash — the provider pool would monotonically decay and eventually all enterprise egress would be blocked by quota that nobody can spend."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by having the test itself call ctx.quota.release (the explicit caller path) and claiming the sweeper ran — the daemon's autonomous TTL sweep is never exercised, and a crashed-owner leak would go undetected."
+  anti_slop_mitigation: "AS-04 drives the TTL expiry with the deterministic MockClock so the sweeper tick fires on synthetic time. AS-05 verifies the sweep's audit event and chain. AS-06 pins the literals: 15 tokens restored, available 30 -> 45, earmark rows 1 -> 0, and zero wire packets — the restoration happens without any active call."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "capcli-cron"   # kernel principal (policy.yaml#identity.kernel_principals) — the sweeper is an unattended daemon worker
+    agent_id: "agt_bc_12"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_earmarks"
+        row_count: 1   # earmark_01c3: 15 tokens, provider 'threads', ttl 24h; owner routine crashed 25h ago (MockClock-fixed)
+      - name: "_api_quota"
+        row_count: 1   # provider 'threads': total 50, available 30, earmarked 15
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'daemon earmark_sweeper tick: capcli-daemon worker (earmark_sweeper.rs) scans _budget_earmarks with the MockClock advanced 25h past earmark_01c3 creation (TTL 24h elapsed, owner dead) and dissolves the expired reservation back into _api_quota'
+  input_params:
+    earmark_id: "earmark_01c3"
+    tokens: 15
+    ttl_hours: 24
+    clock_offset_hours: 25
+    owner_state: "crashed"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "daemon.earmark_sweeper"
+    culprit: "none — nominal path: TTL-expired earmark detected (25h elapsed > 24h TTL) and dissolved; 15 tokens restored to the available quota without an active call"
+    remedy: "none required — the sweeper frees expired reservations autonomously; caller routines need not return cleanly to release earmarked tokens"
+  database:
+    row_count_delta: -1
+    tables_mutated: ["_budget_earmarks", "_api_quota"]   # expired earmark row dissolved (1 -> 0); _api_quota available restored in place 30 -> 45, earmarked 15 -> 0
+  wire:
+    packets_transmitted: 0   # the restoration is purely local — no provider call is made by the sweeper
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.earmark.sweep"   # NOTE: exact event name not located verbatim in cans/ effect.md payload list; follows channel.verb naming with assembly.md#Daemon-surface earmark_sweeper.rs ('periodic daemon worker dissolving expired earmarks back to available quota') as the closest grounded source
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Deterministic MockClock: the synthetic clock advances a literal 25h past earmark creation so the TTL comparison (25h > 24h) is a fixed arithmetic fact; the sweeper tick fires on that synthetic tick — no real sleeps, no SystemTime::now, and the expired-owner scenario is reproducible exactly."
+  - rule: "AS-05"
+    verification: "_audit gains the sweep event row (the api.earmark.sweep record) whose prev_hash equals the SHA-256 of the prior row; capcli-core::audit::verify_chain() passes; no caller-side quota.release event appears in the trace (that would prove the test released it, not the sweeper)."
+  - rule: "AS-06"
+    verification: "Hardcoded literals verified by direct SQL: _budget_earmarks count 1 -> 0, _api_quota available 30 -> 45 and earmarked 15 -> 0, wire packets == 0 — the 15 tokens are provably back in the global bucket with no active call; expected values are immutable literals, never derived from the sweeper's own counters."

@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_06_earmark_ringfence_and_release"
+title: "Earmark ring-fences 20 API tokens, burns 8, and dissolves the unburned 12 back to the global bucket"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Quota-brokerage-methods"
+  statement: "'ctx.quota.earmark(provider, verb, tokens, ttl_hours, intent) — claims and ring-fences token allocation' and 'ctx.quota.release(earmark_id) — explicitly dissolves unburned reservation back to global pool': earmarked tokens bypass the global bucket check while reserved (earmark debit), and on completion the unburned balance returns to the pool — no orphaned earmarked tokens stay permanently locked."
+  blast_radius_if_breached: "Orphaned earmarks would permanently subtract capacity from the provider pool on every batch run, so the enterprise's usable quota silently decays to zero while dashboards still show 'earmarked' tokens nobody can ever spend."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by asserting only the initial earmark creation (row exists) and never re-querying the balances at completion — the unburned 12 tokens could remain locked forever and the 'release' half of the contract would go unverified."
+  anti_slop_mitigation: "AS-06 pins the full literal chain (50 -> ring-fence 20 -> burn 8 -> release 12 -> final 42) with a post-run direct SQL read. AS-05 verifies the completion event and hash chain. AS-03 requires the typed exit 0 with the parsed envelope."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_06"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'threads': total 50, available 50, earmarked 0
+      - name: "_budget_earmarks"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://newsletter_batch@3 -p audience=followers -m "newsletter batch send" (routine calls ctx.quota.earmark("threads", "threads.posts", 20, 3, intent), dispatches 8 calls via ctx.api.call(..., earmark_id), then completes and releases the unburned reservation)'
+  input_params:
+    earmark_tokens: 20
+    tokens_burned: 8
+    ttl_hours: 3
+    total_bucket: 50
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "api.earmark"
+    culprit: "none — nominal path: 20 tokens ring-fenced (available 50 -> 30), 8 burned from the reservation, the unburned 12 dissolved back to the global bucket on completion (available 30 -> 42, earmarked 0)"
+    remedy: "none required — unburned earmark balance returns to the global pool at completion; no tokens stay permanently locked"
+  database:
+    row_count_delta: 0
+    tables_mutated: ["_budget_earmarks", "_api_quota"]   # earmark row created then dissolved within the run (net 0); _api_quota available updated in place 50 -> 30 -> 42
+  wire:
+    packets_transmitted: 8   # the 8 real api calls drawn from the earmarked reservation
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.earmark.release"   # NOTE: exact event name not located verbatim in cans/ effect.md payload list; follows the channel.verb naming with action.md#Quota-brokerage-methods (ctx.quota.release) as the closest grounded source — catalog §6.4 attributes completion-time dissolution to the daemon, while cans/ grounds daemon-side dissolution only for TTL expiry (assembly.md earmark_sweeper.rs, covered by bc_12)
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 0 and parse the CliEnvelope: state_modified true and the run receipt reports the completed batch — no .is_ok() shortcut."
+  - rule: "AS-05"
+    verification: "_audit records the earmark lifecycle and the routine completion (routine.run outcome success); the dissolution event row's prev_hash equals the SHA-256 of the prior row and capcli-core::audit::verify_chain() passes across every new row."
+  - rule: "AS-06"
+    verification: "Hardcoded literal chain verified by direct post-run SQL: _api_quota available == 42 (50 - 8 burned), earmarked == 0, and SELECT count(*) FROM _budget_earmarks == 0 — the unburned 12 are provably back in the global pool, not left orphaned; expected values are literals, never derived from the engine's counters."

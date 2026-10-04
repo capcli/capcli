@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "vs_06_vault_set_audit_masked_fingerprint"
+title: "sys vault set commits a vault.set audit event carrying a masked value and SHA-256 fingerprint — no plaintext, no block glyphs in machine JSON"
+domain: "vault_secrets"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#audit-contract-—-all-secret-mutations-emit-vault.set-with-masked-values-and-SHA-256-fingerprint"
+  statement: "Every secret mutation emits vault.set with masked values and a SHA-256 fingerprint: provisioning 'vault://stripe_key' via sys vault set commits the AES-256-GCM ciphertext to the secrets table and an audit event whose payload carries secret_name, secret_hash_prefix, and action — the plaintext appears in no output stream, and machine payloads use the masked word plus the hash prefix, never unicode block glyphs."
+  blast_radius_if_breached: "The audit spine (git-committed, JSONL-mirrored, offsite-replicated to WORM storage) records live credentials in plaintext: every auditor, backup system, and S3 Object Lock reader permanently holds sk_live material — an unretractable leak through the tamper-evidence system itself."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts 'the event exists' without decoding the payload (plaintext rides inside an unparsed blob), or fakes redaction with unicode block glyphs (████) in the machine JSON — which is itself a banned representation — or logs the stdin value while verifying (catalog banned slop: logging plaintext secret or unmasked credential data to _audit)."
+  anti_slop_mitigation: "AS-06 hardcodes the masked semantics: the parsed event payload equals the masked word plus the computed sha256 prefix '31fa10dc5531', with zero plaintext occurrences and zero block-glyph characters; AS-05 verifies the single vault.set event and hash chain; AS-01 forces the real crypto path."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:maya"
+    agent_id: "agt_vs_06"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "secrets"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "printf '%s' \"sk_live_VS06_FIXTURE_a51f\" | capcli sys vault set vault://stripe_key --scope prod --in @-"
+  input_params:
+    secret_ref: "vault://stripe_key"
+    scope: "prod"
+    stdin_value: "sk_live_VS06_FIXTURE_a51f"
+    expected_sha256_prefix12: "31fa10dc5531"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 1
+    tables_mutated:
+      - "secrets"
+      - "_audit"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "vault.set (secret_name: stripe_key, secret_hash_prefix, action: injected)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Decode the new _audit row's payload JSON and assert exact masked semantics: payload carries secret_name 'stripe_key', a secret_hash_prefix equal to sha256('sk_live_VS06_FIXTURE_a51f')[0:12] = '31fa10dc5531', action 'injected', and the value field reads the masked word — the plaintext literal occurs 0 times across _audit, the JSONL mirror, stdout, and stderr, and the machine JSON contains no unicode block glyph characters (████ banned in machine payloads)."
+  - rule: "AS-05"
+    verification: "_audit gained exactly 1 event 'vault.set' whose prev_hash equals the SHA-256 of the prior row and capcli-core::audit::verify_chain() passes; SELECT count(*) FROM secrets returns 1 row for 'vault://stripe_key' whose value is a fresh AES-256-GCM blob."
+  - rule: "AS-01"
+    verification: "Real crypto path, no mocks: the engine decrypt round-trip on the new secrets row returns exactly 'sk_live_VS06_FIXTURE_a51f', and the fingerprint in the audit payload is recomputed independently in the test from the same literal — the event and the ciphertext are provably about the same secret."

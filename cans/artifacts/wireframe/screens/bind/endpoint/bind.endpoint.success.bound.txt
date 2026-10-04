@@ -1,0 +1,13 @@
+[dev:tier_1]  ✓  bound
+
+  binding_id: bnd_2m7p
+  endpoint:   dispatch_order@4
+  url:        http://127.0.0.1:4040/endpoints/dispatch_order
+  auth:       api-key
+  rate:       60 req/min
+  channel:    all (rest + mcp)
+  writes:     denied by default
+  trust:      pinned (serve floor)
+
+  state_modified: true
+  audit_op:       op_3f7k

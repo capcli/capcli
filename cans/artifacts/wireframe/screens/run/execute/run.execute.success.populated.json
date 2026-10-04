@@ -1,0 +1,42 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.execute.success.populated",
+  "noun": "run",
+  "verb": "execute",
+  "target": "cap://dispatch_order@4",
+  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "pinned",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": true,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/run/execute/run.execute.success.populated.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": true,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  executed",
+      "  routine:         dispatch_order@4 (pinned)",
+      "    tracking:     794644790133",
+      "  audit_op:        op_9f2c",
+      "  state_modified:  true"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": true
+    }
+  }
+}

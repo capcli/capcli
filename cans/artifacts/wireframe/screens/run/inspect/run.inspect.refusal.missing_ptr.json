@@ -1,0 +1,52 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.inspect.refusal.missing_ptr",
+  "noun": "run",
+  "verb": "inspect",
+  "target": "dispatch_order@4",
+  "command": "capcli inspect dispatch_order@4",
+  "state": {
+    "exit_code": 3,
+    "domain": "missing_param",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "missing_param",
+    "culprit": "Unrecognized pointer format: missing scheme prefix.",
+    "remedy": "restate as a typed URP, e.g. cap://dispatch_order@4"
+  },
+  "txt_pair": "screens/run/inspect/run.inspect.refusal.missing_ptr.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 3,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 3",
+      "  FATAL  missing_param.unrecognized_ptr",
+      "         Unrecognized pointer format: missing scheme prefix.",
+      "  state_modified: false",
+      "  remedy: restate as a typed URP, e.g. cap://dispatch_order@4"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "missing_param"
+    }
+  }
+}

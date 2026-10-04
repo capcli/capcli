@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "api.sync.denial.rate",
+  "noun": "api",
+  "verb": "sync",
+  "target": "stripe",
+  "command": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
+  "state": {
+    "exit_code": 2,
+    "domain": "api.quota",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "api.quota",
+    "culprit": "Sync call within 24h cooldown for provider 'stripe'.",
+    "remedy": "wait for the 24h cooldown to reset, or inspect the live catalog via 'capcli api catalog stripe'",
+    "layer": "quota",
+    "measured": "last sync completed 18h 24m ago (cooldown remaining: 5h 36m)"
+  },
+  "txt_pair": "screens/api/sync/api.sync.denial.rate.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "  FAIL  api.quota.rate_limit",
+      "        Sync call within 24h cooldown for provider 'stripe'.",
+      "  state_modified:  false",
+      "  layer:           quota",
+      "  remedy:          wait for the 24h cooldown to reset, or inspect the live catalog via 'capcli api catalog stripe'"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "api.quota"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "api.catalog.success.populated",
+  "noun": "api",
+  "verb": "catalog",
+  "target": "stripe",
+  "command": "capcli api catalog stripe --state active --json",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/api/catalog/api.catalog.success.populated.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  populated",
+      "  cap://stripe",
+      "  ├── refund_charge          active   draft   214 calls",
+      "  │     └── last_call: op_9f2e (ok)",
+      "  state_modified:  false"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}

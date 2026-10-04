@@ -1,0 +1,263 @@
+---
+title: Capcli Handbook
+description: The public operating system, engineering laws, and commercial playbook of Capcli.
+last_modified: 2026-09-30
+---
+
+# Capcli Handbook
+
+This is the public operating manual for Capcli. 
+
+Everything about how we build software, make decisions, compensate people, and sell to enterprises is documented openly in this repository. 
+
+There are no secret internal wikis, no locked HR Notion pages, and no backdoor policies. If an operational rule is not committed to this repo, **it does not exist.**
+
+---
+
+## The Core Axiom
+
+> **Prompt engineering is dead. We govern agents with physics, not psychology.**
+
+We build the deterministic runtime substrate for the autonomous software era. We replace polite English suggestions with compiled Rust, native C SQLite authorizers, Linux namespace sandboxes, and immutable cryptographic audit ledgers.
+
+We run this company with the exact same rigor: **asynchronous, written, transparent, and PR-driven.**
+
+---
+
+## The Four Operating Quadrants
+
+```text
+┌─────────────────────────────────┬─────────────────────────────────┐
+│ 1. COMPANY                      │ 2. ENGINEERING                  │
+│ Doctrine, laws & $100M strategy │ Rust kernel, sandboxes & DAGs   │
+├─────────────────────────────────┼─────────────────────────────────┤
+│ 3. PEOPLE                       │ 4. GROWTH                       │
+│ Open pay formulas & async rules │ Commercial open source & GTM    │
+└─────────────────────────────────┴─────────────────────────────────┘
+```
+
+### 1. [Company (`/company`)](./company)
+* **[Manifesto](./company/manifesto.md):** The 10-part thesis on why probability fails and why we built an execution bunker.
+* **[Strategy](./company/strategy.md):** The 7-part playbook for moving from $0 to $100M ARR without an army of cold-callers.
+* **[Operating Laws](./company/operating-laws.md):** The non-negotiables (Fail-closed, WORM audit, Zero secret exposure).
+* **[Decision Frameworks](./company/decision-frameworks.md):** How we resolve architectural and product stalemates without consensus meetings.
+
+### 2. [Engineering (`/engineering`)](./engineering)
+* **[Architecture](./engineering/architecture):** The Rust workspace, native SQLite authorizer callback, `bwrap` namespaces, and integer budget cascades.
+* **[Standards](./engineering/standards):** musl static builds, zero-panic law, no `unwrap()`, and strict POSIX exit code contracts.
+* **[Operations](./engineering/operations):** Incident severity tiers, PagerDuty rotation, and synthetic invariant fuzzing.
+
+### 3. [People & Culture (`/people`)](./people)
+* **[Compensation](./people/compensation):** The public mathematical pay formula. No black boxes, no secret negotiations.
+* **[Hiring](./people/hiring):** Anti-credentialist, proof-of-work hiring. 3-day paid trials on real repo issues; zero whiteboard LeetCode.
+* **[Async Playbook](./people/operations/async-playbook.md):** Why meetings are treated as bugs and written RFCs are law.
+
+### 4. [Growth & Monetization (`/growth`)](./growth)
+* **[Business Model](./growth/business-model):** Open core vs. Enterprise perimeter. Taxing liability and risk, never compute or tokens.
+* **[Developer GTM](./growth/developer-gtm):** Terminal-first bottom-up adoption. Technical incident post-mortems over ad spend.
+* **[Enterprise & Compliance](./growth/enterprise-and-compliance):** Air-gapped deployments, hardware KMS signatures, and automated SOC2 evidence.
+
+---
+
+## How to Change This Company
+
+Our company policies are maintained like code:
+
+1. **Fork this repository.**
+2. **Edit the Markdown/MDX file.**
+3. **Open a Pull Request with a clear rationale.**
+4. If the PR is reviewed and merged into `main`, **it becomes company law.**
+
+Zero committees. Zero executive backdoor overrides.
+
+---
+
+```bash
+# Verify your local runtime environment
+capcli sys doctor --report
+```
+
+### Part 1 of 4: Root Topology & Company Doctrine (`handbook/company/`)
+
+Here is the top-level handbook layout and the file tree for **`company/`**. 
+
+No corporate fluff. Built like code.
+
+---
+
+### Root Layout Overview
+
+```text
+handbook/
+├── index.mdx                        # Global handbook table of contents
+├── company/                         # Doctrine, operating laws, and decision frameworks (Part 1)
+├── engineering/                     # Rust kernel, sandbox physics, and PR rules (Part 2)
+├── people/                          # Compensation, async culture, and security clearances (Part 3)
+└── growth/                          # Developer GTM, open-source model, and monetization (Part 4)
+```
+
+---
+
+### Tree: `handbook/company/`
+
+```text
+handbook/company/
+├── manifesto.md                     # The thesis: "Why prompts fail and physics win"
+├── culture.md                       # High autonomy, async-first, PR-driven company ops
+├── operating-laws.md                # Non-negotiables (Fail-closed, WORM audit, No LLM babysitting)
+├── strategy.md                      # From dev tool to enterprise runtime firewall ($0 -> $100M)
+├── decision-frameworks.md           # How we resolve architectural and product stalemates
+├── management.md                    # Zero middle-management: pods, leads, and individual ownership
+└── roadmap-governance.md            # How features move from RFC -> Sim Rehearsal -> Pinned Core
+```
+
+---
+
+*End of Part 1/4. Say **"continue"** for Part 2/4 (Engineering & Kernel Architecture).*
+
+### Part 2 of 4: Engineering & Kernel Architecture (`handbook/engineering/`)
+
+This directory codifies how the Rust engine, sandbox jails, and SDKs are built, tested, and guarded.
+
+---
+
+### Tree: `handbook/engineering/`
+
+```text
+handbook/engineering/
+├── index.mdx                        # Engineering principles & technical philosophy
+│
+├── architecture/                    # Subsystem specs & design decisions
+│   ├── monorepo-topology.md         # Rust workspace (core, cli, daemon, types) + Py SDK + PWA
+│   ├── kernel-and-authorizer.md     # Native SQLite C authorizer, WAL pool, and VDBE opcode checks
+│   ├── sandboxes-and-isolation.md   # bwrap namespaces, seccomp-bpf, Tier 1 vs Tier 2 platform laws
+│   ├── budget-and-cascade.md        # Min() cascade math, frame push/pop, proactive rate buckets
+│   ├── audit-spine-and-dag.md       # SHA-256 hash chains, causal linking, and S3 WORM witness
+│   └── ipc-and-runtime-socket.md    # Kernel UDS/Named Pipe streaming JSON-RPC contracts
+│
+├── standards/                       # Quality gates & code conventions
+│   ├── rust-guidelines.md           # musl static linking, MSRV 1.85+, zero-panic law, no unwrap()
+│   ├── python-sdk-rules.md          # Zero runtime dependencies, typed Param[T], strict IPC client
+│   ├── exit-codes-contract.md       # POSIX 0, 2, 3, 4, 5, 6 specifications & invariant tests
+│   └── code-reviews.md              # Turnaround SLAs, mandatory git-blame trail, PR checklists
+│
+├── operations/                      # Production runtime & developer tooling
+│   ├── release-pipeline.md          # musl cross-compilation, PyPI wheel builds, reproducible builds
+│   ├── testing-and-fuzzing.md       # AST fuzzing, synthetic sim replay, invariant breach drills
+│   ├── on-call-and-incidents.md     # PagerDuty rotation, SEV-1 to SEV-4 taxonomy, root cause DAGs
+│   └── security-and-jailbreaks.md   # Sandbox escape threat modeling, memory safety, CVE protocols
+│
+└── telemetry/                       # Observability & diagnostic surfaces
+    ├── rustc-diagnostics.md         # Miette/codespan machine-readable diagnostic emission
+    └── daemon-metrics.md            # IPC socket latency, frame high-water marks, queue lag
+```
+
+---
+
+*End of Part 2/4. Say **"continue"** for Part 3/4 (People, Async Operations & Compensation).*
+
+### Part 3 of 4: People, Compensation & Async Operations (`handbook/people/`)
+
+This directory eliminates corporate HR theatre. Policies are public, salaries are mathematical formulas, and internal changes are merged via PRs.
+
+---
+
+### Tree: `handbook/people/`
+
+```text
+handbook/people/
+├── index.mdx                        # Operating philosophy: High agency, zero hand-holding
+│
+├── compensation/                    # Open mathematical pay model
+│   ├── salary-calculator.mdx        # Formula: Base × Role Level × Location Factor
+│   ├── equity-and-options.md        # 10-year exercise window, 1-year cliff, transparent cap table
+│   └── benchmarks.md                # Tier 1 dev-tool comp targets (San Francisco market benchmarks)
+│
+├── hiring/                          # Anti-credentialist, proof-of-work hiring
+│   ├── interview-pipeline.md        # Resume filter -> Async take-home -> 3-day paid trial -> Offer
+│   ├── paid-work-trial.md           # Real repo issue execution; zero whiteboard LeetCode puzzles
+│   └── scoring-rubric.md            # The bar: Systems grit, async clarity, paranoid threat modeling
+│
+├── performance/                     # Unforgiving execution tracking
+│   ├── impact-evaluation.md         # Evaluated solely on shipped PRs, kernel stability, and RFCs
+│   ├── feedback-cadence.md          # Continuous async feedback; zero annual 360 review bloat
+│   └── offboarding-and-firing.md    # Fast failure recognition, generous severance, no corporate politics
+│
+├── benefits-and-perks/              # Trust-based, high-trust autonomy
+│   ├── spending-money.md            # Expense rule: "Act in Capcli’s best interest" (no pre-approvals)
+│   ├── time-off.md                  # Unlimited PTO with a mandatory 25-day minimum floor
+│   └── hardware-and-workspace.md    # High-spec Linux/Darwin rigs, co-working budget, YubiKeys
+│
+└── operations/                      # Asynchronous workflow mechanics
+    ├── async-playbook.md            # Written RFCs > Slack chatter > Zoom meetings (meetings are a bug)
+    ├── policy-via-git.md            # Handbook changes require a PR, review, and merge
+    └── opsec-and-credentials.md     # Hardware keys, zero-trust workstation rules, production access
+```
+
+---
+
+*End of Part 3/4. Say **"continue"** for Part 4/4 (Developer GTM, Open-Source Economics & Business Model).*
+
+### Part 4 of 4: GTM, Open-Source Economics & Enterprise Monetization (`handbook/growth/`)
+
+This directory plots the entire commercial engine. No MBA vanity metrics. Developer-first inbound distribution, open-source monetization, and compliance navigation.
+
+---
+
+### Tree: `handbook/growth/`
+
+```text
+handbook/growth/
+├── index.mdx                        # Growth philosophy: "Great software distributes itself via CLI"
+│
+├── business-model/                  # Commercial open-source (COSS) economics
+│   ├── pricing-calculator.mdx       # Interactive seat, compute-fuel, and managed-quota pricing engine
+│   ├── open-core-vs-enterprise.md   # The strict boundary: what stays MIT vs what goes commercial
+│   ├── unit-economics.md            # Cloud margin breakdown: egress compute, SQLite storage, KMS signing
+│   ├── default-alive-rules.md       # Burn rate caps, minimum runway floor (24 months), hiring triggers
+│   └── revenue-targets.md           # The progression: $0 to $1M ARR (Devs) -> $10M (Scaleups) -> $100M (Enterprise)
+│
+├── developer-gtm/                   # Bottom-up dev distribution (Zero cold outbound)
+│   ├── positioning-and-narrative.md # Framing: "Docker isolates machines; Capcli isolates business logic"
+│   ├── content-as-engineering.md    # Technical tear-downs, incident post-mortems, deterministic benchmarks
+│   ├── viral-mechanics.md           # CLI install friction (<5s), terminal receipts, copy-paste snippets
+│   ├── documentation-as-funnel.md   # Search-engine-optimized reference docs as the primary landing page
+│   └── anti-marketing-rules.md      # Absolute bans: no spam emails, no gated PDFs, no fake webinar funnels
+│
+├── ecosystem-and-harnesses/         # Platform hooks & AI runtime integrations
+│   ├── harness-interop-playbook.md  # Official adapters: Claude Code, Hermes, OpenAI Swarms, DeepSeek
+│   ├── skill-registry-distribution.md # Distribution via SKILL.md, agent tool-registries, and PyPI/Cargo
+│   ├── model-agnostic-stance.md     # Kernel neutrality: we never pick model winners or run LLM inference
+│   └── partner-integrations.md      # Cloud object stores (S3/R2), hosted databases (Turso/LibSQL), Stripe
+│
+├── enterprise-and-compliance/       # Closing 6-figure enterprise deals without enterprise bloat
+│   ├── air-gapped-deployments.md    # Private on-prem binaries, custom KMS witnesses, zero-egress builds
+│   ├── security-pack-and-soc2.md    # SOC2 Type II, ISO 27001, HIPAA compliance evidence mapping
+│   ├── contract-standards.md        # Standard mutual NDA, open master service agreement (MSA), zero redlines
+│   ├── procurement-navigation.md    # Bypassing slow corporate IT via developer trust receipts
+│   └── support-and-slas.md          # 99.99% uptime guarantees, dedicated private Slack/Discord rooms
+│
+├── community-and-oss/               # Open-source community stewardship
+│   ├── contributor-ladder.md        # Contributor -> Triager -> Core Maintainer promotion thresholds
+│   ├── telemetry-and-privacy.md     # Strict opt-in diagnostic pings; zero tracking of code, DB rows, or secrets
+│   ├── rfc-process.md               # How external contributors propose kernel changes via Markdown RFCs
+│   └── license-enforcement.md       # Protecting the MIT core and handling commercial IP violations
+│
+└── revops-and-metrics/              # Transparent financial operations
+    ├── transparent-board-deck.md    # Standard board deck template shared with the entire company
+    ├── metric-definitions.md        # ARR, Net Revenue Retention (NRR), CAC payback, and Terminal Churn
+    └── billing-and-metering.md      # Self-serve Stripe usage billing integrated into Capcli daemon
+```
+
+---
+
+### Complete Handbook Architecture Summary
+
+```text
+handbook/
+├── index.mdx                        # The Operating Root
+├── company/                         # 1/4: Doctrine, Decision Laws, Culture
+├── engineering/                     # 2/4: Rust Kernel, Sandboxes, Invariant Standards
+├── people/                          # 3/4: Open Pay, 3-Day Trials, Async Git Ops
+└── growth/                          # 4/4: Commercial OSS, Dev GTM, Enterprise Engine
+```

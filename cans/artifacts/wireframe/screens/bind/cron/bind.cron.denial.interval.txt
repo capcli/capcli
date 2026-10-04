@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.schedule_min_interval
+        cron expr: * * * * *
+                   ^^^^^^^^^
+
+        Interval lower than 5-minute cap. Sub-5-minute schedules refused.
+
+  state_modified: false
+  layer:          authorizer
+  measured:       interval 1m (floor: 5m)
+  remedy:         raise the interval to 5 minutes or more; tighter reactivity belongs to inbound webhooks

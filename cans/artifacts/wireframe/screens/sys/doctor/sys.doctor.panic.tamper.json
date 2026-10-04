@@ -1,0 +1,53 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "sys.doctor.panic.tamper",
+  "noun": "sys",
+  "verb": "doctor",
+  "target": "sys://audit-chain",
+  "command": "capcli sys doctor",
+  "state": {
+    "exit_code": 5,
+    "domain": "kernel.panic",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "kernel.panic",
+    "culprit": "Audit SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch",
+    "remedy": "re-enter with 'CAPCLI_RECOVERY=1 capcli sys doctor', then restore from the last verified object-store checkpoint via 'capcli sys recover <commit>'"
+  },
+  "txt_pair": "screens/sys/doctor/sys.doctor.panic.tamper.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 5,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 5",
+      "PANIC  kernel.panic.audit_chain_tampered",
+      "       kill_and_alert executed: process tree terminated, supervisor alerted.",
+      "       Boot refused: no execution until chain integrity is restored.",
+      "state_modified: false",
+      "remedy:         re-enter with 'CAPCLI_RECOVERY=1 capcli sys doctor', then restore from the last verified object-store checkpoint via 'capcli sys recover <commit>'"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "kernel.panic"
+    }
+  }
+}

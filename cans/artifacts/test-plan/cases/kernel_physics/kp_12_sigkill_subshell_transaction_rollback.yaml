@@ -1,0 +1,81 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_12_sigkill_subshell_transaction_rollback"
+title: "SIGKILLed subshell transaction rolled back with no dangling claims or busy WAL"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#state-rollback-law"
+  statement: "When the subprocess running a guest routine dies abruptly (SIGKILL) mid-transaction, the kernel WAL supervisor detects the dead PID, rolls back the uncommitted transaction, and leaves no dangling claim row and no busy uncommitted WAL state — any partial commit is a critical kernel bug."
+  blast_radius_if_breached: "Half-committed batches poison the SSOT (some rows applied, others lost), orphaned claims block every future run against the same resource fleet-wide, and a permanently busy WAL wedges all writers on the shared database."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent kills the process and only asserts that the subshell is gone, leaving dangling rows in claims or an uncommitted WAL undetected; or uses real sleep loops to wait for the supervisor poll instead of deterministic clock ticks."
+  anti_slop_mitigation: "AS-02 proves the exact post-kill substrate state: row counts equal, claims empty, and a fresh BEGIN IMMEDIATE acquires instantly (no busy WAL); AS-04 drives supervisor poll ticks via MockClock; AS-08 proves the sandbox scratch dir is wiped despite the kill; AS-03 requires exit_code == 5 plus a parsed kernel.panic diagnostic."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "batch.ops@example.com"
+    agent_id: "agt_kp_12"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 1
+      engine: sqlite
+      db: workspace
+      tables:
+        orders:
+          cols:
+            id: pk
+            status: 'text=open'
+            amount: int
+          idx: [status]
+    tables:
+      - name: "orders"
+        row_count: 20
+      - name: "claims"
+        row_count: 0
+      - name: "_audit"
+        row_count: 8
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'spawn subshell `capcli run batch_reconcile -p batch=2024-11 -m "reconcile november batch"`; the harness delivers SIGKILL (signal 9) to the guest PID after the first INSERT of its open WAL transaction; the kernel WAL supervisor polls PID liveness on MockClock ticks'
+  input_params:
+    routine_engine: "python"
+    kill_signal: 9
+    kill_timing: "after the first INSERT inside the explicit transaction, before COMMIT"
+    transaction_content: "batched INSERT INTO orders plus claim acquisition on orders:batch-2024-11"
+
+expected_observations:
+  exit_code: 5
+  state_modified: false
+  diagnostic:
+    domain: "kernel.panic"
+    culprit: "subshell PID killed by SIGKILL with an open WAL transaction — the supervisor detected the dead PID and rolled back the uncommitted frames"
+    remedy: "the transaction was rolled back automatically; verify zero mutation and no dangling claim, then re-run the routine — no manual database intervention may be required"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "kernel.panic (recorded after WAL rollback — the chain remains valid)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Post-kill direct substrate queries: SELECT count(*) FROM orders == 20 and SELECT count(*) FROM claims == 0 (no dangling lock row); then open a fresh connection and assert BEGIN IMMEDIATE succeeds without hitting the busy timeout — proving no uncommitted WAL writer is wedged; _audit may append exactly one kernel.panic row (8 -> 9) and nothing else."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 5 and parse the CliEnvelope<T>: diagnostic.domain == kernel.panic, culprit names the dead PID and the open transaction, remedy confirms automatic rollback, state_modified == false."
+  - rule: "AS-04"
+    verification: "Supervisor liveness polls step on explicit MockClock ticks injected via the engine API — the test never sleeps to wait for cleanup and is fully deterministic across runs."
+  - rule: "AS-08"
+    verification: "The killed routine ran sandboxed: assert the per-run /scratch/<run-uuid> tmpfs directory does not exist on the host after the supervisor finishes the rollback — the kill must not leak guest files."

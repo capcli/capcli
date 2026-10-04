@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "routine.retire.denial.active_deps",
+  "noun": "routine",
+  "verb": "retire",
+  "target": "dispatch_order",
+  "command": "capcli routine retire dispatch_order --reason \"replaced by unified fulfillment path\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.authorizer",
+    "trust": "pinned",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.authorizer",
+    "culprit": "Callee dependencies block retirement; dependents must be retired or rebound first.",
+    "remedy": "retire or rebind order_sync@2 and sync_orders@1 first, then re-run retire",
+    "layer": "authorizer",
+    "measured": "2 active dependents (0 permitted for retirement)"
+  },
+  "txt_pair": "screens/routine/retire/routine.retire.denial.active_deps.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "FAIL  policy.authorizer.retire.deps_exist",
+      "Callee dependencies block retirement; dependents must be retired or rebound first.",
+      "state_modified: false",
+      "layer: authorizer",
+      "remedy: retire or rebind order_sync@2 and sync_orders@1 first, then re-run retire"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.authorizer"
+    }
+  }
+}

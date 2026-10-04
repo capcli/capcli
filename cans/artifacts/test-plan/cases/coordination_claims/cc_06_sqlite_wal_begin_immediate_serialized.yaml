@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_06_sqlite_wal_begin_immediate_serialized"
+title: "Concurrent write transactions serialize via BEGIN IMMEDIATE in WAL mode without deadlocks"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#physical-arbiter--SQLite-BEGIN-IMMEDIATE-serializes-physical-writes"
+  statement: "SQLite BEGIN IMMEDIATE is the physical arbiter that serializes physical writes (shared workspace.db in WAL mode with busy-timeout queue): multiple threads initiating write transactions concurrently are serialized — writers queue sequentially, every transaction commits, and no SQLITE_BUSY upgrade deadlock or lost update occurs."
+  blast_radius_if_breached: "BEGIN DEFERRED-style races produce SQLITE_BUSY mid-transaction upgrade deadlocks and interleaved partial writes into the SSOT: domain state diverges across replicas, frames reconcile against phantom balances, and the serialized write pipeline seizes under load."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent spawns uncontrolled threads with real sleeps and accepts whatever interleaving occurs (a deadlock-free run is luck, not serialization), or wraps the engine's transaction open in a global mutex that fakes serialization without ever exercising BEGIN IMMEDIATE."
+  anti_slop_mitigation: "AS-04 mandates deterministic lock-step thread synchronization (std::sync::Barrier rendezvous, MockClock for busy_timeout ticks — never uncontrolled threads); AS-06 pins the engine's BEGIN IMMEDIATE open path and zero SQLITE_BUSY; AS-05 verifies every commit chains in acquisition order."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_cc06"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "4 engine writer threads in lock-step (std::sync::Barrier rendezvous, deterministic turn order, MockClock busy_timeout ticks): each thread opens BEGIN IMMEDIATE, INSERTs 2 orders rows, commits; barriers advance thread phases — no uncontrolled scheduling"
+  input_params:
+    writer_threads: 4
+    rows_per_thread: 2
+    transaction_open: "BEGIN IMMEDIATE (write lock acquired at open, never DEFERRED)"
+    busy_timeout_clock: "MockClock epoch ticks injected via engine API"
+    synchronization: "std::sync::Barrier phase steps — threads rendezvous, never race"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — 8 inserts committed across 4 serialized transactions; zero SQLITE_BUSY"
+    remedy: "n/a — success; serialization verified by the assertions below"
+  database:
+    row_count_delta: 8 # orders 0 -> 8; _audit 4 -> 12 (8 db.exec events in commit order)
+    tables_mutated: ["orders", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (x8 — commit order matches BEGIN IMMEDIATE acquisition order)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Deterministic lock-step: threads rendezvous at std::sync::Barrier phase boundaries with MockClock stepping busy_timeout ticks — no uncontrolled thread scheduling, no sleeps, no accept-whatever interleaving; the serialization order is reproducible run-to-run."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: engine transaction open path issues BEGIN IMMEDIATE (assert the statement text / EXPLAIN trace, never BEGIN DEFERRED); zero SQLITE_BUSY upgrade errors in the sqlite3 log; orders count 8 with ids 1..8; no partial commits."
+  - rule: "AS-05"
+    verification: "All 8 commits chain into _audit in BEGIN IMMEDIATE acquisition order (monotonic seq, each prev_hash == SHA-256 of the prior row); run capcli-core::audit::verify_chain() over rows 1..12 — serialization order must equal ledger order."
+  - rule: "AS-03"
+    verification: "Parse each writer thread's CliEnvelope: exit_code == 0 and state_modified == true for all 4 transactions — no thread's failure is swallowed."

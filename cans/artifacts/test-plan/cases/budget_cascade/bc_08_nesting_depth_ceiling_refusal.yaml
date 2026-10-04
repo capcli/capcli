@@ -1,0 +1,64 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_08_nesting_depth_ceiling_refusal"
+title: "Frame push aborts at nesting depth 6 with max_nesting_depth_exceeded"
+domain: "budget_cascade"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Composition-flags"
+  statement: "'max_nesting_depth: 5 caps composition depth' (governance.yaml#routine_shape.composition.max_nesting_depth): the kernel frame push aborts with exit 2 when the call stack attempts to exceed 5 nested routine invocations — unbounded recursion between routine callers is structurally impossible."
+  blast_radius_if_breached: "Unbounded routine recursion would build infinitely deep frame chains, each holding budget reservations and claims — stack exhaustion, deadlocked frame pools, and unreclaimable session budget locked in cycles of mutually-calling routines."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by catching a generic stack-overflow or runtime panic (exit 4/5) and calling it a pass — the frame-push governance refusal (exit 2, max_nesting_depth_exceeded) is never distinguished from a crash."
+  anti_slop_mitigation: "AS-03 forces the typed exit 2 with the max_nesting_depth_exceeded culprit — a runtime crash code fails the test. AS-02 proves the aborted push left no 6th frame row. AS-06 pins the literals: depth cap 5, refusal at the 6th invocation."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_08"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 5   # five active nested frames: routine_a -> routine_b -> routine_c -> routine_d -> routine_e
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'budget frame push via capcli-core::budget: routine_f invoked as the 6th nested routine from a call stack already 5 frames deep (a -> b -> c -> d -> e -> f)'
+  input_params:
+    current_depth: 5
+    max_nesting_depth: 5
+    attempted_depth: 6
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "max_nesting_depth_exceeded: frame push for the 6th nested routine invocation aborted — composition depth is capped at 5 (governance composition.max_nesting_depth)"
+    remedy: "flatten the composition — the import ceiling is 3 routine imports per file and depth 5; restructure the call chain instead of recursing deeper"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.frame_push (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _budget_frames returns exactly 5 before and after (strict equality) — the aborted push leaves no 6th frame row, and the 5 existing frames' counters are unchanged."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 (a stack-overflow crash would surface as exit 4/5 and must fail this test) and parse the CliEnvelope diagnostic: domain == 'policy.budget', culprit names max_nesting_depth_exceeded, remedy suggests flattening."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: depth cap == 5, refusal at attempted depth == 6, frame count == 5 post-run — the expected depth is an immutable literal, never read back from the engine's own depth counter."

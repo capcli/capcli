@@ -1,0 +1,64 @@
+$schema: "test-plan/case/v1"
+case_id: "we_10_wire_payload_byte_cap_breach"
+title: "Fuel gate blocks the oversized outbound POST payload before socket transmission"
+domain: "wire_egress"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Pre-call-policy"
+  statement: "'Pre-call policy — checks enforced before egress leaves kernel': the fuel gate enforces the wire payload cap — max_call_egress_bytes 5,242,880 (5MB physical wire limit per egress dispatch, policy.yaml#api.fuel; assembly.md#Core-domain-subsystems fuel_gate.rs 'enforces session fuel and wire payload caps') — so an oversized outbound POST body is blocked before any byte reaches the socket."
+  blast_radius_if_breached: "Streaming an unbounded request body to a provider before checking the cap would burn wire budget and session fuel on doomed transfers, trip provider-side payload limits mid-stream, and enable memory-exhaustion of the egress proxy under oversized payloads."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by streaming the oversized request to a physical (or wiremock) server first and asserting the server's 413 response — the kernel-side pre-socket block is never exercised, and the bytes already left the process."
+  anti_slop_mitigation: "AS-06 pins the literal byte counts (6,291,456 body vs 5,242,880 cap) and asserts the receiving server observed 0 requests / 0 bytes. AS-02 proves zero table mutations via direct SQL. AS-03 forces the typed exit 2 with the parsed diagnostic block."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_10"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'stripe': 48 of 50 tokens available
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'ctx.api.call("stripe.charges", params=<serialized POST body of 6,291,456 bytes (6 MiB)>, intent="oversized batch upload attempt")'
+  input_params:
+    verb: "stripe.charges"
+    body_bytes: 6291456
+    max_call_egress_bytes: 5242880   # NOTE: catalog §6.3 narrative cites a 65,536-byte cap; spec policy.yaml#api.fuel.max_call_egress_bytes sets 5,242,880 (5MB) per egress dispatch — spec value used (65,536 in spec applies to webhook ingress and serve response bodies only)
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "outbound POST payload 6,291,456 bytes exceeds max_call_egress_bytes 5,242,880 (5MB physical wire limit per egress dispatch, policy.yaml#api.fuel); fuel_gate blocks the dispatch before socket transmission"
+    remedy: "shrink the request payload below the 5MB per-dispatch cap, or move the bulk transfer to ctx.storage.put (object storage, 10MB ceiling) and pass a reference instead of the raw body"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) on _api_quota and every business table before/after is identical (strict equality); the stripe row's remaining is unchanged — the blocked call debited nothing."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.budget', the culprit cites the measured 6,291,456 bytes against the 5,242,880 cap (cite_measured_value), and the remedy names a concrete alternative path."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: body 6,291,456 bytes, cap 5,242,880 bytes; the wiremock receiving server's request counter reads exactly 0 and 0 payload bytes were transmitted — the size check fires before socket creation, never mid-stream."

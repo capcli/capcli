@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "routine.prove.denial.sandbox",
+  "noun": "routine",
+  "verb": "prove",
+  "target": "sync_orders",
+  "command": "capcli routine prove sync_orders --env sim",
+  "state": {
+    "exit_code": 2,
+    "domain": "kernel.sandbox",
+    "trust": "draft",
+    "env": "sim",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "kernel.sandbox",
+    "culprit": "Jail containment boundary violated; raw network egress prohibited from guest sandboxes.",
+    "remedy": "use ctx.api.call with an activated catalog verb",
+    "layer": "sandbox",
+    "measured": "1 containment violation (connect trapped at 0 bytes egress)"
+  },
+  "txt_pair": "screens/routine/prove/routine.prove.denial.sandbox.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[sim:tier_1]  ✗  exit 2",
+      "FAIL  kernel.sandbox.breach",
+      "Jail containment boundary violated; raw network egress prohibited from guest sandboxes.",
+      "state_modified: false",
+      "layer: sandbox",
+      "remedy: use ctx.api.call with an activated catalog verb"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "kernel.sandbox"
+    }
+  }
+}

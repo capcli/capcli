@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_03_causal_dag_parent_pointer"
+title: "Nested routine leaf ops carry caused_by parent pointers that walk cleanly back to the session root"
+domain: "audit_dag"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#parent-pointer--caused_by-references-parent-operation-id"
+  statement: "Every child primitive execution records its parent operation id in caused_by (hierarchy: op -> routine -> session goal); env and stage are stamped on every leaf event, so a traversal from any leaf reaches the session root and the caused_by graph stays acyclic (linearity: sequential routine interiors guarantee an acyclic DAG)."
+  blast_radius_if_breached: "Orphaned leaf events with null caused_by sever causal attribution: sys audit trace stops mid-tree, corruption can no longer be pinned to a specific routine, world, agent, and version, replay cannot reconstruct dependency order, and budget frame reconciliation loses its parent_frame links."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent leaves caused_by null on nested routine calls but still passes by matching only the leaf op id, or derives the expected parent id from the row it just read (tautology) instead of a hardcoded literal op-id chain."
+  anti_slop_mitigation: "AS-06 hardcodes the literal op-id chain and asserts caused_by IS NOT NULL on every new row; AS-05 verifies the new events cryptographically chain into the ledger; petgraph is_cyclic_directed == false on the caused_by graph."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_ad_03"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "engine dispatch in session ses_ad_03: routine.run cap://orders/ship (frame push) -> nested routine.run cap://orders/notify (frame push) -> leaf db.exec INSERT INTO orders (id, status) VALUES (7, 'shipped'); then SELECT caused_by from every new _audit row"
+  input_params:
+    session: "ses_ad_03"
+    root_intent: "settle february payout batch"
+    nesting_depth: 2
+    leaf_write: "INSERT INTO orders (id, status) VALUES (7, 'shipped')"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — two routine.run frames plus one leaf db.exec appended, each with a non-null caused_by"
+    remedy: "n/a — success; pointer walk verified by the assertions below"
+  database:
+    row_count_delta: 1 # orders 0 -> 1; _audit 4 -> 7 (2 frames + 1 leaf)
+    tables_mutated: ["orders", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (x2 frame events) + db.exec (leaf, caused_by = parent routine.run op id)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Hardcoded literal op-id chain: leaf db.exec caused_by == op id of nested routine.run cap://orders/notify; that event's caused_by == op id of routine.run cap://orders/ship; that event's caused_by == the session root event (intent 'settle february payout batch'); assert SELECT caused_by IS NOT NULL on all three new _audit rows and petgraph is_cyclic_directed(caused_by graph) == false."
+  - rule: "AS-05"
+    verification: "The three new _audit rows chain correctly: each prev_hash == SHA-256 of the prior row, the leaf's result_hash == SHA-256 of the canonical JSON outcome of the INSERT (rows_affected 1); run capcli-core::audit::verify_chain() over rows 1..7."
+  - rule: "AS-03"
+    verification: "Parse the engine CliEnvelope for the dispatch: exit_code == 0, state_modified == true, and the returned audit_op ids match the hardcoded literal op ids (never re-derived from the envelope output)."

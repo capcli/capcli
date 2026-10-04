@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_05_w3c_traceparent_propagation"
+title: "Inbound W3C traceparent is captured into trace_id and binds every leaf op of the request"
+domain: "audit_dag"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#distributed-tracing--incoming-W3C-traceparent-captured-in-trace_id-links-external-caller-to-root-DAG"
+  statement: "An inbound HTTP request carrying the W3C traceparent header has its trace ID captured into trace_id (inbound HTTP requests bind via serve.request); every subsequent leaf operation of that request is stamped with the same trace_id, linking the external caller to the root DAG — the kernel never substitutes a self-generated random trace ID."
+  blast_radius_if_breached: "Cross-system incident forensics breaks: external caller requests cannot be correlated to capcli leaf operations, on-call cannot join capcli audit trails with provider-side distributed traces, and per-caller blast-radius analysis over the causal DAG becomes impossible."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent ignores the incoming header, asserts only that trace_id is non-null (a kernel-generated random trace id passes the check), or compares trace ids read back from the response payload instead of the literal header value."
+  anti_slop_mitigation: "AS-06 pins the literal trace ID from the W3C header and asserts every new event carries exactly it; AS-05 verifies serve.request and leaf events chain cryptographically; AS-03 parses the structured response envelope."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "partner:acme"
+    agent_id: "capcli-serve" # kernel principal: listener owns synchronous endpoint requests
+    trust: "pinned" # bound endpoints require pinned trust
+  initial_state:
+    schema_yaml: |
+      version: 8
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 500
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'curl -s http://127.0.0.1:8042/endpoints/orders-sync -H ''traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01'' -H ''Authorization: Bearer live_9f2kQ7'' -d ''{"order_id": 501, "status": "paid"}'''
+  input_params:
+    w3c_traceparent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+    trace_id: "4bf92f3577b34da6a3ce929d0e0e4736"
+    endpoint: "orders-sync"
+    channel: "rest"
+    bound_routine: "cap://orders/sync@2"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — serve.request status 200; leaf db.exec INSERT committed under the inbound trace context"
+    remedy: "n/a — success; trace binding verified by the assertions below"
+  database:
+    row_count_delta: 1 # orders 500 -> 501; _audit gains serve.request + leaf db.exec
+    tables_mutated: ["orders", "_audit"]
+  wire:
+    packets_transmitted: 0 # no kernel-initiated outbound egress; inbound request + reply only
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "serve.request (endpoint orders-sync, channel rest, trace_id 4bf92f3577b34da6a3ce929d0e0e4736, routine@version cap://orders/sync@2, status 200) + leaf db.exec stamped with the same trace_id"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Hardcoded literal: SELECT trace_id FROM _audit WHERE seq > 4 returns '4bf92f3577b34da6a3ce929d0e0e4736' for the serve.request row AND every leaf op row of this request — the literal is taken from the inbound W3C header, never from engine output; a kernel-generated random trace id must fail the equality."
+  - rule: "AS-05"
+    verification: "The serve.request event and the leaf db.exec event chain correctly: prev_hash == SHA-256 of the prior row, result_hash == SHA-256 of the canonical JSON outcome; run capcli-core::audit::verify_chain() over the full ledger after the request."
+  - rule: "AS-03"
+    verification: "Parse the HTTP/JSON-RPC response envelope: exit_code 0 mapped to status 200, state_modified true, and the receipt echoes the request context (endpoint, trace id) — no raw string matching on the body."

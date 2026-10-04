@@ -1,0 +1,43 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "doc.outline.success.populated",
+  "noun": "doc",
+  "verb": "outline",
+  "target": "doc://refund-policy",
+  "command": "capcli doc outline doc://refund-policy",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "pinned",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/doc/outline/doc.outline.success.populated.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  outline doc://refund-policy",
+      "doc://refund-policy (pinned)",
+      "├── 3. Stripe integration notes",
+      "└── 5. Escalation paths",
+      "nodes:    8",
+      "tokens:   312 (full document)"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}

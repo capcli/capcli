@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "da_08_column_immutability_enforcement"
+title: "UPDATE against an immutable (int~) column is denied by the C authorizer deny_columns_write"
+domain: "database_authorizer"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Kernel-authorizer-layer"
+  statement: "The ~ shorthand expands to immutable write-once and the kernel authorizer layer enforces it: column immutability (~ syntax) denies column update - the deny_columns_write protection fires inside the SQLite C authorizer callback during sqlite3_prepare_v2, never in application logic."
+  blast_radius_if_breached: "Financial ledger amounts become editable post-facto; any compromised agent rewrites transaction history and reconciliation, replay, and regulatory evidence all diverge silently."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent checks the column-update block in application-level wrapper code (or mocks the authorizer) instead of proving the denial originates inside the SQLite authorizer callback - the physical floor is never exercised."
+  anti_slop_mitigation: "AS-01 requires the denial to fire as a SQLITE_UPDATE authorizer action carrying the column argument, with mocks banned on authorizer.rs; AS-02 proves row count and the literal column value are unchanged; AS-03 requires the typed exit code plus authorizer-domain diagnostic."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.ledgerprobe@acme.corp"
+    agent_id: "agt_da_08"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        ledger_entries:
+          description: "Append-only financial ledger with write-once amounts"
+          prov: true
+          columns:
+            id: pk
+            account_ref: text!
+            amount_cents: int~
+    tables:
+      - name: "ledger_entries"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "UPDATE ledger_entries SET amount_cents = 0 WHERE id = 7 LIMIT 1"
+  input_params:
+    targeted_column: "amount_cents"
+    column_shorthand: "int~ (integer immutable write-once)"
+    statement_shape: "WHERE + LIMIT present - passes Layer-2 AST bounds, must still die at Layer 1"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "UPDATE targets immutable column ledger_entries.amount_cents (int~ write-once); deny_columns_write protection returns SQLITE_DENY at prepare time"
+    remedy: "Immutable columns are never updated in place; append a compensating ledger row, or declare the column without ~ via a reviewed schema migration (forward-only)."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Assert the authorizer callback receives the 3D action x table x column tuple (SQLITE_UPDATE, ledger_entries, amount_cents) and returns SQLITE_DENY - enforcement is inside SQLite, with static lint banning mocks on crates/capcli-core/src/db/authorizer.rs and app-logic pre-checks."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM ledger_entries == 500 before and after; SELECT amount_cents FROM ledger_entries WHERE id = 7 == hardcoded literal 4200 before and after (strict equality)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the diagnostic envelope: domain 'policy.authorizer', culprit names the immutable column, remedy present."

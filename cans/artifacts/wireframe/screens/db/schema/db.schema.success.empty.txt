@@ -1,0 +1,10 @@
+[dev:tier_1]  ✓  empty
+
+  database:       envs/dev/workspace.db
+  domain_tables:  0
+  system_tables:  13 (kernel-managed, read-only)
+  views:          0
+  triggers:       0
+
+  state_modified: false
+  note:           no domain schema compiled; declare tables in schema.yaml

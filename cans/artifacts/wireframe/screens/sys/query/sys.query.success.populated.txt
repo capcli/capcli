@@ -1,0 +1,13 @@
+[dev:tier_1]  ✓  queried
+
+  target:    _audit (read-only system table)
+  rows:      3 returned (LIMIT 20)
+  duration:  2ms
+
+  op_id      domain
+  ──────────────────────
+  op_c44d1   policy.ast
+  op_31f8    policy.budget
+  op_b22e9   policy.trust
+
+  note:  writes to _audit are denied; queries served from the SSOT table

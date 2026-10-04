@@ -1,0 +1,53 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "api.prove.crash.runtime",
+  "noun": "api",
+  "verb": "prove",
+  "target": "cap://stripe.issue_credit_note",
+  "command": "capcli api prove stripe.issue_credit_note --env sim",
+  "state": {
+    "exit_code": 4,
+    "domain": "routine.runtime",
+    "trust": "draft",
+    "env": "sim",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "routine.runtime",
+    "culprit": "Upstream contract format failure: response schema 'credit_note.amount' declares union type [integer, string].",
+    "remedy": "re-sync the provider spec once upstream fixes the schema, then re-run the prove"
+  },
+  "txt_pair": "screens/api/prove/api.prove.crash.runtime.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 4,
+    "state_modified": false,
+    "stdout_contains": [
+      "[sim:tier_1]  ✗  exit 4",
+      "  CRASH  routine.runtime.exception",
+      "         error:   upstream contract format failure",
+      "  state_modified:  false",
+      "  rollback:        clean",
+      "  remedy:          re-sync the provider spec once upstream fixes the schema, then re-run the prove"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "routine.runtime"
+    }
+  }
+}

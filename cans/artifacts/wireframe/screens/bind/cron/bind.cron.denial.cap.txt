@@ -1,0 +1,11 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.schedule_cap_exceeded
+        active schedules: 20 of 20
+
+        Max 20 active schedules reached. New schedule binding refused.
+
+  state_modified: false
+  layer:          authorizer
+  measured:       20 active schedules (cap: 20)
+  remedy:         pause or remove an idle schedule first (capcli bind list)

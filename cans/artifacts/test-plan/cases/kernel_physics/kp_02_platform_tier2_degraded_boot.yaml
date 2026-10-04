@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_02_platform_tier2_degraded_boot"
+title: "Tier 2 boot degrades sandbox to broker with visible WARN and denies pinned execution"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/physics.md#sandbox-degraded-on-tier-2"
+  statement: "Booting on a tier 2 host (macOS/Windows) without bwrap never fails silently and never upgrades isolation: boot must emit [WARN] host.degraded_isolation, drop the sandbox provider to the IPC broker + C authorizer path, and pinned routines must remain denied — draft and reviewed are permitted in dev/sim only."
+  blast_radius_if_breached: "Pinned (highest-trust) production routines execute without namespace isolation on developer laptops and endpoint machines — one compromised endpoint silently runs unsandboxed pinned code with production credentials, an enterprise-wide supply-chain exposure."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent swallows the [WARN] host.degraded_isolation line (never parses boot output), asserts only that the daemon started, or runs the case on the CI host default platform so the pinned denial is never exercised against an actual Tier 2 probe."
+  anti_slop_mitigation: "AS-07 forces the explicit two-configuration platform matrix (Tier 1 pinned run must pass; Tier 2 must hard-deny via injected PlatformTier::Tier2); AS-03 requires parsing both the boot warning line and the structured denial envelope; AS-02 proves zero rows mutated by the refused run."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_2"
+  caller_identity:
+    principal: "finance.ops@example.com"
+    agent_id: "agt_kp_02"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 1
+      engine: sqlite
+      db: workspace
+      tables:
+        payouts:
+          cols:
+            id: pk
+            status: 'text=pending'
+            amount_cents: int
+          idx: [status]
+    tables:
+      - name: "payouts"
+        row_count: 2
+      - name: "_audit"
+        row_count: 7
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run payout_settle -p batch=daily -m "settle daily payout batch" (issued against a daemon freshly booted on a macOS host with bwrap absent)'
+  input_params:
+    host_os: "darwin"
+    bwrap_present: false
+    sandbox_provider_expected: "broker"
+    boot_warning_expected: "[WARN] host.degraded_isolation"
+    routine_trust: "pinned"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "E045_TIER2_PINNED_DENIED — pinned trust execution refused on tier 2 (degraded) host whose sandbox provider downgraded to broker" # NOTE: not located in cans/ specs
+    remedy: "run pinned routines from a tier 1 (hardened Linux) host, or demote the routine to reviewed/draft and restrict it to dev/sim on tier 2"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-07"
+    verification: "Run the pinned execution in two injected platform configurations: PlatformTier::Tier1 (run must succeed) and PlatformTier::Tier2 (must hard-deny with exit 2); the platform tier is injected via the platform probe, never inferred from the CI host accidental OS."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 and parse two outputs: the daemon boot log must contain the literal line '[WARN] host.degraded_isolation' (warning not swallowed, provider reported as broker), and the CliEnvelope<T> diagnostic must carry domain policy.trust with the tier-2 pinned denial and state_modified == false."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM payouts on envs/dev/workspace.db before and after the refused run must be strictly equal (2 == 2); _audit must advance 7 -> 8 with exactly one routine.run denial row (effect: none) and no other ledger activity."

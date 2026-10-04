@@ -1,0 +1,9 @@
+[dev:tier_1]  ✗  exit 3
+
+  FATAL  kernel.boot.clock_drift_exceeded
+         Host clock delta vs NTP is 840ms (maximum allowable: 500ms).
+         Execution refused to prevent lease corruption and quota bypass.
+
+  state_modified: false
+  layer: boot
+  remedy: synchronize host system clock via 'chronyd' or 'ntpdate'

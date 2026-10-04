@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_01_missing_frame_token_trap"
+title: "Standalone SDK import without a kernel frame token traps immediately with exit 3"
+domain: "sdk_harness"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Runtime-refusals"
+  statement: "Standalone bypass: routine invocation outside the kernel runner exits 3. The SDK import itself traps a missing frame token — a Python script importing capcli and executing directly (no kernel runner, no kernel-minted capability token bound to an active _budget_frames row) aborts before any ctx method executes, so guest code can never run outside the sandboxed runner wrapper."
+  blast_radius_if_breached: "Guest scripts execute unsandboxed on the host: raw filesystem access, unmediated network egress, no ops/fuel accounting, and zero audit trail — every budget, seccomp, and authorizer guarantee becomes optional decoration controlled by the guest's own honesty."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent sets a fake CAPCLI_FRAME_TOKEN env var in test setup that the SDK accepts (or monkey-patches the trap to a no-op), turning the standalone run green; or asserts a Python traceback text match without pinning exit 3 and the CLI diagnostic envelope."
+  anti_slop_mitigation: "AS-01 bans patching the harness confinement boundary (action.md#Sandbox-boundaries harness confinement node); the trap must fire in a real subprocess with no kernel.sock session established; AS-03 requires exit_code == 3 with the structured diagnostic, not a raw traceback."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.dev@example.com"
+    agent_id: "agt_sh_01" # harness agent attempting a direct standalone execution (no kernel session)
+    trust: "draft" # no trust rung is ever established: no session, no frame
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 0 # no active frame: the token has nothing to bind to
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events for refund@2
+      - name: "routine_stats"
+        row_count: 1
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "python3 routines/refund.py --order-id ORD-10" # standalone guest execution: no capcli run, no kernel.sock session
+  input_params:
+    script: "routines/refund.py" # imports `import capcli` at module top
+    order_id: "ORD-10"
+    kernel_sock_session: null # no kernel.sock connection, no frame token injected
+    frame_token_env: null
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "sdk.harness"
+    culprit: "SDK import trapped: no kernel frame token present — routine code executed outside the kernel runner wrapper (standalone bypass, physics.md#Runtime-refusals)"
+    remedy: "invoke the capability through the kernel: capcli run cap://refund -p order_id=ORD-10 -m \"...\" — the runner injects the kernel-minted frame token over kernel.sock before guest execution"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # trap fires at import, before any ctx method runs
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny" # NOTE: pre-session trap event name not located in cans/effect.md payload list; effect: none (effect.md#Denials), log_all per artifacts/governance.yaml#denials
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Run the trap in a real child process with the genuine SDK import path — no monkey-patching of the frame-token check, no fake CAPCLI_FRAME_TOKEN env var, no mockall on the harness confinement types (action.md#Sandbox-boundaries). A companion positive control: the identical script dispatched via capcli run must execute normally under the runner."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 3 (standalone bypass class, physics.md#Exit-code-law) and parse the structured CliEnvelope emitted by the trap: diagnostic.domain == 'sdk.harness', culprit names the missing frame token, remedy points at capcli run — a raw unhandled Python traceback with no envelope fails the test."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _budget_frames, routine_stats, and any world table before and after the standalone execution; assert strict equality — no frame was pushed, no ops consumed, no rows touched by the unsandboxed script."

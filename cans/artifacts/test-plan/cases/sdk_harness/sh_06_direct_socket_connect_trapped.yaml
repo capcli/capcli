@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_06_direct_socket_connect_trapped"
+title: "Raw socket.create_connection in guest Python is trapped by the seccomp syscall 42 filter"
+domain: "sdk_harness"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Platform-tier-taxonomy"
+  statement: "On Tier 1 the network jail is a seccomp-bpf filter trapping raw socket connect (syscall 42) across all engines (physics.md#Platform-tier-taxonomy; action.md#Jail-architecture tier 1 execution blocks raw network via seccomp-bpf under bwrap): a guest Python routine executing socket.create_connection() is trapped and killed with exit 2 before any packet leaves the namespace — the only egress path is ctx.api.call through the kernel proxy."
+  blast_radius_if_breached: "Guest code bypasses the egress perimeter entirely: unlogged and unquota'd traffic to arbitrary hosts (data exfiltration straight from the sandbox), vaulted-secret boundaries become decorative, and the api catalog allowlist (outbound restricted to apis/ verbs) no longer constrains anything."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent mocks the guest process (never actually running the script), replaces the socket call with a no-op stub, or runs the test on a Tier 2 host where seccomp is absent and asserts the broker's env-var block as equivalent — skipping the actual kernel jail harness."
+  anti_slop_mitigation: "AS-01 bans mocking the guest process or the seccomp jail: the bwrapped child must genuinely attempt connect(); the trap must surface as a seccomp SIGSYS/kill, exit 2, syscall 42; AS-08 asserts the tmpfs /scratch wipe after the killed run; AS-02 proves zero DB effects."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1" # seccomp-bpf network jail is a Tier 1 mechanism (bwrap namespaces)
+  caller_identity:
+    principal: "human.dev@example.com"
+    agent_id: "agt_sh_06"
+    trust: "draft" # the network jail binds all trust rungs on Tier 1; draft suffices to make the scenario valid
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 0
+      - name: "routine_stats"
+        row_count: 1 # sync_inventory@1: manifest declares ctx.api.call only, no raw sockets
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://sync_inventory -p sku=WIDGET-01 -m "sync stock levels" # routine body executes: import socket; socket.create_connection(("203.0.113.7", 443))'
+  input_params:
+    capability: "cap://sync_inventory"
+    guest_code: 'import socket; socket.create_connection(("203.0.113.7", 443))'
+    target_address: "203.0.113.7:443" # raw IP: unregistered destination (we_05 class)
+    intent: "sync stock levels"
+    sandbox_provider: "bwrap + seccomp profile_python" # physics.md#Platform-tier-taxonomy syscall profiles
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "kernel.jail"
+    culprit: "guest routine attempted raw socket connect (syscall 42) to 203.0.113.7:443; seccomp-bpf network jail trapped and killed the execution"
+    remedy: "route all egress through ctx.api.call against activated catalog verbs (cap:// verbs in apis/); raw networking libraries are structurally unavailable inside the sandbox"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # connect() trapped before any packet leaves the unshared network namespace
+    syscall_42_trapped: true
+  audit:
+    event_emitted: "routine.run" # terminal outcome: denied — trapped leaf recorded with the seccomp kill (effect.md#Kernel-event-payloads routine.run outcome)
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mocking of the guest process or the jail: the bwrap-wrapped child must genuinely execute socket.create_connection and die from the seccomp filter (SIGSYS-class kill on syscall 42), not from a simulated error return; the trap must be observed at the kernel/ptrace or wait-status level, not inferred from CLI text."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM world tables, _budget_frames, and routine_stats before and after the killed run; assert strict equality — zero committed effects from the trapped routine; only the denial audit row (effect: none) is new."
+  - rule: "AS-08"
+    verification: "Assert the tmpfs /scratch directory for this execution is physically wiped after the kill: the scratch UUID mount must not exist on the host post-execution (bwrap tmpfs cleanup, action.md#Jail-architecture)."
+  - rule: "AS-07"
+    verification: "Platform boundary check: the syscall-42 trap is asserted on a Tier 1 harness; on the Tier 2 companion run the same raw connect must be blocked by the broker's unshared proxy env vars + ctx mediation with the host.degraded_isolation warning — permissiveness on either tier is a failure."

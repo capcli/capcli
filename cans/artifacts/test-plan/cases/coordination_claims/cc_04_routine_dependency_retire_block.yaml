@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_04_routine_dependency_retire_block"
+title: "Retiring a routine imported by an active dependent is blocked by the dependency DAG"
+domain: "coordination_claims"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#dependency-tracking--routine-dependency-graph-blocks-retirement-of-active-deps"
+  statement: "The routine dependency graph blocks retirement of active dependencies: when Routine A is imported by Routine B, capcli routine retire A is rejected — dependents are never left with dangling references to a retired capability."
+  blast_radius_if_breached: "Dangling imports detonate at call time in production: Routine B dispatches into a retired routine, the kernel executes ungoverned/stale code paths or hard-fails mid-payout, and the provenance graph silently loses the edge that explains who depended on what."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent retires the dependent (Routine B) first in test setup so the retire of A trivially succeeds, or asserts exit non-zero without checking that A's file, routine_stats row, and dependency edge all survived untouched."
+  anti_slop_mitigation: "AS-02 proves the routine file, stats rows, and import edge are identical before/after; AS-03 pins exit 2 with the dependency diagnostic naming both routines; AS-06 hardcodes the dependency edge literal."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.maintainer@acme.corp"
+    agent_id: "agt_cc04"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null # routine-level scenario; no domain table shape required
+    tables:
+      - name: "routine_stats"
+        row_count: 2 # orders/rekey@2 (active, imported) and orders/payout@1 (active importer)
+      - name: "_audit"
+        row_count: 6 # genesis + import/bind events for both routines
+    vault_secrets: []
+    # harness pre-condition: routines/orders/rekey.py exists; routine orders/payout imports cap://orders/rekey (DAG edge rekey <- payout)
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli routine retire orders/rekey --reason \"cleanup dead routine\""
+  input_params:
+    target_routine: "orders/rekey@2"
+    active_dependent: "orders/payout@1 (imports cap://orders/rekey)"
+    dependency_edge: "orders/payout -> cap://orders/rekey"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.governance"
+    culprit: "routine orders/rekey@2 is imported by active routine orders/payout@1 (dependency DAG edge orders/payout -> cap://orders/rekey); retirement of an active dependency is blocked"
+    remedy: "retire orders/payout first, or remove the import edge from orders/payout and re-prove it, then retry routine retire orders/rekey"
+  database:
+    row_count_delta: 0 # routine_stats unchanged; _audit gains exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none — dependency retirement block)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM routine_stats == 2 before and after; routines/orders/rekey.py still exists on disk post-command (stat the file) and its byte hash is unchanged — the retire attempt mutated neither stats nor source."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.governance', culprit names both routines and the dependency edge, remedy lists retire-order/import-removal options."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: the dependency edge 'orders/payout -> cap://orders/rekey' and both routine_stats rows (orders/rekey@2, orders/payout@1) are asserted verbatim — the dependent must remain resolvable and its import edge intact."

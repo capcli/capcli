@@ -1,0 +1,66 @@
+$schema: "test-plan/case/v1"
+case_id: "we_13_sim_rehearsal_isolated_quota"
+title: "High-volume sim rehearsal burns only the sim-scoped quota bucket while the prod balance stays untouched"
+domain: "wire_egress"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/space.md#Quota-isolation"
+  statement: "'Accounting — _api_quota tracks usage partitioned by env; independence — sim rehearsals consume sim quota only' (budget.md#Storage: 'Rows scoped per env: sim and prod quotas independent — rehearsal never burns prod limits'): a high-volume replay run in the sim environment debits only the sim-scoped _api_quota row; the prod row's balance remains exactly unchanged."
+  blast_radius_if_breached: "A shared quota bucket would let rehearsals silently consume production provider quota, so real business traffic would hit 429s and hard denials at peak hours because test runs burned the enterprise's paid allowance."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by asserting a single mocked bucket object twice, or by checking only the sim counter — the prod row is never read, so a shared-bucket regression (sim debits prod) passes unnoticed."
+  anti_slop_mitigation: "AS-01 requires two real _api_quota rows (sim-scoped and prod-scoped) with no shared-bucket mock in between. AS-05 verifies every api.call audit row is env-stamped 'sim' with a valid chain link. AS-06 pins both balances as literals: sim 50 -> 10, prod stays exactly 50."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_13"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 2   # provider 'threads': sim-scoped row 50/50 available AND prod-scoped row 50/50 available (independent partitions)
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://nightly_digest@4 -p volume=high --env sim -m "high-volume sim rehearsal of nightly digest"'
+  input_params:
+    routine: "nightly_digest@4"
+    env: "sim"
+    api_calls: 40
+    sim_bucket_before: 50
+    prod_bucket_before: 50
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "budget.quotas"
+    culprit: "none — nominal path: 40 rehearsal calls burned the sim-scoped bucket 50 -> 10; the prod-scoped row still reads 50/50 (env-partitioned accounting)"
+    remedy: "none required — _api_quota rows are scoped per env; exhaustion in sim gates only sim calls, and rehearsal never burns prod limits"
+  database:
+    row_count_delta: 0
+    tables_mutated: ["_api_quota"]   # sim row debited in place 50 -> 10; prod row untouched; _audit gains 40 api.call event rows
+  wire:
+    packets_transmitted: 40   # sim-scoped wire only: sandbox sim mode routes to the provider test endpoint via the apis/<provider>.sim.yaml overlay (space.md#Policy-overlays)
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (env: sim, 40 events)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No shared-bucket mock: two distinct real _api_quota rows exist (row_count 2 in setup) and the engine's quota accounting debits the row selected by the env column — any test double standing in for the partitioned store invalidates the case."
+  - rule: "AS-05"
+    verification: "_audit gains exactly 40 api.call event rows, each stamped env == 'sim' (effect.md#Event-anatomy env field); the chain verifies end-to-end via capcli-core::audit::verify_chain() across all 40 new rows (prev_hash links intact)."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: the sim row's remaining equals 10 (50 - 40) and the prod row's remaining equals exactly 50 after the run — both values are immutable literals read by direct SQL, never derived from the engine's in-memory counter; any nonzero prod delta fails the test."

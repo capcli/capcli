@@ -1,0 +1,66 @@
+$schema: "test-plan/case/v1"
+case_id: "we_04_vault_bearer_egress_injection"
+title: "Kernel egress proxy injects the vaulted Authorization header without the secret ever entering guest memory"
+domain: "wire_egress"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#Egress-injection"
+  statement: "'Injection point — Authorization headers inserted at kernel egress boundary; references — catalogs reference secret_ref, never plaintext values': the kernel proxy decrypts the vaulted secret, injects it into the Authorization header at the egress boundary, and the plaintext never crosses into guest routine memory (physics.md#Harness-boundaries 'credentials isolation — tokens injected at egress boundary')."
+  blast_radius_if_breached: "A plaintext provider credential leaking into guest memory would be exfiltratable by a compromised or hallucinating routine (stdout dump, crash core, heap scan), turning one buggy draft routine into an enterprise-wide Stripe key rotation incident."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by mocking the injection (asserting an Authorization header on a hand-built fake request) and never scanning guest runtime memory — finding the secret in plaintext in the guest heap would go undetected."
+  anti_slop_mitigation: "AS-01 bans mocking the egress proxy and the AES-256-GCM vault decryption: the real boundary path must run and a raw guest memory scan must come back empty. AS-03 requires the typed exit 0 plus parsed envelope. AS-05 verifies the api.call audit event and its hash-chain link, so the dispatch is proven, not assumed."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.finance@example.com"
+    agent_id: "agt_we_04"
+    trust: "reviewed"   # external API writes require reviewed; draft routines are denied secret access
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'stripe': 48 of 50 tokens available
+    vault_secrets:
+      - ref: "vault://stripe_key"
+        scope: "prod"
+
+execution:
+  trigger: "json_rpc"
+  command: 'ctx.api.call("stripe.charges", params={"amount": 2000, "currency": "usd", "charge": "ch_123"}, intent="settle refund for order ORD-10")'
+  input_params:
+    verb: "stripe.charges"
+    secret_ref: "vault://stripe_key"
+    injection_point: "Authorization header (kernel egress boundary)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "wire.egress"
+    culprit: "none — nominal path: vaulted Authorization header injected at the kernel egress boundary; the decrypted secret exists only ephemerally inside the kernel proxy and is zeroized post-dispatch"
+    remedy: "none required — boundary injection is automatic for secret_ref-bearing verbs; guest code never handles the credential"
+  database:
+    row_count_delta: 1
+    tables_mutated: ["_audit"]   # api.call event row; the stripe _api_quota row is debited in place (row count unchanged)
+  wire:
+    packets_transmitted: 1
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mock of the egress proxy or the AES-256-GCM vault decryption: run the real boundary path and scan the guest subshell's runtime memory (pre-zeroize window) for the plaintext secret — zero matches; the Authorization header is observable only in the kernel-side proxy capture, and audit params are redacted (policy.yaml#audit.redact auth_headers: always)."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 0 and parse the CliEnvelope: state_modified true, audit_op present, data carries the provider response — no .is_ok() shortcut; the envelope's recorded params must show the redacted/masked form of the charge payload."
+  - rule: "AS-05"
+    verification: "_audit sequence increments by exactly 1 with the api.call event; the row's prev_hash equals the SHA-256 of the prior row, result_hash matches the canonical JSON hash of the response, and capcli-core::audit::verify_chain() passes."

@@ -1,0 +1,10 @@
+[dev:tier_1]  ✓  tailing
+
+  mirror:  audit/2026-10-03.jsonl (synced, lag 0s)
+  since:   1h window (from 23:04:11Z)
+  follow:  live stream active — Ctrl-C to detach
+  events:  0 in window
+
+  No audit events within window. Ledger quiet — last commit before window opened.
+
+  integrity:  hash chain valid (root sha256:7f9a1b2c...)

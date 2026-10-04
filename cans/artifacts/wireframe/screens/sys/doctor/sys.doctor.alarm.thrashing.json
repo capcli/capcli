@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "sys.doctor.alarm.thrashing",
+  "noun": "sys",
+  "verb": "doctor",
+  "target": "sys://host",
+  "command": "capcli sys doctor",
+  "state": {
+    "exit_code": 2,
+    "domain": "agent.thrashing",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "agent.thrashing",
+    "culprit": "agent agt_7f3k stuck in repetitive denial loop (rule: policy.query.update_delete.require_limit, target: db://orders)",
+    "remedy": "harness execution throttled; escalate to human or inspect remedy payload",
+    "layer": "governance",
+    "measured": "denials_last_5m: 22 (threshold: 20)"
+  },
+  "txt_pair": "screens/sys/doctor/sys.doctor.alarm.thrashing.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ⚠  agent.thrashing",
+      "  agent:           agt_7f3k",
+      "  denials_last_5m: 22",
+      "  state_modified:  false",
+      "  layer:           governance",
+      "  remedy:          harness execution throttled; escalate to human or inspect remedy payload"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "agent.thrashing"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.promotion.low_success
+        routine: order_sync@1 (target rung: reviewed)
+        source:  routine_stats (last 26 runs)
+          success_rate: 0.87
+                        ^^^^
+          floor:        0.95
+
+        Success rate 0.87 falls below the 0.95 promotion floor; conjunction fails.
+
+  audit_op: op_ship_02
+  state_modified: false
+  layer: authorizer
+  measured: success rate 0.87 vs floor 0.95 (26 runs, 3 failures in sim replay)
+  remedy: fix the 3 failing replays, re-run capcli routine prove order_sync --env sim, then re-ship

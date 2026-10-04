@@ -1,0 +1,12 @@
+[dev:tier_1]  dry-run  ✓
+
+  statement:      ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0
+  ast_check:      pass
+  authorizer:     pass (alter on orders allowed in dev)
+  intent:         declared ("add priority flag for rush shipping")
+  schema_impact:  +1 column (priority)
+  estimated_rows: 4281
+  blast_radius:   schema-only (non-destructive)
+
+  state_modified: false
+  note:           no execution occurred

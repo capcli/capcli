@@ -1,0 +1,11 @@
+[dev:tier_1]  ✗  exit 3
+
+  FATAL  validation.not_found
+         command:   capcli api stats shopify
+         provider:  shopify
+
+         Target provider not found.
+         No catalog entry for provider 'shopify' (providers configured: 2).
+
+  state_modified:  false
+  remedy:          sync the provider first, e.g. 'capcli api sync shopify <openapi-url>', or list configured providers via 'capcli api catalog'

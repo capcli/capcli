@@ -1,0 +1,87 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_13_circuit_breaker_demotion_streak"
+title: "20-run success rate 0.60 below the 0.70 decay floor trips the autonomous circuit-breaker demotion to draft, and the demoted routine is refused in prod"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/time.md#failure-rate-—-success-below-0.70-over-20-runs-triggers-demotion-to-draft"
+  statement: "Sustained failure auto-demotes: when a routine's 20-run window closes with success rate below 0.70 (12/20 = 0.60 here), the daemon decay watchdog's circuit breaker demotes the routine to draft autonomously — no human ticket required. After the demotion the routine holds draft trust, so a prod invocation is denied by the prod trust floor."
+  blast_radius_if_breached: "A broken pinned routine keeps failing in production indefinitely with full unattended privileges: every cron fire re-executes the defective leaf, rows keep being touched by a 12/20-success routine, and 500-row ceilings apply to code that demonstrably misfires 40% of the time (catalog banned slop: allowing a broken pinned routine to repeatedly fail in production without auto-demotion)."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent waits for the 20-run window with real executions and wall-clock time (flaky, slow, never run in CI), or resets routine_stats between runs so the streak never accumulates, or asserts the demotion without re-reading the rung and without proving the follow-up prod invocation is denied."
+  anti_slop_mitigation: "AS-04 forces the 20-run accumulation through MockClock ticks and deterministic routine_stats seeding; AS-02 forces the registry re-read (trust = 'draft') plus zero orders rows mutated by the denied probe; AS-03 forces the typed exit 2 citing the 0.60 vs 0.70 measured pair."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:maya"
+    agent_id: "agt_tl_13"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        routines:
+          description: "routine registry with trust rung and provenance hashes"
+          columns:
+            name: text!~
+            version: int!
+            trust: text!
+            code_hash: text!
+            manifest_hash: text!
+            created_by: text!
+            promoted_by: text
+          idx: [[name, version]]
+        orders:
+          description: "customer fulfillment orders"
+          columns:
+            id: pk
+            status: text!
+          idx: [[status]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "routine_stats"
+        row_count: 1
+      - name: "orders"
+        row_count: 12
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://dispatch_order@4 -p order_id=ORD-3311 -m \"post-circuit-breaker probe\""
+  input_params:
+    order_id: "ORD-3311"
+    pre_execution_phase: "dispatch_order@4 pinned at MockClock t0; routine_stats seeded 19 runs / 11 successes (0.579); MockClock advances through run 20 closing the window at total_runs 20, success_runs 12 (success_rate 0.60 < 0.70 decay floor); the capcli-daemon decay watchdog circuit breaker demotes dispatch_order@4 to draft before this probe command executes"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "dispatch_order@4 auto-demoted to draft by the circuit breaker (20-run success rate 0.60 < 0.70 decay floor); draft trust cannot execute in prod — measured: 12/20 successes vs 0.70 floor"
+    remedy: "repair the failing leaf (sys audit trace pinpoints it), re-prove in sim, and re-ship to reviewed before unattended scheduling resumes"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (decision: denied, effect: none) — preceded by the watchdog's circuit-breaker demotion event (trust pinned -> draft)"  # NOTE: not located in cans/ specs — exact demotion event verb; chain advance mandated by the zero-ghost-actions law
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Accumulate the 20-run window exclusively through MockClock ticks with deterministic routine_stats transitions (19/11 seeded, run 20 closing at 20/12); the watchdog evaluation is a pure function of the injected window — zero real executions, zero sleeps, zero flake."
+  - rule: "AS-02"
+    verification: "After the watchdog tick and the denied probe: SELECT trust FROM routines WHERE name='dispatch_order' AND version=4 returns the literal 'draft'; SELECT count(*) FROM orders is strictly 12 before and after the probe; SELECT total_runs, success_runs FROM routine_stats returns (20, 12) — the demotion consumed the stats, the probe mutated nothing."
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit cites the circuit-breaker demotion with the measured 0.60 vs 0.70 pair, diagnostic.remedy names the trace/repair/re-prove path."

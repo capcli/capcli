@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "vs_12_redacted_leak_detection_kill"
+title: "Routine printing a decrypted credential to stdout is killed by the egress leak scanner (kill_and_alert, exit 5) with the secret redacted from every audit record"
+domain: "vault_secrets"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#leak-prevention-—-secret-exposure-detected-in-output-executes-kill_and_alert"
+  statement: "Secret exposure detected in output executes kill_and_alert: when a routine's stdout (or result envelope) carries the decrypted credential string, the leak scanner kills the frame and tears down the session with exit 5 (kernel.panic), the raw stdout is discarded at the terminal boundary (canonical JSON outcome hashed exclusively), and the denial audit record redacts the secret — the plaintext appears in no audit row, mirror file, or machine payload."
+  blast_radius_if_breached: "Live credentials flow unintercepted into subshell stdout: shell transcripts, CI logs, terminal scrollback, and the audit mirror all permanently capture the decrypted key — the leak detection layer that should kill the run becomes a passive observer of credential exfiltration."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent confuses the kill with a routine runtime crash (asserts exit 4 on a generic exception), or lets the leaked string ride into the audit payload 'to help debugging', or fakes redaction with unicode block glyphs in machine JSON, or asserts the kill without proving zero rows mutated and zero secret bytes persisted (catalog banned slop: emitting secret text to subshell stdout or stderr unintercepted)."
+  anti_slop_mitigation: "AS-03 forces the typed exit 5 kernel.panic with the kill_and_alert citation (distinct from exit 4 runtime); AS-02 proves the frame is dead with zero rows mutated; AS-06 hardcodes the redaction semantics — the leaked literal occurs 0 times in _audit and the JSONL mirror, with no block glyphs in machine JSON."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_vs_12"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "secrets"
+        row_count: 1
+      - name: "routines"
+        row_count: 1
+      - name: "_budget_frames"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4
+    vault_secrets:
+      - ref: "vault://stripe_secret_key"
+        scope: "dev"
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://stripe.refund@2 -p charge_id=ch_9d21K -p amount_cents=1500 -m \"refund failed delivery\""
+  input_params:
+    charge_id: "ch_9d21K"
+    amount_cents: 1500
+    leak_vector: "routine return value embeds the decrypted credential string (attempts to print it to stdout)"
+
+expected_observations:
+  exit_code: 5
+  state_modified: false
+  diagnostic:
+    domain: "kernel.panic"
+    culprit: "plaintext credential stripe_secret_key detected in routine stdout; kill_and_alert executed — frame killed, session torn down"
+    remedy: "strip the credential from the routine result, rotate stripe_secret_key via the Cockpit vault, then re-prove in sim"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "kernel.panic.secret_leak (kill_and_alert; decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope: exit_code == 5 (kernel.panic — NOT exit 4 routine.runtime, because the fault is kernel-detected secret exposure, not a guest exception), state_modified == false, diagnostic.domain == 'kernel.panic', diagnostic.culprit contains 'kill_and_alert', diagnostic.remedy orders rotation + re-prove; stdout contains 'PANIC kernel.panic.secret_leak' with prefix '[dev:tier_1]'."
+  - rule: "AS-02"
+    verification: "Post-kill substrate proof: the routine's frame is dead (SELECT count(*) FROM _budget_frames WHERE outcome='active' AND routine='stripe.refund' returns 0), zero domain rows were mutated by the killed run, and the secrets row is byte-identical to the pre-command read — the kill happened before any commit."
+  - rule: "AS-06"
+    verification: "Hardcoded redaction semantics: the decrypted credential's plaintext literal occurs 0 times in the _audit table, the JSONL mirror file, and the machine envelope; the denial record's payload is redacted per the params_matching ('*secret*') redaction rule using masked representation with a SHA-256 fingerprint — and the machine JSON contains no unicode block glyph characters (████ banned in machine payloads)."

@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_07_jsonl_mirror_flush_cadence"
+title: "High-frequency DB writes flush to the physical JSONL export mirror within the 5-minute hard SLA"
+domain: "audit_dag"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#sync-freshness--mirror-lag-hard-SLA-capped-at-5-minutes"
+  statement: "audit/*.jsonl is a secondary read-only export view streamed from the _audit table, flushed to disk and git for offline diffing and cold recovery as daily append-only files; mirror lag is hard-capped at 5 minutes — after a burst of writes, the physical on-disk JSONL file must be synchronized within the SLA window, not merely queued in memory."
+  blast_radius_if_breached: "Cold recovery and offline diffing silently lose the newest events: a crash or corruption discovered via git-diff of the mirror misses up-to-5-minutes of reality, incident timelines are wrong, and operators trust a mirror that lags beyond its guarantee."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts the in-memory mirror queue length (or a flush-scheduled flag) instead of reading the physical JSONL file from disk, or sleeps on the real wall clock for 5 minutes producing a flaky, clock-dependent test."
+  anti_slop_mitigation: "AS-04 steps the flush cadence deterministically on MockClock (no sleeps); AS-06 requires stat + read of the physical audit/<date>.jsonl file with a hardcoded line count; AS-05 byte-compares every mirrored line against the _audit rows and verifies the chain."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_ad_07"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 4
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "engine API: 30 db.exec single-row INSERTs into orders (ids 1..30) in session ses_ad_07 (within the 50-op session ceiling), then MockClock::advance to t0+300s to fire the mirror flush cycle; compare audit/2026-02-14.jsonl against _audit"
+  input_params:
+    burst_writes: 30
+    mirror_sla_seconds: 300 # hard cap: mirror lag capped at 5 minutes
+    mirror_file: "audit/2026-02-14.jsonl" # daily append-only file
+    flush_clock: "MockClock epoch ticks injected via engine API"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — 30 chained db.exec events mirrored to disk within the SLA window"
+    remedy: "n/a — success; physical mirror verified by the assertions below"
+  database:
+    row_count_delta: 30 # orders 0 -> 30; _audit 4 -> 34
+    tables_mutated: ["orders", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (x30)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "The flush cadence is driven by MockClock epoch ticks injected via the engine API (advance to t0+300s exactly at the SLA boundary); tokio::time::sleep, SystemTime::now, or any real wall-clock wait is a linter failure."
+  - rule: "AS-06"
+    verification: "stat + read the PHYSICAL file audit/2026-02-14.jsonl from disk (never the in-memory queue): hardcoded expected line count 34 (4 genesis + 30 burst events); a missing file or short line count fails the test outright."
+  - rule: "AS-05"
+    verification: "Byte-compare each JSONL line's canonical JSON against the corresponding _audit row (identity, actor, causality, payload, outcome fields) and run capcli-core::audit::verify_chain() over rows 1..34 — the mirror must be a faithful read-only view, including valid prev_hash links."

@@ -1,0 +1,71 @@
+$schema: "test-plan/case/v1"
+case_id: "da_05_ddl_trust_floor_enforcement"
+title: "ALTER TABLE issued by a draft-trust caller is denied (DDL trust floor requires reviewed)"
+domain: "database_authorizer"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+invariant:
+  law_reference: "cans/physics.md#ddl-trust-floors"
+  statement: "alter table requires reviewed trust; draft attempts exit with 2 (policy.yaml authorizer.global.alter: { require_trust: reviewed }) - schema operations are gated by trust at the C authorizer floor, not by CLI convention."
+  blast_radius_if_breached: "Unreviewed schema drift lands directly in live tables; every prepared statement, view, and kernel-compiled trigger shaped against the old schema silently reads wrong columns, corrupting operational reads at fleet scale."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the test in dev with an elevated reviewed trust pre-configured in the session, so the ALTER succeeds and the draft-denial path is never exercised."
+  anti_slop_mitigation: "AS-03 requires the typed exit code plus a trust-domain diagnostic; AS-02 proves orders row count and PRAGMA column list are byte-identical; setup pins caller trust to draft and the slop risk is explicitly listed as banned fixture configuration."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.schema-tinkerer@acme.corp"
+    agent_id: "agt_da_05"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"ALTER TABLE orders ADD COLUMN rush boolean\" -m \"add rush flag\""
+  input_params:
+    ddl_action: "alter"
+    caller_trust: "draft"
+    required_trust: "reviewed"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "ALTER TABLE orders ADD COLUMN rush boolean issued by trust=draft caller; DDL trust floor requires reviewed (authorizer.global.alter.require_trust)"
+    remedy: "Follow the column addition lifecycle: edit schema.yaml and bump version, rule apply --type schema --dry-run --env dev, human DDL approval, routine ship schema_<v> reviewed, then rule apply --type schema --env dev --intent."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 500 before and after; PRAGMA table_info(orders) column list identical before and after (no 'rush' column materialized) - schema drift is a state mutation and must be proven absent."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.trust', culprit cites the draft trust floor, remedy names the schema lifecycle path."
+  - rule: "AS-01"
+    verification: "Static lint: no mock on crates/capcli-core/src/db/authorizer.rs; the session trust rung must be pinned to draft in setup and never upgraded mid-test."

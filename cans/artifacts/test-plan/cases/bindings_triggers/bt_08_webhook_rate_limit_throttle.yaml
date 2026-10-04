@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_08_webhook_rate_limit_throttle"
+title: "Webhook burst past 100 events/minute returns HTTP 429 and parks the payload in the dead letter queue"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Schedule-defenses"
+  statement: "Webhook ingress enforces a burst ceiling of 100 events per minute (artifacts/governance.yaml#watch webhook.events_per_minute: 100): the 101st event inside a rolling 60-second window is refused with HTTP 429 and its payload is parked in the dead letter queue (FIFO retention, 30 days / max 1,000 items, action.md#Schedule-defenses) instead of being dispatched to the bound routine."
+  blast_radius_if_breached: "A compromised or misconfigured provider floods the mailbox: thousands of dispatches per minute burn the session fuel/wire budgets, hammer the bound mutating routine with replayed events (duplicate refunds), and crowd out legitimate triggers; without the dead letter queue the overflow is silently lost with no recovery path."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent sends 101 events with real sleeps between them (flaky) or disables the rate limiter in the harness; or asserts 'some events were rejected' without pinning the exact boundary (event 100 dispatched, event 101 refused); or lets the DLQ write happen but never verifies the parked item."
+  anti_slop_mitigation: "AS-04 drives the rolling 60s window with MockClock ticks injected via the engine API; AS-06 pins the immutable boundary literals (events 1..100 dispatched, event 101 refused) and the DLQ depth; AS-02 proves the refused event never advanced the watch cursor or routine telemetry."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "partner:stripe"
+    agent_id: "capcli-watch" # kernel principal owning asynchronous provider dispatches
+    trust: "reviewed" # watch binding floor (artifacts/policy.yaml#watch require_trust)
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # refund@2 bound via: bind webhook stripe_hooks stripe charge.captured cap://refund
+      - name: "_watch_cursors"
+        row_count: 1 # watch_id: stripe_hooks, cursor at event offset N
+      - name: "_audit"
+        row_count: 103 # bind.create + 100 dispatched events + their routine.run outcomes
+    vault_secrets:
+      - "vault://stripe_webhook_secret (HMAC-SHA256 signing key for provider stripe, armed at bind time)"
+
+execution:
+  trigger: "inbound_http"
+  command: 'curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:4040/hooks/stripe/charge.captured -H "Content-Type: application/json" -H "X-Webhook-Signature: v1=<valid digest>" --data @event_101.json'
+  input_params:
+    http_method: "POST"
+    path: "/hooks/stripe/charge.captured"
+    events_in_current_window: 101 # events 1..100 already accepted inside the rolling window
+    events_per_minute_ceiling: 100 # artifacts/governance.yaml#watch webhook
+    window_seconds: 60 # rolling window driven by MockClock
+    dead_letter_retention_days: 30
+    dead_letter_max_items: 1000
+    bound_capability: "cap://refund"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "bind.webhook"
+    culprit: "ingress rate 101 events inside the rolling 60s window exceeds the events_per_minute ceiling of 100 (artifacts/governance.yaml#watch); HTTP 429 returned to sender, payload parked in dead letter queue"
+    remedy: "provider must throttle bursts below 100 events/minute; the refused payload remains recoverable from the FIFO dead letter queue (30 days / 1,000 items) — on_exhaustion alerts, never silent loss (artifacts/policy.yaml#watch dispatch)"
+  database:
+    row_count_delta: 0
+    tables_mutated: [] # no routine dispatch; DLQ parking is daemon bookkeeping verified via bind inspect
+  wire:
+    packets_transmitted: 0 # refused at ingress: no dispatch to the routine, no egress
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny" # NOTE: ingress throttle denial event name not located in cans/effect.md payload list; effect: none (effect.md#Denials), log_all per artifacts/governance.yaml#denials
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "The rolling 60-second window is driven exclusively by MockClock epoch ticks injected via the engine API; no sleep-based pacing and no SystemTime::now() reads — the token-bucket/window counters must never be mocked (AS-01 class)."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _watch_cursors (cursor must not advance for event 101) and SELECT count(*) FROM routine_stats before and after the 101st POST; assert strict equality with the post-event-100 snapshot — zero dispatches, zero telemetry movement, zero business rows."
+  - rule: "AS-03"
+    verification: "Assert the ingress response is exactly HTTP 429 (not 200, not 503) and, when surfaced through the CLI envelope, exit_code == 2 with diagnostic.culprit citing 101-in-window vs the 100/minute ceiling; verify the DLQ depth via capcli bind inspect --json equals 1 parked item for this event."
+  - rule: "AS-06"
+    verification: "Boundary literals are immutable and hardcoded: exactly 100 accepted + 1 refused inside the window; the DLQ expectations (30-day retention, 1,000-item FIFO cap) are literals from artifacts/governance.yaml#watch, never recomputed from the limiter under test."

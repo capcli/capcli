@@ -1,0 +1,52 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "rule.show.refusal.not_found",
+  "noun": "rule",
+  "verb": "show",
+  "target": "schema://invoices",
+  "command": "capcli rule show schema --table invoices",
+  "state": {
+    "exit_code": 3,
+    "domain": "validation",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "validation",
+    "culprit": "Table 'invoices' has no compiled declaration in this workspace.",
+    "remedy": "declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'"
+  },
+  "txt_pair": "screens/rule/show/rule.show.refusal.not_found.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 3,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 3",
+      "FAIL  validation.table_not_found",
+      "Table 'invoices' has no compiled declaration in this workspace.",
+      "state_modified: false",
+      "remedy: declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "validation"
+    }
+  }
+}

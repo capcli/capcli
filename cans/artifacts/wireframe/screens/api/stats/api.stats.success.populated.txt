@@ -1,0 +1,19 @@
+[dev:tier_1]  ✓  populated
+
+  provider:  stripe
+  window:    24h rolling
+
+  quota_used:       41 of 60 tokens (68%)
+  quota_remaining:  19
+  reset_at:         18:00:00 UTC (in 4h 12m)
+
+  error_rate:   0.8% (3 of 372 calls)
+  p50_latency:  118ms
+  p95_latency:  240ms
+
+  top_verbs_by_spend:
+  ├── refund_charge          214 calls    0 errors
+  ├── create_payment_intent   89 calls    1 error
+  └── issue_credit_note       12 calls    2 errors
+
+  state_modified:  false

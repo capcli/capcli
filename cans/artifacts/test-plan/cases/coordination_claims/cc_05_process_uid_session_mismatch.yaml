@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_05_process_uid_session_mismatch"
+title: "Caller passing --by agt_7f3k with mismatching OS process credentials is aborted with exit 3"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#uniform-actor-model--kernel-treats-all-callers-uniformly-by-PID,-principal,-agent-ID,-and-session"
+  statement: "The kernel treats all callers uniformly by PID, principal, agent ID, and session: --session and --by are validated against the active token registry using the caller's real OS process credentials (interface.md: --by <agent-id> acting identity verified via process credentials) — a CLI self-declaration whose process identity does not match the registered agent is aborted with exit 3 (session errors: missing, forged, or expired session token aborts execution)."
+  blast_radius_if_breached: "Any process on the host impersonates any registered agent by passing --by: audit trails attribute actions to the wrong agent, per-agent trust rungs and quotas are stolen, and the entire identity chain (principal -> agent -> session -> op) becomes decorative."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent trusts the --by flag and asserts the query result only (identity validation skipped or mocked), or runs the command from the SAME harness process that registered the agent — making the mismatch impossible to observe and the test vacuous."
+  anti_slop_mitigation: "AS-03 pins exit 3 exactly (not the generic exit 2 policy denial) with the kernel.session diagnostic; AS-02 proves zero side effects; AS-06 hardcodes the registered-vs-calling credential literals; the mismatch is injected via real Unix socket peer credentials."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:quinn@example.com"
+    agent_id: "agt_7f3k" # the --by value: registered agent bound to a different harness process
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 3
+      - name: "agents"
+        row_count: 1 # agt_7f3k registered: id, name, harness, principal, status active
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+    # harness pre-condition: agt_7f3k is registered with harness process credentials (uid 1002); the CLI in this test runs as uid 1001 over the daemon IPC socket
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"SELECT count(*) FROM orders\" --by agt_7f3k --session ses_a9"
+  input_params:
+    claimed_agent: "agt_7f3k (registered harness uid 1002)"
+    actual_process_uid: 1001 # mismatched caller: peer credentials read from the IPC Unix domain socket
+    session_token: "ses_a9 (validly minted HMAC token for agt_7f3k's registered process)"
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.session"
+    culprit: "--by agt_7f3k resolves to registered harness credentials (uid 1002) but the caller's OS process credentials are uid 1001 (IPC socket peer); acting identity validation failed — session token ses_a9 rejected at Stage 0"
+    remedy: "run from the registered harness process, or re-register the agent binding via sys agent register from the owning principal"
+  database:
+    row_count_delta: 0 # read never executes; _audit gains exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none — acting identity / process credential mismatch)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) — NOT the generic exit 2 policy block — and parse the --json CliEnvelope: diagnostic.domain == 'kernel.session', culprit names the registered uid vs calling uid, remedy present; .is_err() conflation of exit 2/3 is a linter failure."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 3 and SELECT count(*) FROM agents == 1 (status still active) before and after — the impersonated read never executes and the registry is untouched; _audit delta is exactly 1 denial event."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: registered harness uid 1002, calling process uid 1001, agent id 'agt_7f3k'; the mismatch is realized via real Unix domain socket peer credentials (SO_PEERCRED on the daemon IPC socket) — never by mocking the identity validator."

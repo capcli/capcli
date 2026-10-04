@@ -1,0 +1,10 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.replay.external_op
+        window contains external HTTP effect: op_9f2e api.call (fedex.ship) at 23:41:08Z
+        auto-replay of external calls is strictly forbidden — side-effects are not idempotent
+
+  measured:  1 external op in window (17 ops total: 16 local, 1 external)
+  state_modified: false
+  layer: authorizer
+  remedy: confirm external re-execution manually via Cockpit (http://127.0.0.1:4040/audit), or narrow --from to a local-only window

@@ -1,0 +1,71 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_05_endpoint_unpinned_trust_denial"
+title: "bind endpoint on a draft routine is denied: served surface requires pinned trust"
+domain: "bindings_triggers"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/action.md#Endpoint-governance"
+  statement: "Endpoint governance sets a non-negotiable minimum trust of pinned (artifacts/governance.yaml#serve min_trust: pinned) with explicit routine@version locking: attempting to expose a routine whose current trust rung is draft via bind endpoint is denied with exit 2 before any HTTP route is registered; unpinned or draft routines are never reachable over the wire."
+  blast_radius_if_breached: "An unproven draft routine becomes an anonymous-reachable HTTP/MCP surface: attackers and partner systems mutate production world state through code that never passed prove/promotion gates, bypassing the trust ladder entirely while serve emits serve.request events as if the calls were legitimate."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the test with the routine pre-promoted to pinned in fixture setup (masking the floor), or only checks that no HTTP 200 comes back without asserting exit 2 and the policy.trust diagnostic; or leaks an unconfined dev flag that sidesteps the serve gate."
+  anti_slop_mitigation: "AS-02 proves zero endpoint registrations and zero issued keys after the denial; AS-03 requires exit_code == 2 with diagnostic.domain policy.trust (E-unpinned class) parsed from the CliEnvelope; AS-07 runs the same scenario on both tier_1 and tier_2 harnesses so the trust floor — not the platform gate — is provably the denial cause."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.dev@example.com"
+    agent_id: "agt_bt_05"
+    trust: "reviewed" # caller is reviewed so the ROUTINE's draft rung is the only denial trigger
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # refund_status@1: drafted and proven in sim, current trust rung: draft
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events
+      - name: "_watch_cursors"
+        row_count: 0 # zero endpoints bound
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli bind endpoint refund_status@1 --auth api-key --rate 60 -m "expose refund status to partner portal"'
+  input_params:
+    routine: "refund_status@1"
+    routine_trust: "draft"
+    serve_min_trust: "pinned" # artifacts/governance.yaml#serve
+    auth_mode: "api-key"
+    rate_per_minute: 60
+    intent: "expose refund status to partner portal"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "bind.endpoint"
+    culprit: "routine refund_status@1 holds trust rung draft; served endpoints require pinned trust (artifacts/governance.yaml#serve min_trust: pinned, require_version_pin: true)"
+    remedy: "graduate the routine through the trust ladder first: prove in sim, then capcli routine ship refund_status reviewed, then pinned; re-issue bind endpoint afterwards"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # no route registered, no daemon exposure
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "bind.create" # denied attempt recorded with decision: denied, effect: none (effect.md#Kernel-event-payloads bind.create/delete)
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "After the denied bind, SELECT count(*) FROM _watch_cursors (endpoint bindings) == 0 and assert zero partner keys exist via capcli bind list --json; the only _audit delta is the single bind.create denial row with effect: none."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope: diagnostic.domain in the policy.trust class, culprit names refund_status@1 and the pinned floor, remedy references the trust ladder; envelope.state_modified == false."
+  - rule: "AS-07"
+    verification: "Execute the identical bind on both platform tiers: on tier_1 the denial must cite the trust floor (policy.trust / unpinned); on tier_2 the same denial must fire before any E045_TIER2_PINNED_DENIED platform masking — proving the trust floor, not the host profile, is the gate."

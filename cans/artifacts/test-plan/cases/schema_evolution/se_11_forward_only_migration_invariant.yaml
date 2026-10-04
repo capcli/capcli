@@ -1,0 +1,81 @@
+$schema: "test-plan/case/v1"
+case_id: "se_11_forward_only_migration_invariant"
+title: "Down-migration DDL is rejected; backward recovery is mandated through snapshot restore"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Migration-invariants"
+  statement: "Migrations are forward only: down-migrations are banned and snapshots serve as rollbacks - a down-migration script (e.g. DROP TABLE of a v13-introduced table) is denied at the authorizer (global drop: deny) with exit 2, and recovery routes to db restore <id>."
+  blast_radius_if_breached: "Ad-hoc down-migrations diverge prod from the declarative schema and the git-tracked world.sql history; forward-only replay and audit forensics can no longer reconstruct what the database actually was."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent implements a down-migration SQL execution path in the engine (or grants the test caller drop permission) so the rollback script executes - the invariant under test is deleted instead of verified."
+  anti_slop_mitigation: "AS-01 bans authorizer mocks and any engine down-migration path (static lint for DROP-handling code outside the kernel); AS-02 proves both the v13 table and its rows survive; AS-03 requires the typed exit code 2 plus an authorizer diagnostic pointing at snapshot restore."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.rollback-tinkerer@acme.corp"
+    agent_id: "agt_se_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+        shipping_modes:
+          description: "Carrier shipping modes introduced in v13"
+          columns:
+            id: pk
+            code: text!
+            label: text=standard
+          seed:
+            - { code: "air", label: "air freight" }
+            - { code: "ground", label: "ground" }
+      # v13 applied; snapshot snap_migration_013 exists from the pre-apply pairing
+    tables:
+      - name: "orders"
+        row_count: 500
+      - name: "shipping_modes"
+        row_count: 2
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"DROP TABLE shipping_modes\" -m \"down-migrate v13 back to v12\""
+  input_params:
+    statement_class: "DDL (down-migration script)"
+    authorizer_global_rule: "drop: deny"
+    snapshot_available: "snap_migration_013 (VACUUM INTO taken before v13 DDL)"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "DROP TABLE shipping_modes - down-migration DDL; authorizer global rule drop: deny (forward-only migrations: down-migrations banned, snapshots serve as rollbacks)"
+    remedy: "Use snapshot-based recovery: capcli db restore snap_migration_013 (VACUUM INTO point-in-time restore taken before the v13 DDL) - never a hand-written down-migration."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Static lint: no down-migration SQL execution path exists in the engine (no DROP-handling branch reachable from capcli sql beyond the authorizer denial); no mock on crates/capcli-core/src/db/authorizer.rs; the caller holds reviewed trust and is STILL denied - trust cannot purchase schema destruction."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM shipping_modes == 2 AND SELECT count(*) FROM orders == 500 before and after; the v13 table and its seed rows physically survive the denied down-migration."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.authorizer', culprit cites forward-only, remedy names capcli db restore snap_migration_013."

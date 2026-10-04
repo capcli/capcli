@@ -1,0 +1,10 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  validation.routine.not_found
+        routine: sync_inventory
+        nearest: sync_orders, dispatch_order
+
+        Routine name 'sync_inventory' does not exist in the registry.
+
+  state_modified: false
+  remedy: check the spelling, or discover candidates via capcli search 'sync' --trust draft
