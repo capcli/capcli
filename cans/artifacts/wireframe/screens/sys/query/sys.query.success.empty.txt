@@ -1,0 +1,9 @@
+[dev:tier_1]  ✓  queried
+
+  target:    _audit (read-only system table)
+  rows:      0 returned
+  duration:  1ms
+
+  Zero matching audit rows. Predicate matched nothing in 412 committed events.
+
+  note:  exit_code 5 (kernel.panic) has never fired in this workspace
