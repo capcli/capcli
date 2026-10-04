@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_10_wire_egress_session_pool_cascade"
+title: "Session 4MB egress-bytes pool exhausts across multiple child routines and blocks the next API call"
+domain: "budget_cascade"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Fuel-&-Wire-Egress"
+  statement: "'Scope: one pool per session; Cascade: no bypass via splitting — single session pool' (budget.md#budget.frame_push inherited_remaining egress_bytes: 4194304): wire egress bytes accumulate across ALL child routines of a session against one 4,194,304-byte pool; once fully burned, subsequent API calls are blocked (budget_exhaustion: deny, exit 2)."
+  blast_radius_if_breached: "If wire bytes were scoped per routine instead of per session, an agent could split a bulk-export workload into child frames and each would get a fresh 4MB allowance — exfiltrating unbounded data volume through the egress boundary under the radar of any single ceiling."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by resetting the egress-bytes counter at each child frame push (mirroring the per-routine scoping bug) and asserting each child's own 4MB budget — the session-level pool exhaustion is never actually produced."
+  anti_slop_mitigation: "AS-06 pins the accumulation literals (2,097,152 + 2,097,152 = 4,194,304 across two children, not two independent pools) and the blocked third call. AS-02 proves the session counter is unchanged by the denied call. AS-03 forces the typed exit 2 citing the session-level pool, not a per-routine counter."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_10"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 3   # session root frame + child A + child B; session consumed_egress_bytes = 4,194,304 of 4,194,304
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'ctx.api.call("threads.posts", params={"text": "digest"}, intent="third child dispatch") attempted by child routine C after the session egress-bytes pool (4,194,304 bytes) was fully burned by sibling child routines A (2,097,152 bytes) and B (2,097,152 bytes)'
+  input_params:
+    session_egress_pool_bytes: 4194304
+    burned_by_child_a: 2097152
+    burned_by_child_b: 2097152
+    attempted_call: "threads.posts"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "session egress-bytes pool exhausted: 4,194,304/4,194,304 bytes burned across multiple child routines (one pool per session — no bypass via splitting); the subsequent API call is blocked pre-dispatch"
+    remedy: "redistribute the wire volume across sessions or shrink payloads — egress bytes are session-scoped, not per-routine, so splitting into child frames grants no fresh allowance"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted (dimension: egress_bytes)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT on the session's frame rows: consumed_egress_bytes still reads exactly 4,194,304 after the denied call (the blocked dispatch debited 0 bytes) and no business table row counts changed."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.budget' and the citation names the SESSION-level egress-bytes pool (budget_denial_cites_level), never a per-routine counter — a per-routine framing in the diagnostic fails the test."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: child A burned 2,097,152 + child B burned 2,097,152 = session total 4,194,304 (single accumulation, verified by direct read of both child frame rows); the third call is blocked — expected values are immutable literals, never derived from the engine's counters."
