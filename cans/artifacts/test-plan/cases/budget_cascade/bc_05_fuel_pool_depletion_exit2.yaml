@@ -1,0 +1,64 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_05_fuel_pool_depletion_exit2"
+title: "Session fuel pool depletion denies the next primitive invocation with exit 2"
+domain: "budget_cascade"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Fuel-&-Wire-Egress"
+  statement: "'Unit: deterministic integer gas & socket payload bytes; Scope: one pool per session' (policy.yaml#api.fuel.per_session_fuel: 100000; fuel_scope: session): when the session fuel pool is fully consumed, the kernel denies the subsequent primitive invocation with exit 2 — 'kernel denies subsequent primitive invocation' — and execution never continues with a negative fuel balance (policy.yaml#budget.partial_result_on_exhaustion: false)."
+  blast_radius_if_breached: "Continuing past a dry fuel pool (or letting the balance go negative) would let a routine execute unbounded gas-burning work — runaway API fan-out and compute spend with no ceiling, discovered only on the monthly provider invoice."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by asserting a generic runtime error (exit 4) from the guest routine crashing on a failed primitive, instead of the kernel-side policy denial (exit 2) at the fuel gate — the distinction between 'code crashed' and 'policy denied' is lost."
+  anti_slop_mitigation: "AS-03 forces the typed exit 2 with the diagnostic naming attempted_op and the fuel dimension — a runtime crash would be exit 4 and fails the test. AS-02 proves the frame counters and tables are untouched. AS-06 pins the literal 100,000 ceiling and the exact consumed value."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_05"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 1   # active frame with consumed_fuel = 100000 of the 100000-unit session pool
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'primitive invocation via the capcli-core engine API: ctx.db.execute("UPDATE orders SET status = :s WHERE id = :i", params, intent) attempted from a frame whose session fuel pool shows 100000/100000 consumed'
+  input_params:
+    session_fuel_ceiling: 100000
+    consumed_fuel: 100000
+    attempted_op: "db.exec"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "session fuel pool depleted: routine frame hit fuel 100000/100000 (per_session_fuel, policy.yaml#api.fuel) at attempted_op db.exec; the kernel denies the subsequent primitive invocation"
+    remedy: "reduce the routine's fuel footprint or start a new session — execution never continues with a negative fuel balance and no partial result is returned"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted (dimension: fuel)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT on the frame row: consumed_fuel still reads exactly 100000 after the denied invocation (never 100001 or negative) and the business table's row count is unchanged — the denied primitive debited nothing."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 (a guest runtime crash would be exit 4 and must fail this test) and parse the CliEnvelope diagnostic: domain == 'policy.budget', the budget.exhausted payload names the attempted_op (db.exec), the dimension (fuel), declared and consumed values (budget.md#Exhaustion payload contract)."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: ceiling 100000, consumed 100000, post-denial consumed still 100000 — expected values are immutable literals in the test, never read back from the frame the engine just wrote."
