@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "se_04_live_pragma_drift_gate4_refusal"
+title: "Out-of-band column added to SQLite is detected by the Gate 4 PRAGMA drift scan and boot is refused"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Gate-4:-Live-drift"
+  statement: "Gate 4 runs as runtime inspection via sys doctor: PRAGMA scans compare live tables against the compiled YAML, and undeclared columns or tables trigger refusal with exit 3 - unmanaged columns are never silently merged into the compiled schema."
+  blast_radius_if_breached: "Undeclared columns leak into production tables outside governance; the authorizer's 3D action x table x column policy never sees them, so writes bypass deny_columns_write and imm_rows protections entirely."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent silently merges the unmanaged column into the compiled schema in test setup (or only asserts a diff report exists without asserting the refusal), letting drift be absorbed instead of detected."
+  anti_slop_mitigation: "AS-03 requires the typed exit code 3 plus a diagnostic naming the undeclared column; AS-06 hardcodes the literal live-vs-declared column list diff; AS-02 proves the drifted table's rows are untouched by the inspection."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.sre-oncall@acme.corp"
+    agent_id: "agt_se_04"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+      # compiled schema v12 has NO 'rush' column; the fixture seeds drift by adding it out-of-band
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys doctor --json"
+  input_params:
+    gate: "Gate 4: Live drift"
+    drift_seed: "ALTER TABLE orders ADD COLUMN rush boolean executed out-of-band on envs/dev/workspace.db by an external sqlite3 tool in the test fixture"
+    # NOTE: direct workspace.db file access is denied in operation (world.md#workspace.db); the fixture performs the out-of-band edit solely to seed drift for Gate 4 detection
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Gate 4 is the kernel's live drift inspector
+    culprit: "PRAGMA table_info(orders) reports undeclared column 'rush' that does not exist in compiled schema.yaml v12 - live drift detected, boot refused (Gate 4)"
+    remedy: "Either revert the out-of-band column (restore from snapshot) or declare it properly: edit schema.yaml, pass Gates 1-2, dry-run, human approval, then rule apply --type schema."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny (effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) and parse the --json CliEnvelope: diagnostic names the undeclared column 'rush' and the table; a mere drift report with exit 0 fails the test."
+  - rule: "AS-06"
+    verification: "Hardcode the literal expected diff: live PRAGMA table_info(orders) columns [id, ref, customer_id, total_cents, discount_cents, status, receipt, rush] vs declared columns (same list minus rush); assert exactly one undeclared column is reported - never auto-merged into the compiled schema."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 500 before and after the doctor run (inspection is read-only; the drifted table's rows are untouched)."

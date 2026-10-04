@@ -1,0 +1,81 @@
+$schema: "test-plan/case/v1"
+case_id: "se_05_forward_ddl_snapshot_rollback"
+title: "Failing Gate 5 migration auto-restores the snapshot and leaves the live DB untouched"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Gate-5:-Migration-safety"
+  statement: "Gate 5 dry-runs DDL in an isolated test transaction on a snapshot at apply-time; if the migration transaction fails, the snapshot is auto-restored and the kernel throws exit 3 - the live database is never the experiment substrate (snapshot pairing: snapshot taken before physical DDL execution)."
+  blast_radius_if_breached: "A half-applied migration corrupts the production SSOT mid-transaction with no restore path; every consumer reads a schema that matches neither v12 nor v13 and the rollback invariant is gone."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the migration directly on the live database without verifying clean rollback on the snapshot, then only asserts the error text - partial DDL could be committed and the test would still pass."
+  anti_slop_mitigation: "AS-02 proves live row counts and the absence of the new table after the failed apply; AS-06 verifies the snapshot restore by literal snapshot id; AS-03 requires the typed exit code 3 with an auto-restore diagnostic."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.migrationbot@acme.corp"
+    agent_id: "agt_se_05"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+        rush_tiers:
+          description: "Expedited fulfillment tiers"
+          columns:
+            id: pk
+            code: text!
+            label: text
+          seed:
+            - { code: "express", label: "next-day" }
+            - { code: "express", label: "same-day" }
+      # seed rows 1 and 2 both carry code 'express' - violates UNIQUE on rush_tiers.code (text!) inside the migration DDL transaction
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli rule apply --type schema --env dev -m \"apply v13 rush_tiers\""
+  input_params:
+    gate: "Gate 5: Migration safety"
+    failure_cause: "seed row 2 duplicates unique key rush_tiers.code = 'express' (text!) - statement fails inside the DDL transaction on the snapshot"
+    snapshot_taken: "snap_migration_013 (VACUUM INTO, before physical DDL)"
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Gate 5 is the kernel's migration-safety gate
+    culprit: "migration DDL transaction failed on the test snapshot: UNIQUE constraint violation on rush_tiers.code for seed rows ('express' duplicated); snapshot auto-restored, live DB untouched"
+    remedy: "Fix the seed data (unique codes per row), re-run rule apply --dry-run to preview, then re-apply; the live database was already restored from snap_migration_013."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "rule.apply (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 500 before and after; SELECT count(*) FROM sqlite_master WHERE name = 'rush_tiers' == 0 (the failed migration left no partial table); sha256 of envs/dev/workspace.db identical before and after (byte-level live DB untouched)."
+  - rule: "AS-06"
+    verification: "Assert the auto-restored snapshot id equals the literal 'snap_migration_013' taken before physical DDL execution (snapshot pairing invariant); the diagnostic must cite the literal failing seed key 'express'."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) and parse the diagnostic envelope: domain, culprit naming the UNIQUE violation and auto-restore, remedy present - never a bare db.engine exit 2 without the Gate 5 auto-restore semantics."
