@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_11_non_serializable_result_exit4"
+title: "Non-JSON-serializable routine return value traps cleanly with exit 4"
+domain: "sdk_harness"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Exit-code-law"
+  statement: "Exit 4 (domain routine.runtime): a routine returning a non-JSON-serializable object (e.g. an active file descriptor) is trapped by the SDK result-envelope serializer — the process exits 4 cleanly with a standard CliEnvelope diagnostic, and any open transaction is cleanly rolled back (physics.md#Exit-code-law exit 4 node) rather than raising a raw unhandled exception."
+  blast_radius_if_breached: "Un-encodable return values crash the runner with a raw Python traceback: the effect engine cannot hash a canonical JSON outcome (terminal boundary law — canonical JSON outcome hashed exclusively, effect.md#Event-anatomy), audit rows lose result_hash integrity, and callers receive unstructured garbage instead of the typed exit-code contract every client RPC depends on (interface.md#Client-RPC-contract return envelope)."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent serializes the object in test setup (pre-encoding the file handle to a string), or wraps the routine call in a try/except that converts the crash to exit 2 policy denial — misclassifying a runtime type crash as a governance block; or asserts a traceback substring without pinning exit 4 and the envelope."
+  anti_slop_mitigation: "AS-03 requires the exact pair (exit_code == 4, diagnostic.domain routine.runtime with a well-formed envelope — no raw unhandled exception) and the state rollback law (envelope.state_modified == false); AS-02 proves the open transaction rolled back via direct SELECT; AS-06 pins the non-serializable literal."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.dev@example.com"
+    agent_id: "agt_sh_11"
+    trust: "draft" # runtime crash class fires for all rungs; draft suffices to make the scenario valid
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+          seed:
+            - { ref: "ORD-10", status: "pending" }
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 pending — a write precedes the bad return, proving rollback
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events for leaky_return@1
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'run(cap://leaky_return, params={}) # body: with ctx.db.txn() as tx: ctx.db.execute("UPDATE orders SET status = :s WHERE ref = :r", {"s": "leaked", "r": "ORD-10"}, intent="mutation before bad return"); return open("/scratch/invoice.pdf", "rb")'
+  input_params:
+    capability: "cap://leaky_return@1"
+    return_value: 'open("/scratch/invoice.pdf", "rb")' # active file object: not JSON-serializable
+    txn_before_return: 'UPDATE orders SET status = "leaked" WHERE ref = "ORD-10"'
+
+expected_observations:
+  exit_code: 4
+  state_modified: false
+  diagnostic:
+    domain: "routine.runtime"
+    culprit: "routine return value (active file object, /scratch/invoice.pdf) is not JSON-serializable — result envelope construction failed at the SDK boundary"
+    remedy: "return a summary-sized dict of primitives (action.md#Anatomy-and-decorator return value contract); never leak file handles, sockets, or live objects across the envelope boundary"
+  database:
+    row_count_delta: 0
+    tables_mutated: [] # open transaction cleanly rolled back: ORD-10 stays pending
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run" # terminal outcome: error (exit 4) — outcome field per effect.md#Kernel-event-payloads routine.run
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 4 (not 2, not 5, not a panic) and parse the CliEnvelope: diagnostic.domain == 'routine.runtime', culprit names the non-serializable return, remedy prescribes the dict-of-primitives contract; the process must emit the standard envelope — a raw unhandled Python traceback with no envelope fails the test."
+  - rule: "AS-02"
+    verification: "SELECT status FROM orders WHERE ref = 'ORD-10' directly on the workspace database after the exit-4 run: must still equal 'pending' (transaction cleanly rolled back per the exit-4 law); SELECT count(*) FROM orders unchanged — state rollback law holds (physics.md#Exit-code-law)."
+  - rule: "AS-06"
+    verification: "The non-serializable literal (an active file handle) and the expected rollback state ('pending') are immutable hardcoded values; include a companion routine returning a plain dict proving the serializer gate is object-type-aware, not a blanket exit-4 emitter."
+  - rule: "AS-05"
+    verification: "The terminal routine.run row (outcome: error) must still chain: prev_hash equals the SHA-256 of the prior _audit row; result_hash is absent/empty for the failed envelope but the ledger link integrity holds — run capcli-core::audit::verify_chain()."
