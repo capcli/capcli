@@ -1,0 +1,42 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "db.dump.success.truncated",
+  "noun": "db",
+  "verb": "dump",
+  "target": "db://orders",
+  "command": "capcli db dump",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "truncated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/db/dump/db.dump.success.truncated.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  truncated",
+      "result_tokens:  500 of 31204 (cap: 500)",
+      "truncated:      true",
+      "next_cursor:    cur_5f2a",
+      "state_modified: false"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}
