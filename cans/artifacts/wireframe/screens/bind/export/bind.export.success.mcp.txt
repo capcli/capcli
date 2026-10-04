@@ -1,0 +1,10 @@
+[dev:tier_1]  ✓  exported
+
+  artifact: tools.json
+  format:   mcp tool manifest
+  tools:    2 (dispatch_order@4, report_summary@3)
+  bytes:    1286
+  sha256:   8c3e5d7012a4b6c8
+
+  state_modified: true
+  audit_op:       op_1k6w
