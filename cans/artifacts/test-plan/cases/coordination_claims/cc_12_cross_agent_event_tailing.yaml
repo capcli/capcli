@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_12_cross_agent_event_tailing"
+title: "Agent B receives Agent A's live mutation envelope via sys audit tail over the IPC socket"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#event-tailing--agents-observe-sibling-effects-via-sys-audit-tail"
+  statement: "Agents observe sibling effects via sys audit tail (tail — sys audit tail [--follow] [--capability X] [--since 1h]): when agent A commits a mutation, agent B following the stream receives the live event envelope pushed over the daemon IPC Unix domain socket — never by high-frequency busy-wait polling of workspace.db (raw subshell access to the db file is denied)."
+  blast_radius_if_breached: "Coordination goes blind or goes loud: without push delivery, agents poll SQLite in busy loops that hammer the WAL and starve writers; worse, a silent tail means agents act on stale sibling state — double-processing, races on shared resources, and cascading coordination failures."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent fakes the tail by reading the sibling's effect directly from _audit after the fact (poll, not push), or runs the mutation and the tail sequentially so 'receiving' the event is trivially guaranteed by ordering rather than by live delivery."
+  anti_slop_mitigation: "The tail must be live: B follows --follow BEFORE A mutates; AS-06 asserts zero database file access and zero busy-wait loops in B's syscall trace (push over the IPC socket only); AS-05 verifies the streamed envelope is the chained event; AS-03 parses the envelope structure."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.reliefof@acme.corp"
+    agent_id: "agt_cc12b" # agent B: the tailing observer; agent A mutates
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys audit tail --follow"
+  input_params:
+    follow_mode: "true (live push over the daemon IPC Unix domain socket kernel.sock)"
+    peer_command: "capcli sql \"INSERT INTO orders (id, status) VALUES (1, 'new')\" -m \"sibling mutation\" — executed by agt_cc12a WHILE the tail is following"
+    peer_agent: "agt_cc12a (session ses_cc12a)"
+    ordering: "tail starts first; the sibling mutation happens during the follow"
+
+expected_observations:
+  exit_code: 0
+  state_modified: false # the tail command itself is read-only; the sibling's insert lands separately
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — sibling db.exec envelope streamed live to the following agent"
+    remedy: "n/a — success; live delivery verified by the assertions below"
+  database:
+    row_count_delta: 0 # for the tail command; the sibling mutation is asserted in the verification (orders == 1 after agt_cc12a's insert)
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # local IPC Unix domain socket only — no network egress
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (sibling agt_cc12a INSERT, streamed live to the tailing subscriber)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Push, not poll: strace/syscall-trace agent B's tailing process and assert it never opens envs/dev/workspace.db (zero open/read syscalls on the db file) and contains no busy-wait poll loop — events arrive exclusively via the daemon IPC Unix domain socket; B starts following BEFORE agt_cc12a mutates."
+  - rule: "AS-05"
+    verification: "The streamed envelope is the real chained event: its prev_hash == SHA-256 of the prior _audit row and its rows_affected/result_hash match the sibling INSERT; run capcli-core::audit::verify_chain() and assert SELECT count(*) FROM orders == 1 — the observed mutation physically landed."
+  - rule: "AS-03"
+    verification: "Parse the streamed CliEnvelope JSON as it arrives: structured identity/actor fields (agent agt_cc12a, session ses_cc12a), event db.exec, and outcome rows_affected == 1 — never a human-formatted transcript scrape."
