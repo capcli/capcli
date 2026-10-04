@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  policy.authorizer.claim_not_holder
+        target: orders:ORD-10
+        lease:  claim_c3d4 (holder: agt_9k2w)
+        caller: agt_7f3k
+
+        Caller does not own the claim; only the holder may release a lease.
+
+  state_modified: false
+  layer: authorizer
+  remedy: ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry
