@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "we_03_background_priority_yield_exit6"
+title: "Background task yields with exit 6 below the 15-token floor and lands cleanly in _suspended_tasks"
+domain: "wire_egress"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/budget.md#Safe-Yield"
+  statement: "'Frames suspended at floor return exit 6 and land cleanly in _suspended_tasks': a background-priority task hitting the quota floor (bucket below the 15-token background floor, reserving quota for scheduled posts) is suspended — not hard-killed — and re-enters at yield_until (physics.md#Exit-code-law: exit 6 — domain api.quota; proactive rate yield; task suspended until yield_until timestamp)."
+  blast_radius_if_breached: "If background tasks were hard-killed with exit 2 (or worse, allowed to drain the bucket), scheduled posts and batch jobs would die mid-flight across the enterprise, requiring manual restarts and starving the time-critical traffic the floor exists to protect."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by killing the task as a hard failure (asserting exit 2 / 'error') or by asserting only the exit code without proving the frame actually landed in _suspended_tasks with a yield_until re-entry timestamp."
+  anti_slop_mitigation: "AS-03 forces the typed assertion exit_code == 6 (the graceful-yield code, never 2) with the full diagnostic block parsed. AS-02 physically queries _suspended_tasks (0 -> 1 row) and _budget_frames (outcome 'yielded', yield_until set). AS-04 pins yield_until to the deterministic simulated clock so the re-entry time cannot be flaky."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_03"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'threads': 24h window, 14 tokens remaining (below the 15-token background floor)
+      - name: "_suspended_tasks"
+        row_count: 0
+      - name: "_budget_frames"
+        row_count: 1   # active parent frame for broadcast_newsletter@2
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://broadcast_newsletter@2 -p audience=followers -m "daily digest broadcast"'
+  input_params:
+    routine: "broadcast_newsletter@2"
+    priority_class: "background"
+    tokens_available: 14
+    background_yield_tokens: 15
+
+expected_observations:
+  exit_code: 6
+  state_modified: false   # business/world state untouched (envelope contract, wireframe run.execute.yield.quota)
+  diagnostic:
+    domain: "api.quota"
+    culprit: "background priority floor: threads bucket at 14 tokens < 15-token background floor (background_yield_tokens, reserving quota for scheduled posts); frame yielded, not killed"
+    remedy: "task safely yielded; frame persisted to _suspended_tasks with yield_until set from the provider reset_at — the daemon auto-resumes on token refill; do not retry manually"
+  database:
+    row_count_delta: 1
+    tables_mutated: ["_suspended_tasks"]   # kernel-managed suspension ledger; world/business tables untouched
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.frame_pop (outcome: yielded)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) on every business table before/after (strict equality — zero mutations); SELECT count(*) FROM _suspended_tasks goes 0 -> 1 with the yielded frame's task id; the _budget_frames row shows outcome = 'yielded' and a non-null yield_until."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 6 exactly (a hard kill would emit 2 and fail this test) and parse the CliEnvelope diagnostic: domain == 'api.quota', culprit cites 14 tokens < 15 floor, remedy mentions daemon auto-resume; archetype A (Diagnostic) output renders the failing span."
+  - rule: "AS-04"
+    verification: "yield_until is computed from the deterministic MockClock refill epoch (no SystemTime::now, no real sleeps): step the synthetic clock to the fixed reset_at and assert the recorded yield_until equals that literal tick."
