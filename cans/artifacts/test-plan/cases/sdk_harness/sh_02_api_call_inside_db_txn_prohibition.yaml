@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_02_api_call_inside_db_txn_prohibition"
+title: "ctx.api.call inside an open ctx.db.txn block is rejected for transaction isolation"
+domain: "sdk_harness"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Layer-2:-SQL-AST-check"
+  statement: "Transaction integrity: ctx.api.call is strictly forbidden inside ctx.db.txn blocks (action.md#Interior-rules). The SDK raises a transaction isolation error at call time — the network call never dispatches, the open transaction rolls back cleanly with zero rows committed, and long-running HTTP egress can never hold a SQLite write lock."
+  blast_radius_if_breached: "A slow (or hung) upstream HTTP call inside a write transaction pins the SQLite WAL writer lock for its full 300s timeout: every concurrent writer on the host queues into busy_timeout failures, and a mid-flight crash rolls back the local mutation while the irreversible HTTP effect already left the kernel — split-brain state with no rollback path (action.md#External-APIs irreversibility)."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent wraps the api call in a try/except inside the test (swallowing the isolation error) and asserts the txn succeeded; or disables the SDK guard flag in the fixture; or mocks ctx.api.call to return instantly so the lock-holding hazard never reproduces."
+  anti_slop_mitigation: "AS-01 bans mocking the guard boundary and the API transport; the error must surface from the real SDK layer; AS-02 proves the transaction rolled back with a direct SELECT; AS-03 requires the typed isolation error and envelope diagnostic, not a generic exception."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_sh_02"
+    trust: "reviewed" # refund_and_archive@4 runs at reviewed in dev
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+          seed:
+            - { ref: "ORD-10", status: "pending" }
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 pending — the txn would flip status to refunded
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events for refund_and_archive@4
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'with ctx.db.txn() as tx:\n    ctx.db.execute("UPDATE orders SET status = :s WHERE ref = :r", {"s": "refunding", "r": "ORD-10"}, intent="mark refunding")\n    ctx.api.call("stripe.refunds.create", params={"order": "ORD-10"}, intent="issue refund inside open txn")'
+  input_params:
+    routine: "refund_and_archive@4"
+    txn_statements_before_violation: 1
+    forbidden_call: 'ctx.api.call("stripe.refunds.create", ...) inside ctx.db.txn block'
+    http_dispatched: false
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "sdk.harness"
+    culprit: 'ctx.api.call("stripe.refunds.create") invoked inside an open ctx.db.txn block — network egress is structurally forbidden within transaction scope (transaction isolation)'
+    remedy: "split the flow: commit the local mutation first (close the txn), then issue ctx.api.call outside the block; or use kernel-managed ctx.api.poll_until for dependent remote state, never inside the txn"
+  database:
+    row_count_delta: 0
+    tables_mutated: [] # open transaction rolled back: ORD-10 stays pending
+  wire:
+    packets_transmitted: 0 # the isolation guard fires before any HTTP dispatch
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny" # NOTE: txn-isolation denial event name not located in cans/effect.md payload list; effect: none (effect.md#Denials)
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT status FROM orders WHERE ref = 'ORD-10' directly on envs/dev/workspace.db after the failed run: must still equal 'pending' (transaction cleanly rolled back, zero rows committed); SELECT count(*) FROM orders unchanged."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope: diagnostic.culprit names the ctx.api.call-inside-txn violation and diagnostic.remedy prescribes the split flow; the SDK must raise the typed transaction isolation error, not a generic Exception subclass."
+  - rule: "AS-01"
+    verification: "No mocking of the ctx.api transport or the SDK guard: the guard fires against the real call site. Companion control: the identical ctx.api.call OUTSIDE any txn block must dispatch normally in the same test binary, proving the guard is scope-aware rather than a blanket api ban."
+  - rule: "AS-06"
+    verification: "The expected rollback outcome ('pending' status preserved) is an immutable literal hardcoded in the test — never read back from the engine's own report of what it rolled back."
