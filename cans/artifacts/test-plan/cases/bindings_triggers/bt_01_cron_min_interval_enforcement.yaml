@@ -1,0 +1,71 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_01_cron_min_interval_enforcement"
+title: "Cron binding below the 5-minute floor is denied at the schedule governance gate"
+domain: "bindings_triggers"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/time.md#Cron-governance"
+  statement: "A cron binding whose expression fires faster than the schedule minimum interval (min_interval_minutes: 5, artifacts/governance.yaml#schedule) is rejected by the policy authorizer before any schedule row is committed; a 1-minute expression such as \"* * * * *\" must never become an active trigger. Tighter loops are only legal inside kernel-managed ctx.api.poll_until in-flight polling (artifacts/governance.yaml#watch poll.min_interval_minutes exempts in-flight poll_until)."
+  blast_radius_if_breached: "A sub-5-minute cron bound to a mutating routine fires ~1,440 unattended executions per day under kernel principal capcli-cron: session-scoped fuel/rows budgets burn out, the SQLite WAL is hammered by a fire storm, and production tables mutate with zero human oversight while occupying one of the max 20 active schedule slots."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent edits the fixture governance.yaml to min_interval_minutes: 1 (or skips compiling governance into capcli.lock) so the 1-minute expression binds silently; or asserts only that stderr mentions 'interval' while the process actually exits 0 and an active binding row exists."
+  anti_slop_mitigation: "AS-03 forces exit_code == 2 plus a parsed CliEnvelope diagnostic (domain/culprit/remedy citing the measured 1-minute vs 5-minute floor); AS-02 forces a direct SELECT count(*) proving zero binding rows; physics.md#Policy-vs-governance-split compiles governance.yaml at boot with runtime mutation denied, so fixture tamper trips a lockfile refusal instead of weakening the gate."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bt_01"
+    trust: "reviewed" # schedule binding floor is reviewed (artifacts/policy.yaml#schedule require_trust) so the interval rule is the ONLY denial trigger
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # payout@3 registered and proven, eligible as a bind target
+      - name: "_audit"
+        row_count: 0
+      - name: "_watch_cursors"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli bind cron payout_sweep cap://payout "* * * * *" -m "minute-level payout reconciliation during close"'
+  input_params:
+    binding_name: "payout_sweep"
+    capability: "cap://payout"
+    cron_expr: "* * * * *"
+    computed_interval_minutes: 1
+    min_interval_minutes: 5 # artifacts/governance.yaml#schedule
+    intent: "minute-level payout reconciliation during close"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "bind.cron"
+    culprit: 'cron expression "* * * * *" resolves to a 1-minute interval, below the schedule floor min_interval_minutes: 5 (artifacts/governance.yaml#schedule)'
+    remedy: 're-issue bind cron with a cadence of at least 5 minutes (e.g. "*/5 * * * *") or use kernel-managed in-flight ctx.api.poll_until for tighter loops'
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "bind.create" # denied attempt recorded with decision: denied, effect: none (effect.md#Event-integrity denial logging)
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Run SELECT count(*) FROM _watch_cursors and SELECT count(*) FROM routine_stats directly on envs/dev/workspace.db before and after the command; assert strict equality (no binding row, no telemetry row). The single permitted _audit delta is the denial record: SELECT count(*) FROM _audit WHERE event = 'bind.create' AND decision = 'denied' AND effect = 'none' must equal 1."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 (never .is_err() alone) and parse the --json CliEnvelope: diagnostic.domain == 'bind.cron', diagnostic.culprit contains 'min_interval_minutes', diagnostic.remedy names the 5-minute floor, envelope.state_modified == false (archetype A diagnostic per physics.md#Diagnostic-output-law)."
+  - rule: "AS-06"
+    verification: "The interval verdict is asserted against immutable literals 1 and 5 hardcoded in the test specification; the expected outcome is never recomputed from the cron parser output under test."
