@@ -1,0 +1,8 @@
+[dev:tier_1]  ✗  exit 3
+
+  FATAL  validation.not_found
+         target: op_9f99
+         No audit operation with id 'op_9f99' exists in _audit.
+
+  state_modified: false
+  remedy: verify the operation id via capcli sys tail or sys query, then re-run sys trace <op-id> --explain
