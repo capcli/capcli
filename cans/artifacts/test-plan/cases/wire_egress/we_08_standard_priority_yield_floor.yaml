@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "we_08_standard_priority_yield_floor"
+title: "Standard-priority frame yields at the 5-token floor instead of draining the bucket"
+domain: "wire_egress"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Priority-Floors"
+  statement: "'Standard tasks yield at 5 tokens remaining' (policy.yaml#api.rate_limit.priority_floors.standard_yield_tokens: 5): when a standard-priority frame's pre-call check sees available tokens at the standard floor, it yields cleanly with exit 6 (physics.md#Exit-code-law: exit 6 — domain api.quota, proactive rate yield) instead of draining the bucket the way a critical task may."
+  blast_radius_if_breached: "If standard tasks drained the pool to 0, time-critical critical-class work (payments, incident pages) would arrive at a dry bucket and hard-fail with exit 2 across the enterprise exactly during load peaks."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by asserting exit 6 while letting the call consume tokens anyway (drain-to-0 behavior), or by asserting a generic 'suspended' flag without checking that the bucket still holds exactly the floor reserve."
+  anti_slop_mitigation: "AS-06 pins the literals: floor 5, available 5, post-check remaining exactly 5 — the expected value is hardcoded, so a draining implementation fails. AS-03 forces exit 6 (the yield code) with the parsed diagnostic, distinguishing yield from a hard exit 2 kill. AS-02 proves the quota row is untouched by direct SQL."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_08"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'threads': 5 tokens available — the standard-class floor
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'priority-floor evaluation in capcli-core::budget for a standard-priority frame: ctx.api.call("threads.posts") pre-call check invoked with tokens_available == 5'
+  input_params:
+    verb: "threads.posts"
+    priority_class: "standard"
+    tokens_available: 5
+    standard_yield_tokens: 5
+
+expected_observations:
+  exit_code: 6
+  state_modified: false
+  diagnostic:
+    domain: "api.quota"
+    culprit: "standard priority floor reached: 5 tokens available equals the standard reserve floor ('Standard tasks yield at 5 tokens remaining'); frame yields to preserve headroom instead of draining"
+    remedy: "frame marked 'yielded' and suspended until refill; the daemon re-queues on token refill — standard tasks must not drain the bucket like critical tasks"
+  database:
+    row_count_delta: 0   # unit-tier preemption decision; suspension persistence into _suspended_tasks is we_03's e2e scope
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.frame_pop (outcome: yielded)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _api_quota returns 1 before and after (strict equality) AND the threads row's remaining field still reads exactly 5 — the standard task did not consume the reserve; the _budget_frames row records outcome 'yielded' in place (no row-count change)."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 6 exactly — a hard failure (exit 2) or a successful dispatch (exit 0) both fail the test; parse the CliEnvelope diagnostic: domain == 'api.quota', culprit cites the 5-token standard floor, remedy mentions yield/refill."
+  - rule: "AS-06"
+    verification: "Hardcoded literal expectations: floor == 5, available == 5, post-check remaining == 5; expected values are immutable literals in the spec, never computed from the engine's own bucket read."
