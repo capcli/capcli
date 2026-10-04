@@ -1,0 +1,66 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_07_authoring_mutex_concurrent_edit"
+title: "Second agent's concurrent write to routines/payout.py is blocked by the filesystem authoring mutex"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#authoring-mutex--filesystem-lock-on-routines/<name>.py-during-edits;-concurrent-edits-exit-2"
+  statement: "A filesystem lock guards routines/<name>.py during edits: while agent A holds the authoring mutex on routines/payout.py, agent B's concurrent write to the same file is refused with exit 2 — concurrent file overwrites are mutually excluded, never interleaved or last-writer-wins."
+  blast_radius_if_breached: "Last-writer-wins clobbers whole edits: agent A's provenance-stamped changes vanish under agent B's overwrite, the routine manifest and code drift apart, prove/ship decisions are made on code nobody can reproduce, and the authoring history becomes un-attributable."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent serializes the two writes in test code (waiting for A to finish before B starts) so the mutex never actually contends, then asserts the file is intact — a test that can never fail and proves no mutual exclusion."
+  anti_slop_mitigation: "The contention must be simultaneous (agent B writes while A genuinely holds the lock); AS-02 proves the file is byte-identical (hash equality) before/after; AS-03 pins exit 2 with the mutex diagnostic; AS-06 hardcodes holder and file-hash literals."
+
+setup:
+  env: "dev" # authoring happens in the dev worktree
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.reliefof@acme.corp"
+    agent_id: "agt_cc07b" # agent B attempts; agent A holds the authoring lock
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null # routine-file scenario; no domain table shape required
+    tables:
+      - name: "_audit"
+        row_count: 6 # genesis + prove events for payout@4
+    vault_secrets: []
+    # harness pre-condition: routines/payout.py exists (sha256 pinned in the test as a literal); agt_cc07a holds the filesystem authoring lock on routines/payout.py
+
+execution:
+  trigger: "rust_api"
+  command: "agent B's kernel-mediated authoring write: open routines/payout.py via the engine authoring path (O_WRONLY) while agt_cc07a holds the authoring mutex — contention is simultaneous, not serialized by the test"
+  input_params:
+    target_file: "routines/payout.py"
+    lock_holder: "agt_cc07a (session ses_cc07a, edit in progress)"
+    contender: "agt_cc07b (session ses_cc07b)"
+    file_sha256_pre: "literal pinned by the harness (immutable expected hash)"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authoring"
+    culprit: "filesystem authoring mutex on routines/payout.py is held by agt_cc07a (session ses_cc07a, edit in progress); concurrent edit by agt_cc07b refused — mutual exclusion, no overwrite"
+    remedy: "wait for agt_cc07a to release the authoring lock (or coordinate the handoff), then retry the write; never force-write past the mutex"
+  database:
+    row_count_delta: 0 # no table mutation; _audit gains exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none — authoring mutex contention on routines/payout.py)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SHA-256 of routines/payout.py before and after the refused write is byte-identical (equal to the hardcoded pre-hash literal) — agent B's content never lands; stat mtime unchanged; no partial/truncated write is left behind."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.authoring', culprit names routines/payout.py and the lock holder agt_cc07a, remedy present."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: holder 'agt_cc07a', contender 'agt_cc07b', target path 'routines/payout.py', and the expected file hash; the contention window is held open by the harness while B genuinely attempts — the test must fail if the writes are serialized by accident."
