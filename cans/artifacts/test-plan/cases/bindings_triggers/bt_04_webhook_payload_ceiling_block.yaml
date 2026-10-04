@@ -1,0 +1,73 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_04_webhook_payload_ceiling_block"
+title: "Webhook payload over the 65,536-byte ceiling rejected at ingress with HTTP 413"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Schedule-defenses"
+  statement: "Webhook ingress enforces a hard payload ceiling of max 65,536 bytes (artifacts/governance.yaml#watch webhook.max_payload_bytes): a body of 65,537 bytes is rejected at ingress with HTTP 413 before the payload is buffered or dispatched, and the oversize condition is detectable from the request headers so the daemon never allocates unbounded memory."
+  blast_radius_if_breached: "Oversized (or deliberately unbounded chunked) webhook bodies are buffered into daemon memory: heap exhaustion crashes the kernel's audit spine (exit 5 panic loop), a single provider storm takes down all bound triggers, and the failure cascades into unavailability of every schedule and endpoint on the host."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent reads the whole body into a buffer first, then asserts the length check fires afterwards (the OOM already happened); or sends only 100KB and asserts a generic 'too large' string while the routine actually dispatched; or truncates the payload silently and returns 200."
+  anti_slop_mitigation: "AS-03 requires the exact pair (HTTP 413, CLI-side exit 2) plus a structured diagnostic citing the measured byte count vs the 65,536 ceiling; AS-02 proves zero dispatch and no cursor advance; the test asserts rejection occurs before body consumption via the Content-Length header path."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "partner:stripe"
+    agent_id: "capcli-watch" # kernel principal owning asynchronous provider dispatches
+    trust: "reviewed" # watch binding floor (artifacts/policy.yaml#watch require_trust)
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # refund@2 bound via: bind webhook stripe_hooks stripe charge.captured cap://refund
+      - name: "_watch_cursors"
+        row_count: 1
+      - name: "_audit"
+        row_count: 2
+    vault_secrets:
+      - "vault://stripe_webhook_secret (HMAC-SHA256 signing key for provider stripe, armed at bind time)"
+
+execution:
+  trigger: "inbound_http"
+  command: 'curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:4040/hooks/stripe/charge.captured -H "Content-Type: application/json" -H "X-Webhook-Signature: v1=<valid digest over the oversized body>" --data-binary @oversize_payload_65537.json'
+  input_params:
+    http_method: "POST"
+    path: "/hooks/stripe/charge.captured"
+    payload_bytes: 65537
+    payload_ceiling_bytes: 65536 # artifacts/governance.yaml#watch webhook.max_payload_bytes
+    content_length_header: 65537
+    signature: "valid HMAC over the oversized body (so only the size gate can reject)"
+    bound_capability: "cap://refund"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "bind.webhook"
+    culprit: "payload of 65,537 bytes exceeds the webhook ingress ceiling of 65,536 bytes (artifacts/governance.yaml#watch webhook.max_payload_bytes); HTTP 413 returned at ingress"
+    remedy: "provider must split or slim the event below 65,536 bytes; oversized bodies are refused at the header stage and are never buffered in daemon or guest memory"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # rejected at ingress; no routine dispatch, no egress
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny" # NOTE: ingress denial event name not located in cans/effect.md payload list; effect: none (effect.md#Denials), log_all per artifacts/governance.yaml#denials
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert the ingress response is exactly HTTP 413 and, when surfaced through the CLI envelope, exit_code == 2 with diagnostic.culprit citing the measured 65,537 vs the 65,536 ceiling; assert the refusal is decided from request headers (Content-Length path) BEFORE the body stream is consumed — a test that must slurp the body to learn the verdict fails."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _watch_cursors and SELECT count(*) FROM routine_stats before and after the oversized POST; assert strict equality — no cursor advance, no dispatch; SELECT count(*) FROM _audit must show only the single effect: none denial row."
+  - rule: "AS-06"
+    verification: "The boundary pair (65,537 payload, 65,536 ceiling) is an immutable literal pair hardcoded in the test spec, with a companion exactly-at-ceiling 65,536-byte positive control proving the gate fires only past the boundary."
