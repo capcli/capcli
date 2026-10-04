@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "da_02_where_tautology_bypass_kill"
+title: "WHERE-clause tautology (OR 1=1) privilege escalation is killed by the AST pattern scanner"
+domain: "database_authorizer"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/physics.md#deny-patterns"
+  statement: "Boolean bypass attacks are denied structurally: the deny pattern 'UPDATE * SET * WHERE * OR 1=1' and tautology bypass (e.g. WHERE 1=1) are matched against the parsed AST logical-operator tree, never against raw statement text."
+  blast_radius_if_breached: "A prompt-injected routine escalates every user to admin in one statement; RBAC is hollowed out company-wide and the mutation is indistinguishable from a legitimate bulk write in the audit trail."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent only string-matches '1=1' in the SQL text - obfuscated variants (OR 2=2, OR 'a'='a', OR id=id) slip past the string filter while the test stays green."
+  anti_slop_mitigation: "AS-01 bans mocking the AST scanner and string-contains shortcuts; AS-03 requires the typed exit code plus a parsed diagnostic citing the matched deny pattern; AS-02 proves the users table is untouched after the kill."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.authprobe@acme.corp"
+    agent_id: "agt_da_02"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        users:
+          description: "Operator identity roster with role grants"
+          columns:
+            id: pk
+            email: text!
+            role: text=member
+          seed:
+            - { email: "root@acme.corp", role: "admin" }
+    tables:
+      - name: "users"
+        row_count: 200
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "UPDATE users SET role = 'admin' WHERE id = '1' OR 1=1"
+  input_params:
+    submitted_to: "Layer-2 SQL AST structural pattern scan (sqlparser crate) ahead of sqlite3_prepare_v2"
+    where_tree_shape: "BinaryOp(Or, Expr(id='1'), Expr(1=1))"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.query"
+    culprit: "WHERE clause binary tree contains tautology disjunct (id = '1') OR (1 = 1); matches deny pattern 'UPDATE * SET * WHERE * OR 1=1' (policy.query.update_delete.deny_patterns)"
+    remedy: "Remove the OR tautology and bind a concrete id parameter (positional or named binding - interpolation is banned)."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Denial must originate from the sqlparser AST walk over the WHERE Expr::BinaryOp(Or) node with literal-equivalent operands; static lint bans .contains(\"1=1\") string shortcuts and any mock trait on the scanner or authorizer."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the structured diagnostic: domain 'policy.query', culprit cites the matched deny pattern, remedy present - no .is_err() without the typed code."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM users == 200 before and after; SELECT count(*) FROM users WHERE role = 'admin' == 1 (only the seeded root) after the denied run."
