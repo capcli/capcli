@@ -1,0 +1,66 @@
+$schema: "test-plan/case/v1"
+case_id: "vs_08_vault_export_plaintext_denial"
+title: "'capcli sys vault dump' is refused — the CLI surface exposes no credential export path and secret values are masked in all outputs"
+domain: "vault_secrets"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/agent.md#access-—-agent-read-only;-value-masked-in-all-outputs"
+  statement: "Secret values are masked in all outputs and the vault's only CLI surface is provisioning ('sys vault set', 'sys vault import-env'): a plaintext credential dump is structurally impossible because no export verb exists in the frozen subcommand tree — 'sys vault dump' is rejected at the parser before any kernel dispatch, and the secrets value column is masked in every query path regardless."
+  blast_radius_if_breached: "A single command exfiltrates every live credential from the workspace: leaked backups, shared screen recordings, and piped transcripts all carry full sk_live material — the encrypted-at-rest design undone by one verb that was never supposed to exist (catalog banned slop: implementing credential export or print commands in the CLI interface)."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent implements (or stubs) a vault dump verb in a test binary to make the command 'work', or accepts a generic unknown-command error without proving the refusal is structural (no such verb in the surface, secrets table untouched, zero plaintext in any stream)."
+  anti_slop_mitigation: "AS-03 forces the typed exit 3 parser refusal whose remedy enumerates the three legal injection channels; AS-02 proves the secrets row count and ciphertext are untouched; AS-06 hardcodes that the seeded secret literal appears nowhere and the CLI registry contains no vault export/print verb."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:maya"
+    agent_id: "agt_vs_08"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "secrets"
+        row_count: 1
+      - name: "_audit"
+        row_count: 4
+    vault_secrets:
+      - ref: "vault://stripe_key"
+        scope: "prod"
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys vault dump"
+  input_params:
+    attempted_verb: "sys vault dump"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "policy.secrets"
+    culprit: "subcommand 'sys vault dump' does not exist in the CLI surface — vault verbs are 'sys vault set' and 'sys vault import-env' only; plaintext credential export is structurally impossible because values are masked in all outputs"
+    remedy: "provision or rotate secrets per-channel: 'capcli sys vault set <key> --in @-', CAPCLI_SECRET_* env binding, or authenticated Cockpit RPC — no export path exists by design"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "none (parser-level refusal before kernel dispatch — no op to audit)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope: exit_code == 3 (usage/compile-time refusal at the parser), state_modified == false, diagnostic.domain == 'policy.secrets', diagnostic.culprit states the verb does not exist, diagnostic.remedy enumerates only injection channels; stdout prefix '[prod:tier_1]'."
+  - rule: "AS-02"
+    verification: "Post-refusal substrate proof on envs/prod/workspace.db: SELECT count(*) FROM secrets returns 1 with the value column byte-identical to the pre-command read, and SELECT count(*) FROM _audit is unchanged — nothing was dumped, listed, or mutated."
+  - rule: "AS-06"
+    verification: "Hardcoded structural negative: scan the CLI subcommand registry (the frozen ten-noun tree) for any vault verb other than 'set' and 'import-env' — 0 matches; and grep all output streams for the seeded secret literal and for base64-shaped blobs of it — 0 occurrences, proving the refusal leaked nothing en route."

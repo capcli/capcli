@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "vs_07_egress_proxy_token_refresh_zeroize"
+title: "Egress proxy proactively refreshes an expiring OAuth bearer token (within the 300s buffer), dispatches with the new token, and zeroizes every intermediate decrypted buffer"
+domain: "vault_secrets"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#boundary-rotation-—-egress-proxy-silently-refreshes-expired-bearer-tokens"
+  statement: "The egress proxy silently refreshes expired (or within the 300s proactive buffer) bearer tokens at the kernel egress boundary: the ephemeral token is re-derived from the vaulted root, the refreshed ciphertext is committed back to the vault, the main request dispatches with the new token injected in the Authorization header (the secret never enters guest memory), and every intermediate decrypted buffer is zeroized post-dispatch (memory zeroized post-dispatch)."
+  blast_radius_if_breached: "Decrypted OAuth tokens accumulate in global heap buffers without zeroization: a heap dump, core file, or swap artifact of the daemon yields live bearer tokens long after dispatch; stale tokens keep being sent, triggering provider 401 storms and lockouts on the payment path."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent mocks the egress proxy (or the provider token endpoint) so no refresh ever runs, asserts the 401-retry path instead of the proactive refresh, or 'verifies' zeroization by checking that a Rust variable went out of scope without reading raw memory (catalog banned slop: caching decrypted token strings in global heap without zeroization guards)."
+  anti_slop_mitigation: "AS-01 forbids mocking the proxy, vault, or crypto — a real wiremock token endpoint serves the refresh and the real zeroize path runs; AS-04 pins the expiry boundary deterministically; AS-06 hardcodes the raw-memory zero-match scan and the new-token header check."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:maya"
+    agent_id: "agt_vs_07"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "secrets"
+        row_count: 1
+      - name: "routines"
+        row_count: 1
+      - name: "_audit"
+        row_count: 4
+    vault_secrets:
+      - ref: "vault://stripe_oauth_token"
+        scope: "prod"
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://stripe.refund_charge@3 -p charge_id=ch_9d21K -p amount_cents=1500 -m \"refund failed delivery\""
+  input_params:
+    charge_id: "ch_9d21K"
+    amount_cents: 1500
+    bearer_ref: "vault://stripe_oauth_token"
+    bearer_expires_in_s_at_dispatch: 120
+    refresh_buffer_s: 300
+    wiremock_token_endpoint: "https://stripe.test/oauth/token"
+    refreshed_token_literal: "tok_VS07_NEW_44aa"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 2
+    tables_mutated:
+      - "secrets"
+      - "_audit"
+  wire:
+    packets_transmitted: 2
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.token_refresh (provider: stripe, token_type: bearer, expires_in, refresh_outcome: success) followed by api.call for the refund dispatch"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mocks on the security boundary: the vault, AES-256-GCM decryption, and the egress proxy run for real — a wiremock server plays only the external provider (token endpoint + refund endpoint), and the guest routine's memory is inspected to prove the bearer never crosses into it (injection at the egress boundary only)."
+  - rule: "AS-04"
+    verification: "Deterministic expiry boundary: the bearer's expires_at is set to MockClock-now + 120s, strictly inside the 300s proactive refresh buffer (governance api.token_refresh.refresh_buffer_seconds), so the refresh decision is a pure function of injected time — no sleeps, no wall clock, no flaky 401 races."
+  - rule: "AS-06"
+    verification: "Hardcoded zeroize proof by raw memory scan: after dispatch, scan the egress worker's buffer region (raw pointer read, not scope-drop reasoning) for the old and refreshed token byte patterns — 0 occurrences of either post-dispatch; the captured Authorization header on the refund request hashes to sha256('tok_VS07_NEW_44aa') = '53450035d2d9cfadd98f7c596d142da0c1d1f8c415d20cdd3e3e9a9ff8ccf52a', proving the new token was used and both buffers were wiped."
