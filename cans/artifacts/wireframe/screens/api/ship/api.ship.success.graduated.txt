@@ -1,0 +1,10 @@
+[dev:tier_1]  ✓  graduated
+
+  verb:             cap://threads.create_media_post
+  rung:             draft → reviewed
+  training_wheels:  cleared on call 4 of 4
+  evidence:         synthetic contract replay 3/3 passed (calls 1–3)
+                    call 4 executed under replayed contract: pass
+  governance:       standard (24h approval windows closed)
+
+  state_modified:  true

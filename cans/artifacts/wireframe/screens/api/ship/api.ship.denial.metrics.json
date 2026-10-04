@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "api.ship.denial.metrics",
+  "noun": "api",
+  "verb": "ship",
+  "target": "cap://threads.create_media_post",
+  "command": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.authorizer",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.authorizer",
+    "culprit": "Fails synthetic contract replay: 2 of 3 replays passed.",
+    "remedy": "fix the failing invariant, re-run 'capcli api prove threads.create_media_post --env sim', then re-ship",
+    "layer": "authorizer",
+    "measured": "synthetic contract replay 2/3 passed (required: 3/3) · sim success rate 0.67 (floor: 0.90)"
+  },
+  "txt_pair": "screens/api/ship/api.ship.denial.metrics.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "  FAIL  policy.authorizer.unproven",
+      "        Fails synthetic contract replay.",
+      "  state_modified:  false",
+      "  layer:           authorizer",
+      "  measured:        synthetic contract replay 2/3 passed (required: 3/3) · sim success rate 0.67 (floor: 0.90)"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.authorizer"
+    }
+  }
+}
