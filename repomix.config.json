@@ -53,7 +53,11 @@
 //    "cans/artifacts/policy.yaml",
   // "cans/artifacts/governance.yaml",
    "cans/artifacts/capcli.landing-copy.md",
-   "cans/artifacts/",
+    "cans/artifacts/capcli.hero-copy.md",
+    "cans/artifacts/wireframe/screens/",
+    "cans/artifacts/test-plan/cases/",
+    "cans/artifacts/test-plan/manifest.yaml",
+  // "cans/artifacts/",
   //  "cans/artifacts/",
   //  "cans/assembly.md",
 		]
