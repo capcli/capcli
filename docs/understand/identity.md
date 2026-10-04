@@ -182,7 +182,7 @@ $ capcli sys agent revoke agt_7f3k -m "rogue query loops detected"
 
 The revocation takes effect in **under 10 milliseconds**:
 * Every subsequent command run by `agt_7f3k` is refused (`exit 2`).
-* Active distributed claims and lease locks held by the agent in `_claims` are terminated.
+* Active distributed claims and lease locks held by the agent in `claims` are terminated.
 * Live sessions bound to the agent are invalidated.
 
 ---

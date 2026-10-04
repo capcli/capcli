@@ -85,7 +85,7 @@ The Linux kernel snipes the syscall at the processor level. The subshell termina
 ### How do routines talk to the internet, then?
 Through the **`ctx.api.call`** IPC bridge. 
 
-The guest script asks the Capcli Rust daemon over a local Unix domain socket: *"Please execute the activated catalog verb `stripe.refund_charge` on my behalf."* 
+The guest script asks the Capcli Rust daemon over a local Unix domain socket: *"Please execute the synced catalog verb `stripe.refund_charge` on my behalf."* 
 
 The kernel inspects the token bucket, checks the budget, validates the schema, injects the vaulted secret, and fires the HTTP request from its own hardened proxy.
 
@@ -117,7 +117,7 @@ Capcli uses high-speed, local platform IPC:
 ┌────────────────────────────────────────────────────────────────────────┐
 │  SANDBOX JAIL (bwrap / broker)                                         │
 │                                                                        │
-│   Guest Script (TypeScript / Python)                                   │
+│   Guest Script (Python / JavaScript / TypeScript)                      │
 │        │                                                               │
 │        │ JSON-Lines Protocol (zero-dependency SDK)                     │
 │        ▼                                                               │

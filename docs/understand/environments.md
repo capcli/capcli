@@ -48,7 +48,7 @@ In `dev`, the kernel lets down its guard just enough so you can build things wit
 * **Draft writes permitted:** Newly created routines can mutate local tables.
 * **Seeding relaxation:** Dev allows up to 100 affected rows for draft mutations (compared to 10 in prod) so you can seed tables without hitting an AST wall.
 * **Waived pre-counts:** You don't have to run `capcli sql --count` before every bulk update.
-* **Permissive engines:** You can run TypeScript (Bun/Node), Python, or JavaScript.
+* **Permissive engines:** You can run Python (1st-class), JavaScript, or TypeScript.
 
 If your agent completely ruins `envs/dev/workspace.db`, nobody cares. You delete it, run `capcli env new dev --seed prod`, and you're back in business.
 

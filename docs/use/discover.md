@@ -68,7 +68,7 @@ $ capcli inspect cap://order_refund@7
 [dev:tier_1]  cap://order_refund@7
 
   trust:       reviewed
-  runtime:     typescript (bun)
+  runtime:     python (python3)
   params:      order_id: string, reason: string
   limits:      6 ops · 20s · 500 result tokens
   budget:      can_invoke_now: true

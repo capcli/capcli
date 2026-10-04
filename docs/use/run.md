@@ -30,7 +30,7 @@ Your harness didn't write a try/catch. Didn't check rate limits. Didn't remember
 
 ## Run raw SQL (read)
 
-Reads don't need intent. They're free. Bounded, but free.
+The canonical form is `capcli run sql "<statement>"`; `capcli sql` is a root alias for the same verb. Reads don't need intent. They're free. Bounded, but free.
 
 ```bash
 $ capcli sql "SELECT id, total, status FROM orders WHERE status = 'pending' LIMIT 10"
@@ -166,7 +166,7 @@ $ capcli run reconcile_inventory -p warehouse=WEST \
   lock:        released
 ```
 
-The lock is a lease in `_claims`. If your harness crashes mid-run, the lock expires after TTL. No orphaned locks. No deadlocks.
+The lock is a lease in `claims`. If your harness crashes mid-run, the lock expires after TTL. No orphaned locks. No deadlocks.
 
 ---
 

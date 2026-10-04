@@ -16,7 +16,7 @@ $ capcli inspect cap://dispatch_order@4
 [dev:tier_1]  cap://dispatch_order@4
 
   trust:       pinned
-  runtime:     typescript (bun)
+  runtime:     python (python3)
   params:      order_id: string, carrier: string
   description: "Dispatch paid order to carrier and update status"
 
@@ -103,7 +103,6 @@ $ capcli inspect cap://stripe.refund_charge
 [dev:tier_1]  cap://stripe.refund_charge
 
   trust:       reviewed
-  state:       active
   sim_mode:    sandbox
   cost_class:  write
   idempotent:  true
@@ -114,8 +113,6 @@ $ capcli inspect cap://stripe.refund_charge
     provider:          stripe
     bucket_capacity:   60
     tokens_available:  47
-    tokens_earmarked:  10
-    unreserved_headroom: 37
     refill_rate:       1.0/s
     reset_at:          14m
 
@@ -131,7 +128,7 @@ $ capcli inspect cap://stripe.refund_charge
     p95_duration:  1100ms
 ```
 
-You see the live quota. You see how many tokens are left. You see whether earmarks are eating into headroom. You know *before* you burn a call whether you can afford it.
+You see the live quota. You see how many tokens are left and which priority floor gates your class. You know *before* you burn a call whether you can afford it.
 
 ---
 

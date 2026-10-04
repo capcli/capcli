@@ -2,7 +2,7 @@
 
 This is where sloppy ad-hoc bash scripts go to become hardened, immortal civil servants.
 
-A routine is a versioned, sandboxed, multi-step script (TypeScript or Python). It bundles database queries, external API calls, and business logic into an atomic unit with cryptographically locked manifests.
+A routine is a versioned, sandboxed, multi-step script (Python 1st-class, JavaScript, or TypeScript). It bundles database queries, external API calls, and business logic into an atomic unit with cryptographically locked manifests.
 
 ```bash
 capcli routine <verb> [args] [--flags]
@@ -14,12 +14,11 @@ capcli routine <verb> [args] [--flags]
 
 | Verb | Syntax | Description |
 |---|---|---|
-| **`new`** | `capcli routine new <name> [--template <ptr>]` | Scaffolds a compliant starter script in `routines/<name>.ts`. |
+| **`new`** | `capcli routine new <name> [--template <ptr>]` | Scaffolds a compliant starter script in `routines/<name>.py`. |
 | **`prove`** | `capcli routine prove <name> [-p k=v] [--env sim]` | Runs synthetic replay tests against masked simulation data. |
 | **`ship`** | `capcli routine ship <name> <reviewed\|pinned> [--reason "..."]` | Submits candidate for promotion up the trust ladder. |
 | **`stats`** | `capcli routine stats <name> [--deep]` | Displays p50/p95 latency, run counts, and historical success rates. |
 | **`rollback`**| `capcli routine rollback <name> [--to-version <v>]` | Rewinds capability pointer to a prior verified version hash. |
-| **`sweep`** | `capcli routine sweep [--since 30d]` | Scans for dead, failing (<70%), or duplicate routine candidates. |
 | **`retire`** | `capcli routine retire <name> [--reason "..."]` | Decommissions a routine without destroying historical provenance. |
 
 ---
@@ -42,7 +41,7 @@ Before a routine can be registered, proved, or shipped, the Rust kernel measures
 
 ## 1. Proving It: `routine prove`
 
-You wrote `routines/refund_order.ts`. You think it works. 
+You wrote `routines/refund_order.py`. You think it works. 
 
 The kernel doesn't care what you think. It demands proof in simulation:
 
@@ -97,22 +96,7 @@ Fail even one metric? The promotion is blocked, and the routine is thrown into t
 
 ---
 
-## 3. The 1-Hour Parole Window (Canary Veto)
-
-Let's say your routine passed the math and was promoted to `reviewed`.
-
-**It is now on probation for 60 minutes.**
-
-During the first hour of production traffic, the kernel watches error rates and latency like a hawk. If the routine triggers a policy denial, unexpected spike, or runtime crash:
-* The kernel fires an autonomous circuit breaker.
-* The promotion is instantly revoked.
-* The routine drops straight back to `draft` trust.
-
-You fix the bug. You rehearse again. Reality remains intact.
-
----
-
-## 4. Deleting Without Deleting: `routine retire`
+## 3. Deleting Without Deleting: `routine retire`
 
 In traditional engineering, someone runs `git rm routines/old_script.py`, commits it, and breaks three cron jobs and two API endpoints.
 
@@ -137,7 +121,7 @@ $ capcli routine retire legacy_billing -m "superseded by billing_v2"
 
 ---
 
-## 5. The Time Machine: `routine rollback`
+## 4. The Time Machine: `routine rollback`
 
 Did an updated routine ship with a subtle edge-case bug? Don't push a frantic hotfix commit at midnight:
 

@@ -74,7 +74,7 @@ Capcli enforces a **Dual-Storage Guarantee**:
 │  GIT WORKTREE REPOSITORY      │  │  OBJECT STORE (S3 / R2 WORM)        │
 │  • schema.yaml (DDL changes)  │  │  • Binary VACUUM snapshots          │
 │  • world.sql (DDL exports)    │  │  • S3 Object Lock (Immutable WORM)  │
-│  • routines/ (.ts, .py code)  │  │  • checkpoint.sig (KMS Notary)      │
+│  • routines/ (.py, .js code)  │  │  • checkpoint.sig (KMS Notary)      │
 │  • audit/ (Daily JSONL logs)  │  │  • Retained permanently             │
 │  • Squashed every 90 days     │  │                                     │
 └───────────────────────────────┘  └─────────────────────────────────────┘

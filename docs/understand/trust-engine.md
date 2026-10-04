@@ -23,7 +23,7 @@ Think of trust as security clearances for code. Every routine, query, and API ve
 ---
 
 ### 1. Draft: Toddler Mode
-Every newly written routine, imported template, or freshly activated API verb starts here. Zero exceptions.
+Every newly written routine, imported template, or freshly synced API verb starts here. Zero exceptions.
 
 * **Max rows affected:** 10 (Dev allows 100 so you can seed test data without crying).
 * **Secrets:** Completely invisible. Try to `SELECT value FROM secrets` and the C authorizer laughs in your face (`exit 2`).
@@ -73,37 +73,6 @@ Fail even one check by 0.01%? Auto-promotion aborts, and the candidate gets toss
 
 ---
 
-## The 1-Hour Parole Window (Canary Veto)
-
-Congratulations! Your routine passed the 5-point math and got promoted. It's live!
-
-**Now it's on parole.**
-
-The moment a routine is promoted, the kernel starts a silent **60-minute canary timer**. 
-
-```
-Promotion Approved
-        │
-        ▼
-┌───────────────────────────────┐
-│   1-Hour Canary Telemetry     │
-│   (Watches error rates & ops) │
-└───────────────┬───────────────┘
-                │
-     ┌──────────┴──────────┐
-     ▼                     ▼
-Any anomaly spike?     Clean 60 mins?
-     │                     │
-AUTONOMOUS DEMOTION   PERMANENT RUNG
-(Back to Draft)       (Survives parole)
-```
-
-If the routine triggers a policy denial, latency spike, or runtime panic during those first 60 minutes, the kernel doesn't page you. It fires an **autonomous circuit breaker**, cancels the promotion, and drops the routine straight back to `draft`. 
-
-You fix the bug. You try again.
-
----
-
 ## The Tier 2 Permanent Nerf (Mac & Windows Tears)
 
 Here is a cold, hard pill to swallow:
@@ -136,15 +105,15 @@ You write code on your Mac. You test it in simulation on your Mac. But when it's
 
 ---
 
-## Training Wheels for APIs
+## Un-simulated APIs
 
-When your agent activates a brand new external API verb (e.g. `stripe.refund_charge`) that has no simulation mock fixture:
+When your agent calls a brand new external API verb (e.g. `stripe.refund_charge`) that has no simulation fixture:
 
-* It gets tagged with **Training Wheels**.
-* Calls 1, 2, and 3 require synthetic contract replay proofs against historical audit logs.
-* On **Call 4**, it automatically graduates to standard governance.
+* There is no activation gate and no human sign-off — the verb is governed by its declared **`sim_mode`** from day one.
+* If `apis/<provider>.sim.yaml` exists, calls route to the provider sandbox; without one, the verb falls back to schema-validating **`dry-run`** responses (`{ "simulated": true }`).
+* Verbs marked **`prod-only`** are physically denied in `dev` and `sim` by the authorizer — they can only ever touch the live wire in `prod`.
 
-The system assumes every new external effect is a potential disaster until proven routine.
+The system assumes every new external effect is a potential disaster until its simulation mode says otherwise.
 
 ---
 

@@ -68,16 +68,14 @@ Enforced by AST parsing and native SQLite `sqlite3_set_authorizer`:
 | Metric | Hard Limit | Note |
 |---|---|---|
 | **Registered Providers** | Max 10 providers | E.g. Stripe, GitHub, Twilio |
-| **Verbs per Provider** | Max 500 imported | Full catalog ceiling |
-| **Active Verbs per Provider** | Max 50 active | Keeps active surface small |
+| **Verbs per Provider** | Max 300 imported | Full catalog ceiling |
 | **Wire Payload Egress** | 5 MB max per call | Trapped at HTTP proxy layer |
 | **Default Bucket Capacity** | 60 tokens | Client-side rate bucket |
 | **Refill Rate** | 1.0 token / sec | Steady-state drip |
 | **In-Flight Poll (`poll_until`)**| Max 30s duration, min 2s sleep | Counts as **1 aggregate op** |
-| **Active Quota Earmarks** | Max 50 registry / 10 per session | Ring-fenced API capacity |
-| **Max Earmark Share** | 80% of token bucket | Anti-hoarding lock |
-| **Earmark TTL** | Max 24 hours | Auto-dissolves to global pool |
-| **Background Yield Threshold**| < 15 unreserved tokens | Suspends task via `exit 6` |
+| **Priority Floor (Background)** | Yields below 15 tokens | `exit 6`, frame parked in `_suspended_tasks` |
+| **Priority Floor (Standard)** | Yields below 5 tokens | `exit 6`, frame parked in `_suspended_tasks` |
+| **Priority Floor (Critical)** | 0 (drains pool) | Pre-call gate `exit 2` only when bucket is empty |
 | **Yield Task Queue** | Max 100 suspended tasks | In `_suspended_tasks` table |
 | **Yield Deferral Limit** | Max 5 re-queue attempts | Aborts after 5 consecutive yields |
 | **Token Refresh Window** | 300s before expiration | Auto-refreshes (max 3 retries) |
@@ -144,7 +142,6 @@ To stop runaway agent loops from burning resources:
 | **Capability Invocations**| Max 300 calls / minute | `exit 2` |
 | **Routine Drafts per Agent**| Max 30 concurrent drafts | `exit 2` on creation |
 | **Routine Creation Velocity**| Max 10 created / hour | `exit 2` (anti-flooding) |
-| **API Verb Activations** | Max 10 activations / hour | `exit 2` |
 | **Template Promotions** | Max 5 promotions / day | `exit 2` |
 | **Agent Thrashing Threshold**| 20 sustained denials in 5 min| Fires `agent.thrashing` alarm |
 | **Backup Auto-Commit** | Every 15 minutes | Auto-commits state to Git |

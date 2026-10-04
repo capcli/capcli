@@ -19,7 +19,7 @@ curl -fsSL https://capcli.dev/install.sh | bash
 | **Make safe API calls without leaking keys or burning quotas.** | [Call APIs →](use/call-apis.md) |
 | **Handle incoming webhooks, crons, or export an MCP server.** | [Inbox & Triggers →](use/inbox-and-triggers.md) |
 | **Pause execution and ask a human a structured question.** | [Ask Human →](use/ask-human.md) |
-| **Understand the token-bucket brokerage & multi-day limits.** | [Budgets & Brokerage →](understand/budgets.md) |
+| **Understand the token-bucket floors & multi-day limits.** | [Budgets & Priority Floors →](understand/budgets.md) |
 | **Open the local web cockpit.** | [Administrative Cockpit →](concepts/cockpit.md) |
 | **Hit an exit code or denial? Check the ceilings.** | [Hard Limits & Ceilings →](reference/limits.md) |
 | **Look up exact CLI command contracts (10 surface nouns).** | [Command Reference →](reference/index.md) |

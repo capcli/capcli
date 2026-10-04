@@ -10,7 +10,7 @@ Here is how your agent talks to the outside world without setting the company on
 
 ---
 
-## 1. Discovery: The Dormant Catalog
+## 1. Discovery: The Compiled Catalog
 
 You do not paste giant OpenAPI JSON specs into your LLM prompt. That gives the model amnesia and burns your context window for zero reason.
 
@@ -20,7 +20,7 @@ Instead, sync the vendor spec once:
 $ capcli api sync stripe https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.yaml
 ```
 
-The kernel compiles the endpoints into `apis/stripe.yaml`. Every endpoint enters the registry as **dormant**:
+The kernel compiles the endpoints into `apis/stripe.yaml`. Every endpoint enters the registry at **`draft` trust**:
 
 ```bash
 $ capcli search "refund"
@@ -29,43 +29,45 @@ $ capcli search "refund"
 ```text
 [dev:tier_1]  2 results
 
-  cap://stripe.refund_charge    api-verb   dormant   "Issue partial or full Stripe refund"
+  cap://stripe.refund_charge    api-verb   draft     "Issue partial or full Stripe refund"
   cap://order_refund@4          routine    reviewed  "Process cancelled order and archive"
 ```
 
 Notice the pointer: **`cap://`**, not `api://`. 
 
-To the kernel, anything runnable is a capability. Whether it’s a local TypeScript routine or an external Stripe endpoint, the interface is identical: you search it, you inspect it, you run it.
+To the kernel, anything runnable is a capability. Whether it’s a local Python routine or an external Stripe endpoint, the interface is identical: you search it, you inspect it, you run it.
 
-**Dormant means:**
+**Synced means:**
 * Zero token cost to your agent’s context window.
-* Fully discoverable via search.
-* **Physically uncallable** until deliberately activated.
+* Fully discoverable via search and inspect.
+* **Governed, not gated:** the verb is immediately callable, but only through the same trust ladder, sim modes, and authorizer rules as every local routine.
 
 ---
 
-## 2. Wake It Up: Activation & Training Wheels
+## 2. Trust Ladder & Simulation Modes
 
-Your agent cannot fire off random endpoints. It must activate the verb and declare its causal motivation:
+Your agent cannot fire off random endpoints at full power. Every synced verb starts at **`draft` trust** with a declared simulation mode, and the ladder is the only way up:
 
 ```bash
-$ capcli api activate stripe.refund_charge -m "allow support agent refunds"
+$ capcli api ship stripe.refund_charge reviewed \
+    --reason "proved against sandbox fixtures"
 ```
 
 ```text
-[dev:tier_1]  ✓  activated
+[dev:tier_1]  ✓  promoted
 
   verb:            cap://stripe.refund_charge
-  trust:           draft
-  training_wheels: 3 calls remaining
+  trust:           reviewed
   sim_mode:        sandbox
 ```
 
-### The 3-Call Training Wheels Rule
-You don't let an autonomous agent wake up a live payment endpoint and immediately start blasting money.
+### Simulation Modes Are Physics, Not Suggestions
+The `sim_mode` declared per verb decides where calls go — the authorizer enforces it at prepare-time:
 
-* **Calls 1, 2, and 3:** The kernel forces the verb through synthetic contract replays against historical audit logs in simulation. 
-* **Call 4:** If it didn't violate payload schemas or trigger rate limits, it auto-graduates to standard governance.
+* **`sandbox`:** Routes to the provider sandbox URL via `apis/<provider>.sim.yaml`.
+* **`mock`:** Returns canned fixtures from `apis/<provider>.mock.yaml`.
+* **`dry-run`:** Validates the payload schema and returns `{ "simulated": true }`.
+* **`prod-only`:** Physically denied in `dev` and `sim` by the authorizer (`exit 2`). Live-wire verbs never rehearse on fake data by accident.
 
 ---
 
@@ -170,8 +172,10 @@ Capcli stops the blast before the request leaves your machine:
 3. If Stripe reports you only have 2 requests left, Capcli forcefully drains the local token bucket down to 2.
 
 ### What happens when the quota runs dry?
-* **Critical / Interactive Tasks:** Blocked before touching the wire with **`exit 2` (Denied)**.
-* **Background Tasks:** Suspended safely with **`exit 6` (Yield)**. The frame is parked in `_suspended_tasks` until the reset epoch, then resumed automatically by the daemon.
+The token bucket applies **priority floors** — low-priority tasks yield while real capacity remains:
+* **Background Tasks:** Yield with **`exit 6`** when tokens drop below **15**. The frame is parked in `_suspended_tasks` until the reset epoch, then resumed automatically by the daemon.
+* **Standard Tasks:** Yield with **`exit 6`** when tokens drop below **5**.
+* **Critical Tasks:** Can drain the pool to **0** — only blocked with **`exit 2` (Denied)** when the bucket is truly empty.
 
 ---
 

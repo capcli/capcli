@@ -20,12 +20,10 @@ capcli api <verb> [args] [--flags]
 |---|---|---|
 | **`sync`** | `capcli api sync <provider> <url> [--interval 7d] [--dry-run]` | Imports and compiles OpenAPI specs into `apis/<provider>.yaml`. |
 | **`diff`** | `capcli api diff <provider>` | Diffs compiled spec against upstream spec hash (`spec_hash`). |
-| **`catalog`**| `capcli api catalog <provider> [--state <state>]` | Lists verbs filtered by state (`dormant`, `active`, `deprecated`, `retired`). |
-| **`activate`**| `capcli api activate <provider.verb> -m "<why>"` | Moves verb from `dormant` to `active` at `draft` trust. |
+| **`catalog`**| `capcli api catalog <provider> [--trust <trust>]` | Lists verbs filtered by trust rung (`draft`, `reviewed`, `pinned`). |
 | **`prove`** | `capcli api prove <provider.verb> [-p k=v] [--env sim]` | Dry-runs against simulated mocks or schema fixtures. |
 | **`ship`** | `capcli api ship <provider.verb> <reviewed\|pinned> [--reason "<why>"]` | Promotes an API verb up the trust ladder. |
 | **`stats`** | `capcli api stats <provider> [--deep] [--summary]` | Displays provider token-bucket quotas and latency metrics. |
-| **`deactivate`**| `capcli api deactivate <provider.verb> [--reason "<why>"]` | Reverts an active verb back to dormant. |
 | **`retire`** | `capcli api retire <provider.verb> [--reason "<why>"]` | Permanently disables verb while preserving provenance. |
 | **`rollback`**| `capcli api rollback <provider.verb> [version]` | Restores prior verb configuration schema. |
 
@@ -34,14 +32,13 @@ capcli api <verb> [args] [--flags]
 ## Invariants & Rules
 
 * **Spec Quarantine:** The harness is banned from reading raw OpenAPI files. Specs >10MB auto-prune unreferenced paths during compilation.
-* **Verb Lifecycle:** `dormant` ➔ `active` ➔ `deprecated` ➔ `retired`. Dormant verbs never decay or expire.
-* **Training Wheels:** Newly activated unmocked verbs enforce 3 contract replay passes. Auto-graduates on Call 4.
+* **Verb Lifecycle:** Verbs sync at `draft` trust and climb the ladder via `ship` (`draft` ➔ `reviewed` ➔ `pinned`); retiring preserves provenance. There is no dormant state and no activation verb.
 * **Simulation Modes:**
   * `sandbox`: Routes to provider sandbox URL via `apis/<provider>.sim.yaml`.
   * `mock`: Returns canned fixture from `apis/<provider>.mock.yaml`.
   * `dry-run`: Validates payload schema and returns `{ "simulated": true }`.
   * `prod-only`: Throws `exit 2` if called in `dev` or `sim`.
-* **Ceilings:** Max 10 providers; max 500 verbs/provider; max 50 active verbs/provider; max 10 activations/hour.
+* **Ceilings:** Max 10 providers; max 300 verbs/provider.
 
 ---
 

@@ -62,33 +62,32 @@ If the 30-minute timer ran out and nobody answered? `status: expired` ➔ The su
 
 When an agent is executing a multi-step compiled routine, it doesn't need to exit to bash to ask for help:
 
-```typescript
-import { routine, ctx, Param } from "@capcli/sdk";
+```python
+# routines/process_dispute.py — Python is the 1st-class routine substrate
+from capcli import routine, ctx, Param
 
-export default routine({
-  name: "process_dispute",
-  trust: "reviewed",
-  limits: { max_ops: 10, max_duration_seconds: 60 }
-}, async (order_id: Param<string>, refund_amount: Param<number>) => {
+@routine(
+    name="process_dispute",
+    trust="reviewed",
+    limits={"max_ops": 10, "max_duration_seconds": 60}
+)
+def process_dispute(order_id: Param[str], refund_amount: Param[float]):
 
-  if (refund_amount > 500) {
-    // Suspend routine and wait for human resolution
-    const decision = await ctx.ping.ask({
-      principal: "user:ops-lead",
-      question: `Approve high-value refund of $${refund_amount} for ${order_id}?`,
-      options: ["approve", "reject", "flag_fraud"],
-      timeout_minutes: 60
-    });
+    if refund_amount > 500:
+        # Suspend routine and wait for human resolution
+        decision = ctx.ping.ask(
+            principal="user:ops-lead",
+            question=f"Approve high-value refund of ${refund_amount} for {order_id}?",
+            options=["approve", "reject", "flag_fraud"],
+            timeout_minutes=60
+        )
 
-    if (decision !== "approve") {
-      return { status: "denied", reason: decision };
-    }
-  }
+        if decision != "approve":
+            return {"status": "denied", "reason": decision}
 
-  // Bounded write executes only if human clicked 'approve'
-  await ctx.db.execute("UPDATE orders SET status = 'refunded' WHERE id = :id", { id: order_id });
-  return { status: "refunded" };
-});
+    # Bounded write executes only if human clicked 'approve'
+    ctx.db.execute("UPDATE orders SET status = 'refunded' WHERE id = :id", {"id": order_id})
+    return {"status": "refunded"}
 ```
 
 The moment `ctx.ping.ask` fires, **the routine pauses in memory.** 

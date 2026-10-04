@@ -34,7 +34,7 @@ $ capcli inspect cap://dispatch_order@4
 [dev:tier_1]  cap://dispatch_order@4
 
   trust:       pinned
-  runtime:     typescript (bun)
+  runtime:     python (python3)
   params:      order_id: string, carrier: string
   limits:      8 ops · 15s · 500 result tokens
   budget:      can_invoke_now: true

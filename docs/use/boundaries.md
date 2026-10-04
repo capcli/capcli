@@ -162,7 +162,7 @@ s.connect(("10.0.0.5", 5432))
 
   state_modified: false
   layer: sandbox
-  remedy: use ctx.api.call with an activated catalog verb
+  remedy: use ctx.api.call with a synced catalog verb
 ```
 
 The process never saw the network. `seccomp-bpf` killed the syscall before it reached the kernel's TCP stack. The routine got an exit code. No timeout. No connection refused. Just: *this path does not exist.*

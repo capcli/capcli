@@ -1,4 +1,4 @@
-# Budgets & Brokerage
+# Budgets & Priority Floors
 
 If you give an autonomous agent an unrestricted API key, you will wake up to a $4,000 billing incident. 
 
@@ -8,7 +8,7 @@ Most developer tools treat rate limits like an afterthought: they fire requests 
 
 In Capcli, **a budget is not a loose suggestion or an alert threshold.** 
 
-A budget is a multi-dimensional financial cage compiled into every call stack frame. It cascades downward, tracks multi-day rolling windows, ring-fences capacity before touching the wire, and yields execution cleanly instead of crashing.
+A budget is a multi-dimensional financial cage compiled into every call stack frame. It cascades downward, tracks multi-day rolling windows, enforces numeric priority floors before touching the wire, and yields execution cleanly instead of crashing.
 
 ---
 
@@ -104,31 +104,26 @@ Splitting code gives you better modularity, but **it will never buy you a single
 
 ---
 
-## 4. Proactive Brokerage: Quota Earmarks
+## 4. Priority Floors: Numeric Reservation Without Leases
 
 Imagine you run an agent that publishes 3 scheduled promotional posts a day on X (Twitter), but you also run an interactive customer-support agent that replies to mentions.
 
-Without brokerage: A disgruntled customer spams your brand on Twitter. The support agent fires 50 replies in 20 minutes, burns your entire 24-hour account quota, and your scheduled promotional campaign crashes at 18:00 with an unhandled exception.
+Without floors: The support agent fires 50 replies in 20 minutes, drains the token bucket to a handful of tokens, and your scheduled promotional campaign wakes up at 18:00 to find the bucket dead empty.
 
-Capcli solves this with **Quota Earmarks** (`_budget_earmarks`):
+Capcli solves this with **Priority Floors** — simple numeric preemption floors on the client-side token bucket (`policy.yaml#api.rate_limit.priority_floors`):
 
-```typescript
-// The daily scheduler runs at 08:00 and ring-fences 3 posts for the day:
-const earmark = await ctx.quota.earmark({
-  provider: "twitter",
-  verb: "create_post",
-  tokens: 3,
-  ttl_hours: 24,
-  intent: "reserve quota for scheduled daily broadcasts"
-});
-
-// Later that evening, the scheduled post consumes from the reserve:
-await ctx.api.call("twitter.create_post", { text: "Hello world" }, { earmark_id: earmark.id });
+```yaml
+# policy.yaml — the token bucket reserves capacity by priority class
+rate_limit:
+  priority_floors:
+    background_yield_tokens: 15   # background yields (exit 6) if tokens < 15
+    standard_yield_tokens: 5      # standard yields (exit 6) if tokens < 5
+    critical_floor_tokens: 0      # critical tasks can drain pool to 0
 ```
 
-* **Ring-Fenced Headroom:** Even if the customer support agent goes crazy answering mentions, it is **physically blocked from touching those 3 reserved slots**.
-* **The 80% Anti-Hoarding Ceiling:** No single task can reserve more than 80% of a provider's active capacity.
-* **Decaying Leases:** If the scheduled campaign gets cancelled or fails to use the 3 slots, the earmark TTL auto-dissolves the reservation back into the public pool.
+* **Floors beat leases:** Instead of tasks locking slices of quota ahead of time, low-priority tasks are simply **forced to yield while tokens remain above the floor** — so the bucket always has room for the tasks that matter.
+* **Direct protection for low-volume platforms:** Scheduled daily posts are background tasks; the moment the bucket drops below 15 tokens, they park cleanly instead of eating the last reserves.
+* **No reservation bureaucracy:** No leases, no TTLs, no anti-hoarding ceilings to tune. A background campaign that gets cancelled leaves nothing behind — it simply never ran below the floor.
 
 ---
 
@@ -144,24 +139,25 @@ Capcli splits tasks into three priority classes:
 ### What happens when social media quota runs dry:
 
 ```
-                  Provider Token Headroom < 15
-                                │
-            ┌───────────────────┴───────────────────┐
-            ▼                                       ▼
-      Critical Task                           Background Task
-            │                                       │
-  Can borrow unburned earmarks?               EXIT 6 (YIELD)
-            │                                       │
-         SUCCESS                           Frame parked into
-            │                              _suspended_tasks
-  (Or exit 2 if dead empty)                         │
-                                           Daemon watches reset_at
-                                                    │
-                                           Auto-resumes when
-                                           rolling window clears!
+              Provider Token Bucket Draining
+                            │
+        ┌───────────────────┼───────────────────┐
+        ▼                   ▼                   ▼
+  tokens < 15          tokens < 5          tokens < 1
+        │                   │                   │
+  Background Task      Standard Task       Critical Task
+  EXIT 6 (YIELD)       EXIT 6 (YIELD)      runs on, drains
+        │                   │              pool to 0
+  Frame parked into    Frame parked into        │
+  _suspended_tasks     _suspended_tasks    exit 2 only when
+        │                   │              truly empty
+  Daemon watches reset_at                   │
+        │                                   │
+  Auto-resumes when                   Blocked before
+  rolling window clears!              touching the wire
 ```
 
-* **The Clean Park:** When a background marketing routine tries to post but finds the rolling daily ceiling exhausted, the kernel doesn't throw a runtime error. It emits **`exit 6` (Yield)**.
+* **The Clean Park:** When a background marketing routine tries to post but the bucket has dropped below its class floor, the kernel doesn't throw a runtime error. It emits **`exit 6` (Yield)**.
 * **The Suspended Frame:** The routine’s call stack, parameters, and current leaf progress are serialized into `_suspended_tasks` alongside the exact epoch timestamp (`resume_at: 1714521600`) when the API window reopens.
 * **Zero Babysitting:** The daemon sleeps. When the clock strikes the reset epoch, the daemon unfreezes the task and executes the post. 
 
@@ -203,9 +199,9 @@ Look at the receipt:
 
 **Budgets are structural physics, not runtime suggestions.**
 
-You cannot `--force` your way past a Twitter rate limit. You cannot bypass a daily ceiling by writing nested subroutines. You declare what you need, Capcli ring-fences the slots, and when the quota runs dry, reality parks cleanly until the doors open again.
+You cannot `--force` your way past a Twitter rate limit. You cannot bypass a daily ceiling by writing nested subroutines. You declare what you need, the priority floors hold the line for the tasks that matter, and when the quota runs dry, reality parks cleanly until the doors open again.
 
 ---
 
 **See how audit logs link budget frames:** → [audit.md](audit.md)  
-**Inspect live API quotas and unreserved headroom:** → `capcli inspect cap://threads.create_media_post`
+**Inspect live API quotas and floor-gated headroom:** → `capcli inspect cap://threads.create_media_post`

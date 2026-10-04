@@ -159,7 +159,7 @@ The C authorizer scales permissions dynamically based on the caller's trust rung
 
 ## 5. System Tables Protection Matrix
 
-The 13 kernel-managed system tables live inside `workspace.db` alongside domain data. The C authorizer applies hard-coded access rules:
+The kernel-managed system tables live inside `workspace.db` alongside domain data. The C authorizer applies hard-coded access rules:
 
 | System Table | Purpose | Agent Access |
 |---|---|---|
@@ -167,13 +167,12 @@ The 13 kernel-managed system tables live inside `workspace.db` alongside domain 
 | `_api_quota` | Live rate-bucket balances | **Read-Only** |
 | `_api_catalog` | OpenAPI imported verbs | **Read-Only** |
 | `_budget_frames` | Cascading call-stack frames | **Read-Only** |
-| `_budget_earmarks`| Ring-fenced token allocations | **Read-Only** |
 | `secrets` | AES-256-GCM encrypted credentials | **Read-Only** (`value` masked; Draft denied) |
 | `agents` | Process identity registry | **Read-Only** |
 | `claims` | Distributed lease locks | **Read, Insert, Delete** (for locking) |
 | `_pending_asks` | Suspended human inquiries | **Read-Only** |
 | `_watch_cursors` | Webhook / Polling stream offsets | **Read-Only** |
-| `_capability_embeddings` | Semantic search vectors | **Read-Only** |
+| `_suspended_tasks` | Yielded frames awaiting quota refill | **Read-Only** |
 | `routine_stats` | Historical latency/reliability | **Read-Only** |
 | `_system_schema`| Compiled DDL checksums | **Read-Only** |
 

@@ -168,7 +168,7 @@ In most systems, if a query is rejected, nothing is logged. The request simply f
 
 In Capcli, **denials are pedagogical evidence.** 
 
-Every time an agent tries to drop a table, bypass a `WHERE` clause, exceed an op budget, or call an unactivated API, the kernel records a full denial receipt:
+Every time an agent tries to drop a table, bypass a `WHERE` clause, exceed an op budget, or call an API verb its trust rung forbids, the kernel records a full denial receipt:
 
 ```json
 {
