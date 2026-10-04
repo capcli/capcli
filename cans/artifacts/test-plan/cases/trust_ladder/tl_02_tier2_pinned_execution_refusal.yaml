@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_02_tier2_pinned_execution_refusal"
+title: "Pinned-trust routine invoked on a Tier 2 host (Darwin) is hard-denied with E045_TIER2_PINNED_DENIED while the identical invocation passes on Tier 1"
+domain: "trust_ladder"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/trust.md#pinned-execution-refusal-—-invoking-pinned-routine-on-Tier-2-throws-exit-2-(E045_TIER2_PINNED_DENIED)"
+  statement: "Invoking a pinned routine on a Tier 2 platform throws exit 2 with code E045_TIER2_PINNED_DENIED before any dispatch: the platform ceiling caps Tier 2 hosts at the reviewed rung (pinned execution requires a Tier 1 host per cans/physics.md#Platform-tier-taxonomy). The identical pinned invocation on a Tier 1 host must pass, proving the denial is platform-conditional, not routine-conditional."
+  blast_radius_if_breached: "Hardened production routines (may_run_unattended, summary audit mode, 500-row ceilings) execute on degraded-isolation hosts with broker sandboxing instead of bwrap namespaces and seccomp profiles — unreviewed blast radius on macOS/Windows fleets with no namespace containment and weakened egress mediation."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the pinned test only on the CI host that happens to be Darwin (or happens to be Linux) and never injects the other platform tier, so the Tier 2 security violation is silently masked by ambient hardware (catalog banned slop: bypassing platform check because host machine happens to be Darwin in CI); or asserts a generic failure without matching the E045 code."
+  anti_slop_mitigation: "AS-07 mandates two explicit platform configurations in one test: a mocked platform probe injecting PlatformTier::Tier1 (pinned run must succeed) and PlatformTier::Tier2 (must hard-deny with E045_TIER2_PINNED_DENIED). AS-03 additionally requires the typed code literal in the diagnostic, and AS-02 proves the orders table is untouched on the denied leg."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_2"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_tl_02"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          description: "customer fulfillment orders"
+          columns:
+            id: pk
+            status: text!
+          idx: [[status]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "orders"
+        row_count: 12
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\""
+  input_params:
+    order_id: "ORD-1042"
+    carrier: "fedex"
+    platform_tier_matrix:
+      - "tier_1: identical invocation must execute (exit 0) — pinned permitted on hardened Linux/WSL2 hosts"
+      - "tier_2: identical invocation must hard-deny before dispatch with E045_TIER2_PINNED_DENIED"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "pinned routine dispatch_order@4 invoked on a tier_2 host (darwin); code E045_TIER2_PINNED_DENIED — platform ceiling caps this host at reviewed"
+    remedy: "execute on a tier_1 host (Linux, WSL2, or Docker with userns), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (decision: denied, effect: none; code E045_TIER2_PINNED_DENIED)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-07"
+    verification: "Run the case twice with an injected platform probe: PlatformTier::Tier1 leg executes cap://dispatch_order@4 to completion (exit 0, routine.run allowed) and PlatformTier::Tier2 leg denies immediately at the trust layer with E045_TIER2_PINNED_DENIED — both legs in the same test binary so ambient CI hardware cannot mask either outcome."
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope on the tier_2 leg: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit contains the literal 'E045_TIER2_PINNED_DENIED', diagnostic.remedy names a tier_1 host or the rollback demotion; stdout contains 'FAIL policy.trust.tier2_pinned' and prefix '[dev:tier_2]'."
+  - rule: "AS-02"
+    verification: "On the denied tier_2 leg, SELECT count(*) FROM orders before and after on envs/dev/workspace.db — strictly 12 both times, and SELECT count(*) FROM routines stays 1 with trust = 'pinned' (the refusal demotes nothing by itself)."
