@@ -25,7 +25,7 @@
       "table:          orders",
       "├── customer_id     int ref=customers.id",
       "├── status          text=pending",
-      "└── modified_by     text (prov)",
+      "├── modified_by     text (prov)",
       "state_modified: false"
     ],
     "stdout_not_contains": [
