@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.execute.denial.budget_cascade",
+  "noun": "run",
+  "verb": "execute",
+  "target": "cap://sync_inventory@3",
+  "command": "capcli run cap://sync_inventory@3 -p warehouse=west -m \"nightly inventory sync\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.budget",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.budget",
+    "culprit": "Child frame starved by min() cascade: recount_stock@2 (frame_025) granted 2 of 6 declared ops.",
+    "remedy": "shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain",
+    "layer": "budget",
+    "measured": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops"
+  },
+  "txt_pair": "screens/run/execute/run.execute.denial.budget_cascade.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "  FAIL  policy.budget.starved",
+      "        effective:      min(declared 6, governance 50, parent 2, session 488) -> 2 ops",
+      "  state_modified: false",
+      "  layer: budget",
+      "  remedy: shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.budget"
+    }
+  }
+}

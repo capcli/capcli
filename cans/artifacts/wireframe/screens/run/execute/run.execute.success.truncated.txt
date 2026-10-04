@@ -1,0 +1,8 @@
+[dev:tier_1]  ✓  truncated
+
+  routine:      report_orders@2 (reviewed)
+  frame:        frame_022
+  result:       500 of 2384 tokens (cap: 500)
+  truncated:    true
+  next_cursor:  cur_0192f
+  audit_op:     op_9f32b

@@ -1,0 +1,41 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.execute.success.truncated",
+  "noun": "run",
+  "verb": "execute",
+  "target": "cap://report_orders@2",
+  "command": "capcli run cap://report_orders@2 -p quarter=2026Q3",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "truncated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/run/execute/run.execute.success.truncated.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  truncated",
+      "  truncated:    true",
+      "  next_cursor:  cur_0192f",
+      "  audit_op:     op_9f32b"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}
