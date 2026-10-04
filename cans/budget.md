@@ -47,13 +47,13 @@
       - streaming updates — consumption pushes via WebSocket: see effect.md#Audit-spine
       - denial markers — visual badges signal quota blocks: see #Exhaustion
   - Cascade
-    - Proactive Brokerage
-      - Hard Earmarks — `_budget_earmarks` locks quota slices pre-execution; ring-fenced from global pool
-      - Headroom arithmetic — unreserved_headroom = tokens_available - tokens_earmarked
-      - Priority Classes — Critical, Standard, Background (see artifacts/governance.yaml#priority)
-      - Preemption — Background tasks yield via exit 6 when unreserved_headroom < background_yield_threshold (15)
-      - Earmark lifecycle — creation via ctx.quota.earmark, debit via ctx.api.call(earmark_id), release via ctx.quota.release
-      - Decaying Leases — Earmarks carry TTL; daemon sweeper auto-dissolves unburned tokens to global pool on expiration
+    - Priority Floors
+      - Priority Classes — Critical, Standard, Background (see artifacts/governance.yaml#routine_shape)
+      - Preemption — Low priority tasks yield via exit 6 when `tokens_available` drops below class floor in `policy.yaml`:
+        - Background tasks yield at 15 tokens remaining (reserving quota for scheduled posts)
+        - Standard tasks yield at 5 tokens remaining
+        - Critical tasks drain pool to 0
+      - Safe Yield — Frames suspended at floor return exit 6 and land cleanly in `_suspended_tasks`
 
     - min() law
       - Child effective limit = min(declared need, governance ceiling, parent_remaining, session_ceiling)

@@ -54,8 +54,8 @@
   // "cans/artifacts/governance.yaml",
    "cans/artifacts/capcli.landing-copy.md",
   // "cans/artifacts/",
-  //  "cans/artifacts/"
- //   "cans/assembly.md",
+    "cans/artifacts/",
+    "cans/assembly.md",
 		]
   },
   "security": {

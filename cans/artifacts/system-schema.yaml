@@ -4,7 +4,7 @@ db: workspace.db                       # managed runtime database
 readonly_for_agent: true               # kernel-upgrades only; agent write throws exit 2
 
 # ───────────────────────────────────────────────────────────────
-# SYSTEM TABLES (13 KERNEL-MANAGED SURFACES)
+# SYSTEM TABLES (11 KERNEL-MANAGED SURFACES)
 # ───────────────────────────────────────────────────────────────
 tables:
   _audit:
@@ -48,7 +48,6 @@ tables:
       env: text!                       # sim and prod track quotas independently
       bucket_capacity: int!            # max token burst size
       tokens_available: int!           # current proactive client-side token count
-      tokens_earmarked: int=0          # reserved tokens ring-fenced from global pool
       refill_rate_per_s: real!         # token drip rate per second
       window_seconds: int=0            # rolling window size in seconds (0 = steady token bucket)
       quota_type: text=token_bucket    # token_bucket or sliding_window
@@ -66,7 +65,7 @@ tables:
       - [[provider, scope_key, env]]
 
   _api_catalog:
-    description: "OpenAPI imported verbs catalog tracking lifecycle, sim mode, and training wheels"
+    description: "OpenAPI imported verbs catalog tracking trust ladder and sim mode"
     sys: true
     imm_cols: [provider, verb]         # provider and verb identity cannot be mutated
     columns:
@@ -77,27 +76,21 @@ tables:
       path: text!                      # URL path template
       params_schema: json              # JSON schema of accepted parameters
       description: text!               # feeds search index and inspector
-      state: text=dormant              # lifecycle state
       trust: text=draft                # trust ladder level
       sim_mode: text=sandbox           # rehearsal behavior
       cost_class: text=read            # read or write
-      prod_first_calls_remaining: int=0 # training wheels counter
-      activated_at: int
-      activated_by: text
       retired_at: int
       idempotent: int=0                # 1 = retries allowed with same key
       spec_hash: text!                 # sha256 of imported OpenAPI endpoint
       synced_at: int!                  # last sync timestamp
       version: int=1                   # catalog version increment
     chk:
-      - "state IN ('dormant', 'active', 'deprecated', 'retired')"
       - "trust IN ('draft', 'reviewed', 'pinned')"
       - "sim_mode IN ('sandbox', 'mock', 'dry-run', 'skip', 'prod-only')"
       - "cost_class IN ('read', 'write')"
     idx:
-      - [[provider, state]]
+      - [[provider, trust]]
       - [[provider, verb]]
-      - [[state, trust]]
 
   _budget_frames:
     description: "Per-invocation budget execution frames enforcing downward min() cascade"
@@ -197,18 +190,7 @@ tables:
     idx:
       - [provider]
 
-  _capability_embeddings:
-    description: "Harness-generated semantic vector store for progressive routine discovery"
-    sys: true
-    columns:
-      capability: text pk              # capability identifier
-      version: int!                    # capability version
-      embedding: blob!                 # serialized float array vector
-      updated_at: int!
-    idx:
-      - [[capability, version]]
 
-  routine_stats:
     description: "Aggregated primitive telemetry and execution metrics driving promotion gates"
     sys: true
     columns:
@@ -242,27 +224,3 @@ tables:
       - [[status, resume_at]]
       - [frame_id]
 
-  _budget_earmarks:
-    description: "Proactive quota reservations ring-fencing tokens for planned tasks"
-    sys: true
-    columns:
-      id: pk
-      earmark_id: text!~              # unique reservation handle (e.g. emk_sched_01)
-      provider: text!                 # provider slug (e.g. threads, stripe)
-      verb: text!                     # target API verb
-      scope_key: text=global          # per-account partition (e.g. act_123)
-      agent: text!                    # agent claiming the allocation
-      session: text!                  # session context
-      priority: text=standard         # critical, standard, background
-      tokens_reserved: int!           # count of reserved slots
-      tokens_consumed: int=0          # count already burned
-      expires_at: int!                # unix epoch seconds (TTL)
-      status: text=active             # active, released, expired, exhausted
-    chk:
-      - "status IN ('active', 'released', 'expired', 'exhausted')"
-      - "priority IN ('critical', 'standard', 'background')"
-      - "tokens_consumed <= tokens_reserved"
-    idx:
-      - [[provider, verb, status]]
-      - [[expires_at, status]]
-      - [earmark_id]

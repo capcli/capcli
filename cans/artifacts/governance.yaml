@@ -152,8 +152,7 @@ storage:
 # ───────────────────────────────────────────────────────────────
 api:
   max_providers: 10
-  max_verbs_per_provider: 500            # full catalog fits
-  max_active_per_provider: 50            # active surface stays small
+  max_verbs_per_provider: 300            # full catalog fits
   require_description: true              # unsearchable = unregistrable
   sync:
     min_interval_hours: 24               # no hourly hammering of provider URLs
@@ -163,28 +162,17 @@ api:
     auto_refresh: true                   # auto-rotates ephemeral access tokens via vaulted root
     refresh_buffer_seconds: 300          # proactive refresh window before expiration
     max_retries: 3                       # exhaust retries before falling back to human ask
-  activation:
-    max_activations_per_hour: 10         # no rapid-fire activation
-    require_intent: true
   decay:
-    dead_after_days: 30                  # unused active verb → retire candidate
-    dormant_never_expires: true          # dormant verbs stay forever (discoverability)
+    dead_after_days: 30                  # unused verb → retire candidate
   versions:
     max_versions_kept: 10
   search:
     max_results: 20
     fuzzy_threshold: 2                   # Levenshtein distance for fuzzy match
-    semantic_min_relevance: 0.6
   sim_mode:
     default: sandbox                     # if apis/<provider>.sim.yaml exists
     fallback: dry-run                    # if no sim.yaml and no explicit sim_mode declared
     require_declaration_for_prod_only: true  # prod-only must be explicit, never inferred
-  prod_first_calls:
-    require_human_approval: false
-    require_synthetic_replay_pass: true  # passes against masked historical audit events in sim
-    approval_window_hours: 24            # approval expires after 24h
-    audit_field: first_prod_call
-    apply_to: [skip, prod-only]          # only un-simulated verbs get training wheels
   serve_overlay:
     min_trust_for_served_api: pinned     # served endpoints calling APIs need pin
 
