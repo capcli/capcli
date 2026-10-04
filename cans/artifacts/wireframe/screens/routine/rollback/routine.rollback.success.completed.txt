@@ -1,0 +1,10 @@
+[dev:tier_1]  ✓  completed
+
+  routine:  sync_orders
+  pointer:  v5 -> v3
+  version:  sync_orders@3 (code_hash sha256:b2c4d6..., manifest_hash sha256:9e8f1a...)
+  trust:    draft
+
+  state_modified: true
+  audit:          op_roll_01 (routine.rollback committed; v5 retained in provenance graph)
+  note:           edits to v3 still require a new version; in-place modification banned

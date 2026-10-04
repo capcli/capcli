@@ -1,0 +1,15 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.retire.deps_exist
+        routine: dispatch_order@4
+        callers (dependency graph):
+          ├── order_sync@2   imports dispatch_order (reviewed)
+          └── sync_orders@1  imports dispatch_order (draft)
+
+        Callee dependencies block retirement; dependents must be retired or rebound first.
+
+  audit_op: op_retire_02
+  state_modified: false
+  layer: authorizer
+  measured: 2 active dependents (0 permitted for retirement)
+  remedy: retire or rebind order_sync@2 and sync_orders@1 first, then re-run retire

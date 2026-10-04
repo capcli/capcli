@@ -1,0 +1,10 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  validation.routine.not_found
+        routine: legacy_etl_backup
+        nearest: legacy_etl
+
+        Target routine 'legacy_etl_backup' does not exist in the registry.
+
+  state_modified: false
+  remedy: verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl
