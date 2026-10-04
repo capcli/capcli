@@ -1,0 +1,12 @@
+[sim:tier_1]  ✗  exit 4
+
+  CRASH  routine.runtime.exception
+         routines/sync_orders.py:34 in dispatch
+         total = carrier_fee + surcharge
+                 ^^^^^^^^^^^
+         TypeError: unsupported operand types for +: 'NoneType' and 'int'
+         carrier_fee is None on edge route 'pickup'; uncaught in sim test pass 3 of 10
+
+  state_modified: false
+  rollback: clean
+  remedy: guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim

@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "routine.prove.denial.policy",
+  "noun": "routine",
+  "verb": "prove",
+  "target": "sync_orders",
+  "command": "capcli routine prove sync_orders --env sim",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.authorizer",
+    "trust": "draft",
+    "env": "sim",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.authorizer",
+    "culprit": "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
+    "remedy": "declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine",
+    "layer": "authorizer",
+    "measured": "1 undeclared leaf (manifest declares 5; DDL not among them)"
+  },
+  "txt_pair": "screens/routine/prove/routine.prove.denial.policy.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[sim:tier_1]  ✗  exit 2",
+      "FAIL  policy.authorizer.routine.illegal_leaf",
+      "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
+      "state_modified: false",
+      "layer: authorizer",
+      "remedy: declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.authorizer"
+    }
+  }
+}

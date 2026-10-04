@@ -1,0 +1,53 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "routine.prove.crash.runtime",
+  "noun": "routine",
+  "verb": "prove",
+  "target": "sync_orders",
+  "command": "capcli routine prove sync_orders --env sim",
+  "state": {
+    "exit_code": 4,
+    "domain": "routine.runtime",
+    "trust": "draft",
+    "env": "sim",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "routine.runtime",
+    "culprit": "TypeError: unsupported operand types for +: 'NoneType' and 'int'",
+    "remedy": "guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim"
+  },
+  "txt_pair": "screens/routine/prove/routine.prove.crash.runtime.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 4,
+    "state_modified": false,
+    "stdout_contains": [
+      "[sim:tier_1]  ✗  exit 4",
+      "CRASH  routine.runtime.exception",
+      "TypeError: unsupported operand types for +: 'NoneType' and 'int'",
+      "state_modified: false",
+      "rollback: clean",
+      "remedy: guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "routine.runtime"
+    }
+  }
+}
