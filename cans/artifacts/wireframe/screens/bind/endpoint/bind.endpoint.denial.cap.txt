@@ -1,0 +1,11 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.endpoint_cap_exceeded
+        active endpoints: 10 of 10
+
+        Max 10 active endpoints reached. Exposure surface stays small.
+
+  state_modified: false
+  layer:          authorizer
+  measured:       10 active endpoints (cap: 10)
+  remedy:         retire an unused endpoint first (capcli bind remove)
