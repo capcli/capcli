@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_10_genesis_event_hash_anchor"
+title: "The first audit event of a newly provisioned world anchors prev_hash to the deterministic 64-zero SHA-256 anchor"
+domain: "audit_dag"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#genesis-sequence--world-starts-with-rule.apply,-sql-query,-sql-write-deny,-sql-write-ok"
+  statement: "A newly provisioned world starts its ledger with the genesis sequence rule.apply, sql query, sql write deny, sql write ok; the first event's prev_hash is initialized to the deterministic 64-zero SHA-256 anchor (not an arbitrary or random seed), so every world's chain root is reproducible from row 1."
+  # NOTE: not located in cans/ specs — the 64-zero genesis anchor value comes from the test-plan catalog §6.5; cans/effect.md defines only the genesis sequence and tamper-evidence chain
+  blast_radius_if_breached: "A random or per-install genesis parent hash makes ledger roots non-reproducible: two identical worlds yield different chain roots, WORM witness anchors cannot be cross-checked, and a tamperer gains a free 're-genesis' escape hatch to restart an unanchored history."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts only that _audit is non-empty after provisioning (or that row 1 exists) without pinning the literal prev_hash anchor, letting an arbitrary seed value slip through as a 'valid' genesis block."
+  anti_slop_mitigation: "AS-05 pins the literal 64-zero anchor and the row-1-to-row-2 hash link; AS-06 hardcodes the genesis event order and counts as immutable literals; AS-03 parses the provisioning envelope payload."
+
+setup:
+  env: "dev" # templates unpack strictly into the dev worktree
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.maintainer@acme.corp"
+    agent_id: "agt_ad_10"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null # fresh world provisioned from template below
+    tables:
+      - name: "orders"
+        row_count: 0 # seeded by template after provisioning
+      - name: "_audit"
+        row_count: 0 # empty ledger until provisioning writes the genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli env new shop --from ./templates/shop"
+  input_params:
+    template: "./templates/shop (valid schema.yaml + starter configuration; passes Gate 1 and Gate 2 before disk write)"
+    expected_genesis_order: ["rule.apply", "sql query", "sql write deny", "sql write ok"]
+    expected_audit_rows_after: 5 # genesis x4 + env.init_from_template
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — world provisioned into the dev worktree with a fully anchored genesis chain"
+    remedy: "n/a — success; genesis anchor verified by the assertions below"
+  database:
+    row_count_delta: 5 # _audit 0 -> 5 (genesis x4 + env.init_from_template); orders seeded 0 -> 3 by the template
+    tables_mutated: ["_audit", "orders"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "rule.apply (genesis seq 1, prev_hash = 64-zero anchor) -> sql query -> sql write deny -> sql write ok -> env.init_from_template"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-05"
+    verification: "Cryptographic anchor check: SELECT prev_hash FROM _audit WHERE seq = 1 equals the literal 64-zero string '0000000000000000000000000000000000000000000000000000000000000000'; row 2's prev_hash == SHA-256 of row 1's canonical serialization (sha2::Sha256); run capcli-core::audit::verify_chain() over rows 1..5."
+  - rule: "AS-06"
+    verification: "Immutable literals hardcoded: genesis event order [rule.apply, sql query, sql write deny, sql write ok], _audit row count 5, orders seed count 3 — never derived from the provisioning output; any deviation in order or count fails."
+  - rule: "AS-03"
+    verification: "Parse the CliEnvelope: exit_code == 0, state_modified == true, and the env.init_from_template payload carries source_uri, bundle_sha256, schema_version, and seed_tables_count as structured fields — not scraped from human-readable output."
