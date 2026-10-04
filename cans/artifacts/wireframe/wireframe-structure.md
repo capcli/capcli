@@ -41,7 +41,6 @@ cans/artifacts/wireframe/
       sync/
       diff/
       catalog/
-      activate/
       prove/
       ship/
       stats/
@@ -78,6 +77,7 @@ cans/artifacts/wireframe/
       merge/
       remove/
     sys/
+      help/
       inbox/
       tail/
       trace/
@@ -140,6 +140,7 @@ cans/artifacts/wireframe/
       "policy.budget",
       "policy.trust",
       "policy.secrets",
+      "policy.template",
       "policy.notify",
       "db.engine",
       "db.claims",
@@ -263,7 +264,7 @@ cans/artifacts/wireframe/
     "journey_human_onboarding": {
       "name": "S0–S10 Human Onboarding & First Write",
       "color": "#58a6ff",
-      "entry": "sys.doctor.success.nominal",
+      "entry": "sys.help.success.stub",
       "terminal": "sys.doctor.success.report",
       "description": "Host probe -> search capabilities -> pre-flight inspect -> deliberate AST denial -> bounded write -> snapshot creation -> state corruption -> restore proof -> trust receipt"
     },
@@ -303,11 +304,11 @@ cans/artifacts/wireframe/
       "description": "YAML diff -> Gate 2 circular ref block -> dry-run impact envelope -> snapshot commit -> atomic migration merge"
     },
     "journey_tamper_forensics": {
-      "name": "Integrity Panic & Break-Glass Recovery",
+      "name": "Tamper Quarantine & Forensic Isolation",
       "color": "#f0883e",
-      "entry": "sys.doctor.panic.tamper",
-      "terminal": "sys.doctor.recovery_mode",
-      "description": "Broken SHA-256 chain -> emergency panic (exit 5) -> CAPCLI_RECOVERY=1 diagnostic re-entry"
+      "entry": "sys.doctor.warning.tamper",
+      "terminal": "sys.doctor.quarantine_mode",
+      "description": "Broken SHA-256 chain -> isolate corrupted block to audit.quarantine.jsonl -> alert dead-letter -> active state remains online"
     },
     "journey_human_in_the_loop": {
       "name": "Ping Ask Suspension & Resolution",
@@ -318,6 +319,24 @@ cans/artifacts/wireframe/
     }
   },
   "transitions": [
+    {
+      "id": "t_human_help_to_doctor",
+      "journeys": ["journey_human_onboarding", "journey_harness_onboarding"],
+      "from": ["sys.help.success.stub"],
+      "to": ["sys.doctor.success.nominal"],
+      "trigger": "exec_doctor",
+      "label": "capcli sys doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_help_to_search",
+      "journeys": ["journey_human_onboarding", "journey_harness_onboarding"],
+      "from": ["sys.help.success.stub"],
+      "to": ["run.search.success.populated"],
+      "trigger": "exec_search",
+      "label": "capcli search 'order'",
+      "arrow_type": "progress"
+    },
     {
       "id": "t_human_doctor_to_search",
       "journeys": ["journey_human_onboarding"],
@@ -588,13 +607,13 @@ cans/artifacts/wireframe/
       "arrow_type": "success"
     },
     {
-      "id": "t_tamper_panic_to_recovery",
+      "id": "t_tamper_quarantine_inspect",
       "journeys": ["journey_tamper_forensics"],
-      "from": ["sys.doctor.panic.tamper"],
-      "to": ["sys.doctor.recovery_mode"],
-      "trigger": "boot_recovery_shell",
-      "label": "CAPCLI_RECOVERY=1 capcli sys doctor",
-      "arrow_type": "denial"
+      "from": ["sys.doctor.warning.tamper"],
+      "to": ["sys.doctor.quarantine_mode"],
+      "trigger": "inspect_quarantine",
+      "label": "capcli sys doctor --quarantine",
+      "arrow_type": "progress"
     },
     {
       "id": "t_ask_suspended_to_list",
@@ -631,7 +650,7 @@ cans/artifacts/wireframe/
 
 ## 4. Complete Screen Inventory & State Matrix
 
-### 4.1 `run/` (5 verbs $\rightarrow$ 36 screen pairs)
+### 4.1 `run/` (5 verbs $\rightarrow$ 37 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -669,6 +688,7 @@ cans/artifacts/wireframe/
 | `run.search.success.gaps` | success | 0 | — | gaps | Surfaces missing capabilities via `--since` |
 | `run.inspect.success.routine` | success | 0 | — | populated | Pre-flight envelope with `can_invoke_now` |
 | `run.inspect.success.quota` | success | 0 | — | populated | Headroom breakdown on `quota://` URP |
+| `run.inspect.success.template` | success | 0 | — | populated | Inspection envelope on `tpl://` blueprint |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
 
@@ -691,13 +711,14 @@ cans/artifacts/wireframe/
 | `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
 | `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
 
-### 4.3 `routine/` (8 verbs $\rightarrow$ 26 screen pairs)
+### 4.3 `routine/` (8 verbs $\rightarrow$ 27 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `routine.new.success.created` | success | 0 | — | created | Routine scaffold committed |
 | `routine.new.refusal.name_taken` | refusal | 3 | validation | collision | Routine name already registered |
 | `routine.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates LOC or param limits |
+| `routine.new.refusal.template_compat` | refusal | 3 | policy.template | compat_fail | Template policy_version mismatch exits 3 |
 | `routine.prove.success.passed` | success | 0 | — | passed | Dynamic fingerprint verified |
 | `routine.prove.denial.shape` | denial | 2 | policy.authorizer | bad_shape | Execution violates declared limits |
 | `routine.prove.denial.policy` | denial | 2 | policy.authorizer | illegal_leaf | Routine attempts forbidden leaf op |
@@ -721,7 +742,7 @@ cans/artifacts/wireframe/
 | `routine.retire.denial.active_deps` | denial | 2 | policy.authorizer | deps_exist | Callee dependencies block retirement |
 | `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
 
-### 4.4 `api/` (9 verbs $\rightarrow$ 24 screen pairs)
+### 4.4 `api/` (8 verbs $\rightarrow$ 19 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -733,11 +754,6 @@ cans/artifacts/wireframe/
 | `api.catalog.success.populated` | success | 0 | — | populated | Imported catalog verbs listed |
 | `api.catalog.success.empty` | success | 0 | — | empty | Zero APIs configured |
 | `api.catalog.success.truncated` | success | 0 | — | truncated | Truncated at 500 verbs |
-| `api.activate.success.activated` | success | 0 | — | activated | Dormant verb shifted to active draft |
-| `api.activate.success.contract_tested`| success| 0 | — | verified | Activated with verified OpenAPI JSON Schema |
-| `api.activate.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active verbs reached |
-| `api.activate.denial.rate` | denial | 2 | policy.authorizer | rate_limit | Exceeded 10 activations/hour |
-| `api.activate.refusal.missing_intent`| refusal| 3 | compile | no_intent | Missing intent flag on activation |
 | `api.prove.success.passed` | success | 0 | — | passed | Rehearsal in sim verified |
 | `api.prove.denial.sim_gap` | denial | 2 | policy.authorizer | sim_gap | Missing mock fixture in sim |
 | `api.prove.denial.policy` | denial | 2 | policy.authorizer | forbidden | Verb egress rule rejected |
@@ -821,13 +837,14 @@ cans/artifacts/wireframe/
 | `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Gate 1 YAML syntax failure |
 | `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Gate 2 circular dependency detected |
 
-### 4.8 `env/` (7 verbs $\rightarrow$ 15 screen pairs)
+### 4.8 `env/` (7 verbs $\rightarrow$ 16 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `env.new.success.created` | success | 0 | — | created | New worktree namespace created |
 | `env.new.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 5 environments reached |
 | `env.new.refusal.name_taken` | refusal | 3 | validation | collision | Environment name exists |
+| `env.new.refusal.bundle_too_large` | refusal | 3 | policy.template | size_overflow | Bundle exceeds 5MB ceiling |
 | `env.use.success.switched` | success | 0 | — | switched | Sticky context switched |
 | `env.use.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 | `env.list.success.populated` | success | 0 | — | populated | Environments listed |
@@ -843,10 +860,11 @@ cans/artifacts/wireframe/
 | `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (15 verbs $\rightarrow$ 39 screen pairs)
+### 4.9 `sys/` (16 verbs $\rightarrow$ 43 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
+| `sys.help.success.stub` | success | 0 | — | stub | 6-line minimalist help stub redirecting to search |
 | `sys.inbox.success.populated` | success | 0 | — | populated | Sensory events popped from queue |
 | `sys.inbox.success.empty` | success | 0 | — | empty | Sensory inbox completely drained |
 | `sys.tail.success.populated` | success | 0 | — | populated | Live streaming audit records |
@@ -1110,22 +1128,6 @@ trust_receipt:
 
 ---
 
-### 5.10 API Activation with Training Wheels (`screens/api/activate/api.activate.success.training_wheels.txt`)
-
-```text
-[dev:tier_1]  ✓  activated
-
-  verb:            cap://stripe.refund_charge
-  trust:           draft
-  training_wheels: 3 calls remaining
-  sim_mode:        sandbox
-
-  audit:           op_008b1a
-  note:            next 3 invocations require synthetic contract replay
-```
-
----
-
 ### 5.11 NTP Clock Drift Diagnostic Warning (`screens/sys/doctor/sys.doctor.warning.clock_drift.txt`)
 
 ```text
@@ -1153,6 +1155,21 @@ trust_receipt:
   Outbound refunds must include `charge_id` and idempotent client request UUID.
   Never refund a charge older than 120 days via automated routines; delegate
   to human supervisor via `ctx.ping.ask`.
+```
+
+---
+
+### 5.13 Minimalist Root Help Stub (`screens/sys/help/sys.help.success.stub.txt`)
+
+```text
+capcli 0.4.2 — compiled execution firewall for AI agents
+
+Usage: capcli <noun> <verb> [target] [flags]
+
+Capabilities are discovered dynamically, not listed in static help.
+  Find actions:    capcli search <query>
+  Pre-flight:      capcli inspect <urp>
+  System status:   capcli sys doctor
 ```
 
 ---

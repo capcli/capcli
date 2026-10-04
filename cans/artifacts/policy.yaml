@@ -39,9 +39,10 @@ authorizer:
       allow: [read]
     _suspended_tasks:
       allow: [read]
-    _system_schema:
+    _templates:
       allow: [read]
-      deny: [insert, update, delete]
+    _outbox_events:
+      allow: [read]
 
   # Domain views are declared dynamically in schema.yaml and compiled into workspace.db
 
@@ -91,7 +92,7 @@ query:
     confirm_above: { rows: 50000 }             # raised: human gate only on massive blast radius
 
   system_tables:
-    deny_write: [_audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, routine_stats, _suspended_tasks, _system_schema]
+    deny_write: [_audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, routine_stats, _suspended_tasks, _templates, _outbox_events]
     deny_read: []                              # reads allowed; writes are kernel-internal
 
 # ───────────────────────────────────────────────────────────────
@@ -117,7 +118,7 @@ trust:
 rate:
   writes_per_minute: 60
   capability_calls_per_minute: 300
-  template_promotions_per_day: 5               # registry-flooding guard
+  template_imports_per_day: 10                 # anti-flood intake rate ceiling
   denials_alert_threshold: 20                  # sustained denial = agent thrashing, surface it
 
 # ───────────────────────────────────────────────────────────────
@@ -150,8 +151,6 @@ api:
     require_url: true                          # sync must have a source URL
     require_interval: true                     # no one-shot-only syncs
     spec_hash_verified: true                   # compiled catalog must match fetched hash
-  activation:
-    no_activation: true                     # removed: no activation verb in lean spec
   sim_mode:
     enforce_prod_only: true              # prod-only verbs denied in sim/dev by authorizer
     mock_fixture_required: true          # mock verbs must have apis/<provider>.mock.yaml
@@ -196,7 +195,6 @@ api:
   replay: manual                               # never auto-replayed
   search:
     log_all_queries: true                        # every search is an audit event
-    log_dormant_discovery: true                  # agent found a dormant verb → logged
     gap_threshold: 3                             # searched N times, never invoked → gap signal
 
 # ───────────────────────────────────────────────────────────────
@@ -334,6 +332,8 @@ fail_closed:
   lockfile_mismatch_prod: refuse_boot      # prod aborts if hash(schema+system+policy+gov) != capcli.lock
   lockfile_mismatch_non_prod: auto_recompile # dev and sim auto-update lockfile when syntax passes
   system_schema_hash_mismatch: refuse_boot # kernel integrity check
+  template_incompatibility: refuse_intake   # exit 3 on min_kernel_version or policy_version drift
+  template_bundle_overflow: refuse_intake  # exit 3 if bundle > 5MB
   unauthorized_runtime: deny               # exit 2 if routine targets banned engine
   runtime_binary_missing: refuse_boot      # exit 3 if declared provider missing on host
   unparseable_sql: deny

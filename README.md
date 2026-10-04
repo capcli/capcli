@@ -33,7 +33,7 @@ It replaces fragile human admin panels and defensive prompt engineering with **u
        │                                                  │
        │   THE BUDGET CAGE       │    THE MEMORY SPINE    │
        │   • Cascading min() Ops │    • SHA-256 DAG Chain │
-       │   • Quota Earmarks      │    • S3 WORM Checkpoint│
+       │   • Quota Preemption    │    • S3 WORM Checkpoint│
        └────────────────────────┬─────────────────────────┘
                                 │
                                 ▼
@@ -58,7 +58,7 @@ Capcli treats **local state mutations and external network egress with equal gat
 
 ### 2. The Wire Floor
 * **Syscall 42 Trapping & Virtual Isolation:** Raw socket calls (`connect`) triggered by `requests.get()` or `fetch()` are intercepted via `seccomp-bpf` (Tier 1) or hardware microVM null-routing (Tier 2) (`exit 2`). Unconfined host execution is banned.
-* **Quarantined OpenAPI Catalogs:** The agent never reads raw 5MB Swagger files. Outbound traffic routes exclusively through imported, activated catalog verbs (`capcli api sync`).
+* **Quarantined OpenAPI Catalogs:** The agent never reads raw 5MB Swagger files. Outbound traffic routes exclusively through imported catalog verbs (`capcli api import`).
 * **Optimistic Token Buckets:** Client-side rate buckets regulate egress cadence but slave dynamically to remote headers. A single upstream 429 instantly drains the local bucket to zero and yields active tasks (`exit 6`) until the `Retry-After` epoch.
 * **Zero-Knowledge Vault:** API credentials live in an AES-256-GCM vault. The kernel injects `Authorization` headers at the socket edge, and memory buffers are zeroized (`zeroize`) immediately post-dispatch. The agent never sees the secret in plaintext.
 

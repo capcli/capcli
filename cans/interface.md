@@ -51,11 +51,10 @@
       - Record — api record <provider.verb> [-p k=v] — captures live response and compiles JSON Schema contract
       - Drift — api diff <provider>
       - Catalog — api catalog <provider> [--state <state>]
-      - Activation — api activate <provider.verb> --intent "..."
       - Verification — api prove <provider.verb> [-p k=v] [--env sim]
       - Promotion — api ship <provider.verb> <reviewed|pinned> [--reason "..."]
       - Profiling — api stats <provider> [--deep] [--summary]
-      - Retirement — api retire | deactivate <provider.verb> [--reason]
+      - Retirement — api retire <provider.verb> [--reason]
       - History — api rollback <provider.verb> [version]
     - Trigger path: bind noun
       - Bindings
@@ -87,6 +86,7 @@
       - Promotion — env merge <name> [target=prod] [-m "<why>"]
       - Deprovisioning — env remove <name>
     - System path: sys noun
+      - Help stub — sys help (aliases: capcli --help, capcli help) — returns <= 6-line discovery stub
       - Sensory inbox — sys inbox pop [--channel <name>]
       - Audit tailing — sys audit tail [--follow] [--capability X] [--since 1h]
       - Causal tracing — sys audit trace <op-id> [--explain]
@@ -158,7 +158,7 @@
       - presentation stance — neutral kernel inspector; renders engine primitives without domain abstractions
     - Cockpit functional layers
       - Layer 1: State Inspector — renders schema tables, columns, indexes, and format-preserved masked cells (████)
-      - Layer 2: Capability Inspector — routine catalog, version diffs, OpenAPI verb states, and manifest-vs-fingerprint graphs
+      - Layer 2: Capability Inspector — routine catalog, template blueprints (tpl://), version diffs, OpenAPI verb states, and manifest-vs-fingerprint graphs
       - Layer 3: Policy & Governance — live policy authorizer rules, lockfile SHA256 integrity, and rate ceilings
       - Layer 4: Audit Spine — live streaming event tail, causal DAG trace explorer, and machine denial decoders
       - Layer 5: Budget & Telemetry — call stack frame trees, fuel consumption meters, wire byte counters, and token-bucket drain gauges
@@ -186,7 +186,7 @@
       - pedagogy — designed denial teaches gate constraints before write success
       - safety order — read → dry-run → denial → write → recovery proof
     - Human journey stages
-      - S0 verify — doctor check probes host profile and locks: see cans/assembly.md#Host-system-dependencies
+      - S0 help & verify — root help stub redirects to search; doctor check probes host profile
       - S1 intent — natural language goal capture
       - S2 proposal — preview dev schema via dry-run
       - S3 read — initial safe select query
@@ -198,7 +198,7 @@
       - S9 promotion — sim prove followed by evidence-based promotion
       - S10 receipt — sys doctor --report verification receipt
     - Harness journey stages
-      - H0 contract — parse machine boundaries via sys doctor --json
+      - H0 contract — parse 6-line root help or sys doctor --json
       - H1 discovery — inspect catalog verbs and existing schema views via run search
       - H2 rehearsal — execute plan with run --dry-run
       - H3 dual probe — query local state via sql and inspect remote verbs via api catalog

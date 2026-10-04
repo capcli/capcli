@@ -33,6 +33,7 @@ cans/artifacts/test-plan/
       kp_12_sigkill_subshell_transaction_rollback.yaml
       kp_13_unprivileged_userns_docker_check.yaml
       kp_14_dynamic_seccomp_profile_switch.yaml
+      kp_15_root_help_stub_ceiling.yaml
     database_authorizer/
       da_01_unbounded_update_ast_kill.yaml
       da_02_where_tautology_bypass_kill.yaml
@@ -58,7 +59,7 @@ cans/artifacts/test-plan/
       we_08_standard_priority_yield_floor.yaml
       we_09_critical_priority_pool_drain.yaml
       we_10_wire_payload_byte_cap_breach.yaml
-      we_11_dormant_verb_egress_denial.yaml
+      we_11_unimported_verb_egress_denial.yaml
       we_12_ephemeral_bearer_auto_refresh.yaml
       we_13_sim_rehearsal_isolated_quota.yaml
     budget_cascade/
@@ -67,13 +68,13 @@ cans/artifacts/test-plan/
       bc_03_leaf_op_51_hard_kill.yaml
       bc_04_duration_watchdog_cleanup.yaml
       bc_05_fuel_pool_depletion_exit2.yaml
-      bc_06_earmark_ringfence_and_release.yaml
+      bc_06_priority_floor_preemption_exit6.yaml
       bc_07_suspended_task_refill_resume.yaml
       bc_08_nesting_depth_ceiling_refusal.yaml
       bc_09_rows_affected_pool_exhaustion.yaml
       bc_10_wire_egress_session_pool_cascade.yaml
       bc_11_parent_frame_reconciliation_audit.yaml
-      bc_12_earmark_ttl_sweeper_dissolution.yaml
+      bc_12_suspended_task_max_deferments_abort.yaml
       bc_13_inspect_preflight_can_invoke_verdict.yaml
     audit_dag/
       ad_01_sha256_prev_hash_linking.yaml
@@ -117,6 +118,9 @@ cans/artifacts/test-plan/
       se_11_forward_only_migration_invariant.yaml
       se_12_git_worktree_isolation_boundary.yaml
       se_13_git_push_dry_run_merge_gate.yaml
+      se_14_template_bundle_cap_breach.yaml
+      se_15_template_kernel_compat_refusal.yaml
+      se_16_template_ast_rewrite_draft_floor.yaml
     coordination_claims/
       cc_01_exclusive_lease_acquisition.yaml
       cc_02_contested_claim_rejection.yaml
@@ -356,7 +360,7 @@ anti_slop_assertions:
 
 ## 6. Master Test Plan Bible & Case Catalog
 
-This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–14 cases per domain, 140 cases total).
+This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–16 cases per domain, 144 cases total).
 
 ### 6.1 Kernel Physics (`cases/kernel_physics/`)
 
@@ -376,6 +380,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `kp_12_sigkill_subshell_transaction_rollback.yaml` | Integration | Subprocess running guest routine receives SIGKILL; kernel WAL supervisor detects dead PID and rolls back uncommitted transaction. | TN | Leaving dangling locks in `claims` or leaving SQLite WAL in busy uncommitted state. |
 | `kp_13_unprivileged_userns_docker_check.yaml` | Integration | Host running inside Docker without unprivileged user namespaces automatically falls over to gVisor or microVM isolation without security degradation. | TP | Refusing boot inside containers instead of routing to supported containerized isolation providers. |
 | `kp_14_dynamic_seccomp_profile_switch.yaml` | Unit | Jail runner applies distinct dynamic seccomp profiles per runtime (`profile_python` vs `profile_bun_node` vs `profile_binary`). | TP | Applying universal permissive seccomp profile across all language runtimes. |
+| `kp_15_root_help_stub_ceiling.yaml` | E2E | `capcli --help` outputs strictly <= 6 lines and exits 0; references `search` and forbids dumping full command tree. | TP | Allowing standard bloated CLI help output that blows LLM context windows. |
 
 ### 6.2 Database Floor & C-Authorizer (`cases/database_authorizer/`)
 
@@ -409,7 +414,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `we_08_standard_priority_yield_floor.yaml` | Unit | Standard priority task checks quota; available tokens equal 5; task yields cleanly with `exit 6`. | TN | Allowing standard task to drain bucket down to 0 like a critical task. |
 | `we_09_critical_priority_pool_drain.yaml` | Unit | Critical priority task checks quota; available tokens equal 3; task permitted to consume down to 0 tokens. | TP | Blocking critical task at background threshold (15 tokens). |
 | `we_10_wire_payload_byte_cap_breach.yaml` | Integration | Egress proxy detects outbound POST payload size exceeding 65,536 bytes; blocks call before socket transmission. | TN | Streaming oversized request to physical server before checking limit. |
-| `we_11_dormant_verb_egress_denial.yaml` | Unit | Routine attempts to invoke unactivated (dormant) OpenAPI verb; proxy rejects call with `exit 2`. | TN | Auto-activating verb on invoke without requiring explicit activation lifecycle step. |
+| `we_11_unimported_verb_egress_denial.yaml` | Unit | Routine attempts to invoke unimported or retired OpenAPI verb; proxy rejects call with `exit 2`. | TN | Auto-importing external endpoints on invoke without prior catalog import. |
 | `we_12_ephemeral_bearer_auto_refresh.yaml` | Integration | Egress proxy detects bearer token expiration (`expires_at < now`); executes OAuth token refresh flow before dispatching main request. | TP | Passing expired token and expecting remote API 401 handling. |
 | `we_13_sim_rehearsal_isolated_quota.yaml` | Integration | High-volume replay executed in `sim` environment burns sim quota bucket; prod bucket balance remains 100% untouched. | TP | Sharing a single quota bucket across environments. |
 
@@ -422,13 +427,13 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `bc_03_leaf_op_51_hard_kill.yaml` | E2E | Routine without declared custom limit attempts op #51; kernel watchdog halts frame with `exit 2` at boundary. | TN | Allowing half-executed state mutations on the 51st operation. |
 | `bc_04_duration_watchdog_cleanup.yaml` | Integration | Guest routine enters infinite loop; watchdog timer trips at 300s (simulated); process killed, transaction rolled back. | TN | Leaking orphaned child processes or zombie threads after kill. |
 | `bc_05_fuel_pool_depletion_exit2.yaml` | Unit | Routine exceeds session fuel allocation (100,000 units); kernel denies subsequent primitive invocation. | TN | Continuing execution with negative fuel balance. |
-| `bc_06_earmark_ringfence_and_release.yaml` | Integration | Routine earmarks 20 API tokens for batch run; daemon dissolves unburned balance back to global bucket upon routine completion. | TP | Leaving orphaned earmarked tokens permanently locked. |
+| `bc_06_priority_floor_preemption_exit6.yaml` | Integration | Background task executes when tokens_available < 15; frame preempted with exit 6 and parked in _suspended_tasks. | TN | Permitting background tasks to drain quota below 15 tokens. |
 | `bc_07_suspended_task_refill_resume.yaml` | Integration | Daemon cron detects quota refill epoch passed; picks up frame from `_suspended_tasks` and re-dispatches to completion. | TP | Manually resuming task via test command rather than verifying daemon auto-dispatch. |
 | `bc_08_nesting_depth_ceiling_refusal.yaml` | Unit | Call stack exceeds 5 nested routine invocations; kernel frame push aborts with `exit 2` (`max_nesting_depth_exceeded`). | TN | Permitting unbounded recursion between routine callers. |
 | `bc_09_rows_affected_pool_exhaustion.yaml` | Integration | Routine attempts batch write affecting 150 rows under a 100-row trust pool ceiling; transaction aborted with `exit 2`. | TN | Committing the first 100 rows and discarding the remaining 50. |
 | `bc_10_wire_egress_session_pool_cascade.yaml` | Unit | Session-level egress bytes pool (4MB) exhausted across multiple child routines; subsequent API calls blocked. | TN | Scoping wire bytes exclusively per routine rather than across the session. |
 | `bc_11_parent_frame_reconciliation_audit.yaml` | Integration | Child routine pops; kernel emits `budget.frame_pop` event returning unburned ops and fuel to parent frame pool. | TP | Dropping parent frame state or failing to reconcile balances upon child exit. |
-| `bc_12_earmark_ttl_sweeper_dissolution.yaml` | Integration | Daemon earmark sweeper worker runs; detects earmark past its TTL; restores tokens to `_api_quota` without active call. | TP | Relying on caller routine to return cleanly to free earmarked tokens. |
+| `bc_12_suspended_task_max_deferments_abort.yaml` | Integration | Suspended task deferred 5 times hits yield_max_deferments ceiling; daemon aborts task with exit 2 to prevent starvation loops. | TN | Indefinitely deferring suspended tasks across infinite quota refills. |
 | `bc_13_inspect_preflight_can_invoke_verdict.yaml` | Unit | `inspect` evaluates routine against depleted session ops; returns `can_invoke_now: false` and lists tightest constraint. | TN | Returning `can_invoke_now: true` when ops headroom is 0. |
 
 ### 6.5 Memory Spine & Causal DAG (`cases/audit_dag/`)
@@ -484,6 +489,9 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `se_11_forward_only_migration_invariant.yaml` | Integration | Agent attempts down-migration script; kernel rejects execution; mandates VACUUM snapshot restore for backward recovery. | TN | Implementing down-migration SQL execution path in engine. |
 | `se_12_namespace_isolation_boundary.yaml` | Integration | Migrations executed in `envs/dev/` namespace; test confirms `envs/prod/` SQLite database file remains untouched. | TP | Running migrations across environment boundaries directly. |
 | `se_13_git_push_dry_run_merge_gate.yaml` | Integration | Production merge pipeline runs `git push --dry-run` to verify remote credentials before committing physical DDL changes. | TP | Applying DDL changes locally when remote git repository is unreachable. |
+| `se_14_template_bundle_cap_breach.yaml` | Integration | Template archive exceeding 5MB rejected at Gate 1 with `exit 3` (`template_bundle_overflow`). | TN | Extracting unverified large archives to `/tmp` before validating file size. |
+| `se_15_template_kernel_compat_refusal.yaml` | Unit | Template declaring `min_kernel_version: 0.5.0` on a 0.4.2 kernel refused intake with `exit 3`. | TN | Ignoring template manifest compatibility constraints during unpack. |
+| `se_16_template_ast_rewrite_draft_floor.yaml` | Integration | Routine imported via `tpl://` rewrites routine name via AST, locks trust rung to `draft` (v1), and logs `template.import`. | TP | Allowing imported templates to inherit `pinned` trust or running bash sed replacement. |
 
 ### 6.8 Coordination & Claims (`cases/coordination_claims/`)
 

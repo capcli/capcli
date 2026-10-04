@@ -48,6 +48,8 @@
       - workspace.db-wal — write-ahead log for serializing commits: see agent.md#Coordination
       - workspace.db-shm — shared-memory index for concurrent readers: see world.md#SQLite-as-SSOT
     - Functional data directories
+      - docs/ — version-controlled markdown specifications and playbooks
+      - storage/ — local blob storage namespace: see artifacts/governance.yaml#storage
       - audit/ — append-only historical JSONL export files: see effect.md#Audit-spine
         - audit/audit.YYYY-MM-DD.jsonl — daily audit mirror holding hashed rows
         - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
@@ -103,7 +105,6 @@
       - daemon surface (crates/capcli-daemon/src/)
         - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#Administrative-cockpit-pwa
         - yield_queue.rs — evaluates _suspended_tasks and re-dispatches tasks on quota refill
-        - earmark_sweeper.rs — periodic daemon worker dissolving expired earmarks back to available quota
         - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
         - cron.rs — croner schedule evaluator daemon: see time.md#Schedule-&-maintenance
         - webhook.rs — inbound HMAC signature verification: see action.md#Bindings
@@ -128,7 +129,7 @@
       - param.py — Param[T] generic typing for input schemas: see action.md#Anatomy-and-decorator
       - context_db.py — ctx.db query, execute, txn, and lock wrappers: see action.md#The-ctx-contract
       - context_api.py — ctx.api call, verify, and poll_until IPC bridge: see action.md#The-ctx-contract
-      - context_quota.py — ctx.quota inspect, earmark, and release SDK wrappers
+      - context_quota.py — ctx.quota inspect SDK wrapper
       - context_storage.py — ctx.storage put, get, and url wrappers: see action.md#The-ctx-contract
       - context_ping.py — ctx.ping notify and ask suspension handlers: see action.md#The-ctx-contract
       - native_bridge.py — in-process FFI bridge (`capcli_native.so`) using shared memory for zero-copy DB and Authorizer calls; socket client used exclusively for background daemon RPC
@@ -179,7 +180,6 @@
         - contract_validator.rs — live response JSON Schema validator and shadow canary engine for external APIs
         - outbox.rs — stages mutating API calls alongside DB transactions; verifies upstream idempotency header mapping and rejects unmapped routes with exit 3
         - quota.rs — dual-window token bucket and rolling window accounting in _api_quota: see budget.md#Quotas
-        - earmark.rs — atomic reservation transactions and earmark balance ledger: see budget.md#Cascade
         - header_parser.rs — extracts RFC headers and parses nested JSON usage payloads: see artifacts/policy.yaml#api
         - egress.rs — reqwest HTTP proxy with secret injection: see agent.md#Egress-injection
         - sim_mock.rs — serves canned fixtures from apis/*.mock.yaml: see space.md#Sim-mode-taxonomy
@@ -269,7 +269,7 @@
       - bundle target — compiled static SPA embedded into capcli-daemon via rust-embed
     - Telemetry views (packages/pwa/src/views/)
       - state.tsx — raw relational schema inspector, masked cell renderer, and table row counts
-      - capability.tsx — routine version inspector, static manifest diffs, and dynamic leaf fingerprints
+      - capability.tsx — routine version inspector, template blueprint browser (tpl://), static manifest diffs, and dynamic leaf fingerprints
       - audit.tsx — live virtualized audit tail, causal DAG breadcrumbs, and denial explanation dialogs
       - budget.tsx — session frame cascade tree, fuel gauges, wire byte meters, and live proactive token-bucket meters
       - approvals.tsx — human promotion queue, canary veto timers, and interactive ping.ask dialogs
@@ -282,6 +282,7 @@
 
   - Monorepo test architecture
     - Unit test tier (crates/capcli-core/tests/unit/)
+      - test_template.rs — validates template bundle intake, AST rewrites, and size ceilings: see world.md#World-templates
       - test_bytecode.rs — verifies EXPLAIN OpenWrite detection: see physics.md#Layer-1.5:-prepare-time-cross-check
       - test_authorizer.rs — validates SQLite C authorizer callbacks: see physics.md#Layer-1:-sqlite3_set_authorizer
       - test_routine_shape.rs — enforces LOC, token, and param bounds: see artifacts/governance.yaml#routine_shape

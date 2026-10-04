@@ -5,7 +5,7 @@
     "journey_human_onboarding": {
       "name": "S0–S10 Human Onboarding & First Write",
       "color": "#58a6ff",
-      "entry": "sys.doctor.success.nominal",
+      "entry": "sys.help.success.stub",
       "terminal": "sys.doctor.success.report",
       "description": "Host probe -> search capabilities -> pre-flight inspect -> deliberate AST denial -> bounded write -> snapshot creation -> state corruption -> restore proof -> trust receipt"
     },
@@ -60,6 +60,24 @@
     }
   },
   "transitions": [
+    {
+      "id": "t_human_help_to_doctor",
+      "journeys": ["journey_human_onboarding", "journey_harness_onboarding"],
+      "from": ["sys.help.success.stub"],
+      "to": ["sys.doctor.success.nominal"],
+      "trigger": "exec_doctor",
+      "label": "capcli sys doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_help_to_search",
+      "journeys": ["journey_human_onboarding", "journey_harness_onboarding"],
+      "from": ["sys.help.success.stub"],
+      "to": ["run.search.success.populated"],
+      "trigger": "exec_search",
+      "label": "capcli search 'order'",
+      "arrow_type": "progress"
+    },
     {
       "id": "t_human_doctor_to_search",
       "journeys": ["journey_human_onboarding"],

@@ -4,7 +4,7 @@ db: audit.db                           # isolated ledger database (workspace.db 
 readonly_for_agent: true               # kernel-upgrades only; agent write throws exit 2
 
 # ───────────────────────────────────────────────────────────────
-# SYSTEM TABLES (11 KERNEL-MANAGED SURFACES)
+# SYSTEM TABLES (13 KERNEL-MANAGED SURFACES)
 # ───────────────────────────────────────────────────────────────
 tables:
   _audit:
@@ -193,6 +193,7 @@ tables:
       - [provider]
 
 
+  routine_stats:
     description: "Aggregated primitive telemetry and execution metrics driving promotion gates"
     sys: true
     columns:
@@ -225,6 +226,25 @@ tables:
     idx:
       - [[status, resume_at]]
       - [frame_id]
+
+  _templates:
+    description: "Imported blueprints and scaffolds backing tpl:// URP resolution"
+    sys: true
+    imm_cols: [urp, bundle_hash]
+    columns:
+      id: pk
+      urp: text! unique                # tpl://routines/webhook_receiver
+      kind: text!                      # world | routine
+      bundle_hash: text!               # sha256 checksum of bundle
+      min_kernel_version: text!        # compatibility floor
+      policy_version: int!             # version match against runtime
+      description: text!               # feeds hybrid search index
+      imported_at: int!                # epoch seconds
+    chk:
+      - "kind IN ('world', 'routine')"
+    idx:
+      - [urp]
+      - [[kind, policy_version]]
 
   _outbox_events:
     target_db: workspace.db

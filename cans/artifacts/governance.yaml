@@ -24,6 +24,7 @@ registry:
 # 1.5 TEMPLATES — blueprints are unproven proposals
 # ───────────────────────────────────────────────────────────────
 template:
+  max_templates: 100                  # registry capacity ceiling for blueprints
   max_bundle_size_mb: 5               # bundle transfer ceiling
   require_kernel_compat: true         # refuses outdated templates at boot
   require_policy_match: true          # template policy_version == runtime policy_version
@@ -75,9 +76,7 @@ routine_shape:
   priority_classes: [critical, standard, background]
   preemption_enabled: true
   yield_enabled: true
-  earmark_max_ttl_hours: 24            # aligned with 24h rolling windows
   yield_max_deferments: 5
-  max_active_earmarks: 50              # registry-wide active earmark ceiling
   max_in_flight_poll_seconds: 30       # async 2-step media/container polling duration cap
   max_suspended_tasks: 100             # daemon queue capacity for yielded frames
   sandbox:
@@ -108,7 +107,7 @@ routine_shape:
   manifest_drift: anomaly             # undeclared primitives trigger governance event
 
 # ───────────────────────────────────────────────────────────────
-# 4. MAINTENANCE — subtraction runs on schedule
+# 3. MAINTENANCE — subtraction runs on schedule
 # ───────────────────────────────────────────────────────────────
 maintenance:
   consolidation:
@@ -132,7 +131,7 @@ maintenance:
     hash_chain_verify: "0 4 * * *"    # daily integrity check
 
 # ───────────────────────────────────────────────────────────────
-# 5. SCHEDULE — time is governed like everything else
+# 4. SCHEDULE — time is governed like everything else
 # ───────────────────────────────────────────────────────────────
 schedule:
   max_active: 20
@@ -142,7 +141,7 @@ schedule:
   dead_schedule_disable: true         # bound routine retired → auto-disable loudly
 
 # ───────────────────────────────────────────────────────────────
-# 5.5 STORAGE — blob storage bounds
+# 5. STORAGE — blob storage bounds
 # ───────────────────────────────────────────────────────────────
 storage:
   provider: local                      # local | s3 | r2
@@ -150,7 +149,7 @@ storage:
   allowed_mime: ["application/pdf", "image/*", "text/*", "application/json"]
 
 # ───────────────────────────────────────────────────────────────
-# 5.5 API — the catalog has dimensions
+# 6. API — the catalog has dimensions
 # ───────────────────────────────────────────────────────────────
 api:
   max_providers: 10
@@ -179,7 +178,7 @@ api:
     min_trust_for_served_api: pinned     # served endpoints calling APIs need pin
 
 # ───────────────────────────────────────────────────────────────
-# 6. WATCH — ears with limits
+# 7. WATCH — ears with limits
 # ───────────────────────────────────────────────────────────────
 watch:
   max_active: 50
@@ -195,7 +194,7 @@ watch:
     max_items: 1000                   # FIFO purge past this, loudly
 
 # ───────────────────────────────────────────────────────────────
-# 7. SERVE — the counter window is the strictest door
+# 8. SERVE — the counter window is the strictest door
 # ───────────────────────────────────────────────────────────────
 serve:
   max_endpoints: 10                   # exposure surface stays small
@@ -210,7 +209,7 @@ serve:
     max_result_tokens: 500            # inherits routine result cap
 
 # ───────────────────────────────────────────────────────────────
-# 8. NOTIFY / ASK — voices don't shout
+# 9. NOTIFY / ASK — voices don't shout
 # ───────────────────────────────────────────────────────────────
 notify:
   max_channels: 3
@@ -222,7 +221,7 @@ notify:
     max_timeout_minutes: 480
 
 # ───────────────────────────────────────────────────────────────
-# 9. ENVIRONMENTS — worlds stay honest
+# 10. ENVIRONMENTS — worlds stay honest
 # ───────────────────────────────────────────────────────────────
 env:
   max_environments: 5                 # isolated directory namespaces under envs/
@@ -231,7 +230,7 @@ env:
   sim_seed_masking: enforce           # sensitive columns masked on fork, always
 
 # ───────────────────────────────────────────────────────────────
-# 10. BACKUP — recoverability is a structural property
+# 11. BACKUP — recoverability is a structural property
 # ───────────────────────────────────────────────────────────────
 backup:
   provider: object_storage            # s3 | r2
@@ -239,7 +238,7 @@ backup:
   include_audit: true
 
 # ───────────────────────────────────────────────────────────────
-# 11. DENIAL UX — limits teach, not just block
+# 12. DENIAL UX — limits teach, not just block
 # ───────────────────────────────────────────────────────────────
 denials:
   cite_measured_value: true           # "file has 342 LOC, max is 150"
@@ -251,7 +250,7 @@ denials:
   budget_denial_cites_ancestors: true # shows parent/session remaining for context
 
 # ───────────────────────────────────────────────────────────────
-# 12. SCHEMA — two files, two owners, one DDL
+# 13. SCHEMA — two files, two owners, one DDL
 # ───────────────────────────────────────────────────────────────
 schema:
   world:

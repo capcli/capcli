@@ -4,7 +4,7 @@
     - Unifying concept
       - Universal Resource Pointers (URP) — typed URN pointers across entire workspace
       - Pointer taxonomy
-        - cap:// — routines and activated/dormant API verbs
+        - cap:// — routines and imported API verbs
         - db:// — tables, columns, check constraints, and read views
         - doc:// — markdown specs, playbooks, error codes, and rules
         - audit:// — causal DAG events, failures, and sequence patterns
@@ -24,7 +24,7 @@
         - kernel binds :principal
         - unscoped views carry no principal requirement
       - Registry boundary
-        - search targets — routines, api verbs, views
+        - search targets — routines, api verbs, views, template blueprints
         - db ops bypass search — inline gated
         - trust ladder spans entire registry — see trust.md#The-ladder
     - Capability record
@@ -68,7 +68,7 @@
         - learning input — see time.md#Learning-loop
       - Registry ceilings
         - limits — see artifacts/governance.yaml#registry
-        - enforcement point — routine prove, api activate
+        - enforcement point — routine prove, api import
         - creation freedom — filesystem writes ungated
   - Routines
     - Procedure layer
@@ -229,14 +229,12 @@
         - ctx.db.txn() — transaction context manager
         - ctx.db.lock(target, ttl) — application-level lease claim in claims; auto-expired by daemon tick
       - External api methods
-        - ctx.api.call(verb, params, intent, earmark_id=None, select=None) — governed HTTP egress with optional JSONPath wire projection; params accepts JSON dict, multipart fields, or ctx.storage blob handles
+        - ctx.api.call(verb, params, intent, select=None) — governed HTTP egress with optional JSONPath wire projection; params accepts JSON dict, multipart fields, or ctx.storage blob handles
         - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) — kernel-managed in-flight polling (1 aggregate op)
         - egress retry — idempotent verbs (GET/PUT/DELETE) auto-retry on 429/503/network-drop; mutating POST without declared idempotency header fails closed immediately (exit 4)
         - ctx.api.verify(verb, key) — key validation check
       - Quota brokerage methods
-        - ctx.quota.inspect(verb) — returns total, available, earmarked, and unreserved headroom
-        - ctx.quota.earmark(provider, verb, tokens, ttl_hours, intent) — claims and ring-fences token allocation
-        - ctx.quota.release(earmark_id) — explicitly dissolves unburned reservation back to global pool
+        - ctx.quota.inspect(verb) — returns total, available, priority floors, and reset_at
       - Blob storage methods
         - ctx.storage.put(name, data, mime) — uploads blob and returns metadata
         - ctx.storage.get(key) — retrieves stream and verified sha256
@@ -263,7 +261,6 @@
         - token refresh — daemon auto-refreshes bearer tokens; stateless CLI refreshes on demand and persists updated token to encrypted vault
         - missing secret fallback — missing secret_ref auto-binds from CAPCLI_SECRET_* before triggering headless exit 3 or ask prompt
         - pre-call quota — deny before network dispatch: see budget.md#Quotas
-        - earmark debit — if earmark_id present, debits tokens_consumed from _budget_earmarks; bypasses global bucket check
         - idempotency — kernel-minted key persisted before egress
         - in-flight wait — poll_until executes sleep in Rust runtime; Python interpreter never busy-waits
       - Sandbox boundaries
@@ -310,7 +307,7 @@
       - Verification — proof of execution path rather than simple crash status
   - External APIs
     - Boundary characteristics
-      - egress perimeter — raw unmanaged socket egress blocked; exploratory calls route via activated catalog verbs (capcli run)
+      - egress perimeter — raw unmanaged socket egress blocked; exploratory calls route via imported catalog verbs (capcli run)
       - Authorizer separation — authorizer protects SQLite; egress proxy protects HTTP
       - Irreversibility — HTTP writes lack rollback and transactions
       - Pre-call policy — checks enforced before egress leaves kernel
@@ -320,31 +317,15 @@
       - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, and idempotency header mapping
       - Live contract capture — capcli api record <verb> generates strict JSON Schema assertions from live responses; offline static cassette replays are banned from promotion gating
       - Sync cadence limits — see artifacts/governance.yaml#api.sync
-      - Verb default state — dormant across entire imported spec
-        - immortality — dormant verbs never expire; unactivated surface stays permanent
       - Diff inspection — api diff <provider> compares spec_hash
     - State machine
       - States
-        - dormant — discoverable, inspectable, uncallable
-        - active — proven, callable, assigned to trust rung
+        - active — imported directly via api import at draft trust
         - deprecated — flagged by upstream spec removal, callable with warning
         - retired — uncallable, preserved for provenance
       - State transitions
-        - sync — imported to dormant
-        - activate — dormant to active at draft trust
-        - deactivate — active back to dormant
+        - import — imported directly to draft trust
         - retire — active or deprecated to retired
-    - Activation gate
-      - Trigger — capcli api activate <verb> --intent "..."
-      - Validation checks
-        - provider ceilings — max 50 active verbs per provider
-        - verb exists in catalog and holds dormant status
-        - active count under provider cap: see artifacts/governance.yaml#api
-        - rate under activation cap: see artifacts/governance.yaml#api.activation
-        - hourly ceiling — max 10 activations per hour
-        - intent present and passes anti-junk validation
-      - Initial trust — draft
-      - Schema contract gate — external verbs require strict OpenAPI response schema matching; unvalidated routes cannot elevate past draft
     - Live quota tracking
       - mechanics — token bucket calculation and _api_quota sync: see budget.md#Quotas
       - pre-call gate — remaining <= deny_at_remaining denies egress with exit 2

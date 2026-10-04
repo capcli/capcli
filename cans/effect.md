@@ -27,8 +27,8 @@
       - capability.search — query, results_count, resolution_stage: see action.md#Search-surface
       - db.exec — sql, params, vdbe_inspect, rules_matched, rows_affected, result_hash
       - routine.run — routine, version, hashes, triggered_by, outcome: see action.md#Routines
+      - template.import — urp, kind, bundle_hash, policy_version, target_env: see world.md#World-templates
       - api.sync — provider, added, removed, changed, unchanged: see action.md#Catalog-synchronization
-      - api.activate — verb, state transition, trust, intent: see action.md#State-machine
       - api.token_refresh — provider, token_type, expires_in, refresh_outcome
       - api.call sim — sim_mode, http_called, fixture_used: see space.md#Sim-mode-taxonomy
       - api.first_prod_call — call_number, calls_remaining, contract_proof_hash: see trust.md#Simulation-gaps

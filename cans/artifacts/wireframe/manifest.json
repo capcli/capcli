@@ -22,6 +22,7 @@
       "policy.budget",
       "policy.trust",
       "policy.secrets",
+      "policy.template",
       "policy.notify",
       "db.engine",
       "db.claims",

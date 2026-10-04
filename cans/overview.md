@@ -54,7 +54,7 @@
       - runtime — unparseable SQL, missing principals, or quota breaches deny
       - recovery — emergency break-glass restricts verbs to audit-only: see recovery.md#Restore-path
     - Capability lifecycle
-      - exploration — raw bounded SQL mutations and standalone activated API calls accumulate telemetry in dev
+      - exploration — raw bounded SQL mutations and imported API calls accumulate telemetry in dev
       - sufficiency — optional pattern mining for consolidation: see time.md#Discovery-arc
       - codification — repeated DB and API call sequences compiled into governed routines
       - trust progression — earned autonomy moves routines from draft to reviewed to pinned via synthetic proof

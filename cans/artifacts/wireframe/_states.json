@@ -44,6 +44,7 @@
       "missing_param",
       "lockfile_mismatch",
       "schema_hash_mismatch",
+      "policy.template",
       "policy.secrets"
     ],
     "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
