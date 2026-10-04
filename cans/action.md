@@ -59,7 +59,7 @@
         - doc inspection — inspect on doc:// returns outline nodes; doc read fetches targeted leaf
         - relevance floor — semantic matches below 0.60 rejected
       - Determinism split
-        - kernel search — exact, prefix, FTS5 structured filters over _search_index
+        - kernel search — exact, prefix, FTS5 structured filters over capability catalog
         - harness search — semantic rankings, fuzzy tolerance
         - rationale — see physics.md#Search-ceiling
       - Scale behavior
@@ -78,7 +78,7 @@
         - creation freedom — filesystem writes ungated
   - Routines
     - Procedure layer
-      - Substrate — TypeScript (.ts), JavaScript (.js), or Python (.py) files in routines/ or declared binaries
+      - Substrate — Python (.py, 1st class), JavaScript (.js, 2nd class), or TypeScript (.ts, 3rd class) files in routines/ or declared binaries
       - Purpose — branching, retries, multi-step composition
       - Mental model — see overview.md#Mental-model
       - Evolution — raw SQL exploration becomes routine exploitation
@@ -88,9 +88,9 @@
         - event — immutable audit log record
         - routine — learned composition with version and code_hash
     - Anatomy and decorator
-      - TypeScript contract example: routines/refund.ts
-        - exports default routine({ name, trust, limits }, handler)
-        - companion schema: auto-inferred via Param<T> or explicit refund.schema.json
+      - Python 1st-class contract example: routines/refund.py
+        - @routine(name="refund", trust="pinned", limits={"max_ops": 8})
+        - alternative SDK substrates: JavaScript (.js, 2nd) and TypeScript (.ts, 3rd)
       - Structure — @routine(name, trust, idempotent, description, limits)
       - Decorator fields
         - name — registry id, validated at registration
@@ -129,7 +129,6 @@
       - Jail architecture
         - provider resolution — auto selects bwrap on Tier 1; selects broker on Tier 2: see physics.md#Platform-tier-taxonomy
         - tier 1 execution — bwrap namespaces, tmpfs /scratch wiped at exit, seccomp-bpf blocking raw network and fork
-        - tier 2 execution — child Python subprocess mediated strictly via IPC broker; scratch mapped to host tmpdir; network unconfined warning emitted
         - tier 2 execution — child Python subprocess mediated strictly via IPC broker; scratch mapped to host tmpdir; network unconfined warning emitted
         - latency floor — warm runner recycling ensures execution overhead < 50ms
       - Yield handling
@@ -233,7 +232,7 @@
         - ctx.db.query(sql, params) — read returning list[dict]
         - ctx.db.execute(sql, params, intent) — write returning Result
         - ctx.db.txn() — transaction context manager
-        - ctx.db.lock(target, ttl) — application-level lease claim in _claims; auto-expired by daemon tick
+        - ctx.db.lock(target, ttl) — application-level lease claim in claims; auto-expired by daemon tick
       - External api methods
         - ctx.api.call(verb, params, intent, earmark_id=None) — governed HTTP egress (draws from earmark if provided)
         - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) — kernel-managed in-flight polling (1 aggregate op)

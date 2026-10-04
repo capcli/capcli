@@ -2,10 +2,10 @@
 <!-- ref-by: action.md, assembly.md, budget.md, overview.md, physics.md, recovery.md, time.md, trust.md -->
   - CLI surface
     - Design laws
-      - exit code laws — strict integer contract (0, 2, 3, 4, 5): see physics.md#Exit-code-law
+      - exit code laws — strict integer contract (0, 2, 3, 4, 5, 6): see physics.md#Exit-code-law
       - Command shape — capcli <noun> <verb> [target] [--flags]
       - Subcommand tree — ten nouns (run, db, routine, api, bind, ping, rule, env, sys, doc)
-      - Ergonomic alias — `capcli apply` directly aliases `capcli rule apply schema`
+      - Ergonomic alias — `capcli apply` aliases `capcli rule apply schema`; `capcli sql` aliases `capcli run sql`
       - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json
@@ -23,7 +23,7 @@
         - search — search <query> [--type <domain>] [--trust X] [--env X]
         - gap detection — run search gaps --since 7d
         - inspect — inspect <ptr> — resolves pre-flight envelopes across all URP types
-      - Aliases — capcli search, capcli inspect
+      - Aliases — capcli sql, capcli search, capcli inspect
       - Inspect envelope
         - sla guarantee — single-response zero-roundtrip go/no-go verdict via can_invoke_now
         - tokens — file size, parameter schema, result caps
@@ -34,7 +34,6 @@
         - composition — nesting depth, child routines, budget cascade
         - pre-flight check — can_invoke_now boolean verdict
     - Storage path: db noun
-      - SQL — sql <query> [-p k=v] [-m "intent"] (unified read/write via AST detection)
       - Locking — db lock <table>:<ref> --ttl <duration> --reason "..."
       - Release — db unlock <target>
       - Schema — db schema [--table]
@@ -100,7 +99,7 @@
     - Document path: doc noun
       - Reading — doc read <ptr> [--max-tokens 100]
       - Outline — doc outline <ptr>
-    - Banned operations
+    - Refusals and banned operations
       - config writes — config set banned; edit YAML and git commit
       - direct system-schema apply — managed by kernel upgrades
       - manual schema edits — schema edit banned; edit schema.yaml
@@ -128,12 +127,10 @@
       - flag ceiling — universal flags frozen at exactly twelve; no per-noun growth
     - Mutating flags
       - --dry-run — plan execution without applying state changes
-      - --intent "<why>|@<path>" — causal motivation, accepts inline text or file
       - --reason "<why>|@<path>" — threshold crossing justification, accepts inline text or file
       - --by <agent-id> — acting identity verified via process credentials
     - Scoped flags
       - --lock <ref> — exclusive claim lease on run
-      - --sandbox — jail wrapper on sys exec
   - Client RPC contract
     - Client instantiation and transport
       - Connection setup

@@ -87,7 +87,7 @@
         - hash verification — mandatory at boot: see artifacts/governance.yaml#schema.system
         - mismatch behavior — refuse boot: see artifacts/policy.yaml#fail_closed
       - managed surfaces — 13 kernel tables defined in artifacts/system-schema.yaml
-        - registry roster — _audit, _api_quota, _api_catalog, _budget_frames, _sessions, _search_index, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats
+        - registry roster — _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats, _suspended_tasks, _budget_earmarks
     - Shorthand expansion
       - column shorthands
         - primary key
@@ -239,8 +239,8 @@
       - rollback check — verifies transaction rollback cleanly reverses DDL
       - failure code — auto-restores snapshot and throws exit 3
   - Command surface db
-    - Unified SQL command
-      - syntax — capcli sql "<statement>" [-p k=v] [-m "<intent>"] [--dry-run]
+    - Unified SQL execution
+      - syntax — capcli run sql "<statement>" (root alias: capcli sql "<statement>") [-p k=v] [-m "<intent>"] [--dry-run]
       - read dispatch — SELECT statements execute read-only without intent requirement
       - write dispatch — INSERT/UPDATE/DELETE enforce AST bounds and require intent
     - Concurrency commands
@@ -250,5 +250,5 @@
       - ddl display — db schema [--table]
       - state management — db snapshot, db restore <id>, db dump
     - Boundary laws
-      - dead commands — db count, db query, db exec banned; replaced by unified sql
+      - dead commands — db count, db query, db exec banned; replaced by unified run sql
       - enforcement depth — all commands cross AST and authorizer layers

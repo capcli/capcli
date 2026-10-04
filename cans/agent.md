@@ -7,7 +7,7 @@
       - session — temporary engagement scope (ses_a9)
       - op — single leaf execution in causal DAG
     - Credential binding
-      - capability token — kernel-minted HMAC session token in _sessions system table
+      - capability token — kernel-minted HMAC session token bound to active _budget_frames
       - workspace pinning — active session and principal pinned to envs/<name>/workspace.db
       - session fork — child agents inherit scoped parent token via session fork
       - acting identity — --session and --by validated against active token registry
@@ -30,7 +30,7 @@
       - authority limit — skill origin acts as metadata, never grants power
     - Concurrency scope
       - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE with busy_timeout
-      - application locks — business-level leases tracked in _claims table with daemon TTL cleanup
+      - application locks — business-level leases tracked in claims table with daemon TTL cleanup
       - authoring mutex — filesystem lock on routines/<name>.py during edits; concurrent edits exit 2
       - collision handling — writers queue sequentially; immediate exit 2 occurs on queue timeout only
       - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
@@ -55,7 +55,7 @@
       - execution environment — bash subshell isolated via IPC socket to kernel daemon; direct workspace.db file access blocked
       - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)
       - session persistence — CAPCLI_SESSION env var or workspace.db active context preserves session across turns
-      - exit contract — process exit codes (0, 2, 3, 4, 5) return status to subshell
+      - exit contract — process exit codes (0, 2, 3, 4, 5, 6) return status to subshell
       - client boundary — HTTP/WS daemon serving JSON-RPC 2.0 for external harnesses and tools
   - Secrets
     - Vault storage
@@ -81,7 +81,7 @@
   - Coordination
     - World coordination
       - claims — distributed lease locks with TTL via db lock for multi-step ops
-      - dependency tracking — _routine_deps graph blocks retirement of active deps
+      - dependency tracking — routine dependency graph blocks retirement of active deps
       - physical arbiter — shared workspace.db with WAL-mode serialized commits
       - event tailing — agents observe sibling effects via sys audit tail
     - Harness neutrality

@@ -45,21 +45,22 @@ routine_shape:
   
   # ─── GUEST RUNTIMES ──────────────────────────────────────────
   runtime:
-    default: typescript                   # default guest engine if undeclared
-    allowed: [typescript, python]         # system-wide permitted runtime whitelist
+    default: python                       # 1st-class guest engine
+    priority: [python, javascript, typescript] # explicit priority ranking
+    allowed: [python, javascript, typescript]  # system-wide whitelist
     providers:
-      typescript:
-        engine: bun                       # bun | node
-        min_version: "1.1.0"
-        ext: [".ts"]
-      javascript:
-        engine: node                      # node | bun
-        min_version: "20.0.0"
-        ext: [".js"]
       python:
         engine: python3
         min_version: "3.11"
         ext: [".py"]
+      javascript:
+        engine: node                      # node | bun
+        min_version: "20.0.0"
+        ext: [".js"]
+      typescript:
+        engine: bun                       # bun | node
+        min_version: "1.1.0"
+        ext: [".ts"]
 
   execution:
     max_ops_per_run: 50               # primitive DAG ceiling — op 51 aborts
@@ -77,28 +78,28 @@ routine_shape:
   max_active_earmarks: 50              # registry-wide active earmark ceiling
   max_in_flight_poll_seconds: 30       # async 2-step media/container polling duration cap
   max_suspended_tasks: 100             # daemon queue capacity for yielded frames
-    sandbox:
-      provider: auto                  # auto | bwrap | podman | broker
-      scratch_mb: 64                  # tmpfs ceiling
-      allow_unconfined: false         # true permits broker mode on Tier 2 in dev/sim
-      tiers:
-        tier_1: [linux, wsl2]         # see: cans/physics.md#Platform-tier-taxonomy
-        tier_2: [darwin, termux, win] # see: cans/physics.md#Platform-tier-taxonomy
-      pinned_requires_tier_1: true    # see: cans/trust.md#Ladder-laws
-    composition:
-      budget_inheritance: min          # child effective = min(declared, parent_remaining)
-      ops_cascade: true                # child ops consume from parent's pool
-      duration_cascade: true           # child time consumes from parent's clock
-      fuel_scope: session              # fuel is session-level, not per-routine
-      rate_scope: session              # rate is session-level, not per-routine
-      rows_scope: trust_session        # rows per trust level per session
-      result_tokens_scope: routine     # each routine caps its own output independently
-      max_nesting_depth: 5             # composition depth hygiene
-      budget_exhaustion: deny          # exhausted budget = exit 2, never silent truncation
-      cascade: true
-      session_scoped: [fuel, egress_bytes, writes_per_minute, capability_calls_per_minute, rows_affected]
-      routine_scoped_cascade: [ops, duration_ms]
-      routine_scoped_independent: [result_tokens]
+  sandbox:
+    provider: auto                    # auto | bwrap | podman | broker
+    scratch_mb: 64                    # tmpfs ceiling
+    allow_unconfined: false           # true permits broker mode on Tier 2 in dev/sim
+    tiers:
+      tier_1: [linux, wsl2]           # see: cans/physics.md#Platform-tier-taxonomy
+      tier_2: [darwin, termux, win]   # see: cans/physics.md#Platform-tier-taxonomy
+    pinned_requires_tier_1: true      # see: cans/trust.md#Ladder-laws
+  composition:
+    budget_inheritance: min            # child effective = min(declared, parent_remaining)
+    ops_cascade: true                  # child ops consume from parent's pool
+    duration_cascade: true             # child time consumes from parent's clock
+    fuel_scope: session                # fuel is session-level, not per-routine
+    rate_scope: session                # rate is session-level, not per-routine
+    rows_scope: trust_session          # rows per trust level per session
+    result_tokens_scope: routine       # each routine caps its own output independently
+    max_nesting_depth: 5               # composition depth hygiene
+    budget_exhaustion: deny            # exhausted budget = exit 2, never silent truncation
+    cascade: true
+    session_scoped: [fuel, egress_bytes, writes_per_minute, capability_calls_per_minute, rows_affected]
+    routine_scoped_cascade: [ops, duration_ms]
+    routine_scoped_independent: [result_tokens]
   versions:
     max_versions_kept: 25             # provenance graph stays navigable
     max_rollback_depth: 5
