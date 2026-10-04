@@ -1,0 +1,13 @@
+[prod:tier_1]  ✗  exit 6
+
+  YIELD  policy.api.quota_exhausted
+         routine broadcast_newsletter@2 (frame_018)
+         provider: threads
+         verb:     threads.create_media_post
+
+  state_modified:  false
+  layer:           quota
+  tokens_left:     0 / 50 (24h window)
+  reset_at:        18:00:00 UTC (in 4h 12m)
+  suspended_frame: task_99a8b1
+  remedy:          task safely yielded; daemon will auto-resume at reset_at

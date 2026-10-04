@@ -1,0 +1,13 @@
+[prod:tier_1]  ✓  resumed
+
+  task:           task_99a8b1 (background)
+  routine:        broadcast_newsletter@2 (frame_018 re-dispatched)
+  trigger:        token refill epoch — threads pool restored to 50/50
+  yielded_for:    4h 12m (yield_until elapsed at 18:00:00 UTC)
+
+  queue:          daemon re-queued from _suspended_tasks
+  retry:          threads.create_media_post replayed under idempotent key
+  result:         posted (media_id 1793882)
+
+  state_modified: true
+  audit_op:       op_9f44e
