@@ -1,0 +1,11 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.webhook_signature_required
+        provider: stripe
+        signing:  none armed (vault://stripe_webhook_secret absent)
+
+        Unsigned hooks rejected. HMAC-SHA256 verification must be armed at bind time.
+
+  state_modified: false
+  layer:          authorizer
+  remedy:         store the provider signing secret via sys vault set, then re-run bind webhook

@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "bind.webhook.denial.cap",
+  "noun": "bind",
+  "verb": "webhook",
+  "target": "cap://sync_orders",
+  "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.authorizer",
+    "trust": "pinned",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.authorizer",
+    "culprit": "Max 50 active hooks reached. New webhook binding refused.",
+    "remedy": "remove a dormant hook first (capcli bind list)",
+    "layer": "authorizer",
+    "measured": "50 active hooks (cap: 50)"
+  },
+  "txt_pair": "screens/bind/webhook/bind.webhook.denial.cap.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "FAIL  policy.authorizer.webhook_cap_exceeded",
+      "Max 50 active hooks reached. New webhook binding refused.",
+      "state_modified: false",
+      "layer:          authorizer",
+      "remedy:         remove a dormant hook first (capcli bind list)"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.authorizer"
+    }
+  }
+}
