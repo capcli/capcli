@@ -1,0 +1,79 @@
+$schema: "test-plan/case/v1"
+case_id: "se_13_git_push_dry_run_merge_gate"
+title: "Prod merge verifies remote push credentials via git push --dry-run before committing physical DDL changes"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/space.md#git-push-gate"
+  statement: "The prod merge pipeline requires verified remote push credentials via git push --dry-run before any physical DDL is applied: env merge executes the git branch merge for code/schema, snapshots the target DB, then applies the forward DDL diff - in that order, with the backup push mandate satisfied first."
+  blast_radius_if_breached: "DDL changes are applied locally while the remote git repository is unreachable: prod now runs schema that exists nowhere else; the next clone, disaster recovery, or teammate pull reconstructs a different world and the merge is untraceable."
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent applies DDL changes locally when the remote git repository is unreachable (skipping the credential dry-run or mocking the git transport to always succeed), so the push-gate ordering is never actually exercised."
+  anti_slop_mitigation: "AS-06 asserts the literal operation ordering (push verification precedes DDL application) and a companion unreachable-remote run must refuse; AS-05 verifies the env.merge event with git_commit and chain link; AS-02 verifies prod row baselines."
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.promotionbot@acme.corp"
+    agent_id: "agt_se_13"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+        shipping_modes:
+          description: "Carrier shipping modes introduced in v13"
+          columns:
+            id: pk
+            code: text!
+            label: text=standard
+          seed:
+            - { code: "air", label: "air freight" }
+            - { code: "ground", label: "ground" }
+      # dev worktree holds v13; remote origin reachable with valid push credentials
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli env merge dev prod -m \"atomic promotion of schema v13\" --confirm-backup --confirm-prod"
+  input_params:
+    remote_state: "origin reachable; git push --dry-run verifies write credentials"
+    merge_pipeline: "git branch merge for code/schema -> snapshot prod DB -> apply forward DDL diff -> lock lockfile"
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none"
+    culprit: "none"
+    remedy: "none"
+  database:
+    row_count_delta: 2
+    tables_mutated:
+      - "shipping_modes"
+  wire:
+    packets_transmitted: 0 # kernel API egress is zero; git transport to remote is git-integration traffic, not counted as wire-egress packets
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "env.merge (allow; source_env=dev, target_env=prod, git_commit, ddl_status)"
+    chain_valid: true
+    state_modified_field: true
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Assert literal ordering from the audit event sequence: git push --dry-run credential verification and the prod snapshot BOTH precede the DDL application event (ddl_status applied); companion negative run with an unreachable remote must refuse the merge (no local DDL apply); prod orders == 500 (literal baseline, unchanged) and shipping_modes == 2 seed rows after merge."
+  - rule: "AS-05"
+    verification: "env.merge event recorded in prod _audit with source_env, target_env, git_commit, ddl_status fields; sequence id incremented by 1; capcli-core::audit::verify_chain() returns true; prev_hash == sha256 of prior row."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 (integer) and parse the success envelope: state_modified == true, data block carries the merge receipt; never assert .is_ok() without the typed code and envelope fields."

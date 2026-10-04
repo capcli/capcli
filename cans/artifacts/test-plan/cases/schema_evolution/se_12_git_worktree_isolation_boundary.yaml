@@ -1,0 +1,79 @@
+$schema: "test-plan/case/v1"
+case_id: "se_12_git_worktree_isolation_boundary"
+title: "Migration applied in the envs/dev/ worktree leaves the envs/prod/ database physically untouched"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/space.md#World-governance"
+  statement: "Each environment is an isolated git worktree branch (envs/<name>/) whose workspace.db is gitignored uncommitted local runtime state - a migration executed in envs/dev/ mutates only envs/dev/workspace.db, and envs/prod/workspace.db remains byte-identical."
+  blast_radius_if_breached: "A dev-only experiment writes directly into the primary prod database file; unreviewed DDL reaches production without merge, snapshot, or the push gate, and prod data is silently redefined."
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent runs the migration on the primary branch workspace database directly (or points both environments at one workspace.db path in the fixture), so the isolation boundary is never actually crossed or verified."
+  anti_slop_mitigation: "AS-02 physically queries BOTH database files (prod count and byte-hash equality before/after); AS-05 verifies the dev apply event and hash chain; AS-06 hardcodes the literal prod baseline."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.migrationbot@acme.corp"
+    agent_id: "agt_se_12"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+        shipping_modes:
+          description: "Carrier shipping modes introduced in v13"
+          columns:
+            id: pk
+            code: text!
+            label: text=standard
+          seed:
+            - { code: "air", label: "air freight" }
+            - { code: "ground", label: "ground" }
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+  # parallel state: envs/prod/workspace.db also holds 500 order rows at compiled schema v12 (no shipping_modes)
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli rule apply --type schema --env dev -m \"add shipping_modes v13\""
+  input_params:
+    target_worktree: "envs/dev/ (isolated git worktree branch)"
+    bystander_worktree: "envs/prod/ (must remain untouched, compiled v12)"
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none"
+    culprit: "none"
+    remedy: "none"
+  database:
+    row_count_delta: 2
+    tables_mutated:
+      - "shipping_modes"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "rule.apply (allow; schema migration event for v13 in dev)"
+    chain_valid: true
+    state_modified_field: true
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Physically query envs/prod/workspace.db (independent connection, not the dev handle): SELECT count(*) FROM orders == 500 before AND after the dev apply, and sha256(envs/prod/workspace.db) byte-identical before/after; SELECT count(*) FROM sqlite_master WHERE name = 'shipping_modes' == 0 in prod."
+  - rule: "AS-05"
+    verification: "On envs/dev/workspace.db: _audit sequence id incremented by 1 with a rule.apply event (seed_rows count included); capcli-core::audit::verify_chain() returns true; prev_hash == sha256 of prior row."
+  - rule: "AS-06"
+    verification: "Hardcode the literal outcomes: dev shipping_modes == 2 seed rows (air, ground) after apply; prod orders == 500 (unchanged); the two workspace.db files must be distinct paths with distinct git worktree branches (assert resolved paths differ)."
