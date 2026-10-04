@@ -1,0 +1,18 @@
+[dev:tier_1]  ✓  nominal
+
+boot_check:
+  kernel:            capcli 8.4.1
+  platform:          linux x86_64 (tier_1, hardened namespaces)
+  python_runtime:    3.12.2 (floor: 3.11)
+  git_version:       2.43.0 (identity: configured)
+  engine:            sqlite_3.45.1 (wal_mode: true)
+  c_authorizer:      active
+  sandbox_provider:  bwrap (unprivileged userns: supported)
+  seccomp_bpf:       active
+  ntp_drift_ms:      14 (cap: 500)
+  audit_sink:        online
+  lockfile:          capcli.lock (root hash verified)
+  workspace:         envs/dev/workspace.db
+
+state_modified: false
+note:           boot-check probes only; no execution occurred

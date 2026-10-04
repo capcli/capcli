@@ -1,0 +1,14 @@
+[prod:tier_1]  capcli 0.4.2
+
+trust_receipt:
+  status:            nominal
+  host_tier:         tier_1 (hardened Linux namespaces)
+  workspace:         envs/prod/workspace.db
+  ledger_root_hash:  sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c
+  audited_events:    14290 committed to _audit
+  policy_denials:    18 (intercepted pre-execution; state untouched)
+  unaudited_writes:  0
+  secret_leaks:      0
+  pinned_routines:   32
+  active_triggers:   4 crons, 3 webhooks, 1 endpoint
+  sleep_score:       100%

@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 5
+
+PANIC  kernel.panic.audit_chain_tampered
+       Audit SHA-256 chain broken at _audit row 8,412 (op_84c1).
+       prev_hash mismatch: expected sha256:9d41e6f0c2ab..., found sha256:00ab77c2d1e9...
+       Tamper blast radius: all rows after 8,412 are invalidated.
+       kill_and_alert executed: process tree terminated, supervisor alerted.
+       Boot refused: no execution until chain integrity is restored.
+
+state_modified: false
+layer:          kernel
+remedy:         re-enter with 'CAPCLI_RECOVERY=1 capcli sys doctor', then restore from the last verified object-store checkpoint via 'capcli sys recover <commit>'
