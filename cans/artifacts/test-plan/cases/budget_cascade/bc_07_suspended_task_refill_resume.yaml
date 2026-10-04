@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_07_suspended_task_refill_resume"
+title: "Daemon yield queue auto-resumes the suspended frame after the quota refill epoch passes"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/budget.md#Task-resumption"
+  statement: "'Task resumption — daemon monitors resume_at timestamps and automatically re-queues execution on token refill' (assembly.md#Daemon-surface yield_queue.rs 'evaluates _suspended_tasks and re-dispatches tasks on quota refill'; action.md#Yield-handling: runner reads yield_until payload and re-queues via daemon cron): the resumed frame completes with exit 0 and no manual resume command is ever issued."
+  blast_radius_if_breached: "If suspended background work required manual resurrection, every quota-window blip would strand enterprise batch jobs (nightly digests, payouts) in _suspended_tasks forever — silent data pipeline stalls discovered days later."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by manually resuming the task via a test-issued `capcli run` command and asserting completion — the daemon's auto-dispatch contract (yield_queue re-queue on refill) is never exercised at all."
+  anti_slop_mitigation: "AS-04 drives the refill epoch with the deterministic MockClock so the daemon tick fires on synthetic time. AS-05 verifies the routine.run audit event for the re-dispatch. AS-06 pins the literal queue transition (1 -> 0 rows in _suspended_tasks) and asserts no test-issued run command exists in the trace."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_07"
+    trust: "pinned"   # unattended daemon re-dispatch; pinned rung may run unattended
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_suspended_tasks"
+        row_count: 1   # task_99a8b1: broadcast_newsletter@2, yielded below the 15-token background floor, yield_until set
+      - name: "_api_quota"
+        row_count: 1   # provider 'threads': bucket refilled to 28 tokens (above the background floor) at the refill epoch
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'daemon yield_queue tick: capcli-daemon (yield_queue.rs) evaluates _suspended_tasks after the MockClock advances past the threads refill epoch (tokens_available 28 > background floor 15) and re-dispatches task_99a8b1 -> cap://broadcast_newsletter@2 -p audience=followers'
+  input_params:
+    suspended_task: "task_99a8b1"
+    capability: "cap://broadcast_newsletter@2"
+    tokens_after_refill: 28
+    background_yield_tokens: 15
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "daemon.yield_queue"
+    culprit: "none — nominal path: refill epoch passed (28 tokens available); frame task_99a8b1 re-queued from _suspended_tasks and dispatched to completion"
+    remedy: "none required — the daemon auto-resumes yielded tasks on token refill; manual resume commands are unnecessary"
+  database:
+    row_count_delta: -1
+    tables_mutated: ["_suspended_tasks"]   # task_99a8b1 dequeued (1 -> 0 rows); the completed routine's own effects recorded via routine.run
+  wire:
+    packets_transmitted: 1   # the resumed broadcast's single threads.posts dispatch
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (re-dispatch of task_99a8b1 from _suspended_tasks)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Deterministic MockClock: advance the synthetic clock past the literal refill epoch tick and assert the daemon's yield_queue evaluation fires on that tick — no real sleeps, no SystemTime::now; the resume decision is reproducible bit-for-bit."
+  - rule: "AS-05"
+    verification: "_audit gains the routine.run event row for the re-dispatched broadcast_newsletter@2 (triggered_by = daemon yield queue) and its prev_hash chains to the prior row; verify_chain() passes; the earlier budget.frame_pop (outcome: yielded) row remains intact in the chain."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: SELECT count(*) FROM _suspended_tasks goes 1 -> 0, exit == 0, and the audit trace for the re-dispatch contains NO test-issued run invocation — the only originator is the daemon's yield_queue tick (a manual `capcli run` in the trace fails the test)."
