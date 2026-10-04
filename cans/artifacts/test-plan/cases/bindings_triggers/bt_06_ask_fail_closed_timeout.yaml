@@ -1,0 +1,84 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_06_ask_fail_closed_timeout"
+title: "Unanswered ctx.ping.ask expires fail-closed: the suspended routine is denied, never assumed yes"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Fail-closed-stance"
+  statement: "A routine suspended via ctx.ping.ask that receives no human resolution before its timeout expires fails closed: the suspension resolves as denied (policy.yaml notify.ask on_timeout: fail_closed — expired = denied, never 'assume yes'), the routine frame terminates without committing its guarded effect, and the pending ask row transitions to status expired with no resolution recorded."
+  blast_radius_if_breached: "Timeout defaults to consent: unattended approval windows silently authorize irreversible effects (refunds, prod merges, secret reads) hours after the human went offline; audit trails then claim human sign-off that never happened, poisoning every compliance attestation built on the ask ledger."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent sleeps on the real wall clock to age the ask (flaky CI), or resolves the ask in test setup before checking expiry semantics; or asserts the routine 'completed' with exit 0 treating silence as the default option."
+  anti_slop_mitigation: "AS-04 mandates MockClock epoch ticks for the 60-minute default timeout window (artifacts/governance.yaml#notify.ask default_timeout_minutes: 60); AS-02 proves zero business rows committed and the _pending_asks row transitions to expired with resolution NULL; AS-03 requires exit_code == 2 with the policy.notify expired diagnostic."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.supervisor@example.com" # ask target principal who never answers
+    agent_id: "agt_bt_06"
+    trust: "reviewed" # routine refund_big@2 runs at reviewed; the guarded effect requires the ask outcome
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+          seed:
+            - { ref: "ORD-10", status: "pending" }
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 pending — the guarded effect would flip status to refunded
+      - name: "_pending_asks"
+        row_count: 0 # suspension row created during execution, then expired
+      - name: "_budget_frames"
+        row_count: 0
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events for refund_big@2
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'ctx.ping.ask(principal="human.supervisor@example.com", question="Approve $8,400 refund for ORD-10?", options=["approve", "deny"], timeout_minutes=60) -> suspension; MockClock::advance(3601 seconds); daemon ask-expiry sweep -> frame fails closed'
+  input_params:
+    routine: "refund_big@2"
+    ask_principal: "human.supervisor@example.com"
+    ask_question: "Approve $8,400 refund for ORD-10?"
+    ask_options: ["approve", "deny"]
+    timeout_minutes: 60 # artifacts/governance.yaml#notify.ask default_timeout_minutes
+    clock_advance_seconds: 3601
+    on_timeout: "fail_closed" # artifacts/policy.yaml#notify
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.notify"
+    culprit: "ask suspension expired without resolution (timeout: 60m elapsed; on_timeout: fail_closed — expired asks never assume consent)"
+    remedy: "re-issue the ask if the decision is still relevant; the guarded effect was never executed and the routine frame terminated as denied"
+  database:
+    row_count_delta: 0
+    tables_mutated: [] # business/world tables unchanged; kernel-managed system transition: _pending_asks.status pending -> expired
+  wire:
+    packets_transmitted: 0 # expiry sweep only; the ask card dispatch happened at suspension time, before this observation window
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run" # terminal outcome: denied (fail-closed on ask expiry) per effect.md#Kernel-event-payloads routine.run outcome
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "The 60-minute timeout window and the expiry sweep are driven exclusively by MockClock epoch ticks injected via the engine API (advance 3601s); SystemTime::now(), NTP reads, and sleep-based aging are linter failures."
+  - rule: "AS-02"
+    verification: "SELECT status, resolution FROM _pending_asks WHERE principal = 'human.supervisor@example.com' must return status = 'expired' with resolution NULL; SELECT status FROM orders WHERE ref = 'ORD-10' must still equal 'pending' — zero business rows committed (state rollback law, physics.md#Exit-code-law)."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 (not exit 0, not a generic panic) and parse the CliEnvelope: diagnostic.domain == 'policy.notify', culprit cites the elapsed timeout and fail-closed policy, remedy never suggests that consent was implied; envelope.state_modified == false."
+  - rule: "AS-06"
+    verification: "The timeout literal 60 and the fail_closed outcome are immutable hardcoded values from artifacts/governance.yaml#notify.ask and artifacts/policy.yaml#notify — never derived from the ask record under test."
