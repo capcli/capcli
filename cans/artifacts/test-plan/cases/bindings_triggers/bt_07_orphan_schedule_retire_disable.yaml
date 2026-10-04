@@ -1,0 +1,74 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_07_orphan_schedule_retire_disable"
+title: "Retiring a bound routine auto-disables its cron schedule loudly via daemon tick"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/time.md#Cron-governance"
+  statement: "Orphan handling: retiring a routine auto-disables its bound schedule (artifacts/governance.yaml#schedule dead_schedule_disable: true). After capcli routine retire, the daemon pauses or dissolves the associated cron binding on its next tick — loudly, with an audit event — so no active cron trigger ever targets a retired routine. Retirement itself never deletes provenance (action.md anti-decisions: no deletion)."
+  blast_radius_if_breached: "A live cron keeps firing a retired routine: kernel principal capcli-cron dispatches executions against a capability whose code and manifest are no longer governed, burning schedule slots (max 20) on dead triggers, executing stale logic against migrated schema, and leaving operators unaware because nothing was announced."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent calls capcli bind pause/remove manually inside the test (faking the daemon reaction), or asserts only that retire exited 0 without ever checking the schedule's post-retire state; or advances real wall-clock time waiting for the next tick."
+  anti_slop_mitigation: "The test must issue ONLY routine retire and then step the daemon tick via MockClock (AS-04); the schedule state change must be observed via bind list/inspect and the loud audit event (AS-05); no manual bind management command may appear in the test path."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.maintainer@example.com"
+    agent_id: "agt_bt_07"
+    trust: "reviewed" # retire authority; binding floor reviewed (artifacts/policy.yaml#schedule)
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # payout@3: active routine, trust reviewed, bound to cron
+      - name: "_watch_cursors"
+        row_count: 1 # binding recon_5m (bind cron recon_5m cap://payout "*/5 * * * *"), state: active
+      - name: "_audit"
+        row_count: 3 # bind.create + routine.draft + prove events
+      - name: "claims"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli routine retire payout --reason "consolidated into settle_batch@1" && capcli sys serve --start --json' # retire, then daemon tick evaluates orphan schedules
+  input_params:
+    routine: "payout@3"
+    retire_reason: "consolidated into settle_batch@1"
+    bound_schedule: 'bind cron recon_5m cap://payout "*/5 * * * *"'
+    dead_schedule_disable: true # artifacts/governance.yaml#schedule
+    daemon_tick_clock: "MockClock epoch ticks injected via engine API"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "bind.cron"
+    culprit: "none (nominal) — orphan protection fired: schedule recon_5m auto-disabled on the daemon tick after payout retired"
+    remedy: "no action; the loud disable event is recorded in _audit; re-binding requires a live capability target"
+  database:
+    row_count_delta: 2 # retire audit event + schedule auto-disable audit event; routine_stats rows retained (retirement keeps provenance)
+    tables_mutated: ["_audit", "routine_stats"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "bind.delete" # NOTE: retire + auto-disable event names not located in cans/effect.md payload list; bind.delete is the nearest grounded lifecycle event (target_urp: bind://recon_5m, trigger_type: cron)
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "The orphan-evaluation daemon tick is stepped via MockClock epoch ticks injected through the engine API; waiting on real wall-clock time for the next cron tick is a linter failure."
+  - rule: "AS-05"
+    verification: "The retire event and the schedule-disable event must both chain: prev_hash equals SHA-256 of the prior _audit row, result_hash matches canonical JSON of the envelope; run capcli-core::audit::verify_chain() over the ledger including both new rows."
+  - rule: "AS-06"
+    verification: "The post-state is asserted against immutable literals: capcli bind list --json shows the binding recon_5m in paused/dissolved state (never active), and SELECT count(*) FROM _watch_cursors WHERE watch_id = 'recon_5m' reflects the disabled record — expected values hardcoded, not derived from the retire output."
+  - rule: "AS-02"
+    verification: "Negative control on the business substrate: SELECT count(*) FROM claims == 0 and world tables unchanged — the disable is bookkeeping, not a business mutation; routine_stats rows for payout are retained (provenance graph intact)."
