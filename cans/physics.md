@@ -102,15 +102,17 @@
       - exit 6 — domain api.quota; proactive rate yield; task suspended until yield_until timestamp
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
-      - engine — native terminal diagnostics rendered via miette and codespan
-      - machine style — text output emits rustc-style diagnostics; no filler
-      - machine envelope — --json returns structured domain, culprit, remedy, and state_modified keys
-      - payload redirection law — when --out is set, payload writes to file; stdout emits minimal receipt (<30 tokens)
-      - shell escaping defense — all arguments support @<path> to bypass shell string escaping, injection, and ARG_MAX limits
-      - stdin piping — @- consumes from process stdin until EOF; rejects multi-statement unless explicit batch mode
-      - denial format — [FAIL] rule code, rejected statement, expected syntax
-      - structural purity — machine consumers pass --json for pure envelopes
-      - buffer isolation — stdout/stderr unlogged; effect engine hashes json: see effect.md#Event-anatomy
+      - engine — native terminal diagnostics rendered procedurally via `miette` and `codespan`
+      - data contract — all commands return `CliEnvelope<T>`: { context, exit_code, state_modified, data, diagnostic, audit_op }
+      - layout archetypes — human output maps to exactly 3 procedural formats:
+        - archetype A (Diagnostic) — exits 2, 3, 4, 5, 6; renders header, failing span with carets (`^^^^`), and indented metadata block
+        - archetype B (Tree) — hierarchical DAGs (`sys trace`, `inspect`); renders unicode branches (`├──`, `└──`, `│`)
+        - archetype C (Receipt) — exit 0 key-value records; renders aligned pairs separated by `─` dividers
+      - machine envelope — `--json` returns raw serialized `CliEnvelope<T>`
+      - payload redirection — `--out <path>` writes payload to disk; stdout returns <30 token receipt
+      - shell escaping defense — all arguments accept `@<path>` or `@-` (stdin)
+      - typography rules — table pipes (`|`) banned; tree characters locked to `├──`, `└──`, `│`; divider locked to `─`
+      - buffer isolation — stdout/stderr unlogged; effect engine hashes canonical JSON exclusively
     - Break-glass paths
       - recovery shell — CAPCLI_RECOVERY=1 loads schema and audit sink only
       - diagnostic check — sys doctor --boot-check verifies boot without daemon

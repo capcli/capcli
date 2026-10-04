@@ -6,7 +6,7 @@
 
 The wireframe layer serves a dual purpose: an **interactive edgeless canvas** for humans and harnesses, and a **deterministic golden-file test fixture suite** for the Rust kernel.
 
-Flow graphs, journey definitions, and multi-branch transition metadata are completely decoupled into `flows.json`. Individual screen fixtures remain atomic, stateless, and uncoupled from orchestration.
+Flow graphs, journey definitions, and multi-branch transition metadata are codified into `flows.json`. Individual screen fixtures remain atomic, stateless, and congruent with runtime compiler and authorizer output.
 
 ```
 cans/artifacts/wireframe/
@@ -29,43 +29,35 @@ cans/artifacts/wireframe/
       restore/
       dump/
     routine/
-      author/
-        new/
-        prove/
-      promote/
-        ship/
-        pending/
-      maintain/
-        sweep/
-        stats/
-        rollback/
-        demote/
-        retire/
+      new/
+      prove/
+      ship/
+      pending/
+      sweep/
+      stats/
+      rollback/
+      retire/
     api/
+      sync/
+      diff/
       catalog/
-        sync/
-        diff/
-        list/
-      lifecycle/
-        activate/
-        prove/
-        ship/
-      maintain/
-        stats/
-        retire/
-        rollback/
+      activate/
+      prove/
+      ship/
+      stats/
+      retire/
+      rollback/
     bind/
-      triggers/
-        cron/
-        webhook/
-        endpoint/
-      manage/
-        list/
-        inspect/
-        pause/
-        resume/
-        remove/
-        keys/
+      cron/
+      webhook/
+      endpoint/
+      export/
+      list/
+      inspect/
+      pause/
+      resume/
+      remove/
+      keys/
     ping/
       notify/
       ask/
@@ -86,36 +78,33 @@ cans/artifacts/wireframe/
       merge/
       remove/
     sys/
-      audit/
-        tail/
-        trace/
-        query/
-        replay/
-      agent/
-        register/
-        list/
-        revoke/
-      vault/
-        set/
-        import_env/
-      core/
-        inbox/
-        doctor/
-        backup/
-        recover/
-        exec/
-        serve/
+      inbox/
+      tail/
+      trace/
+      query/
+      replay/
+      register/
+      agents/
+      revoke/
+      vault_set/
+      vault_import/
+      doctor/
+      backup/
+      recover/
+      exec/
+      serve/
     doc/
       read/
       outline/
+      inspect/
 ```
 
 ### 1.1 Structural Invariants
 * **Active Nouns:** Exactly 10 CLI nouns (`run`, `db`, `routine`, `api`, `bind`, `ping`, `rule`, `env`, `sys`, `doc`).
 * **Pairing Law:** Every `.json` fixture has an identical `.txt` companion in the same folder. No orphan files. No empty directories.
-* **Depth Ceiling:** File paths relative to `screens/` must remain between 3 and 5 directory components.
-* **Sibling Invariants:** Min 3, max 12 siblings per branch node.
-* **Naming Law:**
+* **Depth Ceiling:** File paths relative to `screens/` must remain exactly 3 path components: `{noun}/{verb}/{filename}`.
+* **Sibling Invariants:** Min 3, max 16 verb directories per noun branch node.
+* **Naming Law:** Strict 4-segment token syntax:
   ```
   {noun}.{verb}.{state}.{condition}.{json|txt}
   ```
@@ -128,12 +117,12 @@ cans/artifacts/wireframe/
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "policy_version": 5,
   "governance_version": 8,
   "schema_version": 3,
   "lockfile": "capcli.lock",
-  "compiled_at": "2026-03-31T00:00:00Z",
+  "compiled_at": "2026-10-04T00:00:00Z",
   "nouns": [
     "run", "db", "routine", "api", "bind",
     "ping", "rule", "env", "sys", "doc"
@@ -144,12 +133,14 @@ cans/artifacts/wireframe/
     "env": ["dev", "sim", "prod"],
     "tier": ["tier_1", "tier_2"],
     "budget": ["active", "exhausted", "yielded"],
-    "data": ["populated", "empty", "truncated", "redirected"],
+    "data": ["populated", "empty", "truncated", "redirected", "dry_run"],
     "denial_domain": [
       "policy.authorizer",
       "policy.ast",
       "policy.budget",
       "policy.trust",
+      "policy.secrets",
+      "policy.notify",
       "db.engine",
       "db.claims",
       "api.upstream",
@@ -157,22 +148,25 @@ cans/artifacts/wireframe/
       "routine.runtime",
       "kernel.sandbox",
       "kernel.panic",
-      "host.ntp"
+      "kernel.boot",
+      "host.ntp",
+      "agent.thrashing"
     ]
   },
   "output_contract": {
     "prefix": "[{env}:{tier}]",
-    "human_format": "rustc-style diagnostic with atomic blocks and horizontal dividers",
+    "human_format": "rustc-style diagnostic with atomic blocks, source spans, and indented key-values",
     "machine_format": "--json structured envelope",
-    "banned_characters": ["│", "|", "├", "└"],
+    "tree_characters_allowed": ["├──", "└──", "│"],
+    "banned_characters": ["|", "├─", "└─"],
     "divider_character": "─",
-    "denial_keys": ["domain", "culprit", "remedy", "state_modified"],
+    "denial_keys": ["domain", "culprit", "remedy", "state_modified", "layer"],
     "truncation": {
       "max_result_tokens": 500,
       "emits": ["truncated", "next_cursor"]
     },
     "help_stub_max_lines": 6,
-    "banned_flags": ["--force", "--override-budget", "--force-prod"],
+    "banned_flags": ["--force", "--override-budget", "--force-prod", "--verbose"],
     "payload_redirection": "--out writes payload to file; stdout emits <30 token receipt"
   }
 }
@@ -184,7 +178,12 @@ cans/artifacts/wireframe/
 {
   "0": {
     "label": "success",
-    "state_modified": true,
+    "variants": {
+      "committed": { "state_modified": true },
+      "dry_run": { "state_modified": false },
+      "suspended": { "state_modified": false },
+      "resumed": { "state_modified": true }
+    },
     "diagnostic": null,
     "audit": "committed to _audit with result_hash"
   },
@@ -196,12 +195,14 @@ cans/artifacts/wireframe/
       "policy.ast",
       "policy.budget",
       "policy.trust",
+      "policy.notify",
       "db.engine",
       "db.claims",
       "api.quota",
-      "kernel.sandbox"
+      "kernel.sandbox",
+      "agent.thrashing"
     ],
-    "diagnostic_required": ["domain", "culprit", "remedy"],
+    "diagnostic_required": ["domain", "culprit", "remedy", "layer", "state_modified"],
     "denial_ux": {
       "cite_measured_value": true,
       "suggest_remediation": true,
@@ -216,34 +217,35 @@ cans/artifacts/wireframe/
     "domains": [
       "compile",
       "validation",
-      "boot",
+      "kernel.boot",
       "missing_param",
       "lockfile_mismatch",
       "schema_hash_mismatch",
-      "host.ntp"
+      "host.ntp",
+      "policy.secrets"
     ],
-    "diagnostic_required": ["domain", "culprit", "remedy"]
+    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
   },
   "4": {
     "label": "crash",
     "state_modified": false,
     "domains": ["routine.runtime"],
     "rollback": "clean",
-    "diagnostic_required": ["domain", "culprit", "remedy"]
+    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
   },
   "5": {
     "label": "panic",
     "state_modified": false,
     "domains": ["kernel.panic"],
     "boot_refusal": true,
-    "diagnostic_required": ["domain", "culprit", "remedy"]
+    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
   },
   "6": {
     "label": "yield",
     "state_modified": false,
     "domains": ["api.quota"],
     "suspension": true,
-    "diagnostic_required": ["domain", "culprit", "remedy", "yield_until", "deferments"],
+    "diagnostic_required": ["domain", "culprit", "remedy", "tokens_left", "reset_at", "suspended_frame", "state_modified"],
     "resume": "daemon re-queues via _suspended_tasks on token refill"
   }
 }
@@ -253,68 +255,98 @@ cans/artifacts/wireframe/
 
 ## 3. Decoupled Flow & Journey Engine (`flows.json`)
 
-All choreography, branching paths, multiple inputs/outputs, and operational user journeys are codified centrally. Screen fixtures never hold route references.
-
 ```json
 {
-  "$schema": "wireframe/flows/v1",
-  "version": 1,
+  "$schema": "wireframe/flows/v2",
+  "version": 2,
   "journeys": {
     "journey_human_onboarding": {
       "name": "S0–S10 Human Onboarding & First Write",
       "color": "#58a6ff",
-      "entry": "sys.core.doctor.success.nominal",
-      "terminal": "sys.core.doctor.success.nominal",
-      "description": "Probe host -> deliberate AST blast denial -> bounded write -> snapshot restore -> trust receipt"
+      "entry": "sys.doctor.success.nominal",
+      "terminal": "sys.doctor.success.report",
+      "description": "Host probe -> search capabilities -> pre-flight inspect -> deliberate AST denial -> bounded write -> snapshot creation -> state corruption -> restore proof -> trust receipt"
+    },
+    "journey_harness_onboarding": {
+      "name": "H0–H7 Autonomous Harness Machine Onboarding",
+      "color": "#79c0ff",
+      "entry": "sys.doctor.success.nominal",
+      "terminal": "routine.prove.success.passed",
+      "description": "Parse machine contract (--json) -> catalog discovery -> dry-run rehearsal -> dual probe -> composite prove -> parse denial feedback -> overview codification -> sim proving"
     },
     "journey_execution_crucible": {
       "name": "Cascade Starvation, Jail Traps & Contention",
       "color": "#f85149",
       "entry": "run.inspect.success.routine",
       "terminal": "run.execute.success.populated",
-      "description": "Exhaustion at child frame boundary -> syscall 42 trap -> concurrency lease recovery"
+      "description": "Exhaustion at child frame boundary -> syscall 42 trap -> concurrency lease recovery -> thrashing detection -> vault resolution"
     },
     "journey_trust_promotion": {
       "name": "Draft to Pinned Canary Promotion",
       "color": "#3fb950",
-      "entry": "routine.author.prove.success.passed",
-      "terminal": "routine.promote.ship.success.shipped",
-      "description": "Sim replay verification -> 1-hour canary telemetry window -> Tier 1 pinned lock"
+      "entry": "routine.prove.success.passed",
+      "terminal": "routine.ship.success.shipped",
+      "description": "Sim replay verification -> ship promotion queue -> 1-hour canary telemetry window -> Tier 1 pinned lock"
     },
     "journey_quota_preemption": {
       "name": "Wire Quota Starvation, Yield & Auto-Resume",
       "color": "#d29922",
       "entry": "run.execute.yield.quota",
       "terminal": "run.execute.resume.quota",
-      "description": "Background task reaches dry pool -> Exit 6 suspension -> daemon parks frame -> refill triggers auto-resume"
+      "description": "Background task reaches dry pool -> Exit 6 suspension -> daemon parks frame -> refill epoch -> daemon auto-resume"
     },
     "journey_schema_evolution": {
       "name": "Forward DDL & Snapshot Auto-Reversal",
       "color": "#a371f7",
       "entry": "rule.diff.success.populated",
       "terminal": "env.merge.success.merged",
-      "description": "YAML diff -> Gate 2 circular ref block -> dry-run failure -> atomic snapshot reversal"
+      "description": "YAML diff -> Gate 2 circular ref block -> dry-run impact envelope -> snapshot commit -> atomic migration merge"
     },
     "journey_tamper_forensics": {
       "name": "Integrity Panic & Break-Glass Recovery",
       "color": "#f0883e",
-      "entry": "sys.core.doctor.panic.tamper",
-      "terminal": "sys.core.doctor.recovery_mode",
-      "description": "Broken SHA-256 chain -> emergency panic -> CAPCLI_RECOVERY=1 diagnostic re-entry"
+      "entry": "sys.doctor.panic.tamper",
+      "terminal": "sys.doctor.recovery_mode",
+      "description": "Broken SHA-256 chain -> emergency panic (exit 5) -> CAPCLI_RECOVERY=1 diagnostic re-entry"
+    },
+    "journey_human_in_the_loop": {
+      "name": "Ping Ask Suspension & Resolution",
+      "color": "#bc8cff",
+      "entry": "run.execute.suspended.ask",
+      "terminal": "run.execute.success.populated",
+      "description": "Routine hits ctx.ping.ask -> task suspends -> Cockpit inquiry card -> human resolves choice -> frame execution resumes"
     }
   },
   "transitions": [
     {
-      "id": "t_onboarding_boot_to_read",
+      "id": "t_human_doctor_to_search",
       "journeys": ["journey_human_onboarding"],
-      "from": ["sys.core.doctor.success.nominal"],
+      "from": ["sys.doctor.success.nominal"],
+      "to": ["run.search.success.populated"],
+      "trigger": "exec_search",
+      "label": "capcli search 'order'",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_search_to_inspect",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.search.success.populated"],
+      "to": ["run.inspect.success.routine"],
+      "trigger": "exec_inspect",
+      "label": "capcli inspect cap://dispatch_order@4",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_inspect_to_read",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.inspect.success.routine"],
       "to": ["run.sql.success.populated"],
       "trigger": "exec_read",
       "label": "capcli sql 'SELECT id FROM orders LIMIT 5'",
       "arrow_type": "progress"
     },
     {
-      "id": "t_onboarding_deliberate_denial",
+      "id": "t_human_deliberate_denial",
       "journeys": ["journey_human_onboarding"],
       "from": ["run.sql.success.populated"],
       "to": ["run.sql.denial.ast"],
@@ -327,18 +359,12 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
       }
     },
     {
-      "id": "t_denial_hub_to_explain",
-      "journeys": ["journey_human_onboarding", "journey_execution_crucible"],
-      "from": [
-        "run.sql.denial.ast",
-        "run.execute.denial.budget",
-        "run.execute.denial.budget_cascade",
-        "run.execute.denial.network_jail",
-        "run.execute.denial.tier2_pinned"
-      ],
-      "to": ["sys.audit.trace.success.populated"],
+      "id": "t_human_denial_to_trace",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.sql.denial.ast"],
+      "to": ["sys.trace.success.populated"],
       "trigger": "inspect_trace",
-      "label": "capcli sys audit trace <op_id> --explain",
+      "label": "capcli sys trace op_9f2e --explain",
       "arrow_type": "denial",
       "ui": {
         "button_text": "Diagnose Cause (--explain)",
@@ -346,78 +372,256 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
       }
     },
     {
-      "id": "t_trace_remedy_to_bounded_write",
+      "id": "t_human_trace_to_dry_run",
       "journeys": ["journey_human_onboarding"],
-      "from": ["sys.audit.trace.success.populated"],
-      "to": ["run.sql.success.populated"],
-      "trigger": "apply_remedy",
-      "label": "Append WHERE id = 'ORD-8842' LIMIT 1 -m 'reconcile status'",
-      "arrow_type": "success",
-      "ui": {
-        "button_text": "Execute Remediated Write",
-        "hotkey": "r"
-      }
-    },
-    {
-      "id": "t_snapshot_restore_verification",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["db.snapshot.success.created"],
-      "to": ["db.restore.success.restored"],
-      "trigger": "verify_restore",
-      "label": "capcli db restore snap_migration_004",
+      "from": ["sys.trace.success.populated"],
+      "to": ["run.sql.success.dry_run"],
+      "trigger": "preview_remedy",
+      "label": "capcli sql 'UPDATE orders ...' --dry-run",
       "arrow_type": "progress"
     },
     {
-      "id": "t_quota_yield_fork",
-      "journeys": ["journey_quota_preemption"],
-      "from": ["run.execute.yield.quota"],
-      "to": [
-        "run.execute.resume.quota",
-        "sys.core.inbox.success.populated"
-      ],
-      "trigger": "quota_resolution",
-      "arrow_type": "yield",
-      "branch_labels": {
-        "run.execute.resume.quota": "Tokens refilled (>15 unreserved headroom)",
-        "sys.core.inbox.success.populated": "Deferments exceeded (>5) -> sensory alert"
-      }
+      "id": "t_human_dry_run_to_commit",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.sql.success.dry_run"],
+      "to": ["run.sql.success.populated"],
+      "trigger": "exec_bounded_write",
+      "label": "Execute Remediated Write (-m)",
+      "arrow_type": "success"
     },
     {
-      "id": "t_canary_veto_branch",
-      "journeys": ["journey_trust_promotion"],
-      "from": ["routine.promote.ship.success.shipped"],
-      "to": [
-        "routine.maintain.stats.success.populated",
-        "routine.promote.ship.rollback.canary"
-      ],
-      "trigger": "telemetry_evaluation",
-      "arrow_type": "progress",
-      "branch_labels": {
-        "routine.maintain.stats.success.populated": "Telemetry clean over 1 hour -> stable",
-        "routine.promote.ship.rollback.canary": "Anomaly or policy denial detected -> circuit breaker"
-      }
+      "id": "t_human_commit_to_snapshot",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["run.sql.success.populated"],
+      "to": ["db.snapshot.success.created"],
+      "trigger": "take_snapshot",
+      "label": "capcli db snapshot",
+      "arrow_type": "progress"
     },
     {
-      "id": "t_canary_auto_rollback_to_demote",
-      "journeys": ["journey_trust_promotion"],
-      "from": ["routine.promote.ship.rollback.canary"],
-      "to": ["routine.maintain.demote.success.circuit_breaker"],
-      "trigger": "auto_demote",
-      "label": "Revert routine trust pointer to draft",
+      "id": "t_human_snapshot_to_corrupt",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["db.snapshot.success.created"],
+      "to": ["db.restore.success.restored"],
+      "trigger": "test_restore",
+      "label": "capcli db restore snap_onboarding_01",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_human_restore_to_report",
+      "journeys": ["journey_human_onboarding"],
+      "from": ["db.restore.success.restored"],
+      "to": ["sys.doctor.success.report"],
+      "trigger": "emit_receipt",
+      "label": "capcli sys doctor --report",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_harness_contract_to_search",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["sys.doctor.success.nominal"],
+      "to": ["run.search.success.populated"],
+      "trigger": "harness_search",
+      "label": "capcli search '' --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_search_to_dry_run",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["run.search.success.populated"],
+      "to": ["run.sql.success.dry_run"],
+      "trigger": "harness_dry_run",
+      "label": "capcli sql 'SELECT ...' --dry-run --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_dry_run_to_catalog",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["run.sql.success.dry_run"],
+      "to": ["api.catalog.success.populated"],
+      "trigger": "probe_api_catalog",
+      "label": "capcli api catalog stripe --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_catalog_to_prove_draft",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["api.catalog.success.populated"],
+      "to": ["routine.prove.success.passed"],
+      "trigger": "prove_hybrid",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_prove_to_trace_explain",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["routine.prove.success.passed"],
+      "to": ["sys.trace.success.populated"],
+      "trigger": "explain_feedback",
+      "label": "capcli sys trace op_prove_01 --explain --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_trace_to_overview",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["sys.trace.success.populated"],
+      "to": ["run.overview.success.populated"],
+      "trigger": "codify_overview",
+      "label": "capcli run overview",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_overview_to_final_prove",
+      "journeys": ["journey_harness_onboarding"],
+      "from": ["run.overview.success.populated"],
+      "to": ["routine.prove.success.passed"],
+      "trigger": "final_prove_sim",
+      "label": "capcli routine prove overview --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_crucible_inspect_to_cascade",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["run.inspect.success.routine"],
+      "to": ["run.execute.denial.budget_cascade"],
+      "trigger": "invoke_child_frame",
+      "label": "Child frame crosses min() bounds",
       "arrow_type": "denial"
     },
     {
-      "id": "t_tamper_to_recovery_breakglass",
+      "id": "t_crucible_cascade_to_jail",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["run.execute.denial.budget_cascade"],
+      "to": ["run.execute.denial.network_jail"],
+      "trigger": "raw_socket_attempt",
+      "label": "Syscall 42 connect() trapped",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crucible_jail_to_claims",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["run.execute.denial.network_jail"],
+      "to": ["db.lock.denial.claim_held"],
+      "trigger": "contested_claim",
+      "label": "capcli db lock orders:ORD-10",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crucible_claims_to_thrashing",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["db.lock.denial.claim_held"],
+      "to": ["sys.doctor.alarm.thrashing"],
+      "trigger": "sustained_denials",
+      "label": "20 sustained denials in 5m",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crucible_thrashing_to_missing_secret",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["sys.doctor.alarm.thrashing"],
+      "to": ["run.execute.refusal.missing_secret"],
+      "trigger": "execute_without_vault",
+      "label": "capcli run cap://stripe.refund",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crucible_secret_to_vault",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["run.execute.refusal.missing_secret"],
+      "to": ["sys.vault_set.success.vaulted"],
+      "trigger": "inject_vault_secret",
+      "label": "capcli sys vault_set stripe_key",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_crucible_vault_resume_exec",
+      "journeys": ["journey_execution_crucible"],
+      "from": ["sys.vault_set.success.vaulted"],
+      "to": ["run.execute.success.populated"],
+      "trigger": "retry_execution",
+      "label": "capcli run cap://stripe.refund",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_promotion_prove_to_queue",
+      "journeys": ["journey_trust_promotion"],
+      "from": ["routine.prove.success.passed"],
+      "to": ["routine.pending.success.populated"],
+      "trigger": "enqueue_promotion",
+      "label": "capcli routine ship order_sync reviewed --queue",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_promotion_queue_to_ship",
+      "journeys": ["journey_trust_promotion"],
+      "from": ["routine.pending.success.populated"],
+      "to": ["routine.ship.success.shipped"],
+      "trigger": "commit_ship",
+      "label": "capcli routine ship order_sync pinned",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_quota_yield_to_park",
+      "journeys": ["journey_quota_preemption"],
+      "from": ["run.execute.yield.quota"],
+      "to": ["run.execute.resume.quota"],
+      "trigger": "daemon_auto_refill",
+      "label": "Daemon token refill tick",
+      "arrow_type": "yield"
+    },
+    {
+      "id": "t_schema_diff_to_apply_dry",
+      "journeys": ["journey_schema_evolution"],
+      "from": ["rule.diff.success.populated"],
+      "to": ["rule.apply.success.dry_run"],
+      "trigger": "exec_dry_run_ddl",
+      "label": "capcli rule apply schema --dry-run",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_schema_apply_dry_to_merge",
+      "journeys": ["journey_schema_evolution"],
+      "from": ["rule.apply.success.dry_run"],
+      "to": ["env.merge.success.merged"],
+      "trigger": "exec_env_merge",
+      "label": "capcli env merge dev prod -m 'forward DDL'",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_tamper_panic_to_recovery",
       "journeys": ["journey_tamper_forensics"],
-      "from": ["sys.core.doctor.panic.tamper"],
-      "to": ["sys.core.doctor.recovery_mode"],
-      "trigger": "break_glass",
-      "label": "Export CAPCLI_RECOVERY=1",
-      "arrow_type": "denial",
-      "ui": {
-        "button_text": "Enter Recovery Break-Glass",
-        "hotkey": "!"
-      }
+      "from": ["sys.doctor.panic.tamper"],
+      "to": ["sys.doctor.recovery_mode"],
+      "trigger": "boot_recovery_shell",
+      "label": "CAPCLI_RECOVERY=1 capcli sys doctor",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ask_suspended_to_list",
+      "journeys": ["journey_human_in_the_loop"],
+      "from": ["run.execute.suspended.ask"],
+      "to": ["ping.list.success.populated"],
+      "trigger": "view_inquiries",
+      "label": "capcli ping list --pending",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ask_list_to_resolve",
+      "journeys": ["journey_human_in_the_loop"],
+      "from": ["ping.list.success.populated"],
+      "to": ["ping.resolve.success.resolved"],
+      "trigger": "resolve_inquiry",
+      "label": "capcli ping resolve ask_88a --choice approve",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ask_resolve_to_resumed_exec",
+      "journeys": ["journey_human_in_the_loop"],
+      "from": ["ping.resolve.success.resolved"],
+      "to": ["run.execute.success.populated"],
+      "trigger": "resume_routine",
+      "label": "Routine frame auto-resumes",
+      "arrow_type": "success"
     }
   ]
 }
@@ -427,20 +631,21 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
 
 ## 4. Complete Screen Inventory & State Matrix
 
-### 4.1 `run/` (5 verbs $\rightarrow$ 33 screen pairs)
+### 4.1 `run/` (5 verbs $\rightarrow$ 36 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `run.execute.success.populated` | success | 0 | — | populated | Deterministic execution and commit |
-| `run.execute.success.redirected` | success | 0 | — | redirected | Payload written to file via `--out`; stdout emits receipt |
+| `run.execute.success.redirected` | success | 0 | — | redirected | Payload directed to file via `--out`; stdout emits receipt |
 | `run.execute.success.truncated` | success | 0 | — | truncated | Result $>500$ tokens; returns `next_cursor` |
 | `run.execute.denial.budget` | denial | 2 | policy.budget | exhausted | Frame ops/duration ceiling exhausted |
-| `run.execute.denial.budget_cascade` | denial | 2 | policy.budget | starved | Child frame clipped by parent/session `min()` |
+| `run.execute.denial.budget_cascade` | denial | 2 | policy.budget | starved | Child frame clipped by parent/session $\min()$ |
 | `run.execute.denial.trust` | denial | 2 | policy.trust | unproven | Draft routine executed in prod |
 | `run.execute.denial.tier2_pinned` | denial | 2 | policy.trust | tier2 | `E045_TIER2_PINNED_DENIED` on macOS/Win |
 | `run.execute.denial.authorizer` | denial | 2 | policy.authorizer | forbidden | Prohibited table or column mutation |
 | `run.execute.denial.network_jail` | denial | 2 | kernel.sandbox | syscall_42 | Trapped raw `connect()` via seccomp-bpf |
 | `run.execute.denial.claim_held` | denial | 2 | db.claims | locked | Exclusive `--lock` ref already held |
+| `run.execute.refusal.missing_secret`| refusal| 3 | policy.secrets | missing_key | Missing credential redirects to Cockpit URL |
 | `run.execute.suspended.ask` | success | 0 | — | suspended | Pauses frame; enqueues in `_pending_asks` |
 | `run.execute.yield.quota` | yield | 6 | api.quota | rate_limit | Suspends task; sets `yield_until` timestamp |
 | `run.execute.resume.quota` | success | 0 | — | resumed | Daemon re-dispatches task on token refill |
@@ -448,6 +653,7 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
 | `run.execute.crash.poll_timeout` | crash | 4 | routine.runtime | timeout | `poll_until` exceeds 30-second ceiling |
 | `run.execute.panic.secret_leak` | panic | 5 | kernel.panic | leak | `kill_and_alert` triggered on plaintext secret leak |
 | `run.sql.success.populated` | success | 0 | — | populated | AST-vetted SQL commit |
+| `run.sql.success.dry_run` | success | 0 | — | dry_run | Execution plan preview with impact metrics |
 | `run.sql.success.redirected` | success | 0 | — | redirected | SQL export payload directed to disk via `--out` |
 | `run.sql.success.truncated` | success | 0 | — | truncated | SELECT result bounded at 10,000 rows |
 | `run.sql.denial.ast` | denial | 2 | policy.ast | unbounded | Missing `WHERE` or `LIMIT` clause |
@@ -460,7 +666,8 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
 | `run.search.success.populated` | success | 0 | — | populated | Matched capabilities and URP pointers |
 | `run.search.success.empty` | success | 0 | — | empty | Zero hits; outputs semantic suggestions |
 | `run.search.success.truncated` | success | 0 | — | truncated | Search results capped at 20 |
-| `run.inspect.success.routine` | success | 0 | — | populated | Pre-flight envelope and budget cascade |
+| `run.search.success.gaps` | success | 0 | — | gaps | Surfaces missing capabilities via `--since` |
+| `run.inspect.success.routine` | success | 0 | — | populated | Pre-flight envelope with `can_invoke_now` |
 | `run.inspect.success.quota` | success | 0 | — | populated | Headroom breakdown on `quota://` URP |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
@@ -477,104 +684,106 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
 | `db.schema.success.populated` | success | 0 | — | populated | Live DDL schema introspected |
 | `db.schema.success.empty` | success | 0 | — | empty | Empty database state |
 | `db.snapshot.success.created` | success | 0 | — | created | Point-in-time snapshot committed |
-| `db.snapshot.denial.trust` | denial | 2 | policy.trust | forbidden | Snapshots restricted to pinned trust |
+| `db.snapshot.denial.prod_draft` | denial | 2 | policy.trust | forbidden | Draft identity cannot snapshot prod |
 | `db.restore.success.restored` | success | 0 | — | restored | DB state restored from snapshot |
 | `db.restore.refusal.missing_id` | refusal | 3 | missing_param | missing_arg | Target snapshot ID missing |
 | `db.restore.denial.active_locks` | denial | 2 | db.claims | active_locks | Active claims prevent state reversal |
 | `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
 | `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
 
-### 4.3 `routine/` (8 verbs $\rightarrow$ 24 screen pairs)
+### 4.3 `routine/` (8 verbs $\rightarrow$ 26 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
-| `routine.author.new.success.created` | success | 0 | — | created | Routine scaffold committed |
-| `routine.author.new.refusal.name_taken` | refusal | 3 | validation | collision | Routine name already registered |
-| `routine.author.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates LOC or param limits |
-| `routine.author.prove.success.passed` | success | 0 | — | passed | Dynamic fingerprint verified |
-| `routine.author.prove.denial.shape` | denial | 2 | policy.authorizer | bad_shape | Execution violates declared limits |
-| `routine.author.prove.denial.policy` | denial | 2 | policy.authorizer | illegal_leaf | Routine attempts forbidden leaf op |
-| `routine.author.prove.denial.sandbox` | denial | 2 | kernel.sandbox | breach | Jail containment boundary violation |
-| `routine.author.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Uncaught exception in test pass |
-| `routine.promote.ship.success.shipped` | success | 0 | — | shipped | Routine promoted to new trust rung |
-| `routine.promote.ship.rollback.canary` | success | 0 | — | rolled_back | Canary telemetry trips auto-rollback |
-| `routine.promote.ship.denial.metrics` | denial | 2 | policy.authorizer | low_success | Success rate falls below 0.90 |
-| `routine.promote.ship.refusal.missing_reason`| refusal | 3 | validation | missing_arg | Elevation to pinned requires reason |
-| `routine.promote.ship.denial.trust` | denial | 2 | policy.trust | tier2_refusal | Pinned promotion denied on Tier 2 |
-| `routine.promote.pending.success.populated` | success | 0 | — | populated | Batch promotion candidates listed |
-| `routine.promote.pending.success.empty` | success | 0 | — | empty | No routines pending promotion |
-| `routine.maintain.sweep.success.populated` | success | 0 | — | populated | Deduplication proposals generated |
-| `routine.maintain.sweep.success.empty` | success | 0 | — | empty | No duplicate routines detected |
-| `routine.maintain.stats.success.populated` | success | 0 | — | populated | Routine p50/p95 execution metrics |
-| `routine.maintain.stats.refusal.not_found` | refusal | 3 | validation | not_found | Routine name does not exist |
-| `routine.maintain.rollback.success.completed`| success | 0 | — | completed | Reverts pointer to prior version |
-| `routine.maintain.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback depth of 5 |
-| `routine.maintain.rollback.refusal.not_found`| refusal | 3 | validation | not_found | Target version not found in history |
-| `routine.maintain.demote.success.circuit_breaker`| success| 0 | — | demoted | Auto-demotes failing routine to draft |
-| `routine.maintain.retire.success.completed` | success | 0 | — | completed | Routine retired from service |
-| `routine.maintain.retire.denial.active_deps` | denial | 2 | policy.authorizer | deps_exist | Callee dependencies block retirement |
-| `routine.maintain.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
+| `routine.new.success.created` | success | 0 | — | created | Routine scaffold committed |
+| `routine.new.refusal.name_taken` | refusal | 3 | validation | collision | Routine name already registered |
+| `routine.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates LOC or param limits |
+| `routine.prove.success.passed` | success | 0 | — | passed | Dynamic fingerprint verified |
+| `routine.prove.denial.shape` | denial | 2 | policy.authorizer | bad_shape | Execution violates declared limits |
+| `routine.prove.denial.policy` | denial | 2 | policy.authorizer | illegal_leaf | Routine attempts forbidden leaf op |
+| `routine.prove.denial.sandbox` | denial | 2 | kernel.sandbox | breach | Jail containment boundary violation |
+| `routine.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Uncaught exception in test pass |
+| `routine.ship.success.shipped` | success | 0 | — | shipped | Routine promoted to new trust rung |
+| `routine.ship.rollback.canary` | success | 0 | — | rolled_back | Canary telemetry trips auto-rollback |
+| `routine.ship.denial.metrics` | denial | 2 | policy.authorizer | low_success | Success rate falls below 0.95 |
+| `routine.ship.refusal.missing_reason`| refusal | 3 | validation | missing_arg | Elevation to pinned requires reason |
+| `routine.ship.denial.trust` | denial | 2 | policy.trust | tier2_refusal | Pinned promotion denied on Tier 2 |
+| `routine.pending.success.populated` | success | 0 | — | populated | Batch promotion candidates listed |
+| `routine.pending.success.empty` | success | 0 | — | empty | No routines pending promotion |
+| `routine.sweep.success.populated` | success | 0 | — | populated | Deduplication proposals generated |
+| `routine.sweep.success.empty` | success | 0 | — | empty | No duplicate routines detected |
+| `routine.stats.success.populated` | success | 0 | — | populated | Routine p50/p95 execution metrics |
+| `routine.stats.refusal.not_found` | refusal | 3 | validation | not_found | Routine name does not exist |
+| `routine.rollback.success.completed`| success | 0 | — | completed | Reverts pointer to prior version |
+| `routine.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback depth of 5 |
+| `routine.rollback.refusal.not_found`| refusal | 3 | validation | not_found | Target version not found in history |
+| `routine.retire.success.completed` | success | 0 | — | completed | Routine retired from service |
+| `routine.retire.denial.active_deps` | denial | 2 | policy.authorizer | deps_exist | Callee dependencies block retirement |
+| `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
 
-### 4.4 `api/` (8 verbs $\rightarrow$ 21 screen pairs)
-
-| Screen ID | State | Exit | Domain | Condition | Description |
-|---|---|---|---|---|---|
-| `api.catalog.sync.success.synced` | success | 0 | — | synced | OpenAPI spec compiled to catalog |
-| `api.catalog.sync.denial.rate` | denial | 2 | api.quota | rate_limit | Sync call within 24h cooldown |
-| `api.catalog.sync.refusal.missing_url` | refusal | 3 | missing_param | missing_arg | Upstream spec URL omitted |
-| `api.catalog.diff.success.populated` | success | 0 | — | populated | Spec divergence detected |
-| `api.catalog.diff.success.empty` | success | 0 | — | empty | Zero drift from active catalog |
-| `api.catalog.list.success.populated` | success | 0 | — | populated | Imported catalog verbs listed |
-| `api.catalog.list.success.empty` | success | 0 | — | empty | Zero APIs configured |
-| `api.catalog.list.success.truncated` | success | 0 | — | truncated | Truncated at 500 verbs |
-| `api.lifecycle.activate.success.activated` | success | 0 | — | activated | Dormant verb shifted to active draft |
-| `api.lifecycle.activate.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active verbs reached |
-| `api.lifecycle.activate.denial.rate` | denial | 2 | policy.authorizer | rate_limit | Exceeded 10 activations/hour |
-| `api.lifecycle.activate.refusal.missing_intent`| refusal| 3 | compile | no_intent | Missing intent flag on activation |
-| `api.lifecycle.prove.success.passed` | success | 0 | — | passed | Rehearsal in sim verified |
-| `api.lifecycle.prove.denial.sim_gap` | denial | 2 | policy.authorizer | sim_gap | Missing mock fixture in sim |
-| `api.lifecycle.prove.denial.policy` | denial | 2 | policy.authorizer | forbidden | Verb egress rule rejected |
-| `api.lifecycle.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Upstream contract format failure |
-| `api.lifecycle.ship.success.shipped` | success | 0 | — | shipped | Promoted; enters training wheels |
-| `api.lifecycle.ship.success.graduated` | success | 0 | — | graduated | Reaches Call 4; enters full autonomy |
-| `api.lifecycle.ship.denial.metrics` | denial | 2 | policy.authorizer | unproven | Fails synthetic contract replay |
-| `api.lifecycle.ship.refusal.missing_reason` | refusal | 3 | validation | missing_arg | Missing elevation justification |
-| `api.maintain.stats.success.populated` | success | 0 | — | populated | Quota usage and error metrics |
-| `api.maintain.stats.refusal.not_found` | refusal | 3 | validation | not_found | Target provider not found |
-| `api.maintain.retire.success.completed` | success | 0 | — | completed | API verb deactivated to dormant |
-| `api.maintain.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target verb not found |
-| `api.maintain.rollback.success.completed` | success | 0 | — | completed | Reverts API spec to prior hash |
-| `api.maintain.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback limit of 10 |
-| `api.maintain.rollback.refusal.not_found` | refusal | 3 | validation | not_found | Target version not found |
-
-### 4.5 `bind/` (9 verbs $\rightarrow$ 21 screen pairs)
+### 4.4 `api/` (9 verbs $\rightarrow$ 24 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
-| `bind.triggers.cron.success.bound` | success | 0 | — | bound | Schedule bound to routine |
-| `bind.triggers.cron.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 20 active schedules reached |
-| `bind.triggers.cron.denial.interval` | denial | 2 | policy.authorizer | interval_low| Interval lower than 5-minute cap |
-| `bind.triggers.cron.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent flag |
-| `bind.triggers.webhook.success.bound` | success | 0 | — | bound | Inbound hook route activated |
-| `bind.triggers.webhook.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active hooks reached |
-| `bind.triggers.webhook.denial.unsigned` | denial | 2 | policy.authorizer | unsigned | Unsigned hooks rejected |
-| `bind.triggers.webhook.denial.payload_size` | denial | 2 | policy.authorizer | too_large | Hook payload exceeds 64KB |
-| `bind.triggers.webhook.refusal.missing_ingress`| refusal| 3 | compile | no_ingress | Missing public ingress URL/tunnel |
-| `bind.triggers.endpoint.success.bound` | success | 0 | — | bound | Routine exposed as HTTP/MCP |
-| `bind.triggers.endpoint.denial.trust` | denial | 2 | policy.trust | unpinned | Endpoint requires pinned trust |
-| `bind.triggers.endpoint.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 10 active endpoints reached |
-| `bind.manage.list.success.populated` | success | 0 | — | populated | Active bindings displayed |
-| `bind.manage.list.success.empty` | success | 0 | — | empty | Zero bindings active |
-| `bind.manage.inspect.success.populated` | success | 0 | — | populated | Binding configuration envelope |
-| `bind.manage.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
-| `bind.manage.pause.success.completed` | success | 0 | — | completed | Trigger paused |
-| `bind.manage.pause.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
-| `bind.manage.resume.success.completed` | success | 0 | — | completed | Trigger resumed |
-| `bind.manage.resume.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
-| `bind.manage.remove.success.completed` | success | 0 | — | completed | Trigger dismantled |
-| `bind.manage.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
-| `bind.manage.keys.success.issued` | success | 0 | — | issued | API key stamped for endpoint |
-| `bind.manage.keys.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 25 keys reached |
+| `api.sync.success.synced` | success | 0 | — | synced | OpenAPI spec compiled to catalog |
+| `api.sync.denial.rate` | denial | 2 | api.quota | rate_limit | Sync call within 24h cooldown |
+| `api.sync.refusal.missing_url` | refusal | 3 | missing_param | missing_arg | Upstream spec URL omitted |
+| `api.diff.success.populated` | success | 0 | — | populated | Spec divergence detected |
+| `api.diff.success.empty` | success | 0 | — | empty | Zero drift from active catalog |
+| `api.catalog.success.populated` | success | 0 | — | populated | Imported catalog verbs listed |
+| `api.catalog.success.empty` | success | 0 | — | empty | Zero APIs configured |
+| `api.catalog.success.truncated` | success | 0 | — | truncated | Truncated at 500 verbs |
+| `api.activate.success.activated` | success | 0 | — | activated | Dormant verb shifted to active draft |
+| `api.activate.success.training_wheels`| success| 0 | — | probation | Activated with 3 synthetic contract checks |
+| `api.activate.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active verbs reached |
+| `api.activate.denial.rate` | denial | 2 | policy.authorizer | rate_limit | Exceeded 10 activations/hour |
+| `api.activate.refusal.missing_intent`| refusal| 3 | compile | no_intent | Missing intent flag on activation |
+| `api.prove.success.passed` | success | 0 | — | passed | Rehearsal in sim verified |
+| `api.prove.denial.sim_gap` | denial | 2 | policy.authorizer | sim_gap | Missing mock fixture in sim |
+| `api.prove.denial.policy` | denial | 2 | policy.authorizer | forbidden | Verb egress rule rejected |
+| `api.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Upstream contract format failure |
+| `api.ship.success.shipped` | success | 0 | — | shipped | Promoted to reviewed |
+| `api.ship.success.graduated` | success | 0 | — | graduated | Reaches Call 4; enters standard governance |
+| `api.ship.denial.metrics` | denial | 2 | policy.authorizer | unproven | Fails synthetic contract replay |
+| `api.ship.refusal.missing_reason` | refusal | 3 | validation | missing_arg | Missing elevation justification |
+| `api.stats.success.populated` | success | 0 | — | populated | Quota usage and error metrics |
+| `api.stats.refusal.not_found` | refusal | 3 | validation | not_found | Target provider not found |
+| `api.retire.success.completed` | success | 0 | — | completed | API verb deactivated to dormant |
+| `api.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target verb not found |
+| `api.rollback.success.completed` | success | 0 | — | completed | Reverts API spec to prior hash |
+| `api.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback limit of 5 |
+| `api.rollback.refusal.not_found` | refusal | 3 | validation | not_found | Target version not found |
+
+### 4.5 `bind/` (10 verbs $\rightarrow$ 23 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `bind.cron.success.bound` | success | 0 | — | bound | Schedule bound to routine |
+| `bind.cron.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 20 active schedules reached |
+| `bind.cron.denial.interval` | denial | 2 | policy.authorizer | interval_low| Interval lower than 5-minute cap |
+| `bind.cron.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent flag |
+| `bind.webhook.success.bound` | success | 0 | — | bound | Inbound hook route activated |
+| `bind.webhook.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active hooks reached |
+| `bind.webhook.denial.unsigned` | denial | 2 | policy.authorizer | unsigned | Unsigned hooks rejected |
+| `bind.webhook.denial.payload_size` | denial | 2 | policy.authorizer | too_large | Hook payload exceeds 64KB |
+| `bind.webhook.refusal.missing_ingress`| refusal| 3 | compile | no_ingress | Missing public ingress URL/tunnel |
+| `bind.endpoint.success.bound` | success | 0 | — | bound | Routine exposed as HTTP/MCP |
+| `bind.endpoint.denial.trust` | denial | 2 | policy.trust | unpinned | Endpoint requires pinned trust |
+| `bind.endpoint.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 10 active endpoints reached |
+| `bind.export.success.openapi` | success | 0 | — | exported | Bound OpenAPI schema exported |
+| `bind.export.success.mcp` | success | 0 | — | exported | Bound MCP tool definition exported |
+| `bind.list.success.populated` | success | 0 | — | populated | Active bindings displayed |
+| `bind.list.success.empty` | success | 0 | — | empty | Zero bindings active |
+| `bind.inspect.success.populated` | success | 0 | — | populated | Binding configuration envelope |
+| `bind.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
+| `bind.pause.success.completed` | success | 0 | — | completed | Trigger paused |
+| `bind.pause.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
+| `bind.resume.success.completed` | success | 0 | — | completed | Trigger resumed |
+| `bind.resume.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
+| `bind.remove.success.completed` | success | 0 | — | completed | Trigger dismantled |
+| `bind.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
+| `bind.keys.success.issued` | success | 0 | — | issued | API key stamped for endpoint (90d expiry) |
+| `bind.keys.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 25 keys reached |
 
 ### 4.6 `ping/` (5 verbs $\rightarrow$ 11 screen pairs)
 
@@ -583,18 +792,18 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
 | `ping.notify.success.dispatched` | success | 0 | — | dispatched | Notification dispatched |
 | `ping.notify.denial.quiet_hours` | denial | 2 | policy.authorizer | quiet_hours | Blocked between 22:00 and 07:00 |
 | `ping.notify.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent declaration |
-| `ping.ask.success.suspended` | success | 0 | — | suspended | Human question queued |
+| `ping.ask.success.suspended` | success | 0 | — | suspended | Human question queued with Cockpit URL |
 | `ping.ask.denial.options_cap` | denial | 2 | policy.authorizer | cap_exceeded| Exceeds 5 structured choices |
 | `ping.ask.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent declaration |
 | `ping.list.success.populated` | success | 0 | — | populated | Pending suspension questions |
 | `ping.list.success.empty` | success | 0 | — | empty | Zero pending inquiries |
 | `ping.resolve.success.resolved` | success | 0 | — | resolved | Choice selected; resumes task |
 | `ping.resolve.refusal.not_found` | refusal | 3 | validation | not_found | Invalid ask ID |
-| `ping.resolve.denial.expired` | denial | 2 | policy.authorizer | expired | Timeout elapsed; fail-closed |
+| `ping.resolve.denial.expired` | denial | 2 | policy.notify | expired | Timeout elapsed; fail-closed |
 | `ping.expire.success.completed` | success | 0 | — | completed | Explicit expiration executed |
 | `ping.expire.refusal.not_found` | refusal | 3 | validation | not_found | Target inquiry not found |
 
-### 4.7 `rule/` (4 verbs $\rightarrow$ 11 screen pairs)
+### 4.7 `rule/` (4 verbs $\rightarrow$ 12 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -603,9 +812,10 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
 | `rule.diff.success.populated` | success | 0 | — | populated | Schema/policy drift detected |
 | `rule.diff.success.empty` | success | 0 | — | empty | Workspace in lockstep with rules |
 | `rule.apply.success.applied` | success | 0 | — | applied | DDL applied in transaction |
+| `rule.apply.success.dry_run` | success | 0 | — | dry_run | DDL impact preview on snapshot |
 | `rule.apply.denial.trust` | denial | 2 | policy.trust | unproven | `ALTER` requires reviewed trust |
 | `rule.apply.refusal.validation` | refusal | 3 | validation | rejected | Gate 2 semantic check fails |
-| `rule.apply.denial.lockfile` | denial | 2 | policy.authorizer | drift | Lockfile root hash mismatch |
+| `rule.apply.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
 | `rule.validate.success.valid` | success | 0 | — | valid | Declarations pass Gates 1 & 2 |
 | `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Gate 1 YAML syntax failure |
 | `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Gate 2 circular dependency detected |
@@ -627,273 +837,378 @@ All choreography, branching paths, multiple inputs/outputs, and operational user
 | `env.merge.success.merged` | success | 0 | — | merged | DDL forwarded to production |
 | `env.merge.denial.trust` | denial | 2 | policy.trust | unreviewed | Production merge requires reviewed |
 | `env.merge.refusal.unmerged` | refusal | 3 | compile | conflict | Git branch conflict blocks DDL |
-| `env.merge.denial.lockfile` | denial | 2 | policy.authorizer | drift | Lockfile out of sync |
+| `env.merge.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile out of sync |
 | `env.remove.success.removed` | success | 0 | — | removed | Environment dismantled |
 | `env.remove.denial.prod_flags` | denial | 2 | policy.authorizer | confirmation | Prod requires dual confirm flags |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (15 verbs $\rightarrow$ 35 screen pairs)
+### 4.9 `sys/` (15 verbs $\rightarrow$ 39 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
-| `sys.audit.tail.success.populated` | success | 0 | — | populated | Live streaming audit records |
-| `sys.audit.tail.success.empty` | success | 0 | — | empty | No audit events within window |
-| `sys.audit.trace.success.populated` | success | 0 | — | populated | Causal DAG walk with `--explain` |
-| `sys.audit.trace.refusal.not_found` | refusal | 3 | validation | not_found | Target operation ID missing |
-| `sys.audit.query.success.populated` | success | 0 | — | populated | SQL executed against `_audit` |
-| `sys.audit.query.success.empty` | success | 0 | — | empty | Zero matching audit rows |
-| `sys.audit.query.refusal.unparseable`| refusal | 3 | compile | bad_syntax | Malformed SQL audit query |
-| `sys.audit.replay.success.replayed` | success | 0 | — | replayed | Deterministic execution from log |
-| `sys.audit.replay.denial.external` | denial | 2 | policy.authorizer | external_op | HTTP calls require manual flag |
-| `sys.audit.replay.refusal.missing_from`| refusal| 3 | missing_param | missing_arg | Target timestamp or commit omitted |
-| `sys.agent.register.success.registered`| success| 0 | — | registered | Kernel-minted agent ID issued |
-| `sys.agent.register.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max agents exceeded |
-| `sys.agent.list.success.populated` | success | 0 | — | populated | Registered agents listed |
-| `sys.agent.list.success.empty` | success | 0 | — | empty | Zero registered agents |
-| `sys.agent.revoke.success.revoked` | success | 0 | — | revoked | Agent credentials killed |
-| `sys.agent.revoke.refusal.not_found` | refusal | 3 | validation | not_found | Target agent ID not found |
-| `sys.vault.set.success.vaulted` | success | 0 | — | vaulted | AES-256-GCM secret encrypted |
-| `sys.vault.set.refusal.missing_val` | refusal | 3 | missing_param | missing_arg | Target secret value omitted |
-| `sys.vault.import_env.success.imported`| success| 0 | — | imported | Scanned and bound `CAPCLI_SECRET_*`|
-| `sys.vault.import_env.refusal.no_env_vars`|refusal|3 | validation | not_found | No matching environment variables |
-| `sys.core.inbox.success.populated` | success | 0 | — | populated | Sensory events popped from queue |
-| `sys.core.inbox.success.empty` | success | 0 | — | empty | Sensory inbox completely drained |
-| `sys.core.doctor.success.nominal` | success | 0 | — | nominal | Verified Trust Receipt emitted |
-| `sys.core.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from lockfile |
-| `sys.core.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or bwrap |
-| `sys.core.doctor.refusal.clock_drift`| refusal| 3 | host.ntp | clock_skew | Host clock delta $>500$ms vs NTP |
-| `sys.core.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Audit SHA-256 chain broken |
-| `sys.core.doctor.recovery_mode` | success | 0 | — | recovery | `CAPCLI_RECOVERY=1` break-glass active |
-| `sys.core.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |
-| `sys.core.backup.denial.push_fail` | denial | 2 | policy.authorizer | push_fail | Remote S3/Git push rejected |
-| `sys.core.recover.success.restored` | success | 0 | — | restored | Reconstructed from object store |
-| `sys.core.recover.refusal.not_found` | refusal | 3 | validation | not_found | Recovery snapshot missing |
-| `sys.core.recover.denial.active_locks`| denial | 2 | db.claims | active_locks | Active locks prevent state reversal |
-| `sys.core.exec.success.completed` | success | 0 | — | completed | Isolated command executed in jail |
-| `sys.core.exec.denial.sandbox` | denial | 2 | kernel.sandbox | violation | Attempted unconfined escape |
-| `sys.core.exec.crash.runtime` | crash | 4 | routine.runtime | crash | Executable process crash |
-| `sys.core.serve.success.running` | success | 0 | — | running | IPC/WS/HTTP daemon active |
-| `sys.core.serve.refusal.already_running`| refusal| 3 | compile | port_bound | Daemon process already running |
-| `sys.core.serve.denial.port` | denial | 2 | db.engine | port_denied | Port 4040 binding rejected |
+| `sys.inbox.success.populated` | success | 0 | — | populated | Sensory events popped from queue |
+| `sys.inbox.success.empty` | success | 0 | — | empty | Sensory inbox completely drained |
+| `sys.tail.success.populated` | success | 0 | — | populated | Live streaming audit records |
+| `sys.tail.success.empty` | success | 0 | — | empty | No audit events within window |
+| `sys.trace.success.populated` | success | 0 | — | populated | Causal DAG walk with `--explain` tree |
+| `sys.trace.refusal.not_found` | refusal | 3 | validation | not_found | Target operation ID missing |
+| `sys.query.success.populated` | success | 0 | — | populated | SQL executed against `_audit` |
+| `sys.query.success.empty` | success | 0 | — | empty | Zero matching audit rows |
+| `sys.query.refusal.unparseable`| refusal | 3 | compile | bad_syntax | Malformed SQL audit query |
+| `sys.replay.success.replayed` | success | 0 | — | replayed | Deterministic execution from log |
+| `sys.replay.denial.external` | denial | 2 | policy.authorizer | external_op | HTTP calls require manual flag |
+| `sys.replay.refusal.missing_from`| refusal| 3 | missing_param | missing_arg | Target timestamp or commit omitted |
+| `sys.register.success.registered`| success| 0 | — | registered | Kernel-minted agent ID issued |
+| `sys.register.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max agents exceeded |
+| `sys.agents.success.populated` | success | 0 | — | populated | Registered agents listed |
+| `sys.agents.success.empty` | success | 0 | — | empty | Zero registered agents |
+| `sys.revoke.success.revoked` | success | 0 | — | revoked | Agent credentials killed |
+| `sys.revoke.refusal.not_found` | refusal | 3 | validation | not_found | Target agent ID not found |
+| `sys.vault_set.success.vaulted` | success | 0 | — | vaulted | AES-256-GCM secret encrypted |
+| `sys.vault_set.refusal.missing_val` | refusal | 3 | missing_param | missing_arg | Target secret value omitted |
+| `sys.vault_import.success.imported`| success| 0 | — | imported | Scanned and bound `CAPCLI_SECRET_*`|
+| `sys.vault_import.refusal.no_env_vars`|refusal|3 | validation | not_found | No matching environment variables |
+| `sys.doctor.success.nominal` | success | 0 | — | nominal | Host doctor readiness check |
+| `sys.doctor.success.report` | success | 0 | — | report | Full YAML Trust Receipt |
+| `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
+| `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or bwrap |
+| `sys.doctor.refusal.clock_drift`| refusal| 3 | host.ntp | clock_skew | Host clock delta $>500$ms vs NTP |
+| `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
+| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Audit SHA-256 chain broken |
+| `sys.doctor.recovery_mode` | success | 0 | — | recovery | `CAPCLI_RECOVERY=1` break-glass active |
+| `sys.doctor.alarm.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
+| `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |
+| `sys.backup.denial.push_fail` | denial | 2 | policy.authorizer | push_fail | Remote S3/Git push rejected |
+| `sys.recover.success.restored` | success | 0 | — | restored | Reconstructed from object store |
+| `sys.recover.refusal.not_found` | refusal | 3 | validation | not_found | Recovery snapshot missing |
+| `sys.recover.denial.active_locks`| denial | 2 | db.claims | active_locks | Active locks prevent state reversal |
+| `sys.exec.success.completed` | success | 0 | — | completed | Isolated command executed in jail |
+| `sys.exec.denial.sandbox` | denial | 2 | kernel.sandbox | violation | Attempted unconfined escape |
+| `sys.exec.crash.runtime` | crash | 4 | routine.runtime | crash | Executable process crash |
+| `sys.serve.success.running` | success | 0 | — | running | IPC/WS/HTTP daemon active |
+| `sys.serve.refusal.already_running`| refusal| 3 | compile | port_bound | Daemon process already running |
+| `sys.serve.denial.port` | denial | 2 | db.engine | port_denied | Port 4040 binding rejected |
 
-### 4.10 `doc/` (2 verbs → 4 screen pairs)
+### 4.10 `doc/` (3 verbs $\rightarrow$ 6 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
-| `doc.read.success.populated` | success | 0 | — | populated | Document leaf content returned bounded |
+| `doc.read.success.populated` | success | 0 | — | populated | Full document returned bounded |
+| `doc.read.success.sliced` | success | 0 | — | sliced | Progressive disclosure: section + token cap |
 | `doc.read.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
-| `doc.outline.success.populated` | success | 0 | — | populated | Outline node tree rendered |
+| `doc.outline.success.populated` | success | 0 | — | populated | Outline node tree with section indices |
 | `doc.outline.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
+| `doc.inspect.success.populated` | success | 0 | — | populated | Document metadata, tokens, and node count |
 
 ---
 
-## 5. Atomic Output Contract & Canonical Screen Fixtures
+## 5. Canonical Screen Fixtures
 
-Every terminal transcript is constructed of three atomic components:
-1. **HEADER:** Environment/Tier badge, command status, target identifier.
-2. **BODY:** Diagnostic metrics, culprit details, observed limits, and data tables.
-3. **FOOTER:** `state_modified` boolean, audit linkage, actionable remediation, and token receipt.
+Every terminal transcript follows strict typographic rules:
+1. **Header Badge:** Standardized `[{env}:{tier}]` runtime context prefix.
+2. **Visual Spans:** Source SQL or parameters underlined with carets (`^^^^`) directly pinpointing violations.
+3. **Indented Blocks:** Two-space hierarchical indentation; clean label columns.
+4. **Dividers:** Horizontal character lines (`─`) for separation. No random vertical pipe borders.
+5. **Machine/Human Duality:** Clean human presentation by default; JSON structure strictly matches `--json`.
 
-Dividers must be horizontal rules (`─`). No vertical bars (`│`, `|`, `├`, `└`) are permitted.
+---
 
 ### 5.1 AST Blast-Radius Denial (`screens/run/sql/run.sql.denial.ast.txt`)
 
 ```text
-⟨run.sql.denial.ast⟩
-⟨exit 2⟩ policy.ast
+[dev:tier_1]  ✗  exit 2
 
-[dev:tier_2] ERROR: UNBOUNDED MUTATION REJECTED
-────────────────────────────────────────────────────────────────────────────────
-Statement:       UPDATE orders SET status = 'shipped'
-Culprit:         AST blast-radius check failed: missing WHERE and LIMIT clauses
-Require Where:   true (provided: false)
-Require Limit:   true (provided: false, ceiling: 1000)
-Max Limit:       1000
-────────────────────────────────────────────────────────────────────────────────
-state_modified:  false
-audit_event:     db.exec.denied (uncommitted)
-remedy:          Append explicit WHERE clause and LIMIT <= 1000 (e.g. WHERE id = 'ORD-1' LIMIT 1)
-────────────────────────────────────────────────────────────────────────────────
-⟨agent parses: --json envelope with domain, culprit, remedy, state_modified⟩
-⟨human reads: atomic header, body, footer blocks above with horizontal rules only⟩
+  FAIL  policy.query.update_delete.require_limit
+        UPDATE orders SET status = 'shipped' WHERE status = 'processing'
+                                                                   ^^^^^^
+        No LIMIT clause. Blast radius unbounded.
+
+  audit_op: op_9f2e
+  state_modified: false
+  layer: AST
+  measured: matches potentially 847 rows (cap: 100)
+  remedy: add LIMIT, or target specific primary key
 ```
 
-### 5.2 Network Jail Syscall 42 Trapping (`screens/run/execute/run.execute.denial.network_jail.txt`)
+---
+
+### 5.2 Causal DAG Tree Walk (`screens/sys/trace/sys.trace.success.populated.txt`)
 
 ```text
-⟨run.execute.denial.network_jail⟩
-⟨exit 2⟩ kernel.sandbox
+[dev:tier_1]  Causal DAG Trace (op_9f2e)
 
-[dev:tier_1] ERROR: NETWORK JAIL BREACH TRAPPED
-────────────────────────────────────────────────────────────────────────────────
-Target:          sync_inventory@1
-Culprit:         Raw socket connect() (syscall 42) trapped by seccomp-bpf filter
-Attempted Wire:  api.supplier.com:443
-Sandbox Mode:    bwrap (tier_1 hardened isolation)
-Policy Floor:    Raw network egress prohibited from guest routines
-────────────────────────────────────────────────────────────────────────────────
-state_modified:  false
-audit_event:     sandbox.breach (uncommitted)
-remedy:          Route external calls via ctx.api.call using declared apis/ catalog verbs
-────────────────────────────────────────────────────────────────────────────────
-⟨agent parses: --json envelope with domain, culprit, remedy, state_modified⟩
-⟨human reads: atomic header, body, footer blocks above with horizontal rules only⟩
+  ses_a992f  session.start        "fulfill urgent pending orders"
+  └── op_9f2c  routine.dispatch_order@4
+        ├── op_9f2d  db.query (orders)         ✓ [allowed]  12ms
+        ├── op_9f2e  api.call (fedex.ship)     ✓ [allowed]  340ms
+        │     └── tracking: 794644790133
+        └── op_9f2f  db.execute (orders)       ✓ [allowed]  18ms
+              └── status = 'shipped' (1 row)
+
+  Root Intent: "fulfill urgent pending orders"
+  Authority:   user:alice (via agt_7f3k)
+  Integrity:   valid hash link (chain verified)
 ```
 
-### 5.3 Cascade Budget Starvation (`screens/run/execute/run.execute.denial.budget_cascade.txt`)
+---
+
+### 5.3 YAML Trust Receipt (`screens/sys/doctor/sys.doctor.success.report.txt`)
 
 ```text
-⟨run.execute.denial.budget_cascade⟩
-⟨exit 2⟩ policy.budget
+[prod:tier_1]  capcli 0.4.2
 
-[prod:tier_1] ERROR: CASCADE BUDGET STARVATION
-────────────────────────────────────────────────────────────────────────────────
-Target:          dispatch_order@2 -> record_metric@1 (frame_004)
-Culprit:         Child execution clipped by parent frame_001 min() remaining headroom
-Declared Need:   10 ops
-Parent Headroom: 3 ops
-Attempted Op:    db.exec
-Blocking Level:  routine
-Session Pool:    3 ops remaining
-────────────────────────────────────────────────────────────────────────────────
-state_modified:  false
-audit_event:     budget.exhausted (uncommitted)
-remedy:          Raise parent op budget or decouple child as an asynchronous worker
-────────────────────────────────────────────────────────────────────────────────
-⟨agent parses: --json envelope with domain, culprit, remedy, state_modified, measured, remaining⟩
-⟨human reads: atomic header, body, footer blocks above with horizontal rules only⟩
+trust_receipt:
+  status:            nominal
+  host_tier:         tier_1 (hardened Linux namespaces)
+  workspace:         envs/prod/workspace.db
+  ledger_root_hash:  sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c
+  audited_events:    14290 committed to _audit
+  policy_denials:    18 (intercepted pre-execution; state untouched)
+  unaudited_writes:  0
+  secret_leaks:      0
+  pinned_routines:   32
+  active_triggers:   4 crons, 3 webhooks, 1 endpoint
+  sleep_score:       100%
 ```
 
-### 5.4 Quota Preemption Yield (`screens/run/execute/run.execute.yield.quota.txt`)
+---
+
+### 5.4 Pre-Flight Routine Inspection Envelope (`screens/run/inspect/run.inspect.success.routine.txt`)
 
 ```text
-⟨run.execute.yield.quota⟩
-⟨exit 6⟩ api.quota
+[dev:tier_1]  capcli inspect cap://dispatch_order@4
 
-[prod:tier_1] YIELD: PROVIDER QUOTA DEPLETED
-────────────────────────────────────────────────────────────────────────────────
-Provider:        stripe
-Priority:        background
-Unreserved Pool: 0 tokens available
-Yield Until:     2026-03-31T12:00:00Z (epoch: 1774958400)
-Task Frame:      frame_009 persisted to _suspended_tasks
-Deferments:      1/5
-────────────────────────────────────────────────────────────────────────────────
-state_modified:  false
-audit_event:     api.yield (suspended)
-remedy:          Task parked cleanly; daemon will automatically re-queue on token refill
-────────────────────────────────────────────────────────────────────────────────
-⟨agent parses: --json envelope with yield_until, deferments, priority, state_modified⟩
-⟨human reads: atomic header, body, footer blocks above with horizontal rules only⟩
+  trust:       pinned
+  runtime:     typescript (bun)
+  params:      order_id: string, carrier: string
+  description: "Dispatch paid order to carrier and update status"
+
+  limits:      8 ops · 15s · 500 result tokens
+
+  manifest:
+    1. db.query    orders (read)
+    2. api.call    logistics.shipments.create
+    3. db.execute  orders (write)
+
+  budget_status:
+    can_invoke_now:             true
+    session_ops_remaining:      488
+    session_duration_remaining: 555000ms
+    session_fuel_remaining:     80400
+    session_egress_remaining:   4181824 bytes
+    session_rate_remaining:     287
+    tightest_constraint:        null
+
+  composition:
+    max_nesting_depth:   5
+    budget_inheritance:  min
+    child_routines:      []
+
+  stats:
+    total_runs:    214
+    success_rate:  99.1%
+    p50_duration:  340ms
+    p95_duration:  890ms
+    last_run_at:   2m ago
 ```
 
-### 5.5 Secret Exposure Emergency Panic (`screens/run/execute/run.execute.panic.secret_leak.txt`)
+---
+
+### 5.5 Dry-Run Schema Impact Plan (`screens/run/sql/run.sql.success.dry_run.txt`)
 
 ```text
-⟨run.execute.panic.secret_leak⟩
-⟨exit 5⟩ kernel.panic
+[dev:tier_1]  dry-run  ✓
 
-[dev:tier_1] PANIC: PLAINTEXT SECRET LEAK DETECTED
-────────────────────────────────────────────────────────────────────────────────
-Action:          kill_and_alert triggered
-Secret Target:   vault://stripe_key
-Detected Value:  sk_live_████
-Buffer Action:   Stdout destroyed, memory buffers zeroized, process terminated
-Integrity Floor: Credentials may never cross process boundaries in plaintext
-────────────────────────────────────────────────────────────────────────────────
-state_modified:  false
-audit_event:     vault.leak_incident (stamped)
-remedy:          Inspect routine source to eliminate debug logging of vaulted secrets
-────────────────────────────────────────────────────────────────────────────────
-⟨agent parses: --json envelope with domain, culprit, remedy, state_modified⟩
-⟨human reads: atomic header, body, footer blocks above with horizontal rules only⟩
+  statement:      ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0
+  ast_check:      pass
+  authorizer:     pass (alter on orders allowed in dev)
+  intent:         declared ("add priority flag for rush shipping")
+  schema_impact:  +1 column (priority)
+  estimated_rows: 4281
+  blast_radius:   schema-only (non-destructive)
+
+  state_modified: false
+  note:           no execution occurred
 ```
 
-### 5.6 Platform Tier Degradation Denial (`screens/run/execute/run.execute.denial.tier2_pinned.txt`)
+---
+
+### 5.6 Agent Thrashing Alarm (`screens/sys/doctor/sys.doctor.alarm.thrashing.txt`)
 
 ```text
-⟨run.execute.denial.tier2_pinned⟩
-⟨exit 2⟩ policy.trust
+[dev:tier_1]  ⚠  agent.thrashing
 
-[prod:tier_2] ERROR: E045_TIER2_PINNED_DENIED
-────────────────────────────────────────────────────────────────────────────────
-Target:          settle_ledger@4 (pinned)
-Host Platform:   darwin (tier_2 degraded isolation)
-Missing Defense: Linux unprivileged namespaces + seccomp-bpf syscall filter
-Trust Floor:     Pinned routines demand Tier 1 hardened environments
-────────────────────────────────────────────────────────────────────────────────
-state_modified:  false
-audit_event:     trust.tier_denied (uncommitted)
-remedy:          Downgrade routine to reviewed for dev/sim or execute on a Tier 1 Linux host
-────────────────────────────────────────────────────────────────────────────────
-⟨agent parses: --json envelope with domain, culprit, remedy, state_modified⟩
-⟨human reads: atomic header, body, footer blocks above with horizontal rules only⟩
+  agent:           agt_7f3k
+  denials_last_5m: 22
+  rule_hit:        policy.query.update_delete.require_limit
+  target:          db://orders
+  harness_status:  stuck in repetitive denial loop
+
+  state_modified:  false
+  layer:           governance
+  remedy:          harness execution throttled; escalate to human or inspect remedy payload
+```
+
+---
+
+### 5.7 Missing Vault Secret with Cockpit URL (`screens/run/execute/run.execute.refusal.missing_secret.txt`)
+
+```text
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  policy.secrets.missing
+        capability: cap://stripe.refund_charge
+        secret_ref: vault://stripe_secret
+
+        Credential 'stripe_secret' not found in vault.
+        Direct CLI parameter injection is banned to prevent prompt leakage.
+
+  state_modified: false
+  layer: vault
+  remedy: prompt human supervisor to inject credential via Cockpit (http://127.0.0.1:4040/vault)
+```
+
+---
+
+### 5.8 Network Jail Syscall 42 Trapping (`screens/run/execute/run.execute.denial.network_jail.txt`)
+
+```text
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  kernel.network.jail
+        syscall 42 (connect) trapped by seccomp-bpf
+        target: 10.0.0.5:5432
+        caller: routines/sneaky_exfil.py
+
+        Raw network egress prohibited from guest sandboxes.
+
+  state_modified: false
+  layer: sandbox
+  remedy: use ctx.api.call with an activated catalog verb
+```
+
+---
+
+### 5.9 Quota Yield Frame Suspension (`screens/run/execute/run.execute.yield.quota.txt`)
+
+```text
+[prod:tier_1]  ✗  exit 6
+
+  YIELD  policy.api.quota_exhausted
+         routine broadcast_newsletter@2 (frame_018)
+         provider: threads
+         verb:     threads.create_media_post
+
+  state_modified:  false
+  layer:           quota
+  tokens_left:     0 / 50 (24h window)
+  reset_at:        18:00:00 UTC (in 4h 12m)
+  suspended_frame: task_99a8b1
+  remedy:          task safely yielded; daemon will auto-resume at reset_at
+```
+
+---
+
+### 5.10 API Activation with Training Wheels (`screens/api/activate/api.activate.success.training_wheels.txt`)
+
+```text
+[dev:tier_1]  ✓  activated
+
+  verb:            cap://stripe.refund_charge
+  trust:           draft
+  training_wheels: 3 calls remaining
+  sim_mode:        sandbox
+
+  audit:           op_008b1a
+  note:            next 3 invocations require synthetic contract replay
+```
+
+---
+
+### 5.11 NTP Clock Drift Boot Refusal (`screens/sys/doctor/sys.doctor.refusal.clock_drift.txt`)
+
+```text
+[dev:tier_1]  ✗  exit 3
+
+  FATAL  kernel.boot.clock_drift_exceeded
+         Host clock delta vs NTP is 840ms (maximum allowable: 500ms).
+         Execution refused to prevent lease corruption and quota bypass.
+
+  state_modified: false
+  layer: boot
+  remedy: synchronize host system clock via 'chronyd' or 'ntpdate'
+```
+
+---
+
+### 5.12 Progressive Disclosure Doc Reading (`screens/doc/read/doc.read.success.sliced.txt`)
+
+```text
+[dev:tier_1]  doc://refund-policy (section 3)
+
+  outline_node: 3. Stripe integration notes
+  tokens:       84 (cap: 100)
+  has_more:     false
+
+  ────────────────────────────────────────────────────────────────────────────
+  Outbound refunds must include `charge_id` and idempotent client request UUID.
+  Never refund a charge older than 120 days via automated routines; delegate
+  to human supervisor via `ctx.ping.ask`.
 ```
 
 ---
 
 ## 6. Fixture Schema & Rust Test Runner Contract
 
-### 6.1 Pure Atomic Screen Fixture Schema (`screens/run/execute/run.execute.denial.budget_cascade.json`)
+### 6.1 Screen Fixture Schema (`screens/run/sql/run.sql.denial.ast.json`)
 
 ```json
 {
   "$schema": "wireframe/v2",
-  "screen_id": "run.execute.denial.budget_cascade",
+  "screen_id": "run.sql.denial.ast",
   "noun": "run",
-  "verb": "execute",
-  "target": "dispatch_order@2",
-  "command": "capcli run dispatch_order@2 --env prod -m 'process batch'",
+  "verb": "sql",
+  "target": "db://orders",
+  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
   "state": {
     "exit_code": 2,
-    "domain": "policy.budget",
-    "trust": "pinned",
-    "env": "prod",
+    "domain": "policy.ast",
+    "trust": "draft",
+    "env": "dev",
     "tier": "tier_1",
     "state_modified": false,
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "policy.budget",
-    "culprit": "child routine record_metric@1 (frame_004) clipped by parent frame_001 min() headroom",
-    "remedy": "raise declared limits on parent routine or decouple child as an asynchronous worker",
-    "layer": "budget",
-    "measured": {
-      "parent_remaining_ops": 3,
-      "child_declared_ops": 10,
-      "attempted_op": "db.exec"
-    },
-    "remaining": {
-      "blocking_level": { "ops": 0, "duration_ms": 254800, "fuel": 80400 },
-      "session": { "ops": 3, "duration_ms": 555000, "fuel": 80400, "egress_bytes": 4181824 },
-      "ancestors": [
-        { "frame": "frame_001", "remaining_ops": 3 }
-      ]
-    },
-    "blocking_level": "routine"
+    "domain": "policy.ast",
+    "culprit": "No LIMIT clause. Blast radius unbounded.",
+    "remedy": "add LIMIT, or target specific primary key",
+    "layer": "AST",
+    "measured": "matches potentially 847 rows (cap: 100)"
   },
-  "txt_pair": "screens/run/execute/run.execute.denial.budget_cascade.txt",
+  "txt_pair": "screens/run/sql/run.sql.denial.ast.txt",
   "txt_sha256": null,
   "test_assertions": {
     "exit_code": 2,
     "state_modified": false,
     "stdout_contains": [
-      "[prod:tier_1]",
-      "CASCADE BUDGET STARVATION",
-      "clipped by parent frame_001",
-      "parent_remaining_ops: 3",
-      "state_modified:  false"
+      "[dev:tier_1]  ✗  exit 2",
+      "FAIL  policy.query.update_delete.require_limit",
+      "No LIMIT clause. Blast radius unbounded.",
+      "state_modified: false",
+      "layer: AST",
+      "remedy: add LIMIT, or target specific primary key"
     ],
     "stdout_not_contains": [
-      "--override-budget",
       "--force",
-      "partial commit"
+      "SyntaxError",
+      "panic"
     ],
     "stderr_empty": true,
-    "json_keys_required": ["domain", "culprit", "remedy", "state_modified", "measured", "remaining"],
+    "json_keys_required": ["domain", "culprit", "remedy", "state_modified", "layer"],
     "json_field_values": {
       "state_modified": false,
-      "domain": "policy.budget"
+      "domain": "policy.ast"
     }
   }
 }
@@ -939,11 +1254,9 @@ fn execute_wireframe_golden_tests() {
         let txt_path = json_path.with_extension("txt");
         assert!(txt_path.exists(), "Missing TXT pairing for {}", json_path.display());
 
-        // 2. Assert TXT has zero vertical line characters
+        // 2. Assert TXT has zero raw table pipe characters
         let txt_content = fs::read_to_string(&txt_path).unwrap();
-        assert!(!txt_content.contains('│'), "Vertical character │ forbidden in {}", txt_path.display());
-        assert!(!txt_content.contains('├'), "Vertical character ├ forbidden in {}", txt_path.display());
-        assert!(!txt_content.contains('└'), "Vertical character └ forbidden in {}", txt_path.display());
+        assert!(!txt_content.contains('|'), "Pipe character | forbidden in {}", txt_path.display());
 
         // 3. Dispatch CLI harness command
         let output = capcli_test_exec(&fixture.command);
@@ -952,7 +1265,7 @@ fn execute_wireframe_golden_tests() {
         assert_eq!(output.exit_code, fixture.test_assertions.exit_code, "Exit mismatch at {}", fixture.screen_id);
         assert_eq!(output.state_modified, fixture.test_assertions.state_modified, "State modified invariant failed at {}", fixture.screen_id);
 
-        // 5. Assert atomic header, body, and footer content needles
+        // 5. Assert atomic output needles
         for needle in &fixture.test_assertions.stdout_contains {
             assert!(output.stdout.contains(needle), "{}: Missing expected output needle '{}'", fixture.screen_id, needle);
         }
@@ -971,8 +1284,6 @@ fn execute_wireframe_golden_tests() {
 
 ## 7. Edgeless Playable Canvas Implementation (`wireframe.html`)
 
-A single, zero-dependency HTML file (`<450` lines) combining SVG canvas rendering with an interactive terminal simulator. It reads `manifest.json` for node inventory, `flows.json` for graph topology and buttons, and screens for transcripts.
-
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -985,21 +1296,21 @@ A single, zero-dependency HTML file (`<450` lines) combining SVG canvas renderin
     --text: #c9d1d9; --green: #3fb950; --red: #f85149;
     --yellow: #d29922; --purple: #a371f7; --blue: #58a6ff;
   }
-  body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: monospace; overflow: hidden; display: flex; height: 100vh; }
+  body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; overflow: hidden; display: flex; height: 100vh; }
   #canvas-container { flex: 1; height: 100%; position: relative; cursor: grab; }
   #canvas-container:active { cursor: grabbing; }
   svg { width: 100%; height: 100%; }
-  #hud { position: absolute; top: 16px; left: 16px; display: flex; gap: 8px; z-index: 10; }
-  .hud-btn { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; cursor: pointer; border-radius: 4px; font-family: monospace; }
+  #hud { position: absolute; top: 16px; left: 16px; display: flex; gap: 8px; z-index: 10; flex-wrap: wrap; max-width: 60%; }
+  .hud-btn { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; cursor: pointer; border-radius: 4px; font-family: monospace; font-size: 11px; }
   .hud-btn:hover { border-color: var(--blue); color: #fff; }
-  #terminal-panel { width: 580px; height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+  #terminal-panel { width: 620px; height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; }
   #terminal-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  #terminal-body { padding: 16px; flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.4; color: #58a6ff; }
+  #terminal-body { padding: 16px; flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; color: #c9d1d9; }
   #terminal-actions { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
-  .action-btn { background: #21262d; border: 1px solid var(--border); color: #fff; padding: 6px 10px; cursor: pointer; border-radius: 4px; font-size: 11px; }
+  .action-btn { background: #21262d; border: 1px solid var(--border); color: #fff; padding: 6px 10px; cursor: pointer; border-radius: 4px; font-size: 11px; font-family: monospace; }
   .action-btn:hover { border-color: var(--green); }
   .node rect { stroke-width: 2px; rx: 6px; cursor: pointer; }
-  .node text { font-size: 12px; fill: var(--text); pointer-events: none; }
+  .node text { font-size: 11px; fill: var(--text); pointer-events: none; font-family: monospace; }
   .edge { stroke: var(--border); stroke-width: 2px; marker-end: url(#arrow); fill: none; }
   .edge.denial { stroke: var(--red); stroke-dasharray: 4; }
   .edge.yield { stroke: var(--yellow); stroke-dasharray: 6; }
@@ -1009,12 +1320,14 @@ A single, zero-dependency HTML file (`<450` lines) combining SVG canvas renderin
 
 <div id="canvas-container">
   <div id="hud">
-    <button class="hud-btn" onclick="focusJourney('journey_human_onboarding')">1. Onboarding (S0-S10)</button>
-    <button class="hud-btn" onclick="focusJourney('journey_execution_crucible')">2. Execution Crucible</button>
-    <button class="hud-btn" onclick="focusJourney('journey_trust_promotion')">3. Trust Ladder</button>
-    <button class="hud-btn" onclick="focusJourney('journey_quota_preemption')">4. Quota Yield/Resume</button>
-    <button class="hud-btn" onclick="focusJourney('journey_schema_evolution')">5. DDL Evolution</button>
-    <button class="hud-btn" onclick="focusJourney('journey_tamper_forensics')">6. Forensics & Panic</button>
+    <button class="hud-btn" onclick="focusJourney('journey_human_onboarding')">1. Human Onboarding (S0-S10)</button>
+    <button class="hud-btn" onclick="focusJourney('journey_harness_onboarding')">2. Harness Onboarding (H0-H7)</button>
+    <button class="hud-btn" onclick="focusJourney('journey_execution_crucible')">3. Execution Crucible</button>
+    <button class="hud-btn" onclick="focusJourney('journey_trust_promotion')">4. Trust Ladder</button>
+    <button class="hud-btn" onclick="focusJourney('journey_quota_preemption')">5. Quota Yield/Resume</button>
+    <button class="hud-btn" onclick="focusJourney('journey_schema_evolution')">6. DDL Evolution</button>
+    <button class="hud-btn" onclick="focusJourney('journey_tamper_forensics')">7. Forensics & Panic</button>
+    <button class="hud-btn" onclick="focusJourney('journey_human_in_the_loop')">8. Ask & Resolution</button>
   </div>
   <svg id="viewport">
     <defs>
@@ -1028,10 +1341,10 @@ A single, zero-dependency HTML file (`<450` lines) combining SVG canvas renderin
 
 <div id="terminal-panel">
   <div id="terminal-header">
-    <span id="screen-id-display">select a state node</span>
+    <span id="screen-id-display" style="font-weight: 600;">select a state node</span>
     <span id="exit-badge"></span>
   </div>
-  <div id="terminal-body">Click any node on the canvas to play CLI output...</div>
+  <div id="terminal-body">Click any node on the canvas to inspect real CLI diagnostic output...</div>
   <div id="terminal-actions"></div>
 </div>
 
@@ -1097,7 +1410,6 @@ function renderOutActions(screenId) {
       btn.className = 'action-btn';
       btn.textContent = t.ui?.button_text || `Transition -> ${targetId}`;
       btn.onclick = () => {
-        // Resolve target screen file path and simulate transition
         const parts = targetId.split('.');
         const txtPath = `screens/${parts[0]}/${parts[1]}/${targetId}.txt`;
         loadScreen(targetId, txtPath, 0);
@@ -1113,6 +1425,9 @@ function focusJourney(journeyId) {
   if (journey) {
     document.getElementById('screen-id-display').textContent = `Journey: ${journey.name}`;
     document.getElementById('terminal-body').textContent = journey.description;
+    const parts = journey.entry.split('.');
+    const txtPath = `screens/${parts[0]}/${parts[1]}/${journey.entry}.txt`;
+    loadScreen(journey.entry, txtPath, 0);
   }
 }
 </script>

@@ -250,5 +250,5 @@
       - ddl display — db schema [--table]
       - state management — db snapshot, db restore <id>, db dump
     - Boundary laws
-      - dead commands — db count, db query, db exec banned; replaced by unified run sql
-      - enforcement depth — all commands cross AST and authorizer layers
+      - command routing — all SQL routes exclusively through `capcli run sql` (alias `capcli sql`): see interface.md#Refusals-and-banned-operations
+      - enforcement depth — all statements cross AST and C-authorizer layers before engine evaluation

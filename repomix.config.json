@@ -30,6 +30,7 @@
   "include": [
       "README.md",
    //   "docs",
+   //    "cans/artifacts/wireframe",
       "cans/",
   //    "cans/artifacts/capcli.playbook.md",
       "cans/artifacts/governance.yaml",
@@ -54,7 +55,7 @@
    "cans/artifacts/capcli.landing-copy.md",
   // "cans/artifacts/",
   //  "cans/artifacts/"
-    "cans/assembly.md",
+ //   "cans/assembly.md",
 		]
   },
   "security": {

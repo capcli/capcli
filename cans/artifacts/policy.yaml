@@ -1,6 +1,5 @@
 # ═══════════════════════════════════════════════════════════════
 # policy.yaml — default-deny behavioral policy, compiled at boot
-# Update v4.1: Added identity.skill_origin section (2026-09-12)
 # Behavioral permission: what capabilities may do.
 # Structure lives in governance.yaml. Zero overlap.
 # Two enforcement layers: authorizer (C-level floor) + AST (semantic ceiling)

@@ -100,19 +100,16 @@
       - Reading — doc read <ptr> [--max-tokens 100]
       - Outline — doc outline <ptr>
     - Refusals and banned operations
-      - config writes — config set banned; edit YAML and git commit
-      - direct system-schema apply — managed by kernel upgrades
-      - manual schema edits — schema edit banned; edit schema.yaml
-      - banned bypass flags — --force, --override-budget, --force-prod banned
-      - retired verbs
-        - db count, db query, db exec — banned; use unified sql
-        - claim — banned; use db lock or run --lock
-        - jail — banned; use sys exec --sandbox
-        - policy explain — banned; use sys audit trace --explain
-        - --verbose — banned; use sys audit tail
-        - api call — banned; use run or ctx.api.call
-        - budget — banned; use inspect cost envelope
-        - api import --pick — banned; verbs synced in full
+      - ssot enforcement — config mutations require git commits; direct `config set` or manual SQL DDL denied (exit 3)
+      - banned bypass flags — `--force`, `--override-budget`, `--force-prod`, `--verbose` rejected at parser (exit 3)
+      - unified verb aliases — single authoritative paths:
+        - queries/updates — use `capcli sql` (bans `db query`, `db exec`, `db count`)
+        - locks — use `db lock` (bans `claim`)
+        - sandboxing — use `sys exec --sandbox` (bans `jail`)
+        - explanations — use `sys audit trace --explain` (bans `policy explain`)
+        - egress — use `capcli run` or `ctx.api.call` (bans `api call`)
+        - budgets — use `capcli inspect quota://` (bans `budget` noun)
+        - imports — full catalog sync only (bans `api import --pick`)
   - Universal flags
     - Global flags
       - --json — stable machine-readable output

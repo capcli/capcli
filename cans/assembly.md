@@ -23,6 +23,7 @@
   - Declarative artifacts directory
     - Path and target definitions
       - artifacts/ — repository declarative blueprints: see overview.md#Governance-line
+      - artifacts/wireframe/ — offline golden test fixtures and edgeless canvas assets; excluded from runtime binary: see wireframe-structure.md
       - lockfile compiler target — capcli.lock compiled SSOT: see world.md#Validation-gates
       - static template immutability — uneditable at runtime: see overview.md#Governance-line
     - Schema specifications
@@ -91,8 +92,18 @@
       - command surface (crates/capcli-cli/src/)
         - main.rs — entrypoint routing subcommands and exit codes: see interface.md#CLI-surface
         - commands/ — clap subcommand handlers for ten nouns: see interface.md#CLI-surface
-        - terminal/ — rustc-style diagnostics and json emitter: see physics.md#Diagnostic-output-law
+        - terminal/ — procedural renderers for the 3 visual archetypes (Diagnostic, Tree, Receipt) over CliEnvelope<T>: see physics.md#Diagnostic-output-law
     - Persistent daemon crate
+      - crate identity — crates/capcli-daemon
+      - configuration — Cargo.toml linking axum, tower, croner, rust-embed, capcli-core, capcli-types
+      - daemon surface (crates/capcli-daemon/src/)
+        - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#Administrative-cockpit-pwa
+        - yield_queue.rs — evaluates _suspended_tasks and re-dispatches tasks on quota refill
+        - earmark_sweeper.rs — periodic daemon worker dissolving expired earmarks back to available quota
+        - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
+        - cron.rs — croner schedule evaluator daemon: see time.md#Schedule-&-maintenance
+        - webhook.rs — inbound HMAC signature verification: see action.md#Bindings
+        - assets.rs — rust-embed static bundle serving administrative cockpit: see interface.md#Administrative-cockpit-pwa
   - TypeScript runtime harness package
     - Package identity and layout
       - package root — packages/ts (published locally as @capcli/sdk)
@@ -102,19 +113,6 @@
       - param.ts — Param<T> type definitions for runtime validation
       - ctx.ts — ctx.db, ctx.api, ctx.storage, ctx.quota wrappers
       - ipc.ts — streaming JSON-RPC client over /run/capcli/kernel.sock
-
-  - Python runtime harness package
-      - crate identity — crates/capcli-daemon
-      - configuration — Cargo.toml linking axum, tower, croner, rust-embed
-      - daemon surface (crates/capcli-daemon/src/)
-        - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#Administrative-cockpit-pwa
-        - yield_queue.rs — evaluates _suspended_tasks and re-dispatches tasks on quota refill
-        - earmark_sweeper.rs — periodic daemon worker dissolving expired earmarks back to available quota
-        - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
-        - cron.rs — croner schedule evaluator daemon: see time.md#Schedule-&-maintenance
-        - webhook.rs — inbound HMAC signature verification: see action.md#Bindings
-        - assets.rs — rust-embed static bundle serving administrative cockpit: see interface.md#Administrative-cockpit-pwa
-
   - Python runtime harness package
     - Package identity and layout
       - package root — packages/py (published locally as capcli-py): see action.md#Routines
@@ -125,8 +123,7 @@
       - routine.py — @routine decorator storing manifests: see action.md#Anatomy-and-decorator
       - param.py — Param[T] generic typing for input schemas: see action.md#Anatomy-and-decorator
       - context_db.py — ctx.db query, execute, txn, and lock wrappers: see action.md#The-ctx-contract
-      - context_api.py — ctx.api call and verify egress wrappers: see action.md#The-ctx-contract
-      - context_api.py — exposes poll_until IPC bridge to kernel runtime
+      - context_api.py — ctx.api call, verify, and poll_until IPC bridge: see action.md#The-ctx-contract
       - context_quota.py — ctx.quota inspect, earmark, and release SDK wrappers
       - context_storage.py — ctx.storage put, get, and url wrappers: see action.md#The-ctx-contract
       - context_ping.py — ctx.ping notify and ask suspension handlers: see action.md#The-ctx-contract
@@ -153,9 +150,6 @@
         - manifest.rs — receives declared manifests via runner IPC: see action.md#Manifests-&-fingerprints
         - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
         - ipc_socket.rs — cross-platform IPC (UDS on POSIX/Termux, Named Pipes on Windows): see action.md#Sandbox-execution
-        - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
-        - manifest.rs — receives declared manifests via runner IPC: see action.md#Manifests-&-fingerprints
-        - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
       - Execution gates
         - shape_gate.rs — checks LOC, tokens, and param limits: see artifacts/governance.yaml#routine_shape
         - trust_gate.rs — denies draft writes in prod worktree: see trust.md#The-ladder
@@ -294,6 +288,7 @@
       - test_ping_timeout.rs — validates fail-closed inquiry timeouts: see artifacts/policy.yaml#notify
       - test_mirror.rs — tests transactional JSONL stream flushing: see effect.md#Storage-hierarchy
     - End-to-end test tier (crates/capcli-cli/tests/e2e/)
+      - test_wireframe_fixtures.rs — golden-file engine asserting CLI stdout/exit codes against all screen fixtures: see wireframe-structure.md#Rust-Integration-Test-Runner
       - test_onboarding_human.rs — validates human S0 to S10 sequence: see interface.md#Human-journey-stages
       - test_onboarding_harness.rs — validates agent H0 to H7 sequence: see interface.md#Harness-journey-stages
       - test_budget_cascade.rs — tests min() pool inheritance down call stack: see budget.md#Cascade
@@ -311,6 +306,7 @@
     - Binary composition & linkage
       - target architecture — static compilation for x86_64 and aarch64 musl: see #Host-system-dependencies
       - static linkage — links libc, bundled SQLite C engine, and axum: see world.md#SQLite-as-SSOT
+      - zero template bundling — wireframe screens excluded from binary; CLI renders output procedurally
       - runtime dependencies — zero host npm, zero Bun, zero node_modules: see overview.md#Zero-trust-agent
     - Inter-crate dependency flow
       - types package — capcli-types imported across core, cli, and daemon: see #Shared-contracts-crate
