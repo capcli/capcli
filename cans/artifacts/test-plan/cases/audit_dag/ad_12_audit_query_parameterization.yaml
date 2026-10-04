@@ -1,0 +1,64 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_12_audit_query_parameterization"
+title: "sys audit query rejects raw string concatenation and demands -p key=val bound parameters"
+domain: "audit_dag"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/physics.md#parameterization--bound-parameters-mandatory;-interpolation-denied"
+  statement: "sys audit query <sql> [-p k=v] enforces the Layer 2 AST parameterization law against the audit mirror: bound parameters are mandatory and raw value interpolation is denied structurally — unparameterized SQL never reaches the system audit surface."
+  blast_radius_if_breached: "Injection against the audit mirror: a caller concatenates hostile values into mirror queries, exfiltrating or corrupting the ledger's read view — the one surface assumed safe for forensics becomes the injection vector, defeating every upstream defense."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts a generic SQL error was printed (string-matching 'error' or .is_err()) instead of pinning exit 2 with the policy diagnostic; or never runs the bound-parameter control, so a kernel that denies ALL queries would still pass."
+  anti_slop_mitigation: "AS-03 pins exit 2 plus the policy.query diagnostic and mandates the -p control re-run; AS-02 proves the mirror is untouched; AS-05 verifies the denial event chains with effect: none."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.auditor@acme.corp"
+    agent_id: "agt_ad_12"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null # domain tables irrelevant; the system audit mirror is the target
+    tables:
+      - name: "_audit"
+        row_count: 16 # genesis + workload events
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys audit query \"SELECT event, ts FROM _audit WHERE principal = 'user:mallory'\"" # SQL assembled by raw string concatenation of a base template and the principal value — no bind parameter
+  input_params:
+    assembled_by: "raw string concatenation: base || principal (unescaped value glued into the WHERE predicate)"
+    control_command: "capcli sys audit query \"SELECT event, ts FROM _audit WHERE principal = :principal\" -p principal=user:mallory"
+    layer: "AST (Layer 2 structural scan)"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.query"
+    culprit: "raw literal 'user:mallory' interpolated into WHERE principal = ... — bound parameters mandatory; interpolation denied (Layer 2 AST structural scan, multi-statement/injection defenses)"
+    remedy: "re-run with a named bind: capcli sys audit query \"SELECT event, ts FROM _audit WHERE principal = :principal\" -p principal=user:mallory"
+  database:
+    row_count_delta: 0 # mirror untouched; _audit grows by exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none, rules_matched: [parameterization])"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.query', culprit names the interpolated literal, remedy shows the -p bound form; then run the control command with -p principal=user:mallory and assert it exits 0 — proving the denial is about parameterization, not the query itself."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _audit before and after: identical modulo exactly 1 appended denial event (hardcoded delta); no mirror row is returned, mutated, or leaked by the rejected query."
+  - rule: "AS-05"
+    verification: "The denial event chains: prev_hash == SHA-256 of the prior row, decision == 'denied', effect == 'none'; run capcli-core::audit::verify_chain() — denial logging must hold on the query surface too."
