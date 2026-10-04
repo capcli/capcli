@@ -1,0 +1,76 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_03_poll_until_aggregate_accounting"
+title: "ctx.api.poll_until over 5 wire iterations charges exactly 1 aggregate operation"
+domain: "sdk_harness"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#External-api-methods"
+  statement: "ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) is kernel-managed in-flight polling charged as exactly 1 aggregate op (action.md#External-api-methods): the sleep executes in the Rust runtime so the Python interpreter never busy-waits (action.md#Execution-guards in-flight wait); five polling iterations must debit consumed_ops by 1, not 5, and the routine's ops budget is not prematurely exhausted."
+  blast_radius_if_breached: "Per-iteration op accounting turns every poll loop into a budget furnace: a 5-iteration wait burns 5 of the max 50 ops per run (and cascades into the session_ops_ceiling: 500), prematurely exhausting frames to exit 2 budget denials on perfectly healthy routines and starving quota for real work."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent mocks the quota broker / _budget_frames counters to return the expected number (tautology), or replaces poll_until with a stub that never touches the wire, or derives the expected ops count by calling the accounting function itself."
+  anti_slop_mitigation: "AS-01 bans mocking the token-bucket/op counters (named AS-01 boundary class): the real frame accounting substrate must move; AS-06 pins consumed_ops to the immutable literal 1 with 5 real wire iterations; AS-05 verifies the audit chain and frame outcome for the single aggregate op."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_sh_03"
+    trust: "reviewed" # shipment_wait@2 runs at reviewed in sim against a wiremock provider
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 0 # frame pushed at run start
+      - name: "_api_quota"
+        row_count: 1 # logistics provider bucket: total/available healthy
+      - name: "routine_stats"
+        row_count: 1 # shipment_wait@2 proven in sim
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'result = ctx.api.poll_until(verb="logistics.shipments.get", params={"id": "SHP-9"}, condition=lambda r: r["status"] == "delivered", timeout_s=30, interval_s=5)'
+  input_params:
+    routine: "shipment_wait@2"
+    verb: "logistics.shipments.get"
+    poll_iterations: 5 # wiremock returns delivered only on the 5th response
+    timeout_s: 30
+    interval_s: 5 # ticks driven by MockClock in the Rust runtime
+    max_in_flight_poll_seconds: 30 # artifacts/governance.yaml#routine_shape
+    expected_aggregate_ops: 1
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "sdk.harness"
+    culprit: "none (nominal) — 5 poll iterations completed within timeout; kernel charged 1 aggregate op"
+    remedy: "no action; poll_until remains the mandated transient-polling primitive (raw time.sleep loops banned, action.md#Interior-rules)"
+  database:
+    row_count_delta: 4 # 1 _budget_frames row + routine.run, budget.frame_push, budget.frame_pop audit events; _api_quota updated in place
+    tables_mutated: ["_audit", "_budget_frames", "_api_quota"]
+  wire:
+    packets_transmitted: 5 # five real upstream GETs by the kernel-managed poll loop (the wiremock provider serves delivered only on iteration 5)
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run" # outcome: success; consumed ops visible via budget.frame_push/pop (effect.md#Kernel-event-payloads)
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "SELECT consumed_ops FROM _budget_frames WHERE routine = 'shipment_wait' must equal the immutable literal 1 (never 5, never a value recomputed from the poll loop counter); the literal is hardcoded in the test spec."
+  - rule: "AS-01"
+    verification: "No mockall or manual mocks on the quota broker, _budget_frames accounting, or the poll transport: the wiremock provider must serve 5 real HTTP responses, and the frame row must be the genuine substrate row written by the kernel."
+  - rule: "AS-05"
+    verification: "Verify the ledger for the run: the routine.run row's prev_hash equals the SHA-256 of the prior _audit row, result_hash matches the canonical JSON hash of the envelope; run capcli-core::audit::verify_chain() over the full ledger."
+  - rule: "AS-04"
+    verification: "Poll interval ticks (5s) and the 30s timeout window are driven by MockClock epoch ticks inside the Rust runtime — no Python-side sleep, no wall-clock reads; the interpreter busy-waiting is itself a failure (action.md#Execution-guards in-flight wait)."
