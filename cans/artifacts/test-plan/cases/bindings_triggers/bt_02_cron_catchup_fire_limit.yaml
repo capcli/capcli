@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_02_cron_catchup_fire_limit"
+title: "Daemon restart after 2h downtime executes exactly one catchup fire, not 24"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/action.md#Schedule-defenses"
+  statement: "Restart safety caps daemon-boot catchup at max 1 catchup execution (artifacts/governance.yaml#schedule max_catchup_fires: 1): a cron binding that missed 24 ticks during 2 hours of daemon downtime must execute exactly one catchup fire on restart; the remaining missed ticks are discarded, never replayed in a burst."
+  blast_radius_if_breached: "A thundering herd of 24 catchup runs on every daemon restart hammers external provider rate limits (compounding 429 storms), re-burns session fuel and rows budgets on stale events, and produces 24 duplicate mutating effects (double refunds, double inventory writes) for a single logical schedule."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent fakes the downtime by sleeping on the real wall clock (flaky), or deletes the missed-tick ledger so zero catchup fires occur and then asserts 'no burst' as success; or fires all 24 but only counts routine exits, calling the burst 'one logical catchup'."
+  anti_slop_mitigation: "AS-04 mandates MockClock epoch ticks injected via the engine API to simulate the 7200s downtime deterministically; AS-06 forces the expected catchup count to the immutable literal 1 (not 24, not derived from the schedule expression); AS-05 forces audit chain verification proving exactly one routine.run catchup event."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bt_02"
+    trust: "reviewed" # schedule binding floor reviewed (artifacts/policy.yaml#schedule); fire executes under kernel principal capcli-cron
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1 # payout@3: read-only reconciliation routine (ctx.db.query only, no egress)
+      - name: "_budget_frames"
+        row_count: 0
+      - name: "_audit"
+        row_count: 1 # the bind.create event for bind cron recon_5m cap://payout "*/5 * * * *"
+      - name: "claims"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys serve --start --json" # daemon restart after simulated downtime; catchup evaluation runs on boot
+  input_params:
+    existing_binding: 'bind cron recon_5m cap://payout "*/5 * * * *"'
+    downtime_seconds: 7200 # 2 hours, driven by MockClock
+    missed_ticks_computed: 24
+    max_catchup_fires: 1 # artifacts/governance.yaml#schedule
+    catchup_executor_principal: "capcli-cron"
+    clock: "MockClock epoch ticks injected via engine API (SystemTime::now and sleep banned)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "bind.cron"
+    culprit: "none (nominal) — exactly 1 catchup fire executed on daemon boot, honoring max_catchup_fires: 1"
+    remedy: "no action; the single catchup run is recorded in routine_stats and _audit with triggered_by the cron binding"
+  database:
+    row_count_delta: 4 # one catchup execution: 1 _budget_frames row + routine.run, budget.frame_push, budget.frame_pop audit events
+    tables_mutated: ["_audit", "_budget_frames", "routine_stats"]
+  wire:
+    packets_transmitted: 0 # payout is a read-only reconciliation routine (ctx.db.query only)
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run" # triggered_by: cron:recon_5m, outcome: success (effect.md#Kernel-event-payloads)
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Downtime and restart are driven exclusively by MockClock epoch ticks injected via the daemon engine API (advance 7200s across 24 missed ticks); any SystemTime::now(), NTP read, or tokio sleep in the test path is a linter failure."
+  - rule: "AS-06"
+    verification: "SELECT count(*) FROM _audit WHERE event = 'routine.run' AND triggered_by = 'cron:recon_5m' must equal the immutable literal 1 (never 24, never a count derived from the cron expression under test); SELECT count(*) FROM _budget_frames WHERE routine = 'payout' == 1."
+  - rule: "AS-05"
+    verification: "The single catchup routine.run row must chain: prev_hash equals the SHA-256 of the prior _audit row and result_hash matches the canonical JSON hash of the run envelope; run capcli-core::audit::verify_chain() over the full ledger and assert validity."
+  - rule: "AS-03"
+    verification: "Assert daemon start exit_code == 0 and parse the CliEnvelope; the envelope reports exactly one catchup dispatch with state_modified: true — an envelope claiming 24 dispatches must fail the test."
