@@ -1,0 +1,42 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.overview.success.populated",
+  "noun": "run",
+  "verb": "overview",
+  "target": "cap://overview@1",
+  "command": "capcli run overview",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/run/overview/run.overview.success.populated.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  overview (487 tokens)",
+      "    pending_orders:   14 (3 rush)",
+      "    pending_asks:     1 (ask_8812 awaiting user:alice)",
+      "    session_ops:      488 remaining",
+      "  system_health:  nominal"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}
