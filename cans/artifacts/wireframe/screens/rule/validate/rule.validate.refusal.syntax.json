@@ -1,0 +1,53 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "rule.validate.refusal.syntax",
+  "noun": "rule",
+  "verb": "validate",
+  "target": "schema://orders",
+  "command": "capcli rule validate",
+  "state": {
+    "exit_code": 3,
+    "domain": "compile",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "compile",
+    "culprit": "Duplicate mapping key 'status' already defined at schema.yaml:52:11.",
+    "remedy": "remove or rename the duplicate 'status' key, then re-run capcli rule validate"
+  },
+  "txt_pair": "screens/rule/validate/rule.validate.refusal.syntax.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 3,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 3",
+      "FAIL  compile.gate_1_bad_syntax",
+      "^^^^^^ duplicate_key",
+      "Duplicate mapping key 'status' already defined at schema.yaml:52:11.",
+      "state_modified: false",
+      "remedy: remove or rename the duplicate 'status' key, then re-run capcli rule validate"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "compile"
+    }
+  }
+}
