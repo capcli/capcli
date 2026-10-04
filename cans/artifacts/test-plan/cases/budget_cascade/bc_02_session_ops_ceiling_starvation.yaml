@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_02_session_ops_ceiling_starvation"
+title: "Session ops ceiling starvation: the 11th child invocation dies with exit 2 after session counters saturate"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Splitting-is-not-escaping"
+  statement: "'Session-level counters never reset through composition' — a 100-op routine split into 10x10 sub-routines still hits the session ops ceiling (governance.yaml#routine_shape.execution.session_ops_ceiling): once the session total is consumed, the next child invocation is denied with exit 2 (budget_exhaustion: deny — never silent truncation)."
+  blast_radius_if_breached: "If session counters reset across child frame pushes, any agent could subdivide a banned workload into child routines and execute unbounded ops inside one session — silently consuming shared compute and starving every other enterprise session on the host."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by resetting session counters between child pushes in the fixture (or spawning a fresh session per child), so the 11th call succeeds and the 'starvation' denial is never actually produced by the kernel."
+  anti_slop_mitigation: "AS-02 proves via direct SQL that the session consumption persisted at the cap across all ten child frame pushes and that the 11th invocation mutated nothing. AS-03 forces the typed exit 2 with the diagnostic citing session remaining 0 and ancestors. AS-06 pins the literals (500 ceiling, 450 pre-consumed, 5 ops per child, 11th call index)."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_02"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 1   # parent orchestrator frame fanout_sync@2; session already consumed 450 of 500 session ops
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://fanout_sync@2 -p children=11 -m "fan-out child sync batch" — the parent attempts 11 child routine invocations; children 1-10 each execute 5 read ops, the 11th is invoked last'
+  input_params:
+    children_attempted: 11
+    child_ops_each: 5
+    session_consumed_before: 450
+    session_ops_ceiling: 500   # NOTE: catalog §6.4 narrative cites a session ops ceiling of 50; spec governance.yaml#routine_shape.execution.session_ops_ceiling sets 500 (budget.md#Cascade-view-in-`inspect` shows session_ops_remaining 488 of 500) — spec value used, with 450 ops pre-consumed so the catalog's 'ten child routines x 5 ops each, 11th call dies' shape is preserved
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "session ops ceiling exhausted: fanout_sync@2's 11th child invocation denied at session 500/500 ops — session-level counters never reset through composition (splitting is not escaping)"
+    remedy: "shrink the fan-out or continue in a new session; wrapping the workload in more child frames cannot reset the session ops ceiling"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) on every business table before/after is identical (the children are read-only, the 11th committed nothing); the session ops counter reads exactly 500/500 after the run — proving counters accumulated across all ten successful child frame pushes and were never reset."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.budget', the denial cites the session level (budget_denial_cites_level), the measured 500/500 remaining, and the ancestor context line 'session remaining: 0 ops' (budget_denial_cites_ancestors)."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: ceiling 500, pre-consumed 450, 5 ops per child, denial at the 11th invocation — the expected denied index is a literal, never derived from counting the engine's own frame rows."
