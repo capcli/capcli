@@ -1,0 +1,10 @@
+[dev:tier_1]  ✓  acquired
+
+  target:         orders:ORD-10
+  ttl:            300s
+  lease_id:       claim_9d21
+  holder:         agt_7f3k
+  reason:         batch fulfillment
+
+  state_modified: true
+  audit_op:       op_44c1

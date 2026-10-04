@@ -1,0 +1,11 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  validation.lock.reason_required
+        target: orders:ORD-10
+        ttl:    300s
+        reason: (absent)
+
+        --reason is required for locking; unjustified leases are refused.
+
+  state_modified: false
+  remedy: re-run with --reason "why this lease is needed"
