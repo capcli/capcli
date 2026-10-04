@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "se_10_scoped_view_missing_principal_bind"
+title: "Scoped view whose SQL omits the :principal bind variable is refused by the Gate 2 compile check"
+domain: "schema_evolution"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#principal-binds"
+  statement: "A view declaring scoped: principal requires a :principal bind variable in its SQL; Gate 2 fails if a scoped view omits :principal (and at call time the authorizer denies scoped execution without --as)."
+  blast_radius_if_breached: "A 'scoped' view without a principal bind leaks every principal's rows to every caller; per-customer data isolation collapses and the --as enforcement becomes decorative."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent allows scoped view creation without the compile check, then only verifies the runtime --as denial - the missing-bind compile gate (exit 3) is never exercised and malformed views ship inside compiled schema."
+  anti_slop_mitigation: "AS-03 requires the typed exit code 3 with a diagnostic naming the missing bind; AS-06 parses the view SQL and asserts the literal empty bind-variable list; AS-02 proves the view was never created in the database."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.view-author@acme.corp"
+    agent_id: "agt_se_10"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      views:
+        my_orders:
+          description: "Orders scoped to execution principal passed via --as"
+          scoped: principal
+          exposes: [orders]
+          query: |
+            SELECT
+              o.id,
+              o.ref,
+              o.total_cents,
+              o.status
+            FROM orders o
+            WHERE o.customer_id = 1;
+      # defect: WHERE binds literal 1 instead of :principal
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "Gate 2 compile of the fixture schema.yaml (view my_orders declares scoped: principal but the query omits the :principal bind)"
+  input_params:
+    gate: "Gate 2: Semantics (principal binds)"
+    declared_scope: "principal"
+    bind_variables_in_query: 0
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; principal-bind check is part of the Gate 2 compile subsystem
+    culprit: "view my_orders declares scoped: principal but its SQL omits the :principal bind variable (WHERE o.customer_id = 1 binds a literal); Gate 2 compile check fails"
+    remedy: "Rewrite the view query with WHERE o.customer_id = :principal and re-compile; at call time, remember scoped execution also requires --as <principal>."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny (effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) and parse the diagnostic envelope: domain, culprit naming the missing :principal bind, remedy present; a runtime-only --as denial (exit 2) without the compile refusal fails the test."
+  - rule: "AS-06"
+    verification: "Parse the view's SQL with the real parser and assert the bind-variable list is the literal empty set (zero :principal tokens); the expected defect (literal 1 in WHERE) is hardcoded, not derived from compiler output."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM sqlite_master WHERE name = 'my_orders' == 0 (the malformed view was never created); SELECT count(*) FROM orders == 500 before and after."
