@@ -1,0 +1,13 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  validation.gate_2_semantics
+        --> schema.yaml:60:12
+
+        idx:
+          - [[prio, status]]
+              ^^^^ index_target_missing
+
+        Indexed column 'prio' does not exist in parent table 'orders'.
+
+  state_modified: false
+  remedy: fix the index target to a declared column, then re-run capcli rule validate

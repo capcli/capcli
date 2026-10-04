@@ -1,0 +1,14 @@
+[dev:tier_1]  ✓  applied (1 statement)
+
+  intent:       "add priority flag for rush shipping"
+  trust:        reviewed
+  snapshot:     snap_schema_013 (pre-DDL rollback point)
+
+  statements applied:
+    1.  ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0
+
+  transaction:  tx_5c81a2 committed (atomic)
+  lockfile:     capcli.lock re-locked (sha256:9e2b71c4)
+  audit:        op_13f9 (rule.apply) committed to _audit
+
+  state_modified: true

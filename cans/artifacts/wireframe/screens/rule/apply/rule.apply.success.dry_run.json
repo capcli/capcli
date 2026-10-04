@@ -1,0 +1,42 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "rule.apply.success.dry_run",
+  "noun": "rule",
+  "verb": "apply",
+  "target": "schema://orders",
+  "command": "capcli rule apply schema --dry-run",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "dry_run"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/rule/apply/rule.apply.success.dry_run.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✓  dry-run (schema apply)",
+      "statement:      ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
+      "gate_5:         pass (test migration executed and rolled back on snapshot)",
+      "state_modified: false",
+      "note:           no execution occurred; preview only"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}
