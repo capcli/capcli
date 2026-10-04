@@ -1,0 +1,19 @@
+[dev:tier_1]  ✓  populated
+
+  routine:      dispatch_order@4
+  window:       214 runs (last 30d)
+
+  runs:          214
+  success_rate:  99.1%
+  p50_duration:  340ms
+  p95_duration:  890ms
+  last_run_at:   2m ago (op_9f2e, ses_a992f)
+  drift_events:  0
+
+  leaves (--deep):
+    db.query    orders                     p50 12ms  p95 41ms  fuel 40
+    api.call    logistics.shipments.create p50 340ms p95 812ms fuel 610
+    db.execute  orders                     p50 18ms  p95 52ms  fuel 46
+
+  state_modified: false
+  note:           read-only profiling from routine_stats and the audit mirror
