@@ -1,0 +1,68 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_13_unprivileged_userns_docker_check"
+title: "Docker host without unprivileged user namespaces refused at boot with clean diagnostics"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#tier-1-(hardened)"
+  statement: "Docker hosts qualify as tier 1 (hardened) only with unprivileged user namespaces enabled: booting inside a container that lacks userns must produce a clean boot diagnostic and refusal (exit 3) — the namespace isolation checks are never silently bypassed for containerized hosts."
+  blast_radius_if_breached: "The kernel believes it is hardened while bwrap cannot actually create unprivileged user namespaces inside the container: every sandboxed routine degrades to an unconfined or brokered path on production container hosts — container escape becomes trivial."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the boot check on a userns-enabled development container (or a bare-metal CI runner) where the probe passes by accident, or detects running-in-Docker via an environment variable heuristic instead of probing actual namespace capability."
+  anti_slop_mitigation: "AS-07 forces the dual platform configuration (userns-enabled Docker must pass boot; userns-disabled must refuse); AS-01 requires the real namespace capability probe — no env-var heuristics, no mocked probe; AS-03 requires exit_code == 3 plus a parsed diagnostic; AS-02 proves zero ledger mutation."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "prod.oncall@example.com"
+    agent_id: "agt_kp_13"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "claims"
+        row_count: 2
+      - name: "_audit"
+        row_count: 6
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli sys doctor --boot-check (executed inside a Docker container with unprivileged user namespaces disabled — max_user_namespaces = 0, userns-remap off)' # NOTE: not located in cans/ specs
+  input_params:
+    host_context: "docker"
+    userns_enabled: false
+    expected_verdict: "refuse boot"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.boot"
+    culprit: "the container runtime lacks unprivileged user namespaces — a Docker host cannot qualify as tier 1 (hardened) without userns"
+    remedy: "enable userns-remap on the Docker daemon (or raise the unprivileged userns limit) and re-run capcli sys doctor --boot-check, or run the kernel on a Linux host providing unprivileged user namespaces"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "kernel.boot.deny (diagnostic envelope only — boot refused before ledger advance)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "The userns probe must actually test namespace creation capability in the running container (a real unprivileged user namespace creation attempt via the syscall path) — environment-variable Docker detection or a mocked probe result is rejected."
+  - rule: "AS-07"
+    verification: "Dual configuration: the identical boot check on a userns-enabled Docker host must pass, while the userns-disabled configuration must refuse with exit 3 — the verdict must flip with the actual platform capability, never with the CI host default."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 and parse the CliEnvelope<T>: diagnostic.domain == kernel.boot, culprit names the missing unprivileged userns capability, remedy references the Docker daemon configuration, state_modified == false."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM claims (2 == 2) and SELECT count(*) FROM _audit (6 == 6) on envs/prod/workspace.db before and after the refused boot — strict equality proves the prod world is untouched."

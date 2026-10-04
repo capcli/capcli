@@ -1,0 +1,81 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_14_dynamic_seccomp_profile_switch"
+title: "Distinct dynamic seccomp profiles applied per language runtime engine"
+domain: "kernel_physics"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#syscall-profiles"
+  statement: "The jail runner compiles a distinct dynamic seccomp-bpf filter per engine — profile_python (clone, futex, basic POSIX signals), profile_bun_node (epoll_create1, epoll_ctl, eventfd2, io_uring_setup), profile_binary (clone3, futex, rseq, rt_sigreturn) — while the network jail traps raw socket connect (syscall 42) across all engines; no universal permissive profile may ever be installed."
+  blast_radius_if_breached: "A single permissive profile grants every runtime every syscall: a Python guest loads io_uring, a binary guest calls epoll_ctl to open raw sockets or reach sibling processes — engine-level containment collapses and cross-runtime escapes become routine."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent applies one shared permissive filter to all three runtimes (the test passes because every syscall is allowed) or asserts that the profile names differ while never compiling or applying the actual BPF programs."
+  anti_slop_mitigation: "AS-06 pins the exact per-profile syscall allowlists as hardcoded literals and requires pairwise distinctness; AS-01 bans mocked seccomp/jail types — filters must compile and apply in real forked children; AS-05 verifies the three routine.run audit events and chain links; AS-03 requires exit_code == 0 with state_modified == true."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "runtime.qa@example.com"
+    agent_id: "agt_kp_14"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 1
+      engine: sqlite
+      db: workspace
+      tables:
+        exec_runs:
+          cols:
+            id: pk
+            engine: 'text=python'
+            profile: 'text=profile_python'
+          idx: [engine]
+    tables:
+      - name: "exec_runs"
+        row_count: 0
+      - name: "_audit"
+        row_count: 1
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'capcli_core::routine::jail::JailRunner::apply_profile(runtime) for Runtime::Python, Runtime::BunNode, and Runtime::Binary — each spawns an isolated child that executes a trivial audited INSERT INTO exec_runs under its resolved filter; each child additionally probes one out-of-profile syscall and a raw socket connect (syscall 42)'
+  input_params:
+    engines: ["python", "bun_node", "binary"]
+    profiles_expected:
+      python: ["clone", "futex", "basic POSIX signals"]
+      bun_node: ["epoll_create1", "epoll_ctl", "eventfd2", "io_uring_setup"]
+      binary: ["clone3", "futex", "rseq", "rt_sigreturn"]
+    audited_write: "INSERT INTO exec_runs (engine, profile) VALUES (:e, :p)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "kernel.jail"
+    culprit: "seccomp profile resolution per engine — profile_python vs profile_bun_node vs profile_binary applied to the three child runs"
+    remedy: "none required on the success path — dynamic per-engine profiles are selected automatically by the jail runner; verification compares each applied allowlist against the literal spec sets"
+  database:
+    row_count_delta: 3
+    tables_mutated: ["exec_runs"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: true
+  audit:
+    event_emitted: "routine.run"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "The three expected allowlists are immutable literals hardcoded from the spec (python: clone/futex/basic POSIX signals; bun_node: epoll_create1/epoll_ctl/eventfd2/io_uring_setup; binary: clone3/futex/rseq/rt_sigreturn); the applied filters must match them exactly and be pairwise distinct — a shared or permissive profile fails the literal comparison."
+  - rule: "AS-01"
+    verification: "No mock on routine/jail.rs or the seccomp layer: each profile must compile to a real seccomp-bpf program and be applied in a real forked child; profile-name-only assertions without filter application are rejected."
+  - rule: "AS-05"
+    verification: "SELECT count(*) FROM exec_runs returns 3 (one audited row per engine); _audit advances 1 -> 4 with three routine.run rows whose prev_hash links form a valid SHA-256 chain and whose result_hash values match the canonical JSON of each child outcome."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 and parse CliEnvelope<T>: state_modified == true, three receipts present, audit_op set; additionally each child's out-of-profile syscall probe must be trapped (including raw connect, syscall 42, trapped across all engines) while the profile's own allowed syscalls execute successfully."
