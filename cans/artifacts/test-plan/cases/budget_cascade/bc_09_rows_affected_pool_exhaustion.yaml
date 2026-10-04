@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_09_rows_affected_pool_exhaustion"
+title: "150-row batch write aborts the whole transaction at the 100-row reviewed trust pool ceiling"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Rows-affected"
+  statement: "'Rows affected — Unit: rows written or affected; Scope: one pool per trust level per session; Cascade: draft/reviewed/pinned each carry their own pool' (policy.yaml trust.reviewed.max_rows_affected: 100; rows_scope: trust_session): a batch write attempting 150 rows under the reviewed trust pool is aborted with exit 2 — 'no partial execution past budget', so neither the first 100 rows nor the remaining 50 are committed."
+  blast_radius_if_breached: "Committing the first 100 rows and discarding the last 50 (or vice versa) would leave half-migrated business state — orders marked backfilled in one warehouse but not its twin, a silent integrity split discovered only by downstream reconciliation jobs."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by asserting the denial but only checking the row count of a *different* table, or by trusting the routine's own reported rows_affected instead of physically re-querying the mutated table — a partial commit of 100 rows would pass unnoticed."
+  anti_slop_mitigation: "AS-02 mandates the direct before/after SELECT count(*) plus a field-level check (no row carries the batch's new status) — exactly 0 of 150 rows may be committed. AS-03 forces the typed exit 2 with measured 150 vs ceiling 100 cited. AS-06 pins the literals 150/100/0."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_09"
+    trust: "reviewed"   # the 100-row pool belongs to the reviewed trust level
+  initial_state:
+    schema_yaml: |
+      tables:
+        - name: orders
+          columns:
+            id: "int~"
+            status: "text"
+            warehouse: "text"
+    tables:
+      - name: "orders"
+        row_count: 500   # 500 existing rows; the batch targets 150 rows in warehouse 'west'
+      - name: "_budget_frames"
+        row_count: 1
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://bulk_status_update@2 -p warehouse=west -p batch=150 -m "backfill west warehouse status" (routine wraps a 150-row UPDATE inside `with ctx.db.txn():`)'
+  input_params:
+    rows_attempted: 150
+    rows_pool_ceiling: 100   # trust.reviewed.max_rows_affected
+    trust_level: "reviewed"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "rows-affected pool exhausted: bulk_status_update@2 attempted a 150-row write under the 100-row reviewed trust pool (rows_scope: trust_session; policy.yaml trust.reviewed.max_rows_affected: 100); the whole transaction is aborted"
+    remedy: "chunk the write into <= 100-row transactions within the trust pool, or operate at a higher trust rung — the first 100 rows are NOT committed and the remaining 50 are NOT silently discarded"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted (dimension: rows_affected)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders returns 500 before and after (strict equality) AND zero rows carry the batch's new status value — proving exactly 0 of the 150 attempted rows were committed, not 100 committed plus 50 discarded."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.budget', the denial cites the measured value (150 attempted) against the ceiling (100) per cite_measured_value, and the transaction-abort remedy is present."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: attempted 150, ceiling 100, committed 0 — the expected commit count is an immutable literal verified by direct SQL, never taken from the engine's reported rows_affected."
