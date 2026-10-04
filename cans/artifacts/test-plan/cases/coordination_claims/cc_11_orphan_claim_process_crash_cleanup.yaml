@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_11_orphan_claim_process_crash_cleanup"
+title: "Daemon cleanup worker dissolves the lease of a crashed holder after TTL, no manual DB surgery"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/agent.md#claims--distributed-lease-locks-with-TTL-via-db-lock-for-multi-step-ops"
+  statement: "Claims are distributed lease locks with TTL via db lock for multi-step ops: when the holder process dies abruptly (SIGKILL) mid-lease, the daemon cleanup worker dissolves the lease once the TTL elapses — the WAL-serialized claims state recovers with no manual database intervention and the resource is immediately re-acquirable."
+  blast_radius_if_breached: "Crashed holders leave permanent zombie locks: every worker-death pins a resource forever, on-call must hand-DELETE from the claims table (the surface agents must never touch), the WAL is left in busy uncommitted states, and multi-step pipelines stall cascade-wide."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent 'simulates' the crash by having the holder call db unlock before exiting (graceful release, not a crash), or manually deletes the claims row in test setup and credits the daemon cleanup — both fake the orphan recovery entirely."
+  anti_slop_mitigation: "The holder must be hard-killed (SIGKILL) with the lease still held; AS-04 steps the kill point and TTL expiry deterministically via MockClock; AS-05 verifies the cleanup chains; AS-06 proves re-acquisition succeeds with zero manual DB writes."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.maintainer@acme.corp"
+    agent_id: "agt_cc11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 exists
+      - name: "claims"
+        row_count: 1 # orders:ORD-10 held by agt_cc11a (session ses_cc11a, ttl 60s acquired at t0); holder process to be SIGKILLed before unlock
+      - name: "_audit"
+        row_count: 5 # genesis + holder acquisition event
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "SIGKILL the holder process agt_cc11a while it still holds the lease (no db unlock, uncommitted WAL frames left behind), advance MockClock past TTL expiry (t0+61s), then run the daemon claims cleanup worker tick"
+  input_params:
+    holder: "agt_cc11a (killed at t0+5s, lease ttl 60s from t0)"
+    kill_signal: "SIGKILL (abrupt — no graceful unlock path)"
+    cleanup_tick: "t0+61s on MockClock"
+    manual_db_intervention: false # banned from the test path
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — orphaned claims row dissolved by the daemon cleanup worker; WAL not left busy; resource orders:ORD-10 free again"
+    remedy: "n/a — success; crash recovery verified by the assertions below"
+  database:
+    row_count_delta: -1 # claims 1 -> 0; _audit gains the chained cleanup event
+    tables_mutated: ["claims", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "claims cleanup event — daemon maintenance dissolves the orphaned lease (zero ghost actions: the transition advances the hash chain)"
+    # NOTE: not located in cans/ specs — daemon orphan-cleanup event name is absent from the effect.md kernel payload list; the TTL-bounded lease duty comes from agent.md#claims
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-04"
+    verification: "Deterministic crash timeline: holder killed at t0+5s (SIGKILL, lease still held), cleanup tick fired at t0+61s via MockClock epoch ticks injected through the engine API — no sleeps, no wall-clock races, and no graceful unlock in the kill path."
+  - rule: "AS-05"
+    verification: "The cleanup chains: _audit grows by exactly 1 with prev_hash == SHA-256 of the prior row; run capcli-core::audit::verify_chain(); the SQLite WAL is not left in a busy uncommitted state (next writer commits cleanly)."
+  - rule: "AS-06"
+    verification: "Immutable literals: SELECT count(*) FROM claims == 0 after the cleanup; then re-acquire via capcli db lock orders:ORD-10 --ttl 30 --reason \"recovery re-acquire\" and assert exit 0 — recovery completed with zero manual database intervention (no test-side DELETE on claims)."
