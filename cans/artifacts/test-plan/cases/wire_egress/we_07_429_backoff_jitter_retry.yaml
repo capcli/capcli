@@ -1,0 +1,68 @@
+$schema: "test-plan/case/v1"
+case_id: "we_07_429_backoff_jitter_retry"
+title: "Kernel proxy retries HTTP 429 with exponential backoff and full jitter before surfacing the provider denial"
+domain: "wire_egress"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Remote-429-handling"
+  statement: "'Remote 429 handling — automatic exponential backoff with jitter in kernel proxy before reporting error' (policy.yaml#api.retry.idempotent: {max: 3, backoff: exponential}): the kernel retries an idempotent verb on 429 with exponentially growing, jittered delays, and persistent exhaustion surfaces the upstream provider limits cleanly to the caller (effect.md domain api.upstream)."
+  blast_radius_if_breached: "Instant tight-loop retries on a 429 would amplify load on an already-throttled provider, escalate rate-limit penalties to enterprise-key suspension, and burn session fuel/wire budget on doomed dispatches."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by asserting the surfaced error without measuring timing — instant tight-loop retries (or a single sleep-then-fail) pass the assertion while violating the exponential-backoff-with-jitter contract."
+  anti_slop_mitigation: "AS-04 forces the deterministic MockClock: inter-attempt tick deltas must match the hardcoded exponential schedule with bounded full jitter — real sleeps and wall-clock reads are banned. AS-03 requires the typed exit code plus parsed diagnostic citing remaining and reset_at. AS-06 pins the literal retry count (1 initial + 3 retries = 4 dispatches)."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_07"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'threads': 30 of 50 tokens available locally; provider window itself exhausted (429 on every attempt)
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'ctx.api.call("threads.posts", params={"text": "status digest"}, intent="ops status digest") against a wiremock stub returning HTTP 429 with Retry-After: 60 on every attempt'
+  input_params:
+    verb: "threads.posts"
+    http_status: 429
+    idempotent: true
+    max_retries: 3
+    backoff: "exponential"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "api.upstream"
+    culprit: "upstream provider threads returned HTTP 429 persistently across the initial dispatch plus 3 exponential-backoff retries (api.retry.idempotent.max: 3); provider quota window exhausted — limits surfaced cleanly, not crashed"
+    remedy: "honor the provider reset window (Retry-After: 60 / X-RateLimit-Reset) before re-dispatch; the denial cites remaining + reset_at so the caller can schedule instead of hammering"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 4   # 1 initial dispatch + 3 retries, each a real 429 response
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (decision: denied, effect: none; retry chain recorded with quota_before/quota_after)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) on _api_quota and every business table before/after is identical (strict equality) — the surfaced denial committed nothing; the local bucket row is unchanged by the failed exchange."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'api.upstream', the culprit names the 429 and the 3-retry cap, and the denial cites remaining + reset_at (policy.yaml#api.in_flight_polling.audit.denial_cites_remaining)."
+  - rule: "AS-04"
+    verification: "Deterministic MockClock, no real sleeps: the tick deltas between the 4 dispatch attempts follow the exponential base schedule 1s, 2s, 4s with full jitter bounded to [0, base) — assert each measured delta against those literal bounds; any tokio::time::sleep / SystemTime::now usage fails the linter."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: exactly 4 transmission attempts (1 + 3), never 2, never 5; each attempt observed as a real 429 response on the wiremock server counter — expected values are literals, not derived from the retry loop's own counter."
