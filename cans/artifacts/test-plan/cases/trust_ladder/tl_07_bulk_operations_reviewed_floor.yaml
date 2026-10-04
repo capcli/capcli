@@ -1,0 +1,73 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_07_bulk_operations_reviewed_floor"
+title: "Draft-trust routine attempting a 25-row bulk update is rejected at the policy gate even in dev (bulk operations require reviewed)"
+domain: "trust_ladder"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/trust.md#bulk-operations-—-unlocks-mass-updates:-see-artifacts/policy.yaml#query.bulk"
+  statement: "Bulk operations (mass updates) unlock only at the reviewed rung: query.bulk.require_trust = reviewed is an absolute trust floor that no environment overlay relaxes — the dev trust_overlay loosens draft row ceilings and waives bulk pre-count, but never grants bulk-operation rights to draft callers. A draft routine attempting a bulk update of 25 rows is therefore rejected at the policy gate before any row is touched, in dev exactly as in prod."
+  blast_radius_if_breached: "Unproven draft code executes mass updates over arbitrary row counts: a single buggy backfill rewrites an entire warehouse-status table with no sim proof and no reviewed sign-off — silent data corruption at scale, and in dev the slop would silently graduate to prod on the next env merge."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the bulk attempt only in prod (where several gates would deny anyway) and calls it a pass, or pre-elevates the routine to reviewed in the fixture, or asserts exit 2 without verifying all 25 candidate rows kept their original status (catalog banned slop: allowing draft routines to execute bulk updates in development environments)."
+  anti_slop_mitigation: "AS-02 forces a direct pre/post check that every one of the 25 inventory rows is unchanged (count AND status values); AS-03 forces the typed exit 2 with the policy.trust domain and the bulk-classification citation in the dev environment, proving the env overlay did not relax the reviewed floor."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_tl_07"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      tables:
+        inventory:
+          description: "warehouse stock positions awaiting status backfill"
+          columns:
+            id: pk
+            sku: text!
+            status: text!
+          idx: [[status]]
+    tables:
+      - name: "inventory"
+        row_count: 25
+      - name: "routines"
+        row_count: 1
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://inventory_backfill@2 -p batch_size=25 -m \"bulk backfill of warehouse status column\""
+  input_params:
+    batch_size: 25
+    routine_declared_rows: 25
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "draft routine inventory_backfill@2 attempting a bulk update classified at 25 rows; bulk operations require reviewed trust (query.bulk.require_trust) and drafts cannot hold it — measured: bulk update of 25 rows from trust rung draft"
+    remedy: "prove in sim ('capcli routine prove inventory_backfill --env sim') and ship to reviewed trust before bulk backfills, or chunk the update into single-row draft writes within the draft row ceiling"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (decision: denied, effect: none; rule query.bulk.require_trust)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Before and after the command on envs/dev/workspace.db: SELECT count(*) FROM inventory returns 25 both times AND SELECT count(*) FROM inventory WHERE status != 'pending_backfill' returns 0 both times — all 25 rows retain their seeded status, proving the gate fired before execution, not mid-transaction."
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit cites the bulk classification and the reviewed requirement, diagnostic.remedy names the sim-prove path; stdout prefix '[dev:tier_1]' proves the denial fired in the dev environment, where row ceilings are loosened but query.bulk.require_trust is not."
