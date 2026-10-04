@@ -1,0 +1,59 @@
+$schema: "test-plan/case/v1"
+case_id: "se_01_yaml_syntax_gate1_refusal"
+title: "Malformed schema.yaml (TAB indentation) is refused by Gate 1 with a structured diagnostic, exit 3"
+domain: "schema_evolution"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Gate-1:-Syntax"
+  statement: "Gate 1 runs at parse-time on file load: YAML must be valid syntax without duplicate keys; a schema.yaml containing TAB characters or broken indentation halts with a structured refusal (exit 3), never a parser panic."
+  blast_radius_if_breached: "A silently-tolerated malformed schema compiles undefined shorthand expansions into live DDL; every environment built from the template inherits structurally ambiguous schema and migrations become unprovable."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent lets the underlying YAML parser panic (unwind into a crash or exit 4/5) instead of asserting the kernel's structured Gate 1 refusal envelope - the test then passes on a crash rather than a typed denial."
+  anti_slop_mitigation: "AS-03 requires the typed exit code 3 plus a parsed diagnostic block with span information (no panic signature on stderr); AS-02 proves the live workspace.db is untouched by the failed compile; AS-06 hardcodes the offending line/column literal."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.schema-author@acme.corp"
+    agent_id: "agt_se_01"
+    trust: "draft"
+  initial_state:
+    schema_yaml: "version: 12\nengine: sqlite\ndb: workspace.db\ntables:\n\torders:\n  columns:\n      id: pk\n   ref: text!\n"
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "Gate 1 parse-time load of the fixture schema.yaml (TAB character inside the tables: block plus inconsistent 3-space indentation)"
+  input_params:
+    gate: "Gate 1: Syntax"
+    fixture_defects:
+      - "TAB character used for indentation under tables:"
+      - "column 'ref' dedented to 3 spaces under a 4-space parent"
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Gate 1 is the kernel's schema compile subsystem
+    culprit: "schema.yaml line 5: TAB character in indentation breaks YAML block mapping; line 7: inconsistent 3-space indent for column 'ref' (Gate 1: valid syntax without duplicate keys)"
+    remedy: "Replace TABs with 2-space indentation, fix the column block indent, and validate with capcli rule validate before re-submitting the schema."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny (effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) and parse the structured diagnostic envelope: domain, culprit citing the offending line, remedy present; stderr must contain no 'panicked at' backtrace - a parser panic fails the test."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 500 before and after the failed compile (the live envs/dev/workspace.db was never touched by a Gate 1 refusal)."
+  - rule: "AS-06"
+    verification: "Expected diagnostic span hardcoded as literal (line 5 TAB, line 7 indent) - not derived from the parser's own error output; assert both the typed code and the cited line numbers."
