@@ -133,7 +133,7 @@
     - Output caps
       - Routine results
         - max_result_tokens 500 — summaries crossing to the model truncate
-        - truncation structure — emits valid JSON envelope with truncated: true and next_cursor; inline raw string corruption banned
+        - pagination envelope — outputs return { items, pagination: { has_more, next_cursor, batch_size }, truncated: bool }; raw dumps > 500 tokens truncated
         - serve response max_result_tokens 500 — inherited routine cap
       - Ping surfaces
         - notify message_max_tokens 300 — notifications are summaries, not essays

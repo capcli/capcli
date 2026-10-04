@@ -12,8 +12,8 @@
         - trust bounds — all rungs permitted (draft, reviewed, pinned): see trust.md#The-ladder
       - tier 2 (degraded) — macOS (Darwin), Android (Termux), Windows native
         - sandbox — out-of-jail process mediated via IPC broker and C authorizer: see action.md#Sandbox-execution
-        - network jail — process-level egress block via unshared proxy env and ctx mediation
-        - diagnostic alert — boot emits [WARN] host.degraded_isolation: see interface.md#CLI-surface
+        - network jail — NONE; syscall 42 trapping is unavailable; raw sockets are unconfined at OS level
+        - diagnostic alert — boot emits [WARN] host.degraded_isolation (network unconfined; cooperative SDK egress only)
         - trust bounds — draft and reviewed in dev/sim only; pinned execution denied: see trust.md#Ladder-laws
     - parity principle — local state mutations and external API egress share equal gate severity
     - local engine — C authorizer and AST parse intercept SQLite commands at prepare time
@@ -46,6 +46,7 @@
         - structure — unparseable SQL and schema bypass sequences denied
         - update/delete — require_where and require_limit mandatory up to 1000
         - row bounds — select max 10000, insert max 500, update/delete max 100
+        - pagination bounds — OFFSET > 50 denied at prepare-time (exit 2); deep pagination mandates indexed keyset cursors
         - deny patterns
           - boolean injections — UPDATE * SET * WHERE * OR 1=1 denied
           - unconditional deletions — DELETE FROM * WHERE NOT EXISTS * denied
@@ -77,6 +78,7 @@
       - template syntax error — routine template failing py_compile validation aborts intake (exit 3)
       - missing configuration — policy.yaml or governance.yaml absent
       - lockfile mismatch — compiled capcli.lock SHA256 mismatch aborts boot in prod and sim
+      - migration lock SLA breach — schema rebuild holding SQLite write lock > 500ms aborts execution (exit 2)
       - schema integrity — system_schema hash mismatch aborts boot
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
@@ -146,7 +148,7 @@
       - human threshold — writes exceeding row caps require confirmation
   - Search ceiling
     - Execution split — kernel filters deterministically; harness ranks semantically
-    - Stage cascade — exact, prefix, fuzzy, and embedding stages: see action.md#Search-surface
+    - Stage cascade — exact, prefix, FTS5 full-text, and Levenshtein distance: see action.md#Search-surface
     - Saturation boundary — registry ceilings enforce hard stop: see artifacts/governance.yaml#registry
   - Harness boundaries
     - Skills (SKILL.md)

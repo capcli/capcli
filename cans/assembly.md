@@ -51,6 +51,9 @@
         - audit/audit.YYYY-MM-DD.jsonl — daily audit mirror holding hashed rows
         - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
         - audit/witness.log — remote KMS witness attestation logs: see recovery.md#Hash-chains
+      - migrations/ — compiled migration bundles: see world.md#Schema-evolution
+        - migrations/NNNN_<name>/plan.json — compiled expand/contract DDL phases
+        - migrations/NNNN_<name>/backfill.py — sandboxed chunked data backfill routine
       - routines/ — agent-authored procedural guest scripts (.ts, .js, .py): see action.md#Routines
         - routines/overview.ts — dense system situational health routine
         - routines/order_refund.ts — sandboxed multi-step refund script
@@ -133,6 +136,7 @@
       - Subsystem modules
         - connection.rs — rusqlite connection pool in WAL mode: see world.md#SQLite-as-SSOT
         - authorizer.rs — sqlite3_set_authorizer C callback: see physics.md#Layer-1:-sqlite3_set_authorizer
+        - migrate.rs — 12-step table rebuild engine and 500ms lock watchdog: see world.md#Schema-evolution
         - bytecode.rs — EXPLAIN opcode parser checking OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
         - snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
         - claims.rs — distributed lease locks via _claims: see agent.md#Coordination
@@ -169,6 +173,10 @@
     - Domain 4: External API gateway (api/)
       - Subsystem modules
         - catalog.rs — manages OpenAPI YAML specs in apis/: see action.md#Catalog-synchronization
+        - auth_schemes.rs — executes SigV4 canonical hashing, OAuth2 token rotations, and mTLS client cert binding
+        - projector.rs — streams JSONPath wire filtering to discard oversized payloads before sandbox intake
+        - cassette.rs — VCR HTTP cassette recorder and deterministic replay engine for sim mode
+        - outbox.rs — stages mutating API calls alongside DB transactions to guarantee dual-write consistency
         - quota.rs — dual-window token bucket and rolling window accounting in _api_quota: see budget.md#Quotas
         - earmark.rs — atomic reservation transactions and earmark balance ledger: see budget.md#Cascade
         - header_parser.rs — extracts RFC headers and parses nested JSON usage payloads: see artifacts/policy.yaml#api
@@ -183,7 +191,7 @@
     - Domain 5: Event & schedule bindings (bind/)
       - Subsystem modules
         - cron.rs — evaluates cron patterns via croner crate: see time.md#Schedule-&-maintenance
-        - webhook.rs — verifies provider HMAC signatures: see action.md#Bindings
+        - webhook.rs — vendor signature drivers (Stripe, GitHub, Slack, Shopify, Twilio, RFC): see action.md#Bindings
         - endpoint.rs — routes pinned HTTP calls via axum: see action.md#Serve-lifecycle-split
         - keys.rs — hashes and validates partner API keys: see artifacts/governance.yaml#serve
       - Execution gates
@@ -205,7 +213,7 @@
       - Subsystem modules
         - loader.rs — deserializes YAML configs with serde_yml: see world.md#Validation-gates
         - petgraph_check.rs — checks relational cycles and targets: see world.md#Gate-2:-Semantics
-        - template_bundle.rs — unpacks and validates world template bundles: see world.md#World-templates
+        - template_bundle.rs — validates manifest inputs, enforces governance exclusion, and unpacks bundles: see world.md#World-templates
         - shorthand.rs — expands schema shorthands into SQLite DDL: see world.md#Shorthand-expansion
         - lockfile.rs — verifies compiled root sha256 checksum: see world.md#Validation-gates
       - Execution gates

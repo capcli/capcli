@@ -16,6 +16,8 @@
         - concurrency
           - journal mode — WAL mode enabled
           - readers — concurrent non-blocking reads
+          - reader bounds — persistent reader locks banned; daemon WebSocket tails use short-lived connection snapshots to prevent WAL checkpoint starvation
+          - checkpointing — kernel runs PRAGMA wal_checkpoint(PASSIVE) after writes; maintenance ticks run TRUNCATE to bound WAL size < 100MB
           - writers — serialized atomic transactions via busy-timeout queue
         - access perimeter
           - direct sockets — agent connection denied
@@ -87,7 +89,7 @@
         - hash verification — mandatory at boot: see artifacts/governance.yaml#schema.system
         - mismatch behavior — refuse boot: see artifacts/policy.yaml#fail_closed
       - managed surfaces — 13 kernel tables defined in artifacts/system-schema.yaml
-        - registry roster — _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _capability_embeddings, routine_stats, _suspended_tasks, _budget_earmarks
+        - registry roster — _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _outbox_events, routine_stats, _suspended_tasks, _budget_earmarks
     - Shorthand expansion
       - column shorthands
         - primary key
@@ -147,31 +149,21 @@
         - audit injection — created_by and modified_by populated by kernel on prov tables
         - system protection — sys: true denies agent writes
   - Schema evolution
-    - Column addition lifecycle
-      - step 1: edit — agent modifies schema.yaml and bumps version
-      - step 2: dry-run
-        - command — rule apply --type schema --dry-run --env dev
-        - preview — prints exact physical SQL DDL
-        - snapshot test — verifies snapshot creation without mutation
-      - step 3: trust gate
-        - trust requirement — alter: see artifacts/policy.yaml#authorizer.global
-        - evaluation — draft trust throws exit 2
-      - step 4: approval — human inspects DDL plan and rollback preview
-      - step 5: ship — routine ship schema_<v> reviewed
-      - step 6: apply dev
-        - command — rule apply --type schema --env dev --intent "..."
-        - execution — snapshot taken, DDL executed in transaction
-        - audit — schema migration event emitted
-      - step 7: atomic prod promotion
-        - command — env merge dev prod -m "..."
-        - mechanics — snapshots prod, merges git, applies physical DDL, locks lockfile
+    - Four-phase industrial pipeline
+      - 1. Expand phase — additive, non-breaking DDL (nullable columns, new tables); execution SLA < 10ms
+      - 2. Backfill phase — user-space pinned routine (migrations/NNNN/backfill.py); bounded chunks (max 500 rows/txn); yields cleanly on quota/fuel (exit 6)
+      - 3. Contract phase — destructive DDL executed by kernel migrate.rs via 12-step shadow table rebuild; drops old columns, applies NOT NULL and FKs
+      - 4. Pin phase — verifies live PRAGMA matches schema.yaml; updates root hash in capcli.lock
+    - Rebuild mechanics
+      - kernel responsibility — Rust kernel generates shadow table creation, row copy, index rebuild, and atomic swap; agent DDL authoring banned
+      - lock duration SLA — table exclusive write lock capped at 500ms; breaches abort immediately with exit 2
+    - Migration lifecycle commands
+      - planning — rule plan --name <slug> generates migrations/NNNN_<slug>/ bundle
+      - rehearsal — rule prove <id> --env sim validates FK integrity, lock timing, and backfill fuel
+      - application — rule apply <id> [-m "<intent>"] executes phased cutover
     - Agent denial rules
-      - raw DDL execution
-        - command — sql "ALTER TABLE ..."
-        - decision — denied: see artifacts/policy.yaml#authorizer.global
-      - table destruction
-        - command — DROP TABLE
-        - decision — denied: see artifacts/policy.yaml#authorizer.global
+      - raw DDL execution — raw ALTER TABLE or DROP TABLE queries denied unconditionally (exit 2)
+      - table recreate scripts — manual SQLite table rebuild scripts written by agents rejected at AST gate
       - direct database edits
         - target — workspace.db
         - decision — denied via filesystem permissions (chmod 600)
@@ -182,17 +174,20 @@
         - condition — cross-world DDL without git merge
         - decision — denied: see artifacts/policy.yaml#env.prod
     - Migration invariants
-      - forward only — down-migrations banned; snapshots serve as rollbacks
-      - snapshot pairing — snapshot taken before physical DDL execution
+      - forward only — down-migrations strictly banned; rollback achieved via forward-roll revert bundle
+      - user vs kernel separation — backfills run in user space routines; structural rebuilds run in kernel
+      - snapshot pairing — cold VACUUM snapshot created prior to Expand phase for disaster-only recovery
       - lockfile check — capcli.lock verification at boot: see physics.md#Fail-closed-stance
   - World templates
     - Invariant bundle laws
-      - atomic pairing — world template bundles valid schema.yaml and declared starter configurations
-      - version lock — template must declare min_kernel_version and policy_version matching active runtime
+      - manifest mandate — bundles must include capcli-template.yaml declaring typed inputs, provides map, and min_kernel_version
+      - governance exclusion — templates cannot bundle or alter policy.yaml or governance.yaml; host governance compiler overrides all
+      - zero trust inheritance — all imported routines, views, and verbs register strictly at draft trust (v1) with zero promotional credit
+      - no lifecycle hooks — post-install scripts and dynamic execution during unpack strictly banned; static AST expansion only
     - Intake pipeline
-      - provisioning command — env new <name> --from <path|git-url|urp>
+      - provisioning command — env new <name> --from <path|git-url|urp> [-p key=val]
       - destination isolation — template unpacks strictly into dev worktree; prod direct-init denied
-      - validation sequence — passes Gate 1 (Syntax) and Gate 2 (Semantics) before disk write
+      - validation sequence — validates -p against manifest inputs; passes Gate 1 (Syntax) and Gate 2 (Semantics) before disk write
       - dry-run migration — Gate 5 test migration executes on temporary snapshot
       - seed constraints — table seed arrays capped at 50 rows per table
     - Audit and provenance
@@ -235,9 +230,10 @@
       - failure code — throws exit 3
     - Gate 5: Migration safety
       - timing — apply-time during rule apply
-      - execution — DDL dry-runs in isolated test transaction on snapshot
-      - rollback check — verifies transaction rollback cleanly reverses DDL
-      - failure code — auto-restores snapshot and throws exit 3
+      - execution — rehearsal runs on masked sim snapshot; checks PRAGMA foreign_key_check
+      - lock SLA gate — fails closed (exit 2) if shadow table swap lock duration exceeds 500ms
+      - backfill safety — validates backfill routine terminates cleanly within session fuel bounds
+      - failure code — aborts cutover, discards rehearsal state, returns exit 2 or 3
   - Command surface db
     - Unified SQL execution
       - syntax — capcli run sql "<statement>" (root alias: capcli sql "<statement>") [-p k=v] [-m "<intent>"] [--dry-run]

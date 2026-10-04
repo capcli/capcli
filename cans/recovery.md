@@ -4,8 +4,8 @@
     - Local point-in-time
       - mechanics — db.snapshot.rs executes VACUUM INTO
       - consistency — creates transactionally clean copy during traffic
-      - restore — db restore <id> reverses database state atomically
-      - pairing — snapshot taken prior to physical schema migrations
+      - restore — db restore <id> reverses database state atomically; disaster-only recovery (discards concurrent post-snapshot writes)
+      - pairing — snapshot taken prior to physical schema migrations as safety net; schema rollbacks roll forward via revert bundles
     - Snapshot catalog
       - listing — sys recover --list displays recovery points
       - identification — human-readable names (e.g. snap_migration_004)

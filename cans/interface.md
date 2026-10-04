@@ -39,7 +39,7 @@
       - Schema — db schema [--table]
       - Snapshots — db snapshot, restore <id>, dump
     - Routine path: routine noun
-      - Authoring — direct write in routines/<name>.py (or optional scaffold via routine new <name>)
+      - Authoring — direct write in routines/<name>.py (or optional scaffold via routine new <name> [--template <ptr>] [-p k=v])
       - Verification — routine prove <name> [-p k=v] [--env sim]
       - Promotion — routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
       - Maintenance — routine sweep [--since 30d]
@@ -47,7 +47,8 @@
       - Recovery — routine rollback <name> [version]
       - Retirement — routine retire <name> [--reason]
     - API path: api noun
-      - Sync — api sync <provider> <url> [--interval 7d] [--dry-run]
+      - Import — api import <provider> <path> <method> [--spec <url|file>]
+      - Record — api record <provider.verb> [-p k=v] — captures live test call into replay cassette
       - Drift — api diff <provider>
       - Catalog — api catalog <provider> [--state <state>]
       - Activation — api activate <provider.verb> --intent "..."
@@ -75,6 +76,8 @@
     - Governance path: rule noun
       - Inspection — rule show [target=schema]
       - Comparison — rule diff [target=schema] [--git] vs HEAD or live DB PRAGMAs
+      - Planning — rule plan --name <slug> [-m "<why>"] — generates migration bundle (plan.json, backfill stub)
+      - Verification — rule prove <id> [--env sim] — rehearses expand, backfill, and contract SLA
       - Application — rule apply [target=schema] [--dry-run] [-m|--intent "<why>")
       - Validation — rule validate
     - World path: env noun

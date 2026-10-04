@@ -51,7 +51,6 @@
         - exact — id match short-circuit at zero cost
         - prefix — name completion
         - fuzzy — edit-distance over names and descriptions
-        - semantic — harness-side embedding ranking
         - did-you-mean — nearest candidates proposed on zero hits
       - Progressive disclosure
         - on-demand discovery — search and inspect optional; direct invocation permitted whenever signature is known
@@ -59,8 +58,8 @@
         - doc inspection — inspect on doc:// returns outline nodes; doc read fetches targeted leaf
         - relevance floor — semantic matches below 0.60 rejected
       - Determinism split
-        - kernel search — exact, prefix, FTS5 structured filters over capability catalog
-        - harness search — semantic rankings, fuzzy tolerance
+        - kernel search — exact, prefix, FTS5 full-text, and strsim Levenshtein distance; zero in-binary neural models
+        - harness search — external semantic ranking and embeddings managed entirely in caller userland
         - rationale — see physics.md#Search-ceiling
       - Scale behavior
         - cap trigger — keyword search degrades past 300-routine hard ceiling. see artifacts/governance.yaml#registry
@@ -109,14 +108,16 @@
       - file size — max 150 lines of code; max 2,000 tokens
       - signatures — max 8 typed Param declarations; description required
       - execution caps — max 50 ops per run; max 300s duration; max 10 txn statements
+      - pagination posture — routines must encapsulate iteration and filtering loops internally; multi-turn LLM subshell pagination loops banned
       - output envelope — max 500 result tokens; oversized results return truncated: true
   - Routine templates
     - Invariant authoring laws
-      - string templating — kernel writes scaffolds via string substitution; decorator reflects manifest over IPC
+      - typed expansion — scaffolds expand through typed template parameters; blind regex and sed substitutions banned
       - unproven intake — templated routines register strictly at draft trust, version 1
       - shape compliance — intake parses through shape_gate.rs; non-compliant stubs rejected before disk write
+      - scaffold taxonomy — tpl://routines/* provides micro-patterns (webhook_receiver, idempotent_action, chunked_batch)
     - Scaffolding pipeline
-      - optional scaffolding — routine new <name> [--template <ptr|path>] (filesystem write in routines/ is draft SSOT)
+      - optional scaffolding — routine new <name> [--template <ptr|path>] [-p k=v] (filesystem write in routines/ is draft SSOT)
       - verification — checks import line counts and py_compile syntax
       - audit payload — records routine.draft with template_source and template_hash
     - Sandbox execution
@@ -224,7 +225,7 @@
         - active locks — reads active lease locks from claims and db locks
         - budget headroom — reads consumed fuel and remaining session quota
         - system health — returns nominal status, drift alarms, or thrash warnings
-        - result constraint — dense summary strictly under 500 tokens
+        - result constraint — dense stdout summary strictly under 500 tokens; transcript mounting left to harness
         - invocation trigger — standard zero-step executed at session boot
   - The ctx contract
     - Surface methods
@@ -234,9 +235,9 @@
         - ctx.db.txn() — transaction context manager
         - ctx.db.lock(target, ttl) — application-level lease claim in claims; auto-expired by daemon tick
       - External api methods
-        - ctx.api.call(verb, params, intent, earmark_id=None) — governed HTTP egress (draws from earmark if provided)
+        - ctx.api.call(verb, params, intent, earmark_id=None, select=None) — governed HTTP egress with optional JSONPath wire projection; params accepts JSON dict, multipart fields, or ctx.storage blob handles
         - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) — kernel-managed in-flight polling (1 aggregate op)
-        - egress retry — automatic backoff and jitter on 429/503 upstream responses
+        - egress retry — idempotent verbs (GET/PUT/DELETE) auto-retry on 429/503/network-drop; mutating POST without declared idempotency header fails closed immediately (exit 4)
         - ctx.api.verify(verb, key) — key validation check
       - Quota brokerage methods
         - ctx.quota.inspect(verb) — returns total, available, earmarked, and unreserved headroom
@@ -246,6 +247,7 @@
         - ctx.storage.put(name, data, mime) — uploads blob and returns metadata
         - ctx.storage.get(key) — retrieves stream and verified sha256
         - ctx.storage.url(key, ttl) — mints signed temporary access url
+      - Cursor persistence — chunked batch routines persist cursor state to _watch_cursors; carrying cursors across LLM turns prohibited
       - Hand triggers
         - ctx.bind.cron — time declaration
         - ctx.bind.webhook — async event subscription
@@ -259,6 +261,10 @@
     - Execution guards
       - API call boundaries
         - kernel mediation — egress executed exclusively through kernel binary
+        - auth engines — kernel resolves Bearer, Basic, OAuth2 refresh tokens, AWS SigV4 signing, and mTLS client certs from vault
+        - wire projection — select JSONPath filters large upstream responses at kernel socket edge before passing payload to guest sandbox
+        - dual-write safety — mutating API calls executed within DB workflows require kernel idempotency keys or compensating rollback actions
+        - outbox draining — daemon drains _outbox_events asynchronously; headless subshell CLI executions drain pending outbox calls synchronously prior to exit 0
         - secret injection — boundary insertion; decrypted ephemerally in CLI or retrieved from daemon cache; memory zeroized post-dispatch
         - token refresh — daemon auto-refreshes bearer tokens; stateless CLI refreshes on demand and persists updated token to encrypted vault
         - missing secret fallback — missing secret_ref auto-binds from CAPCLI_SECRET_* before triggering headless exit 3 or ask prompt
@@ -269,7 +275,7 @@
       - Sandbox boundaries
         - runtime isolation — Tier 1 unshares network namespace; Tier 2 unsets outbound proxy env vars and relies on ctx mediation: see physics.md#Platform-tier-taxonomy
         - transport bridge — local IPC permitted exclusively to kernel endpoint
-        - harness confinement — SDK import traps missing frame token: see physics.md#Runtime-refusals
+        - suspension contract — ctx.ping.ask serializes step checkpoint to _pending_asks and exits with code 6; resume re-invokes entrypoint with saved state
         - interface definition — Param typing enforces input validation
     - Data protection
       - Context confinement — raw records stay inside sandbox
@@ -316,10 +322,9 @@
       - Pre-call policy — checks enforced before egress leaves kernel
       - Idempotency mandate — non-idempotent retries denied
     - Catalog synchronization
-      - Sync trigger — capcli api sync <provider> <url> [--interval <cadence>]
-      - Spec quarantine — kernel alone parses OpenAPI specs; harness never reads raw spec
-      - Compilation — kernel parses OpenAPI spec and generates apis/<provider>.yaml
-      - Spec pruning — specs exceeding 10MB auto-prune unreferenced paths during compilation
+      - Targeted import — capcli api import <provider> <path> <method> [--spec <url|file>] imports isolated endpoints on demand; full enterprise spec sync banned
+      - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, and idempotency header mapping
+      - Cassette recording — capcli api record <verb> captures wire traffic to apis/<provider>.cassette.jsonl for simulation replay; manual mock authoring banned
       - Sync cadence limits — see artifacts/governance.yaml#api.sync
       - Verb default state — dormant across entire imported spec
         - immortality — dormant verbs never expire; unactivated surface stays permanent
@@ -356,8 +361,9 @@
   - Bindings
     - Trigger types
       - cron — bind cron <name> <capability> "<cron_expr>" [-m "intent"]
-      - webhook — bind webhook <name> <provider> <event> <capability> [-m "intent"]
+      - webhook — bind webhook <name> <provider> <event> <capability> [--driver stripe|github|slack|shopify|twilio|rfc] [-m "intent"]
       - endpoint — bind endpoint <routine@version> --auth api-key [--rate <r>]
+    - Signature verification — vendor-specific adapters verify timestamped headers, HMAC digests, and URL parameters before dispatch
     - Binding management
       - Lifecycle commands — bind list, inspect, pause, resume, remove
       - Key management — bind keys issue <name> --principal partner:<id>

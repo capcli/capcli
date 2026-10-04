@@ -59,7 +59,7 @@
       - type validity — emails become anon_*@sim.local; unicode blocks (████) banned
     - Sim mode taxonomy
       - sandbox — HTTP routes to provider test endpoint via overlay
-      - mock — kernel returns canned fixture from apis/*.mock.yaml
+      - mock — kernel replays verified HTTP exchange from apis/<provider>.cassette.jsonl; unrecorded endpoints fail closed
       - dry-run — parameter and policy check returning simulated: true
       - skip — excluded from execution; omitted from fingerprint
       - prod-only — execution routes to schema-validated mock fixtures in sim; physical egress strictly denied outside prod
@@ -87,4 +87,5 @@
     - Safety controls
       - prod removal flags — --confirm-backup and --confirm-prod mandatory
       - git push gate — prod merge requires verified remote push credentials via git push --dry-run
+      - merge scope — code, YAML, and migrations only; binary database state (workspace.db) is strictly partition-local and never merged across environments
       - merge pipeline — env merge executes git branch merge for code/schema, snapshots target DB, then applies forward DDL diff

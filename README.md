@@ -57,7 +57,7 @@ Capcli treats **local state mutations and external network egress with equal gat
 * **Zero Mutation on Breach:** `state_modified: false` is mathematically guaranteed on any non-zero exit code.
 
 ### 2. The Wire Floor
-* **Syscall 42 Trapping:** Raw socket calls (`connect`) triggered by `requests.get()` or `fetch()` are intercepted at the processor level via `seccomp-bpf` (`exit 2`). 
+* **Syscall 42 Trapping (Tier 1 Linux):** Raw socket calls (`connect`) triggered by `requests.get()` or `fetch()` are intercepted at the processor level via `seccomp-bpf` (`exit 2`). Tier 2 hosts (macOS/Windows) lack socket traps and rely on cooperative SDK mediation.
 * **Quarantined OpenAPI Catalogs:** The agent never reads raw 5MB Swagger files. Outbound traffic routes exclusively through imported, activated catalog verbs (`capcli api sync`).
 * **Proactive Token Buckets:** Client-side rate buckets block or yield tasks *before* packets touch the physical network. Downstream rate-limit headers (even nested JSONPath headers) dynamically sync the gate.
 * **Zero-Knowledge Vault:** API credentials live in an AES-256-GCM vault. The kernel injects `Authorization` headers at the socket edge, and memory buffers are zeroized (`zeroize`) immediately post-dispatch. The agent never sees the secret in plaintext.
@@ -98,7 +98,7 @@ def dispatch_order(order_id: Param[str], carrier: Param[str]):
 | Law | Enforcement Mechanism | What Happens on Breach |
 | :--- | :--- | :--- |
 | **1. The Database Floor** | Native C `sqlite3_set_authorizer` + AST parser | Unbounded writes or missing `LIMIT` are **killed at prepare-time (`exit 2`)**. Zero rows touched. |
-| **2. The Wire Floor** | `bwrap` namespaces + `seccomp-bpf` + Token Buckets | Raw socket call? **Trapped at Syscall 42 (`exit 2`)**. Quota dry? Background tasks **park cleanly (`exit 6`)**. |
+| **2. The Wire Floor** | `bwrap` namespaces + `seccomp-bpf` (Tier 1) + Token Buckets | Raw socket call? **Trapped at Syscall 42 (`exit 2`)** on Tier 1. Quota dry? Background tasks **park cleanly (`exit 6`)**. |
 | **3. The Budget Cage** | Downward cascading frames ($\min$) | Op #51 on a 50-op run? **Terminated at frame boundary (`exit 2`)**. No half-executed side effects. |
 | **4. The Memory Spine** | Append-only SHA-256 Causal DAG | Tampered audit row or broken hash link? **Kernel refuses to boot (`exit 3`)**. Unaudited writes fail closed (`exit 5`). |
 

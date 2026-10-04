@@ -29,10 +29,11 @@
       - validation — format constraints: see artifacts/policy.yaml#identity
       - authority limit — skill origin acts as metadata, never grants power
     - Concurrency scope
-      - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE with busy_timeout
+      - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE; writer transactions bounded to <50ms
+      - writer priority — interactive agent and webhook mutations preempt bulk migration backfills
       - application locks — business-level leases tracked in claims table with daemon TTL cleanup
       - authoring mutex — filesystem lock on routines/<name>.py during edits; concurrent edits exit 2
-      - collision handling — writers queue sequentially; immediate exit 2 occurs on queue timeout only
+      - collision handling — writers queue up to busy_timeout (default 5000ms); timeout exhaustion fails closed with exit 2
       - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
       - callee floor — cross-agent routine calls demand trust >= reviewed
   - Intent chain
@@ -63,7 +64,7 @@
       - schema — name unique, value, scope, expires_at, sens: true
       - audit contract — all secret mutations emit vault.set with masked values and SHA-256 fingerprint
       - two-tier secrets — root secrets held in vault; ephemeral egress tokens derived
-      - access — agent read-only; value masked in all outputs
+      - access — absolute zero-knowledge in guest runtime; agents hold opaque vault references, never plaintext strings; injection occurs solely at kernel network edge
       - encryption — AES-256-GCM at rest; cached in memory by daemon or decrypted ephemerally per CLI run
       - ingestion — provisioned via CLI (`capcli sys vault set`), environment variables (`CAPCLI_SECRET_*`), or external client RPC
     - Provisioning workflow
