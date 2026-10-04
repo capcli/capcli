@@ -1,0 +1,10 @@
+[dev:tier_1]  ✓  empty
+
+  providers:  0
+  verbs:      0
+
+  Zero APIs configured.
+  Sync a provider spec to populate the catalog, e.g.
+  'capcli api sync stripe https://api.stripe.com/openapi.json'
+
+  state_modified:  false

@@ -1,0 +1,23 @@
+[dev:tier_1]  ✓  truncated
+
+  providers:     10
+  verbs_total:   1204
+  verbs_listed:  500 (listing cap)
+
+  catalog
+  ├── api://stripe
+  │     ├── refund_charge           active    draft
+  │     ├── create_payment_intent   active    draft
+  │     └── issue_credit_note       active    draft
+  ├── api://threads
+  │     ├── create_media_post       active    draft
+  │     └── get_media_post          dormant   —
+  └── api://fedex
+        ├── ship                    active    reviewed
+        └── track                   active    reviewed
+  ... 493 further verbs elided (listing capped at 500) ...
+
+  truncated:    true
+  next_cursor:  api://shipstation.create_order
+
+  state_modified:  false
