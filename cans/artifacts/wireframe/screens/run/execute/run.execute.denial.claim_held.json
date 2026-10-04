@@ -1,0 +1,56 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.execute.denial.claim_held",
+  "noun": "run",
+  "verb": "execute",
+  "target": "cap://dispatch_order@4",
+  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-10 -p carrier=fedex --lock orders:ORD-10 -m \"fulfill urgent pending orders\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "db.claims",
+    "trust": "pinned",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "db.claims",
+    "culprit": "Exclusive --lock ref 'orders:ORD-10' already held by session ses_b4410 (14m 22s remaining).",
+    "remedy": "wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'",
+    "layer": "claims",
+    "measured": "1 active lease on orders:ORD-10 (expires in 14m 22s)"
+  },
+  "txt_pair": "screens/run/execute/run.execute.denial.claim_held.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "  FAIL  db.claims.locked",
+      "        exclusive claim 'orders:ORD-10' already held",
+      "  state_modified: false",
+      "  layer: claims",
+      "  remedy: wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "db.claims"
+    }
+  }
+}

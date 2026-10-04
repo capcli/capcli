@@ -1,0 +1,12 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  policy.authorizer.deny_columns_write
+        UPDATE customers SET email = :new_email WHERE id = :id
+                             ^^^^^
+        column 'email' is immutable (imm_cols: [email])
+        The C authorizer denied the write at prepare time.
+
+  state_modified: false
+  layer: authorizer
+  measured: 1 column write denied (customers.email)
+  remedy: insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration

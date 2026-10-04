@@ -1,0 +1,13 @@
+[dev:tier_2]  ✗  exit 2
+
+  FAIL  policy.trust.tier2_pinned
+        code:     E045_TIER2_PINNED_DENIED
+        routine:  dispatch_order@4 holds pinned trust
+        host:     darwin (tier_2, broker isolation)
+
+        Pinned execution requires a Tier 1 host.
+        Tier 2 platforms are capped at the reviewed rung.
+
+  state_modified: false
+  layer: trust
+  remedy: execute on a tier_1 host (Linux, WSL2), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'

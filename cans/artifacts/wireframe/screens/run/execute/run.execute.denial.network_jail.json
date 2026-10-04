@@ -1,0 +1,55 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "run.execute.denial.network_jail",
+  "noun": "run",
+  "verb": "execute",
+  "target": "cap://sneaky_exfil@1",
+  "command": "capcli run cap://sneaky_exfil@1 -p db_host=10.0.0.5:5432 -m \"replicate orders to analytics host\"",
+  "state": {
+    "exit_code": 2,
+    "domain": "kernel.sandbox",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "kernel.sandbox",
+    "culprit": "Raw connect() to 10.0.0.5:5432 trapped by seccomp-bpf filter (syscall 42).",
+    "remedy": "use ctx.api.call with an activated catalog verb",
+    "layer": "sandbox"
+  },
+  "txt_pair": "screens/run/execute/run.execute.denial.network_jail.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  ✗  exit 2",
+      "  FAIL  kernel.network.jail",
+      "        syscall 42 (connect) trapped by seccomp-bpf",
+      "  state_modified: false",
+      "  layer: sandbox",
+      "  remedy: use ctx.api.call with an activated catalog verb"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "kernel.sandbox"
+    }
+  }
+}
