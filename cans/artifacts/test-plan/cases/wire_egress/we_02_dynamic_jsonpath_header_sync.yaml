@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "we_02_dynamic_jsonpath_header_sync"
+title: "Kernel dynamic parser recalibrates the local quota bucket from the X-Business-Use-Case-Usage JSON header via JSONPath"
+domain: "wire_egress"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Dynamic-header-calibration"
+  statement: "Provider quota headers are used only to recalibrate the local bucket: the kernel 'reconciles RFC standard headers or extracts structured JSON payloads (e.g. X-Business-Use-Case-Usage) via JSONPath' and syncs the local _api_quota remaining down to the provider-reported usage (policy.yaml#api.rate_limit.header_calibration: reconcile_on_response true, utilization_jsonpath $.*.call_count)."
+  blast_radius_if_breached: "If nested JSON usage headers were ignored, the local bucket would drift above the provider's real limit, so enterprise bursts would slam into provider-side 429s or API-key suspensions exactly when the business believed quota headroom remained."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by only replaying fixed RFC headers (X-RateLimit-Remaining) and never exercising the nested JSON header path — the JSONPath extraction is skipped and the assertion passes against a static string, masking parser regressions."
+  anti_slop_mitigation: "AS-01 bans mocking the header parser: the response must come from a real wiremock HTTP reply carrying the nested JSON header. AS-05 verifies the api.call audit row and hash-chain link. AS-06 forces hardcoded literals (call_count 40, recalibrated remaining 10) so the expected value is not derived from engine output."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_02"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'threads': local bucket believes remaining 28 of 50 (24h rolling window)
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'ctx.api.call("threads.posts", params={"text": "status digest"}, intent="ops status digest") against a wiremock provider returning HTTP 200 with header X-Business-Use-Case-Usage: {"business_use_case": {"call_count": 40, "estimated_time_to_regain_access": 3600}}'
+  input_params:
+    verb: "threads.posts"
+    http_status: 200
+    json_usage_header: "X-Business-Use-Case-Usage"
+    utilization_jsonpath: "$.*.call_count"
+    local_remaining_before: 28
+    provider_reported_call_count: 40
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "wire.egress"
+    culprit: "none — nominal path: dynamic header calibration extracted call_count 40 via $.*.call_count and reconciled the local bucket down from 28 to 10 remaining (50 total - 40 provider-reported)"
+    remedy: "none required — header calibration is automatic on every response (reconcile_on_response); provider numbers only recalibrate, never widen, the local bucket"
+  database:
+    row_count_delta: 0
+    tables_mutated: ["_api_quota"]   # remaining updated in place 28 -> 10; _audit gains the api.call event row (see audit block)
+  wire:
+    packets_transmitted: 1
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (quota_before: 28, quota_after: 10)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mock of the header parser (assembly.md#Core-domain-subsystems header_parser.rs 'extracts RFC headers and parses nested JSON usage payloads'): the X-Business-Use-Case-Usage JSON must arrive on a real wiremock HTTP response and be parsed by the production kernel path, not injected as a pre-parsed value."
+  - rule: "AS-05"
+    verification: "_audit sequence increments by exactly 1 (api.call event row); the new row's prev_hash equals the SHA-256 of the prior row; capcli-core::audit::verify_chain() passes; the api.call payload carries quota_before 28 and quota_after 10 (policy.yaml#api.in_flight_polling.audit.record_before_after)."
+  - rule: "AS-06"
+    verification: "Hardcoded literal expectations, never derived from output: JSONPath $.*.call_count evaluates to 40 on the literal header JSON; recalibrated remaining equals literal 10 (50 - 40); wait_seconds_jsonpath $.*.estimated_time_to_regain_access evaluates to 3600 — asserting bucket == engine_output is banned."
