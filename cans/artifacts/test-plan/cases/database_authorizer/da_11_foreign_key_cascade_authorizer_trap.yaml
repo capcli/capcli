@@ -1,0 +1,83 @@
+$schema: "test-plan/case/v1"
+case_id: "da_11_foreign_key_cascade_authorizer_trap"
+title: "FK cascade that would mutate imm_rows child rows is halted by the authorizer and rolled back"
+domain: "database_authorizer"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Enforcement-split"
+  statement: "Foreign key cascades execute in the SQLite engine layer, but row immutability is a kernel authorizer-layer law: a parent DELETE whose ON DELETE cascade would physically mutate rows in a child table tagged imm_rows: true is denied and the entire statement (parent delete included) rolls back."
+  blast_radius_if_breached: "A routine 'cleans up' parent orders and silently shreds the immutable line-item financial ledger; regulatory retention guarantees break at scale and no audit row describes the destruction."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent disables foreign keys on the test SQLite connection (PRAGMA foreign_keys=OFF) so no cascade is ever generated - the authorizer trap is bypassed by fixture misconfiguration rather than engine policy."
+  anti_slop_mitigation: "AS-01 requires the foreign_keys pragma to stay enabled (it is on the authorizer's strictly-permitted pragma list) and bans connection-level overrides; AS-02 proves both parent and child row counts unchanged; AS-03 requires the typed exit code plus authorizer-domain diagnostic."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.ordercleanup@acme.corp"
+    agent_id: "agt_da_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+        order_items:
+          description: "Immutable line items appended to finalized orders"
+          imm_rows: true
+          columns:
+            id: pk
+            order_id: int ref=orders.id
+            sku: text ref=inventory.sku
+            quantity: int=1
+            price_cents: int!
+      # NOTE: ON DELETE CASCADE clause not located in cans/ shorthand spec - cascade wiring is declared as a physical SQLite foreign key cascade (world.md#Enforcement-split, SQLite engine layer) on order_items.order_id
+    tables:
+      - name: "orders"
+        row_count: 500
+      - name: "order_items"
+        row_count: 1200
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"DELETE FROM orders WHERE id = 2 LIMIT 1\" -m \"remove test order ORD-002\""
+  input_params:
+    cascade_target: "order_items (imm_rows: true) via order_items.order_id ON DELETE CASCADE"
+    parent_statement_shape: "WHERE + LIMIT present - passes Layer-2 AST bounds"
+    foreign_keys_pragma: "enabled (authorizer-permitted)"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "cascade from DELETE ON orders (id = 2) would physically delete order_items rows; table order_items is tagged imm_rows: true - authorizer returns SQLITE_DENY and the parent delete rolls back with it"
+    remedy: "Do not cascade into immutable tables; drop the ON DELETE cascade clause via a reviewed forward schema migration, or archive children explicitly with compensating inserts before removing the parent."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "PRAGMA foreign_keys must remain enabled for the whole test (it is on the authorizer's strictly permitted pragma list; query_only and foreign_keys are the only allowed pragmas) - disabling FK in the test connection fails CI; no mocks on authorizer.rs."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 500 AND SELECT count(*) FROM order_items == 1200 before and after (parent delete rolled back with the halted cascade); SELECT count(*) FROM order_items WHERE order_id = 2 == literal pre-seeded child count."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.authorizer', culprit names the cascade target and imm_rows tag, remedy present."
