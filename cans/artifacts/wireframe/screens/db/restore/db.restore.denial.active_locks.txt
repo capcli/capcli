@@ -1,0 +1,13 @@
+[dev:tier_1]  ✗  exit 2
+
+  FAIL  db.claims.active_locks
+        target:  snap_migration_004
+        active:  1 claim on db://orders
+
+        Active claims prevent state reversal; restoring under a live lease would orphan the holder.
+
+  audit_op: op_71c9
+  state_modified: false
+  layer: claims
+  measured: orders:ORD-10 held by agt_9k2w, claim_c3d4; TTL remaining 187s of 300s
+  remedy: wait for lease expiry or ask the holder to release, then re-run 'capcli db restore snap_migration_004'
