@@ -1,0 +1,10 @@
+[dev:tier_1]  doc://refund-policy (section 3)
+
+  outline_node: 3. Stripe integration notes
+  tokens:       84 (cap: 100)
+  has_more:     false
+
+  ────────────────────────────────────────────────────────────────────────────
+  Outbound refunds must include `charge_id` and idempotent client request UUID.
+  Never refund a charge older than 120 days via automated routines; delegate
+  to human supervisor via `ctx.ping.ask`.
