@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_09_tamper_detection_root_worm_walk"
+title: "Scheduled integrity walk detects local chain tamper against the offsite S3 WORM root checkpoint"
+domain: "audit_dag"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/effect.md#tamper-detection--per-row-sha256-chain-verified-against-root-ledger-hash"
+  statement: "The scheduled integrity walk verifies the per-row sha256 chain against the root ledger hash checkpointed offsite (recovery.md#Integrity-checks: local hash chain validated against S3 WORM immutable ledger root, independent of git squashes); divergence between the recomputed local chain root and the WORM witness anchor halts the kernel — a broken sha256 link invalidates all subsequent events."
+  blast_radius_if_breached: "A tampered ledger passes as healthy: an attacker rewrites _audit history (erases a denial, fabricates an allow) and the kernel keeps executing on top of a falsified past — every compliance attestation and forensic trace built afterwards is poisoned."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts ledger health by running only the local verify_chain() (self-consistent tampering passes: an attacker who re-hashes the whole chain after editing row 4 still matches row-to-row) and never compares against the offsite WORM root anchor witness."
+  anti_slop_mitigation: "AS-05 recomputes the full SHA-256 chain AND compares the recomputed root against the WORM witness checkpoint (the offsite anchor does not move); AS-02 proves zero row-count drift; AS-03 pins exit 5 with a kernel.panic diagnostic; AS-04 steps the scheduled walk tick deterministically."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.maintainer@acme.corp"
+    agent_id: "agt_ad_09"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 3
+      - name: "_audit"
+        row_count: 12 # pre-existing chain; row 4 payload is mutated out-of-band via raw sqlite3 before the walk (WORM checkpoint holds the pre-tamper root)
+    vault_secrets: []
+    # harness pre-condition: offsite S3 WORM witness checkpoint (simulated object store) anchors the root hash of the untampered 12-row chain
+
+execution:
+  trigger: "rust_api"
+  command: "daemon integrity-walk worker tick (MockClock advanced to the scheduled maintenance epoch from artifacts/governance.yaml#maintenance): recompute the sha256 chain over _audit rows 1..12 and compare the final root against the offsite S3 WORM witness checkpoint"
+  input_params:
+    tampered_row: 4
+    worm_checkpoint: "simulated offsite S3 Object Lock store holding the pre-tamper root ledger hash"
+    walk_clock: "MockClock epoch ticks injected via engine API (scheduled verification walk)"
+
+expected_observations:
+  exit_code: 5
+  state_modified: false
+  diagnostic:
+    domain: "kernel.panic"
+    culprit: "chain divergence at _audit seq 4: recomputed row hash != chained prev_hash of seq 5 (payload mutated after the WORM checkpoint); broken sha256 link invalidates all subsequent events 4..12"
+    remedy: "restore envs/dev/workspace.db from the last VACUUM INTO snapshot (db restore <id> / sys recover) and re-verify against the WORM anchor before resuming; the tampered span is untrustworthy"
+  database:
+    row_count_delta: 0 # row counts unchanged; the tamper was payload-level, the walk mutates nothing
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # witness comparison reads the simulated offsite anchor; no business egress
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "none — kernel panic precedes chained emission; no event is appended onto an invalidated ledger (tamper blast radius)"
+    chain_valid: false
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-05"
+    verification: "Cryptographic verification both ways: recompute SHA-256 row-by-row (sha2::Sha256, crates/capcli-core/src/sys/hashchain.rs) and assert the recomputed chain root != the WORM witness root, with the first divergence index == 4 (hardcoded); a local-only verify_chain() pass is insufficient — the offsite anchor comparison is mandatory."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _audit == 12 and SELECT count(*) FROM orders == 3 after the panic — the walk itself mutates nothing; row counts are strictly equal pre/post."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 5 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'kernel.panic', culprit names seq 4 and the WORM divergence, remedy points at snapshot restore; generic panic-string matching is a linter failure."
+  - rule: "AS-04"
+    verification: "The scheduled integrity walk is stepped via MockClock epoch ticks at the governance maintenance schedule; no sleep-based waiting for the next scheduled tick."
