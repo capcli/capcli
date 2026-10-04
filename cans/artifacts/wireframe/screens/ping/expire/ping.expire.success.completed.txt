@@ -1,0 +1,8 @@
+[dev:tier_1]  ✓  completed
+
+  ask_id:          ask_88a
+  principal:       user:alice
+  action:          explicit expiration
+  outcome:         inquiry closed; fail-closed (expired asks never assume consent)
+  audit_op:        op_9f35b
+  state_modified:  true
