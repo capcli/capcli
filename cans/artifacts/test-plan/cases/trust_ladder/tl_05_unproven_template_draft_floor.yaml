@@ -1,0 +1,82 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_05_unproven_template_draft_floor"
+title: "Imported routine template whose bundle manifest claims pinned trust is registered strictly at draft trust version 1 (template trust floor, zero inheritance)"
+domain: "trust_ladder"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/trust.md#template-trust-floor-—-imported-routines-and-world-templates-enter-strictly-at-draft-trust"
+  statement: "Imported routines and world templates enter strictly at draft trust: the kernel forces trust rung 'draft' and version 1 at intake regardless of any trust declaration inside the bundle manifest, because blueprints confer zero promotional credit and pre-pinned imports are banned. Intake itself succeeds (unproven intake registers at draft); the negative assertion is the denied elevation."
+  blast_radius_if_breached: "A malicious or sloppily-authored template bundle ships with 'trust: pinned' honored at intake: unproven third-party code immediately gains unattended scheduling, 500-row ceilings, summary-only audit, and endpoint serving rights in prod — a supply-chain elevation-of-privilege on first import."
+
+confusion_matrix:
+  quadrant: "true_negative"   # catalog Matrix: TN — the denied quantity is the claimed rung (pinned), not the intake; action.md#unproven-intake registers at draft and the test asserts the floor
+  slop_risk: "Agent trusts the template manifest's declared 'trust: pinned' and asserts the imported rung equals the claim (tautology on fixture input), or never re-reads the registry rung at all — the kernel clamp is silently skipped (catalog banned slop: trusting template manifest declaration of 'pinned')."
+  anti_slop_mitigation: "AS-06 requires the expected rung and version to be immutable literals ('draft', 1) hardcoded in the test rather than echoed from the bundle; AS-02 requires a direct registry query proving zero rows above draft trust; AS-05 verifies the routine.draft audit payload records template_source and template_hash so the unproven origin is permanently stamped."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_tl_05"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      tables:
+        routines:
+          description: "routine registry with trust rung and provenance hashes"
+          columns:
+            name: text!~
+            version: int!
+            trust: text!
+            code_hash: text!
+            manifest_hash: text!
+            created_by: text!
+            promoted_by: text
+          idx: [[name, version]]
+    tables:
+      - name: "routines"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli routine new payout_v2 --template cap://templates/payout_bundle --reason \"vendor payout automation import\""
+  input_params:
+    name: "payout_v2"
+    template_ptr: "cap://templates/payout_bundle"
+    template_manifest_claim:
+      trust: "pinned"
+      declared_versions_shipped: 18
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 2
+    tables_mutated:
+      - "routines"
+      - "_audit"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.draft (payload: template_source = cap://templates/payout_bundle, template_hash; trust recorded 'draft', version 1)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Hardcode the expected literals: SELECT trust, version FROM routines WHERE name='payout_v2' must return exactly ('draft', 1) — never the manifest's claimed 'pinned' or its declared version history; the expected values are immutable test constants, not derived from the engine's intake output."
+  - rule: "AS-02"
+    verification: "Direct registry proof of the floor: SELECT count(*) FROM routines WHERE trust != 'draft' returns 0 after intake, and SELECT count(*) FROM routines returns exactly 1 — zero rows above draft, so the bundle claim conferred nothing (zero trust inheritance)."
+  - rule: "AS-05"
+    verification: "_audit gains exactly 1 event 'routine.draft' whose payload carries template_source and template_hash fields; prev_hash links to the prior row and capcli-core::audit::verify_chain() passes — the unproven provenance is permanently recorded on the hash chain."
