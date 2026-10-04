@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_04_bytecode_openwrite_discrepancy"
+title: "Layer 1.5 kills read-masked SELECT exhibiting OpenWrite VDBE opcode"
+domain: "kernel_physics"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Layer-1.5:-prepare-time-cross-check"
+  statement: "Every statement is dry-run prepared in a test transaction and its SQLite EXPLAIN bytecode is cross-checked against the AST classification: a statement classified as read whose VDBE program contains the OpenWrite opcode is denied before execution — unclassified writes trigger denial."
+  blast_radius_if_breached: "Write operations masquerading as reads (a SELECT invoking a mutating function) slip past keyword-level gates and write arbitrary files or mutate tables under read-only dispatch rules — direct data exfiltration and privilege escalation."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent gates the statement with a regex or simple keyword match on SELECT (the masquerading statement passes as a read), or asserts a denial without ever compiling the EXPLAIN bytecode to observe the OpenWrite opcode."
+  anti_slop_mitigation: "AS-06 pins the expected EXPLAIN opcode program containing OpenWrite as a hardcoded literal (no string matching on the SQL text); AS-01 bans mocking the prepare pipeline; AS-02 proves zero rows mutated and no file written; AS-03 requires exit_code == 2 with a parsed diagnostic."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "data.pipeline@example.com"
+    agent_id: "agt_kp_04"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 1
+      engine: sqlite
+      db: workspace
+      tables:
+        messages:
+          cols:
+            id: pk
+            payload: text
+            sender: 'text=system'
+    tables:
+      - name: "messages"
+        row_count: 5
+      - name: "_audit"
+        row_count: 6
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'capcli_core::db::pipeline::stage3_prepare("SELECT writefile(:path, payload) FROM messages WHERE id = :id", params { path: "/scratch/exfil.txt", id: 3 }) — Layer 1.5 dry-run prepare in test transaction plus SQLite EXPLAIN bytecode scan'
+  input_params:
+    statement: "SELECT writefile(:path, payload) FROM messages WHERE id = :id"
+    bound_params: { path: "/scratch/exfil.txt", id: 3 }
+    ast_classification: "read (SELECT)"
+    vdbe_expectation: "OpenWrite opcode present in EXPLAIN bytecode"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "SQLite EXPLAIN bytecode for a statement AST-classified as read contains the OpenWrite opcode — read/write classification discrepancy; writefile is additionally on the function denylist"
+    remedy: "remove the mutating function from the read statement; route file output through ctx.storage and declare the operation as a write with causal intent"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "The expected EXPLAIN opcode program is a hardcoded literal list that must contain OpenWrite for this exact statement; the gate must be bytecode-driven — a test that only string-matches SELECT on the SQL text is rejected."
+  - rule: "AS-01"
+    verification: "No mock may replace the sqlparser AST check, the sqlite3_prepare_v2 dry-run, or the EXPLAIN cross-check; the real VDBE bytecode must be compiled in the test transaction inside the test process."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM messages before and after must be strictly equal (5 == 5); the filesystem target /scratch/exfil.txt must not exist after the denial; _audit advances 6 -> 7 with exactly one db.exec denial row (effect: none)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 and parse CliEnvelope<T>: diagnostic.domain == policy.authorizer, culprit names the OpenWrite/read classification discrepancy, remedy non-empty, state_modified == false."

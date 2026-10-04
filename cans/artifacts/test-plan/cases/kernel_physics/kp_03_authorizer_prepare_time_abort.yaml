@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_03_authorizer_prepare_time_abort"
+title: "C authorizer aborts unpermitted column write during sqlite3_prepare_v2"
+domain: "kernel_physics"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Layer-1:-sqlite3_set_authorizer"
+  statement: "Unpermitted column access is denied inside the sqlite3_set_authorizer callback invoked from sqlite3_prepare_v2 — the statement dies at prepare time, sqlite3_step is never reached, and not a single byte of the statement executes."
+  blast_radius_if_breached: "Immutable write-once columns (deny_columns_write) become editable after prepare: audit provenance keys, ledger amounts, and identity columns can be silently rewritten, destroying write-once guarantees and forensic accountability across every world."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent writes a test where the denial only surfaces at execution time (sqlite3_step) or after partial row mutation, or mocks the AuthorizerCallback to return SQLITE_OK so the invalid statement passes the gate."
+  anti_slop_mitigation: "AS-01 bans any mock on the authorizer callback (the real native C callback via rusqlite must fire); AS-06 pins the expected callback tuple (UPDATE, ledger_entries, amount) and the SQLITE_DENY decision as immutable literals; AS-02 proves zero rows mutated; AS-03 requires exit_code == 2 with a parsed diagnostic."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "ledger.ops@example.com"
+    agent_id: "agt_kp_03"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 1
+      engine: sqlite
+      db: workspace
+      tables:
+        ledger_entries:
+          cols:
+            id: pk
+            amount: int~
+            memo: text
+    tables:
+      - name: "ledger_entries"
+        row_count: 4
+      - name: "_audit"
+        row_count: 5
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'capcli_core::db::pipeline::prepare("UPDATE ledger_entries SET amount = :amount WHERE id = :id LIMIT 1", params { amount: 500, id: 4 }) — sqlite3_prepare_v2 with the native sqlite3_set_authorizer callback attached'
+  input_params:
+    statement: "UPDATE ledger_entries SET amount = :amount WHERE id = :id LIMIT 1"
+    bound_params: { amount: 500, id: 4 }
+    target_column: "amount"
+    column_shorthand: "int~ (integer immutable write-once)"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "sqlite3_set_authorizer returned SQLITE_DENY for action tuple (SQLITE_UPDATE, ledger_entries, amount) — deny_columns_write protection on immutable column amount"
+    remedy: "choose a mutable column for the update, or record the correction as a new ledger row; the amount column is write-once (int~) and cannot be updated"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mockall or manual mock may wrap the authorizer: the native C callback inside sqlite3_prepare_v2 (via rusqlite) must fire in-process; static analysis rejects mocks on crates/capcli-core/src/db/authorizer.rs types."
+  - rule: "AS-06"
+    verification: "The expected authorizer invocation is a hardcoded literal: action SQLITE_UPDATE, table ledger_entries, column amount, decision SQLITE_DENY — never derived from the callback's own return value."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM ledger_entries before and after must be strictly equal (4 == 4); SELECT amount FROM ledger_entries WHERE id = 4 must still return the original literal value; _audit advances 5 -> 6 with exactly one db.exec denial row (effect: none)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 and parse CliEnvelope<T>: diagnostic.domain == policy.authorizer, culprit names the (UPDATE, ledger_entries, amount) tuple, remedy non-empty, state_modified == false; additionally instrument that sqlite3_step was never invoked (step counter == 0), proving the abort happened at prepare time, not execution time."
