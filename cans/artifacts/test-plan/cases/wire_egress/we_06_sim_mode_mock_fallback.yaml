@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "we_06_sim_mode_mock_fallback"
+title: "Sim mock mode serves the canned fixture from apis/threads.mock.yaml with zero wire packets"
+domain: "wire_egress"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/space.md#Sim-mode-taxonomy"
+  statement: "'Mock — kernel returns canned fixture from apis/*.mock.yaml': a verb declared sim_mode: mock in the sim environment is served entirely inside the kernel (policy.yaml#api.sim_mode.mock_fixture_required: true), so the rehearsal completes with http_called: false and not a single packet leaks to any external server."
+  blast_radius_if_breached: "A packet leaking from a sim rehearsal to a real provider would fire live side effects (charges, emails, posts) from masked rehearsal data and pollute production quota and idempotency keys — an unrecoverable external blast radius."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by stubbing the HTTP client at the test boundary so 'no packet' is trivially true, while the kernel's sim_mock fixture path (apis/<provider>.mock.yaml) is never exercised — or by letting the call hit an external test server and asserting only the response shape."
+  anti_slop_mitigation: "AS-01 bans mocking sim_mock.rs: the fixture must be served by the real kernel path. AS-05 verifies the api.call sim audit event (sim_mode, http_called, fixture_used fields). AS-06 compares the response byte-for-byte with the literal fixture and asserts the external wiremock server received exactly 0 requests."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_06"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # sim-scoped 'threads' row (sim and prod quotas are independent)
+    vault_secrets: []   # fixture path requires no secret; apis/threads.mock.yaml present with the canned response
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli run cap://nightly_digest@2 -p audience=followers -m "nightly digest rehearsal" (env: sim via `capcli env use sim`; routine manifest declares threads.posts with sim_mode: mock)'
+  input_params:
+    routine: "nightly_digest@2"
+    verb: "threads.posts"
+    sim_mode: "mock"
+    fixture: "apis/threads.mock.yaml"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "api.sim_mock"
+    culprit: "none — nominal path: sim_mock.rs served the canned fixture from apis/threads.mock.yaml; http_called: false, fixture_used: true"
+    remedy: "none required — sim_mode: mock resolves fixtures inside the kernel without touching the wire"
+  database:
+    row_count_delta: 1
+    tables_mutated: ["_audit", "_api_quota"]   # api.call sim event row (+1); sim-scoped quota row debited in place (count unchanged)
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (sim_mode: mock, http_called: false, fixture_used: true)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mock of the fixture-serving path: the response must come from the production kernel sim_mock.rs reading apis/threads.mock.yaml (assembly.md#Core-domain-subsystems), not from a test-level stub returning a canned struct."
+  - rule: "AS-05"
+    verification: "_audit gains exactly one api.call sim event row; parse its fields — sim_mode == 'mock', http_called == false, fixture_used == true (effect.md#Kernel-event-payloads); prev_hash equals the SHA-256 of the prior row and verify_chain() passes."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: the returned payload equals the literal fixture bytes from apis/threads.mock.yaml (byte-for-byte compare, not a shape match), and the external wiremock server's request counter reads exactly 0 — proving no packet leaked during the simulation run."
