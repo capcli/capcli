@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "se_06_env_merge_prod_dual_flag_gate"
+title: "Merging dev schema into prod without both --confirm-backup and --confirm-prod is rejected with exit 2"
+domain: "schema_evolution"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+invariant:
+  law_reference: "cans/space.md#Safety-controls"
+  statement: "Production-affecting env operations are dual-flag gated: --confirm-backup and --confirm-prod are both mandatory; a merge into prod carrying zero or only one confirmation flag is a policy denial with exit 2 and applies no physical DDL."
+  blast_radius_if_breached: "A single-confirmed (or unconfirmed) merge rewrites production DDL in one command; an unverified backup state means the operation is irreversible, turning every schema mistake into a production outage with no rollback point."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent permits the production merge with a single confirmation flag (e.g. only --confirm-prod), or pre-bakes both flags into a shell alias the test reuses - the dual-flag conjunction is never actually evaluated."
+  anti_slop_mitigation: "AS-06 runs the literal three-variant flag matrix (no flags, backup only, prod only) and asserts every variant denies; AS-03 requires the typed exit code 2 plus a policy diagnostic naming the missing flags; AS-02 proves prod is byte-identical after each refusal."
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.promotionbot@acme.corp"
+    agent_id: "agt_se_06"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+      # dev worktree already carries schema v13; prod still runs compiled v12
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli env merge dev prod -m \"promote schema v13\""
+  input_params:
+    confirm_flags_present: []
+    required_flags:
+      - "--confirm-backup"
+      - "--confirm-prod"
+    variant_matrix:
+      - "no flags"
+      - "--confirm-backup only"
+      - "--confirm-prod only"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.env" # NOTE: not located in cans/ specs - family policy.* per effect.md denial domain classification; env safety controls live in space.md#Safety-controls
+    culprit: "env merge dev prod without dual confirmation: missing --confirm-backup and --confirm-prod (governance.yaml env.prod_removal_flags: 2; prod merge gate)"
+    remedy: "Verify the backup push first (sys backup --push), then re-run env merge dev prod -m \"...\" --confirm-backup --confirm-prod."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "env.merge (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Execute the literal three-variant matrix: (1) no flags, (2) --confirm-backup only, (3) --confirm-prod only - each must exit 2; a single-flag success is a critical false negative. Only the conjunction of both flags may ever pass (verified in the companion positive case se_13)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) per variant and parse the --json CliEnvelope: diagnostic names the missing flag(s), remedy names the dual-flag re-run; no .is_ok()/.is_err() shorthand."
+  - rule: "AS-02"
+    verification: "After every refused variant: SELECT count(*) FROM orders == 500 on envs/prod/workspace.db, sha256 of envs/prod/workspace.db byte-identical to pre-merge, and the v13 DDL is absent (PRAGMA table_info contains no v13-only table)."

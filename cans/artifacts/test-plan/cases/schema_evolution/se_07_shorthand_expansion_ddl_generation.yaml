@@ -1,0 +1,87 @@
+$schema: "test-plan/case/v1"
+case_id: "se_07_shorthand_expansion_ddl_generation"
+title: "Shorthand notation compiles deterministically to the exact SQLite DDL dialect and applies cleanly"
+domain: "schema_evolution"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Shorthand-expansion"
+  statement: "Every column shorthand expands deterministically: pk to integer autoincrement primary key, text! to text unique, text=val to text default 'val', int~ to integer immutable write-once, mask=true to FPA-marked column, imm_rows: true to authorizer-denied row mutation - compiled output is byte-reproducible for identical worlds."
+  blast_radius_if_breached: "Non-deterministic or wrong-dialect DDL makes schema drift undetectable: two compiles of the same world yield different databases, lockfile hashes never match, and capcli.lock refuses every boot (or worse, accepts mismatches)."
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent hand-writes the expected SQL DDL in the test and compares it to... itself, or asserts only that some CREATE TABLE string exists - the compiled output from the YAML shorthands is never actually diffed against hardcoded literals."
+  anti_slop_mitigation: "AS-06 hardcodes every expected expansion as immutable literal DDL and PRAGMA facts, diffed against real compiler output; AS-05 verifies the apply event and hash chain; AS-03 checks the typed success envelope."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.schema-author@acme.corp"
+    agent_id: "agt_se_07"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        customers:
+          description: "Core customer identity, contact info, and sensitivity bounds"
+          prov: true
+          columns:
+            id: pk
+            email: text!
+            phone: text~
+            tier: text=standard
+        payments:
+          description: "Financial ledger with PII redaction and payload masking"
+          columns:
+            id: pk
+            order_id: int ref=orders.id
+            raw_response: json mask=true
+        order_items:
+          description: "Immutable line items appended to finalized orders"
+          imm_rows: true
+          columns:
+            id: pk
+            quantity: int=1
+    tables: []
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "in-process shorthand compile of the fixture schema_yaml, diff the compiled statement list against hardcoded literal DDL, then apply via the in-process rule-apply path to the test dev workspace.db"
+  input_params:
+    shorthands_under_test:
+      - "id: pk"
+      - "email: text!"
+      - "phone: text~"
+      - "tier: text=standard"
+      - "raw_response: json mask=true"
+      - "order_items imm_rows: true"
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none"
+    culprit: "none"
+    remedy: "none"
+  database:
+    row_count_delta: 0
+    tables_mutated:
+      - "customers"
+      - "payments"
+      - "order_items"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "rule.apply (allow; schema migration event for v13)"
+    chain_valid: true
+    state_modified_field: true
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Diff compiler output against immutable literals: PRAGMA table_info(customers) yields id INTEGER pk=1 autoincrement, email TEXT (unique index present via PRAGMA index_list), phone TEXT, tier TEXT default 'standard'; payments.raw_response masks; order_items carries the compiled imm_rows authorizer rule; compile the fixture twice and assert byte-identical DDL (byte reproducibility for identical worlds)."
+  - rule: "AS-05"
+    verification: "After the apply: _audit sequence id incremented by 1 with a rule.apply event; capcli-core::audit::verify_chain() returns true; prev_hash == sha256 of the prior row; no silent audit-pipeline failure."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 (integer) and parse the success envelope: state_modified == true, data block carries the compiled statement list - never assert .is_ok() alone."
