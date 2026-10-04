@@ -109,7 +109,7 @@
       - audit mirror sync — max lag: see artifacts/governance.yaml#maintenance
       - hash chain audit — verification cron: see artifacts/governance.yaml#maintenance
       - api catalog sync — interval: see artifacts/governance.yaml#api
-      - backup commits — interval: see artifacts/governance.yaml#backup
+      - backup snapshots — interval: see artifacts/governance.yaml#backup
   - Versioning & provenance
     - Version record
       - identifiers — capability name and sequential integer version

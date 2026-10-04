@@ -25,11 +25,11 @@
       - capacity limits — max 5 concurrent environments (prod, dev, sim, 2 experiments)
       - sim defaults — mode resolution: see artifacts/governance.yaml#api
     - World governance
-      - worktree boundary — envs/<name>/ is an isolated git worktree branch containing declarative files
-      - substrate isolation — envs/<name>/workspace.db is gitignored uncommitted local runtime state
+      - namespace boundary — envs/<name>/ is an isolated directory namespace containing declarative overrides and state
+      - substrate isolation — envs/<name>/workspace.db and envs/<name>/audit.db are uncommitted, locally managed SQLite instances
       - filesystem mandate — POSIX locking compliance required: see physics.md#Platform-tier-taxonomy
       - prod promotion gate — Tier 1 host required for prod merge: see trust.md#Ladder-laws
-      - prod protection — removal flags: see artifacts/governance.yaml#env
+      - prod protection — destructive operations require out-of-band cryptographic challenge signatures (WebAuthn/Passkey or GPG/SSH key)
       - backup mandate — git and object push required on mutation
   - Primitive scoping
     - Event identity
@@ -76,7 +76,7 @@
       - detection — env doctor checks unmerged production routines
       - inspection — env inspect flags schema drift and data staleness
       - staleness threshold — sim data older than 14 days triggers re-seed nag
-      - deprovisioning — prod removal requires --confirm-backup and --confirm-prod
+      - deprovisioning — prod removal requires signed cryptographic challenge token; CLI flag bypasses are rejected
   - env command
     - Management commands
       - provisioning — env new <name> [--seed prod]
@@ -85,7 +85,7 @@
       - merge — env merge <name> [target=prod]
       - deletion — env remove <name>
     - Safety controls
-      - prod removal flags — --confirm-backup and --confirm-prod mandatory
+      - prod destructive auth — operations halting prod require out-of-band cryptographic signature via Cockpit challenge or local key
       - git push gate — prod merge requires verified remote push credentials via git push --dry-run
-      - merge scope — code, YAML, and migrations only; binary database state (workspace.db) is strictly partition-local and never merged across environments
-      - merge pipeline — env merge executes git branch merge for code/schema, snapshots target DB, then applies forward DDL diff
+      - merge scope — declarative schemas, routines, and migration scripts only; binary database files remain strictly partition-local
+      - merge pipeline — env merge verifies schema forward-compatibility in sim, snapshots target DB, and applies forward migration plan

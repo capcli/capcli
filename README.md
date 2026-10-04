@@ -57,9 +57,9 @@ Capcli treats **local state mutations and external network egress with equal gat
 * **Zero Mutation on Breach:** `state_modified: false` is mathematically guaranteed on any non-zero exit code.
 
 ### 2. The Wire Floor
-* **Syscall 42 Trapping (Tier 1 Linux):** Raw socket calls (`connect`) triggered by `requests.get()` or `fetch()` are intercepted at the processor level via `seccomp-bpf` (`exit 2`). Tier 2 hosts (macOS/Windows) lack socket traps and rely on cooperative SDK mediation.
+* **Syscall 42 Trapping & Virtual Isolation:** Raw socket calls (`connect`) triggered by `requests.get()` or `fetch()` are intercepted via `seccomp-bpf` (Tier 1) or hardware microVM null-routing (Tier 2) (`exit 2`). Unconfined host execution is banned.
 * **Quarantined OpenAPI Catalogs:** The agent never reads raw 5MB Swagger files. Outbound traffic routes exclusively through imported, activated catalog verbs (`capcli api sync`).
-* **Proactive Token Buckets:** Client-side rate buckets block or yield tasks *before* packets touch the physical network. Downstream rate-limit headers (even nested JSONPath headers) dynamically sync the gate.
+* **Optimistic Token Buckets:** Client-side rate buckets regulate egress cadence but slave dynamically to remote headers. A single upstream 429 instantly drains the local bucket to zero and yields active tasks (`exit 6`) until the `Retry-After` epoch.
 * **Zero-Knowledge Vault:** API credentials live in an AES-256-GCM vault. The kernel injects `Authorization` headers at the socket edge, and memory buffers are zeroized (`zeroize`) immediately post-dispatch. The agent never sees the secret in plaintext.
 
 ---
@@ -100,7 +100,7 @@ def dispatch_order(order_id: Param[str], carrier: Param[str]):
 | **1. The Database Floor** | Native C `sqlite3_set_authorizer` + AST parser | Unbounded writes or missing `LIMIT` are **killed at prepare-time (`exit 2`)**. Zero rows touched. |
 | **2. The Wire Floor** | `bwrap` namespaces + `seccomp-bpf` (Tier 1) + Token Buckets | Raw socket call? **Trapped at Syscall 42 (`exit 2`)** on Tier 1. Quota dry? Background tasks **park cleanly (`exit 6`)**. |
 | **3. The Budget Cage** | Downward cascading frames ($\min$) | Op #51 on a 50-op run? **Terminated at frame boundary (`exit 2`)**. No half-executed side effects. |
-| **4. The Memory Spine** | Append-only SHA-256 Causal DAG | Tampered audit row or broken hash link? **Kernel refuses to boot (`exit 3`)**. Unaudited writes fail closed (`exit 5`). |
+| **4. The Memory Spine** | Append-only SHA-256 Causal DAG | Tampered audit row or broken link? **Isolates to quarantine branch**. Total storage failure **fails closed (`exit 5`)**. |
 
 ---
 
@@ -110,9 +110,9 @@ Machines communicate via exit codes, not polite English apologies. Capcli never 
 
 * **`exit 0`** $\rightarrow$ **Success.** Committed to relational state, hashed into the causal ledger.
 * **`exit 2`** $\rightarrow$ **Policy Denial.** Blocked by C authorizer, AST, trust rung, or op budget. **State untouched.**
-* **`exit 3`** $\rightarrow$ **Refusal / Drift.** Unparseable syntax, missing intent (`-m`), lockfile mismatch, or NTP clock drift >500ms. **State untouched.**
+* **`exit 3`** $\rightarrow$ **Refusal / Drift.** Unparseable syntax, missing intent (`-m`), lockfile mismatch, or missing host dependencies. **State untouched.**
 * **`exit 4`** $\rightarrow$ **Crash.** Sandbox runtime exception. Transaction cleanly rolled back.
-* **`exit 5`** $\rightarrow$ **Kernel Panic.** Audit sink unreachable. Hard halt. Kernel refuses to run unaudited.
+* **`exit 5`** $\rightarrow$ **Kernel Panic.** Total media failure across primary and quarantine audit sinks. Execution refused.
 * **`exit 6`** $\rightarrow$ **Yield.** Provider quota dry. Task safely parked in `_suspended_tasks` until token refill epoch.
 
 ---
@@ -137,7 +137,7 @@ trust_receipt:
   secret_leaks:      0
   pinned_routines:   32
   active_triggers:   4 crons, 3 webhooks, 1 endpoint
-  sleep_score:       100% (laptop closed, zero terminal panics)
+  deployment:        headless_daemon (systemd on hardened Linux)
 ```
 
 ---
@@ -151,7 +151,7 @@ Docker isolates the host OS from a container escape. It does nothing to stop an 
 Have fun with that at 3:00 AM. Prompts are probabilistic suggestions. `sqlite3_set_authorizer` and `seccomp-bpf` are compiled C machine code. Prompts drift; physics do not.
 
 #### Can the LLM modify its own policies?
-No. `schema.yaml`, `policy.yaml`, and `governance.yaml` are compiled into `capcli.lock` (a root SHA-256 hash). Any runtime drift between disk YAML and the lockfile triggers an instant `exit 3` boot refusal. Policy changes require signed Git commits.
+No. `schema.yaml`, `policy.yaml`, and `governance.yaml` compile into `capcli.lock`. In `prod`, runtime drift triggers an instant `exit 3` boot refusal. In `dev` and `sim`, valid YAML changes auto-recompile the lockfile to prevent developer and agent lockouts.
 
 #### What Harnesses does this work with?
 All of them. Claude Code, Hermes, OpenAI Swarms, DeepSeek, custom LangChain loops, or a naked `curl` bash script. If your system can type a command into a terminal, it can run inside Capcli.
@@ -164,7 +164,7 @@ All of them. Claude Code, Hermes, OpenAI Swarms, DeepSeek, custom LangChain loop
 |---|---|
 | **[Start Tour](docs/start/index.md)** | Install the static binary and run your first bounded task in 60 seconds. |
 | **[Daily Use](docs/use/index.md)** | Discovering capabilities, calling APIs, handling webhooks, and asking humans. |
-| **[Understand Physics](docs/understand/index.md)** | The Causal DAG, proactive token brokerage, and the 3-rung trust ladder. |
+| **[Understand Physics](docs/understand/index.md)** | The Causal DAG, optimistic token brokerage, and the 3-rung trust ladder. |
 | **[CLI & Command Reference](docs/reference/index.md)** | Machine-grade contracts for all 10 surface nouns (`run`, `api`, `bind`, etc.). |
 | **[Deep Concepts](docs/concepts/index.md)** | `seccomp-bpf` profiles, the 5-Gate compiler, and the embedded Cockpit. |
 
@@ -178,4 +178,4 @@ cd capcli && cargo build --release --target x86_64-unknown-linux-musl
 ```
 
 [MIT](LICENSE) © 2026 capcli contributors.  
-**Build an enterprise that runs while you sleep.**
+**Deterministic execution infrastructure for autonomous agents.**

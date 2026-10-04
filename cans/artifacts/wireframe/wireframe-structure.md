@@ -639,7 +639,7 @@ cans/artifacts/wireframe/
 | `run.execute.success.redirected` | success | 0 | — | redirected | Payload directed to file via `--out`; stdout emits receipt |
 | `run.execute.success.truncated` | success | 0 | — | truncated | Result $>500$ tokens; returns `next_cursor` |
 | `run.execute.denial.budget` | denial | 2 | policy.budget | exhausted | Frame ops/duration ceiling exhausted |
-| `run.execute.denial.budget_cascade` | denial | 2 | policy.budget | starved | Child frame clipped by parent/session $\min()$ |
+| `run.execute.denial.budget_cascade` | denial | 2 | policy.budget | starved | Pre-flight call-tree analysis detects starved child branch; invocation blocked |
 | `run.execute.denial.trust` | denial | 2 | policy.trust | unproven | Draft routine executed in prod |
 | `run.execute.denial.tier2_pinned` | denial | 2 | policy.trust | tier2 | `E045_TIER2_PINNED_DENIED` on macOS/Win |
 | `run.execute.denial.authorizer` | denial | 2 | policy.authorizer | forbidden | Prohibited table or column mutation |
@@ -734,7 +734,7 @@ cans/artifacts/wireframe/
 | `api.catalog.success.empty` | success | 0 | — | empty | Zero APIs configured |
 | `api.catalog.success.truncated` | success | 0 | — | truncated | Truncated at 500 verbs |
 | `api.activate.success.activated` | success | 0 | — | activated | Dormant verb shifted to active draft |
-| `api.activate.success.training_wheels`| success| 0 | — | probation | Activated with 3 synthetic contract checks |
+| `api.activate.success.contract_tested`| success| 0 | — | verified | Activated with verified OpenAPI JSON Schema |
 | `api.activate.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active verbs reached |
 | `api.activate.denial.rate` | denial | 2 | policy.authorizer | rate_limit | Exceeded 10 activations/hour |
 | `api.activate.refusal.missing_intent`| refusal| 3 | compile | no_intent | Missing intent flag on activation |
@@ -743,7 +743,7 @@ cans/artifacts/wireframe/
 | `api.prove.denial.policy` | denial | 2 | policy.authorizer | forbidden | Verb egress rule rejected |
 | `api.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Upstream contract format failure |
 | `api.ship.success.shipped` | success | 0 | — | shipped | Promoted to reviewed |
-| `api.ship.success.graduated` | success | 0 | — | graduated | Reaches Call 4; enters standard governance |
+| `api.ship.success.graduated` | success | 0 | — | graduated | 100% schema match & shadow canary passed |
 | `api.ship.denial.metrics` | denial | 2 | policy.authorizer | unproven | Fails synthetic contract replay |
 | `api.ship.refusal.missing_reason` | refusal | 3 | validation | missing_arg | Missing elevation justification |
 | `api.stats.success.populated` | success | 0 | — | populated | Quota usage and error metrics |
@@ -798,6 +798,7 @@ cans/artifacts/wireframe/
 | `ping.list.success.populated` | success | 0 | — | populated | Pending suspension questions |
 | `ping.list.success.empty` | success | 0 | — | empty | Zero pending inquiries |
 | `ping.resolve.success.resolved` | success | 0 | — | resolved | Choice selected; resumes task |
+| `ping.resolve.denial.occ_conflict`| denial | 2 | db.engine | stale_state | Touched rows modified during suspension; OCC fence violated |
 | `ping.resolve.refusal.not_found` | refusal | 3 | validation | not_found | Invalid ask ID |
 | `ping.resolve.denial.expired` | denial | 2 | policy.notify | expired | Timeout elapsed; fail-closed |
 | `ping.expire.success.completed` | success | 0 | — | completed | Explicit expiration executed |
@@ -836,10 +837,10 @@ cans/artifacts/wireframe/
 | `env.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Schema divergence detected |
 | `env.merge.success.merged` | success | 0 | — | merged | DDL forwarded to production |
 | `env.merge.denial.trust` | denial | 2 | policy.trust | unreviewed | Production merge requires reviewed |
-| `env.merge.refusal.unmerged` | refusal | 3 | compile | conflict | Git branch conflict blocks DDL |
+| `env.merge.refusal.plan_conflict` | refusal | 3 | compile | conflict | Target schema migration plan conflict blocks DDL |
 | `env.merge.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile out of sync |
 | `env.remove.success.removed` | success | 0 | — | removed | Environment dismantled |
-| `env.remove.denial.prod_flags` | denial | 2 | policy.authorizer | confirmation | Prod requires dual confirm flags |
+| `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
 ### 4.9 `sys/` (15 verbs $\rightarrow$ 39 screen pairs)
@@ -871,11 +872,11 @@ cans/artifacts/wireframe/
 | `sys.doctor.success.nominal` | success | 0 | — | nominal | Host doctor readiness check |
 | `sys.doctor.success.report` | success | 0 | — | report | Full YAML Trust Receipt |
 | `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
-| `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or bwrap |
-| `sys.doctor.refusal.clock_drift`| refusal| 3 | host.ntp | clock_skew | Host clock delta $>500$ms vs NTP |
+| `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or supported sandbox provider (bwrap/crun/microvm) |
+| `sys.doctor.warning.clock_drift`| success| 0 | host.ntp | clock_skew | Host clock delta $>500$ms vs NTP (monotonic fallback active) |
 | `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
-| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Audit SHA-256 chain broken |
-| `sys.doctor.recovery_mode` | success | 0 | — | recovery | `CAPCLI_RECOVERY=1` break-glass active |
+| `sys.doctor.warning.tamper` | success | 0 | — | tampered | Audit SHA-256 chain broken; corrupted block isolated to quarantine |
+| `sys.doctor.quarantine_mode`| success | 0 | — | quarantine | Quarantine ledger inspection active |
 | `sys.doctor.alarm.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
 | `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |
 | `sys.backup.denial.push_fail` | denial | 2 | policy.authorizer | push_fail | Remote S3/Git push rejected |
@@ -968,7 +969,7 @@ trust_receipt:
   secret_leaks:      0
   pinned_routines:   32
   active_triggers:   4 crons, 3 webhooks, 1 endpoint
-  sleep_score:       100%
+  deployment:        headless_daemon (systemd Linux)
 ```
 
 ---
@@ -1125,18 +1126,16 @@ trust_receipt:
 
 ---
 
-### 5.11 NTP Clock Drift Boot Refusal (`screens/sys/doctor/sys.doctor.refusal.clock_drift.txt`)
+### 5.11 NTP Clock Drift Diagnostic Warning (`screens/sys/doctor/sys.doctor.warning.clock_drift.txt`)
 
 ```text
-[dev:tier_1]  ✗  exit 3
+[dev:tier_1]  [WARN] host.ntp.clock_drift
 
-  FATAL  kernel.boot.clock_drift_exceeded
-         Host clock delta vs NTP is 840ms (maximum allowable: 500ms).
-         Execution refused to prevent lease corruption and quota bypass.
+  WARN   Host clock delta vs NTP is 840ms.
+         Monotonic clock (CLOCK_MONOTONIC) and SQLite transaction sequencing active.
 
   state_modified: false
-  layer: boot
-  remedy: synchronize host system clock via 'chronyd' or 'ntpdate'
+  remedy: run 'chronyd' or 'ntpdate' to re-align wall clock
 ```
 
 ---

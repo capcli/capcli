@@ -43,9 +43,10 @@
     "banned_characters": ["|", "├─", "└─"],
     "divider_character": "─",
     "denial_keys": ["domain", "culprit", "remedy", "state_modified", "layer"],
-    "truncation": {
+    "pagination": {
       "max_result_tokens": 500,
-      "emits": ["truncated", "next_cursor"]
+      "mandate": "keyset_schema",
+      "required_envelope_keys": ["items", "next_cursor", "has_more"]
     },
     "help_stub_max_lines": 6,
     "banned_flags": ["--force", "--override-budget", "--force-prod", "--verbose"],

@@ -29,7 +29,7 @@
         - bounds
           - row ceiling — see artifacts/policy.yaml#trust.pinned
         - operational autonomy
-          - headless schedules — may_run_unattended: true (artifacts/policy.yaml)
+          - headless schedules — may_run_unattended: true; strictly mandates dedicated systemd server daemon (local workstations prohibited from unattended prod runs)
           - endpoint serving — minimum floor: see artifacts/governance.yaml#serve
         - observation depth
           - audit logging — summary recording
@@ -52,7 +52,7 @@
         - bulk modifications — autonomous up to declared routine row ceilings
         - external egress — HTTP calls leaving perimeter require explicit grant
       - cross-agent floor — cross-agent calls require callee trust >= reviewed; drafts cannot be dependencies
-      - training wheels graduation — unapproved calls graduate to normal governance automatically on call 4
+      - contract proof promotion — external verbs promote only via validated JSON Schema contract proofs and shadow canary runs; arbitrary call-count graduation is banned
       - monotonic ascent — ladder climbed sequentially; elevation skips denied
       - verified promotion — promotion automated upon passing synthetic sim replay and invariant suite
       - dependency floor — cross-agent callee routines must hold trust >= reviewed
@@ -108,10 +108,10 @@
         - rehearsal pass — mock execution satisfies conjunction metrics with zero policy denials
       - fallback handling
         - execution — prod-only and un-simulated verbs resolve to schema-validated mock fixtures in sim
-      - training wheels
-        - target verbs — skip and prod-only verbs
-        - synthetic contract proof — contract replay replaces human sign-off: see artifacts/governance.yaml#api.prod_first_calls
-        - tracking — remaining calls decremented in _api_catalog
+      - contract verification
+        - target verbs — all external HTTP egress capabilities
+        - live contract proof — responses validated against upstream OpenAPI JSON Schemas; safe idempotent routes verified via read-only shadow canarying
+        - promotion floor — unvalidated verbs remain locked to draft
     - Cost evidence
       - profiling metrics
         - latency — p50 and p95 duration per leaf primitive
@@ -140,6 +140,7 @@
       - command — capcli sys doctor --report
       - provenance — computed directly from kernel _audit mirror
     - Verified receipt lines
+      - deployment topology — dedicated_daemon (systemd Linux) or local_workstation (ephemeral)
       - host execution tier — tier_1 (hardened) or tier_2 (degraded): see physics.md#Platform-tier-taxonomy
       - sandbox provider — bwrap, podman, or broker: see action.md#Sandbox-execution
       - audited operations — total count of recorded events

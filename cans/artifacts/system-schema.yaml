@@ -1,6 +1,6 @@
 version: 3                             # compiled into capcli.lock root hash
 engine: sqlite                         # SQLite SSOT substrate
-db: workspace.db                       # managed runtime database
+db: audit.db                           # isolated ledger database (workspace.db hosts domain state)
 readonly_for_agent: true               # kernel-upgrades only; agent write throws exit 2
 
 # ───────────────────────────────────────────────────────────────
@@ -8,7 +8,7 @@ readonly_for_agent: true               # kernel-upgrades only; agent write throw
 # ───────────────────────────────────────────────────────────────
 tables:
   _audit:
-    description: "Append-only historical audit mirror; primary query surface for what happened"
+    target_db: audit.db                # physically isolated database file
     sys: true                          # readonly_grant for agents
     imm_rows: true                     # authorizer denies UPDATE & DELETE unconditionally
     columns:
@@ -39,6 +39,7 @@ tables:
       - [[capability, decision]]
 
   _api_quota:
+    target_db: workspace.db
     description: "Live external provider rate limits parsed deterministically from response headers"
     sys: true
     columns:
@@ -170,6 +171,7 @@ tables:
       principal: text!                 # target human or partner identity
       question: text!                  # prompt text
       options: json!                   # allowed choice strings array
+      state_fences: json!              # OCC version hashes of read dependencies captured at suspension
       timeout_at: int!                 # unix epoch seconds
       status: text=pending             # pending, resolved, expired
       resolution: text                 # selected option
@@ -223,4 +225,20 @@ tables:
     idx:
       - [[status, resume_at]]
       - [frame_id]
+
+  _outbox_events:
+    target_db: workspace.db
+    description: "Transactional outbox for external API mutations requiring verified idempotency headers"
+    sys: true
+    columns:
+      id: pk
+      idempotency_key: text! unique    # kernel-minted idempotency UUID
+      provider: text!                  # provider slug in apis/
+      verb: text!                      # target API verb
+      payload: json! mask=true         # egress parameters
+      idempotency_header: text!        # verified upstream header (e.g. Idempotency-Key)
+      status: text=pending             # pending, dispatched, failed
+      created_at: int!
+    chk:
+      - "status IN ('pending', 'dispatched', 'failed')"
 

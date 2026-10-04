@@ -8,10 +8,10 @@
       - .gitignore — ignores **/workspace.db*, *.snap.db, target/, dist/, and tmpfs scratch
       - repomix.config.json — context packing configuration for LLM code review
     - Host system dependencies
-      - git binary — host git >= 2.30 for worktrees: see space.md#Environment-axis
+      - git binary — host git >= 2.30 for read-only declarative repo tracking
       - python runtime — host python >= 3.11 for sandboxed routines: see action.md#Routines
       - javascript runtime — host bun >= 1.1 or node >= 20 for polyglot execution
-      - bubblewrap binary — host bwrap >= 0.8.0 mandatory on Tier 1; optional on Tier 2: see physics.md#Platform-tier-taxonomy
+      - sandbox backends — bwrap >= 0.8.0, crun >= 1.5, or podman rootless on Tier 1; microvm/wasm on Tier 2: see physics.md#Platform-tier-taxonomy
       - target toolchains — musl (Linux Tier 1), apple-darwin (macOS Tier 2), android (Termux Tier 2), msvc (Windows Tier 2)
     - Root management commands
       - compile development — cargo build --workspace: see physics.md#Exit-code-law
@@ -44,6 +44,7 @@
       - governance.yaml — active runtime structural boundaries: see artifacts/governance.yaml
     - Live transactional databases
       - workspace.db — live SQLite in WAL mode (chmod 600): see world.md#SQLite-as-SSOT
+      - audit.db — dedicated append-only ledger SQLite database (chmod 600): see effect.md#Audit-spine
       - workspace.db-wal — write-ahead log for serializing commits: see agent.md#Coordination
       - workspace.db-shm — shared-memory index for concurrent readers: see world.md#SQLite-as-SSOT
     - Functional data directories
@@ -62,7 +63,7 @@
         - apis/stripe.yaml — compiled OpenAPI provider verbs: see action.md#Catalog-synchronization
         - apis/stripe.sim.yaml — simulation base URL overlays: see space.md#Policy-overlays
         - apis/stripe.mock.yaml — offline canned simulation fixtures: see space.md#Sim-mode-taxonomy
-      - envs/ — isolated git worktrees and partition roots: see space.md#Environment-axis
+      - envs/ — isolated directory namespaces and partition roots: see space.md#Environment-axis
         - envs/dev/ — local development world with isolated DB: see space.md#World-definitions
         - envs/sim/ — simulation replay world with masked see space.md#World-definitions
         - envs/prod/ — live production world for pinned trust: see space.md#World-definitions
@@ -81,9 +82,9 @@
         - rpc.rs — streaming JSON-RPC 2.0 lines models: see #Python-runtime-harness-package
     - Core domain engine crate
       - crate identity — crates/capcli-core
-      - configuration — Cargo.toml linking rusqlite bundled, petgraph, sha2, aes-gcm
+      - configuration — Cargo.toml linking rusqlite bundled, petgraph, sha2, aes-gcm, tract-onnx
       - engine module (crates/capcli-core/src/)
-        - db/ — rusqlite WAL pool and authorizer callbacks: see world.md#SQLite-as-SSOT
+        - db/ — dual rusqlite WAL pool (workspace.db for state, audit.db for ledger) and VDBE mutation hooks
         - parse/ — VDBE explain bytecode and query validation: see physics.md#Layer-1.5:-prepare-time-cross-check
         - compile/ — YAML AST compilation and petgraph acyclic check: see world.md#Gate-2:-Semantics
         - budget/ — budget frame push/pop and min() cascade: see budget.md#Cascade
@@ -97,7 +98,7 @@
         - commands/ — clap subcommand handlers for ten nouns: see interface.md#CLI-surface
         - terminal/ — procedural renderers for the 3 visual archetypes (Diagnostic, Tree, Receipt) over CliEnvelope<T>: see physics.md#Diagnostic-output-law
     - Persistent daemon crate
-      - crate identity — crates/capcli-daemon
+      - crate identity — crates/capcli-daemon (targets systemd service on headless Linux servers for 24/7 background automation)
       - configuration — Cargo.toml linking axum, tower, croner, rust-embed, capcli-core, capcli-types
       - daemon surface (crates/capcli-daemon/src/)
         - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#Administrative-cockpit-pwa
@@ -130,13 +131,13 @@
       - context_quota.py — ctx.quota inspect, earmark, and release SDK wrappers
       - context_storage.py — ctx.storage put, get, and url wrappers: see action.md#The-ctx-contract
       - context_ping.py — ctx.ping notify and ask suspension handlers: see action.md#The-ctx-contract
-      - ipc_client.py — streaming JSON-RPC over /run/capcli/kernel.sock: see action.md#Sandbox-execution
+      - native_bridge.py — in-process FFI bridge (`capcli_native.so`) using shared memory for zero-copy DB and Authorizer calls; socket client used exclusively for background daemon RPC
   - Core domain subsystems (crates/capcli-core/src/)
     - Domain 1: Database & storage engine (db/)
       - Subsystem modules
         - connection.rs — rusqlite connection pool in WAL mode: see world.md#SQLite-as-SSOT
         - authorizer.rs — sqlite3_set_authorizer C callback: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - migrate.rs — 12-step table rebuild engine and 500ms lock watchdog: see world.md#Schema-evolution
+        - migrate.rs — trigger-replicated online shadow table engine with atomic <20ms cutover: see world.md#Schema-evolution
         - bytecode.rs — EXPLAIN opcode parser checking OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
         - snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
         - claims.rs — distributed lease locks via _claims: see agent.md#Coordination
@@ -148,7 +149,7 @@
     - Domain 2: Routine engine & sandboxing (routine/)
       - Subsystem modules
         - runner.rs — multi-runtime process supervisor (bun, python3, native)
-        - jail.rs — bwrap wrapper mounting host engines and applying runtime seccomp profile
+        - jail.rs — multi-backend sandbox manager (bwrap, crun, gVisor) applying runtime seccomp profiles
         - shape_gate.rs — AST parser for source mode; JSON schema validator for contract mode
         - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
         - manifest.rs — receives declared manifests via runner IPC: see action.md#Manifests-&-fingerprints
@@ -175,8 +176,8 @@
         - catalog.rs — manages OpenAPI YAML specs in apis/: see action.md#Catalog-synchronization
         - auth_schemes.rs — executes SigV4 canonical hashing, OAuth2 token rotations, and mTLS client cert binding
         - projector.rs — streams JSONPath wire filtering to discard oversized payloads before sandbox intake
-        - cassette.rs — VCR HTTP cassette recorder and deterministic replay engine for sim mode
-        - outbox.rs — stages mutating API calls alongside DB transactions to guarantee dual-write consistency
+        - contract_validator.rs — live response JSON Schema validator and shadow canary engine for external APIs
+        - outbox.rs — stages mutating API calls alongside DB transactions; verifies upstream idempotency header mapping and rejects unmapped routes with exit 3
         - quota.rs — dual-window token bucket and rolling window accounting in _api_quota: see budget.md#Quotas
         - earmark.rs — atomic reservation transactions and earmark balance ledger: see budget.md#Cascade
         - header_parser.rs — extracts RFC headers and parses nested JSON usage payloads: see artifacts/policy.yaml#api
@@ -208,6 +209,7 @@
         - option_gate.rs — limits question choices to max 5: see artifacts/governance.yaml#notify
         - length_gate.rs — enforces question token caps: see artifacts/governance.yaml#notify
         - fail_closed_gate.rs — fails suspended routine on timeout: see artifacts/policy.yaml#notify
+        - occ_fence_gate.rs — verifies dependency state_fences on resume; denies stale resumptions with exit 2
       - Domain telemetry — tracks ask response latencies, pending queues, and expiry counts
     - Domain 7: Governance & rule compilation (rule/)
       - Subsystem modules
@@ -223,11 +225,11 @@
       - Domain telemetry — tracks YAML AST compilation cycles and lockfile validation time
     - Domain 8: Environment & worktree management (env/)
       - Subsystem modules
-        - worktree.rs — provisions and merges git worktrees: see space.md#Environment-axis
+        - namespace.rs — provisions and manages environment directory partitions: see space.md#Environment-axis
         - masking.rs — executes format-preserving anonymization: see space.md#Data-masking
         - drift.rs — checks schema and data staleness vs prod: see space.md#Environment-drift
       - Execution gates
-        - prod_protect_gate.rs — demands dual confirmation flags: see space.md#World-governance
+        - prod_protect_gate.rs — verifies out-of-band cryptographic challenge signatures: see space.md#World-governance
         - merge_gate.rs — verifies rehearsal proof before merge: see space.md#Safety-controls
       - Domain telemetry — measures worktree creation overhead and anonymization durations
     - Domain 9: System, audit & diagnostics (sys/)
@@ -245,8 +247,8 @@
     - Domain 10: Capability execution & discovery (run/)
       - Subsystem modules
         - registry.rs — Universal Resource Pointer dispatcher: see action.md#Global-pointer-registry
-        - search.rs — cascades exact, prefix, FTS5, and fuzzy: see action.md#Search-surface
-        - preflight.rs — evaluates can_invoke_now verdict: see budget.md#Pre-flight
+        - search.rs — hybrid discovery engine cascading exact, prefix, FTS5 BM25, and local ONNX vector similarity
+        - preflight.rs — evaluates static call-tree cost graph to return recursive can_invoke_now verdict: see budget.md#Pre-flight
       - Execution gates
         - preflight_gate.rs — denies call if preflight fails: see budget.md#Pre-flight
         - trust_floor_gate.rs — blocks caller lacking rung authority: see trust.md#The-ladder

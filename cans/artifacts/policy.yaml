@@ -74,11 +74,8 @@ query:
     require_where: true
     require_limit: true
     max_limit: 1000
-    max_rows_affected: 100                     # blast radius cap (trust overlays adjust)
-    deny_patterns:
-      - "UPDATE * SET * WHERE * OR 1=1"
-      - "DELETE FROM * WHERE NOT EXISTS *"
-      - "* WHERE 1=1 *"
+    max_rows_affected: 100                     # enforced mid-flight via sqlite3_update_hook; hard abort on overflow
+    runtime_mutation_trap: true                # terminates VDBE execution if mutated rows > limit, regardless of tautologies
 
   insert:
     max_rows_per_statement: 500                # chunked beyond this
@@ -165,7 +162,7 @@ api:
     max_call_egress_bytes: 5242880       # 5MB physical wire limit per egress dispatch
     confirm_above_fuel: 50000            # gate reserved for high wire/compute impact
   rate_limit:                                    # live quota from provider responses
-    model: proactive_token_bucket                # client-side bucket is PRIMARY authority
+    model: optimistic_token_bucket               # client-side bucket is an optimistic cache slaved to upstream headers
     default_capacity: 60                         # burst ceiling
     refill_rate_per_sec: 1.0                     # steady-state token drip
     pre_call_gate: true                          # fail-closed: tokens < 1 → exit 2 immediately
@@ -175,6 +172,7 @@ api:
       critical_floor_tokens: 0                   # critical tasks can drain pool to 0
     header_calibration:                          # reactive headers used ONLY to recalibrate bucket
       reconcile_on_response: true                # sync local bucket down if provider reports lower
+      on_unexpected_429: zero_bucket_and_yield   # remote 429 instantly drains local bucket to 0 and parks frames (exit 6)
       parser_engine: dynamic                     # standard_rfc or json_path
       reset_header: "X-RateLimit-Reset"
       remaining_header: "X-RateLimit-Remaining"
@@ -194,6 +192,7 @@ api:
     require_intent: true
     require_trust: reviewed
     idempotency_key: kernel_minted
+    require_upstream_idempotency_header: true  # outbox staging denied if upstream lacks idempotency header mapping
   replay: manual                               # never auto-replayed
   search:
     log_all_queries: true                        # every search is an audit event
@@ -332,7 +331,8 @@ audit:
 # ───────────────────────────────────────────────────────────────
 fail_closed:
   no_policy: refuse_boot
-  lockfile_mismatch: refuse_boot           # abort if hash(schema+system+policy+gov) != capcli.lock
+  lockfile_mismatch_prod: refuse_boot      # prod aborts if hash(schema+system+policy+gov) != capcli.lock
+  lockfile_mismatch_non_prod: auto_recompile # dev and sim auto-update lockfile when syntax passes
   system_schema_hash_mismatch: refuse_boot # kernel integrity check
   unauthorized_runtime: deny               # exit 2 if routine targets banned engine
   runtime_binary_missing: refuse_boot      # exit 3 if declared provider missing on host

@@ -45,11 +45,11 @@
       "description": "YAML diff -> Gate 2 circular ref block -> dry-run impact envelope -> snapshot commit -> atomic migration merge"
     },
     "journey_tamper_forensics": {
-      "name": "Integrity Panic & Break-Glass Recovery",
+      "name": "Tamper Quarantine & Forensic Isolation",
       "color": "#f0883e",
-      "entry": "sys.doctor.panic.tamper",
-      "terminal": "sys.doctor.recovery_mode",
-      "description": "Broken SHA-256 chain -> emergency panic (exit 5) -> CAPCLI_RECOVERY=1 diagnostic re-entry"
+      "entry": "sys.doctor.warning.tamper",
+      "terminal": "sys.doctor.quarantine_mode",
+      "description": "Broken SHA-256 chain -> isolate corrupted block to audit.quarantine.jsonl -> alert dead-letter -> active state remains online"
     },
     "journey_human_in_the_loop": {
       "name": "Ping Ask Suspension & Resolution",
@@ -330,13 +330,13 @@
       "arrow_type": "success"
     },
     {
-      "id": "t_tamper_panic_to_recovery",
+      "id": "t_tamper_quarantine_inspect",
       "journeys": ["journey_tamper_forensics"],
-      "from": ["sys.doctor.panic.tamper"],
-      "to": ["sys.doctor.recovery_mode"],
-      "trigger": "boot_recovery_shell",
-      "label": "CAPCLI_RECOVERY=1 capcli sys doctor",
-      "arrow_type": "denial"
+      "from": ["sys.doctor.warning.tamper"],
+      "to": ["sys.doctor.quarantine_mode"],
+      "trigger": "inspect_quarantine",
+      "label": "capcli sys doctor --quarantine",
+      "arrow_type": "progress"
     },
     {
       "id": "t_ask_suspended_to_list",

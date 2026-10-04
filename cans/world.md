@@ -3,7 +3,9 @@
   - SQLite as SSOT
     - Storage trinity
       - workspace.db
-        - ssot role — primary source of truth for domain state AND _audit events
+        - ssot role — dedicated source of truth for domain tables, claims, and local state
+      - audit.db
+        - ssot role — isolated, append-only SQLite database for _audit ledger to eliminate WAL lock contention
         - process — capcli kernel-managed
         - permissions — chmod 600
         - engine substrate
@@ -31,9 +33,7 @@
         - version control
           - tracking — committed to git
           - diffs — readable schema change history
-        - commit automation
-          - trigger — successful schema migrations
-          - cadence — see artifacts/governance.yaml#backup
+        - snapshot automation — deterministic DDL and seed dump generated locally on migration; synced directly to object storage
         - disaster recovery
           - restoration — sys recover: see recovery.md#Restore-path
       - object snapshots — binary VACUUM INTO backups in object store: see recovery.md#Snapshots
@@ -41,10 +41,10 @@
       - execution flow
         - step 1 — causal intent declaration
         - step 2 — kernel gate intake
-        - step 3 — AST structural analysis
-        - step 4 — C-level authorizer interception
+        - step 3 — AST structural pre-parse and target validation
+        - step 4 — C-level authorizer (sqlite3_set_authorizer) & VDBE mutation hooks (sqlite3_update_hook)
         - step 5 — physical SQLite commit
-        - step 6 — audit mirror emission
+        - step 6 — asynchronous audit emission to audit.db and JSONL
       - perimeter enforcement
         - direct driver paths — denied
         - external ORM sockets — denied
@@ -152,11 +152,11 @@
     - Four-phase industrial pipeline
       - 1. Expand phase — additive, non-breaking DDL (nullable columns, new tables); execution SLA < 10ms
       - 2. Backfill phase — user-space pinned routine (migrations/NNNN/backfill.py); bounded chunks (max 500 rows/txn); yields cleanly on quota/fuel (exit 6)
-      - 3. Contract phase — destructive DDL executed by kernel migrate.rs via 12-step shadow table rebuild; drops old columns, applies NOT NULL and FKs
+      - 3. Contract phase — destructive DDL executed by kernel migrate.rs via trigger-replicated online shadow table; background backfill runs in chunks (max 500 rows/txn)
       - 4. Pin phase — verifies live PRAGMA matches schema.yaml; updates root hash in capcli.lock
-    - Rebuild mechanics
-      - kernel responsibility — Rust kernel generates shadow table creation, row copy, index rebuild, and atomic swap; agent DDL authoring banned
-      - lock duration SLA — table exclusive write lock capped at 500ms; breaches abort immediately with exit 2
+    - Online migration mechanics
+      - kernel responsibility — Rust kernel creates shadow table, attaches delta replication triggers, copies base data in chunks, and performs atomic swap (<20ms lock)
+      - lock duration — exclusive write lock held only during final trigger detach and table rename
     - Migration lifecycle commands
       - planning — rule plan --name <slug> generates migrations/NNNN_<slug>/ bundle
       - rehearsal — rule prove <id> --env sim validates FK integrity, lock timing, and backfill fuel
@@ -219,10 +219,9 @@
         - immutable targets — imm_cols exist in target table
       - failure code — throws exit 3
     - Gate 3: Manifest lock
-      - timing — boot-time startup check in prod and sim environments
-      - validation — compile sha256 of schema, system-schema, policy, and governance
-      - verification — computed hash must match active capcli.lock entry exactly
-      - failure code — throws exit 3 (refuse boot in prod/sim; marks dev as uncompiled draft)
+      - timing — boot-time check on engine initialization
+      - prod enforcement — hash mismatch against capcli.lock aborts boot immediately with exit 3
+      - dev/sim reconciliation — if Gate 1 and Gate 2 pass, engine auto-recompiles capcli.lock and logs [WARN] lockfile.auto_recompiled
     - Gate 4: Live drift
       - timing — runtime inspection via sys doctor
       - detection — PRAGMA scans compare live tables against compiled YAML
@@ -231,7 +230,7 @@
     - Gate 5: Migration safety
       - timing — apply-time during rule apply
       - execution — rehearsal runs on masked sim snapshot; checks PRAGMA foreign_key_check
-      - lock SLA gate — fails closed (exit 2) if shadow table swap lock duration exceeds 500ms
+      - online cutover gate — verifies shadow table delta lag reaches zero before executing atomic <20ms table swap
       - backfill safety — validates backfill routine terminates cleanly within session fuel bounds
       - failure code — aborts cutover, discards rehearsal state, returns exit 2 or 3
   - Command surface db

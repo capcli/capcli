@@ -20,7 +20,7 @@
       - enforcement — constraints enforced via SQLite C authorizer and OS jails
       - policy anchor — default: deny across all capability vectors
     - Physics over rules
-      - dual store recovery — hot state in workspace.db; full snapshot backups synced to git and object store
+      - dual store recovery — hot state in workspace.db; point-in-time binary snapshots synced directly to object store
       - mechanism — impossible paths preferred over prompt instructions
       - unbounded writes — denied structurally via AST and authorizer
       - failure modes — designed denials teach harness through structured feedback
@@ -66,4 +66,4 @@
       - no ORMs or query builders — raw SQL crosses authorizer directly
       - no runtime policy mutation — policy changes require git commits
       - append-only audit spine — domain tables permit bounded DELETEs; _audit table is strictly append-only
-      - no kernel LLM — zero AI inference or natural language parsing in core
+      - zero generative LLMs — zero LLM generation or probabilistic parsing in kernel; deterministic quantized ONNX embeddings permitted strictly for vector search

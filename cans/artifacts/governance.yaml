@@ -11,8 +11,9 @@ policy_version: 5
 # 1. REGISTRY — the shelves have dimensions
 # ───────────────────────────────────────────────────────────────
 registry:
-  max_routines: 300                   # hard cap — register refuses past it
-  soft_cap: 200                       # sys doctor nags; consolidation urged
+  max_routines: 1000                  # local hybrid ONNX vector index scales registry capacity
+  soft_cap: 800                       # sys doctor nags; consolidation urged
+  embedded_semantic_index: true       # in-binary ONNX vector similarity enabled
   max_per_agent_draft: 30             # anti-flood per agent identity
   creation_rate: { per_hour: 10 }     # no rapid-fire generation
   search_index:
@@ -66,6 +67,7 @@ routine_shape:
     max_ops_per_run: 50               # primitive DAG ceiling — op 51 aborts
     max_duration_seconds: 300         # sandbox watchdog kill
     max_result_tokens: 500            # summary cap crossing to the model
+    enforce_pagination_contract: true # bans raw JSON string chopping; requires { items, next_cursor } schema
     max_txn_statements: 10            # one transaction stays one thought
     session_ops_ceiling: 500          # session-level hard cap; frames cascade within this
 
@@ -79,9 +81,9 @@ routine_shape:
   max_in_flight_poll_seconds: 30       # async 2-step media/container polling duration cap
   max_suspended_tasks: 100             # daemon queue capacity for yielded frames
   sandbox:
-    provider: auto                    # auto | bwrap | podman | broker
+    provider: auto                    # auto | bwrap | podman | microvm | wasm
     scratch_mb: 64                    # tmpfs ceiling
-    allow_unconfined: false           # true permits broker mode on Tier 2 in dev/sim
+    allow_unconfined: false           # cooperative host process execution is strictly prohibited
     tiers:
       tier_1: [linux, wsl2]           # see: cans/physics.md#Platform-tier-taxonomy
       tier_2: [darwin, termux, win]   # see: cans/physics.md#Platform-tier-taxonomy
@@ -224,7 +226,7 @@ notify:
 # ───────────────────────────────────────────────────────────────
 env:
   max_environments: 5                 # isolated directory namespaces under envs/
-  prod_removal_flags: 2               # number of confirm flags to remove prod (!)
+  prod_destructive_auth: challenge_signature  # requires out-of-band WebAuthn/SSH signed challenge
   require_backup_push: true           # no world exists unbacked
   sim_seed_masking: enforce           # sensitive columns masked on fork, always
 
@@ -232,12 +234,9 @@ env:
 # 10. BACKUP — recoverability is a structural property
 # ───────────────────────────────────────────────────────────────
 backup:
-  interval_minutes: 15
-  max_drift_minutes: 30               # doctor alarms if commits fall behind
-  push: true
+  provider: object_storage            # s3 | r2
+  snapshot_interval_minutes: 60
   include_audit: true
-  trigger_on: [save, apply, promote, migrate, merge, import, register, restore, serve.add, bind, vault]
-  git_max_age_days: 90
 
 # ───────────────────────────────────────────────────────────────
 # 11. DENIAL UX — limits teach, not just block

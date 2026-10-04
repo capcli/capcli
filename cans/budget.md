@@ -56,6 +56,8 @@
       - Safe Yield — Frames suspended at floor return exit 6 and land cleanly in `_suspended_tasks`
 
     - min() law
+      - Static call-graph evaluation — kernel inspects declared child dependency trees prior to root frame execution
+      - Pre-flight rejection — if parent_remaining or session headroom cannot satisfy the worst-case leaf path, can_invoke_now returns false before invocation
       - Child effective limit = min(declared need, governance ceiling, parent_remaining, session_ceiling)
       - Governance ceiling comes from routine_shape.execution limits (artifacts/governance.yaml)
       - The kernel enforces the tightest constraint at every frame — the cage tightens, never widens
@@ -109,12 +111,12 @@
       - composition.effective_limits: "min(50, session_remaining)" strings per dimension
       - composition block: max_nesting_depth, child_routines list, budget_inheritance
   - Quotas
-    - Proactive rate limiting
-      - Local bucket — token-bucket throttle regulates client-side egress cadence
+    - Optimistic rate limiting
+      - Local bucket — optimistic token-bucket regulates client-side cadence; slaved dynamically to upstream headers
       - Multi-window tracking — supports dual-rate partitions (burst bucket + rolling window ceilings e.g. 24h / 86400s)
       - Gate decision — local bucket empty pauses dispatch up to timeout; hard limit exhaustion throws exit 2
-      - Dynamic header calibration — reconciles RFC standard headers or extracts structured JSON payloads (e.g. X-Business-Use-Case-Usage) via JSONPath
-      - Remote 429 handling — automatic exponential backoff with jitter in kernel proxy before reporting error
+      - Dynamic header calibration — reconciles RFC headers and structured JSON payloads; unexpected 429 instantly forces local bucket tokens to 0
+      - Remote 429 handling — active frames immediately yield to _suspended_tasks (exit 6) locked until upstream Retry-After epoch
       - Storage
         - State lands in `_api_quota` rows — kernel-written, agent-readable
         - Rows scoped per env: sim and prod quotas independent — rehearsal never burns prod limits
@@ -132,8 +134,8 @@
       - All governance caps (registry, schedule, watch, serve, surface): see artifacts/governance.yaml
     - Output caps
       - Routine results
-        - max_result_tokens 500 — summaries crossing to the model truncate
-        - pagination envelope — outputs return { items, pagination: { has_more, next_cursor, batch_size }, truncated: bool }; raw dumps > 500 tokens truncated
+        - max_result_tokens 500 — summary ceiling crossing to the model
+        - pagination contract — raw JSON truncation is prohibited; collections exceeding 500 tokens must emit typed pagination envelopes ({ items, next_cursor, has_more }); unbounded unpaginated dumps fail prove with exit 3
         - serve response max_result_tokens 500 — inherited routine cap
       - Ping surfaces
         - notify message_max_tokens 300 — notifications are summaries, not essays
@@ -164,7 +166,7 @@
       - Task resumption — daemon monitors resume_at timestamps and automatically re-queues execution on token refill
       - Hard deny — dry pool + Critical task throws exit 2 (see physics.md#Exit-code-law)
       - No partial execution past budget — routine fails cleanly, no half-executed side effects
-      - Runtime: op #51 aborts (limit_exceeded), watchdog kills past 300s, results truncated: true
+      - Runtime: op #51 aborts (limit_exceeded), watchdog kills past 300s, unbounded result dumps fail prove with exit 3
     - Pre-flight
       - budget_status.can_invoke_now is the pre-flight verdict; false + blocking_reasons → don't call
       - Warnings are non-blocking — remaining below warn_at_remaining

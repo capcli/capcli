@@ -64,7 +64,7 @@
       - schema — name unique, value, scope, expires_at, sens: true
       - audit contract — all secret mutations emit vault.set with masked values and SHA-256 fingerprint
       - two-tier secrets — root secrets held in vault; ephemeral egress tokens derived
-      - access — absolute zero-knowledge in guest runtime; agents hold opaque vault references, never plaintext strings; injection occurs solely at kernel network edge
+      - access — absolute zero-knowledge in guest runtime; guest address space never allocates credential bytes; guest SDK accepts and passes only opaque URP references (vault://name)
       - encryption — AES-256-GCM at rest; cached in memory by daemon or decrypted ephemerally per CLI run
       - ingestion — provisioned via CLI (`capcli sys vault set`), environment variables (`CAPCLI_SECRET_*`), or external client RPC
     - Provisioning workflow
@@ -75,7 +75,7 @@
         - injection channels — headless CLI (`capcli sys vault set`), env auto-binding, or external client RPC
         - suspension — headless execution exits with code 3 on missing secrets; interactive sessions pause via ask
     - Egress injection
-      - injection point — Authorization headers inserted at kernel egress boundary
+      - injection point — Authorization headers inserted strictly at kernel socket edge prior to TLS handshake; zero plaintext leakage to guest heap or IPC payloads
       - boundary rotation — egress proxy silently refreshes expired bearer tokens
       - references — catalogs reference secret_ref, never plaintext values
       - trust restriction — draft routines denied secret access

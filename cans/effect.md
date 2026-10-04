@@ -2,10 +2,10 @@
 <!-- ref-by: action.md, assembly.md, budget.md, interface.md, overview.md, recovery.md, space.md, world.md -->
   - Audit spine
     - Storage hierarchy
-      - _audit table (SSOT)
-        - role — primary transactional source of truth for all events
-        - location — live system table in workspace.db
-        - access — queryable via SQL; writes restricted to kernel engine
+      - audit.db (SSOT)
+        - role — isolated transactional source of truth for all events
+        - location — independent system database envs/<name>/audit.db
+        - access — zero connection pooling with workspace.db; concurrent writes bypass domain locks
       - audit/*.jsonl (export mirror)
         - role — secondary read-only export view streamed from _audit table
         - persistence — flushed to disk and git for offline diffing and cold recovery
@@ -36,11 +36,11 @@
       - serve.request — endpoint, channel (rest|mcp), trace_id, routine@version, api_key_id, status
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
-      - failure buffer — audit sink error queues writes in memory for 5m before fail
+      - failure buffer — audit sink failure streams uncommitted events to audit/audit.quarantine.jsonl without halting execution
       - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok
       - no synthetic types — onboarding.* and fake lifecycle events denied
-      - tamper blast radius — broken sha256 link invalidates all subsequent events
-      - write priority — unaudited writes denied outright (exit 5)
+      - tamper quarantine — broken sha256 links isolate corrupted leaves to a quarantine branch; valid historical blocks remain operable
+      - write continuity — sink failure triggers out-of-band spooling and alerts; hard kernel panic (exit 5) is reserved for total media loss
       - denial logging — denied operations emit audit events with effect: none
       - tamper detection — per-row sha256 chain verified against root ledger hash
       - external attestation — ledger root hash checkpointed to S3 Object Lock (WORM) storage with KMS signatures

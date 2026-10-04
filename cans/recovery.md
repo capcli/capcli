@@ -15,27 +15,16 @@
         - trigger automation — snapshots precede migrations: see world.md#Migration-invariants
         - retention rules — rolling local retention managed by maintenance: see artifacts/governance.yaml#backup
         - catalog inspection — CLI inspection surface: see interface.md#Storage-path:-db-noun
-  - Git integration
-    - Commit automation
-      - kernel stewardship — kernel automates git lifecycle for governed files: see cans/assembly.md#Persistent-daemon-crate
-      - no raw git — agents execute capcli verbs; manual git add and commit prohibited
-      - cadence — commits every 15 minutes; drift > 30 minutes raises doctor alarm
-      - mutation triggers — commands auto-commit on apply, promote, migrate, merge
-      - tracked artifacts — world.sql, audit logs, and configuration YAMLs
-    - Dual storage guarantee
-      - git repository — operational source code, schema declarations, world.sql DDL, and audit mirrors
-      - object storage — append-only S3 or R2 bucket holding binary VACUUM INTO snapshots: see space.md#World-governance
-      - push command — sys backup --push writes to git and object store
-    - History retention
-      - squash cadence — 90-day git squash keeps repo small under ~35k commits/year
-      - git squash — git_max_age_days threshold: see artifacts/governance.yaml#backup
-      - archive — full immutable history retained in object storage
+  - Storage & Backup
+    - Declarative source tracking — git repository holds read-only human declarations (schema.yaml, policy.yaml); kernel runtime never auto-commits or manages git index locks
+    - Snapshot persistence — transactionally clean VACUUM INTO snapshots and JSONL audit mirrors stream directly to append-only S3/R2 object storage
+    - Retention — immutable point-in-time snapshots and audit logs retain on object storage with WORM locking; local disk retains rolling 30-day cache
   - Hash chains
     - Line linking
       - source — generated in DB _audit table rows and mirrored to JSONL
       - calculation — prev_hash: sha256:<previous_row_hash>
       - engine — sha2::Sha256 in crates/capcli-core/src/sys/hashchain.rs
-      - tamper evidence — modifying any row invalidates all future hashes
+      - tamper evidence — modifying any row splits the causal chain into a quarantine branch (audit.quarantine.jsonl) without bricking active read operations
     - Integrity checks
       - ledger verification — local hash chain validated against S3 WORM immutable ledger root, independent of git squashes
       - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata
@@ -76,4 +65,4 @@
     - Teardown invariants
       - identity revocation — sys agent revoke invalidates all tokens: see agent.md#System-agent-registry
       - backup verification — push dry-run required before deletion: see #Commit-automation
-      - confirmation flags — dual flags mandatory for prod teardown: see space.md#Safety-controls
+      - cryptographic authorization — teardown requires out-of-band challenge signature verification; terminal flag overrides are prohibited

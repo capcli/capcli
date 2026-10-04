@@ -48,7 +48,7 @@
       - Retirement — routine retire <name> [--reason]
     - API path: api noun
       - Import — api import <provider> <path> <method> [--spec <url|file>]
-      - Record — api record <provider.verb> [-p k=v] — captures live test call into replay cassette
+      - Record — api record <provider.verb> [-p k=v] — captures live response and compiles JSON Schema contract
       - Drift — api diff <provider>
       - Catalog — api catalog <provider> [--state <state>]
       - Activation — api activate <provider.verb> --intent "..."
@@ -71,7 +71,7 @@
       - Notifications — ping notify <principal> <msg> --channel <c> --intent "..."
       - Inquiries — ping ask <principal> <q> --options <opts> [--timeout <t>] --intent "..."
       - Listing — ping list [--pending]
-      - Resolution — ping resolve <ask-id> --choice <opt>
+      - Resolution — ping resolve <ask-id> --choice <opt> — verifies OCC state_fences before re-dispatching frame
       - Expiry — ping expire <ask-id>
     - Governance path: rule noun
       - Inspection — rule show [target=schema]
@@ -96,7 +96,7 @@
       - Vault provisioning — sys vault set <key> <val>, sys vault import-env
       - Diagnostics — sys doctor [--boot-check] [--json]
         - platform probe — reports host OS, platform tier, and sandbox: see physics.md#Platform-tier-taxonomy
-      - Backups — sys backup [--push], recover <commit>
+      - Backups — sys backup [--push], recover <snapshot-id>
       - Sandboxing — sys exec <cmd> --sandbox
       - Daemon control — sys serve --start, --stop, --restart, --status
     - Document path: doc noun

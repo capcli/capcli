@@ -48,7 +48,7 @@ tier_taxonomy:
 exit_code_law:
   "0": "success with audit event recorded; upstream HTTP failures handled gracefully in envelope"
   "2": "invariant or governance block; state untouched (state_modified: false) — domains db.engine, policy.authorizer, policy.budget, policy.trust"
-  "3": "compile-time refusal, validation failure, boot lockfile mismatch, or missing parameter"
+  "3": "compile-time refusal, validation failure, prod boot lockfile mismatch, or missing parameter"
   "4": "domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back"
   "5": "domain kernel.panic; audit sink unreachable or host resource failure; execution refused"
   "6": "domain api.quota; proactive rate yield; task suspended until yield_until timestamp"
@@ -57,7 +57,7 @@ exit_code_law:
 anti_slop_laws:
   AS-01:
     name: "Banned Mocking Law"
-    rule: "Tests verifying security boundaries (sqlite3_set_authorizer, AST checks, seccomp-bpf, AES-256 vault decryption, token-bucket counters) must never mock the boundary mechanism."
+    rule: "Tests verifying security boundaries (sqlite3_set_authorizer, sqlite3_update_hook, seccomp-bpf, socket-edge vault injection, token-bucket counters) must never mock the boundary mechanism."
     slop_vector: "Agent mocks AuthorizerCallback to return SQLITE_OK in a unit test to make an invalid query pass."
     enforcement: "Static analysis prohibits mockall or manual mock traits on any type inside crates/capcli-core/src/db/authorizer.rs or crates/capcli-core/src/routine/jail.rs."
   AS-02:

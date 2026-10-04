@@ -57,14 +57,9 @@
         - payload constraint — search returns pointers and summaries (<60 tokens), never raw blobs
         - doc inspection — inspect on doc:// returns outline nodes; doc read fetches targeted leaf
         - relevance floor — semantic matches below 0.60 rejected
-      - Determinism split
-        - kernel search — exact, prefix, FTS5 full-text, and strsim Levenshtein distance; zero in-binary neural models
-        - harness search — external semantic ranking and embeddings managed entirely in caller userland
-        - rationale — see physics.md#Search-ceiling
-      - Scale behavior
-        - cap trigger — keyword search degrades past 300-routine hard ceiling. see artifacts/governance.yaml#registry
-        - degradation — keyword search yields noise past cap
-        - mitigation — structured filters prune, semantic ranks
+      - Hybrid discovery engine
+        - kernel search — exact, prefix, FTS5 BM25, and embedded local ONNX vector similarity; zero external API dependency
+        - semantic resilience — synonym queries match capability intent across 1,000+ registered routines without degradation
       - Analytics and gaps
         - search event anatomy — see effect.md#Audit-spine
         - gap detection — search gaps --since 7d
@@ -109,7 +104,7 @@
       - signatures — max 8 typed Param declarations; description required
       - execution caps — max 50 ops per run; max 300s duration; max 10 txn statements
       - pagination posture — routines must encapsulate iteration and filtering loops internally; multi-turn LLM subshell pagination loops banned
-      - output envelope — max 500 result tokens; oversized results return truncated: true
+      - output envelope — max 500 result tokens; raw string slicing banned; outputs exceeding 500 tokens must return a valid keyset pagination schema ({ items, pagination: { has_more, next_cursor } })
   - Routine templates
     - Invariant authoring laws
       - typed expansion — scaffolds expand through typed template parameters; blind regex and sed substitutions banned
@@ -128,9 +123,9 @@
         - 4. Workspace default — routine_shape.runtime.default in governance.yaml
         - Mismatch resolution — breach at any level halts immediately with exit 2 (E050_RUNTIME_DISALLOWED)
       - Jail architecture
-        - provider resolution — auto selects bwrap on Tier 1; selects broker on Tier 2: see physics.md#Platform-tier-taxonomy
+        - provider resolution — Tier 1 probes bwrap and userns; falls back to rootless crun/podman or gVisor if userns is disabled; Tier 2 requires microvm or wasm
         - tier 1 execution — bwrap namespaces, tmpfs /scratch wiped at exit, seccomp-bpf blocking raw network and fork
-        - tier 2 execution — child Python subprocess mediated strictly via IPC broker; scratch mapped to host tmpdir; network unconfined warning emitted
+        - tier 2 execution — isolated microVM (Colima/Lima/WSL2) or Wasmtime runtime; raw host subprocess execution denied
         - latency floor — warm runner recycling ensures execution overhead < 50ms
       - Yield handling
         - Signal capture — runner catches exit 6 from kernel
@@ -138,14 +133,12 @@
         - State preservation — zero partial side effects committed before yield
       - Provider backends
         - bwrap — Linux/WSL2 unprivileged namespace sandbox with host userns doctor check: see physics.md#Platform-tier-taxonomy
-        - broker — Tier 2 process runner relying on ctx wrapper isolation and C authorizer: see physics.md#Platform-tier-taxonomy
+        - microvm — lightweight virtualization provider for macOS/Windows enforcing hardware-level network isolation
         - podman — rootless container runner for unprivileged container environments
+        - wasm — Wasmtime runtime with unmapped socket capabilities for pure in-process isolation
       - Jail defenses
-        - runner engine — tokio::process::Command dispatching bwrap (Tier 1) or broker (Tier 2)
-        - IPC transport — streaming JSON-Lines over platform socket:
-          - Linux / macOS — $XDG_RUNTIME_DIR/capcli/kernel.sock or /run/capcli/kernel.sock
-          - Termux — $PREFIX/var/run/capcli/kernel.sock
-          - Windows — \\.\pipe\capcli-kernel
+        - execution engine — sandboxed runner embedding native C/Rust FFI bindings (capcli_native) for local DB/Authorizer calls via shared memory ring buffer
+        - daemon transport — Unix domain socket / Named Pipe reserved strictly for asynchronous out-of-band events (cron dispatch, webhook intake, outbox draining)
         - path restriction — Tier 1 blocks via pivot_root mount table; Tier 2 blocks via process cwd jail
       - Execution limits
         - ops ceiling — see artifacts/governance.yaml#routine_shape
@@ -171,7 +164,8 @@
         - architecture law — events start routines, routines never consume events
     - Composition and cascade
       - Mechanism — standard python imports between routine modules
-      - Context inheritance — child frames consume parent pools
+      - Static call-tree preflight — root invocation verifies that worst-case call-graph branch depth can be fully funded before execution begins
+      - Context inheritance — child frames consume parent pools; starvation aborts before root dispatch rather than decapitating child frames mid-flight
       - Rules and caps
         - nesting ceiling — see artifacts/governance.yaml#routine_shape
         - import ceiling — see artifacts/governance.yaml#routine_shape
@@ -263,9 +257,9 @@
         - kernel mediation — egress executed exclusively through kernel binary
         - auth engines — kernel resolves Bearer, Basic, OAuth2 refresh tokens, AWS SigV4 signing, and mTLS client certs from vault
         - wire projection — select JSONPath filters large upstream responses at kernel socket edge before passing payload to guest sandbox
-        - dual-write safety — mutating API calls executed within DB workflows require kernel idempotency keys or compensating rollback actions
+        - dual-write safety — mutating API calls staged to _outbox_events must map an explicit upstream idempotency header in apis/<provider>.yaml; routes lacking idempotency support require synchronous execution with declared compensating rollbacks
         - outbox draining — daemon drains _outbox_events asynchronously; headless subshell CLI executions drain pending outbox calls synchronously prior to exit 0
-        - secret injection — boundary insertion; decrypted ephemerally in CLI or retrieved from daemon cache; memory zeroized post-dispatch
+        - secret injection — boundary insertion in Rust egress proxy; guest language runtime address space never handles plaintext credential bytes
         - token refresh — daemon auto-refreshes bearer tokens; stateless CLI refreshes on demand and persists updated token to encrypted vault
         - missing secret fallback — missing secret_ref auto-binds from CAPCLI_SECRET_* before triggering headless exit 3 or ask prompt
         - pre-call quota — deny before network dispatch: see budget.md#Quotas
@@ -273,9 +267,9 @@
         - idempotency — kernel-minted key persisted before egress
         - in-flight wait — poll_until executes sleep in Rust runtime; Python interpreter never busy-waits
       - Sandbox boundaries
-        - runtime isolation — Tier 1 unshares network namespace; Tier 2 unsets outbound proxy env vars and relies on ctx mediation: see physics.md#Platform-tier-taxonomy
+        - runtime isolation — network namespace unshared (Tier 1) or virtual network interface dropped (Tier 2): see physics.md#Platform-tier-taxonomy
         - transport bridge — local IPC permitted exclusively to kernel endpoint
-        - suspension contract — ctx.ping.ask serializes step checkpoint to _pending_asks and exits with code 6; resume re-invokes entrypoint with saved state
+        - suspension contract — ctx.ping.ask snapshots step checkpoint and OCC state_fences to _pending_asks and exits with code 6; resume verifies dependency entity hashes and aborts with exit 2 if data drifted during human review
         - interface definition — Param typing enforces input validation
     - Data protection
       - Context confinement — raw records stay inside sandbox
@@ -324,7 +318,7 @@
     - Catalog synchronization
       - Targeted import — capcli api import <provider> <path> <method> [--spec <url|file>] imports isolated endpoints on demand; full enterprise spec sync banned
       - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, and idempotency header mapping
-      - Cassette recording — capcli api record <verb> captures wire traffic to apis/<provider>.cassette.jsonl for simulation replay; manual mock authoring banned
+      - Live contract capture — capcli api record <verb> generates strict JSON Schema assertions from live responses; offline static cassette replays are banned from promotion gating
       - Sync cadence limits — see artifacts/governance.yaml#api.sync
       - Verb default state — dormant across entire imported spec
         - immortality — dormant verbs never expire; unactivated surface stays permanent
@@ -350,11 +344,7 @@
         - hourly ceiling — max 10 activations per hour
         - intent present and passes anti-junk validation
       - Initial trust — draft
-      - Training wheels
-        - target verbs — un-simulated third-party verbs: see trust.md#Simulation-gaps
-        - autonomous graduation — rehearsal promotion rules: see trust.md#Gates-&-promotion
-        - window expiration — 24-hour approval window per unapproved call
-        - graduation — fourth call enters normal governance
+      - Schema contract gate — external verbs require strict OpenAPI response schema matching; unvalidated routes cannot elevate past draft
     - Live quota tracking
       - mechanics — token bucket calculation and _api_quota sync: see budget.md#Quotas
       - pre-call gate — remaining <= deny_at_remaining denies egress with exit 2

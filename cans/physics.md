@@ -3,21 +3,23 @@
   - Platform tiering and dual-engine enforcement
     - Platform tier taxonomy
       - tier 1 (hardened) — Linux bare-metal, VPS, Docker (with userns), WSL2
-        - sandbox — unprivileged bwrap namespaces + tmpfs scratch: see action.md#Sandbox-execution
+        - sandbox — unprivileged bwrap namespaces; automatically falls back to rootless OCI (crun/podman) or gVisor if host kernel restricts user namespaces
         - network jail — seccomp-bpf filter trapping raw socket connect (syscall 42) across all engines
         - syscall profiles — dynamic seccomp filters per engine:
           - profile_python: allow clone, futex, basic POSIX signals
           - profile_bun_node: allow epoll_create1, epoll_ctl, eventfd2, io_uring_setup
           - profile_binary: allow clone3, futex, rseq, rt_sigreturn
         - trust bounds — all rungs permitted (draft, reviewed, pinned): see trust.md#The-ladder
-      - tier 2 (degraded) — macOS (Darwin), Android (Termux), Windows native
-        - sandbox — out-of-jail process mediated via IPC broker and C authorizer: see action.md#Sandbox-execution
-        - network jail — NONE; syscall 42 trapping is unavailable; raw sockets are unconfined at OS level
-        - diagnostic alert — boot emits [WARN] host.degraded_isolation (network unconfined; cooperative SDK egress only)
+      - tier 2 (virtualized / wasm) — macOS (Darwin), Android (Termux), Windows native
+        - sandbox — mandatory microVM (Colima / Lima) or WASM sandbox (Wasmtime) with unmapped socket capabilities
+        - network jail — kernel-enforced socket null-routing; cooperative host process execution is Tier 0 (DENIED)
         - trust bounds — draft and reviewed in dev/sim only; pinned execution denied: see trust.md#Ladder-laws
+  - Deployment topology
+    - dedicated server — headless Linux host running capcli-daemon under systemd; required for 24/7 background crons, webhooks, and S3 WORM attestations
+    - local workstation — ephemeral developer environment; prohibited from serving production endpoints or hosting unattended pinned schedules
     - parity principle — local state mutations and external API egress share equal gate severity
     - local engine — C authorizer and AST parse intercept SQLite commands at prepare time
-    - egress engine — token-bucket quotas, secret boundaries, and sim routing intercept network calls
+    - egress engine — optimistic token-bucket quotas slaved to remote headers, secret boundaries, and sim routing intercept network calls
   - Two-layer enforcement
     - Layer 1: sqlite3_set_authorizer
       - engine — native C callback inside sqlite3_prepare_v2 via rusqlite crate
@@ -36,8 +38,12 @@
       - ddl trust floors
         - alter table — requires reviewed trust; draft attempts exit with 2
         - vacuum — requires pinned trust; denied unconditionally in prod
+    - Layer 1.2: VDBE execution progress & mutation hook
+      - engine — sqlite3_update_hook + sqlite3_progress_handler
+      - hook checks — counts physical B-Tree row mutations and VDBE byte-code steps during execution
+      - mid-flight abort — aborts transaction instantly if mutated row count exceeds declared LIMIT, independent of WHERE clause structure
     - Layer 2: SQL AST check
-      - engine — sqlparser crate cross-checked against SQLite EXPLAIN bytecode
+      - engine — sqlparser crate pre-check (secondary to Layer 1.2 runtime mutation hook)
       - checks
         - parameterization — bound parameters mandatory; interpolation denied
         - transaction isolation — ctx.api.call in ctx.db.txn blocks rejected
@@ -70,15 +76,15 @@
     - Anchor principle — default: deny (artifacts/policy.yaml)
     - Boot refusals
       - missing host dependencies — python < 3.11 or git < 2.30 aborts boot on all tiers (exit 3)
-      - sandbox missing on tier 1 — absent or unexecutable bwrap on Linux aborts boot (exit 3)
+      - sandbox missing on tier 1 — absent bwrap automatically falls back to container or microvm runner; aborts boot with exit 3 only if all isolation providers fail
       - sandbox degraded on tier 2 — missing bwrap downgrades to provider=broker with warning
-      - clock drift — host clock delta vs NTP > 500ms aborts boot to prevent claim corruption
+      - clock drift — host clock delta vs NTP > 500ms emits diagnostic warning; internal causal DAG and lease claims bind to CLOCK_MONOTONIC and SQLite sequence IDs
       - unconfigured git identity — missing user.name/email triggers auto-fallback to capcli[bot] or aborts
       - template incompatibility — template min_kernel_version or policy_version mismatch aborts intake (exit 3)
       - template syntax error — routine template failing py_compile validation aborts intake (exit 3)
       - missing configuration — policy.yaml or governance.yaml absent
-      - lockfile mismatch — compiled capcli.lock SHA256 mismatch aborts boot in prod and sim
-      - migration lock SLA breach — schema rebuild holding SQLite write lock > 500ms aborts execution (exit 2)
+      - lockfile mismatch in prod — compiled capcli.lock SHA256 mismatch aborts boot with exit 3 in prod; dev and sim auto-recompile if syntax and semantics pass
+      - migration execution — structural changes use trigger-replicated shadow tables with asynchronous backfills; exclusive cutover lock is atomic and held for <20ms
       - schema integrity — system_schema hash mismatch aborts boot
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
@@ -89,7 +95,7 @@
       - ambiguity — unclassified read/write treated as write
       - standalone bypass — routine invocation outside kernel runner exits 3
       - principal missing — scoped view invoked without --as rejected
-      - audit sink error — unaudited writes denied outright (exit 5)
+      - audit sink error — local disk/media write failures spool to audit.quarantine.jsonl; exit 5 reserved for total I/O deadlock
       - quota exhaustion — remaining <= deny_at_remaining throws exit 6 (Background) or exit 2 (Critical)
     - Exit code law
       - exit 0 — success with audit event recorded; upstream HTTP failures handled gracefully in envelope
@@ -100,7 +106,7 @@
         - domain policy.trust — action forbidden by caller trust rung (e.g. draft touching prod)
       - exit 3 — compile-time refusal, validation failure, boot lockfile mismatch, or missing parameter
       - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
-      - exit 5 — domain kernel.panic; audit sink unreachable or host resource failure; execution refused
+      - exit 5 — domain kernel.panic; unrecoverable media corruption or storage exhaustion across both primary and quarantine sinks
       - exit 6 — domain api.quota; proactive rate yield; task suspended until yield_until timestamp
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
@@ -147,9 +153,8 @@
       - bulk minimum — trust >= reviewed: see artifacts/policy.yaml#query
       - human threshold — writes exceeding row caps require confirmation
   - Search ceiling
-    - Execution split — kernel filters deterministically; harness ranks semantically
-    - Stage cascade — exact, prefix, FTS5 full-text, and Levenshtein distance: see action.md#Search-surface
-    - Saturation boundary — registry ceilings enforce hard stop: see artifacts/governance.yaml#registry
+    - Hybrid search engine — kernel embeds a local quantized vector model (ONNX tract runtime) combined with SQLite FTS5 for zero-roundtrip semantic discovery
+    - Semantic indexing — queries match synonymous capabilities locally without external LLM ranking calls or keyword saturation walls
   - Harness boundaries
     - Skills (SKILL.md)
       - separation — skills exist in harness; routines exist in capcli
