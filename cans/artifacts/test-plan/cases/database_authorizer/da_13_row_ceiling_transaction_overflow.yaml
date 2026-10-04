@@ -1,0 +1,68 @@
+$schema: "test-plan/case/v1"
+case_id: "da_13_row_ceiling_transaction_overflow"
+title: "501-row single-batch INSERT exceeds the 500-row insert ceiling and aborts cleanly with exit 2"
+domain: "database_authorizer"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/physics.md#row-bounds"
+  statement: "Row bounds are physics: insert max 500 rows per statement (policy.yaml query.insert.max_rows_per_statement: 500); a single-batch insert of 501 rows aborts the transaction cleanly with exit 2 - partial_result_on_exhaustion is false, so never a silent truncation."
+  blast_radius_if_breached: "Unbounded ingest floods the SSOT inside one WAL transaction; the database balloons mid-flight, snapshot/backup pairing breaks, and a half-executed batch leaves an indeterminate ingest ledger that replay cannot reproduce."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent truncates the input array silently to 500 rows before submission (or asserts on a rows-inserted count derived from the engine's own output), so the abort-vs-truncate behavior is never distinguished."
+  anti_slop_mitigation: "AS-06 requires the literal 501-row input and a hardcoded expected delta of 0; AS-02 proves SELECT count(*) is exactly 0 rows inserted; AS-03 requires the typed exit code plus a policy.query diagnostic citing the measured row count."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.ingestbot@acme.corp"
+    agent_id: "agt_da_13"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        sensor_events:
+          description: "High-volume device telemetry ingest staging"
+          columns:
+            id: pk
+            ts: int!
+            payload: json
+    tables:
+      - name: "sensor_events"
+        row_count: 0
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"INSERT INTO sensor_events (ts, payload) VALUES (1717000000, '{\"t\":1}'), (1717000001, '{\"t\":2}') [tuple 3 through 501 enumerated as literal value tuples in the test fixture]\" -m \"bulk ingest batch\""
+  input_params:
+    rows_in_batch: 501
+    insert_ceiling: 500
+    caller_trust_note: "reviewed caller binds the global 500-row ceiling (dev overlay only raises draft caps to 200, never above 500)"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.query"
+    culprit: "insert row count 501 > max 500 (policy.yaml query.insert.max_rows_per_statement: 500); single-batch transaction aborted - no partial commit, no silent truncation"
+    remedy: "Chunk the batch into <= 500-row statements, each an independent transaction and audit event; pre-count with capcli sql --count before mass operations."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM sensor_events == 0 before and after the aborted command (strict equality on envs/dev/workspace.db); the transaction rolled back leaving zero inserted rows."
+  - rule: "AS-06"
+    verification: "The submitted VALUES array must still contain exactly 501 literal tuples at denial time (assert input length == 501, proving abort-not-truncate); expected row_count_delta hardcoded as literal 0, never derived from engine output."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.query', culprit cites measured 501 vs ceiling 500 (denials cite the measured value), remedy present."

@@ -1,0 +1,68 @@
+$schema: "test-plan/case/v1"
+case_id: "da_12_disallowed_sqlite_function_trap"
+title: "load_extension / writefile invocation is denied by the authorizer function denylist"
+domain: "database_authorizer"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/physics.md#function-denylist"
+  statement: "The authorizer enforces a function allowlist/denylist at prepare time: load_extension, writefile, readfile are denied (policy.yaml authorizer.global.functions.deny), so the function never evaluates and no filesystem or shared-object side effect can occur."
+  blast_radius_if_breached: "Arbitrary .so loading is remote code execution inside the kernel process; writefile dumps database pages or secrets to arbitrary host paths, exfiltrating data past every egress control."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent relies on host filesystem permissions (e.g. unwritable /etc) to make writefile fail, or mocks the authorizer function callback - the SQLite-level function intercept itself is never exercised and a permissive host would silently pass."
+  anti_slop_mitigation: "AS-01 requires the SQLITE_FUNCTION authorizer action to return SQLITE_DENY inside the real callback (filesystem permissions are irrelevant to the assertion); AS-02 proves zero rows changed and zero filesystem artifacts; AS-03 requires the typed exit code plus authorizer-domain diagnostic."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.payload-smuggler@acme.corp"
+    agent_id: "agt_da_12"
+    trust: "draft"
+  initial_state:
+    schema_yaml: |
+      version: 12
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          columns:
+            id: pk
+            ref: text!
+            total_cents: int=0
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "rust_api"
+  command: "SELECT load_extension('evil.so')"
+  input_params:
+    denied_function_primary: "load_extension"
+    denied_function_variant: "SELECT writefile('/tmp/da_12_pwned.txt', 'x')"
+    compiled_allowlist: "count, sum, min, max, avg, json_extract, date, strftime"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "SQL function load_extension is on the compiled denylist (load_extension, writefile, readfile, fts3_tokenizer denied; allowlist: count, sum, min, max, avg, json_extract, date, strftime) - SQLITE_DENY at prepare time"
+    remedy: "Use allowlisted SQL functions only; extension loading and file functions are denied unconditionally (fail-closed stance: default deny)."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Assert the authorizer callback intercepts the function invocation (SQLITE_FUNCTION action, function name load_extension / writefile) and returns SQLITE_DENY before evaluation; static lint bans mocks on authorizer.rs and bans tests that rely on host filesystem permissions for the denial."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 500 before and after; filesystem zero-effect probe: /tmp/da_12_pwned.txt does not exist after the run (writefile never evaluated), and no shared object was dlopened."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the diagnostic envelope: domain 'policy.authorizer', culprit names the denied function and the denylist, remedy present."
