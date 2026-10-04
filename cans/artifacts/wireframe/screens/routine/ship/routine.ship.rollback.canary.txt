@@ -1,0 +1,15 @@
+[prod:tier_1]  ✓  rolled_back
+
+  routine:     order_sync@2
+  promoted_to: reviewed (auto-promotion conjunction met)
+  canary:      1h veto window completed with anomalies
+
+  canary_verdict:
+    p95_duration:  4120ms vs 890ms baseline (4.6x spike)
+    drift_events:  2 fingerprint drift events
+    action:        autonomous circuit-breaker rollback
+
+  final_rung:     draft (promotion reverted)
+  state_modified: true
+  audit:          op_ship_07 (routine.canary_rollback committed)
+  note:           re-prove in sim before re-promotion

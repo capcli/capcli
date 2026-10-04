@@ -1,0 +1,10 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  validation.promotion.reason_required
+        command: capcli routine ship order_sync pinned
+        rung:    pinned
+
+        Elevation to pinned requires a --reason justification; threshold crossings need evidence.
+
+  state_modified: false
+  remedy: re-run with --reason, e.g. capcli routine ship order_sync pinned --reason "30d clean canary"
