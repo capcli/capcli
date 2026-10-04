@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "we_09_critical_priority_pool_drain"
+title: "Critical-priority frame drains the token pool to exactly 0 tokens and completes successfully"
+domain: "wire_egress"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Priority-Floors"
+  statement: "'Critical tasks drain pool to 0' (policy.yaml#api.rate_limit.priority_floors.critical_floor_tokens: 0): a critical-priority frame is permitted to consume the remaining quota down to exactly 0 tokens — no background (15) or standard (5) floor is imposed on it — and its dispatch completes with exit 0."
+  blast_radius_if_breached: "Blocking critical work at the background/standard floor would hard-fail payment settlements, incident escalations, and other time-critical enterprise operations while quota headroom still legally remained."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by blocking the critical task at the background threshold (15 tokens) and still calling the test 'passing', or by asserting a mocked bucket counter instead of the real _api_quota row."
+  anti_slop_mitigation: "AS-01 bans mocking the token-bucket counters — the real bucket row must be read and debited. AS-05 verifies the api.call audit event (quota_before/quota_after) and the hash chain, so the drain is proven on the ledger. AS-06 pins literals: floor 0, available 3, post-drain 0, exit 0."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.finance@example.com"
+    agent_id: "agt_we_09"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'stripe': 3 tokens available
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'critical-priority frame dispatch via the capcli-core engine API: ctx.api.call("stripe.charges", params={"amount": 2000, "currency": "usd"}, intent="settle payment") with the bucket at 3 tokens'
+  input_params:
+    verb: "stripe.charges"
+    priority_class: "critical"
+    tokens_available: 3
+    critical_floor_tokens: 0
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "budget.quotas"
+    culprit: "none — nominal path: critical class floor is 0 tokens, so the dispatch is permitted and the pool is drained 3 -> 0 by design"
+    remedy: "none required — critical tasks may drain the pool to 0; the bucket refills at 1.0 token/s (refill_rate_per_sec) afterward"
+  database:
+    row_count_delta: 0
+    tables_mutated: ["_api_quota"]   # remaining debited in place 3 -> 0; row count unchanged; _audit gains the api.call event row
+  wire:
+    packets_transmitted: 1
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (quota_before: 3, quota_after: 0)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mock of the token-bucket counter: the pre-call gate reads the real _api_quota row (3 tokens) through the production quota path and the debit is written back by the engine — a stubbed counter makes the test invalid."
+  - rule: "AS-05"
+    verification: "_audit gains exactly one api.call event row carrying quota_before == 3 and quota_after == 0 (policy.yaml#api.in_flight_polling.audit.record_before_after); prev_hash equals the SHA-256 of the prior row; verify_chain() passes."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: critical floor == 0, available == 3, post-drain remaining == 0, exit == 0 — and no yield fires at the 15- or 5-token thresholds (exit 6 would fail the test); expected values are literals, never derived from the bucket read."
