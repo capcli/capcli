@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_09_time_sleep_raw_loop_prohibition"
+title: "Raw time.sleep loop in routine source is flagged and mandates ctx.api.poll_until"
+domain: "sdk_harness"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Interior-rules"
+  statement: "Interior rules ban raw time.sleep loops: transient polling must use the atomic kernel-managed ctx.api.poll_until (action.md#Interior-rules transient polling node). The SDK linter/shape gate flags a routine body calling time.sleep() at validation time with exit 3 — blocking sleep loops in sandboxed agent routines are structurally rejected before registration, and the remediation always points at ctx.api.poll_until (the interpreter never busy-waits; the sleep executes in the Rust runtime, action.md#Execution-guards)."
+  blast_radius_if_breached: "Blocking sleeps burn the max 300s duration budget doing nothing: watchdog kills fire on healthy routines, ops ceilings are consumed by wall-clock rather than work, and Python-side busy-waiting pins the sandbox runner thread — degrading warm runner recycling (execution overhead < 50ms floor, action.md#Jail-architecture) for every other routine on the host."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent writes a compliant routine (using poll_until) and asserts the linter passes — testing nothing about the ban; or catches the lint finding as a soft warning while registration still succeeds (exit 0); or substitutes asyncio.sleep believing only time.sleep is banned."
+  anti_slop_mitigation: "AS-03 requires exit_code == 3 with the diagnostic citing the flagged time.sleep line and the poll_until remediation — a warning-only path fails; AS-06 pins the banned-call detection against immutable literal source snippets (time.sleep positive, ctx.api.poll_until negative control); AS-02 proves no routine version was registered."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.dev@example.com"
+    agent_id: "agt_sh_09"
+    trust: "draft" # lint/shape validation fires at prove before any trust-gated execution
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 0 # slow_wait must NOT register: the lint refusal precedes registration
+      - name: "_audit"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'routine_lint::scan(routines/slow_wait.py) # body: import time; time.sleep(30); return ctx.db.query(...)' # SDK linter / shape gate static pass
+  input_params:
+    routine_file: "routines/slow_wait.py"
+    banned_call: "time.sleep(30)"
+    permitted_alternative: 'ctx.api.poll_until(verb, params, condition, timeout_s, interval_s)'
+    gate: "prove-stage shape/lint validation (time.md#prove-stage verification checks)"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "sdk.harness"
+    culprit: "routines/slow_wait.py line 3: raw time.sleep(30) loop — blocking sleeps are banned in sandboxed routines (interior rules); only kernel-managed ctx.api.poll_until may wait"
+    remedy: "replace the sleep loop with ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) — kernel-managed in-flight polling charged as 1 aggregate op with the sleep in the Rust runtime"
+  database:
+    row_count_delta: 0
+    tables_mutated: [] # no version registered: the lint refusal precedes registration
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "governance.deny" # NOTE: lint refusal event name not located in cans/effect.md payload list; effect: none (effect.md#Denials), log_all per artifacts/governance.yaml#denials
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 3 (compile/validation refusal class, physics.md#Exit-code-law) and parse the CliEnvelope: diagnostic.culprit cites the exact flagged source line (time.sleep) and diagnostic.remedy mandates ctx.api.poll_until; a warning-only pass with exit 0 fails the test."
+  - rule: "AS-06"
+    verification: "Detection is asserted against immutable literal source snippets: a body containing time.sleep(30) must be flagged, and a functionally identical body using ctx.api.poll_until must pass the same gate in the same unit run — expected verdicts hardcoded, never derived from the linter output."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM routine_stats before and after the lint pass; assert strict equality (0 == 0) — no version was registered for the non-compliant routine; the only _audit delta is the single refusal row with effect: none."
+  - rule: "AS-01"
+    verification: "The lint pass runs the genuine AST scan over the source — no regex shortcut that only greps the literal string 'time.sleep' (e.g. commented-out or aliased import time as t; t.sleep(30) must still be caught via AST resolution, mirroring the da_02 AST-over-regex doctrine)."
