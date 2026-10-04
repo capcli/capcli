@@ -1,0 +1,12 @@
+[dev:tier_1]  ✓  registered
+
+  agent_id:   agt_5k2p
+  name:       refund-processor
+  principal:  user:alice
+  harness:    claude-code
+  token:      kernel-minted HMAC capability token (bound to active _budget_frames)
+  status:     active
+
+  state_modified: true
+  audit_op:       op_r702
+  note:           ids and tokens are kernel-issued; self-declared identities are denied
