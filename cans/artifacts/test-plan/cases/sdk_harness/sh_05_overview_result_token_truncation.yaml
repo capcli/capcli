@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_05_overview_result_token_truncation"
+title: "Overview output past 500 result tokens truncates cleanly with truncated: true and valid JSON"
+domain: "sdk_harness"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/action.md#Shape-constraints"
+  statement: "The output envelope caps results at max 500 result tokens; oversized results return truncated: true (action.md#Shape-constraints, artifacts/governance.yaml#routine_shape max_result_tokens: 500). An overview routine producing 800 tokens must emit a valid, closed JSON envelope whose data carries truncated: true and <= 500 tokens — truncation never produces malformed or unclosed JSON (overview output is a dense situational summary, action.md#Session-Overview-Primer)."
+  blast_radius_if_breached: "Oversized results blow the prompt-cache economics the overview exists to protect (session priming at volatile turn leaves): 800-token payloads multiply token burn across every agent session; malformed mid-token truncation crashes every downstream JSON parser — agents and the Cockpit PWA both consume this envelope at session boot."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent shrinks the overview fixture below 500 tokens so truncation never triggers, then asserts truncated: false as 'valid'; or checks json.loads succeeded on a hand-crafted envelope instead of the engine's actual output; or recomputes the token count with a different tokenizer to claim the cap held."
+  anti_slop_mitigation: "AS-03 requires strict envelope parsing of the engine's actual --json output: valid JSON AND data.truncated == true AND token count <= 500; AS-06 pins the immutable literals (raw 800, cap 500) and the truncated flag; AS-05 verifies the audit chain for the run that produced the truncated envelope."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.ops@example.com"
+    agent_id: "agt_sh_05"
+    trust: "reviewed" # routines/overview.py registered under name overview (action.md#Session-Overview-Primer)
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+    tables:
+      - name: "orders"
+        row_count: 1 # enough world data for the overview to aggregate an 800-token summary
+      - name: "_budget_frames"
+        row_count: 0
+      - name: "routine_stats"
+        row_count: 1 # overview registered, result_tokens scope: routine (artifacts/governance.yaml#routine_shape)
+      - name: "_audit"
+        row_count: 2 # routine.draft + prove events
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run overview --json" # standard zero-step session-boot briefing (action.md#Session-Overview-Primer)
+  input_params:
+    routine: "overview"
+    raw_result_tokens: 800 # oversized fixture: dense KPI + pending asks + locks + budget summary
+    max_result_tokens: 500 # artifacts/governance.yaml#routine_shape
+    output_mode: "--json (raw serialized CliEnvelope, physics.md#Diagnostic-output-law)"
+
+expected_observations:
+  exit_code: 0
+  state_modified: false # overview is a read-only idempotent briefing; no world mutation
+  diagnostic:
+    domain: "run.overview"
+    culprit: "result envelope exceeded the 500-token result cap (raw output: 800 tokens); envelope truncated with truncated: true"
+    remedy: "no action — truncation flag is the contract; slim the overview assembly if full fidelity is required (dense summary strictly under 500 tokens, action.md#Session-Overview-Primer)"
+  database:
+    row_count_delta: 1 # routine.run terminal audit event for the read-only briefing; frame bookkeeping excluded from this headline delta
+    tables_mutated: ["_audit"]
+  wire:
+    packets_transmitted: 0 # overview aggregates local schema views only
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run" # outcome: success; result_hash computed over the truncated canonical envelope
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Strictly parse the engine's actual --json output: the payload must deserialize as valid JSON (no unclosed strings, no dangling fragments from mid-token cuts), data.truncated == true, and the serialized result token count <= 500; assert exit_code == 0 with envelope.state_modified == false."
+  - rule: "AS-06"
+    verification: "The boundary literals (raw 800 tokens, cap 500, truncated: true) are immutable hardcoded values from artifacts/governance.yaml#routine_shape — never recomputed from the envelope under test; the fixture must genuinely produce 800 raw tokens (verified by a tokenizer-agnostic character/word floor), not a pre-shrunk payload."
+  - rule: "AS-05"
+    verification: "Verify the routine.run audit row: prev_hash equals the SHA-256 of the prior _audit row, result_hash equals the canonical JSON hash of the truncated envelope actually returned; run capcli-core::audit::verify_chain() over the ledger."
