@@ -1,0 +1,17 @@
+[dev:tier_1]  ✓  populated
+
+  pending:  2 inquiries
+
+  ├── ask_8812  awaiting_input  "Missing Stripe credentials (API secret key & webhook signing secret)."
+  │     ├── principal:  user:local
+  │     ├── options:    keys_injected, abort
+  │     ├── timeout:    60m (fail-closed)
+  │     └── cockpit:    http://127.0.0.1:4040/vault
+  └── ask_88a  awaiting_input  "Approve refund for order ORD-10?"
+        ├── principal:  user:alice
+        ├── options:    approve, reject, escalate
+        ├── timeout:    24h (fail-closed)
+        ├── asked_by:   agt_7f3k (task_99a8b1, frame_018)
+        └── cockpit:    http://127.0.0.1:4040/ask/ask_88a
+
+  state_modified:  false
