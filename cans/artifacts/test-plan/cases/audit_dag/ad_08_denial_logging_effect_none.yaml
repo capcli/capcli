@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_08_denial_logging_effect_none"
+title: "A C-authorizer denial still writes an audit record with decision: denied, effect: none, and the rule id"
+domain: "audit_dag"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#denial-logging--denied-operations-emit-audit-events-with-effect:-none"
+  statement: "Denied operations emit audit events with effect: none: when the C-level authorizer blocks a statement at prepare time, the _audit ledger still gains a chained row carrying decision: denied, rules_matched with the specific rule id, and state_modified strictly false — skipping audit logging on denial is a ghost action."
+  blast_radius_if_breached: "Silent denials: an attacker probing the authorizer boundary leaves no trace, policy tuning loses its training data (denial patterns inform harness adjustments), the thrashing detector (20 sustained denials) never fires, and on-call cannot see why an agent's operations vanish."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts exit 2 on the blocked UPDATE but never queries _audit, so a kernel that skips denial logging entirely still passes; or asserts a generic error string instead of the structured decision/effect/rule fields on the chained row."
+  anti_slop_mitigation: "AS-02 proves orders is untouched AND _audit grows by exactly 1 (the denial event); AS-03 pins exit 2 plus the policy.authorizer diagnostic; AS-05 verifies the denial row chains cryptographically with its rule id present."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_ad_08"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+          imm_cols: [id] # write-once key: deny_columns_write protection
+    tables:
+      - name: "orders"
+        row_count: 3 # includes id=7
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"UPDATE orders SET id = 42 WHERE id = 7 LIMIT 1\" -m \"rekey after migration\""
+  input_params:
+    target_column: "orders.id (immutable, imm_cols)"
+    expected_rule: "deny_columns_write:orders.id" # physics.md#Layer-1 column writes protection
+    layer: "authorizer"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "orders.id is write-once (imm_cols); deny_columns_write trapped the UPDATE inside sqlite3_set_authorizer at prepare_v2 before a single byte executed"
+    remedy: "drop id from the SET list — rekeying requires a new schema version with a fresh column; id is protected by deny_columns_write"
+  database:
+    row_count_delta: 0 # orders untouched; _audit grows by exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none, rules_matched: [deny_columns_write:orders.id])"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 3 and SELECT id FROM orders WHERE id = 7 still returns 7 before and after; SELECT count(*) FROM _audit grows from 4 to exactly 5 — the denial event is logged, the business mutation is not (delta 1 is a hardcoded literal)."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.authorizer', culprit names orders.id and deny_columns_write, remedy present."
+  - rule: "AS-05"
+    verification: "SELECT the last _audit row and verify it chains: prev_hash == SHA-256 of row 4, decision == 'denied', effect == 'none', rules_matched contains 'deny_columns_write:orders.id'; run capcli-core::audit::verify_chain() — a denial that skips logging fails the chain-length assertion."
