@@ -1,30 +1,30 @@
 {
   "$schema": "wireframe/v2",
-  "screen_id": "run.execute.suspended.ask",
-  "noun": "run",
-  "verb": "execute",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+  "screen_id": "sys.doctor.success.clock_drift",
+  "noun": "sys",
+  "verb": "doctor",
+  "target": "sys://host",
+  "command": "capcli sys doctor",
   "state": {
     "exit_code": 0,
     "domain": null,
-    "trust": "pinned",
+    "trust": "reviewed",
     "env": "dev",
     "tier": "tier_1",
     "state_modified": false,
-    "data_shape": null
+    "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/execute/run.execute.suspended.ask.txt",
+  "txt_pair": "screens/sys/doctor/sys.doctor.success.clock_drift.txt",
   "txt_sha256": null,
   "test_assertions": {
     "exit_code": 0,
     "state_modified": false,
     "stdout_contains": [
-      "[dev:tier_1]  ✓  suspended",
-      "  ask:             ask_88a",
-      "  pending_asks:    1 enqueued (ask_88a)",
-      "  state_modified:  false"
+      "[dev:tier_1]  \u2713  exit 0",
+      "  \u26a0  clock drift warning: host delta vs NTP is 840ms (warning threshold: 500ms)",
+      "         causal ordering unaffected: CLOCK_MONOTONIC + SQLite sequence IDs",
+      "  state_modified: false"
     ],
     "stdout_not_contains": [
       "--force",

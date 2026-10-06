@@ -1,0 +1,50 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "routine.new.refusal.template_compat",
+  "noun": "routine",
+  "verb": "new",
+  "target": "order_sync",
+  "command": "capcli routine new order_sync --from tpl://order_sync@2",
+  "state": {
+    "exit_code": 3,
+    "domain": "policy.template",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.template",
+    "culprit": "Template policy_version mismatch (template requires policy 5, workspace policy 4)",
+    "remedy": "upgrade the workspace policy_version or select a template compiled against policy 4"
+  },
+  "txt_pair": "screens/routine/new/routine.new.refusal.template_compat.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 3,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  \u2717  exit 3",
+      "  FAIL  policy.template.compat_fail",
+      "  state_modified: false"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "policy.template"
+    }
+  }
+}

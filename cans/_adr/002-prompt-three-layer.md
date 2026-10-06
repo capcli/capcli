@@ -18,7 +18,7 @@
   - Prompts restate cans directly for completeness — rejected: cans is builder-facing SSOT, wholesale agent exposure recreates harness catalog injection
   - Invent --section and sys verify now and legalise later — rejected: prompt files cannot legalise surface; blocked entries stay blocked
 - Consequences
-  - forensics and hitl banks are present but blocked until illegal screen states are legalised or renamed (wireframe P0-2)
+  - forensics and hitl banks are present but blocked until illegal screen states are legalised or renamed (wireframe P0-2) — resolved by ADR-003: screens renamed, both banks now serve
   - docs/ completeness debt becomes explicit: missing docs: targets are listed in prompt-structure.md section 7, not silently inlined
   - Slice caps in bank frontmatter must be honest: cap covers rendered leaf size, ceiling 500
   - Branch carries no cans/*.md surface changes: any follow-up amendment (interface leaf addressing, state taxonomy) lands as its own ADR

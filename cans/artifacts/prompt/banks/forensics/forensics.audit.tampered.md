@@ -6,7 +6,7 @@ slug: audit_tampered
 version: 1
 trust: draft
 trigger:
-  screens: ["sys.doctor.warning.tamper"]
+  screens: ["sys.doctor.success.tamper"]
   predicate: {}
 vars:
   - name: env
@@ -18,7 +18,7 @@ sections:
   stage_3_attest: 60
 slice_max_tokens: 500
 docs: "docs/understand/ (audit page: docs debt)"
-status: blocked
+status: served
 ---
 
 # ⚡ TAMPER FORENSICS & QUARANTINE PROTOCOL

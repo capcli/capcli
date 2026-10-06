@@ -54,7 +54,7 @@ Every single refusal, denial, yield, and crash condition across all 10 CLI nouns
 |---|---|---|---|---|---|---|
 | R12 | `db.lock.denial.claim_held` | 2 | `db.claims` | `held` | `ACTION: capcli sql "SELECT * FROM claims"` | `remedy: lease held by another session; yield or await TTL` |
 | R13 | `db.lock.refusal.missing_reason` | 3 | `validation` | `missing_arg` | `ACTION: capcli db lock <ref> --reason "<why>"` | `remedy: exclusive lock leases mandate --reason flag` |
-| R14 | `db.unlock.refusal.not_holder` | 3 | `policy.authorizer` | `unauthorized` | `ACTION: capcli sql "SELECT holder FROM claims"` | `remedy: acting agent ID does not own target lease` |
+| R14 | `db.unlock.denial.not_holder` | 3 | `policy.authorizer` | `unauthorized` | `ACTION: capcli sql "SELECT holder FROM claims"` | `remedy: acting agent ID does not own target lease` |
 | R15 | `db.snapshot.denial.prod_draft` | 2 | `policy.trust` | `forbidden` | `ACTION: capcli env use sim` | `remedy: draft trust cannot snapshot prod; switch to sim` |
 | R16 | `db.restore.denial.active_locks` | 2 | `db.claims` | `active_locks` | `ACTION: capcli sql "SELECT * FROM claims"` | `remedy: active business claims prevent state reversal` |
 
@@ -67,7 +67,7 @@ Every single refusal, denial, yield, and crash condition across all 10 CLI nouns
 | R17 | `routine.new.refusal.shape_violation` | 3 | `validation` | `bad_shape` | `ACTION: head -n 150 routines/<name>.py` | `remedy: routine exceeds limits: 150 LOC, 2000 tokens, 8 params` |
 | R18 | `routine.prove.denial.policy` | 2 | `policy.authorizer` | `illegal_leaf` | `ACTION: capcli inspect cap://<name>` | `remedy: forbidden leaf: external API calls banned in db.txn` |
 | R19 | `routine.ship.denial.trust` | 2 | `policy.trust` | `tier2_refusal` | `ACTION: capcli run <cap> --env sim` | `remedy: E045 pinned trust forbidden on Tier 2 macOS/Win` |
-| R20 | `routine.ship.rollback.canary` | 0 | `policy.authorizer` | `rolled_back` | `ACTION: capcli routine prove <name> --env sim` | `remedy: canary telemetry spike triggered auto-rollback` |
+| R20 | `routine.ship.success.rolled_back` | 0 | `policy.authorizer` | `rolled_back` | `ACTION: capcli routine prove <name> --env sim` | `remedy: canary telemetry spike triggered auto-rollback` |
 | R21 | `routine.rollback.denial.depth` | 2 | `policy.authorizer` | `depth_limit` | `ACTION: capcli routine stats <name>` | `remedy: target version exceeds max rollback depth of 5` |
 | R22 | `routine.retire.denial.active_deps` | 2 | `policy.authorizer` | `deps_exist` | `ACTION: capcli inspect cap://<name>` | `remedy: active routines or crons depend on this capability` |
 
@@ -134,8 +134,8 @@ Every single refusal, denial, yield, and crash condition across all 10 CLI nouns
 |---|---|---|---|---|---|---|
 | R43 | `sys.doctor.refusal.boot` | 3 | `compile` | `missing_dep` | `ACTION: capcli sys doctor` | `remedy: host missing python3.11 or sandbox provider (bwrap)` |
 | R44 | `sys.register.denial.cap` | 2 | `policy.authorizer` | `cap_exceeded` | `ACTION: capcli sys agent list` | `remedy: maximum registered agents reached; revoke idle tokens` |
-| R45 | `sys.doctor.warning.clock_drift` | 0 | `host.ntp` | `clock_skew` | `ACTION: sudo chronyd -q || sudo ntpdate pool.ntp.org`| `remedy: host clock skewed >500ms; monotonic fallback active` |
-| R46 | `sys.doctor.alarm.thrashing` | 2 | `agent.thrashing` | `looping` | `ACTION: capcli sys audit trace latest --explain` | `remedy: 20 sustained denials in 5m; harness throttled` |
+| R45 | `sys.doctor.success.clock_drift` | 0 | `host.ntp` | `clock_skew` | `ACTION: sudo chronyd -q || sudo ntpdate pool.ntp.org`| `remedy: host clock skewed >500ms; monotonic fallback active` |
+| R46 | `sys.doctor.denial.thrashing` | 2 | `agent.thrashing` | `looping` | `ACTION: capcli sys audit trace latest --explain` | `remedy: 20 sustained denials in 5m; harness throttled` |
 | R47 | `sys.exec.crash.runtime` | 5 | `kernel.panic` | `crash` | `ACTION: export CAPCLI_RECOVERY=1 && capcli sys doctor` | `remedy: unrecoverable media failure; boot emergency recovery` |
 
 ---

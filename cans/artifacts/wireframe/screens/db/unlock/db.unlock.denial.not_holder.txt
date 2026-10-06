@@ -1,4 +1,4 @@
-[dev:tier_1]  ✗  exit 3
+[dev:tier_1]  ✗  exit 2
 
   FAIL  policy.authorizer.claim_not_holder
         target: orders:ORD-10

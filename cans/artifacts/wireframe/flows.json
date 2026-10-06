@@ -34,7 +34,7 @@
       "name": "Wire Quota Starvation, Yield & Auto-Resume",
       "color": "#d29922",
       "entry": "run.execute.yield.quota",
-      "terminal": "run.execute.resume.quota",
+      "terminal": "run.execute.success.resumed",
       "description": "Background task reaches dry pool -> Exit 6 suspension -> daemon parks frame -> refill epoch -> daemon auto-resume"
     },
     "journey_schema_evolution": {
@@ -47,14 +47,14 @@
     "journey_tamper_forensics": {
       "name": "Tamper Quarantine & Forensic Isolation",
       "color": "#f0883e",
-      "entry": "sys.doctor.warning.tamper",
-      "terminal": "sys.doctor.quarantine_mode",
+      "entry": "sys.doctor.success.tamper",
+      "terminal": "sys.doctor.success.quarantine",
       "description": "Broken SHA-256 chain -> isolate corrupted block to audit.quarantine.jsonl -> alert dead-letter -> active state remains online"
     },
     "journey_human_in_the_loop": {
       "name": "Ping Ask Suspension & Resolution",
       "color": "#bc8cff",
-      "entry": "run.execute.suspended.ask",
+      "entry": "run.execute.yield.ask",
       "terminal": "run.execute.success.populated",
       "description": "Routine hits ctx.ping.ask -> task suspends -> Cockpit inquiry card -> human resolves choice -> frame execution resumes"
     }
@@ -270,7 +270,7 @@
       "id": "t_crucible_claims_to_thrashing",
       "journeys": ["journey_execution_crucible"],
       "from": ["db.lock.denial.claim_held"],
-      "to": ["sys.doctor.alarm.thrashing"],
+      "to": ["sys.doctor.denial.thrashing"],
       "trigger": "sustained_denials",
       "label": "20 sustained denials in 5m",
       "arrow_type": "denial"
@@ -278,7 +278,7 @@
     {
       "id": "t_crucible_thrashing_to_missing_secret",
       "journeys": ["journey_execution_crucible"],
-      "from": ["sys.doctor.alarm.thrashing"],
+      "from": ["sys.doctor.denial.thrashing"],
       "to": ["run.execute.refusal.missing_secret"],
       "trigger": "execute_without_vault",
       "label": "capcli run cap://stripe.refund",
@@ -324,7 +324,7 @@
       "id": "t_quota_yield_to_park",
       "journeys": ["journey_quota_preemption"],
       "from": ["run.execute.yield.quota"],
-      "to": ["run.execute.resume.quota"],
+      "to": ["run.execute.success.resumed"],
       "trigger": "daemon_auto_refill",
       "label": "Daemon token refill tick",
       "arrow_type": "yield"
@@ -350,8 +350,8 @@
     {
       "id": "t_tamper_quarantine_inspect",
       "journeys": ["journey_tamper_forensics"],
-      "from": ["sys.doctor.warning.tamper"],
-      "to": ["sys.doctor.quarantine_mode"],
+      "from": ["sys.doctor.success.tamper"],
+      "to": ["sys.doctor.success.quarantine"],
       "trigger": "inspect_quarantine",
       "label": "capcli sys doctor --quarantine",
       "arrow_type": "progress"
@@ -359,7 +359,7 @@
     {
       "id": "t_ask_suspended_to_list",
       "journeys": ["journey_human_in_the_loop"],
-      "from": ["run.execute.suspended.ask"],
+      "from": ["run.execute.yield.ask"],
       "to": ["ping.list.success.populated"],
       "trigger": "view_inquiries",
       "label": "capcli ping list --pending",

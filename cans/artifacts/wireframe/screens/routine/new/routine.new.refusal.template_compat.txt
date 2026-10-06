@@ -1,0 +1,10 @@
+[dev:tier_1]  ✗  exit 3
+
+  FAIL  policy.template.compat_fail
+        template: tpl://order_sync@2 (policy_version 5)
+        workspace policy_version: 4
+
+        Template policy_version mismatch exits 3.
+
+  state_modified: false
+  remedy: upgrade the workspace policy_version or select a template compiled against policy 4

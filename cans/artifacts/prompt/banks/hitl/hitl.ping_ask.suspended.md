@@ -6,7 +6,7 @@ slug: ping_ask_suspended
 version: 1
 trust: draft
 trigger:
-  screens: ["run.execute.suspended.ask"]
+  screens: ["run.execute.yield.ask"]
   predicate: {}
 vars:
   - name: env
@@ -18,7 +18,7 @@ sections:
   stage_3_occ: 80
 slice_max_tokens: 500
 docs: "docs/use/ (ask page: docs debt)"
-status: blocked
+status: served
 ---
 
 # ⚡ HUMAN-IN-THE-LOOP (PING ASK) RESOLUTION PROTOCOL

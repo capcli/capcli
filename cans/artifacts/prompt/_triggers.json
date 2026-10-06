@@ -101,21 +101,19 @@
     },
     {
       "id": "t_forensics_tamper",
-      "screen_id": "sys.doctor.warning.tamper",
+      "screen_id": "sys.doctor.success.tamper",
       "predicate": {},
       "prompt": "doc://prompt/forensics/audit_tampered@1",
-      "serve": "blocked",
-      "reason": "causal DAG hash chain broken: quarantine active",
-      "blocked_reason": "illegal screen state (wireframe P0-2): warning/suspended not legal states"
+      "serve": "L1",
+      "reason": "causal DAG hash chain broken: quarantine active"
     },
     {
       "id": "t_hitl_suspended",
-      "screen_id": "run.execute.suspended.ask",
+      "screen_id": "run.execute.yield.ask",
       "predicate": {},
       "prompt": "doc://prompt/hitl/ping_ask_suspended@1",
-      "serve": "blocked",
-      "reason": "frame suspended awaiting human inquiry resolution",
-      "blocked_reason": "illegal screen state (wireframe P0-2): warning/suspended not legal states"
+      "serve": "L1",
+      "reason": "frame suspended awaiting human inquiry resolution"
     }
   ]
 }

@@ -105,12 +105,12 @@ predicates are disjoint (see genesis/authoring/promotion on
 | evolution `evolution.schema.drift` | `rule.diff.success.populated` | `docs/guides/migration.md` | served |
 | promotion `promotion.routine.passed` | `routine.prove.success.passed`, draft | `docs/automate/promotion.md` | served |
 | wire `wire.catalog.empty` | `api.catalog.success.empty` | `docs/use/` (API catalog page: docs debt) | served |
-| forensics `forensics.audit.tampered` | `sys.doctor.warning.tamper` | `docs/understand/` (audit page: docs debt) | **blocked** — `warning` is not a legal screen state (wireframe P0-2) |
-| hitl `hitl.ping_ask.suspended` | `run.execute.suspended.ask` | `docs/use/` (ask page: docs debt) | **blocked** — `suspended` is not a legal screen state (wireframe P0-2) |
+| forensics `forensics.audit.tampered` | `sys.doctor.success.tamper` | `docs/understand/` (audit page: docs debt) | served — unblocked by ADR-003 rename (`warning` demoted to condition slot) |
+| hitl `hitl.ping_ask.suspended` | `run.execute.yield.ask` | `docs/use/` (ask page: docs debt) | served — unblocked by ADR-003 rename (ask suspension is exit-6 `yield` per `cans/action.md`) |
 
 Blocked means: files exist for review, `_triggers.json` carries
-`"serve": "blocked"`, and no L1 trailer is emitted until the state taxonomy
-is legalised or the screens are renamed in the wireframe + `cans/` owners.
+`"serve": "blocked"`, and no L1 trailer is emitted until the trigger screen
+is a legal screen ID in the wireframe. (No bank is currently blocked.)
 
 Campaign bodies were corrected to SSOT while extracting them from v1:
 no `sys verify` (trust receipt is `sys doctor --report`), no
@@ -124,14 +124,18 @@ suite, zero denials/drift, 1-hour canary), evolution lists all four phases
 ## 7. Open blockers (TBD — owned, not papered over)
 
 1. Leaf addressing without `--section`: needs `cans/interface.md` ruling.
-2. Illegal screen states `warning` / `suspended` / `alarm` / `rollback`:
-   wireframe P0-2; blocks forensics + hitl serving.
-3. `docs/` completeness is partial in this repo (e.g. `docs/reference/`
-   has only authorizer/limits). Every `docs:` pointer above is a target;
-   missing pages are docs debt, not licence to inline the content here.
-4. Remedy catalogue extraction in `docs/reference/errors.md` is unverified
-   against `cans/` owners; several of its screens carry the same illegal
-   states as blocker 2.
+2. `docs/` completeness is partial in this repo (e.g. `docs/reference/`
+   has only authorizer/limits/errors). Every `docs:` pointer above is a
+   target; missing pages are docs debt, not licence to inline the content
+   here.
+3. Remedy catalogue extraction in `docs/reference/errors.md` is unverified
+   against `cans/` owners; its screen IDs were renamed with the wireframe
+   (ADR-003) but rows are not yet verified per-row.
+
+Resolved since v3: illegal screen states `warning` / `suspended` / `alarm` /
+`rollback` — renamed, not legalised; state vocabulary stays the six exit
+labels. Record: `cans/_adr/003-wireframe-state-taxonomy.md`. Forensics and
+hitl now serve.
 
 ## 8. What moved out of v1, and where it went
 
@@ -142,4 +146,6 @@ suite, zero denials/drift, 1-hour canary), evolution lists all four phases
 | Thresholds (promotion, budgets, shapes) | truth | cited from `cans/trust.md`, `cans/budget.md`, `cans/artifacts/governance.yaml` — never restated |
 | Full schema / routine examples | completeness | `docs/` pages via `docs:` pointers; banks keep only the action-sized fragment per stage |
 
-Decision record: `cans/_adr/002-prompt-three-layer.md`.
+Decision records: `cans/_adr/002-prompt-three-layer.md` (three-layer split),
+`cans/_adr/003-wireframe-state-taxonomy.md` (screen renames that unblocked
+forensics + hitl).

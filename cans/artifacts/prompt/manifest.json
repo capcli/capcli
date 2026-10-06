@@ -79,14 +79,14 @@
       "stem": "forensics.audit.tampered",
       "bank": "forensics",
       "file": "banks/forensics/forensics.audit.tampered.md",
-      "status": "blocked"
+      "status": "served"
     },
     {
       "stem": "hitl.ping_ask.suspended",
       "bank": "hitl",
       "file": "banks/hitl/hitl.ping_ask.suspended.md",
-      "status": "blocked"
+      "status": "served"
     }
   ],
-  "note": "Generated from bank frontmatter. Forensics and hitl are blocked: their trigger screens use illegal states (wireframe P0-2)."
+  "note": "Generated from bank frontmatter. All 11 campaigns served; forensics and hitl unblocked by ADR-003 screen renames."
 }
