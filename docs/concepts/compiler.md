@@ -160,25 +160,22 @@ Time is an enforcement mechanism:
 * Quota windows in `_api_quota` rely on reset timestamps.
 * Human inquiry expirations in `_pending_asks` rely on wall-clock deadlines.
 
-If a developer runs Capcli inside a virtual machine with a frozen clock, or an attacker manipulates the local system time backwards by 4 hours to bypass an API rate-limit window:
+If a developer runs Capcli inside a virtual machine with a frozen clock, or an attacker manipulates the local system time backwards by 4 hours to bypass an API rate-limit window, wall-clock enforcement would rot — so Capcli does not enforce on wall-clock. Lease claims and the causal DAG bind to `CLOCK_MONOTONIC` and SQLite sequence IDs (`cans/physics.md`).
 
-**The kernel refuses to boot (`exit 3`).**
-
-At startup, `capcli-core` probes the host clock against an authoritative NTP delta. If the clock skew exceeds **500 milliseconds**:
+At startup, `capcli-core` probes the host clock against an authoritative NTP delta. If the clock skew exceeds **500 milliseconds**, the doctor screen warns on exit 0 and execution continues:
 
 ```text
-[dev:tier_1]  ✗  exit 3
+[dev:tier_1]  ✓  exit 0
 
-  FATAL  kernel.boot.clock_drift_exceeded
-         Host clock delta vs NTP is 840ms (maximum allowable: 500ms).
-         Execution refused to prevent lease corruption and quota bypass.
+  ⚠  clock drift warning: host delta vs NTP is 840ms (warning threshold: 500ms)
+         causal ordering unaffected: CLOCK_MONOTONIC + SQLite sequence IDs
+         lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only
 
   state_modified: false
-  layer: boot
-  remedy: synchronize host system clock via 'chronyd' or 'ntpdate'
+  remedy:          synchronize host system clock via 'chronyd' or 'ntpdate' when convenient; execution is not blocked
 ```
 
-No corrupted distributed locks. No manipulated token windows. Physics requires monotonic time.
+No corrupted distributed locks. No manipulated token windows. Drift degrades audit timestamps only — physics requires monotonic time, so monotonic time is what the kernel trusts.
 
 ---
 
@@ -186,7 +183,7 @@ No corrupted distributed locks. No manipulated token windows. Physics requires m
 
 **Configuration is code. Blueprints are compiled, not interpreted.**
 
-You cannot hack your own leash with a shell script. If the YAML syntax is ambiguous, the graph is circular, or the clock is drifting, Capcli fails closed before a single process can spawn.
+You cannot hack your own leash with a shell script. If the YAML syntax is ambiguous or the graph is circular, Capcli fails closed before a single process can spawn. A drifting clock earns a warning, not a refusal — the kernel's enforcement never depended on the wall clock.
 
 ---
 

@@ -96,7 +96,7 @@ Capcli prevents this with **Offsite WORM Checkpointing**:
 
 **Result:** Even if someone force-pushes your Git repository and deletes your local SQLite file, the offsite KMS witness signature remains immutable in cloud object storage. 
 
-When you restore, the kernel verifies the local hash chain against the offsite WORM checkpoint. If they don't match, **the kernel refuses to boot (`exit 3`)**.
+When you restore, the kernel verifies the local hash chain against the offsite WORM checkpoint. If they don't match, the tampered blocks are isolated to quarantine and restore proceeds only from the last verified checkpoint; if integrity cannot be restored at all, the kernel panics (**`exit 5`**) rather than boot on a forged chain.
 
 ---
 

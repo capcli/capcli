@@ -216,7 +216,7 @@ capcli sys <verb> [args] [--flags]
 
 ## Invariants & Break-Glass Flags
 
-* **The NTP Boot Gate:** Host clock delta > 500ms vs NTP aborts kernel boot (`exit 3`).
+* **The NTP Drift Warning:** Host clock delta > 500ms vs NTP warns on the exit-0 doctor screen; execution continues. There is no boot gate — lease claims and the causal DAG bind to `CLOCK_MONOTONIC` and SQLite sequence IDs, so drift degrades audit timestamps only.
 * **Audit Write Priority:** If the audit sink (`_audit` or JSONL mirror) fails to flush, execution halts immediately with **`exit 5` (Kernel Panic)**. Nothing runs unaudited.
 * **Emergency Recovery Mode (`CAPCLI_RECOVERY=1`):**
   * Disables behavioral policy enforcement (`policy.yaml`).

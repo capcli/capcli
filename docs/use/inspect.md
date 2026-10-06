@@ -182,11 +182,13 @@ $ capcli inspect doc://refund-policy
     4. Edge cases
 ```
 
-You don't read the whole thing. You see the outline. If you need section 3, you fetch it:
+You don't read the whole thing. You see the outline. If you need one leaf, you fetch it with the ordinary bounded read:
 
 ```bash
-$ capcli doc read doc://refund-policy --section 3 --max-tokens 100
+$ capcli doc read doc://refund-policy --max-tokens 100
 ```
+
+(Leaf selection rides the outline's node ids — there is no `--section` flag in v1; see `cans/artifacts/prompt/prompt-structure.md`.)
 
 Progressive disclosure. You pull what you need, not the whole blob.
 

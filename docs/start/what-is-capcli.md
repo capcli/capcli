@@ -47,7 +47,7 @@ Capcli is the vault, the limit, and the ledger. Compiled into machine code. Not 
 1. **Database floor** — unbounded writes die at the C authorizer. `exit 2`.
 2. **Network jail** — raw sockets get trapped at the syscall level. `exit 2`.
 3. **Budget cage** — op #51 on a 50-op run halts. No partial execution.
-4. **Audit spine** — broken hash chain? Kernel refuses to boot. `exit 3`.
+4. **Audit spine** — broken hash chain? Corrupted block isolated to quarantine, exit 0; boot refused only when integrity can't be restored (panic, `exit 5`).
 
 You'll meet these properly later. For now: they exist, they're non-negotiable, and they're why you can close your laptop while your agent works.
 

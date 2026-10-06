@@ -83,7 +83,7 @@ No prompt engineering. No *"please be careful"*. These are compiled into native 
 | **1. Database Floor** | Native C `sqlite3_set_authorizer` + AST | Unbounded writes or missing `LIMIT` are **killed at prepare-time (`exit 2`)**. Zero rows touched. |
 | **2. Wire Floor** | `bwrap` namespaces + `seccomp-bpf` + Quota | Raw sockets trapped at **Syscall 42 (`exit 2`)**. Quota exhausted? Tasks **yield cleanly (`exit 6`)**. |
 | **3. Budget Cage** | Downward cascading frames ($\min$) | Op #51 on a 50-op run? **Halted at frame boundary (`exit 2`)**. No half-executed side effects. |
-| **4. Memory Spine** | Append-only SHA-256 Causal DAG | Tampered audit log or broken link? **Kernel refuses to boot (`exit 3`)**. Unaudited writes panic (`exit 5`). |
+| **4. Memory Spine** | Append-only SHA-256 Causal DAG | Tampered audit log or broken link? **Corrupted block isolated to quarantine (`exit 0`)**, valid history stays operable. Chain unrecoverable with both sinks dead? **Panic (`exit 5`)**, boot refused. |
 
 ---
 
@@ -93,7 +93,7 @@ Machines communicate via exit codes, not conversational apologies:
 
 * **`exit 0`** $\rightarrow$ **Success.** Committed to relational state, hashed into the causal ledger.
 * **`exit 2`** $\rightarrow$ **Policy Denial.** Blocked by C authorizer, AST, trust rung, or budget. **State untouched.**
-* **`exit 3`** $\rightarrow$ **Refusal / Drift.** Missing intent (`-m`), lockfile mismatch, or NTP clock drift >500ms. **State untouched.**
+* **`exit 3`** $\rightarrow$ **Refusal / Drift.** Missing intent (`-m`) or lockfile mismatch. **State untouched.** (Host clock drift >500ms is not a refusal: the doctor screen warns on exit 0 and execution continues on monotonic time.)
 * **`exit 4`** $\rightarrow$ **Crash.** Sandbox runtime exception. Transaction cleanly rolled back.
 * **`exit 5`** $\rightarrow$ **Kernel Panic.** Audit sink unreachable. Hard halt. Kernel refuses to run unaudited.
 * **`exit 6`** $\rightarrow$ **Yield.** Provider quota dry. Task safely parked in `_suspended_tasks` until token refill epoch.

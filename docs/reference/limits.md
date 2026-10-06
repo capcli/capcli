@@ -153,7 +153,7 @@ To stop runaway agent loops from burning resources:
 
 | Rule | Parameter | What happens on breach |
 |---|---|---|
-| **NTP Clock Drift** | Delta > 500ms vs NTP | Kernel refuses to boot (`exit 3`) |
+| **NTP Clock Drift** | Delta > 500ms vs NTP | Diagnostic warning on the exit-0 doctor screen; execution continues (monotonic fallback — enforcement binds to `CLOCK_MONOTONIC`, not wall clock) |
 | **Audit Mirror Lag** | JSONL lag > 5 minutes | `sys doctor` alerts SLA breach |
 | **Universal CLI Flags** | Exactly 12 flags | No custom per-noun flag bloat |
 | **Headless Prompts** | Unattended confirm gate | Fails closed instantly (`exit 2`) |

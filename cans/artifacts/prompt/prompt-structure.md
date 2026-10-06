@@ -128,9 +128,11 @@ suite, zero denials/drift, 1-hour canary), evolution lists all four phases
    has only authorizer/limits/errors). Every `docs:` pointer above is a
    target; missing pages are docs debt, not licence to inline the content
    here.
-3. Remedy catalogue extraction in `docs/reference/errors.md` is unverified
-   against `cans/` owners; its screen IDs were renamed with the wireframe
-   (ADR-003) but rows are not yet verified per-row.
+3. Remedy catalogue `docs/reference/errors.md`: rows verified per-row
+   against `cans/` owners and wireframe fixtures 2026-10-07 and corrected
+   (5 verified as written; success-screen rows R20/R45/R48 removed — not
+   remedies). Header stays candidate until two owner rulings land:
+   `api sync` verb and exit-5 scope (`cans/_collab/conflicts.md` C-1, C-6).
 
 Resolved since v3: illegal screen states `warning` / `suspended` / `alarm` /
 `rollback` — renamed, not legalised; state vocabulary stays the six exit
