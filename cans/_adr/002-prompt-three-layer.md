@@ -1,0 +1,24 @@
+- Status: proposed
+- Date: 2026-10-06
+- Decided by: pending maintainer review (branch prompt/three-layer-rewrite)
+- Context
+  - prompt-structure.md v1 mixed three layers in one file: kernel legality, user completeness, agent action
+  - Symptoms: 48-condition remedy matrix claimed exhaustive against 110 non-success screens, Rust engine code in a prompt file, thresholds redefined against cans/trust.md, banks existing only as code fences
+  - Frozen constraints carried in: no new CLI noun or verb in v1, pointer is doc://prompt/{bank}/{slug}@v, prompt:// reserved pending action.md and interface.md amendment
+- Decision
+  - cans/*.md is SSOT: legality is checked against cans at author time, never invented or restated by a prompt
+  - docs/ is user-facing completeness: full reference lives there, prompt slices end with a docs: pointer and never duplicate it
+  - banks/ prompts are agent-facing action only: state, next action, bound, exit condition, one leaf per turn
+  - Remedy matrix leaves the prompt layer: candidate extraction at docs/reference/errors.md, unverified until checked per-row against cans owners
+  - Engine code leaves the prompt layer: implementation home is cans/assembly.md ownership, referenced not reproduced
+  - Slide caps reconciled: doc read default 100 in cans/interface.md, global result ceiling 500 in cans/action.md; prompt leaves may request up to 500, never above it
+  - No --section flag in v1: leaf selection rides doc outline node ids; if the kernel cannot address leaves that way, interface.md amendment is required first
+- Alternatives considered
+  - Keep v1 all-in-one file and add missing coverage rows — rejected: grows the agent layer into the bloat it exists to prevent
+  - Prompts restate cans directly for completeness — rejected: cans is builder-facing SSOT, wholesale agent exposure recreates harness catalog injection
+  - Invent --section and sys verify now and legalise later — rejected: prompt files cannot legalise surface; blocked entries stay blocked
+- Consequences
+  - forensics and hitl banks are present but blocked until illegal screen states are legalised or renamed (wireframe P0-2)
+  - docs/ completeness debt becomes explicit: missing docs: targets are listed in prompt-structure.md section 7, not silently inlined
+  - Slice caps in bank frontmatter must be honest: cap covers rendered leaf size, ceiling 500
+  - Branch carries no cans/*.md surface changes: any follow-up amendment (interface leaf addressing, state taxonomy) lands as its own ADR
