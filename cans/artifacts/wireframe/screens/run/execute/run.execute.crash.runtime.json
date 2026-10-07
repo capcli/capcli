@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.crash.runtime",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://enrich_customers@2",
   "command": "capcli run cap://enrich_customers@2 -p cohort=enterprise -m \"enrich customer records\"",
   "state": {
@@ -20,28 +18,63 @@
     "remedy": "guard the None case at routines/enrich_customers.py:42, then prove in sim before re-running",
     "layer": "runtime"
   },
-  "txt_pair": "screens/run/execute/run.execute.crash.runtime.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 4,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 4",
-      "  CRASH  routine.runtime.exception",
-      "  state_modified: false",
-      "  rollback: clean (all ops reverted)",
-      "  remedy: guard the None case at routines/enrich_customers.py:42, then prove in sim before re-running"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "routine.runtime"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 4"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "CRASH  routine.runtime.exception",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "enrich_customers@2 (frame_027)"
+          },
+          {
+            "field": "error",
+            "value": "TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'"
+          },
+          {
+            "field": "at",
+            "value": "routines/enrich_customers.py:42 in compute_lifetime_value"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Guest language exception escaped the routine boundary.",
+            "indent": 9
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "rollback",
+            "value": "clean (all ops reverted)"
+          },
+          {
+            "field": "layer",
+            "value": "runtime"
+          },
+          {
+            "field": "remedy",
+            "value": "guard the None case at routines/enrich_customers.py:42, then prove in sim before re-running"
+          }
+        ]
+      }
+    ]
   }
 }

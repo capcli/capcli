@@ -102,6 +102,8 @@
     - Document path: doc noun
       - Reading — doc read <ptr> [--max-tokens 100]
       - Outline — doc outline <ptr>
+      - Pointer scope — doc:// addresses human docs; prompt:// addresses one agent campaign bank
+      - Prompt envelope — inspect prompt://{bank}/{slug}@{version} returns the campaign envelope
     - Refusals and banned operations
       - ssot enforcement — config mutations require git commits; direct `config set` or manual SQL DDL denied (exit 3)
       - banned bypass flags — `--force`, `--override-budget`, `--force-prod`, `--verbose` rejected at parser (exit 3)

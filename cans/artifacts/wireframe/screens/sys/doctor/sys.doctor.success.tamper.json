@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.doctor.success.tamper",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://audit-chain",
   "command": "capcli sys doctor",
   "state": {
@@ -15,20 +13,47 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/doctor/sys.doctor.success.tamper.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  \u2713  exit 0",
-      "  \u26a0  audit tamper isolated",
-      "  state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 0"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "⚠  audit tamper isolated",
+            "value": "SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch"
+          },
+          {
+            "text": "corrupted block moved to quarantine branch; rows 1-8,411 verified, valid history remains operable",
+            "indent": 9
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "chain",
+            "value": "quarantine active (1 block isolated)"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "inspect quarantined block via 'capcli sys doctor' quarantine view, then rebuild proof bundle before any restore"
+          }
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://forensics/audit_tampered@1",
+    "reason": "causal DAG hash chain broken: quarantine active",
+    "serve": "L1"
   }
 }

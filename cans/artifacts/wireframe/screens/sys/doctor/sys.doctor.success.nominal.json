@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.doctor.success.nominal",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://host",
   "command": "capcli sys doctor --boot-check",
   "state": {
@@ -15,23 +13,83 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/doctor/sys.doctor.success.nominal.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  nominal",
-      "  sandbox_provider:  bwrap (unprivileged userns: supported)",
-      "  seccomp_bpf:       active",
-      "  ntp_drift_ms:      14 (cap: 500)",
-      "  audit_sink:        online",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "nominal"
+    },
+    "sections": [
+      {
+        "title": "boot_check",
+        "items": [
+          {
+            "field": "kernel",
+            "value": "capcli 8.4.1"
+          },
+          {
+            "field": "platform",
+            "value": "linux x86_64 (tier_1, hardened namespaces)"
+          },
+          {
+            "field": "python_runtime",
+            "value": "3.12.2 (floor: 3.11)"
+          },
+          {
+            "field": "git_version",
+            "value": "2.43.0 (identity: configured)"
+          },
+          {
+            "field": "engine",
+            "value": "sqlite_3.45.1 (wal_mode: true)"
+          },
+          {
+            "field": "c_authorizer",
+            "value": "active"
+          },
+          {
+            "field": "sandbox_provider",
+            "value": "bwrap (unprivileged userns: supported)"
+          },
+          {
+            "field": "seccomp_bpf",
+            "value": "active"
+          },
+          {
+            "field": "ntp_drift_ms",
+            "value": "14 (cap: 500)"
+          },
+          {
+            "field": "audit_sink",
+            "value": "online"
+          },
+          {
+            "field": "lockfile",
+            "value": "capcli.lock (root hash verified)"
+          },
+          {
+            "field": "workspace",
+            "value": "envs/dev/workspace.db"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "note:           boot-check probes only; no execution occurred",
+            "indent": 0
+          }
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://onboarding/harness@1",
+    "reason": "harness at nominal doctor with empty domain",
+    "serve": "L1"
   }
 }

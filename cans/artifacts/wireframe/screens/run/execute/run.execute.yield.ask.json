@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.yield.ask",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://dispatch_order@4",
   "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
   "state": {
@@ -22,27 +20,88 @@
     "pending_asks": 1,
     "suspended_frame": "frame_026"
   },
-  "txt_pair": "screens/run/execute/run.execute.yield.ask.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 6,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  \u2717  exit 6",
-      "  YIELD  ping.ask_suspended",
-      "  ask:             ask_88a",
-      "  pending_asks:    1 enqueued (ask_88a)",
-      "  state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 6"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "YIELD  ping.ask_suspended",
+            "indent": 2
+          },
+          {
+            "text": "routine dispatch_order@4 (frame_026, paused at leaf 2 of 3)",
+            "indent": 9
+          },
+          {
+            "field": "session",
+            "value": "ses_a992f"
+          },
+          {
+            "field": "intent",
+            "value": "\"fulfill urgent pending orders\""
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "ask",
+            "value": "ask_88a"
+          },
+          {
+            "field": "question",
+            "value": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\""
+          },
+          {
+            "field": "options",
+            "value": "approve, deny"
+          },
+          {
+            "field": "timeout",
+            "value": "60m (fail-closed)"
+          },
+          {
+            "field": "pending_asks",
+            "value": "1 enqueued (ask_88a)"
+          },
+          {
+            "field": "cockpit",
+            "value": "http://127.0.0.1:4040/ask/ask_88a"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "ping"
+          },
+          {
+            "field": "suspended_frame",
+            "value": "frame_026"
+          },
+          {
+            "field": "remedy",
+            "value": "frame checkpointed to _pending_asks; human resolves via Cockpit or 'capcli ping resolve ask_88a --choice approve', frame auto-resumes after hash re-verification"
+          }
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://hitl/ping_ask_suspended@1",
+    "reason": "frame suspended awaiting human inquiry resolution",
+    "serve": "L1"
   }
 }

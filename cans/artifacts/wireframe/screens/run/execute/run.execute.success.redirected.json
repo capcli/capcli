@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.success.redirected",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://report_orders@2",
   "command": "capcli run cap://report_orders@2 -p quarter=2026Q3 --out report.json",
   "state": {
@@ -15,21 +13,33 @@
     "data_shape": "redirected"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/execute/run.execute.success.redirected.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  redirected",
-      "  payload:         1.2MB written to report.json",
-      "  state_modified:  false",
-      "  audit_op:        op_9f31a"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "redirected"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "payload",
+            "value": "1.2MB written to report.json"
+          },
+          {
+            "field": "sha256",
+            "value": "9f3a71c0b8e2d455"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f31a"
+          }
+        ]
+      }
+    ]
   }
 }

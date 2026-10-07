@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.search.success.truncated",
-  "noun": "run",
-  "verb": "search",
   "target": "stripe",
   "command": "capcli search 'stripe'",
   "state": {
@@ -15,22 +13,122 @@
     "data_shape": "truncated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/search/run.search.success.truncated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  20 matches for 'stripe' (capped)",
-      "  truncated:   true",
-      "  result_cap:  20 (search.max_results)",
-      "  next_cursor: doc://refund-policy",
-      "  api://stripe.refund_charge                 api    active"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "20 matches for 'stripe' (capped)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "api://stripe.payment_intents.create        api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.payment_intents.confirm       api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.payment_intents.cancel        api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.refund_charge                 api    active",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.charges.list                  api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.customers.create              api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.customers.retrieve            api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.invoices.create               api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.invoices.send                 api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.invoice_items.create          api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.payment_methods.attach        api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.payouts.list                  api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.balance.retrieve              api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.disputes.list                 api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.verification_sessions.create  api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "vault://stripe_secret_key                  vault  missing",
+            "indent": 2
+          },
+          {
+            "text": "vault://stripe_webhook_secret              vault  missing",
+            "indent": 2
+          },
+          {
+            "text": "quota://stripe                             quota  tracked",
+            "indent": 2
+          },
+          {
+            "text": "bind://webhook/stripe/invoice_paid         bind   active",
+            "indent": 2
+          },
+          {
+            "text": "doc://refund-policy                        doc    readable",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "truncated",
+            "value": "true"
+          },
+          {
+            "field": "result_cap",
+            "value": "20 (search.max_results)"
+          },
+          {
+            "field": "total",
+            "value": "34"
+          },
+          {
+            "field": "next_cursor",
+            "value": "doc://refund-policy"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2t"
+          }
+        ]
+      }
+    ]
   }
 }

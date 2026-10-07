@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.register.denial.cap",
-  "noun": "sys",
-  "verb": "register",
   "target": "agents",
   "command": "capcli sys register",
   "state": {
@@ -21,30 +19,46 @@
     "layer": "authorizer",
     "measured": "8 registered agents (cap: 8)"
   },
-  "txt_pair": "screens/sys/register/sys.register.denial.cap.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.registry.agent_cap",
-      "measured:  8 registered agents (cap: 8)",
-      "state_modified: false",
-      "layer: authorizer",
-      "remedy: revoke a dormant agent via capcli sys revoke <agent-id>, then re-register"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.registry.agent_cap",
+            "indent": 2
+          },
+          {
+            "field": "registration refused",
+            "value": "agent registry at capacity"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "measured",
+            "value": "8 registered agents (cap: 8)"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "remedy",
+            "value": "revoke a dormant agent via capcli sys revoke <agent-id>, then re-register"
+          }
+        ]
+      }
+    ]
   }
 }

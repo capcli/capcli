@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "doc.inspect.success.populated",
-  "noun": "doc",
-  "verb": "inspect",
   "target": "doc://refund-policy",
   "command": "capcli doc inspect doc://refund-policy",
   "state": {
@@ -15,23 +13,57 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/doc/inspect/doc.inspect.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  inspect doc://refund-policy",
-      "document: doc://refund-policy",
-      "source:   git:docs/policies/refund-policy.md@2f6110a",
-      "mtime:    2026-10-02T14:18:33Z",
-      "nodes:    8",
-      "tokens:   312 (cap: 500)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "inspect doc://refund-policy"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "document",
+            "value": "doc://refund-policy"
+          },
+          {
+            "field": "title",
+            "value": "Refund Policy"
+          },
+          {
+            "field": "trust",
+            "value": "pinned"
+          },
+          {
+            "field": "source",
+            "value": "git:docs/policies/refund-policy.md@2f6110a"
+          },
+          {
+            "field": "sha256",
+            "value": "9c1f04ab37e6d2f5c8a01b74e93d6f2a5b8c0d17e4f92a6b3c5d8e0f1a2b4c69"
+          },
+          {
+            "field": "mtime",
+            "value": "2026-10-02T14:18:33Z"
+          },
+          {
+            "field": "nodes",
+            "value": "8"
+          },
+          {
+            "field": "sections",
+            "value": "5"
+          },
+          {
+            "field": "tokens",
+            "value": "312 (cap: 500)"
+          },
+          {
+            "field": "has_more",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

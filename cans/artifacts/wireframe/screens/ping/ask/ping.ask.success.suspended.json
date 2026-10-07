@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.ask.success.suspended",
-  "noun": "ping",
-  "verb": "ask",
   "target": "user:alice",
   "command": "capcli ping ask user:alice \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h --intent \"refund policy requires human sign-off\"",
   "state": {
@@ -15,23 +13,53 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/ping/ask/ping.ask.success.suspended.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  suspended",
-      "ask_id:          ask_88a",
-      "options:         approve, reject, escalate",
-      "timeout:         24h (fail-closed on expiry)",
-      "cockpit:         http://127.0.0.1:4040/ask/ask_88a",
-      "state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "suspended"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "ask_id",
+            "value": "ask_88a"
+          },
+          {
+            "field": "principal",
+            "value": "user:alice"
+          },
+          {
+            "field": "question",
+            "value": "\"Approve refund for order ORD-10?\""
+          },
+          {
+            "field": "options",
+            "value": "approve, reject, escalate"
+          },
+          {
+            "field": "timeout",
+            "value": "24h (fail-closed on expiry)"
+          },
+          {
+            "field": "cockpit",
+            "value": "http://127.0.0.1:4040/ask/ask_88a"
+          },
+          {
+            "field": "dispatch",
+            "value": "pwa_push -> user:alice"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "question parked in _pending_asks; resolve via Cockpit or ping resolve"
+          }
+        ]
+      }
+    ]
   }
 }

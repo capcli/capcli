@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.stats.success.populated",
-  "noun": "routine",
-  "verb": "stats",
   "target": "dispatch_order",
   "command": "capcli routine stats dispatch_order --deep",
   "state": {
@@ -15,23 +13,88 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/stats/routine.stats.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  populated",
-      "routine:      dispatch_order@4",
-      "success_rate:  99.1%",
-      "p50_duration:  340ms",
-      "p95_duration:  890ms",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "routine",
+            "value": "dispatch_order@4"
+          },
+          {
+            "field": "window",
+            "value": "214 runs (last 30d)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "runs",
+            "value": "214"
+          },
+          {
+            "field": "success_rate",
+            "value": "99.1%"
+          },
+          {
+            "field": "p50_duration",
+            "value": "340ms"
+          },
+          {
+            "field": "p95_duration",
+            "value": "890ms"
+          },
+          {
+            "field": "last_run_at",
+            "value": "2m ago (op_9f2e, ses_a992f)"
+          },
+          {
+            "field": "drift_events",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "leaves (--deep):",
+            "indent": 2
+          },
+          {
+            "text": "db.query    orders                     p50 12ms  p95 41ms  fuel 40",
+            "indent": 4
+          },
+          {
+            "text": "api.call    logistics.shipments.create p50 340ms p95 812ms fuel 610",
+            "indent": 4
+          },
+          {
+            "text": "db.execute  orders                     p50 18ms  p95 52ms  fuel 46",
+            "indent": 4
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "read-only profiling from routine_stats and the audit mirror"
+          }
+        ]
+      }
+    ]
   }
 }

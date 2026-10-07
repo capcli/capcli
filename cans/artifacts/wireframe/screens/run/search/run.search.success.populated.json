@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.search.success.populated",
-  "noun": "run",
-  "verb": "search",
   "target": "order",
   "command": "capcli search 'order'",
   "state": {
@@ -15,22 +13,89 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/search/run.search.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  4 matches for 'order'",
-      "  cap://dispatch_order@4              routine  pinned",
-      "    Dispatch paid order to carrier and update status",
-      "    next: capcli inspect cap://dispatch_order@4",
-      "  audit_op:       op_9f2r"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "4 matches for 'order'"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "cap://dispatch_order@4              routine  pinned",
+            "indent": 2
+          },
+          {
+            "text": "Dispatch paid order to carrier and update status",
+            "indent": 4
+          },
+          {
+            "field": "next",
+            "value": "capcli inspect cap://dispatch_order@4"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "api://stripe.payment_intents.create api      dormant",
+            "indent": 2
+          },
+          {
+            "text": "Creates PaymentIntent for card/invoice capture",
+            "indent": 4
+          },
+          {
+            "field": "next",
+            "value": "capcli api activate stripe.payment_intents.create --intent \"...\""
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "db://orders                         view     read",
+            "indent": 2
+          },
+          {
+            "text": "Order rows with customer and fulfillment status",
+            "indent": 4
+          },
+          {
+            "field": "next",
+            "value": "capcli sql \"SELECT id FROM orders LIMIT 5\""
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "doc://refund-policy                 doc      readable",
+            "indent": 2
+          },
+          {
+            "text": "Refund routing rules and 120-day delegation boundary",
+            "indent": 4
+          },
+          {
+            "field": "next",
+            "value": "capcli doc read doc://refund-policy"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_9f2r"
+          }
+        ]
+      }
+    ]
   }
 }

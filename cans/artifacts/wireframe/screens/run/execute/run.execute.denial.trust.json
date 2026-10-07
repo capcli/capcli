@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.denial.trust",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://sync_inventory@3",
   "command": "capcli run cap://sync_inventory@3 -p warehouse=west --env prod -m \"nightly inventory sync\"",
   "state": {
@@ -20,30 +18,59 @@
     "remedy": "prove in sim ('capcli routine prove sync_inventory --env sim'), then ship to reviewed",
     "layer": "trust"
   },
-  "txt_pair": "screens/run/execute/run.execute.denial.trust.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[prod:tier_1]  ✗  exit 2",
-      "  FAIL  policy.trust.unproven",
-      "        routine sync_inventory@3 holds draft trust",
-      "  state_modified: false",
-      "  layer: trust",
-      "  remedy: prove in sim ('capcli routine prove sync_inventory --env sim'), then ship to reviewed"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.trust"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.trust.unproven",
+            "indent": 2
+          },
+          {
+            "text": "routine sync_inventory@3 holds draft trust",
+            "indent": 8
+          },
+          {
+            "field": "target env",
+            "value": "prod (floor: reviewed)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Draft routines cannot execute in production.",
+            "indent": 8
+          },
+          {
+            "text": "Prove in sim first, then ship to reviewed.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "remedy",
+            "value": "prove in sim ('capcli routine prove sync_inventory --env sim'), then ship to reviewed"
+          }
+        ]
+      }
+    ]
   }
 }

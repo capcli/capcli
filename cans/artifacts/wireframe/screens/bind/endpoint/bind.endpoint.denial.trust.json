@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.endpoint.denial.trust",
-  "noun": "bind",
-  "verb": "endpoint",
   "target": "cap://inventory_report@1",
   "command": "capcli bind endpoint inventory_report@1 --auth api-key --rate 60 --channel all",
   "state": {
@@ -21,30 +19,59 @@
     "layer": "trust",
     "measured": "routine trust: draft (floor: pinned)"
   },
-  "txt_pair": "screens/bind/endpoint/bind.endpoint.denial.trust.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.trust.serve_requires_pinned",
-      "Endpoint requires pinned trust. Unpinned routines cannot be exposed as endpoints.",
-      "state_modified: false",
-      "layer:          trust",
-      "remedy:         promote the routine first: capcli routine ship inventory_report pinned --reason \"expose to partners\""
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.trust"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.trust.serve_requires_pinned",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "inventory_report@1"
+          },
+          {
+            "field": "trust",
+            "value": "draft"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Endpoint requires pinned trust. Unpinned routines cannot be exposed as endpoints.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "measured",
+            "value": "routine trust: draft (floor: pinned)"
+          },
+          {
+            "field": "remedy",
+            "value": "promote the routine first: capcli routine ship inventory_report pinned --reason \"expose to partners\""
+          }
+        ]
+      }
+    ]
   }
 }

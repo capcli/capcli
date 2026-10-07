@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "db.unlock.denial.not_holder",
-  "noun": "db",
-  "verb": "unlock",
   "target": "orders:ORD-10",
   "command": "capcli db unlock orders:ORD-10",
   "state": {
@@ -20,30 +18,59 @@
     "remedy": "ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry",
     "layer": "authorizer"
   },
-  "txt_pair": "screens/db/unlock/db.unlock.denial.not_holder.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  \u2717  exit 2",
-      "FAIL  policy.authorizer.claim_not_holder",
-      "Caller does not own the claim; only the holder may release a lease.",
-      "state_modified: false",
-      "layer: authorizer",
-      "remedy: ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.claim_not_holder",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "orders:ORD-10"
+          },
+          {
+            "field": "lease",
+            "value": "claim_c3d4 (holder: agt_9k2w)"
+          },
+          {
+            "field": "caller",
+            "value": "agt_7f3k"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Caller does not own the claim; only the holder may release a lease.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "remedy",
+            "value": "ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry"
+          }
+        ]
+      }
+    ]
   }
 }

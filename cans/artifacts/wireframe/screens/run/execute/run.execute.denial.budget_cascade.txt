@@ -14,3 +14,4 @@
   layer: budget
   measured: child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops
   remedy: shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain
+trailer: prompt://crucible/execution_starved@1 - call-tree preflight failed budget cascade bounds

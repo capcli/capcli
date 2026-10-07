@@ -10,3 +10,4 @@
 
   next_step: author a draft routine or expand catalog via capcli api sync
   audit_op:  op_9f2u
+trailer: prompt://authoring/routine_gaps@1 - telemetry shows uncodified operational sequence

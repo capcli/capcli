@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.keys.denial.cap",
-  "noun": "bind",
-  "verb": "keys",
   "target": "partner_hook",
   "command": "capcli bind keys issue partner_hook --principal partner:acme",
   "state": {
@@ -21,30 +19,55 @@
     "layer": "authorizer",
     "measured": "25 active keys (cap: 25)"
   },
-  "txt_pair": "screens/bind/keys/bind.keys.denial.cap.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.key_cap_exceeded",
-      "Max 25 keys reached. Key issuance refused.",
-      "state_modified: false",
-      "layer:          authorizer",
-      "remedy:         remove an idle endpoint binding to release its keys, or await 90d rotation"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.key_cap_exceeded",
+            "indent": 2
+          },
+          {
+            "field": "active keys",
+            "value": "25 of 25"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Max 25 keys reached. Key issuance refused.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "25 active keys (cap: 25)"
+          },
+          {
+            "field": "remedy",
+            "value": "remove an idle endpoint binding to release its keys, or await 90d rotation"
+          }
+        ]
+      }
+    ]
   }
 }

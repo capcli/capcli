@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.catalog.success.truncated",
-  "noun": "api",
-  "verb": "catalog",
   "target": "api://catalog",
   "command": "capcli api catalog",
   "state": {
@@ -15,23 +13,104 @@
     "data_shape": "truncated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/catalog/api.catalog.success.truncated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  truncated",
-      "  verbs_listed:  500 (listing cap)",
-      "  │     ├── create_media_post       active    draft",
-      "  truncated:    true",
-      "  next_cursor:  api://shipstation.create_order",
-      "  state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "truncated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "providers",
+            "value": "10"
+          },
+          {
+            "field": "verbs_total",
+            "value": "1204"
+          },
+          {
+            "field": "verbs_listed",
+            "value": "500 (listing cap)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "catalog",
+            "indent": 2
+          },
+          {
+            "text": "├── api://stripe",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── refund_charge           active    draft",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── create_payment_intent   active    draft",
+            "indent": 2
+          },
+          {
+            "text": "│     └── issue_credit_note       active    draft",
+            "indent": 2
+          },
+          {
+            "text": "├── api://threads",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── create_media_post       active    draft",
+            "indent": 2
+          },
+          {
+            "text": "│     └── get_media_post          dormant   —",
+            "indent": 2
+          },
+          {
+            "text": "└── api://fedex",
+            "indent": 2
+          },
+          {
+            "text": "├── ship                    active    reviewed",
+            "indent": 8
+          },
+          {
+            "text": "└── track                   active    reviewed",
+            "indent": 8
+          },
+          {
+            "text": "... 493 further verbs elided (listing capped at 500) ...",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "truncated",
+            "value": "true"
+          },
+          {
+            "field": "next_cursor",
+            "value": "api://shipstation.create_order"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

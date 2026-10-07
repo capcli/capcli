@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "rule.diff.success.populated",
-  "noun": "rule",
-  "verb": "diff",
   "target": "schema://orders",
   "command": "capcli rule diff schema --git",
   "state": {
@@ -15,22 +13,89 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/rule/diff/rule.diff.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  drift detected (schema vs HEAD)",
-      "│     └── priority (integer default 0)",
-      "summary:    1 added · 1 changed · 0 removed",
-      "next:       capcli rule apply schema --dry-run",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "drift detected (schema vs HEAD)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "base",
+            "value": "git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)"
+          },
+          {
+            "field": "working",
+            "value": "schema.yaml v13 (uncompiled draft)"
+          },
+          {
+            "field": "scope",
+            "value": "4 tables · 23 columns · 8 indexes"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "orders",
+            "indent": 2
+          },
+          {
+            "text": "├── added",
+            "indent": 2
+          },
+          {
+            "text": "│     └── priority (integer default 0)",
+            "indent": 2
+          },
+          {
+            "text": "├── changed",
+            "indent": 2
+          },
+          {
+            "text": "│     └── version 12 -> 13",
+            "indent": 2
+          },
+          {
+            "text": "└── removed",
+            "indent": 2
+          },
+          {
+            "text": "└── none",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "summary",
+            "value": "1 added · 1 changed · 0 removed"
+          },
+          {
+            "field": "next",
+            "value": "capcli rule apply schema --dry-run"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://evolution/schema_drift@1",
+    "reason": "schema drift requires forward migration plan",
+    "serve": "L1"
   }
 }

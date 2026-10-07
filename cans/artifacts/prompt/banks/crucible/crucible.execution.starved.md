@@ -1,14 +1,10 @@
 ---
-id: doc://prompt/crucible/execution_starved@1
+id: prompt://crucible/execution_starved@1
 stem: crucible.execution.starved
 bank: crucible
 slug: execution_starved
 version: 1
 trust: draft
-trigger:
-  screens: ["run.execute.denial.budget_cascade"]
-  predicate:
-    domain: "policy.budget"
 vars:
   - name: env
     type: string
@@ -19,7 +15,8 @@ sections:
   stage_3_claims: 90
   stage_4_vault: 80
 slice_max_tokens: 500
-docs: "docs/reference/limits.md"
+docs:
+  - doc://reference/limits
 status: served
 ---
 

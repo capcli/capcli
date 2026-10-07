@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.exec.denial.sandbox",
-  "noun": "sys",
-  "verb": "exec",
   "target": "sys://sandbox",
   "command": "capcli sys exec \"python3 etl.py\" --sandbox",
   "state": {
@@ -21,30 +19,63 @@
     "layer": "sandbox",
     "measured": "2 containment violations (tolerated: 0)"
   },
-  "txt_pair": "screens/sys/exec/sys.exec.denial.sandbox.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  kernel.sandbox.escape_attempt",
-      "      violation: ptrace (syscall 101) outside profile_python allowlist",
-      "state_modified: false",
-      "layer:          sandbox",
-      "measured:       2 containment violations (tolerated: 0)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "kernel.sandbox"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  kernel.sandbox.escape_attempt",
+            "indent": 0
+          },
+          {
+            "field": "command",
+            "value": "python3 etl.py"
+          },
+          {
+            "field": "violation",
+            "value": "bwrap pivot_root remount from inside the jail"
+          },
+          {
+            "field": "violation",
+            "value": "ptrace (syscall 101) outside profile_python allowlist"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Attempted unconfined escape; jail torn down mid-execution.",
+            "indent": 6
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          sandbox",
+            "indent": 0
+          },
+          {
+            "text": "measured:       2 containment violations (tolerated: 0)",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         strip escape attempts from the command; raw host access is never granted inside the jail",
+            "indent": 0
+          }
+        ]
+      }
+    ]
   }
 }

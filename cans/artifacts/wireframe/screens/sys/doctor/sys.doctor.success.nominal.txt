@@ -16,3 +16,4 @@ boot_check:
 
 state_modified: false
 note:           boot-check probes only; no execution occurred
+trailer: prompt://onboarding/harness@1 - harness at nominal doctor with empty domain

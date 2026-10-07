@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.inspect.success.populated",
-  "noun": "bind",
-  "verb": "inspect",
   "target": "bnd_3k2f",
   "command": "capcli bind inspect bnd_3k2f",
   "state": {
@@ -15,23 +13,79 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/bind/inspect/bind.inspect.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  populated",
-      "binding_id: bnd_3k2f",
-      "target:     cap://report_summary",
-      "schedule:   0 6 * * 1",
-      "next_fire:  2026-10-05T06:00:00Z",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "binding_id",
+            "value": "bnd_3k2f"
+          },
+          {
+            "field": "kind",
+            "value": "cron"
+          },
+          {
+            "field": "name",
+            "value": "weekly_digest"
+          },
+          {
+            "field": "target",
+            "value": "cap://report_summary"
+          },
+          {
+            "field": "trust",
+            "value": "pinned"
+          },
+          {
+            "field": "schedule",
+            "value": "0 6 * * 1"
+          },
+          {
+            "field": "state",
+            "value": "active"
+          },
+          {
+            "field": "next_fire",
+            "value": "2026-10-05T06:00:00Z"
+          },
+          {
+            "field": "last_fire",
+            "value": "2026-09-28T06:00:00Z (exit 0)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "defenses:",
+            "indent": 2
+          },
+          {
+            "field": "catchup_policy",
+            "value": "max 1 fire on daemon restart"
+          },
+          {
+            "field": "dead_schedule",
+            "value": "auto-disable on routine retire (loud)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

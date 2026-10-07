@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.new.refusal.shape_violation",
-  "noun": "routine",
-  "verb": "new",
   "target": "sync_orders",
   "command": "capcli routine new sync_orders --template tpl://routine/legacy_sync",
   "state": {
@@ -19,28 +17,75 @@
     "culprit": "Scaffold violates routine_shape ceilings: 214 LOC (max: 150), 11 params (max: 8).",
     "remedy": "split the scaffold into composed routines under 150 LOC with at most 8 params each"
   },
-  "txt_pair": "screens/routine/new/routine.new.refusal.shape_violation.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  validation.routine.shape_violation",
-      "Scaffold violates routine_shape ceilings: 214 LOC (max: 150), 11 params (max: 8).",
-      "state_modified: false",
-      "remedy: split the scaffold into composed routines under 150 LOC with at most 8 params each"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  validation.routine.shape_violation",
+            "indent": 2
+          },
+          {
+            "field": "template",
+            "value": "tpl://routine/legacy_sync"
+          },
+          {
+            "text": "shape_gate report (routines/legacy_sync.py):",
+            "indent": 8
+          },
+          {
+            "field": "loc",
+            "value": "214 (max: 150)"
+          },
+          {
+            "text": "^^^",
+            "indent": 18
+          },
+          {
+            "field": "params",
+            "value": "11 (max: 8)"
+          },
+          {
+            "text": "^^",
+            "indent": 18
+          },
+          {
+            "field": "tokens",
+            "value": "1840 (max: 2000)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "Scaffold violates routine_shape ceilings",
+            "value": "214 LOC (max: 150), 11 params (max: 8)."
+          },
+          {
+            "text": "Non-compliant stubs are rejected before disk write; the routines/ tree stays clean.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "split the scaffold into composed routines under 150 LOC with at most 8 params each"
+          }
+        ]
+      }
+    ]
   }
 }

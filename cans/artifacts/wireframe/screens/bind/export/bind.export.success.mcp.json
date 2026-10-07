@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.export.success.mcp",
-  "noun": "bind",
-  "verb": "export",
   "target": "bind://",
   "command": "capcli bind export mcp --out tools.json",
   "state": {
@@ -15,23 +13,50 @@
     "data_shape": "redirected"
   },
   "diagnostic": null,
-  "txt_pair": "screens/bind/export/bind.export.success.mcp.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  exported",
-      "artifact: tools.json",
-      "format:   mcp tool manifest",
-      "tools:    2 (dispatch_order@4, report_summary@3)",
-      "bytes:    1286",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exported"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "artifact",
+            "value": "tools.json"
+          },
+          {
+            "field": "format",
+            "value": "mcp tool manifest"
+          },
+          {
+            "field": "tools",
+            "value": "2 (dispatch_order@4, report_summary@3)"
+          },
+          {
+            "field": "bytes",
+            "value": "1286"
+          },
+          {
+            "field": "sha256",
+            "value": "8c3e5d7012a4b6c8"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_1k6w"
+          }
+        ]
+      }
+    ]
   }
 }

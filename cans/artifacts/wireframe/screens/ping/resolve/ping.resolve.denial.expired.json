@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.resolve.denial.expired",
-  "noun": "ping",
-  "verb": "resolve",
   "target": "ask_88a",
   "command": "capcli ping resolve ask_88a --choice approve",
   "state": {
@@ -21,24 +19,50 @@
     "layer": "notify",
     "measured": "ask_88a deadline passed 2h 14m ago (timeout: 24h, fail-closed)"
   },
-  "txt_pair": "screens/ping/resolve/ping.resolve.denial.expired.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.notify.ask_expired",
-      "Timeout elapsed; resolution window closed (fail-closed).",
-      "state_modified:  false",
-      "layer:           notify",
-      "remedy:          re-issue the ask if still relevant; expired inquiries never assume consent"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": ["domain", "culprit", "remedy", "layer", "state_modified"],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.notify"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.notify.ask_expired",
+            "indent": 2
+          },
+          {
+            "field": "ask_id",
+            "value": "ask_88a"
+          },
+          {
+            "text": "Timeout elapsed; resolution window closed (fail-closed).",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "notify"
+          },
+          {
+            "field": "measured",
+            "value": "ask_88a deadline passed 2h 14m ago (timeout: 24h, fail-closed)"
+          },
+          {
+            "field": "remedy",
+            "value": "re-issue the ask if still relevant; expired inquiries never assume consent"
+          }
+        ]
+      }
+    ]
   }
 }

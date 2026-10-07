@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.agents.success.populated",
-  "noun": "sys",
-  "verb": "agents",
   "target": "agents",
   "command": "capcli sys agents",
   "state": {
@@ -15,22 +13,46 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/agents/sys.agents.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  listed",
-      "registered:  4 agents (cap: 8)",
-      "├── agt_7f3k  order-filler    claude-code  user:alice        active",
-      "├── agt_9q4w  capcli-cron     kernel       scheduler         active",
-      "└── agt_4t6r  capcli-watch    kernel       partner:stripe    revoked"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "listed"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "registered",
+            "value": "4 agents (cap: 8)"
+          },
+          {
+            "field": "active",
+            "value": "3 · revoked: 1"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "├── agt_7f3k  order-filler    claude-code  user:alice        active",
+            "indent": 2
+          },
+          {
+            "text": "├── agt_2m8p  inventory-sync  claude-code  user:alice        active",
+            "indent": 2
+          },
+          {
+            "text": "├── agt_9q4w  capcli-cron     kernel       scheduler         active",
+            "indent": 2
+          },
+          {
+            "text": "└── agt_4t6r  capcli-watch    kernel       partner:stripe    revoked",
+            "indent": 2
+          }
+        ]
+      }
+    ]
   }
 }

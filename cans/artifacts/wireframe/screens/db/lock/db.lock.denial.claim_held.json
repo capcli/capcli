@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "db.lock.denial.claim_held",
-  "noun": "db",
-  "verb": "lock",
   "target": "orders:ORD-10",
   "command": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
   "state": {
@@ -21,30 +19,63 @@
     "layer": "claims",
     "measured": "TTL remaining 187s of 300s; holder agt_9k2w"
   },
-  "txt_pair": "screens/db/lock/db.lock.denial.claim_held.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  db.claims.held",
-      "state_modified: false",
-      "layer: claims",
-      "measured: TTL remaining 187s of 300s; holder agt_9k2w",
-      "remedy: wait for lease expiry or holder release, then retry; inspect via 'capcli inspect db://orders'"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "db.claims"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  db.claims.held",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "orders:ORD-10"
+          },
+          {
+            "field": "lease",
+            "value": "claim_c3d4 (holder: agt_9k2w, op_9f2e)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Target resource currently claimed; exclusive lease is active.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_5c18"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "claims"
+          },
+          {
+            "field": "measured",
+            "value": "TTL remaining 187s of 300s; holder agt_9k2w"
+          },
+          {
+            "field": "remedy",
+            "value": "wait for lease expiry or holder release, then retry; inspect via 'capcli inspect db://orders'"
+          }
+        ]
+      }
+    ]
   }
 }

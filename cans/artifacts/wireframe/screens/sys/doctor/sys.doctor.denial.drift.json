@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.doctor.denial.drift",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://host",
   "command": "capcli sys doctor",
   "state": {
@@ -21,30 +19,63 @@
     "layer": "authorizer",
     "measured": "2 drift items (declaration v3 vs envs/dev/workspace.db)"
   },
-  "txt_pair": "screens/sys/doctor/sys.doctor.denial.drift.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.declaration_drift",
-      "state_modified: false",
-      "layer:          authorizer",
-      "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)",
-      "remedy:         reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.declaration_drift",
+            "indent": 0
+          },
+          {
+            "text": "Live DB schema diverges from the compiled declaration.",
+            "indent": 6
+          },
+          {
+            "field": "drift",
+            "value": "orders.idx_orders_status present in live DB, absent from schema.yaml"
+          },
+          {
+            "field": "drift",
+            "value": "customers.region declared, missing from live table"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Doctor refuses to certify a drifted workspace.",
+            "indent": 6
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          authorizer",
+            "indent": 0
+          },
+          {
+            "text": "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'",
+            "indent": 0
+          }
+        ]
+      }
+    ]
   }
 }

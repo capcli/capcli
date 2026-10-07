@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.webhook.success.bound",
-  "noun": "bind",
-  "verb": "webhook",
   "target": "cap://sync_orders",
   "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
   "state": {
@@ -15,23 +13,62 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/bind/webhook/bind.webhook.success.bound.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  bound",
-      "binding_id: bnd_8d3k",
-      "route:      https://ops.example.com/hook",
-      "signing:    vault://stripe_webhook_secret (hmac-sha256)",
-      "ingress:    verified (public https)",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "bound"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "binding_id",
+            "value": "bnd_8d3k"
+          },
+          {
+            "field": "name",
+            "value": "stripe_hook"
+          },
+          {
+            "field": "route",
+            "value": "https://ops.example.com/hook"
+          },
+          {
+            "field": "provider",
+            "value": "stripe"
+          },
+          {
+            "field": "event",
+            "value": "payment_succeeded"
+          },
+          {
+            "field": "target",
+            "value": "cap://sync_orders"
+          },
+          {
+            "field": "signing",
+            "value": "vault://stripe_webhook_secret (hmac-sha256)"
+          },
+          {
+            "field": "ingress",
+            "value": "verified (public https)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_2b9f"
+          }
+        ]
+      }
+    ]
   }
 }

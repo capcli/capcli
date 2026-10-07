@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "db.restore.refusal.missing_id",
-  "noun": "db",
-  "verb": "restore",
   "target": "db://orders",
   "command": "capcli db restore",
   "state": {
@@ -19,28 +17,51 @@
     "culprit": "Target snapshot ID missing; restore requires an explicit recovery point.",
     "remedy": "list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'"
   },
-  "txt_pair": "screens/db/restore/db.restore.refusal.missing_id.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  missing_param.restore.snapshot_id_required",
-      "Target snapshot ID missing; restore requires an explicit recovery point.",
-      "state_modified: false",
-      "remedy: list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "missing_param"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  missing_param.restore.snapshot_id_required",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli db restore"
+          },
+          {
+            "field": "target",
+            "value": "(absent)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Target snapshot ID missing; restore requires an explicit recovery point.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.serve.success.running",
-  "noun": "sys",
-  "verb": "serve",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",
   "state": {
@@ -15,22 +13,62 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/serve/sys.serve.success.running.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  running",
-      "  pid:       50211",
-      "  rpc:       http://127.0.0.1:4040/rpc (HTTP POST)",
-      "  ws:        ws://127.0.0.1:4040/ws/audit (live tail)",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "running"
+    },
+    "sections": [
+      {
+        "title": "daemon",
+        "items": [
+          {
+            "field": "pid",
+            "value": "50211"
+          },
+          {
+            "field": "status",
+            "value": "listening on 127.0.0.1:4040"
+          },
+          {
+            "field": "ipc",
+            "value": "/run/capcli/kernel.sock (JSON-Lines streaming)"
+          },
+          {
+            "field": "rpc",
+            "value": "http://127.0.0.1:4040/rpc (HTTP POST)"
+          },
+          {
+            "field": "ws",
+            "value": "ws://127.0.0.1:4040/ws/audit (live tail)"
+          },
+          {
+            "field": "tx_queue",
+            "value": "kernel.tx_queue active (fifo write serialization)"
+          },
+          {
+            "field": "policy",
+            "value": "inbound requests pass identical authorizer, AST, and budget gates"
+          },
+          {
+            "field": "audit",
+            "value": "serve.request events streaming to _audit"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: true",
+            "indent": 0
+          },
+          {
+            "text": "note:           bind address locked to 127.0.0.1 per governance",
+            "indent": 0
+          }
+        ]
+      }
+    ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.agents.success.empty",
-  "noun": "sys",
-  "verb": "agents",
   "target": "agents",
   "command": "capcli sys agents",
   "state": {
@@ -15,21 +13,39 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/agents/sys.agents.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  listed",
-      "registered:  0 agents (cap: 8)",
-      "Zero registered agents. Identity registry empty.",
-      "note:  register the first harness via capcli sys register"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "listed"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "registered",
+            "value": "0 agents (cap: 8)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Zero registered agents. Identity registry empty.",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "note",
+            "value": "register the first harness via capcli sys register"
+          }
+        ]
+      }
+    ]
   }
 }

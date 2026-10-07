@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.resume.refusal.not_found",
-  "noun": "bind",
-  "verb": "resume",
   "target": "bnd_3k2f",
   "command": "capcli bind resume bnd_3k2f",
   "state": {
@@ -19,28 +17,51 @@
     "culprit": "Target binding ID not found. Trigger resume refused.",
     "remedy": "confirm the binding ID via capcli bind list"
   },
-  "txt_pair": "screens/bind/resume/bind.resume.refusal.not_found.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  validation.binding_not_found",
-      "Target binding ID not found. Trigger resume refused.",
-      "state_modified: false",
-      "remedy:         confirm the binding ID via capcli bind list"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  validation.binding_not_found",
+            "indent": 2
+          },
+          {
+            "field": "binding_id",
+            "value": "bnd_3k2f"
+          },
+          {
+            "field": "action",
+            "value": "resume"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Target binding ID not found. Trigger resume refused.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "confirm the binding ID via capcli bind list"
+          }
+        ]
+      }
+    ]
   }
 }

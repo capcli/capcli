@@ -1,15 +1,10 @@
 ---
-id: doc://prompt/onboarding/harness@1
+id: prompt://onboarding/harness@1
 stem: onboarding.harness.empty
 bank: onboarding
 slug: harness
 version: 1
 trust: draft
-trigger:
-  screens: ["sys.doctor.success.nominal"]
-  predicate:
-    caller: harness
-    domain_tables: 0
 vars:
   - name: env
     type: string
@@ -23,7 +18,8 @@ sections:
   stage_3_rehearsal: 70
   stage_4_proving: 60
 slice_max_tokens: 500
-docs: "docs/agents/"
+docs:
+  - doc://agents
 status: served
 ---
 
@@ -45,7 +41,7 @@ capcli search "" --json
 ```
 Parse the JSON response array. If zero capabilities exist, trigger the Genesis campaign:
 ```bash
-capcli doc outline doc://prompt/genesis/blank_world@1  # then doc read the stage_1 leaf, --max-tokens 500
+capcli doc outline prompt://genesis/blank_world@1  # then doc read the stage_1 leaf, --max-tokens 500
 ```
 
 ## section:stage_3_rehearsal

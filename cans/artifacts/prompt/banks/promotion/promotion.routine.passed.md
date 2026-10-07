@@ -1,14 +1,10 @@
 ---
-id: doc://prompt/promotion/routine_passed@1
+id: prompt://promotion/routine_passed@1
 stem: promotion.routine.passed
 bank: promotion
 slug: routine_passed
 version: 1
 trust: draft
-trigger:
-  screens: ["routine.prove.success.passed"]
-  predicate:
-    trust: draft
 vars:
   - name: env
     type: string
@@ -18,7 +14,8 @@ sections:
   stage_2_canary: 70
   stage_3_pin: 100
 slice_max_tokens: 500
-docs: "docs/automate/promotion.md"
+docs:
+  - doc://automate/promotion
 status: served
 ---
 

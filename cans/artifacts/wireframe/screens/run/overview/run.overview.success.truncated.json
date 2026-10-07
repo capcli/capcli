@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.overview.success.truncated",
-  "noun": "run",
-  "verb": "overview",
   "target": "cap://overview@1",
   "command": "capcli run overview",
   "state": {
@@ -15,22 +13,83 @@
     "data_shape": "truncated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/overview/run.overview.success.truncated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  overview (500 tokens, clipped)",
-      "    active_locks:     4 (db://orders, db://products, db://claims, db://shipments)",
-      "  truncated:   true",
-      "  token_cap:   500 (max_result_tokens)",
-      "  next_cursor: budget_headroom"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "overview (500 tokens, clipped)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "domain_kpis:",
+            "indent": 2
+          },
+          {
+            "field": "pending_orders",
+            "value": "142 (11 rush)"
+          },
+          {
+            "field": "shipped_today",
+            "value": "893"
+          },
+          {
+            "field": "low_stock_alerts",
+            "value": "17"
+          },
+          {
+            "field": "inbox_backlog",
+            "value": "42 events queued"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "blockers:",
+            "indent": 2
+          },
+          {
+            "field": "pending_asks",
+            "value": "3 (ask_8812, ask_8830, ask_8831)"
+          },
+          {
+            "field": "unresolved_vault",
+            "value": "2 (stripe_secret_key, fedex_api_key)"
+          },
+          {
+            "field": "active_locks",
+            "value": "4 (db://orders, db://products, db://claims, db://shipments)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "────────────────────────────────────────────────────────────────────────────",
+            "indent": 2
+          },
+          {
+            "field": "truncated",
+            "value": "true"
+          },
+          {
+            "field": "token_cap",
+            "value": "500 (max_result_tokens)"
+          },
+          {
+            "field": "next_cursor",
+            "value": "budget_headroom"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2q"
+          }
+        ]
+      }
+    ]
   }
 }

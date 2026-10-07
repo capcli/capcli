@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.prove.success.passed",
-  "noun": "routine",
-  "verb": "prove",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
   "state": {
@@ -15,22 +13,84 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/prove/routine.prove.success.passed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[sim:tier_1]  ✓  passed",
-      "fingerprint:  sha256:9e1b7c04... (dynamic leaf sequence from _audit mirror)",
-      "match:        5 executed / 5 declared (subset; 0 undeclared leaves)",
-      "invariant_suite:     pass (boundary + idempotency assertions)",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "passed"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "routine",
+            "value": "sync_orders@1"
+          },
+          {
+            "field": "fingerprint",
+            "value": "sha256:9e1b7c04... (dynamic leaf sequence from _audit mirror)"
+          },
+          {
+            "field": "manifest",
+            "value": "sha256:4d2f8a11... (declared call sequence via @routine over kernel.sock)"
+          },
+          {
+            "field": "match",
+            "value": "5 executed / 5 declared (subset; 0 undeclared leaves)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "checks:",
+            "indent": 2
+          },
+          {
+            "field": "sandbox_rules",
+            "value": "pass (subprocess, os, raw socket trapped by jail)"
+          },
+          {
+            "field": "param_typing",
+            "value": "pass (order_id: string, carrier: string)"
+          },
+          {
+            "field": "policy_reachability",
+            "value": "pass (orders read/write; logistics.shipments.create egress)"
+          },
+          {
+            "field": "shape_limits",
+            "value": "pass (74 LOC, 1180 tokens, 2 params)"
+          },
+          {
+            "field": "invariant_suite",
+            "value": "pass (boundary + idempotency assertions)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "verification only; no sim world state committed"
+          },
+          {
+            "field": "audit",
+            "value": "op_prove_01"
+          }
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://promotion/routine_passed@1",
+    "reason": "proof passed: routine eligible for promotion",
+    "serve": "L1"
   }
 }

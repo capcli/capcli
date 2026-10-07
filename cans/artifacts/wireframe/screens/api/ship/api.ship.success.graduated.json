@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.ship.success.graduated",
-  "noun": "api",
-  "verb": "ship",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\"",
   "state": {
@@ -15,22 +13,50 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/ship/api.ship.success.graduated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  graduated",
-      "  rung:             draft → reviewed",
-      "  training_wheels:  cleared on call 4 of 4",
-      "                    call 4 executed under replayed contract: pass",
-      "  state_modified:  true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "graduated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "verb",
+            "value": "cap://threads.create_media_post"
+          },
+          {
+            "field": "rung",
+            "value": "draft → reviewed"
+          },
+          {
+            "field": "training_wheels",
+            "value": "cleared on call 4 of 4"
+          },
+          {
+            "field": "evidence",
+            "value": "synthetic contract replay 3/3 passed (calls 1–3)"
+          },
+          {
+            "field": "call 4 executed under replayed contract",
+            "value": "pass"
+          },
+          {
+            "field": "governance",
+            "value": "standard (24h approval windows closed)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
+        ]
+      }
+    ]
   }
 }

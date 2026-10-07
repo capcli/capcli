@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "rule.validate.refusal.syntax",
-  "noun": "rule",
-  "verb": "validate",
   "target": "schema://orders",
   "command": "capcli rule validate",
   "state": {
@@ -19,29 +17,68 @@
     "culprit": "Duplicate mapping key 'status' already defined at schema.yaml:52:11.",
     "remedy": "remove or rename the duplicate 'status' key, then re-run capcli rule validate"
   },
-  "txt_pair": "screens/rule/validate/rule.validate.refusal.syntax.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  compile.gate_1_bad_syntax",
-      "^^^^^^ duplicate_key",
-      "Duplicate mapping key 'status' already defined at schema.yaml:52:11.",
-      "state_modified: false",
-      "remedy: remove or rename the duplicate 'status' key, then re-run capcli rule validate"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "compile"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  compile.gate_1_bad_syntax",
+            "indent": 2
+          },
+          {
+            "text": "--> schema.yaml:54:7",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "columns:",
+            "indent": 8
+          },
+          {
+            "field": "status",
+            "value": "text=pending"
+          },
+          {
+            "field": "status",
+            "value": "text=shipped"
+          },
+          {
+            "text": "^^^^^^ duplicate_key",
+            "indent": 10
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Duplicate mapping key 'status' already defined at schema.yaml:52:11.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "remove or rename the duplicate 'status' key, then re-run capcli rule validate"
+          }
+        ]
+      }
+    ]
   }
 }

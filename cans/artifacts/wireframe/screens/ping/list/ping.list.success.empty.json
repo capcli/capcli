@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.list.success.empty",
-  "noun": "ping",
-  "verb": "list",
   "target": "_pending_asks",
   "command": "capcli ping list --pending",
   "state": {
@@ -15,21 +13,34 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/ping/list/ping.list.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  empty",
-      "pending:  0 inquiries",
-      "note:     no asks parked in _pending_asks; no frames awaiting human input",
-      "state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "empty"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "pending",
+            "value": "0 inquiries"
+          },
+          {
+            "field": "note",
+            "value": "no asks parked in _pending_asks; no frames awaiting human input"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

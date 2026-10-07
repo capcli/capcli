@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.trace.refusal.not_found",
-  "noun": "sys",
-  "verb": "trace",
   "target": "op_9f99",
   "command": "capcli sys trace op_9f99 --explain",
   "state": {
@@ -19,28 +17,42 @@
     "culprit": "No audit operation with id 'op_9f99' exists in _audit.",
     "remedy": "verify the operation id via capcli sys tail or sys query, then re-run sys trace <op-id> --explain"
   },
-  "txt_pair": "screens/sys/trace/sys.trace.refusal.not_found.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FATAL  validation.not_found",
-      "target: op_9f99",
-      "state_modified: false",
-      "remedy: verify the operation id via capcli sys tail or sys query, then re-run sys trace <op-id> --explain"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FATAL  validation.not_found",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "op_9f99"
+          },
+          {
+            "text": "No audit operation with id 'op_9f99' exists in _audit.",
+            "indent": 9
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "verify the operation id via capcli sys tail or sys query, then re-run sys trace <op-id> --explain"
+          }
+        ]
+      }
+    ]
   }
 }

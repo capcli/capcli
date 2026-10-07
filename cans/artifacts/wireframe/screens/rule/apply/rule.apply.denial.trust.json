@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "rule.apply.denial.trust",
-  "noun": "rule",
-  "verb": "apply",
   "target": "schema://orders",
   "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
   "state": {
@@ -20,30 +18,58 @@
     "remedy": "ship the schema change for human review: capcli routine ship schema_13 reviewed",
     "layer": "trust"
   },
-  "txt_pair": "screens/rule/apply/rule.apply.denial.trust.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.trust.alter_requires_reviewed",
-      "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
-      "state_modified: false",
-      "layer: trust",
-      "remedy: ship the schema change for human review: capcli routine ship schema_13 reviewed"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.trust"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.trust.alter_requires_reviewed",
+            "indent": 2
+          },
+          {
+            "text": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^",
+            "indent": 8
+          },
+          {
+            "field": "DDL trust floor",
+            "value": "alter requires reviewed trust; caller rung is draft."
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_13fa"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "measured",
+            "value": "caller trust rung draft (required: reviewed)"
+          },
+          {
+            "field": "remedy",
+            "value": "ship the schema change for human review: capcli routine ship schema_13 reviewed"
+          }
+        ]
+      }
+    ]
   }
 }

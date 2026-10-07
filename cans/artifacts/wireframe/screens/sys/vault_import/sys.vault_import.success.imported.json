@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.vault_import.success.imported",
-  "noun": "sys",
-  "verb": "vault_import",
   "target": "CAPCLI_SECRET_*",
   "command": "capcli sys vault import-env",
   "state": {
@@ -15,22 +13,55 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/vault_import/sys.vault_import.success.imported.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  imported",
-      "bound:    2 secrets (values masked in all outputs)",
-      "└── CAPCLI_SECRET_RESEND_API_KEY  → vault://resend_api_key  aes-256-gcm",
-      "state_modified: true",
-      "note:           vault.set events committed with SHA-256 fingerprints; plaintext zeroized after ingest"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "imported"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "scanned",
+            "value": "process environment for CAPCLI_SECRET_*"
+          },
+          {
+            "field": "bound",
+            "value": "2 secrets (values masked in all outputs)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "├── CAPCLI_SECRET_STRIPE_KEY      → vault://stripe_key      aes-256-gcm",
+            "indent": 2
+          },
+          {
+            "text": "└── CAPCLI_SECRET_RESEND_API_KEY  → vault://resend_api_key  aes-256-gcm",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_r705"
+          },
+          {
+            "field": "note",
+            "value": "vault.set events committed with SHA-256 fingerprints; plaintext zeroized after ingest"
+          }
+        ]
+      }
+    ]
   }
 }

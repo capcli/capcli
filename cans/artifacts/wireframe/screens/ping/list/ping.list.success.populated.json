@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.list.success.populated",
-  "noun": "ping",
-  "verb": "list",
   "target": "_pending_asks",
   "command": "capcli ping list --pending",
   "state": {
@@ -15,22 +13,79 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/ping/list/ping.list.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  populated",
-      "pending:  2 inquiries",
-      "└── ask_88a  awaiting_input  \"Approve refund for order ORD-10?\"",
-      "options:    approve, reject, escalate",
-      "state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "pending",
+            "value": "2 inquiries"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "├── ask_8812  awaiting_input  \"Missing Stripe credentials (API secret key & webhook signing secret).\"",
+            "indent": 2
+          },
+          {
+            "field": "│     ├── principal",
+            "value": "user:local"
+          },
+          {
+            "field": "│     ├── options",
+            "value": "keys_injected, abort"
+          },
+          {
+            "field": "│     ├── timeout",
+            "value": "60m (fail-closed)"
+          },
+          {
+            "field": "│     └── cockpit",
+            "value": "http://127.0.0.1:4040/vault"
+          },
+          {
+            "text": "└── ask_88a  awaiting_input  \"Approve refund for order ORD-10?\"",
+            "indent": 2
+          },
+          {
+            "text": "├── principal:  user:alice",
+            "indent": 8
+          },
+          {
+            "text": "├── options:    approve, reject, escalate",
+            "indent": 8
+          },
+          {
+            "text": "├── timeout:    24h (fail-closed)",
+            "indent": 8
+          },
+          {
+            "text": "├── asked_by:   agt_7f3k (task_99a8b1, frame_018)",
+            "indent": 8
+          },
+          {
+            "text": "└── cockpit:    http://127.0.0.1:4040/ask/ask_88a",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

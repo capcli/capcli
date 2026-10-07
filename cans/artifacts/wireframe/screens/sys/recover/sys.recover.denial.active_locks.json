@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.recover.denial.active_locks",
-  "noun": "sys",
-  "verb": "recover",
   "target": "git:3f9c2ab",
   "command": "capcli sys recover 3f9c2ab",
   "state": {
@@ -21,30 +19,63 @@
     "layer": "claims",
     "measured": "2 active locks (tolerated for reversal: 0)"
   },
-  "txt_pair": "screens/sys/recover/sys.recover.denial.active_locks.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  db.claims.active_locks",
-      "      lock: orders:ORD-10 held by agt_7f3k (ttl: 4m 12s remaining)",
-      "state_modified: false",
-      "layer:          claims",
-      "measured:       2 active locks (tolerated for reversal: 0)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "db.claims"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  db.claims.active_locks",
+            "indent": 0
+          },
+          {
+            "text": "Active claim leases prevent state reversal to commit 3f9c2ab.",
+            "indent": 6
+          },
+          {
+            "field": "lock",
+            "value": "orders:ORD-10 held by agt_7f3k (ttl: 4m 12s remaining)"
+          },
+          {
+            "field": "lock",
+            "value": "ledger:TXN-WRITE held by daemon (ttl: 55s remaining)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Restoring under live claims would orphan lease holders.",
+            "indent": 6
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          claims",
+            "indent": 0
+          },
+          {
+            "text": "measured:       2 active locks (tolerated for reversal: 0)",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         wait for TTL expiry or release via 'capcli db unlock', then retry 'capcli sys recover 3f9c2ab'",
+            "indent": 0
+          }
+        ]
+      }
+    ]
   }
 }

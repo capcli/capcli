@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.notify.success.dispatched",
-  "noun": "ping",
-  "verb": "notify",
   "target": "user:alice",
   "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
   "state": {
@@ -15,22 +13,45 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/ping/notify/ping.notify.success.dispatched.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  dispatched",
-      "channel:         email",
-      "principal:       user:alice",
-      "receipt:         ntf_4c1d9e",
-      "state_modified:  true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "dispatched"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "channel",
+            "value": "email"
+          },
+          {
+            "field": "principal",
+            "value": "user:alice"
+          },
+          {
+            "field": "message",
+            "value": "\"Nightly sync finished\""
+          },
+          {
+            "field": "intent",
+            "value": "declared (\"morning briefing\")"
+          },
+          {
+            "field": "receipt",
+            "value": "ntf_4c1d9e"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f31c"
+          },
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
+        ]
+      }
+    ]
   }
 }

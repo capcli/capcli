@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.catalog.success.empty",
-  "noun": "api",
-  "verb": "catalog",
   "target": "api://catalog",
   "command": "capcli api catalog",
   "state": {
@@ -15,21 +13,56 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/catalog/api.catalog.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  empty",
-      "  providers:  0",
-      "  Zero APIs configured.",
-      "  state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "empty"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "providers",
+            "value": "0"
+          },
+          {
+            "field": "verbs",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Zero APIs configured.",
+            "indent": 2
+          },
+          {
+            "text": "Sync a provider spec to populate the catalog, e.g.",
+            "indent": 2
+          },
+          {
+            "text": "'capcli api sync stripe https://api.stripe.com/openapi.json'",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://wire/catalog_empty@1",
+    "reason": "no external API catalogs configured",
+    "serve": "L1"
   }
 }

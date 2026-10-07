@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "db.lock.refusal.missing_reason",
-  "noun": "db",
-  "verb": "lock",
   "target": "orders:ORD-10",
   "command": "capcli db lock orders:ORD-10 --ttl 300s",
   "state": {
@@ -19,28 +17,55 @@
     "culprit": "--reason is required for locking; no causal justification supplied.",
     "remedy": "re-run with --reason \"why this lease is needed\""
   },
-  "txt_pair": "screens/db/lock/db.lock.refusal.missing_reason.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  validation.lock.reason_required",
-      "reason: (absent)",
-      "state_modified: false",
-      "remedy: re-run with --reason \"why this lease is needed\""
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  validation.lock.reason_required",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "orders:ORD-10"
+          },
+          {
+            "field": "ttl",
+            "value": "300s"
+          },
+          {
+            "field": "reason",
+            "value": "(absent)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "--reason is required for locking; unjustified leases are refused.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with --reason \"why this lease is needed\""
+          }
+        ]
+      }
+    ]
   }
 }

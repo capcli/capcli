@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.sql.denial.authorizer",
-  "noun": "run",
-  "verb": "sql",
   "target": "db://orders",
   "command": "capcli sql \"DROP TABLE orders\" -m \"remove stale orders table\"",
   "state": {
@@ -21,30 +19,58 @@
     "layer": "authorizer",
     "measured": "statement rejected at prepare; 0 rows touched"
   },
-  "txt_pair": "screens/run/sql/run.sql.denial.authorizer.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  policy.authorizer.drop_table",
-      "        Table destruction denied at the C authorizer; DDL flows through schema evolution.",
-      "  state_modified:  false",
-      "  layer:           authorizer",
-      "  remedy:          declare removal in schema.yaml and apply via capcli rule apply schema"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified",
-      "layer"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.drop_table",
+            "indent": 2
+          },
+          {
+            "text": "DROP TABLE orders",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^^^^^^",
+            "indent": 8
+          },
+          {
+            "text": "Table destruction denied at the C authorizer; DDL flows through schema evolution.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_9f2k"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "statement rejected at prepare; 0 rows touched"
+          },
+          {
+            "field": "remedy",
+            "value": "declare removal in schema.yaml and apply via capcli rule apply schema"
+          }
+        ]
+      }
+    ]
   }
 }

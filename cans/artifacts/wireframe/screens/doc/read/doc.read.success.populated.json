@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "doc.read.success.populated",
-  "noun": "doc",
-  "verb": "read",
   "target": "doc://refund-policy",
   "command": "capcli doc read doc://refund-policy --max-tokens 500",
   "state": {
@@ -15,23 +13,122 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/doc/read/doc.read.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  doc://refund-policy (full)",
-      "trust:    pinned",
-      "tokens:   312 (cap: 500)",
-      "has_more: false",
-      "3. Stripe integration notes",
-      "Outbound refunds must include `charge_id` and idempotent client request UUID."
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "doc://refund-policy (full)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "document",
+            "value": "doc://refund-policy"
+          },
+          {
+            "field": "trust",
+            "value": "pinned"
+          },
+          {
+            "field": "source",
+            "value": "git:docs/policies/refund-policy.md@2f6110a"
+          },
+          {
+            "field": "sections",
+            "value": "5"
+          },
+          {
+            "field": "tokens",
+            "value": "312 (cap: 500)"
+          },
+          {
+            "field": "has_more",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "────────────────────────────────────────────────────────────────────────────",
+            "indent": 2
+          },
+          {
+            "text": "1. Scope",
+            "indent": 2
+          },
+          {
+            "text": "Refund routing and approval rules for the storefront.",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "2. Refund windows",
+            "indent": 2
+          },
+          {
+            "text": "Standard window is 30 days. Extended window is 120 days and requires",
+            "indent": 2
+          },
+          {
+            "text": "supervisor approval.",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "3. Stripe integration notes",
+            "indent": 2
+          },
+          {
+            "text": "Outbound refunds must include `charge_id` and idempotent client request UUID.",
+            "indent": 2
+          },
+          {
+            "text": "Never refund a charge older than 120 days via automated routines; delegate",
+            "indent": 2
+          },
+          {
+            "text": "to human supervisor via `ctx.ping.ask`.",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "4. Currency handling",
+            "indent": 2
+          },
+          {
+            "text": "Refunds settle in the original charge currency; no FX conversion on return.",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "5. Escalation paths",
+            "indent": 2
+          },
+          {
+            "text": "Disputed or partial refunds escalate to a human supervisor via `ctx.ping.ask`.",
+            "indent": 2
+          }
+        ]
+      }
+    ]
   }
 }

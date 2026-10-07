@@ -1,14 +1,10 @@
 ---
-id: doc://prompt/authoring/routine_gaps@1
+id: prompt://authoring/routine_gaps@1
 stem: authoring.routine.gaps
 bank: authoring
 slug: routine_gaps
 version: 1
 trust: draft
-trigger:
-  screens: ["run.search.success.gaps"]
-  predicate:
-    gap_count: ">=1"
 vars:
   - name: env
     type: string
@@ -18,7 +14,8 @@ sections:
   stage_2_scaffold: 80
   stage_3_prove: 70
 slice_max_tokens: 500
-docs: "docs/automate/repetition.md"
+docs:
+  - doc://automate/repetition
 status: served
 ---
 

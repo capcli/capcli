@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "rule.apply.success.dry_run",
-  "noun": "rule",
-  "verb": "apply",
   "target": "schema://orders",
   "command": "capcli rule apply schema --dry-run",
   "state": {
@@ -15,22 +13,58 @@
     "data_shape": "dry_run"
   },
   "diagnostic": null,
-  "txt_pair": "screens/rule/apply/rule.apply.success.dry_run.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  dry-run (schema apply)",
-      "statement:      ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
-      "gate_5:         pass (test migration executed and rolled back on snapshot)",
-      "state_modified: false",
-      "note:           no execution occurred; preview only"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "dry-run (schema apply)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "statement",
+            "value": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0"
+          },
+          {
+            "field": "gate_1",
+            "value": "pass (syntax)"
+          },
+          {
+            "field": "gate_2",
+            "value": "pass (semantics; relational DAG acyclic)"
+          },
+          {
+            "field": "gate_5",
+            "value": "pass (test migration executed and rolled back on snapshot)"
+          },
+          {
+            "field": "schema_impact",
+            "value": "+1 column (priority)"
+          },
+          {
+            "field": "estimated_rows",
+            "value": "4281"
+          },
+          {
+            "field": "blast_radius",
+            "value": "schema-only (non-destructive)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "no execution occurred; preview only"
+          }
+        ]
+      }
+    ]
   }
 }

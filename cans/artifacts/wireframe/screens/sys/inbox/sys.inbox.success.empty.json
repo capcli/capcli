@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.inbox.success.empty",
-  "noun": "sys",
-  "verb": "inbox",
   "target": "inbox://*",
   "command": "capcli sys inbox pop",
   "state": {
@@ -15,21 +13,43 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/inbox/sys.inbox.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  popped",
-      "channels_scanned:  4 (email, webhook, cron, ws)",
-      "popped:            0 events",
-      "Sensory inbox completely drained. Nothing to hand to the caller."
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "popped"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "channels_scanned",
+            "value": "4 (email, webhook, cron, ws)"
+          },
+          {
+            "field": "popped",
+            "value": "0 events"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Sensory inbox completely drained. Nothing to hand to the caller.",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "note",
+            "value": "next poll blocks until an event arrives on any channel"
+          }
+        ]
+      }
+    ]
   }
 }

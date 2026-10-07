@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.expire.refusal.not_found",
-  "noun": "ping",
-  "verb": "expire",
   "target": "ask_51c7",
   "command": "capcli ping expire ask_51c7",
   "state": {
@@ -19,23 +17,42 @@
     "culprit": "Target inquiry not found in _pending_asks.",
     "remedy": "run 'capcli ping list --pending' to list live ask IDs"
   },
-  "txt_pair": "screens/ping/expire/ping.expire.refusal.not_found.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  validation.not_found",
-      "Target inquiry not found in _pending_asks.",
-      "state_modified:  false",
-      "remedy:          run 'capcli ping list --pending' to list live ask IDs"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": ["domain", "culprit", "remedy", "state_modified"],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  validation.not_found",
+            "indent": 2
+          },
+          {
+            "field": "ask_id",
+            "value": "ask_51c7"
+          },
+          {
+            "text": "Target inquiry not found in _pending_asks.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "run 'capcli ping list --pending' to list live ask IDs"
+          }
+        ]
+      }
+    ]
   }
 }

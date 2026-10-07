@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.sweep.success.populated",
-  "noun": "routine",
-  "verb": "sweep",
   "target": null,
   "command": "capcli routine sweep",
   "state": {
@@ -15,20 +13,51 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/sweep/routine.sweep.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  \u2713  populated",
-      "  proposals (2):",
-      "  state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "sweep",
+            "value": "duplicate routine scan (14 routines fingerprinted)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "proposals (2):",
+            "indent": 2
+          },
+          {
+            "text": "order_sync@3 ≈ order_sync_v2@1   fingerprint overlap 0.97 — merge candidate",
+            "indent": 4
+          },
+          {
+            "text": "nightly_report@2 ≈ report_job@5  fingerprint overlap 0.93 — merge candidate",
+            "indent": 4
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "proposals only; deduplication requires explicit ship-time review"
+          }
+        ]
+      }
+    ]
   }
 }

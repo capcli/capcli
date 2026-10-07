@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.endpoint.success.bound",
-  "noun": "bind",
-  "verb": "endpoint",
   "target": "cap://dispatch_order@4",
   "command": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
   "state": {
@@ -15,23 +13,62 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/bind/endpoint/bind.endpoint.success.bound.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  bound",
-      "binding_id: bnd_2m7p",
-      "url:        http://127.0.0.1:4040/endpoints/dispatch_order",
-      "auth:       api-key",
-      "rate:       60 req/min",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "bound"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "binding_id",
+            "value": "bnd_2m7p"
+          },
+          {
+            "field": "endpoint",
+            "value": "dispatch_order@4"
+          },
+          {
+            "field": "url",
+            "value": "http://127.0.0.1:4040/endpoints/dispatch_order"
+          },
+          {
+            "field": "auth",
+            "value": "api-key"
+          },
+          {
+            "field": "rate",
+            "value": "60 req/min"
+          },
+          {
+            "field": "channel",
+            "value": "all (rest + mcp)"
+          },
+          {
+            "field": "writes",
+            "value": "denied by default"
+          },
+          {
+            "field": "trust",
+            "value": "pinned (serve floor)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_3f7k"
+          }
+        ]
+      }
+    ]
   }
 }

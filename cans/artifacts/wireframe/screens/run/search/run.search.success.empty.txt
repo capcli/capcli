@@ -9,3 +9,4 @@
 
   gap_signal:  1 of 3 zero-hit searches toward gap_threshold
   audit_op:    op_9f2s
+trailer: prompt://genesis/blank_world@1 - no capabilities and no world to search

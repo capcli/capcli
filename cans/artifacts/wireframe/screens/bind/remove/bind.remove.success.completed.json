@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.remove.success.completed",
-  "noun": "bind",
-  "verb": "remove",
   "target": "bnd_3k2f",
   "command": "capcli bind remove bnd_3k2f",
   "state": {
@@ -15,22 +13,50 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/bind/remove/bind.remove.success.completed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  completed",
-      "binding_id: bnd_3k2f",
-      "target:     cap://report_summary",
-      "transition: active → dismantled",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "binding_id",
+            "value": "bnd_3k2f"
+          },
+          {
+            "field": "kind",
+            "value": "cron"
+          },
+          {
+            "field": "name",
+            "value": "weekly_digest"
+          },
+          {
+            "field": "target",
+            "value": "cap://report_summary"
+          },
+          {
+            "field": "transition",
+            "value": "active → dismantled"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_6h4d"
+          }
+        ]
+      }
+    ]
   }
 }

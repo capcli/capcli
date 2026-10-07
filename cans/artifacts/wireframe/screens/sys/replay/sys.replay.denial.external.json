@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.replay.denial.external",
-  "noun": "sys",
-  "verb": "replay",
   "target": "_audit",
   "command": "capcli sys replay --from 2026-10-03T22:41:07Z",
   "state": {
@@ -21,30 +19,50 @@
     "layer": "authorizer",
     "measured": "1 external op in window (17 ops total: 16 local, 1 external)"
   },
-  "txt_pair": "screens/sys/replay/sys.replay.denial.external.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.replay.external_op",
-      "measured:  1 external op in window (17 ops total: 16 local, 1 external)",
-      "state_modified: false",
-      "layer: authorizer",
-      "remedy: confirm external re-execution manually via Cockpit (http://127.0.0.1:4040/audit), or narrow --from to a local-only window"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.replay.external_op",
+            "indent": 2
+          },
+          {
+            "field": "window contains external HTTP effect",
+            "value": "op_9f2e api.call (fedex.ship) at 23:41:08Z"
+          },
+          {
+            "text": "auto-replay of external calls is strictly forbidden — side-effects are not idempotent",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "measured",
+            "value": "1 external op in window (17 ops total: 16 local, 1 external)"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "remedy",
+            "value": "confirm external re-execution manually via Cockpit (http://127.0.0.1:4040/audit), or narrow --from to a local-only window"
+          }
+        ]
+      }
+    ]
   }
 }

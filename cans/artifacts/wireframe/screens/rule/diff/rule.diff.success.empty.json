@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "rule.diff.success.empty",
-  "noun": "rule",
-  "verb": "diff",
   "target": "schema://orders",
   "command": "capcli rule diff schema --git",
   "state": {
@@ -15,22 +13,64 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/rule/diff/rule.diff.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  in lockstep (schema vs HEAD)",
-      "working:    compiled schema.yaml v12 (lockfile verified)",
-      "added:      0",
-      "workspace is in lockstep with declared rules; no drift found.",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "in lockstep (schema vs HEAD)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "base",
+            "value": "git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)"
+          },
+          {
+            "field": "working",
+            "value": "compiled schema.yaml v12 (lockfile verified)"
+          },
+          {
+            "field": "scope",
+            "value": "4 tables · 22 columns · 7 indexes · 2 triggers"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "added",
+            "value": "0"
+          },
+          {
+            "field": "changed",
+            "value": "0"
+          },
+          {
+            "field": "removed",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "workspace is in lockstep with declared rules; no drift found.",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

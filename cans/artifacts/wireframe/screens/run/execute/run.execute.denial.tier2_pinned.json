@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.denial.tier2_pinned",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://dispatch_order@4",
   "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
   "state": {
@@ -20,29 +18,63 @@
     "remedy": "execute on a tier_1 host (Linux, WSL2), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'",
     "layer": "trust"
   },
-  "txt_pair": "screens/run/execute/run.execute.denial.tier2_pinned.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_2]  ✗  exit 2",
-      "  FAIL  policy.trust.tier2_pinned",
-      "        code:     E045_TIER2_PINNED_DENIED",
-      "  state_modified: false",
-      "  remedy: execute on a tier_1 host (Linux, WSL2), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.trust"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.trust.tier2_pinned",
+            "indent": 2
+          },
+          {
+            "field": "code",
+            "value": "E045_TIER2_PINNED_DENIED"
+          },
+          {
+            "field": "routine",
+            "value": "dispatch_order@4 holds pinned trust"
+          },
+          {
+            "field": "host",
+            "value": "darwin (tier_2, broker isolation)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Pinned execution requires a Tier 1 host.",
+            "indent": 8
+          },
+          {
+            "text": "Tier 2 platforms are capped at the reviewed rung.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "remedy",
+            "value": "execute on a tier_1 host (Linux, WSL2), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'"
+          }
+        ]
+      }
+    ]
   }
 }

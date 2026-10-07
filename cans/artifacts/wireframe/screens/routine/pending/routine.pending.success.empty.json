@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.pending.success.empty",
-  "noun": "routine",
-  "verb": "pending",
   "target": null,
   "command": "capcli routine pending",
   "state": {
@@ -15,21 +13,43 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/pending/routine.pending.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  empty",
-      "queue: promotion candidates (0)",
-      "no routines pending promotion",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "empty"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "queue",
+            "value": "promotion candidates (0)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "no routines pending promotion",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "enqueue via capcli routine ship <name> reviewed --queue"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.diff.success.populated",
-  "noun": "api",
-  "verb": "diff",
   "target": "stripe",
   "command": "capcli api diff stripe",
   "state": {
@@ -15,22 +13,89 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/diff/api.diff.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  populated",
-      "  drift:        spec divergence detected",
-      "    ├── stripe.refund_charge",
-      "    └── stripe.capture_charge → flagged deprecated (auto_deprecate_removed)",
-      "  state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "provider",
+            "value": "stripe"
+          },
+          {
+            "field": "local_hash",
+            "value": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa"
+          },
+          {
+            "field": "remote_hash",
+            "value": "sha256:2b7e8f1a4c6d9e3f5a7b1c8d2e4f6a9b3c5d7e1f"
+          },
+          {
+            "field": "drift",
+            "value": "spec divergence detected"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "added_verbs",
+            "value": "3"
+          },
+          {
+            "text": "├── stripe.refund_charge",
+            "indent": 4
+          },
+          {
+            "text": "├── stripe.issue_credit_note",
+            "indent": 4
+          },
+          {
+            "text": "└── stripe.void_invoice",
+            "indent": 4
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "changed_verbs",
+            "value": "1"
+          },
+          {
+            "text": "└── stripe.create_payment_intent (amount: string → integer)",
+            "indent": 4
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "removed_verbs",
+            "value": "1"
+          },
+          {
+            "text": "└── stripe.capture_charge → flagged deprecated (auto_deprecate_removed)",
+            "indent": 4
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

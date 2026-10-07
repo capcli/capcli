@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.retire.refusal.not_found",
-  "noun": "routine",
-  "verb": "retire",
   "target": "legacy_etl_backup",
   "command": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",
   "state": {
@@ -19,28 +17,51 @@
     "culprit": "Target routine 'legacy_etl_backup' does not exist in the registry.",
     "remedy": "verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl"
   },
-  "txt_pair": "screens/routine/retire/routine.retire.refusal.not_found.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  validation.routine.not_found",
-      "Target routine 'legacy_etl_backup' does not exist in the registry.",
-      "state_modified: false",
-      "remedy: verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  validation.routine.not_found",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "legacy_etl_backup"
+          },
+          {
+            "field": "nearest",
+            "value": "legacy_etl"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Target routine 'legacy_etl_backup' does not exist in the registry.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl"
+          }
+        ]
+      }
+    ]
   }
 }

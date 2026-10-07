@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.rollback.success.completed",
-  "noun": "api",
-  "verb": "rollback",
   "target": "cap://threads.create_media_post",
   "command": "capcli api rollback threads.create_media_post 4",
   "state": {
@@ -15,22 +13,46 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/rollback/api.rollback.success.completed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  completed",
-      "  version:    8 → 4",
-      "  spec_hash:  sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa (restored)",
-      "  depth:      4 of 5 (max rollback depth)",
-      "  state_modified:  true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "verb",
+            "value": "cap://threads.create_media_post"
+          },
+          {
+            "field": "version",
+            "value": "8 → 4"
+          },
+          {
+            "field": "spec_hash",
+            "value": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa (restored)"
+          },
+          {
+            "field": "depth",
+            "value": "4 of 5 (max rollback depth)"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_7c4e9"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
+        ]
+      }
+    ]
   }
 }

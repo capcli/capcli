@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.diff.success.empty",
-  "noun": "api",
-  "verb": "diff",
   "target": "threads",
   "command": "capcli api diff threads",
   "state": {
@@ -15,21 +13,68 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/diff/api.diff.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  empty",
-      "  drift:        none (spec_hash match)",
-      "  Zero drift from active catalog.",
-      "  state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "empty"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "provider",
+            "value": "threads"
+          },
+          {
+            "field": "local_hash",
+            "value": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a"
+          },
+          {
+            "field": "remote_hash",
+            "value": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a"
+          },
+          {
+            "field": "drift",
+            "value": "none (spec_hash match)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "added_verbs",
+            "value": "0"
+          },
+          {
+            "field": "changed_verbs",
+            "value": "0"
+          },
+          {
+            "field": "removed_verbs",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Zero drift from active catalog.",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

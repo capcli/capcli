@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.replay.refusal.missing_from",
-  "noun": "sys",
-  "verb": "replay",
   "target": "_audit",
   "command": "capcli sys replay",
   "state": {
@@ -19,27 +17,38 @@
     "culprit": "replay anchor omitted: --from <timestamp> or --from <commit> is required",
     "remedy": "re-run as capcli sys replay --from 2026-10-03T22:41:07Z"
   },
-  "txt_pair": "screens/sys/replay/sys.replay.refusal.missing_from.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FATAL  missing_param.missing_arg",
-      "state_modified: false",
-      "remedy: re-run as capcli sys replay --from 2026-10-03T22:41:07Z"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "missing_param"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FATAL  missing_param.missing_arg",
+            "indent": 2
+          },
+          {
+            "field": "replay anchor omitted",
+            "value": "--from <timestamp> or --from <commit> is required"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run as capcli sys replay --from 2026-10-03T22:41:07Z"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.retire.success.completed",
-  "noun": "routine",
-  "verb": "retire",
   "target": "legacy_etl",
   "command": "capcli routine retire legacy_etl --reason \"replaced by unified pipeline\"",
   "state": {
@@ -15,22 +13,59 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/retire/routine.retire.success.completed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  completed",
-      "state:     active -> retired",
-      "schedule:  legacy_etl_nightly auto-disabled (orphan protection)",
-      "state_modified: true",
-      "note:           routine remains inspectable via cap://legacy_etl for provenance"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "routine",
+            "value": "legacy_etl@6"
+          },
+          {
+            "field": "state",
+            "value": "active -> retired"
+          },
+          {
+            "field": "reason",
+            "value": "\"replaced by unified pipeline\""
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "schedule",
+            "value": "legacy_etl_nightly auto-disabled (orphan protection)"
+          },
+          {
+            "field": "callers",
+            "value": "none (dependency graph clear)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit",
+            "value": "op_retire_01 (routine.retire committed; provenance graph preserved)"
+          },
+          {
+            "field": "note",
+            "value": "routine remains inspectable via cap://legacy_etl for provenance"
+          }
+        ]
+      }
+    ]
   }
 }

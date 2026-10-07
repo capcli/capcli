@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.webhook.denial.payload_size",
-  "noun": "bind",
-  "verb": "webhook",
   "target": "cap://sync_orders",
   "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
   "state": {
@@ -21,30 +19,59 @@
     "layer": "authorizer",
     "measured": "71334 bytes (cap: 65536)"
   },
-  "txt_pair": "screens/bind/webhook/bind.webhook.denial.payload_size.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.webhook_payload_ceiling",
-      "Hook payload exceeds 64KB. Oversized deliveries refused at ingress.",
-      "state_modified: false",
-      "layer:          authorizer",
-      "remedy:         trim provider event payloads or split events; ceiling is fixed at 65536 bytes"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.webhook_payload_ceiling",
+            "indent": 2
+          },
+          {
+            "field": "delivery",
+            "value": "71334 bytes (ceiling: 65536)"
+          },
+          {
+            "text": "^^^^^",
+            "indent": 18
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Hook payload exceeds 64KB. Oversized deliveries refused at ingress.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "71334 bytes (cap: 65536)"
+          },
+          {
+            "field": "remedy",
+            "value": "trim provider event payloads or split events; ceiling is fixed at 65536 bytes"
+          }
+        ]
+      }
+    ]
   }
 }

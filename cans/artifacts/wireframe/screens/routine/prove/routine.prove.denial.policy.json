@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.prove.denial.policy",
-  "noun": "routine",
-  "verb": "prove",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
   "state": {
@@ -21,30 +19,62 @@
     "layer": "authorizer",
     "measured": "1 undeclared leaf (manifest declares 5; DDL not among them)"
   },
-  "txt_pair": "screens/routine/prove/routine.prove.denial.policy.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[sim:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.routine.illegal_leaf",
-      "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
-      "state_modified: false",
-      "layer: authorizer",
-      "remedy: declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.routine.illegal_leaf",
+            "indent": 2
+          },
+          {
+            "text": "routines/sync_orders.py:41 (test pass leaf 6)",
+            "indent": 8
+          },
+          {
+            "text": "ctx.db.execute(\"ALTER TABLE orders ADD COLUMN rush boolean\")",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+            "indent": 24
+          },
+          {
+            "text": "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_prove_05"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "1 undeclared leaf (manifest declares 5; DDL not among them)"
+          },
+          {
+            "field": "remedy",
+            "value": "declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.list.success.empty",
-  "noun": "bind",
-  "verb": "list",
   "target": "bind://",
   "command": "capcli bind list",
   "state": {
@@ -15,21 +13,39 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/bind/list/bind.list.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  empty",
-      "bindings: 0 active",
-      "No triggers bound. Schedules, hooks, and endpoints will appear here.",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "empty"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "bindings",
+            "value": "0 active"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "No triggers bound. Schedules, hooks, and endpoints will appear here.",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

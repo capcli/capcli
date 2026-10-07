@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.backup.denial.push_fail",
-  "noun": "sys",
-  "verb": "backup",
   "target": "sys://workspace",
   "command": "capcli sys backup --push",
   "state": {
@@ -21,30 +19,58 @@
     "layer": "authorizer",
     "measured": "0 of 2 remotes accepted"
   },
-  "txt_pair": "screens/sys/backup/sys.backup.denial.push_fail.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.backup.push_rejected",
-      "      git: origin rejected (remote ahead by 2 commits)",
-      "state_modified: false",
-      "layer:          authorizer",
-      "measured:       0 of 2 remotes accepted (git: non-fast-forward, s3: HTTP 403)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.backup.push_rejected",
+            "indent": 0
+          },
+          {
+            "text": "Dual-storage push rejected; snapshot remains local and unbacked.",
+            "indent": 6
+          },
+          {
+            "field": "git",
+            "value": "origin rejected (remote ahead by 2 commits)"
+          },
+          {
+            "field": "s3",
+            "value": "PutObject returned 403 (credentials expired)"
+          },
+          {
+            "field": "snapshot",
+            "value": "snap_auto_2026-10-04T0300Z (retained locally)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          authorizer",
+            "indent": 0
+          },
+          {
+            "text": "measured:       0 of 2 remotes accepted (git: non-fast-forward, s3: HTTP 403)",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         refresh vault credentials and reconcile remotes, then retry 'capcli sys backup --push'",
+            "indent": 0
+          }
+        ]
+      }
+    ]
   }
 }

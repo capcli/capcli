@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "db.snapshot.success.created",
-  "noun": "db",
-  "verb": "snapshot",
   "target": "db://orders",
   "command": "capcli db snapshot -m \"pre-migration safety point\"",
   "state": {
@@ -15,22 +13,54 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/db/snapshot/db.snapshot.success.created.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  created",
-      "snapshot_id:    snap_onboarding_01",
-      "tables:         6",
-      "ledger_hash:    sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "created"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "snapshot_id",
+            "value": "snap_onboarding_01"
+          },
+          {
+            "field": "database",
+            "value": "envs/dev/workspace.db"
+          },
+          {
+            "field": "tables",
+            "value": "6"
+          },
+          {
+            "field": "rows",
+            "value": "6"
+          },
+          {
+            "field": "ledger_hash",
+            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          {
+            "field": "method",
+            "value": "VACUUM INTO (clean copy under traffic)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_44c1"
+          }
+        ]
+      }
+    ]
   }
 }

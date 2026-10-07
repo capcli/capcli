@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.ship.refusal.missing_reason",
-  "noun": "api",
-  "verb": "ship",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed",
   "state": {
@@ -19,28 +17,55 @@
     "culprit": "Missing elevation justification.",
     "remedy": "re-run with --reason stating why the verb is ready for the target rung"
   },
-  "txt_pair": "screens/api/ship/api.ship.refusal.missing_reason.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "  FATAL  validation.missing_arg",
-      "         Missing elevation justification.",
-      "  state_modified:  false",
-      "  remedy:          re-run with --reason stating why the verb is ready for the target rung"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FATAL  validation.missing_arg",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli api ship threads.create_media_post reviewed"
+          },
+          {
+            "field": "usage",
+            "value": "capcli api ship <provider.verb> <rung> --reason \"<why>\""
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Missing elevation justification.",
+            "indent": 9
+          },
+          {
+            "text": "Trust elevation requires --reason for the audit trail.",
+            "indent": 9
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with --reason stating why the verb is ready for the target rung"
+          }
+        ]
+      }
+    ]
   }
 }

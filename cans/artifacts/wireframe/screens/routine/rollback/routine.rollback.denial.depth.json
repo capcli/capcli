@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.rollback.denial.depth",
-  "noun": "routine",
-  "verb": "rollback",
   "target": "order_sync",
   "command": "capcli routine rollback order_sync 3",
   "state": {
@@ -21,30 +19,58 @@
     "layer": "authorizer",
     "measured": "rollback depth 6 (max: 5)"
   },
-  "txt_pair": "screens/routine/rollback/routine.rollback.denial.depth.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.rollback.depth_limit",
-      "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5.",
-      "state_modified: false",
-      "layer: authorizer",
-      "remedy: roll back incrementally to a version within 5 of the pointer, or ship a new version reverting the change"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.rollback.depth_limit",
+            "indent": 2
+          },
+          {
+            "text": "capcli routine rollback order_sync 3",
+            "indent": 8
+          },
+          {
+            "text": "^",
+            "indent": 44
+          },
+          {
+            "text": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_roll_02"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "rollback depth 6 (max: 5)"
+          },
+          {
+            "field": "remedy",
+            "value": "roll back incrementally to a version within 5 of the pointer, or ship a new version reverting the change"
+          }
+        ]
+      }
+    ]
   }
 }

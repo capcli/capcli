@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.success.truncated",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://report_orders@2",
   "command": "capcli run cap://report_orders@2 -p quarter=2026Q3",
   "state": {
@@ -15,21 +13,41 @@
     "data_shape": "truncated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/execute/run.execute.success.truncated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  truncated",
-      "  truncated:    true",
-      "  next_cursor:  cur_0192f",
-      "  audit_op:     op_9f32b"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "truncated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "routine",
+            "value": "report_orders@2 (reviewed)"
+          },
+          {
+            "field": "frame",
+            "value": "frame_022"
+          },
+          {
+            "field": "result",
+            "value": "500 of 2384 tokens (cap: 500)"
+          },
+          {
+            "field": "truncated",
+            "value": "true"
+          },
+          {
+            "field": "next_cursor",
+            "value": "cur_0192f"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f32b"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.sql.success.populated",
-  "noun": "run",
-  "verb": "sql",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
   "state": {
@@ -15,23 +13,66 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/sql/run.sql.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  committed",
-      "  statement:      UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1",
-      "  rows_affected:  1",
-      "  result_hash:    sha256:3d91c4e7a8b2f0c5d9e6a1b7f834c2ad",
-      "  state_modified: true",
-      "  audit_op:       op_9f2g"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "committed"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "statement",
+            "value": "UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1"
+          },
+          {
+            "field": "bound_params",
+            "value": "{\"id\": \"4127\"}"
+          },
+          {
+            "field": "ast_check",
+            "value": "pass (WHERE + LIMIT present, blast radius 1)"
+          },
+          {
+            "field": "authorizer",
+            "value": "pass (update on orders allowed in dev)"
+          },
+          {
+            "field": "intent",
+            "value": "declared (\"mark order 4127 shipped after carrier pickup\")"
+          },
+          {
+            "field": "rows_affected",
+            "value": "1"
+          },
+          {
+            "field": "txn",
+            "value": "committed"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2g"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "────────────────────────────────────────────────────────────────────────────",
+            "indent": 2
+          },
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "result_hash",
+            "value": "sha256:3d91c4e7a8b2f0c5d9e6a1b7f834c2ad"
+          }
+        ]
+      }
+    ]
   }
 }

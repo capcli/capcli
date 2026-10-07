@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.doctor.success.quarantine",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://audit-chain",
   "command": "capcli sys doctor",
   "state": {
@@ -15,19 +13,50 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/doctor/sys.doctor.success.quarantine.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  \u2713  quarantine",
-      "  state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "quarantine"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "quarantine ledger:",
+            "indent": 2
+          },
+          {
+            "field": "block",
+            "value": "op_84c1 (_audit row 8,412)"
+          },
+          {
+            "field": "reason",
+            "value": "prev_hash mismatch (tamper isolation)"
+          },
+          {
+            "field": "isolated_at",
+            "value": "2026-10-06T09:14:02Z"
+          },
+          {
+            "field": "valid_history",
+            "value": "rows 1-8,411 verified against root ledger hash"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "quarantine inspection only; restore path requires proof bundle review"
+          }
+        ]
+      }
+    ]
   }
 }

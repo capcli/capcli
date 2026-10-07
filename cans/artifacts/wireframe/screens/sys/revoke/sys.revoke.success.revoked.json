@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.revoke.success.revoked",
-  "noun": "sys",
-  "verb": "revoke",
   "target": "agt_7f3k",
   "command": "capcli sys revoke agt_7f3k",
   "state": {
@@ -15,22 +13,54 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/revoke/sys.revoke.success.revoked.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  revoked",
-      "agent_id:   agt_7f3k",
-      "status:     revoked — credentials killed",
-      "sessions:   1 active session terminated instantly (ses_a992f)",
-      "note:           revoked_agent: deny_all — no grace period, no further dispatch under this identity"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "revoked"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "agent_id",
+            "value": "agt_7f3k"
+          },
+          {
+            "field": "principal",
+            "value": "user:alice"
+          },
+          {
+            "field": "status",
+            "value": "revoked — credentials killed"
+          },
+          {
+            "field": "sessions",
+            "value": "1 active session terminated instantly (ses_a992f)"
+          },
+          {
+            "field": "tokens",
+            "value": "capability token invalidated; in-flight op halted at leaf boundary"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_r703"
+          },
+          {
+            "field": "note",
+            "value": "revoked_agent: deny_all — no grace period, no further dispatch under this identity"
+          }
+        ]
+      }
+    ]
   }
 }

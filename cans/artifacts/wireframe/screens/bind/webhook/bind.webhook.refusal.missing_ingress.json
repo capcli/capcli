@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.webhook.refusal.missing_ingress",
-  "noun": "bind",
-  "verb": "webhook",
   "target": "cap://sync_orders",
   "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders -m \"process fulfillment on stripe async payment success\"",
   "state": {
@@ -19,28 +17,51 @@
     "culprit": "External webhooks require a public --ingress URL or an active tunnel. Raw 127.0.0.1 is denied.",
     "remedy": "re-run with --ingress https://<public-host>/<path> or --tunnel"
   },
-  "txt_pair": "screens/bind/webhook/bind.webhook.refusal.missing_ingress.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  compile.ingress_missing",
-      "External webhooks require a public --ingress URL or an active tunnel. Raw 127.0.0.1 is denied.",
-      "state_modified: false",
-      "remedy:         re-run with --ingress https://<public-host>/<path> or --tunnel"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "compile"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  compile.ingress_missing",
+            "indent": 2
+          },
+          {
+            "field": "provider",
+            "value": "stripe (external)"
+          },
+          {
+            "field": "route",
+            "value": "none declared"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "External webhooks require a public --ingress URL or an active tunnel. Raw 127.0.0.1 is denied.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with --ingress https://<public-host>/<path> or --tunnel"
+          }
+        ]
+      }
+    ]
   }
 }

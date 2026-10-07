@@ -1,14 +1,10 @@
 ---
-id: doc://prompt/authoring/overview_absent@1
+id: prompt://authoring/overview_absent@1
 stem: authoring.overview.absent
 bank: authoring
 slug: overview_absent
 version: 1
 trust: draft
-trigger:
-  screens: ["routine.prove.success.passed"]
-  predicate:
-    overview_exists: false
 vars:
   - name: env
     type: string
@@ -18,7 +14,8 @@ sections:
   stage_2_bound: 50
   stage_3_pin: 60
 slice_max_tokens: 500
-docs: "docs/agents/codification.md"
+docs:
+  - doc://agents/codification
 status: served
 ---
 

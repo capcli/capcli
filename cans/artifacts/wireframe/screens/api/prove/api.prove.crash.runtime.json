@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.prove.crash.runtime",
-  "noun": "api",
-  "verb": "prove",
   "target": "cap://stripe.issue_credit_note",
   "command": "capcli api prove stripe.issue_credit_note --env sim",
   "state": {
@@ -19,29 +17,58 @@
     "culprit": "Upstream contract format failure: response schema 'credit_note.amount' declares union type [integer, string].",
     "remedy": "re-sync the provider spec once upstream fixes the schema, then re-run the prove"
   },
-  "txt_pair": "screens/api/prove/api.prove.crash.runtime.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 4,
-    "state_modified": false,
-    "stdout_contains": [
-      "[sim:tier_1]  ✗  exit 4",
-      "  CRASH  routine.runtime.exception",
-      "         error:   upstream contract format failure",
-      "  state_modified:  false",
-      "  rollback:        clean",
-      "  remedy:          re-sync the provider spec once upstream fixes the schema, then re-run the prove"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "routine.runtime"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 4"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "CRASH  routine.runtime.exception",
+            "indent": 2
+          },
+          {
+            "field": "verb",
+            "value": "cap://stripe.issue_credit_note"
+          },
+          {
+            "field": "stage",
+            "value": "contract replay (sim)"
+          },
+          {
+            "field": "error",
+            "value": "upstream contract format failure"
+          },
+          {
+            "field": "detail",
+            "value": "response schema 'credit_note.amount' declares union type"
+          },
+          {
+            "text": "[integer, string]; kernel contract compiler accepts a single primitive type",
+            "indent": 18
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "rollback",
+            "value": "clean"
+          },
+          {
+            "field": "remedy",
+            "value": "re-sync the provider spec once upstream fixes the schema, then re-run the prove"
+          }
+        ]
+      }
+    ]
   }
 }

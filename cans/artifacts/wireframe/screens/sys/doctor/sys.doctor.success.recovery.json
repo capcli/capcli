@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.doctor.success.recovery",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://host",
   "command": "CAPCLI_RECOVERY=1 capcli sys doctor",
   "state": {
@@ -15,22 +13,80 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/doctor/sys.doctor.success.recovery.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  \u2713  recovery",
-      "  \u26a0  break-glass active: CAPCLI_RECOVERY=1 \u2014 policy disabled, audit sink online",
-      "  chain_status:   broken at _audit row 8,412 (op_84c1); rows 1-8,411 verified",
-      "  allowlist:      sql (read-only), db dump, sys audit tail, sys backup",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "recovery"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "⚠  break-glass active",
+            "value": "CAPCLI_RECOVERY=1 — policy disabled, audit sink online"
+          }
+        ]
+      },
+      {
+        "title": "recovery_shell",
+        "items": [
+          {
+            "field": "mode",
+            "value": "degraded (schema and audit sink loaded only)"
+          },
+          {
+            "field": "policy_engine",
+            "value": "disabled"
+          },
+          {
+            "field": "audit_sink",
+            "value": "online"
+          },
+          {
+            "field": "chain_status",
+            "value": "broken at _audit row 8,412 (op_84c1); rows 1-8,411 verified"
+          },
+          {
+            "field": "entry_event",
+            "value": "recovery_mode_entered logged on startup"
+          },
+          {
+            "field": "allowlist",
+            "value": "sql (read-only), db dump, sys audit tail, sys backup"
+          }
+        ]
+      },
+      {
+        "title": "repair",
+        "items": [
+          {
+            "text": "1. capcli sys audit tail --since 1h   inspect events around the break",
+            "indent": 2
+          },
+          {
+            "text": "2. capcli sys recover 3f9c2ab         reconstruct workspace from object store",
+            "indent": 2
+          },
+          {
+            "text": "3. capcli sys backup --push           re-anchor ledger root after repair",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "note:           diagnostics only; no writes permitted in recovery mode",
+            "indent": 0
+          }
+        ]
+      }
+    ]
   }
 }

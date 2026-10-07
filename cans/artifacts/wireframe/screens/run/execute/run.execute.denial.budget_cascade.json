@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.denial.budget_cascade",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://sync_inventory@3",
   "command": "capcli run cap://sync_inventory@3 -p warehouse=west -m \"nightly inventory sync\"",
   "state": {
@@ -21,30 +19,80 @@
     "layer": "budget",
     "measured": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops"
   },
-  "txt_pair": "screens/run/execute/run.execute.denial.budget_cascade.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  policy.budget.starved",
-      "        effective:      min(declared 6, governance 50, parent 2, session 488) -> 2 ops",
-      "  state_modified: false",
-      "  layer: budget",
-      "  remedy: shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.budget"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.budget.starved",
+            "indent": 2
+          },
+          {
+            "text": "child frame starved by min() cascade",
+            "indent": 8
+          },
+          {
+            "field": "child",
+            "value": "recount_stock@2 (frame_025) declared 6 ops"
+          },
+          {
+            "field": "effective",
+            "value": "min(declared 6, governance 50, parent 2, session 488) -> 2 ops"
+          },
+          {
+            "field": "exhausted at",
+            "value": "op 3 (db.query crossed the clipped ceiling)"
+          },
+          {
+            "field": "parent frame",
+            "value": "frame_024 (sync_inventory@3) 2 ops remaining"
+          },
+          {
+            "field": "ancestors",
+            "value": "session remaining 488 ops (parent was the tightest constraint)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "Splitting is not escaping",
+            "value": "the cage tightens, never widens."
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "budget"
+          },
+          {
+            "field": "measured",
+            "value": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops"
+          },
+          {
+            "field": "remedy",
+            "value": "shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain"
+          }
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://crucible/execution_starved@1",
+    "reason": "call-tree preflight failed budget cascade bounds",
+    "serve": "L1"
   }
 }

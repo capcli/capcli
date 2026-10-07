@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.inspect.success.routine",
-  "noun": "run",
-  "verb": "inspect",
   "target": "cap://dispatch_order@4",
   "command": "capcli inspect cap://dispatch_order@4",
   "state": {
@@ -15,22 +13,150 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/inspect/run.inspect.success.routine.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  capcli inspect cap://dispatch_order@4",
-      "  trust:       pinned",
-      "    can_invoke_now:             true",
-      "    budget_inheritance:  min",
-      "    p95_duration:  890ms"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "plain",
+      "label": "[dev:tier_1]  capcli inspect cap://dispatch_order@4"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "trust",
+            "value": "pinned"
+          },
+          {
+            "field": "runtime",
+            "value": "typescript (bun)"
+          },
+          {
+            "field": "params",
+            "value": "order_id: string, carrier: string"
+          },
+          {
+            "field": "description",
+            "value": "\"Dispatch paid order to carrier and update status\""
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "limits",
+            "value": "8 ops · 15s · 500 result tokens"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "manifest:",
+            "indent": 2
+          },
+          {
+            "text": "1. db.query    orders (read)",
+            "indent": 4
+          },
+          {
+            "text": "2. api.call    logistics.shipments.create",
+            "indent": 4
+          },
+          {
+            "text": "3. db.execute  orders (write)",
+            "indent": 4
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "budget_status:",
+            "indent": 2
+          },
+          {
+            "field": "can_invoke_now",
+            "value": "true"
+          },
+          {
+            "field": "session_ops_remaining",
+            "value": "488"
+          },
+          {
+            "field": "session_duration_remaining",
+            "value": "555000ms"
+          },
+          {
+            "field": "session_fuel_remaining",
+            "value": "80400"
+          },
+          {
+            "field": "session_egress_remaining",
+            "value": "4181824 bytes"
+          },
+          {
+            "field": "session_rate_remaining",
+            "value": "287"
+          },
+          {
+            "field": "tightest_constraint",
+            "value": "null"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "composition:",
+            "indent": 2
+          },
+          {
+            "field": "max_nesting_depth",
+            "value": "5"
+          },
+          {
+            "field": "budget_inheritance",
+            "value": "min"
+          },
+          {
+            "field": "child_routines",
+            "value": "[]"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "stats:",
+            "indent": 2
+          },
+          {
+            "field": "total_runs",
+            "value": "214"
+          },
+          {
+            "field": "success_rate",
+            "value": "99.1%"
+          },
+          {
+            "field": "p50_duration",
+            "value": "340ms"
+          },
+          {
+            "field": "p95_duration",
+            "value": "890ms"
+          },
+          {
+            "field": "last_run_at",
+            "value": "2m ago"
+          }
+        ]
+      }
+    ]
   }
 }

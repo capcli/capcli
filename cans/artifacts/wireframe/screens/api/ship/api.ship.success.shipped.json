@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.ship.success.shipped",
-  "noun": "api",
-  "verb": "ship",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
   "state": {
@@ -15,22 +13,54 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/ship/api.ship.success.shipped.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  shipped",
-      "  rung:         draft → reviewed",
-      "  evidence:     synthetic contract replay 3/3 passed",
-      "  promoted_by:  agt_7f3k",
-      "  state_modified:  true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "shipped"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "verb",
+            "value": "cap://threads.create_media_post"
+          },
+          {
+            "field": "rung",
+            "value": "draft → reviewed"
+          },
+          {
+            "field": "evidence",
+            "value": "synthetic contract replay 3/3 passed"
+          },
+          {
+            "field": "sim success rate 1.00 (floor",
+            "value": "0.90)"
+          },
+          {
+            "field": "policy_denials",
+            "value": "0"
+          },
+          {
+            "field": "promoted_by",
+            "value": "agt_7f3k"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2e"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
+        ]
+      }
+    ]
   }
 }

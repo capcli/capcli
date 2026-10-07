@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.crash.poll_timeout",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://media_digest@2",
   "command": "capcli run cap://media_digest@2 -p audience=followers -m \"morning media digest\"",
   "state": {
@@ -21,29 +19,71 @@
     "layer": "runtime",
     "measured": "poll duration 30.0s (ceiling 30s; requested 45s)"
   },
-  "txt_pair": "screens/run/execute/run.execute.crash.poll_timeout.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 4,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 4",
-      "  CRASH  routine.runtime.timeout",
-      "  state_modified: false",
-      "  rollback: clean (all ops reverted)",
-      "  measured: poll duration 30.0s (ceiling 30s; requested 45s)",
-      "  remedy: set timeout_s to 30 or less, or restructure into a scheduled watch"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "routine.runtime"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 4"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "CRASH  routine.runtime.timeout",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "media_digest@2 (frame_028)"
+          },
+          {
+            "field": "verb",
+            "value": "threads.create_media_post (container 1793881)"
+          },
+          {
+            "field": "waited",
+            "value": "30.0s of requested timeout_s=45 (ceiling: 30s)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "ctx.api.poll_until exceeded the 30-second in-flight ceiling;",
+            "indent": 9
+          },
+          {
+            "text": "the watchdog killed the poll and reverted the frame.",
+            "indent": 9
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "rollback",
+            "value": "clean (all ops reverted)"
+          },
+          {
+            "field": "layer",
+            "value": "runtime"
+          },
+          {
+            "field": "measured",
+            "value": "poll duration 30.0s (ceiling 30s; requested 45s)"
+          },
+          {
+            "field": "remedy",
+            "value": "set timeout_s to 30 or less, or restructure into a scheduled watch"
+          }
+        ]
+      }
+    ]
   }
 }

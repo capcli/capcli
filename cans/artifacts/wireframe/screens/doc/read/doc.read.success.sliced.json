@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "doc.read.success.sliced",
-  "noun": "doc",
-  "verb": "read",
   "target": "doc://refund-policy",
   "command": "capcli doc read doc://refund-policy --max-tokens 100",
   "state": {
@@ -15,22 +13,50 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/doc/read/doc.read.success.sliced.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  doc://refund-policy (section 3)",
-      "outline_node: 3. Stripe integration notes",
-      "tokens:       84 (cap: 100)",
-      "has_more:     false",
-      "Outbound refunds must include `charge_id` and idempotent client request UUID."
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "plain",
+      "label": "[dev:tier_1]  doc://refund-policy (section 3)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "outline_node",
+            "value": "3. Stripe integration notes"
+          },
+          {
+            "field": "tokens",
+            "value": "84 (cap: 100)"
+          },
+          {
+            "field": "has_more",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "────────────────────────────────────────────────────────────────────────────",
+            "indent": 2
+          },
+          {
+            "text": "Outbound refunds must include `charge_id` and idempotent client request UUID.",
+            "indent": 2
+          },
+          {
+            "text": "Never refund a charge older than 120 days via automated routines; delegate",
+            "indent": 2
+          },
+          {
+            "text": "to human supervisor via `ctx.ping.ask`.",
+            "indent": 2
+          }
+        ]
+      }
+    ]
   }
 }

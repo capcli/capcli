@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.export.success.openapi",
-  "noun": "bind",
-  "verb": "export",
   "target": "bind://",
   "command": "capcli bind export openapi --out openapi.json",
   "state": {
@@ -15,23 +13,50 @@
     "data_shape": "redirected"
   },
   "diagnostic": null,
-  "txt_pair": "screens/bind/export/bind.export.success.openapi.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  exported",
-      "artifact:  openapi.json",
-      "format:    openapi 3.1",
-      "endpoints: 2 (dispatch_order@4, report_summary@3)",
-      "bytes:     2418",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exported"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "artifact",
+            "value": "openapi.json"
+          },
+          {
+            "field": "format",
+            "value": "openapi 3.1"
+          },
+          {
+            "field": "endpoints",
+            "value": "2 (dispatch_order@4, report_summary@3)"
+          },
+          {
+            "field": "bytes",
+            "value": "2418"
+          },
+          {
+            "field": "sha256",
+            "value": "4f9a1b2c7d3e5f60"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_8m3v"
+          }
+        ]
+      }
+    ]
   }
 }

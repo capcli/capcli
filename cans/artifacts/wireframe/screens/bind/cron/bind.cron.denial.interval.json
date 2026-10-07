@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.cron.denial.interval",
-  "noun": "bind",
-  "verb": "cron",
   "target": "cap://sync_orders",
   "command": "capcli bind cron poll_orders cap://sync_orders \"* * * * *\" -m \"poll order queue every minute\"",
   "state": {
@@ -21,30 +19,59 @@
     "layer": "authorizer",
     "measured": "interval 1m (floor: 5m)"
   },
-  "txt_pair": "screens/bind/cron/bind.cron.denial.interval.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.schedule_min_interval",
-      "Interval lower than 5-minute cap. Sub-5-minute schedules refused.",
-      "state_modified: false",
-      "layer:          authorizer",
-      "remedy:         raise the interval to 5 minutes or more; tighter reactivity belongs to inbound webhooks"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.schedule_min_interval",
+            "indent": 2
+          },
+          {
+            "field": "cron expr",
+            "value": "* * * * *"
+          },
+          {
+            "text": "^^^^^^^^^",
+            "indent": 19
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Interval lower than 5-minute cap. Sub-5-minute schedules refused.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "interval 1m (floor: 5m)"
+          },
+          {
+            "field": "remedy",
+            "value": "raise the interval to 5 minutes or more; tighter reactivity belongs to inbound webhooks"
+          }
+        ]
+      }
+    ]
   }
 }

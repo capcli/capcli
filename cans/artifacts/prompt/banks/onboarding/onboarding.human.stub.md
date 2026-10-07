@@ -1,14 +1,10 @@
 ---
-id: doc://prompt/onboarding/human@1
+id: prompt://onboarding/human@1
 stem: onboarding.human.stub
 bank: onboarding
 slug: human
 version: 1
 trust: draft
-trigger:
-  screens: ["sys.help.success.stub"]
-  predicate:
-    caller: human
 vars:
   - name: env
     type: string
@@ -23,7 +19,8 @@ sections:
   stage_4_write: 70
   stage_5_recovery: 60
 slice_max_tokens: 500
-docs: "docs/start/"
+docs:
+  - doc://start
 status: served
 ---
 

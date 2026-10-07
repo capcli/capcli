@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.inspect.success.quota",
-  "noun": "run",
-  "verb": "inspect",
   "target": "quota://threads",
   "command": "capcli inspect quota://threads",
   "state": {
@@ -15,22 +13,105 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/inspect/run.inspect.success.quota.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  quota://threads headroom",
-      "  can_invoke_now: true",
-      "    total:       50",
-      "    available:   28",
-      "  reset_at:       18:00:00 UTC (in 4h 12m)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "quota://threads headroom"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "provider",
+            "value": "threads"
+          },
+          {
+            "field": "window",
+            "value": "24h rolling"
+          },
+          {
+            "field": "status",
+            "value": "tracked"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "headroom:",
+            "indent": 2
+          },
+          {
+            "field": "total",
+            "value": "50"
+          },
+          {
+            "field": "available",
+            "value": "28"
+          },
+          {
+            "field": "earmarked",
+            "value": "7"
+          },
+          {
+            "field": "unreserved",
+            "value": "21"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "reservations:",
+            "indent": 2
+          },
+          {
+            "text": "earmark_01c3 5 tokens   ttl 3h    \"newsletter batch send\"",
+            "indent": 4
+          },
+          {
+            "text": "earmark_01d8 2 tokens   ttl 45m   \"story reply sweep\"",
+            "indent": 4
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "rate:",
+            "indent": 2
+          },
+          {
+            "field": "burst_bucket",
+            "value": "10 (refill 1.0/s)"
+          },
+          {
+            "field": "writes_per_minute",
+            "value": "12 of 60 remaining"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "can_invoke_now",
+            "value": "true"
+          },
+          {
+            "field": "deny_at",
+            "value": "5 tokens (pre-call deny floor)"
+          },
+          {
+            "field": "reset_at",
+            "value": "18:00:00 UTC (in 4h 12m)"
+          }
+        ]
+      }
+    ]
   }
 }

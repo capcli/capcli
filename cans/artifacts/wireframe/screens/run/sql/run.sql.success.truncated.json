@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.sql.success.truncated",
-  "noun": "run",
-  "verb": "sql",
   "target": "db://orders",
   "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\"",
   "state": {
@@ -15,22 +13,54 @@
     "data_shape": "truncated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/sql/run.sql.success.truncated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  10000 rows (truncated)",
-      "  returned:       10000",
-      "  total_rows:     14290",
-      "  truncated:      true",
-      "  next_cursor:    10000"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "10000 rows (truncated)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "columns",
+            "value": "id, customer_email, product_id, quantity, status, total"
+          },
+          {
+            "field": "returned",
+            "value": "10000"
+          },
+          {
+            "field": "total_rows",
+            "value": "14290"
+          },
+          {
+            "field": "row_cap",
+            "value": "10000 (select.max_limit)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "truncated",
+            "value": "true"
+          },
+          {
+            "field": "next_cursor",
+            "value": "10000"
+          },
+          {
+            "field": "resume",
+            "value": "append WHERE id > :cursor to continue past the cap"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2i"
+          }
+        ]
+      }
+    ]
   }
 }

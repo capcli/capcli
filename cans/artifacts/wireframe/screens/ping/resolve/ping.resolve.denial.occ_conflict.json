@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.resolve.denial.occ_conflict",
-  "noun": "ping",
-  "verb": "resolve",
   "target": "ask_88a",
   "command": "capcli ping resolve ask_88a --choice approve",
   "state": {
@@ -16,31 +14,59 @@
   },
   "diagnostic": {
     "domain": "db.engine",
-    "culprit": "Touched rows modified during suspension; OCC fence violated (orders row version 41 \u2192 43)",
+    "culprit": "Touched rows modified during suspension; OCC fence violated (orders row version 41 → 43)",
     "remedy": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame",
     "layer": "engine"
   },
-  "txt_pair": "screens/ping/resolve/ping.resolve.denial.occ_conflict.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  \u2717  exit 2",
-      "  FAIL  db.engine.stale_state",
-      "  state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "db.engine"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  db.engine.stale_state",
+            "indent": 2
+          },
+          {
+            "field": "ask",
+            "value": "ask_88a"
+          },
+          {
+            "field": "fence",
+            "value": "orders row version 41 → 43 during suspension"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Touched rows modified during suspension; OCC fence violated.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "engine"
+          },
+          {
+            "field": "remedy",
+            "value": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame"
+          }
+        ]
+      }
+    ]
   }
 }

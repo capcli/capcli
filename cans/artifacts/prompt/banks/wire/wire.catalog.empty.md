@@ -1,13 +1,10 @@
 ---
-id: doc://prompt/wire/catalog_empty@1
+id: prompt://wire/catalog_empty@1
 stem: wire.catalog.empty
 bank: wire
 slug: catalog_empty
 version: 1
 trust: draft
-trigger:
-  screens: ["api.catalog.success.empty"]
-  predicate: {}
 vars:
   - name: env
     type: string
@@ -18,7 +15,8 @@ sections:
   stage_3_prove: 60
   stage_4_ship: 50
 slice_max_tokens: 500
-docs: "docs/use/ (API catalog page: docs debt)"
+docs:
+  - doc://use
 status: served
 ---
 

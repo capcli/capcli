@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.retire.refusal.not_found",
-  "noun": "api",
-  "verb": "retire",
   "target": "cap://stripe.refund_charges",
   "command": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\"",
   "state": {
@@ -19,28 +17,55 @@
     "culprit": "Target verb not found: 'stripe.refund_charges'.",
     "remedy": "list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id"
   },
-  "txt_pair": "screens/api/retire/api.retire.refusal.not_found.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "  FATAL  validation.not_found",
-      "         Target verb not found.",
-      "  state_modified:  false",
-      "  remedy:          list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FATAL  validation.not_found",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\""
+          },
+          {
+            "field": "verb",
+            "value": "cap://stripe.refund_charges"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Target verb not found.",
+            "indent": 9
+          },
+          {
+            "text": "No verb 'stripe.refund_charges' in provider catalog 'stripe' (verbs: 418).",
+            "indent": 9
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id"
+          }
+        ]
+      }
+    ]
   }
 }

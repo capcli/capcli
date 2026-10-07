@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.query.success.populated",
-  "noun": "sys",
-  "verb": "query",
   "target": "_audit",
   "command": "capcli sys query \"SELECT op_id, domain FROM _audit WHERE exit_code = 2 LIMIT 20\"",
   "state": {
@@ -15,22 +13,63 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/query/sys.query.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  queried",
-      "rows:      3 returned (LIMIT 20)",
-      "op_c44d1   policy.ast",
-      "op_31f8    policy.budget",
-      "note:  writes to _audit are denied; queries served from the SSOT table"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "queried"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "target",
+            "value": "_audit (read-only system table)"
+          },
+          {
+            "field": "rows",
+            "value": "3 returned (LIMIT 20)"
+          },
+          {
+            "field": "duration",
+            "value": "2ms"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "op_id      domain",
+            "indent": 2
+          },
+          {
+            "text": "──────────────────────",
+            "indent": 2
+          },
+          {
+            "text": "op_c44d1   policy.ast",
+            "indent": 2
+          },
+          {
+            "text": "op_31f8    policy.budget",
+            "indent": 2
+          },
+          {
+            "text": "op_b22e9   policy.trust",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "note",
+            "value": "writes to _audit are denied; queries served from the SSOT table"
+          }
+        ]
+      }
+    ]
   }
 }

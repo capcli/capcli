@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.resolve.success.resolved",
-  "noun": "ping",
-  "verb": "resolve",
   "target": "ask_88a",
   "command": "capcli ping resolve ask_88a --choice approve",
   "state": {
@@ -15,23 +13,49 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/ping/resolve/ping.resolve.success.resolved.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  resolved",
-      "ask_id:          ask_88a",
-      "choice:          approve",
-      "resumed_task:    task_99a8b1",
-      "resumed_frame:   frame_018",
-      "state_modified:  true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "resolved"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "ask_id",
+            "value": "ask_88a"
+          },
+          {
+            "field": "choice",
+            "value": "approve"
+          },
+          {
+            "field": "question",
+            "value": "\"Approve refund for order ORD-10?\""
+          },
+          {
+            "field": "resolved_by",
+            "value": "user:alice"
+          },
+          {
+            "field": "resumed_task",
+            "value": "task_99a8b1"
+          },
+          {
+            "field": "resumed_frame",
+            "value": "frame_018"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f34a"
+          },
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
+        ]
+      }
+    ]
   }
 }

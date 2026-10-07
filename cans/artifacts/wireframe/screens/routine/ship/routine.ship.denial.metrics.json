@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.ship.denial.metrics",
-  "noun": "routine",
-  "verb": "ship",
   "target": "order_sync",
   "command": "capcli routine ship order_sync reviewed",
   "state": {
@@ -21,30 +19,75 @@
     "layer": "authorizer",
     "measured": "success rate 0.87 vs floor 0.95 (26 runs, 3 failures in sim replay)"
   },
-  "txt_pair": "screens/routine/ship/routine.ship.denial.metrics.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.promotion.low_success",
-      "Success rate 0.87 falls below the 0.95 promotion floor; conjunction fails.",
-      "state_modified: false",
-      "layer: authorizer",
-      "remedy: fix the 3 failing replays, re-run capcli routine prove order_sync --env sim, then re-ship"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.promotion.low_success",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "order_sync@1 (target rung: reviewed)"
+          },
+          {
+            "field": "source",
+            "value": "routine_stats (last 26 runs)"
+          },
+          {
+            "field": "success_rate",
+            "value": "0.87"
+          },
+          {
+            "text": "^^^^",
+            "indent": 24
+          },
+          {
+            "field": "floor",
+            "value": "0.95"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Success rate 0.87 falls below the 0.95 promotion floor; conjunction fails.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_ship_02"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "success rate 0.87 vs floor 0.95 (26 runs, 3 failures in sim replay)"
+          },
+          {
+            "field": "remedy",
+            "value": "fix the 3 failing replays, re-run capcli routine prove order_sync --env sim, then re-ship"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "doc.outline.success.populated",
-  "noun": "doc",
-  "verb": "outline",
   "target": "doc://refund-policy",
   "command": "capcli doc outline doc://refund-policy",
   "state": {
@@ -15,23 +13,66 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/doc/outline/doc.outline.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  outline doc://refund-policy",
-      "doc://refund-policy (pinned)",
-      "├── 3. Stripe integration notes",
-      "└── 5. Escalation paths",
-      "nodes:    8",
-      "tokens:   312 (full document)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "outline doc://refund-policy"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "doc://refund-policy (pinned)",
+            "indent": 2
+          },
+          {
+            "text": "├── 1. Scope",
+            "indent": 2
+          },
+          {
+            "text": "├── 2. Refund windows",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── 2.1 Standard window (30 days)",
+            "indent": 2
+          },
+          {
+            "text": "│     └── 2.2 Extended window (120 days, supervisor approval)",
+            "indent": 2
+          },
+          {
+            "text": "├── 3. Stripe integration notes",
+            "indent": 2
+          },
+          {
+            "text": "├── 4. Currency handling",
+            "indent": 2
+          },
+          {
+            "text": "└── 5. Escalation paths",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "nodes",
+            "value": "8"
+          },
+          {
+            "field": "sections",
+            "value": "5"
+          },
+          {
+            "field": "tokens",
+            "value": "312 (full document)"
+          }
+        ]
+      }
+    ]
   }
 }

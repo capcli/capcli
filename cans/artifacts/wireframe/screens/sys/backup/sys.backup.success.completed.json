@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.backup.success.completed",
-  "noun": "sys",
-  "verb": "backup",
   "target": "sys://workspace",
   "command": "capcli sys backup --push",
   "state": {
@@ -15,23 +13,66 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/backup/sys.backup.success.completed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  completed",
-      "  git_commit:       4c89a0b1 (origin accepted)",
-      "  s3_object:        s3://capcli-worm/envs-dev/snap_auto_2026-10-04T0300Z.db",
-      "  bytes:            18,442,240",
-      "  ledger_anchored:  sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
+    "sections": [
+      {
+        "title": "backup",
+        "items": [
+          {
+            "field": "snapshot",
+            "value": "snap_auto_2026-10-04T0300Z"
+          },
+          {
+            "field": "mechanism",
+            "value": "VACUUM INTO (transactionally clean copy)"
+          },
+          {
+            "field": "git_commit",
+            "value": "4c89a0b1 (origin accepted)"
+          },
+          {
+            "field": "s3_object",
+            "value": "s3://capcli-worm/envs-dev/snap_auto_2026-10-04T0300Z.db"
+          },
+          {
+            "field": "s3_status",
+            "value": "uploaded (Object Lock WORM)"
+          },
+          {
+            "field": "bytes",
+            "value": "18,442,240"
+          },
+          {
+            "field": "ledger_anchored",
+            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          {
+            "field": "audit_mirror",
+            "value": "flushed (lag: 0m)"
+          },
+          {
+            "field": "drift",
+            "value": "0m (cadence: 15m, alarm at 30m)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: true",
+            "indent": 0
+          },
+          {
+            "text": "note:           dual-storage guarantee satisfied (git + object store)",
+            "indent": 0
+          }
+        ]
+      }
+    ]
   }
 }

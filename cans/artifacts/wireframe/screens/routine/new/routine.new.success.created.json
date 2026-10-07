@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.new.success.created",
-  "noun": "routine",
-  "verb": "new",
   "target": "sync_orders",
   "command": "capcli routine new sync_orders",
   "state": {
@@ -15,22 +13,58 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/new/routine.new.success.created.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  created",
-      "routine:   sync_orders",
-      "trust:     draft (unproven intake floor)",
-      "state_modified: true",
-      "next:           capcli routine prove sync_orders --env sim"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "created"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "routine",
+            "value": "sync_orders"
+          },
+          {
+            "field": "file",
+            "value": "routines/sync_orders.py"
+          },
+          {
+            "field": "template",
+            "value": "tpl://routine/python_blank"
+          },
+          {
+            "field": "trust",
+            "value": "draft (unproven intake floor)"
+          },
+          {
+            "field": "version",
+            "value": "1"
+          },
+          {
+            "field": "shape",
+            "value": "38 LOC / 640 tokens / 2 params (ceilings: 150 / 2000 / 8)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit",
+            "value": "op_new_01 (routine.draft committed with template_hash)"
+          },
+          {
+            "field": "next",
+            "value": "capcli routine prove sync_orders --env sim"
+          }
+        ]
+      }
+    ]
   }
 }

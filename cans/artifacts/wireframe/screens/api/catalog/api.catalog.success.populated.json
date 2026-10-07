@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.catalog.success.populated",
-  "noun": "api",
-  "verb": "catalog",
   "target": "stripe",
   "command": "capcli api catalog stripe --state active --json",
   "state": {
@@ -15,22 +13,67 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/catalog/api.catalog.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  populated",
-      "  cap://stripe",
-      "  ├── refund_charge          active   draft   214 calls",
-      "  │     └── last_call: op_9f2e (ok)",
-      "  state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "provider",
+            "value": "stripe"
+          },
+          {
+            "field": "state_filter",
+            "value": "active"
+          },
+          {
+            "field": "verbs",
+            "value": "4 active of 418 total (414 dormant)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "cap://stripe",
+            "indent": 2
+          },
+          {
+            "text": "├── refund_charge          active   draft   214 calls",
+            "indent": 2
+          },
+          {
+            "text": "├── create_payment_intent  active   draft    89 calls",
+            "indent": 2
+          },
+          {
+            "field": "│     └── last_call",
+            "value": "op_9f2e (ok)"
+          },
+          {
+            "text": "├── issue_credit_note      active   draft    12 calls",
+            "indent": 2
+          },
+          {
+            "text": "└── void_invoice           active   draft     4 calls",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

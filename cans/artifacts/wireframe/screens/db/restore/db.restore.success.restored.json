@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "db.restore.success.restored",
-  "noun": "db",
-  "verb": "restore",
   "target": "db://orders",
   "command": "capcli db restore snap_onboarding_01",
   "state": {
@@ -15,22 +13,54 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/db/restore/db.restore.success.restored.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  restored",
-      "snapshot_id:    snap_onboarding_01",
-      "reversed_ops:   1 (post-snapshot writes undone)",
-      "ledger_hash:    sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "restored"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "snapshot_id",
+            "value": "snap_onboarding_01"
+          },
+          {
+            "field": "database",
+            "value": "envs/dev/workspace.db"
+          },
+          {
+            "field": "tables",
+            "value": "6"
+          },
+          {
+            "field": "rows",
+            "value": "6"
+          },
+          {
+            "field": "reversed_ops",
+            "value": "1 (post-snapshot writes undone)"
+          },
+          {
+            "field": "ledger_hash",
+            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_8d4a"
+          }
+        ]
+      }
+    ]
   }
 }

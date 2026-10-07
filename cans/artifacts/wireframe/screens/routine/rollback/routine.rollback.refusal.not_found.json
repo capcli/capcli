@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.rollback.refusal.not_found",
-  "noun": "routine",
-  "verb": "rollback",
   "target": "sync_orders",
   "command": "capcli routine rollback sync_orders 7",
   "state": {
@@ -19,28 +17,55 @@
     "culprit": "Target version v7 not found in the retained provenance graph (v1..v5).",
     "remedy": "list retained versions via capcli inspect cap://sync_orders, then target one that exists"
   },
-  "txt_pair": "screens/routine/rollback/routine.rollback.refusal.not_found.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  validation.rollback.version_not_found",
-      "Target version v7 not found in the retained provenance graph (v1..v5).",
-      "state_modified: false",
-      "remedy: list retained versions via capcli inspect cap://sync_orders, then target one that exists"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  validation.rollback.version_not_found",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "sync_orders"
+          },
+          {
+            "field": "target",
+            "value": "v7"
+          },
+          {
+            "field": "history",
+            "value": "v1..v5 retained (cap: 25 versions)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Target version v7 not found in the retained provenance graph (v1..v5).",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "list retained versions via capcli inspect cap://sync_orders, then target one that exists"
+          }
+        ]
+      }
+    ]
   }
 }

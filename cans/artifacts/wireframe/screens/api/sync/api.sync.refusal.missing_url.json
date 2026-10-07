@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.sync.refusal.missing_url",
-  "noun": "api",
-  "verb": "sync",
   "target": "stripe",
   "command": "capcli api sync stripe",
   "state": {
@@ -19,28 +17,55 @@
     "culprit": "Upstream spec URL omitted.",
     "remedy": "re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'"
   },
-  "txt_pair": "screens/api/sync/api.sync.refusal.missing_url.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "  FATAL  missing_param.missing_arg",
-      "         Upstream spec URL omitted.",
-      "  state_modified:  false",
-      "  remedy:          re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "missing_param"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FATAL  missing_param.missing_arg",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli api sync stripe"
+          },
+          {
+            "field": "usage",
+            "value": "capcli api sync <provider> <url> [--interval 7d] [--dry-run]"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Upstream spec URL omitted.",
+            "indent": 9
+          },
+          {
+            "text": "The kernel alone parses OpenAPI specs; compilation requires a spec URL.",
+            "indent": 9
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'"
+          }
+        ]
+      }
+    ]
   }
 }

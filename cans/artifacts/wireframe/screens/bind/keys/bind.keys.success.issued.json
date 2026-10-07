@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.keys.success.issued",
-  "noun": "bind",
-  "verb": "keys",
   "target": "partner_hook",
   "command": "capcli bind keys issue partner_hook --principal partner:acme",
   "state": {
@@ -15,22 +13,54 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/bind/keys/bind.keys.success.issued.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  issued",
-      "key_id:     key_6v2q",
-      "principal:  partner:acme",
-      "expires_at: 2027-01-02T00:00:00Z (90d rotation)",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "issued"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "key_id",
+            "value": "key_6v2q"
+          },
+          {
+            "field": "principal",
+            "value": "partner:acme"
+          },
+          {
+            "field": "endpoint",
+            "value": "partner_hook (report_summary@3)"
+          },
+          {
+            "field": "issued_at",
+            "value": "2026-10-04T00:00:00Z"
+          },
+          {
+            "field": "expires_at",
+            "value": "2027-01-02T00:00:00Z (90d rotation)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_5j8u"
+          },
+          {
+            "field": "note",
+            "value": "key material sealed in vault; no secret printed to stdout"
+          }
+        ]
+      }
+    ]
   }
 }

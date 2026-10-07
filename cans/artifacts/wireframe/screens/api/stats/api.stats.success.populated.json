@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "api.stats.success.populated",
-  "noun": "api",
-  "verb": "stats",
   "target": "stripe",
   "command": "capcli api stats stripe --deep",
   "state": {
@@ -15,22 +13,89 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/stats/api.stats.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  populated",
-      "  quota_used:       41 of 60 tokens (68%)",
-      "  error_rate:   0.8% (3 of 372 calls)",
-      "  p95_latency:  240ms",
-      "  state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "provider",
+            "value": "stripe"
+          },
+          {
+            "field": "window",
+            "value": "24h rolling"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "quota_used",
+            "value": "41 of 60 tokens (68%)"
+          },
+          {
+            "field": "quota_remaining",
+            "value": "19"
+          },
+          {
+            "field": "reset_at",
+            "value": "18:00:00 UTC (in 4h 12m)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "error_rate",
+            "value": "0.8% (3 of 372 calls)"
+          },
+          {
+            "field": "p50_latency",
+            "value": "118ms"
+          },
+          {
+            "field": "p95_latency",
+            "value": "240ms"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "top_verbs_by_spend:",
+            "indent": 2
+          },
+          {
+            "text": "├── refund_charge          214 calls    0 errors",
+            "indent": 2
+          },
+          {
+            "text": "├── create_payment_intent   89 calls    1 error",
+            "indent": 2
+          },
+          {
+            "text": "└── issue_credit_note       12 calls    2 errors",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

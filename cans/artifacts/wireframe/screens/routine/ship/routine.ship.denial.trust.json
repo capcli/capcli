@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.ship.denial.trust",
-  "noun": "routine",
-  "verb": "ship",
   "target": "order_sync",
   "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
   "state": {
@@ -21,30 +19,67 @@
     "layer": "trust",
     "measured": "platform ceiling reviewed (requested: pinned on tier_2 host)"
   },
-  "txt_pair": "screens/routine/ship/routine.ship.denial.trust.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_2]  ✗  exit 2",
-      "FAIL  policy.trust.tier2_refusal",
-      "Pinned promotion denied on Tier 2; the platform ceiling caps this host at reviewed.",
-      "state_modified: false",
-      "layer: trust",
-      "remedy: run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.trust"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.trust.tier2_refusal",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "order_sync@2 (current rung: reviewed)"
+          },
+          {
+            "field": "target",
+            "value": "pinned"
+          },
+          {
+            "field": "host",
+            "value": "tier_2 (degraded isolation; broker-mediated sandbox)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Pinned promotion denied on Tier 2; the platform ceiling caps this host at reviewed.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_ship_03"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "measured",
+            "value": "platform ceiling reviewed (requested: pinned on tier_2 host)"
+          },
+          {
+            "field": "remedy",
+            "value": "run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)"
+          }
+        ]
+      }
+    ]
   }
 }

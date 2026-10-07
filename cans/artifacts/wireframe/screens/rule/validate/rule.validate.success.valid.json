@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "rule.validate.success.valid",
-  "noun": "rule",
-  "verb": "validate",
   "target": "schema://orders",
   "command": "capcli rule validate",
   "state": {
@@ -15,22 +13,60 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/rule/validate/rule.validate.success.valid.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  valid",
-      "├── Gate 1  syntax     pass (YAML parsed; shorthands expanded; roots present)",
-      "└── Gate 2  semantics  pass (relational DAG verified: orders.customer_id -> customers.id)",
-      "compiled:  17 DDL statements (deterministic; byte-reproducible)",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "valid"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "source",
+            "value": "schema.yaml v13"
+          },
+          {
+            "field": "scope",
+            "value": "4 tables · 23 columns · 8 indexes · 2 triggers"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "gates:",
+            "indent": 2
+          },
+          {
+            "text": "├── Gate 1  syntax     pass (YAML parsed; shorthands expanded; roots present)",
+            "indent": 2
+          },
+          {
+            "text": "└── Gate 2  semantics  pass (relational DAG verified: orders.customer_id -> customers.id)",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "compiled",
+            "value": "17 DDL statements (deterministic; byte-reproducible)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
   }
 }

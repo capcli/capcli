@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.prove.crash.runtime",
-  "noun": "routine",
-  "verb": "prove",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
   "state": {
@@ -19,29 +17,58 @@
     "culprit": "TypeError: unsupported operand types for +: 'NoneType' and 'int'",
     "remedy": "guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim"
   },
-  "txt_pair": "screens/routine/prove/routine.prove.crash.runtime.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 4,
-    "state_modified": false,
-    "stdout_contains": [
-      "[sim:tier_1]  ✗  exit 4",
-      "CRASH  routine.runtime.exception",
-      "TypeError: unsupported operand types for +: 'NoneType' and 'int'",
-      "state_modified: false",
-      "rollback: clean",
-      "remedy: guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "routine.runtime"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 4"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "CRASH  routine.runtime.exception",
+            "indent": 2
+          },
+          {
+            "text": "routines/sync_orders.py:34 in dispatch",
+            "indent": 9
+          },
+          {
+            "text": "total = carrier_fee + surcharge",
+            "indent": 9
+          },
+          {
+            "text": "^^^^^^^^^^^",
+            "indent": 17
+          },
+          {
+            "field": "TypeError",
+            "value": "unsupported operand types for +: 'NoneType' and 'int'"
+          },
+          {
+            "text": "carrier_fee is None on edge route 'pickup'; uncaught in sim test pass 3 of 10",
+            "indent": 9
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "rollback",
+            "value": "clean"
+          },
+          {
+            "field": "remedy",
+            "value": "guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -1,13 +1,10 @@
 ---
-id: doc://prompt/forensics/audit_tampered@1
+id: prompt://forensics/audit_tampered@1
 stem: forensics.audit.tampered
 bank: forensics
 slug: audit_tampered
 version: 1
 trust: draft
-trigger:
-  screens: ["sys.doctor.success.tamper"]
-  predicate: {}
 vars:
   - name: env
     type: string
@@ -17,7 +14,8 @@ sections:
   stage_2_isolate: 70
   stage_3_attest: 60
 slice_max_tokens: 500
-docs: "docs/understand/ (audit page: docs debt)"
+docs:
+  - doc://understand
 status: served
 ---
 

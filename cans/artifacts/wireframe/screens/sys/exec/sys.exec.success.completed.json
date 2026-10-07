@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.exec.success.completed",
-  "noun": "sys",
-  "verb": "exec",
   "target": "sys://sandbox",
   "command": "capcli sys exec \"python3 etl.py\" --sandbox",
   "state": {
@@ -15,22 +13,62 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/exec/sys.exec.success.completed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  completed",
-      "  command:       python3 etl.py",
-      "  jail:          bwrap (tier_1 unprivileged userns)",
-      "  exit_status:   0",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
+    "sections": [
+      {
+        "title": "exec",
+        "items": [
+          {
+            "field": "command",
+            "value": "python3 etl.py"
+          },
+          {
+            "field": "jail",
+            "value": "bwrap (tier_1 unprivileged userns)"
+          },
+          {
+            "field": "seccomp",
+            "value": "profile_python active (syscall 42 trapped)"
+          },
+          {
+            "field": "scratch",
+            "value": "tmpfs 64MB (wiped at exit)"
+          },
+          {
+            "field": "exit_status",
+            "value": "0"
+          },
+          {
+            "field": "duration",
+            "value": "1,284ms"
+          },
+          {
+            "field": "stdout",
+            "value": "2 lines (24 tokens)"
+          },
+          {
+            "field": "side_effects",
+            "value": "1 file under /scratch; audit event committed to _audit"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: true",
+            "indent": 0
+          },
+          {
+            "text": "note:           containment held; effects recorded on the audit spine",
+            "indent": 0
+          }
+        ]
+      }
+    ]
   }
 }

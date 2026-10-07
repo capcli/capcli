@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.denial.budget",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://archive_old_orders@3",
   "command": "capcli run cap://archive_old_orders@3 -p cutoff=90d -m \"archive stale orders\"",
   "state": {
@@ -21,30 +19,75 @@
     "layer": "budget",
     "measured": "frame ops 20/20 · session remaining 488 ops"
   },
-  "txt_pair": "screens/run/execute/run.execute.denial.budget.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  policy.budget.exhausted",
-      "        archive_old_orders@3 (frame_005) exhausted ops: 20/20",
-      "  state_modified: false",
-      "  layer: budget",
-      "  remedy: split the work into chunked routines, or raise declared max_ops in a new routine version"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.budget"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.budget.exhausted",
+            "indent": 2
+          },
+          {
+            "text": "archive_old_orders@3 (frame_005) exhausted ops: 20/20",
+            "indent": 8
+          },
+          {
+            "field": "attempted_op",
+            "value": "db.exec (op #21 crossed the frame ceiling)"
+          },
+          {
+            "field": "blocking_level",
+            "value": "frame"
+          },
+          {
+            "field": "remaining",
+            "value": "0 ops at frame level"
+          },
+          {
+            "field": "ancestors",
+            "value": "session remaining 488 ops (frame was the tightest constraint)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "No partial execution past budget",
+            "value": "the routine failed cleanly"
+          },
+          {
+            "text": "with zero half-executed side effects.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "budget"
+          },
+          {
+            "field": "measured",
+            "value": "frame ops 20/20 · session remaining 488 ops"
+          },
+          {
+            "field": "remedy",
+            "value": "split the work into chunked routines, or raise declared max_ops in a new routine version"
+          }
+        ]
+      }
+    ]
   }
 }

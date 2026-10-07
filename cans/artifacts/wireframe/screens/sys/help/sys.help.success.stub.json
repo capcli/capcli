@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.help.success.stub",
-  "noun": "sys",
-  "verb": "help",
   "target": null,
   "command": "capcli",
   "state": {
@@ -15,19 +13,47 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/help/sys.help.success.stub.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "capcli 0.4.2 \u2014 compiled execution firewall for AI agents",
-      "  Find actions:    capcli search <query>"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "render": {
+    "header": {
+      "style": "plain",
+      "label": "capcli 0.4.2 — compiled execution firewall for AI agents"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Usage: capcli <noun> <verb> [target] [flags]",
+            "indent": 0
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Capabilities are discovered dynamically, not listed in static help.",
+            "indent": 0
+          },
+          {
+            "field": "Find actions",
+            "value": "capcli search <query>"
+          },
+          {
+            "field": "Pre-flight",
+            "value": "capcli inspect <urp>"
+          },
+          {
+            "field": "System status",
+            "value": "capcli sys doctor"
+          }
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://onboarding/human@1",
+    "reason": "human operator requested onboarding tour",
+    "serve": "L1"
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.vault_set.success.vaulted",
-  "noun": "sys",
-  "verb": "vault_set",
   "target": "stripe_key",
   "command": "capcli sys vault set stripe_key --in @-",
   "state": {
@@ -15,23 +13,54 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/vault_set/sys.vault_set.success.vaulted.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  vaulted",
-      "key:          stripe_key",
-      "cipher:       aes-256-gcm",
-      "value:        masked — plaintext never echoed to any output stream",
-      "state_modified: true",
-      "event:          vault.set committed to _audit with SHA-256 fingerprint"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "vaulted"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "key",
+            "value": "stripe_key"
+          },
+          {
+            "field": "cipher",
+            "value": "aes-256-gcm"
+          },
+          {
+            "field": "fingerprint",
+            "value": "sha256:4c1b8e93a7d2f0065be34c881a9d20f7e5c3b6a8"
+          },
+          {
+            "field": "scope",
+            "value": "workspace root secret (envs/dev/workspace.db secrets table)"
+          },
+          {
+            "field": "value",
+            "value": "masked — plaintext never echoed to any output stream"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_r704"
+          },
+          {
+            "field": "event",
+            "value": "vault.set committed to _audit with SHA-256 fingerprint"
+          }
+        ]
+      }
+    ]
   }
 }

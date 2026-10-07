@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.denial.authorizer",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://customer_migrate@2",
   "command": "capcli run cap://customer_migrate@2 -p customer_id=1 -p new_email=alice+corrected@acme.corp -m \"email correction\"",
   "state": {
@@ -21,30 +19,58 @@
     "layer": "authorizer",
     "measured": "1 column write denied (customers.email)"
   },
-  "txt_pair": "screens/run/execute/run.execute.denial.authorizer.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  policy.authorizer.deny_columns_write",
-      "        column 'email' is immutable (imm_cols: [email])",
-      "  state_modified: false",
-      "  layer: authorizer",
-      "  remedy: insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    }
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.deny_columns_write",
+            "indent": 2
+          },
+          {
+            "text": "UPDATE customers SET email = :new_email WHERE id = :id",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^",
+            "indent": 29
+          },
+          {
+            "field": "column 'email' is immutable (imm_cols",
+            "value": "[email])"
+          },
+          {
+            "text": "The C authorizer denied the write at prepare time.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "1 column write denied (customers.email)"
+          },
+          {
+            "field": "remedy",
+            "value": "insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration"
+          }
+        ]
+      }
+    ]
   }
 }
