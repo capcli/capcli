@@ -31,6 +31,7 @@
       "state_modified: false",
       "remedy: check the spelling, or discover candidates via capcli search 'sync' --trust draft"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

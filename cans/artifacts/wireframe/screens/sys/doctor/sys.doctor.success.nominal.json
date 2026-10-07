@@ -17,6 +17,11 @@
   "diagnostic": null,
   "txt_pair": "screens/sys/doctor/sys.doctor.success.nominal.txt",
   "txt_sha256": null,
+  "prompt": {
+    "pointer": "doc://prompt/onboarding/harness@1",
+    "reason": "harness at nominal doctor with empty domain",
+    "predicate": {"caller": "harness", "domain_tables": 0}
+  },
   "test_assertions": {
     "exit_code": 0,
     "state_modified": false,
@@ -26,7 +31,8 @@
       "  seccomp_bpf:       active",
       "  ntp_drift_ms:      14 (cap: 500)",
       "  audit_sink:        online",
-      "state_modified: false"
+      "state_modified: false",
+      "prompt: doc://prompt/onboarding/harness@1 — harness at nominal doctor with empty domain"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

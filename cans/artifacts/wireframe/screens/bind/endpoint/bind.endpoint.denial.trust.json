@@ -34,6 +34,7 @@
       "layer:          trust",
       "remedy:         promote the routine first: capcli routine ship inventory_report pinned --reason \"expose to partners\""
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

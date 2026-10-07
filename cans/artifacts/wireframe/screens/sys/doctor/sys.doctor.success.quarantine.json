@@ -24,6 +24,7 @@
       "[dev:tier_1]  \u2713  quarantine",
       "  state_modified: false"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

@@ -30,6 +30,7 @@
       "state_modified: false",
       "remedy: re-run as capcli sys vault set stripe_key --in @- and pipe the value on stdin"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

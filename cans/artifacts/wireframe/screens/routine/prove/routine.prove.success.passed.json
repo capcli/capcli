@@ -17,6 +17,11 @@
   "diagnostic": null,
   "txt_pair": "screens/routine/prove/routine.prove.success.passed.txt",
   "txt_sha256": null,
+  "prompt": {
+    "pointer": "doc://prompt/promotion/routine_passed@1",
+    "reason": "proof passed: routine eligible for promotion",
+    "predicate": {"trust": "draft"}
+  },
   "test_assertions": {
     "exit_code": 0,
     "state_modified": false,
@@ -25,7 +30,8 @@
       "fingerprint:  sha256:9e1b7c04... (dynamic leaf sequence from _audit mirror)",
       "match:        5 executed / 5 declared (subset; 0 undeclared leaves)",
       "invariant_suite:     pass (boundary + idempotency assertions)",
-      "state_modified: false"
+      "state_modified: false",
+      "prompt: doc://prompt/promotion/routine_passed@1 — proof passed: routine eligible for promotion"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

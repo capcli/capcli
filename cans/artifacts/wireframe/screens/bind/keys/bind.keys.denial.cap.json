@@ -34,6 +34,7 @@
       "layer:          authorizer",
       "remedy:         remove an idle endpoint binding to release its keys, or await 90d rotation"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

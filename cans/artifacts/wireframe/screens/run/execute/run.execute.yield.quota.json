@@ -35,6 +35,7 @@
       "  suspended_frame: task_99a8b1",
       "  remedy:          task safely yielded; daemon will auto-resume at reset_at"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

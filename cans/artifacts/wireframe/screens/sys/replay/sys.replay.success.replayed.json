@@ -27,6 +27,7 @@
       "state_modified: true",
       "note:           idempotency keys suppressed duplicate side-effects; replay committed to _audit as new causal branch"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

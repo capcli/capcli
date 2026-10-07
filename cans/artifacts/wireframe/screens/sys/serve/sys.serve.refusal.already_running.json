@@ -31,6 +31,7 @@
       "state_modified: false",
       "remedy:         inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

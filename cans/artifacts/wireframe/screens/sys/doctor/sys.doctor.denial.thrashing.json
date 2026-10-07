@@ -34,6 +34,7 @@
       "  layer:           governance",
       "  remedy:          harness execution throttled; escalate to human or inspect remedy payload"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

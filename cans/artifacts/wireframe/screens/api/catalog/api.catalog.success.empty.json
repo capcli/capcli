@@ -17,6 +17,11 @@
   "diagnostic": null,
   "txt_pair": "screens/api/catalog/api.catalog.success.empty.txt",
   "txt_sha256": null,
+  "prompt": {
+    "pointer": "doc://prompt/wire/catalog_empty@1",
+    "reason": "no external API catalogs configured",
+    "predicate": {}
+  },
   "test_assertions": {
     "exit_code": 0,
     "state_modified": false,
@@ -24,7 +29,8 @@
       "[dev:tier_1]  ✓  empty",
       "  providers:  0",
       "  Zero APIs configured.",
-      "  state_modified:  false"
+      "  state_modified:  false",
+      "prompt: doc://prompt/wire/catalog_empty@1 — no external API catalogs configured"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

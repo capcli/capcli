@@ -17,6 +17,11 @@
   "diagnostic": null,
   "txt_pair": "screens/run/search/run.search.success.gaps.txt",
   "txt_sha256": null,
+  "prompt": {
+    "pointer": "doc://prompt/authoring/routine_gaps@1",
+    "reason": "telemetry shows uncodified operational sequence",
+    "predicate": {"gap_count": ">=1"}
+  },
   "test_assertions": {
     "exit_code": 0,
     "state_modified": false,
@@ -25,7 +30,8 @@
       "  zero_result (ranked first):",
       "    \"kombucha supplier sync\"    4 searches · 0 hits · last 2h ago",
       "  low_conversion (searched, never invoked):",
-      "  next_step: author a draft routine or expand catalog via capcli api sync"
+      "  next_step: author a draft routine or expand catalog via capcli api sync",
+      "prompt: doc://prompt/authoring/routine_gaps@1 — telemetry shows uncodified operational sequence"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

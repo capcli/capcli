@@ -16,3 +16,4 @@
   layer:           ping
   suspended_frame: frame_026
   remedy:          frame checkpointed to _pending_asks; human resolves via Cockpit or 'capcli ping resolve ask_88a --choice approve', frame auto-resumes after hash re-verification
+prompt: doc://prompt/hitl/ping_ask_suspended@1 — frame suspended awaiting human inquiry resolution

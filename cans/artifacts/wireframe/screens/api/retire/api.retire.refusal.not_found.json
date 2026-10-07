@@ -31,6 +31,7 @@
       "  state_modified:  false",
       "  remedy:          list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

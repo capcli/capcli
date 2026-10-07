@@ -32,6 +32,7 @@
       "state_modified: false",
       "remedy: break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

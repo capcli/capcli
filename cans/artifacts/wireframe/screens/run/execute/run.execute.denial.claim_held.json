@@ -34,6 +34,7 @@
       "  layer: claims",
       "  remedy: wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

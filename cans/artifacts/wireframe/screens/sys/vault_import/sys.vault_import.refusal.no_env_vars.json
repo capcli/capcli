@@ -30,6 +30,7 @@
       "state_modified: false",
       "remedy: export CAPCLI_SECRET_<NAME> in the harness shell, or provision via capcli sys vault set"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

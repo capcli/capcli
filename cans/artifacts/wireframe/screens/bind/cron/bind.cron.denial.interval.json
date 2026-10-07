@@ -34,6 +34,7 @@
       "layer:          authorizer",
       "remedy:         raise the interval to 5 minutes or more; tighter reactivity belongs to inbound webhooks"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

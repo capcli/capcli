@@ -27,6 +27,7 @@
       "  next_cursor: doc://refund-policy",
       "  api://stripe.refund_charge                 api    active"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

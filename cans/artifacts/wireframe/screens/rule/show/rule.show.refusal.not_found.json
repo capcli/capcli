@@ -31,6 +31,7 @@
       "state_modified: false",
       "remedy: declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

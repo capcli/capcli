@@ -32,6 +32,7 @@
       "  state_modified: false",
       "  remedy: execute on a tier_1 host (Linux, WSL2), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

@@ -34,6 +34,7 @@
       "layer:          authorizer",
       "remedy:         trim provider event payloads or split events; ceiling is fixed at 65536 bytes"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

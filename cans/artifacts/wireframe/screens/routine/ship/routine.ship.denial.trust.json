@@ -34,6 +34,7 @@
       "layer: trust",
       "remedy: run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

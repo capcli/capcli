@@ -36,7 +36,9 @@
     ],
     "stdout_not_contains": [
       "SyntaxError",
-      "panic"
+      "panic",
+      "next_prompt",
+      "doc://prompt/"
     ],
     "stderr_empty": true,
     "json_keys_required": [

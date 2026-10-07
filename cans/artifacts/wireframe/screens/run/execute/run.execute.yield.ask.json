@@ -24,6 +24,11 @@
   },
   "txt_pair": "screens/run/execute/run.execute.yield.ask.txt",
   "txt_sha256": null,
+  "prompt": {
+    "pointer": "doc://prompt/hitl/ping_ask_suspended@1",
+    "reason": "frame suspended awaiting human inquiry resolution",
+    "predicate": {}
+  },
   "test_assertions": {
     "exit_code": 6,
     "state_modified": false,
@@ -32,7 +37,8 @@
       "  YIELD  ping.ask_suspended",
       "  ask:             ask_88a",
       "  pending_asks:    1 enqueued (ask_88a)",
-      "  state_modified:  false"
+      "  state_modified:  false",
+      "prompt: doc://prompt/hitl/ping_ask_suspended@1 — frame suspended awaiting human inquiry resolution"
     ],
     "stderr_empty": true,
     "json_keys_required": [

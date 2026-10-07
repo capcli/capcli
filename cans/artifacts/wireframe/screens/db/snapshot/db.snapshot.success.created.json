@@ -27,6 +27,7 @@
       "ledger_hash:    sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
       "state_modified: true"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

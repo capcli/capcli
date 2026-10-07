@@ -27,6 +27,7 @@
       "state_modified: true",
       "next:           capcli routine prove sync_orders --env sim"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

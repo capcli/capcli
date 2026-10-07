@@ -31,6 +31,7 @@
       "  state_modified:  false",
       "  remedy:          re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

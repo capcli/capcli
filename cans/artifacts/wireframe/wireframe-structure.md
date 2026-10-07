@@ -711,9 +711,10 @@ Capabilities are discovered dynamically, not listed in static help.
       "remedy: add LIMIT, or target specific primary key"
     ],
     "stdout_not_contains": [
-      "--force",
       "SyntaxError",
-      "panic"
+      "panic",
+      "next_prompt",
+      "doc://prompt/"
     ],
     "stderr_empty": true,
     "json_keys_required": ["domain", "culprit", "remedy", "state_modified", "layer"],
@@ -724,6 +725,28 @@ Capabilities are discovered dynamically, not listed in static help.
   }
 }
 ```
+
+A fixture may carry one optional top-level `prompt` block declaring that the
+rendered screen offers an L1 prompt trailer (contract:
+`manifest.json` → `output_contract.prompt_trailer`). Only pointer, reason,
+and predicate may appear — no bank title, section name, cap, or body text.
+Eligibility comes from `cans/artifacts/prompt/_triggers.json`; the mapping
+lives there and never in the wireframe. The `.txt` pair renders the trailer
+as its final line, `prompt: <pointer> — <reason>`, and the same line is a
+`stdout_contains` needle. Every fixture without a `prompt` block asserts
+`stdout_not_contains: ["next_prompt", "doc://prompt/"]`.
+
+```json
+"prompt": {
+  "pointer": "doc://prompt/genesis/blank_world@1",
+  "reason": "blank world: 0 domain tables",
+  "predicate": { "domain_tables": 0 }
+}
+```
+
+Trailer emission is gated on the `cans/interface.md` leaf-addressing ruling
+(prompt-structure.md §7): fixtures declare eligibility now; user-visible
+surfacing follows the ruling.
 
 ### 6.2 Rust Integration Test Runner
 
@@ -746,9 +769,17 @@ struct TestAssertions {
 }
 
 #[derive(Deserialize)]
+struct PromptOffer {
+    pointer: String,
+    reason: String,
+    predicate: serde_json::Value,
+}
+
+#[derive(Deserialize)]
 struct WireframeFixture {
     screen_id: String,
     command: String,
+    prompt: Option<PromptOffer>,
     test_assertions: TestAssertions,
     txt_pair: String,
 }
@@ -792,8 +823,68 @@ fn execute_wireframe_golden_tests() {
             assert!(!output.stdout.contains(banned), "{}: Output contains banned token '{}'", fixture.screen_id, banned);
         }
 
+        // 6. Prompt awareness (L1 trailer; contract in manifest.json
+        // output_contract.prompt_trailer). Serving is read-only: exit code
+        // and state_modified are the host screen's, with or without it.
+        match &fixture.prompt {
+            Some(offer) => {
+                let trailer = format!("prompt: {} — {}", offer.pointer, offer.reason);
+                // (b) caps: <=30 tokens, <=60 on the search surface
+                let cap = if fixture.screen_id.starts_with("run.search.") { 60 } else { 30 };
+                assert!(trailer.split_whitespace().count() <= cap, "{}: trailer over {} tokens", fixture.screen_id, cap);
+                // golden pair renders the trailer as its final line, verbatim
+                assert_eq!(txt_content.trim_end().lines().last(), Some(trailer.as_str()), "{}: txt pair must end with the trailer", fixture.screen_id);
+                assert!(output.stdout.contains(&trailer), "{}: trailer missing from output", fixture.screen_id);
+                // (d) state neutrality: predicate-off twin renders identically minus the trailer
+                let off = capcli_test_exec_predicate_off(&fixture.command, &offer.predicate);
+                assert_eq!(off.exit_code, output.exit_code, "{}: exit changed with predicate off", fixture.screen_id);
+                assert_eq!(off.state_modified, output.state_modified, "{}: state_modified changed with predicate off", fixture.screen_id);
+                assert!(!off.stdout.contains("doc://prompt/"), "{}: trailer leaked with predicate off", fixture.screen_id);
+            }
+            None => {
+                // (f) negative space: undeclared screens never offer a prompt
+                assert!(!output.stdout.contains("next_prompt"), "{}: unexpected next_prompt", fixture.screen_id);
+                assert!(!output.stdout.contains("doc://prompt/"), "{}: unexpected prompt pointer", fixture.screen_id);
+            }
+        }
+
         if fixture.test_assertions.stderr_empty {
             assert!(output.stderr.is_empty(), "{}: Expected empty stderr, received: {}", fixture.screen_id, output.stderr);
+        }
+    }
+}
+
+fn resolve_bank_file(pointer: &str) -> std::path::PathBuf {
+    // doc://prompt/{bank}/{slug}@{v} -> banks/{bank}/{bank}.{slug}.*.md
+    let rest = pointer.strip_prefix("doc://prompt/").expect("pointer form");
+    let (bank, slug_v) = rest.split_once('/').expect("pointer form");
+    let slug = slug_v.split('@').next().unwrap();
+    let pat = format!("cans/artifacts/prompt/banks/{}/{}.{}.*.md", bank, bank, slug);
+    glob(&pat).unwrap().next().expect("bank file exists").unwrap()
+}
+
+#[test]
+fn prompt_awareness_closure() {
+    // (a) closure: every fixture prompt.pointer has a serving L1 entry in
+    // cans/artifacts/prompt/_triggers.json for (screen_id, predicate), and
+    // the bank frontmatter for that pointer lists this screen as a trigger.
+    // (c) no body leak: the trailer is pointer + reason only; the reason
+    // appears nowhere in the bank file's rendered text.
+    // (e) no duplication: prompt blocks carry exactly pointer/reason/predicate
+    // (struct shape above); flows.json stays a pure screen graph.
+    let triggers = fs::read_to_string("cans/artifacts/prompt/_triggers.json").unwrap();
+    let flows = fs::read_to_string("cans/artifacts/wireframe/flows.json").unwrap();
+    assert!(!flows.contains("doc://prompt/"), "flows must stay a screen graph");
+    let root = Path::new("cans/artifacts/wireframe/screens");
+    for entry in glob(&format!("{}/**/*.json", root.display())).unwrap() {
+        let content = fs::read_to_string(entry.unwrap()).unwrap();
+        let fixture: WireframeFixture = serde_json::from_str(&content).unwrap();
+        if let Some(offer) = &fixture.prompt {
+            assert!(triggers.contains(&offer.pointer), "{}: pointer has no trigger entry", fixture.screen_id);
+            assert!(triggers.contains(&fixture.screen_id), "{}: screen has no trigger entry", fixture.screen_id);
+            let bank = fs::read_to_string(resolve_bank_file(&offer.pointer)).unwrap();
+            assert!(bank.contains(&fixture.screen_id), "{}: bank frontmatter does not list this screen", fixture.screen_id);
+            assert!(!bank.contains(&offer.reason), "{}: reason duplicates bank text", fixture.screen_id);
         }
     }
 }

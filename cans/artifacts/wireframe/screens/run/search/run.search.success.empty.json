@@ -17,6 +17,11 @@
   "diagnostic": null,
   "txt_pair": "screens/run/search/run.search.success.empty.txt",
   "txt_sha256": null,
+  "prompt": {
+    "pointer": "doc://prompt/genesis/blank_world@1",
+    "reason": "no capabilities and no world to search",
+    "predicate": {"domain_tables": 0}
+  },
   "test_assertions": {
     "exit_code": 0,
     "state_modified": false,
@@ -25,7 +30,8 @@
       "  exact: 0 · prefix: 0 · fuzzy: 0 · semantic: below 0.60 floor",
       "  did_you_mean:",
       "    'supplier':     cap://process_wholesale_order@2 (routine, pinned)",
-      "  gap_signal:  1 of 3 zero-hit searches toward gap_threshold"
+      "  gap_signal:  1 of 3 zero-hit searches toward gap_threshold",
+      "prompt: doc://prompt/genesis/blank_world@1 — no capabilities and no world to search"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

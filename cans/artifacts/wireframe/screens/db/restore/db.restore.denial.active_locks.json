@@ -34,6 +34,7 @@
       "layer: claims",
       "measured: orders:ORD-10 held by agt_9k2w, claim_c3d4; TTL remaining 187s of 300s"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

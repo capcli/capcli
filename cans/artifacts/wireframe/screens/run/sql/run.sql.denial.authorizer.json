@@ -34,6 +34,7 @@
       "  layer:           authorizer",
       "  remedy:          declare removal in schema.yaml and apply via capcli rule apply schema"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

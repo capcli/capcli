@@ -32,6 +32,7 @@
       "layer:          boot",
       "remedy:         install bubblewrap >= 0.8.0, then re-run 'capcli sys doctor --boot-check'"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

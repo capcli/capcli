@@ -34,6 +34,7 @@
       "  layer:           trust",
       "  remedy:          promote via capcli routine ship refund_and_archive reviewed, then re-inspect"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

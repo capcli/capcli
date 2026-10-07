@@ -27,6 +27,7 @@
       "ttl_remaining:  187s (released ahead of TTL)",
       "state_modified: true"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

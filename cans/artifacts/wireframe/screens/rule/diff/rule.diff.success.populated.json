@@ -17,6 +17,11 @@
   "diagnostic": null,
   "txt_pair": "screens/rule/diff/rule.diff.success.populated.txt",
   "txt_sha256": null,
+  "prompt": {
+    "pointer": "doc://prompt/evolution/schema_drift@1",
+    "reason": "schema drift requires forward migration plan",
+    "predicate": {}
+  },
   "test_assertions": {
     "exit_code": 0,
     "state_modified": false,
@@ -25,7 +30,8 @@
       "│     └── priority (integer default 0)",
       "summary:    1 added · 1 changed · 0 removed",
       "next:       capcli rule apply schema --dry-run",
-      "state_modified: false"
+      "state_modified: false",
+      "prompt: doc://prompt/evolution/schema_drift@1 — schema drift requires forward migration plan"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

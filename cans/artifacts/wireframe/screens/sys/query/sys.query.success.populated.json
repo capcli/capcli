@@ -27,6 +27,7 @@
       "op_31f8    policy.budget",
       "note:  writes to _audit are denied; queries served from the SSOT table"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

@@ -32,6 +32,7 @@
       "state_modified: false",
       "remedy: verify the URP; nearest catalog match is doc://refund-policy"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

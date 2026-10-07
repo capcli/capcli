@@ -27,6 +27,7 @@
       "state_modified: true",
       "note:           routine remains inspectable via cap://legacy_etl for provenance"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

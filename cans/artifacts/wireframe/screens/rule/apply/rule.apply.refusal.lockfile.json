@@ -32,6 +32,7 @@
       "state_modified: false",
       "remedy: restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

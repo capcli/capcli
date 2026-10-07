@@ -28,6 +28,7 @@
       "  state_modified: true",
       "  audit_op:       op_9f2g"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

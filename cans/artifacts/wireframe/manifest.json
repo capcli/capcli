@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "policy_version": 5,
   "governance_version": 8,
   "schema_version": 3,
@@ -56,6 +56,14 @@
     },
     "help_stub_max_lines": 6,
     "banned_flags": ["--force", "--override-budget", "--force-prod", "--verbose"],
-    "payload_redirection": "--out writes payload to file; stdout emits <30 token receipt"
+    "payload_redirection": "--out writes payload to file; stdout emits <30 token receipt",
+    "prompt_trailer": {
+      "human_field": "prompt: doc://prompt/{bank}/{slug}@{version}",
+      "machine_field": "next_prompt",
+      "reason": "one line, plain language",
+      "caps_tokens": { "default": 30, "via_search": 60 },
+      "position": "final line of human output; additive envelope key in --json",
+      "serving": "read-only: no audit_op, no state write, exit code and state_modified of the host screen unchanged"
+    }
   }
 }

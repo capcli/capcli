@@ -33,6 +33,7 @@
       "layer: trust",
       "remedy: ship the schema change for human review: capcli routine ship schema_13 reviewed"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

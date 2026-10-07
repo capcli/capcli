@@ -31,6 +31,7 @@
       "state_modified: false",
       "remedy: pick a different name, or edit routines/sync_orders.py directly (the routines/ filesystem is the draft SSOT)"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

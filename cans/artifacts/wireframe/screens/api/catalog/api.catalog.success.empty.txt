@@ -8,3 +8,4 @@
   'capcli api sync stripe https://api.stripe.com/openapi.json'
 
   state_modified:  false
+prompt: doc://prompt/wire/catalog_empty@1 — no external API catalogs configured

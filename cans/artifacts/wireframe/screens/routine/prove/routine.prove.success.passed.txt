@@ -15,3 +15,4 @@
   state_modified: false
   note:           verification only; no sim world state committed
   audit:          op_prove_01
+prompt: doc://prompt/promotion/routine_passed@1 — proof passed: routine eligible for promotion

@@ -27,6 +27,7 @@
       "└── bnd_9x4e  partner_hook    cap://report_summary@3  127.0.0.1:4040     active",
       "state_modified: false"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

@@ -34,6 +34,7 @@
       "layer: trust",
       "measured: caller trust rung is draft; prod floor is reviewed"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

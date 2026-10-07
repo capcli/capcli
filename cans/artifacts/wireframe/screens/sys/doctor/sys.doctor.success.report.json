@@ -28,6 +28,7 @@
       "  secret_leaks:      0",
       "  sleep_score:       100%"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

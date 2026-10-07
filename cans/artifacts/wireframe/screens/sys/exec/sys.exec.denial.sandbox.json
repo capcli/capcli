@@ -34,6 +34,7 @@
       "layer:          sandbox",
       "measured:       2 containment violations (tolerated: 0)"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

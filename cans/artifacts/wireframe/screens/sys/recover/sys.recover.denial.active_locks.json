@@ -34,6 +34,7 @@
       "layer:          claims",
       "measured:       2 active locks (tolerated for reversal: 0)"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

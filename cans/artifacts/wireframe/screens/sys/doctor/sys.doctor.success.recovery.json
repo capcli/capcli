@@ -22,11 +22,12 @@
     "state_modified": false,
     "stdout_contains": [
       "[dev:tier_1]  \u2713  recovery",
-      "  \u26a0  break-glass active: CAPCLI_RECOVERY=1 \u2014 policy disabled, audit sink online",
+      "  \u26a0  break-glass active: CAPCLI_RECOVERY=1 — policy disabled, audit sink online",
       "  chain_status:   broken at _audit row 8,412 (op_84c1); rows 1-8,411 verified",
       "  allowlist:      sql (read-only), db dump, sys audit tail, sys backup",
       "state_modified: false"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

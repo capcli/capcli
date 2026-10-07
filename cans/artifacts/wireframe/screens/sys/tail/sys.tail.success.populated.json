@@ -28,6 +28,7 @@
       "└── 23:58:44Z  op_a11c7  ping.ask     user:alice        allowed     2ms",
       "integrity:  hash chain valid (root sha256:7f9a1b2c...)"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

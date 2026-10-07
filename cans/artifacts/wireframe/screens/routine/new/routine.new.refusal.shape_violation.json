@@ -31,6 +31,7 @@
       "state_modified: false",
       "remedy: split the scaffold into composed routines under 150 LOC with at most 8 params each"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

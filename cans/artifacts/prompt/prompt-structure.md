@@ -119,6 +119,8 @@ currently does.
    into a bank.
 3. Two remedy seams await `cans/` owner rulings (the `api sync` verb; the
    exit-5 scope for secret leaks) — tracked in `cans/_collab/conflicts.md`.
+4. One tokenizer counts tokens for prompt-bank caps and wireframe trailer
+   caps alike; unifying the two counts is an open ADR item.
 
 ## 8. Where each kind of content lives
 

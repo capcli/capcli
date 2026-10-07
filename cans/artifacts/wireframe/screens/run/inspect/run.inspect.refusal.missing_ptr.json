@@ -31,6 +31,7 @@
       "  state_modified: false",
       "  remedy: restate as a typed URP, e.g. cap://dispatch_order@4"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

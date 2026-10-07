@@ -31,6 +31,7 @@
       "state_modified:  false",
       "remedy:          re-run with --intent \"<why this question is asked>\""
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": ["domain", "culprit", "remedy", "state_modified"],
     "json_field_values": {

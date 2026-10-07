@@ -27,6 +27,7 @@
       "  token_cap:   500 (max_result_tokens)",
       "  next_cursor: budget_headroom"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

@@ -17,6 +17,11 @@
   "diagnostic": null,
   "txt_pair": "screens/db/schema/db.schema.success.empty.txt",
   "txt_sha256": null,
+  "prompt": {
+    "pointer": "doc://prompt/genesis/blank_world@1",
+    "reason": "blank world: 0 domain tables",
+    "predicate": {"domain_tables": 0}
+  },
   "test_assertions": {
     "exit_code": 0,
     "state_modified": false,
@@ -25,7 +30,8 @@
       "domain_tables:  0",
       "system_tables:  13 (kernel-managed, read-only)",
       "state_modified: false",
-      "note:           no domain schema compiled; declare tables in schema.yaml"
+      "note:           no domain schema compiled; declare tables in schema.yaml",
+      "prompt: doc://prompt/genesis/blank_world@1 — blank world: 0 domain tables"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

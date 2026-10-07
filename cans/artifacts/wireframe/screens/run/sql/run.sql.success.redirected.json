@@ -27,6 +27,7 @@
       "  sha256:    9c1f77ab02d4e8f1",
       "  audit_op:  op_9f2h"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

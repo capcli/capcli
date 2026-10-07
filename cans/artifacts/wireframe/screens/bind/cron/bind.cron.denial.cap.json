@@ -34,6 +34,7 @@
       "layer:          authorizer",
       "remedy:         pause or remove an idle schedule first (capcli bind list)"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

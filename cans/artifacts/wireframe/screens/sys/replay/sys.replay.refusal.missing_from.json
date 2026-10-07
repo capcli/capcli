@@ -30,6 +30,7 @@
       "state_modified: false",
       "remedy: re-run as capcli sys replay --from 2026-10-03T22:41:07Z"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

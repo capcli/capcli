@@ -25,6 +25,7 @@
       "  inspect: tpl://order_sync@2",
       "  state_modified: false"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

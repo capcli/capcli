@@ -34,6 +34,7 @@
       "  layer:           authorizer",
       "  remedy:          prove a scoped-down verb, or request an explicit egress grant for account-scope operations"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

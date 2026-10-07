@@ -34,6 +34,7 @@
       "  layer:           quota",
       "  remedy:          wait for the 24h cooldown to reset, or inspect the live catalog via 'capcli api catalog stripe'"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

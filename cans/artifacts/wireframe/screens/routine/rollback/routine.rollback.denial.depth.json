@@ -34,6 +34,7 @@
       "layer: authorizer",
       "remedy: roll back incrementally to a version within 5 of the pointer, or ship a new version reverting the change"
     ],
+    "stdout_not_contains": ["next_prompt", "doc://prompt/"],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",
