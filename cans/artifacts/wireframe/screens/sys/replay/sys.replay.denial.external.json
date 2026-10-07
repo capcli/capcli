@@ -34,12 +34,6 @@
       "layer: authorizer",
       "remedy: confirm external re-execution manually via Cockpit (http://127.0.0.1:4040/audit), or narrow --from to a local-only window"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

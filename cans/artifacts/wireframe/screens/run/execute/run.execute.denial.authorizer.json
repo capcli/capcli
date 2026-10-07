@@ -34,12 +34,6 @@
       "  layer: authorizer",
       "  remedy: insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

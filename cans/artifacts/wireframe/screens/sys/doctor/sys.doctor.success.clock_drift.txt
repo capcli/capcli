@@ -1,0 +1,9 @@
+[dev:tier_1]  ✓  exit 0
+
+  ⚠  clock drift warning: host delta vs NTP is 840ms (warning threshold: 500ms)
+         causal ordering unaffected: CLOCK_MONOTONIC + SQLite sequence IDs
+         lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only
+
+  host:            ws-07 (chronyd reachable, not yet synced)
+  state_modified: false
+  remedy:          synchronize host system clock via 'chronyd' or 'ntpdate' when convenient; execution is not blocked

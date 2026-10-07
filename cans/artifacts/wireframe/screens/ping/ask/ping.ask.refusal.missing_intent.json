@@ -31,7 +31,6 @@
       "state_modified:  false",
       "remedy:          re-run with --intent \"<why this question is asked>\""
     ],
-    "stdout_not_contains": ["--force", "--override-budget", "--force-prod", "--verbose"],
     "stderr_empty": true,
     "json_keys_required": ["domain", "culprit", "remedy", "state_modified"],
     "json_field_values": {

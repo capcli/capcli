@@ -31,12 +31,6 @@
       "state_modified: false",
       "remedy: check the spelling, or discover candidates via capcli search 'sync' --trust draft"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

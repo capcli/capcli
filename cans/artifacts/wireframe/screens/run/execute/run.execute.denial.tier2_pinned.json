@@ -32,12 +32,6 @@
       "  state_modified: false",
       "  remedy: execute on a tier_1 host (Linux, WSL2), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

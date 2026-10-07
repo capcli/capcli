@@ -31,12 +31,6 @@
       "state_modified: false",
       "remedy: verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

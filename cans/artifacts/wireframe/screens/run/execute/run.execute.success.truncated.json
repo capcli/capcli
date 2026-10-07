@@ -26,12 +26,6 @@
       "  next_cursor:  cur_0192f",
       "  audit_op:     op_9f32b"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

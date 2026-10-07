@@ -8,7 +8,7 @@ target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/physics.md#leak-prevention-—-secret-exposure-detected-in-output-executes-kill_and_alert"
   statement: "Secret exposure detected in output executes kill_and_alert: when a routine's stdout (or result envelope) carries the decrypted credential string, the leak scanner kills the frame and tears down the session with exit 5 (kernel.panic), the raw stdout is discarded at the terminal boundary (canonical JSON outcome hashed exclusively), and the denial audit record redacts the secret — the plaintext appears in no audit row, mirror file, or machine payload."
-  blast_radius_if_breached: "Live credentials flow unintercepted into subshell stdout: shell transcripts, CI logs, terminal scrollback, and the audit mirror all permanently capture the decrypted key — the leak detection layer that should kill the run becomes a passive observer of credential exfiltration."
+  blast_radius_if_breached: "Live credentials flow unintercepted into subshell stdout: shell transcripts, CI logs, terminal scrollback, and the audit mirror all permanently capture the decrypted key — the layer whose job is to kill the run becomes a passive observer of credential exfiltration."
 
 confusion_matrix:
   quadrant: "true_negative"

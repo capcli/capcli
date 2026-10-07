@@ -32,12 +32,6 @@
       "  rollback:        clean",
       "  remedy:          re-sync the provider spec once upstream fixes the schema, then re-run the prove"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

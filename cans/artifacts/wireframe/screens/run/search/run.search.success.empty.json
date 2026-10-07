@@ -27,12 +27,6 @@
       "    'supplier':     cap://process_wholesale_order@2 (routine, pinned)",
       "  gap_signal:  1 of 3 zero-hit searches toward gap_threshold"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

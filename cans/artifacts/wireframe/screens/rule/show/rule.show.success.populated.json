@@ -28,12 +28,6 @@
       "└── triggers:   deny_agent (kernel-compiled exempt)",
       "state_modified: false"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

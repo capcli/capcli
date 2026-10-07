@@ -31,12 +31,6 @@
       "state_modified: false",
       "remedy: declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

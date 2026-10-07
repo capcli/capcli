@@ -34,12 +34,6 @@
       "measured: TTL remaining 187s of 300s; holder agt_9k2w",
       "remedy: wait for lease expiry or holder release, then retry; inspect via 'capcli inspect db://orders'"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

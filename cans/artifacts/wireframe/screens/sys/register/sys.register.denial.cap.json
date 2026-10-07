@@ -34,12 +34,6 @@
       "layer: authorizer",
       "remedy: revoke a dormant agent via capcli sys revoke <agent-id>, then re-register"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

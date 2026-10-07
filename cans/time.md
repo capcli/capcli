@@ -42,7 +42,7 @@
       - trust execution — prove runs at draft trust regardless of declaration
       - data inputs — test parameters sampled via capcli sys audit sample
     - ship stage
-      - command — capcli routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
+      - command — see interface.md#Routine-path
       - authority model — see overview.md#Human-authority
       - metric prerequisites — success rates queried from routine_stats
       - production promotion — automated upon passing synthetic fuzz and replay suite

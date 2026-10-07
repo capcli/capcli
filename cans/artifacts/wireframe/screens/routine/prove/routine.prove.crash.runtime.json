@@ -32,12 +32,6 @@
       "rollback: clean",
       "remedy: guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

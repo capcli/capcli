@@ -1,0 +1,46 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "ping.resolve.denial.occ_conflict",
+  "noun": "ping",
+  "verb": "resolve",
+  "target": "ask_88a",
+  "command": "capcli ping resolve ask_88a --choice approve",
+  "state": {
+    "exit_code": 2,
+    "domain": "db.engine",
+    "trust": "pinned",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "db.engine",
+    "culprit": "Touched rows modified during suspension; OCC fence violated (orders row version 41 \u2192 43)",
+    "remedy": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame",
+    "layer": "engine"
+  },
+  "txt_pair": "screens/ping/resolve/ping.resolve.denial.occ_conflict.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 2,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  \u2717  exit 2",
+      "  FAIL  db.engine.stale_state",
+      "  state_modified: false"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "layer",
+      "state_modified"
+    ],
+    "json_field_values": {
+      "state_modified": false,
+      "domain": "db.engine"
+    }
+  }
+}

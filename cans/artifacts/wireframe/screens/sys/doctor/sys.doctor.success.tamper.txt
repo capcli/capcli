@@ -1,0 +1,8 @@
+[dev:tier_1]  ✓  exit 0
+
+  ⚠  audit tamper isolated: SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch
+         corrupted block moved to quarantine branch; rows 1-8,411 verified, valid history remains operable
+
+  chain:           quarantine active (1 block isolated)
+  state_modified: false
+  remedy:          inspect quarantined block via 'capcli sys doctor' quarantine view, then rebuild proof bundle before any restore

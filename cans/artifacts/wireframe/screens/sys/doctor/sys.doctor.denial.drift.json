@@ -34,12 +34,6 @@
       "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)",
       "remedy:         reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

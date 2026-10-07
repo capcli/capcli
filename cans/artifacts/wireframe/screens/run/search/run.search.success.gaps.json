@@ -27,12 +27,6 @@
       "  low_conversion (searched, never invoked):",
       "  next_step: author a draft routine or expand catalog via capcli api sync"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

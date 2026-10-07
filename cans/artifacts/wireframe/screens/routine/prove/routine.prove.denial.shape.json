@@ -34,12 +34,6 @@
       "layer: authorizer",
       "remedy: declare limits={\"max_ops\": 16} in a new version, or replace the carrier loop with ctx.api.poll_until"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

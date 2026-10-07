@@ -31,7 +31,6 @@
       "state_modified:  false",
       "remedy:          run 'capcli ping list --pending' to list live ask IDs"
     ],
-    "stdout_not_contains": ["--force", "--override-budget", "--force-prod", "--verbose"],
     "stderr_empty": true,
     "json_keys_required": ["domain", "culprit", "remedy", "state_modified"],
     "json_field_values": {

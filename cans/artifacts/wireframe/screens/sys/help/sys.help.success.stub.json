@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "sys.help.success.stub",
+  "noun": "sys",
+  "verb": "help",
+  "target": null,
+  "command": "capcli",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/sys/help/sys.help.success.stub.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "capcli 0.4.2 \u2014 compiled execution firewall for AI agents",
+      "  Find actions:    capcli search <query>"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}

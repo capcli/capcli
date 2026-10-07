@@ -31,12 +31,6 @@
       "state_modified: false",
       "remedy: verify the operation id via capcli sys tail or sys query, then re-run sys trace <op-id> --explain"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

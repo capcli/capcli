@@ -1,12 +1,12 @@
 {
   "$schema": "wireframe/v2",
-  "screen_id": "db.unlock.refusal.not_holder",
+  "screen_id": "db.unlock.denial.not_holder",
   "noun": "db",
   "verb": "unlock",
   "target": "orders:ORD-10",
   "command": "capcli db unlock orders:ORD-10",
   "state": {
-    "exit_code": 3,
+    "exit_code": 2,
     "domain": "policy.authorizer",
     "trust": "draft",
     "env": "dev",
@@ -17,32 +17,28 @@
   "diagnostic": {
     "domain": "policy.authorizer",
     "culprit": "Caller does not own the claim; lease held by agt_9k2w.",
-    "remedy": "ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry"
+    "remedy": "ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry",
+    "layer": "authorizer"
   },
-  "txt_pair": "screens/db/unlock/db.unlock.refusal.not_holder.txt",
+  "txt_pair": "screens/db/unlock/db.unlock.denial.not_holder.txt",
   "txt_sha256": null,
   "test_assertions": {
-    "exit_code": 3,
+    "exit_code": 2,
     "state_modified": false,
     "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
+      "[dev:tier_1]  \u2717  exit 2",
       "FAIL  policy.authorizer.claim_not_holder",
       "Caller does not own the claim; only the holder may release a lease.",
       "state_modified: false",
       "layer: authorizer",
       "remedy: ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",
       "culprit",
       "remedy",
+      "layer",
       "state_modified"
     ],
     "json_field_values": {

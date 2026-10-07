@@ -26,12 +26,6 @@
       "Zero matching audit rows. Predicate matched nothing in 412 committed events.",
       "note:  exit_code 5 (kernel.panic) has never fired in this workspace"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

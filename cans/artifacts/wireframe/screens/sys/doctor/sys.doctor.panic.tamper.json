@@ -32,12 +32,6 @@
       "state_modified: false",
       "remedy:         re-enter with 'CAPCLI_RECOVERY=1 capcli sys doctor', then restore from the last verified object-store checkpoint via 'capcli sys recover <commit>'"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

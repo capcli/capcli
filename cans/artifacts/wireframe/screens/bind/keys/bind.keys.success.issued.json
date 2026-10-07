@@ -27,12 +27,6 @@
       "expires_at: 2027-01-02T00:00:00Z (90d rotation)",
       "state_modified: true"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

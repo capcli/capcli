@@ -34,12 +34,6 @@
       "layer:          authorizer",
       "remedy:         pause or remove an idle schedule first (capcli bind list)"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

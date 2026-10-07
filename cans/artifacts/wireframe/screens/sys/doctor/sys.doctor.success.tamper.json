@@ -1,0 +1,34 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "sys.doctor.success.tamper",
+  "noun": "sys",
+  "verb": "doctor",
+  "target": "sys://audit-chain",
+  "command": "capcli sys doctor",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/sys/doctor/sys.doctor.success.tamper.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  \u2713  exit 0",
+      "  \u26a0  audit tamper isolated",
+      "  state_modified: false"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}

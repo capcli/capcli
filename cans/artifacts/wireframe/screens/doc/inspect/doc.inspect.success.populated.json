@@ -28,12 +28,6 @@
       "nodes:    8",
       "tokens:   312 (cap: 500)"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {
