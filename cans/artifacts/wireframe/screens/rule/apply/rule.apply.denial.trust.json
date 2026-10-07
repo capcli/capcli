@@ -19,22 +19,55 @@
     "layer": "trust"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "DDL trust floor"
+        "items": [
+          {
+            "text": "FAIL  policy.trust.alter_requires_reviewed",
+            "indent": 2
+          },
+          {
+            "text": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^",
+            "indent": 8
+          },
+          {
+            "field": "DDL trust floor",
+            "value": "alter requires reviewed trust; caller rung is draft."
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_13fa"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "measured",
+            "value": "caller trust rung draft (required: reviewed)"
+          },
+          {
+            "field": "remedy",
+            "value": "ship the schema change for human review: capcli routine ship schema_13 reviewed"
+          }
         ]
       }
     ]

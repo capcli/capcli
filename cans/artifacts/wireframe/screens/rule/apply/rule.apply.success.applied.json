@@ -14,32 +14,65 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "applied (1 statement)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "intent",
-          "trust",
-          "snapshot"
+        "items": [
+          {
+            "field": "intent",
+            "value": "\"add priority flag for rush shipping\""
+          },
+          {
+            "field": "trust",
+            "value": "reviewed"
+          },
+          {
+            "field": "snapshot",
+            "value": "snap_schema_013 (pre-DDL rollback point)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "transaction",
-          "lockfile",
-          "audit"
+        "items": [
+          {
+            "text": "statements applied:",
+            "indent": 2
+          },
+          {
+            "text": "1.  ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
+            "indent": 4
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "transaction",
+            "value": "tx_5c81a2 committed (atomic)"
+          },
+          {
+            "field": "lockfile",
+            "value": "capcli.lock re-locked (sha256:9e2b71c4)"
+          },
+          {
+            "field": "audit",
+            "value": "op_13f9 (rule.apply) committed to _audit"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
         ]
       }
     ]

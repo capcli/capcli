@@ -14,33 +14,76 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "passed"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "fingerprint",
-          "manifest",
-          "match"
+        "items": [
+          {
+            "field": "routine",
+            "value": "sync_orders@1"
+          },
+          {
+            "field": "fingerprint",
+            "value": "sha256:9e1b7c04... (dynamic leaf sequence from _audit mirror)"
+          },
+          {
+            "field": "manifest",
+            "value": "sha256:4d2f8a11... (declared call sequence via @routine over kernel.sock)"
+          },
+          {
+            "field": "match",
+            "value": "5 executed / 5 declared (subset; 0 undeclared leaves)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "sandbox_rules",
-          "param_typing",
-          "policy_reachability",
-          "shape_limits",
-          "invariant_suite"
+        "items": [
+          {
+            "text": "checks:",
+            "indent": 2
+          },
+          {
+            "field": "sandbox_rules",
+            "value": "pass (subprocess, os, raw socket trapped by jail)"
+          },
+          {
+            "field": "param_typing",
+            "value": "pass (order_id: string, carrier: string)"
+          },
+          {
+            "field": "policy_reachability",
+            "value": "pass (orders read/write; logistics.shipments.create egress)"
+          },
+          {
+            "field": "shape_limits",
+            "value": "pass (74 LOC, 1180 tokens, 2 params)"
+          },
+          {
+            "field": "invariant_suite",
+            "value": "pass (boundary + idempotency assertions)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "note",
-          "audit"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "verification only; no sim world state committed"
+          },
+          {
+            "field": "audit",
+            "value": "op_prove_01"
+          }
         ]
       }
     ]

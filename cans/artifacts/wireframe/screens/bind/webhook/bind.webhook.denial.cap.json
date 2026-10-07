@@ -20,25 +20,52 @@
     "measured": "50 active hooks (cap: 50)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "active hooks"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.webhook_cap_exceeded",
+            "indent": 2
+          },
+          {
+            "field": "active hooks",
+            "value": "50 of 50"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Max 50 active hooks reached. New webhook binding refused.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "50 active hooks (cap: 50)"
+          },
+          {
+            "field": "remedy",
+            "value": "remove a dormant hook first (capcli bind list)"
+          }
         ]
       }
     ]

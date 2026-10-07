@@ -14,38 +14,120 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "doc://refund-policy (full)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "document",
-          "trust",
-          "source",
-          "sections",
-          "tokens",
-          "has_more"
+        "items": [
+          {
+            "field": "document",
+            "value": "doc://refund-policy"
+          },
+          {
+            "field": "trust",
+            "value": "pinned"
+          },
+          {
+            "field": "source",
+            "value": "git:docs/policies/refund-policy.md@2f6110a"
+          },
+          {
+            "field": "sections",
+            "value": "5"
+          },
+          {
+            "field": "tokens",
+            "value": "312 (cap: 500)"
+          },
+          {
+            "field": "has_more",
+            "value": "false"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "────────────────────────────────────────────────────────────────────────────",
+            "indent": 2
+          },
+          {
+            "text": "1. Scope",
+            "indent": 2
+          },
+          {
+            "text": "Refund routing and approval rules for the storefront.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "2. Refund windows",
+            "indent": 2
+          },
+          {
+            "text": "Standard window is 30 days. Extended window is 120 days and requires",
+            "indent": 2
+          },
+          {
+            "text": "supervisor approval.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "3. Stripe integration notes",
+            "indent": 2
+          },
+          {
+            "text": "Outbound refunds must include `charge_id` and idempotent client request UUID.",
+            "indent": 2
+          },
+          {
+            "text": "Never refund a charge older than 120 days via automated routines; delegate",
+            "indent": 2
+          },
+          {
+            "text": "to human supervisor via `ctx.ping.ask`.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "4. Currency handling",
+            "indent": 2
+          },
+          {
+            "text": "Refunds settle in the original charge currency; no FX conversion on return.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "5. Escalation paths",
+            "indent": 2
+          },
+          {
+            "text": "Disputed or partial refunds escalate to a human supervisor via `ctx.ping.ask`.",
+            "indent": 2
+          }
+        ]
       }
     ]
   }

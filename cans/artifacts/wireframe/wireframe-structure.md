@@ -717,20 +717,55 @@ in §6.2 from the shape and the contract, never copied into a fixture.
     "measured": "matches potentially 847 rows (cap: 100)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FAIL  policy.query.update_delete.require_limit",
+            "indent": 2
+          },
+          {
+            "text": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^^",
+            "indent": 67
+          },
+          {
+            "text": "No LIMIT clause. Blast radius unbounded.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_9f2e"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "AST"
+          },
+          {
+            "field": "measured",
+            "value": "matches potentially 847 rows (cap: 100)"
+          },
+          {
+            "field": "remedy",
+            "value": "add LIMIT, or target specific primary key"
+          }
         ]
       }
     ]
@@ -749,11 +784,17 @@ Field law:
 - `diagnostic` is the structured diagnostic frame for non-success
   exits (required keys per exit, `_states.json`). Success screens
   carry it as `null` or omit it.
-- `render.header` is `badge` (`[{env}:{tier}]` first line) or
-  `plain`. `render.sections` lists each block the `.txt` renders, in
-  order: `title` is the block's leading `name:` line or `null`, and
-  `fields` is the ordered field labels the block renders, values
-  excluded. The `.txt` is the only home of values.
+- `render` is the screen's full content model, and the `.txt` is its
+  rendering. A renderer consuming the shape alone — header from
+  `state` plus `render.header.label`, sections in order, trailer from
+  the payload — reproduces the `.txt` content exactly (whitespace-
+  normalized): `header.style` is `badge` (`[{env}:{tier}]` first
+  line, `✓` on exit 0, `✗` otherwise) or `plain`; each section
+  carries `title` (the block's leading `name:` line or `null`) and
+  ordered `items`. An item is `{"field", "value"}` (rendered
+  `  label: value`, values aligned per section) or `{"text",
+  "indent"}` (a prose or code line at its indent). Any screen whose
+  `.txt` holds content the shape cannot render has the wrong shape.
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
 
 ### 6.1.1 Trailer Slot
@@ -830,7 +871,9 @@ fn execute_wireframe_golden_tests() {
         assert_eq!(output.exit_code, fixture.state.exit_code, "Exit mismatch at {}", fixture.screen_id);
         assert_eq!(output.state_modified, fixture.state.state_modified, "State modified invariant failed at {}", fixture.screen_id);
 
-        // 4. Golden rendering: stdout equals the paired .txt, byte for byte
+        // 4. Golden rendering: stdout equals the paired .txt, byte for byte.
+        // The .txt is itself regenerated from the shape in CI:
+        // rendering the JSON reproduces it, whitespace-normalized.
         assert_eq!(output.stdout, txt_content, "Golden mismatch at {}", fixture.screen_id);
 
         // 5. Global negatives, asserted once for every fixture:

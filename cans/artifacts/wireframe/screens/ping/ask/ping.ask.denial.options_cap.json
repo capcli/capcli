@@ -20,19 +20,51 @@
     "measured": "options count 6 vs cap 5"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.ask_options_cap",
+            "indent": 2
+          },
+          {
+            "text": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+            "indent": 87
+          },
+          {
+            "text": "Exceeds 5 structured choices; cognitive load capped for one-card decisions.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "options count 6 vs cap 5"
+          },
+          {
+            "field": "remedy",
+            "value": "reduce to 5 or fewer structured options, or split into sequential asks"
+          }
         ]
       }
     ]

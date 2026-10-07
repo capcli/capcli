@@ -20,26 +20,64 @@
     "measured": "1 active lease on orders:ORD-10 (expires in 14m 22s)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "holder",
-          "lease"
+        "items": [
+          {
+            "text": "FAIL  db.claims.locked",
+            "indent": 2
+          },
+          {
+            "text": "exclusive claim 'orders:ORD-10' already held",
+            "indent": 8
+          },
+          {
+            "field": "holder",
+            "value": "ses_b4410 (nightly reorder batch)"
+          },
+          {
+            "field": "lease",
+            "value": "14m 22s remaining (ttl 30m)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Exclusive --lock refs serialize mutations per target;",
+            "indent": 8
+          },
+          {
+            "text": "concurrent dispatch refused to prevent lost updates.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "claims"
+          },
+          {
+            "field": "measured",
+            "value": "1 active lease on orders:ORD-10 (expires in 14m 22s)"
+          },
+          {
+            "field": "remedy",
+            "value": "wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'"
+          }
         ]
       }
     ]

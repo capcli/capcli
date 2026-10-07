@@ -20,19 +20,55 @@
     "measured": "mock fixtures for provider 'threads': 0 (contract replay requires 1)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.sim_gap",
+            "indent": 2
+          },
+          {
+            "text": "capcli api prove threads.create_media_post --env sim",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^^^^^^^^^^^^^^^^^^^^^",
+            "indent": 25
+          },
+          {
+            "text": "Missing mock fixture in sim for prod-only verb.",
+            "indent": 8
+          },
+          {
+            "text": "No entry 'create_media_post' in apis/threads.mock.yaml.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "mock fixtures for provider 'threads': 0 (contract replay requires 1)"
+          },
+          {
+            "field": "remedy",
+            "value": "add a schema-validated mock fixture for 'threads.create_media_post' to apis/threads.mock.yaml, then re-run the prove"
+          }
         ]
       }
     ]

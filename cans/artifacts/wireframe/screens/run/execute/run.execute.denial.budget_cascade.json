@@ -20,31 +20,72 @@
     "measured": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "child",
-          "effective",
-          "exhausted at",
-          "parent frame",
-          "ancestors"
+        "items": [
+          {
+            "text": "FAIL  policy.budget.starved",
+            "indent": 2
+          },
+          {
+            "text": "child frame starved by min() cascade",
+            "indent": 8
+          },
+          {
+            "field": "child",
+            "value": "recount_stock@2 (frame_025) declared 6 ops"
+          },
+          {
+            "field": "effective",
+            "value": "min(declared 6, governance 50, parent 2, session 488) -> 2 ops"
+          },
+          {
+            "field": "exhausted at",
+            "value": "op 3 (db.query crossed the clipped ceiling)"
+          },
+          {
+            "field": "parent frame",
+            "value": "frame_024 (sync_inventory@3) 2 ops remaining"
+          },
+          {
+            "field": "ancestors",
+            "value": "session remaining 488 ops (parent was the tightest constraint)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "Splitting is not escaping"
+        "items": [
+          {
+            "field": "Splitting is not escaping",
+            "value": "the cage tightens, never widens."
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "budget"
+          },
+          {
+            "field": "measured",
+            "value": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops"
+          },
+          {
+            "field": "remedy",
+            "value": "shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain"
+          }
         ]
       }
     ]

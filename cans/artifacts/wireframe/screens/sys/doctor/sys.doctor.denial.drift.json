@@ -20,21 +20,61 @@
     "measured": "2 drift items (declaration v3 vs envs/dev/workspace.db)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "drift"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.declaration_drift",
+            "indent": 0
+          },
+          {
+            "text": "Live DB schema diverges from the compiled declaration.",
+            "indent": 6
+          },
+          {
+            "field": "drift",
+            "value": "orders.idx_orders_status present in live DB, absent from schema.yaml"
+          },
+          {
+            "field": "drift",
+            "value": "customers.region declared, missing from live table"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Doctor refuses to certify a drifted workspace.",
+            "indent": 6
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          authorizer",
+            "indent": 0
+          },
+          {
+            "text": "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'",
+            "indent": 0
+          }
+        ]
       }
     ]
   }

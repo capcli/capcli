@@ -14,26 +14,59 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "bound"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "binding_id",
-          "endpoint",
-          "url",
-          "auth",
-          "rate",
-          "channel",
-          "writes",
-          "trust"
+        "items": [
+          {
+            "field": "binding_id",
+            "value": "bnd_2m7p"
+          },
+          {
+            "field": "endpoint",
+            "value": "dispatch_order@4"
+          },
+          {
+            "field": "url",
+            "value": "http://127.0.0.1:4040/endpoints/dispatch_order"
+          },
+          {
+            "field": "auth",
+            "value": "api-key"
+          },
+          {
+            "field": "rate",
+            "value": "60 req/min"
+          },
+          {
+            "field": "channel",
+            "value": "all (rest + mcp)"
+          },
+          {
+            "field": "writes",
+            "value": "denied by default"
+          },
+          {
+            "field": "trust",
+            "value": "pinned (serve floor)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_3f7k"
+          }
         ]
       }
     ]

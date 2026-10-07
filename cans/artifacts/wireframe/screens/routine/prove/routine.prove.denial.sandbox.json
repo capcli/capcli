@@ -20,27 +20,64 @@
     "measured": "1 containment violation (connect trapped at 0 bytes egress)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "caller"
+        "items": [
+          {
+            "text": "FAIL  kernel.sandbox.breach",
+            "indent": 2
+          },
+          {
+            "text": "syscall 42 (connect) trapped by seccomp-bpf",
+            "indent": 8
+          },
+          {
+            "field": "target",
+            "value": "10.0.0.5:5432"
+          },
+          {
+            "field": "caller",
+            "value": "routines/sync_orders.py:47 (raw socket in sim test pass)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Jail containment boundary violated; raw network egress prohibited from guest sandboxes.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_prove_06"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "sandbox"
+          },
+          {
+            "field": "measured",
+            "value": "1 containment violation (connect trapped at 0 bytes egress)"
+          },
+          {
+            "field": "remedy",
+            "value": "use ctx.api.call with an activated catalog verb"
+          }
         ]
       }
     ]

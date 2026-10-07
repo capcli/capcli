@@ -20,25 +20,56 @@
     "measured": "interval 1m (floor: 5m)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "cron expr"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.schedule_min_interval",
+            "indent": 2
+          },
+          {
+            "field": "cron expr",
+            "value": "* * * * *"
+          },
+          {
+            "text": "^^^^^^^^^",
+            "indent": 19
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Interval lower than 5-minute cap. Sub-5-minute schedules refused.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "interval 1m (floor: 5m)"
+          },
+          {
+            "field": "remedy",
+            "value": "raise the interval to 5 minutes or more; tighter reactivity belongs to inbound webhooks"
+          }
         ]
       }
     ]

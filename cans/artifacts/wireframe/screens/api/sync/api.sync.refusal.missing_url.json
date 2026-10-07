@@ -18,24 +18,52 @@
     "remedy": "re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "command",
-          "usage"
+        "items": [
+          {
+            "text": "FATAL  missing_param.missing_arg",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli api sync stripe"
+          },
+          {
+            "field": "usage",
+            "value": "capcli api sync <provider> <url> [--interval 7d] [--dry-run]"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Upstream spec URL omitted.",
+            "indent": 9
+          },
+          {
+            "text": "The kernel alone parses OpenAPI specs; compilation requires a spec URL.",
+            "indent": 9
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'"
+          }
         ]
       }
     ]

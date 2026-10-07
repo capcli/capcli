@@ -18,25 +18,61 @@
     "remedy": "fix the index target to a declared column, then re-run capcli rule validate"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FAIL  validation.gate_2_semantics",
+            "indent": 2
+          },
+          {
+            "text": "--> schema.yaml:60:12",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "idx:",
+            "indent": 8
+          },
+          {
+            "text": "- [[prio, status]]",
+            "indent": 10
+          },
+          {
+            "text": "^^^^ index_target_missing",
+            "indent": 14
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Indexed column 'prio' does not exist in parent table 'orders'.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "fix the index target to a declared column, then re-run capcli rule validate"
+          }
         ]
       }
     ]

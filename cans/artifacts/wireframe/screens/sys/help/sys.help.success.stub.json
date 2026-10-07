@@ -14,18 +14,39 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "plain",
+    "header": {
+      "style": "plain",
+      "label": "capcli 0.4.2 — compiled execution firewall for AI agents"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Usage: capcli <noun> <verb> [target] [flags]",
+            "indent": 0
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "Find actions",
-          "Pre-flight",
-          "System status"
+        "items": [
+          {
+            "text": "Capabilities are discovered dynamically, not listed in static help.",
+            "indent": 0
+          },
+          {
+            "field": "Find actions",
+            "value": "capcli search <query>"
+          },
+          {
+            "field": "Pre-flight",
+            "value": "capcli inspect <urp>"
+          },
+          {
+            "field": "System status",
+            "value": "capcli sys doctor"
+          }
         ]
       }
     ]

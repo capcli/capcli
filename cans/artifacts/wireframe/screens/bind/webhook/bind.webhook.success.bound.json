@@ -14,26 +14,59 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "bound"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "binding_id",
-          "name",
-          "route",
-          "provider",
-          "event",
-          "target",
-          "signing",
-          "ingress"
+        "items": [
+          {
+            "field": "binding_id",
+            "value": "bnd_8d3k"
+          },
+          {
+            "field": "name",
+            "value": "stripe_hook"
+          },
+          {
+            "field": "route",
+            "value": "https://ops.example.com/hook"
+          },
+          {
+            "field": "provider",
+            "value": "stripe"
+          },
+          {
+            "field": "event",
+            "value": "payment_succeeded"
+          },
+          {
+            "field": "target",
+            "value": "cap://sync_orders"
+          },
+          {
+            "field": "signing",
+            "value": "vault://stripe_webhook_secret (hmac-sha256)"
+          },
+          {
+            "field": "ingress",
+            "value": "verified (public https)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_2b9f"
+          }
         ]
       }
     ]

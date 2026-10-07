@@ -20,28 +20,68 @@
     "measured": "poll duration 30.0s (ceiling 30s; requested 45s)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 4"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "verb",
-          "waited"
+        "items": [
+          {
+            "text": "CRASH  routine.runtime.timeout",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "media_digest@2 (frame_028)"
+          },
+          {
+            "field": "verb",
+            "value": "threads.create_media_post (container 1793881)"
+          },
+          {
+            "field": "waited",
+            "value": "30.0s of requested timeout_s=45 (ceiling: 30s)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "ctx.api.poll_until exceeded the 30-second in-flight ceiling;",
+            "indent": 9
+          },
+          {
+            "text": "the watchdog killed the poll and reverted the frame.",
+            "indent": 9
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "rollback",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "rollback",
+            "value": "clean (all ops reverted)"
+          },
+          {
+            "field": "layer",
+            "value": "runtime"
+          },
+          {
+            "field": "measured",
+            "value": "poll duration 30.0s (ceiling 30s; requested 45s)"
+          },
+          {
+            "field": "remedy",
+            "value": "set timeout_s to 30 or less, or restructure into a scheduled watch"
+          }
         ]
       }
     ]

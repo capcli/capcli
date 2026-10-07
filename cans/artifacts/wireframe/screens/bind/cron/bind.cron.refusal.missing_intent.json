@@ -18,24 +18,48 @@
     "remedy": "re-run with -m \"why this trigger exists\""
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "command",
-          "flag"
+        "items": [
+          {
+            "text": "FAIL  compile.intent_missing",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\""
+          },
+          {
+            "field": "flag",
+            "value": "-m / --intent"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Mutating bind requires an intent declaration. Unattributed triggers are refused.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with -m \"why this trigger exists\""
+          }
         ]
       }
     ]

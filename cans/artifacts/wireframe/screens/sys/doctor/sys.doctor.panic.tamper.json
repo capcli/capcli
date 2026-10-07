@@ -18,20 +18,56 @@
     "remedy": "re-enter with 'CAPCLI_RECOVERY=1 capcli sys doctor', then restore from the last verified object-store checkpoint via 'capcli sys recover <commit>'"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 5"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "prev_hash mismatch",
-          "Tamper blast radius",
-          "kill_and_alert executed",
-          "Boot refused"
+        "items": [
+          {
+            "text": "PANIC  kernel.panic.audit_chain_tampered",
+            "indent": 0
+          },
+          {
+            "text": "Audit SHA-256 chain broken at _audit row 8,412 (op_84c1).",
+            "indent": 7
+          },
+          {
+            "field": "prev_hash mismatch",
+            "value": "expected sha256:9d41e6f0c2ab..., found sha256:00ab77c2d1e9..."
+          },
+          {
+            "field": "Tamper blast radius",
+            "value": "all rows after 8,412 are invalidated."
+          },
+          {
+            "field": "kill_and_alert executed",
+            "value": "process tree terminated, supervisor alerted."
+          },
+          {
+            "field": "Boot refused",
+            "value": "no execution until chain integrity is restored."
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          kernel",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         re-enter with 'CAPCLI_RECOVERY=1 capcli sys doctor', then restore from the last verified object-store checkpoint via 'capcli sys recover <commit>'",
+            "indent": 0
+          }
+        ]
       }
     ]
   }

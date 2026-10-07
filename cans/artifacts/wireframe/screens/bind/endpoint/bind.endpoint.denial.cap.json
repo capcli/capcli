@@ -20,25 +20,52 @@
     "measured": "10 active endpoints (cap: 10)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "active endpoints"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.endpoint_cap_exceeded",
+            "indent": 2
+          },
+          {
+            "field": "active endpoints",
+            "value": "10 of 10"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Max 10 active endpoints reached. Exposure surface stays small.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "10 active endpoints (cap: 10)"
+          },
+          {
+            "field": "remedy",
+            "value": "retire an unused endpoint first (capcli bind remove)"
+          }
         ]
       }
     ]

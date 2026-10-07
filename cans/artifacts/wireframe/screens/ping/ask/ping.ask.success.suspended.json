@@ -14,20 +14,50 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "suspended"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "ask_id",
-          "principal",
-          "question",
-          "options",
-          "timeout",
-          "cockpit",
-          "dispatch",
-          "state_modified",
-          "note"
+        "items": [
+          {
+            "field": "ask_id",
+            "value": "ask_88a"
+          },
+          {
+            "field": "principal",
+            "value": "user:alice"
+          },
+          {
+            "field": "question",
+            "value": "\"Approve refund for order ORD-10?\""
+          },
+          {
+            "field": "options",
+            "value": "approve, reject, escalate"
+          },
+          {
+            "field": "timeout",
+            "value": "24h (fail-closed on expiry)"
+          },
+          {
+            "field": "cockpit",
+            "value": "http://127.0.0.1:4040/ask/ask_88a"
+          },
+          {
+            "field": "dispatch",
+            "value": "pwa_push -> user:alice"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "question parked in _pending_asks; resolve via Cockpit or ping resolve"
+          }
         ]
       }
     ]

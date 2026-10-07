@@ -20,20 +20,51 @@
     "measured": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FAIL  db.engine.txn_queue_timeout",
+            "indent": 2
+          },
+          {
+            "text": "UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50",
+            "indent": 8
+          },
+          {
+            "text": "write lock on db://orders held by op_9f1c; wait exceeded the 5000ms ceiling",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_9f2l"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "engine"
+          },
+          {
+            "field": "measured",
+            "value": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active"
+          },
+          {
+            "field": "remedy",
+            "value": "retry after holder commits, or inspect the claim via capcli inspect db://orders"
+          }
         ]
       }
     ]

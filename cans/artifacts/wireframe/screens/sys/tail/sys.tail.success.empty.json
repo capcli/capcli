@@ -14,25 +14,48 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "tailing"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "mirror",
-          "since",
-          "follow",
-          "events"
+        "items": [
+          {
+            "field": "mirror",
+            "value": "audit/2026-10-03.jsonl (synced, lag 0s)"
+          },
+          {
+            "field": "since",
+            "value": "1h window (from 23:04:11Z)"
+          },
+          {
+            "field": "follow",
+            "value": "live stream active — Ctrl-C to detach"
+          },
+          {
+            "field": "events",
+            "value": "0 in window"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "No audit events within window. Ledger quiet — last commit before window opened.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "integrity"
+        "items": [
+          {
+            "field": "integrity",
+            "value": "hash chain valid (root sha256:7f9a1b2c...)"
+          }
         ]
       }
     ]

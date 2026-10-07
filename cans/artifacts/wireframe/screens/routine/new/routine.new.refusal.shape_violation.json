@@ -18,28 +18,72 @@
     "remedy": "split the scaffold into composed routines under 150 LOC with at most 8 params each"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "template",
-          "loc",
-          "params",
-          "tokens"
+        "items": [
+          {
+            "text": "FAIL  validation.routine.shape_violation",
+            "indent": 2
+          },
+          {
+            "field": "template",
+            "value": "tpl://routine/legacy_sync"
+          },
+          {
+            "text": "shape_gate report (routines/legacy_sync.py):",
+            "indent": 8
+          },
+          {
+            "field": "loc",
+            "value": "214 (max: 150)"
+          },
+          {
+            "text": "^^^",
+            "indent": 18
+          },
+          {
+            "field": "params",
+            "value": "11 (max: 8)"
+          },
+          {
+            "text": "^^",
+            "indent": 18
+          },
+          {
+            "field": "tokens",
+            "value": "1840 (max: 2000)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "Scaffold violates routine_shape ceilings"
+        "items": [
+          {
+            "field": "Scaffold violates routine_shape ceilings",
+            "value": "214 LOC (max: 150), 11 params (max: 8)."
+          },
+          {
+            "text": "Non-compliant stubs are rejected before disk write; the routines/ tree stays clean.",
+            "indent": 8
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "split the scaffold into composed routines under 150 LOC with at most 8 params each"
+          }
         ]
       }
     ]

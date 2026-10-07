@@ -20,21 +20,43 @@
     "measured": "8 registered agents (cap: 8)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "registration refused"
+        "items": [
+          {
+            "text": "FAIL  policy.registry.agent_cap",
+            "indent": 2
+          },
+          {
+            "field": "registration refused",
+            "value": "agent registry at capacity"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "measured",
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "measured",
+            "value": "8 registered agents (cap: 8)"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "remedy",
+            "value": "revoke a dormant agent via capcli sys revoke <agent-id>, then re-register"
+          }
         ]
       }
     ]

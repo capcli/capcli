@@ -18,24 +18,48 @@
     "remedy": "check the spelling, or discover candidates via capcli search 'sync' --trust draft"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "nearest"
+        "items": [
+          {
+            "text": "FAIL  validation.routine.not_found",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "sync_inventory"
+          },
+          {
+            "field": "nearest",
+            "value": "sync_orders, dispatch_order"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Routine name 'sync_inventory' does not exist in the registry.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "check the spelling, or discover candidates via capcli search 'sync' --trust draft"
+          }
         ]
       }
     ]

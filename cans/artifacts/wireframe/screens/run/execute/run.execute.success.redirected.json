@@ -14,15 +14,30 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "redirected"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "payload",
-          "sha256",
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "payload",
+            "value": "1.2MB written to report.json"
+          },
+          {
+            "field": "sha256",
+            "value": "9f3a71c0b8e2d455"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f31a"
+          }
         ]
       }
     ]

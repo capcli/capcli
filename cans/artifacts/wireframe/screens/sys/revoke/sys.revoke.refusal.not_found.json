@@ -18,19 +18,39 @@
     "remedy": "list registered agents via capcli sys agents, then revoke a valid agent id"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target"
+        "items": [
+          {
+            "text": "FATAL  validation.not_found",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "agt_0000"
+          },
+          {
+            "text": "No registered agent with id 'agt_0000' in the agents system table.",
+            "indent": 9
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "list registered agents via capcli sys agents, then revoke a valid agent id"
+          }
         ]
       }
     ]

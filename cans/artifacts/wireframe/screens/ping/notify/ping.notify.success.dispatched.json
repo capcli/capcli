@@ -14,18 +14,42 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "dispatched"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "channel",
-          "principal",
-          "message",
-          "intent",
-          "receipt",
-          "audit_op",
-          "state_modified"
+        "items": [
+          {
+            "field": "channel",
+            "value": "email"
+          },
+          {
+            "field": "principal",
+            "value": "user:alice"
+          },
+          {
+            "field": "message",
+            "value": "\"Nightly sync finished\""
+          },
+          {
+            "field": "intent",
+            "value": "declared (\"morning briefing\")"
+          },
+          {
+            "field": "receipt",
+            "value": "ntf_4c1d9e"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f31c"
+          },
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
         ]
       }
     ]

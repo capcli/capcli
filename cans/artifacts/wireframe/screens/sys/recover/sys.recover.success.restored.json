@@ -14,24 +14,60 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "restored"
+    },
     "sections": [
       {
         "title": "recover",
-        "fields": [
-          "commit",
-          "source",
-          "workspace",
-          "schema_version",
-          "ledger_root_hash",
-          "events_restored",
-          "chain_walk",
-          "drift_discarded"
+        "items": [
+          {
+            "field": "commit",
+            "value": "3f9c2ab"
+          },
+          {
+            "field": "source",
+            "value": "object store (s3://capcli-worm/envs-dev/)"
+          },
+          {
+            "field": "workspace",
+            "value": "envs/dev/workspace.db"
+          },
+          {
+            "field": "schema_version",
+            "value": "3 (system-schema hash verified)"
+          },
+          {
+            "field": "ledger_root_hash",
+            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          {
+            "field": "events_restored",
+            "value": "14290 rows from _audit mirror"
+          },
+          {
+            "field": "chain_walk",
+            "value": "passed (0 broken links)"
+          },
+          {
+            "field": "drift_discarded",
+            "value": "local uncommitted mutations dropped"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: true",
+            "indent": 0
+          },
+          {
+            "text": "note:           workspace reconstructed from offsite archive",
+            "indent": 0
+          }
+        ]
       }
     ]
   }

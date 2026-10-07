@@ -18,24 +18,48 @@
     "remedy": "verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "nearest"
+        "items": [
+          {
+            "text": "FAIL  validation.routine.not_found",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "legacy_etl_backup"
+          },
+          {
+            "field": "nearest",
+            "value": "legacy_etl"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Target routine 'legacy_etl_backup' does not exist in the registry.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl"
+          }
         ]
       }
     ]

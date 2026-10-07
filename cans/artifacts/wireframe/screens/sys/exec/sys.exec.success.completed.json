@@ -14,24 +14,60 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
     "sections": [
       {
         "title": "exec",
-        "fields": [
-          "command",
-          "jail",
-          "seccomp",
-          "scratch",
-          "exit_status",
-          "duration",
-          "stdout",
-          "side_effects"
+        "items": [
+          {
+            "field": "command",
+            "value": "python3 etl.py"
+          },
+          {
+            "field": "jail",
+            "value": "bwrap (tier_1 unprivileged userns)"
+          },
+          {
+            "field": "seccomp",
+            "value": "profile_python active (syscall 42 trapped)"
+          },
+          {
+            "field": "scratch",
+            "value": "tmpfs 64MB (wiped at exit)"
+          },
+          {
+            "field": "exit_status",
+            "value": "0"
+          },
+          {
+            "field": "duration",
+            "value": "1,284ms"
+          },
+          {
+            "field": "stdout",
+            "value": "2 lines (24 tokens)"
+          },
+          {
+            "field": "side_effects",
+            "value": "1 file under /scratch; audit event committed to _audit"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: true",
+            "indent": 0
+          },
+          {
+            "text": "note:           containment held; effects recorded on the audit spine",
+            "indent": 0
+          }
+        ]
       }
     ]
   }

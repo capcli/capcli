@@ -19,25 +19,56 @@
     "layer": "sandbox"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "caller"
+        "items": [
+          {
+            "text": "FAIL  kernel.network.jail",
+            "indent": 2
+          },
+          {
+            "text": "syscall 42 (connect) trapped by seccomp-bpf",
+            "indent": 8
+          },
+          {
+            "field": "target",
+            "value": "10.0.0.5:5432"
+          },
+          {
+            "field": "caller",
+            "value": "routines/sneaky_exfil.py"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Raw network egress prohibited from guest sandboxes.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "sandbox"
+          },
+          {
+            "field": "remedy",
+            "value": "use ctx.api.call with an activated catalog verb"
+          }
         ]
       }
     ]

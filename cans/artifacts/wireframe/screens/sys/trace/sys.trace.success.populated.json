@@ -14,20 +14,59 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "plain",
+      "label": "[dev:tier_1]  Causal DAG Trace (op_9f2e)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "│     └── tracking"
+        "items": [
+          {
+            "text": "ses_a992f  session.start        \"fulfill urgent pending orders\"",
+            "indent": 2
+          },
+          {
+            "text": "└── op_9f2c  routine.dispatch_order@4",
+            "indent": 2
+          },
+          {
+            "text": "├── op_9f2d  db.query (orders)         ✓ [allowed]  12ms",
+            "indent": 8
+          },
+          {
+            "text": "├── op_9f2e  api.call (fedex.ship)     ✓ [allowed]  340ms",
+            "indent": 8
+          },
+          {
+            "field": "│     └── tracking",
+            "value": "794644790133"
+          },
+          {
+            "text": "└── op_9f2f  db.execute (orders)       ✓ [allowed]  18ms",
+            "indent": 8
+          },
+          {
+            "text": "└── status = 'shipped' (1 row)",
+            "indent": 14
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "Root Intent",
-          "Authority",
-          "Integrity"
+        "items": [
+          {
+            "field": "Root Intent",
+            "value": "\"fulfill urgent pending orders\""
+          },
+          {
+            "field": "Authority",
+            "value": "user:alice (via agt_7f3k)"
+          },
+          {
+            "field": "Integrity",
+            "value": "valid hash link (chain verified)"
+          }
         ]
       }
     ]

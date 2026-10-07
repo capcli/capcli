@@ -20,20 +20,59 @@
     "measured": "1 undeclared leaf (manifest declares 5; DDL not among them)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.routine.illegal_leaf",
+            "indent": 2
+          },
+          {
+            "text": "routines/sync_orders.py:41 (test pass leaf 6)",
+            "indent": 8
+          },
+          {
+            "text": "ctx.db.execute(\"ALTER TABLE orders ADD COLUMN rush boolean\")",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+            "indent": 24
+          },
+          {
+            "text": "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_prove_05"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "1 undeclared leaf (manifest declares 5; DDL not among them)"
+          },
+          {
+            "field": "remedy",
+            "value": "declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine"
+          }
         ]
       }
     ]

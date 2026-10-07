@@ -14,24 +14,51 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "10000 rows (truncated)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "columns",
-          "returned",
-          "total_rows",
-          "row_cap"
+        "items": [
+          {
+            "field": "columns",
+            "value": "id, customer_email, product_id, quantity, status, total"
+          },
+          {
+            "field": "returned",
+            "value": "10000"
+          },
+          {
+            "field": "total_rows",
+            "value": "14290"
+          },
+          {
+            "field": "row_cap",
+            "value": "10000 (select.max_limit)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "truncated",
-          "next_cursor",
-          "resume",
-          "audit_op"
+        "items": [
+          {
+            "field": "truncated",
+            "value": "true"
+          },
+          {
+            "field": "next_cursor",
+            "value": "10000"
+          },
+          {
+            "field": "resume",
+            "value": "append WHERE id > :cursor to continue past the cap"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2i"
+          }
         ]
       }
     ]

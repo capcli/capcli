@@ -20,21 +20,61 @@
     "measured": "2 active locks (tolerated for reversal: 0)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "lock"
+        "items": [
+          {
+            "text": "FAIL  db.claims.active_locks",
+            "indent": 0
+          },
+          {
+            "text": "Active claim leases prevent state reversal to commit 3f9c2ab.",
+            "indent": 6
+          },
+          {
+            "field": "lock",
+            "value": "orders:ORD-10 held by agt_7f3k (ttl: 4m 12s remaining)"
+          },
+          {
+            "field": "lock",
+            "value": "ledger:TXN-WRITE held by daemon (ttl: 55s remaining)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Restoring under live claims would orphan lease holders.",
+            "indent": 6
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          claims",
+            "indent": 0
+          },
+          {
+            "text": "measured:       2 active locks (tolerated for reversal: 0)",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         wait for TTL expiry or release via 'capcli db unlock', then retry 'capcli sys recover 3f9c2ab'",
+            "indent": 0
+          }
+        ]
       }
     ]
   }

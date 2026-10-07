@@ -19,25 +19,52 @@
     "layer": "engine"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "ask",
-          "fence"
+        "items": [
+          {
+            "text": "FAIL  db.engine.stale_state",
+            "indent": 2
+          },
+          {
+            "field": "ask",
+            "value": "ask_88a"
+          },
+          {
+            "field": "fence",
+            "value": "orders row version 41 → 43 during suspension"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Touched rows modified during suspension; OCC fence violated.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "engine"
+          },
+          {
+            "field": "remedy",
+            "value": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame"
+          }
         ]
       }
     ]

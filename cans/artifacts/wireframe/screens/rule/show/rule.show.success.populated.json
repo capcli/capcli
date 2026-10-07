@@ -14,34 +14,141 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "compiled rules (orders)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "source",
-          "engine",
-          "compiled_at",
-          "gates"
+        "items": [
+          {
+            "field": "source",
+            "value": "schema.yaml v12 (compiled)"
+          },
+          {
+            "field": "engine",
+            "value": "sqlite (envs/dev/workspace.db)"
+          },
+          {
+            "field": "compiled_at",
+            "value": "2026-10-04T00:00:00Z"
+          },
+          {
+            "field": "gates",
+            "value": "Gate 1 pass · Gate 2 pass"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "├── alter",
-          "├── drop",
-          "├── vacuum",
-          "└── triggers"
+        "items": [
+          {
+            "text": "orders (prov)",
+            "indent": 2
+          },
+          {
+            "text": "├── columns",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── id             pk",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── ref            text unique",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── customer_id    int ref=customers.id",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── total_cents    int default 0",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── discount_cents int default 0",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── status         text default 'pending'",
+            "indent": 2
+          },
+          {
+            "text": "│     └── receipt        blob ref=storage",
+            "indent": 2
+          },
+          {
+            "text": "├── checks",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── discount_cents <= total_cents",
+            "indent": 2
+          },
+          {
+            "text": "│     └── status IN ('pending', 'processing', 'completed', 'cancelled')",
+            "indent": 2
+          },
+          {
+            "text": "├── indexes",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── [ref]",
+            "indent": 2
+          },
+          {
+            "text": "│     └── [[customer_id, status]]",
+            "indent": 2
+          },
+          {
+            "text": "└── triggers",
+            "indent": 2
+          },
+          {
+            "text": "└── validate_total (BEFORE INSERT)",
+            "indent": 8
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "text": "──────────────────────────────────────────────────────────────────────────",
+            "indent": 2
+          },
+          {
+            "text": "authorizer rules (compiled from policy.yaml v5)",
+            "indent": 2
+          },
+          {
+            "text": "├── alter:      require_trust reviewed",
+            "indent": 2
+          },
+          {
+            "text": "├── drop:       deny",
+            "indent": 2
+          },
+          {
+            "text": "├── vacuum:     require_trust pinned",
+            "indent": 2
+          },
+          {
+            "text": "└── triggers:   deny_agent (kernel-compiled exempt)",
+            "indent": 2
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
         ]
       }
     ]

@@ -14,21 +14,54 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "inspect doc://refund-policy"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "document",
-          "title",
-          "trust",
-          "source",
-          "sha256",
-          "mtime",
-          "nodes",
-          "sections",
-          "tokens",
-          "has_more"
+        "items": [
+          {
+            "field": "document",
+            "value": "doc://refund-policy"
+          },
+          {
+            "field": "title",
+            "value": "Refund Policy"
+          },
+          {
+            "field": "trust",
+            "value": "pinned"
+          },
+          {
+            "field": "source",
+            "value": "git:docs/policies/refund-policy.md@2f6110a"
+          },
+          {
+            "field": "sha256",
+            "value": "9c1f04ab37e6d2f5c8a01b74e93d6f2a5b8c0d17e4f92a6b3c5d8e0f1a2b4c69"
+          },
+          {
+            "field": "mtime",
+            "value": "2026-10-02T14:18:33Z"
+          },
+          {
+            "field": "nodes",
+            "value": "8"
+          },
+          {
+            "field": "sections",
+            "value": "5"
+          },
+          {
+            "field": "tokens",
+            "value": "312 (cap: 500)"
+          },
+          {
+            "field": "has_more",
+            "value": "false"
+          }
         ]
       }
     ]

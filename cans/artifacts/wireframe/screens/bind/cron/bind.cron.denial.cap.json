@@ -20,25 +20,52 @@
     "measured": "20 active schedules (cap: 20)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "active schedules"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.schedule_cap_exceeded",
+            "indent": 2
+          },
+          {
+            "field": "active schedules",
+            "value": "20 of 20"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Max 20 active schedules reached. New schedule binding refused.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "20 active schedules (cap: 20)"
+          },
+          {
+            "field": "remedy",
+            "value": "pause or remove an idle schedule first (capcli bind list)"
+          }
         ]
       }
     ]

@@ -14,28 +14,76 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "nominal"
+    },
     "sections": [
       {
         "title": "boot_check",
-        "fields": [
-          "kernel",
-          "platform",
-          "python_runtime",
-          "git_version",
-          "engine",
-          "c_authorizer",
-          "sandbox_provider",
-          "seccomp_bpf",
-          "ntp_drift_ms",
-          "audit_sink",
-          "lockfile",
-          "workspace"
+        "items": [
+          {
+            "field": "kernel",
+            "value": "capcli 8.4.1"
+          },
+          {
+            "field": "platform",
+            "value": "linux x86_64 (tier_1, hardened namespaces)"
+          },
+          {
+            "field": "python_runtime",
+            "value": "3.12.2 (floor: 3.11)"
+          },
+          {
+            "field": "git_version",
+            "value": "2.43.0 (identity: configured)"
+          },
+          {
+            "field": "engine",
+            "value": "sqlite_3.45.1 (wal_mode: true)"
+          },
+          {
+            "field": "c_authorizer",
+            "value": "active"
+          },
+          {
+            "field": "sandbox_provider",
+            "value": "bwrap (unprivileged userns: supported)"
+          },
+          {
+            "field": "seccomp_bpf",
+            "value": "active"
+          },
+          {
+            "field": "ntp_drift_ms",
+            "value": "14 (cap: 500)"
+          },
+          {
+            "field": "audit_sink",
+            "value": "online"
+          },
+          {
+            "field": "lockfile",
+            "value": "capcli.lock (root hash verified)"
+          },
+          {
+            "field": "workspace",
+            "value": "envs/dev/workspace.db"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "note:           boot-check probes only; no execution occurred",
+            "indent": 0
+          }
+        ]
       }
     ]
   },

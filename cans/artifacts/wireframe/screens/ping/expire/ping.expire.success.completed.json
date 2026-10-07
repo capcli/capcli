@@ -14,17 +14,38 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "ask_id",
-          "principal",
-          "action",
-          "outcome",
-          "audit_op",
-          "state_modified"
+        "items": [
+          {
+            "field": "ask_id",
+            "value": "ask_88a"
+          },
+          {
+            "field": "principal",
+            "value": "user:alice"
+          },
+          {
+            "field": "action",
+            "value": "explicit expiration"
+          },
+          {
+            "field": "outcome",
+            "value": "inquiry closed; fail-closed (expired asks never assume consent)"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f35b"
+          },
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
         ]
       }
     ]

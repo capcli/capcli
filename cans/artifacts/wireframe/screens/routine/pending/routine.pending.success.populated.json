@@ -14,24 +14,52 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "queue"
+        "items": [
+          {
+            "field": "queue",
+            "value": "promotion candidates (3)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "order_sync@2   reviewed -> pinned  queued 2h ago    success 0.98",
+            "indent": 2
+          },
+          {
+            "text": "sync_orders@1  draft -> reviewed   queued 31m ago   success 1.00",
+            "indent": 2
+          },
+          {
+            "text": "label_print@1  draft -> reviewed   queued 5m ago    success 0.97",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "sla",
-          "state_modified",
-          "note"
+        "items": [
+          {
+            "field": "sla",
+            "value": "oldest entry 2h old (promotion.sla_breached alert at 48h)"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "batch approval commits a single audit event per queue"
+          }
         ]
       }
     ]

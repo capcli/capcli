@@ -18,24 +18,48 @@
     "remedy": "re-run with --ingress https://<public-host>/<path> or --tunnel"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "provider",
-          "route"
+        "items": [
+          {
+            "text": "FAIL  compile.ingress_missing",
+            "indent": 2
+          },
+          {
+            "field": "provider",
+            "value": "stripe (external)"
+          },
+          {
+            "field": "route",
+            "value": "none declared"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "External webhooks require a public --ingress URL or an active tunnel. Raw 127.0.0.1 is denied.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with --ingress https://<public-host>/<path> or --tunnel"
+          }
         ]
       }
     ]

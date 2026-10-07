@@ -20,28 +20,68 @@
     "measured": "1 envelope section masked (cost_envelope.secret_refs)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "trust",
-          "secret_ref"
+        "items": [
+          {
+            "text": "FAIL  policy.trust.secrets_unreadable",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "cap://refund_and_archive@1"
+          },
+          {
+            "field": "trust",
+            "value": "draft"
+          },
+          {
+            "field": "secret_ref",
+            "value": "vault://stripe_secret_key"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Draft routines cannot read secrets (trust.draft.can_read.secrets: false).",
+            "indent": 8
+          },
+          {
+            "text": "Secret resolution withheld from the inspect envelope.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_9f2x"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "measured",
+            "value": "1 envelope section masked (cost_envelope.secret_refs)"
+          },
+          {
+            "field": "remedy",
+            "value": "promote via capcli routine ship refund_and_archive reviewed, then re-inspect"
+          }
         ]
       }
     ]

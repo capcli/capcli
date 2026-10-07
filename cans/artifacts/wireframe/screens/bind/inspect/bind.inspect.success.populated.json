@@ -14,33 +14,76 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "binding_id",
-          "kind",
-          "name",
-          "target",
-          "trust",
-          "schedule",
-          "state",
-          "next_fire",
-          "last_fire"
+        "items": [
+          {
+            "field": "binding_id",
+            "value": "bnd_3k2f"
+          },
+          {
+            "field": "kind",
+            "value": "cron"
+          },
+          {
+            "field": "name",
+            "value": "weekly_digest"
+          },
+          {
+            "field": "target",
+            "value": "cap://report_summary"
+          },
+          {
+            "field": "trust",
+            "value": "pinned"
+          },
+          {
+            "field": "schedule",
+            "value": "0 6 * * 1"
+          },
+          {
+            "field": "state",
+            "value": "active"
+          },
+          {
+            "field": "next_fire",
+            "value": "2026-10-05T06:00:00Z"
+          },
+          {
+            "field": "last_fire",
+            "value": "2026-09-28T06:00:00Z (exit 0)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "catchup_policy",
-          "dead_schedule"
+        "items": [
+          {
+            "text": "defenses:",
+            "indent": 2
+          },
+          {
+            "field": "catchup_policy",
+            "value": "max 1 fire on daemon restart"
+          },
+          {
+            "field": "dead_schedule",
+            "value": "auto-disable on routine retire (loud)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
         ]
       }
     ]

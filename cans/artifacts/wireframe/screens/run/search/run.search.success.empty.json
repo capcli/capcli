@@ -14,27 +14,52 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "0 matches for 'kombucha supplier sync'"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "exact"
+        "items": [
+          {
+            "field": "exact",
+            "value": "0 · prefix: 0 · fuzzy: 0 · semantic: below 0.60 floor"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "'supplier'",
-          "'sync'",
-          "'schedule'"
+        "items": [
+          {
+            "text": "did_you_mean:",
+            "indent": 2
+          },
+          {
+            "field": "'supplier'",
+            "value": "cap://process_wholesale_order@2 (routine, pinned)"
+          },
+          {
+            "field": "'sync'",
+            "value": "api sync for providers: stripe, fedex"
+          },
+          {
+            "field": "'schedule'",
+            "value": "bind cron bindings (3 active)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "gap_signal",
-          "audit_op"
+        "items": [
+          {
+            "field": "gap_signal",
+            "value": "1 of 3 zero-hit searches toward gap_threshold"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2s"
+          }
         ]
       }
     ]

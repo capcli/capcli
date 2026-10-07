@@ -14,24 +14,51 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "bound"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "binding_id",
-          "name",
-          "schedule",
-          "target",
-          "next_fire",
-          "catchup_policy"
+        "items": [
+          {
+            "field": "binding_id",
+            "value": "bnd_5f8a"
+          },
+          {
+            "field": "name",
+            "value": "nightly_sync"
+          },
+          {
+            "field": "schedule",
+            "value": "0 3 * * *"
+          },
+          {
+            "field": "target",
+            "value": "cap://sync_orders"
+          },
+          {
+            "field": "next_fire",
+            "value": "2026-10-05T03:00:00Z"
+          },
+          {
+            "field": "catchup_policy",
+            "value": "max 1 fire on daemon restart"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_7c41"
+          }
         ]
       }
     ]

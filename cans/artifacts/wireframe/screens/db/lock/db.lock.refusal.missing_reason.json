@@ -18,25 +18,52 @@
     "remedy": "re-run with --reason \"why this lease is needed\""
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "ttl",
-          "reason"
+        "items": [
+          {
+            "text": "FAIL  validation.lock.reason_required",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "orders:ORD-10"
+          },
+          {
+            "field": "ttl",
+            "value": "300s"
+          },
+          {
+            "field": "reason",
+            "value": "(absent)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "--reason is required for locking; unjustified leases are refused.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with --reason \"why this lease is needed\""
+          }
         ]
       }
     ]

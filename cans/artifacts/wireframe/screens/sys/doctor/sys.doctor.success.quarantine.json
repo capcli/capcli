@@ -14,22 +14,47 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "quarantine"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "block",
-          "reason",
-          "isolated_at",
-          "valid_history"
+        "items": [
+          {
+            "text": "quarantine ledger:",
+            "indent": 2
+          },
+          {
+            "field": "block",
+            "value": "op_84c1 (_audit row 8,412)"
+          },
+          {
+            "field": "reason",
+            "value": "prev_hash mismatch (tamper isolation)"
+          },
+          {
+            "field": "isolated_at",
+            "value": "2026-10-06T09:14:02Z"
+          },
+          {
+            "field": "valid_history",
+            "value": "rows 1-8,411 verified against root ledger hash"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "note"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "quarantine inspection only; restore path requires proof bundle review"
+          }
         ]
       }
     ]

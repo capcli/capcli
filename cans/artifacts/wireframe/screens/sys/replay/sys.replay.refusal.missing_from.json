@@ -18,19 +18,35 @@
     "remedy": "re-run as capcli sys replay --from 2026-10-03T22:41:07Z"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "replay anchor omitted"
+        "items": [
+          {
+            "text": "FATAL  missing_param.missing_arg",
+            "indent": 2
+          },
+          {
+            "field": "replay anchor omitted",
+            "value": "--from <timestamp> or --from <commit> is required"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run as capcli sys replay --from 2026-10-03T22:41:07Z"
+          }
         ]
       }
     ]

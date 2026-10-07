@@ -18,17 +18,35 @@
     "remedy": "export CAPCLI_SECRET_<NAME> in the harness shell, or provision via capcli sys vault set"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FATAL  validation.not_found",
+            "indent": 2
+          },
+          {
+            "text": "no CAPCLI_SECRET_* environment variables present in process scope",
+            "indent": 9
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "export CAPCLI_SECRET_<NAME> in the harness shell, or provision via capcli sys vault set"
+          }
         ]
       }
     ]

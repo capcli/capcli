@@ -20,19 +20,47 @@
     "measured": "current time 23:12 inside quiet window (22:00-07:00)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.quiet_hours",
+            "indent": 2
+          },
+          {
+            "text": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+            "indent": 8
+          },
+          {
+            "text": "Notifications blocked between 22:00 and 07:00.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "current time 23:12 inside quiet window (22:00-07:00)"
+          },
+          {
+            "field": "remedy",
+            "value": "re-dispatch after 07:00, or use ping ask (urgent asks bypass quiet hours)"
+          }
         ]
       }
     ]

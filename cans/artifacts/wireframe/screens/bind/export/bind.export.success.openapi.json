@@ -14,23 +14,47 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exported"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "artifact",
-          "format",
-          "endpoints",
-          "bytes",
-          "sha256"
+        "items": [
+          {
+            "field": "artifact",
+            "value": "openapi.json"
+          },
+          {
+            "field": "format",
+            "value": "openapi 3.1"
+          },
+          {
+            "field": "endpoints",
+            "value": "2 (dispatch_order@4, report_summary@3)"
+          },
+          {
+            "field": "bytes",
+            "value": "2418"
+          },
+          {
+            "field": "sha256",
+            "value": "4f9a1b2c7d3e5f60"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_8m3v"
+          }
         ]
       }
     ]

@@ -14,22 +14,58 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "plain",
+      "label": "[prod:tier_1]  capcli 0.4.2"
+    },
     "sections": [
       {
         "title": "trust_receipt",
-        "fields": [
-          "status",
-          "host_tier",
-          "workspace",
-          "ledger_root_hash",
-          "audited_events",
-          "policy_denials",
-          "unaudited_writes",
-          "secret_leaks",
-          "pinned_routines",
-          "active_triggers",
-          "sleep_score"
+        "items": [
+          {
+            "field": "status",
+            "value": "nominal"
+          },
+          {
+            "field": "host_tier",
+            "value": "tier_1 (hardened Linux namespaces)"
+          },
+          {
+            "field": "workspace",
+            "value": "envs/prod/workspace.db"
+          },
+          {
+            "field": "ledger_root_hash",
+            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          {
+            "field": "audited_events",
+            "value": "14290 committed to _audit"
+          },
+          {
+            "field": "policy_denials",
+            "value": "18 (intercepted pre-execution; state untouched)"
+          },
+          {
+            "field": "unaudited_writes",
+            "value": "0"
+          },
+          {
+            "field": "secret_leaks",
+            "value": "0"
+          },
+          {
+            "field": "pinned_routines",
+            "value": "32"
+          },
+          {
+            "field": "active_triggers",
+            "value": "4 crons, 3 webhooks, 1 endpoint"
+          },
+          {
+            "field": "sleep_score",
+            "value": "100%"
+          }
         ]
       }
     ]

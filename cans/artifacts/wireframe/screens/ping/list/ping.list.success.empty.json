@@ -14,19 +14,31 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "empty"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "pending",
-          "note"
+        "items": [
+          {
+            "field": "pending",
+            "value": "0 inquiries"
+          },
+          {
+            "field": "note",
+            "value": "no asks parked in _pending_asks; no frames awaiting human input"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
         ]
       }
     ]

@@ -18,27 +18,56 @@
     "remedy": "choose a version within the kept window, or re-sync the provider spec to rebuild history"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "command",
-          "verb",
-          "version"
+        "items": [
+          {
+            "text": "FATAL  validation.not_found",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli api rollback threads.create_media_post 12"
+          },
+          {
+            "field": "verb",
+            "value": "cap://threads.create_media_post"
+          },
+          {
+            "field": "version",
+            "value": "12"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "Kept versions for this verb"
+        "items": [
+          {
+            "text": "Target version not found.",
+            "indent": 9
+          },
+          {
+            "field": "Kept versions for this verb",
+            "value": "1–8 (max_versions_kept: 10)."
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "choose a version within the kept window, or re-sync the provider spec to rebuild history"
+          }
         ]
       }
     ]

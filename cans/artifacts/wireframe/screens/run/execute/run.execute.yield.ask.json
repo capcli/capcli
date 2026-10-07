@@ -21,33 +21,80 @@
     "suspended_frame": "frame_026"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 6"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "session",
-          "intent"
+        "items": [
+          {
+            "text": "YIELD  ping.ask_suspended",
+            "indent": 2
+          },
+          {
+            "text": "routine dispatch_order@4 (frame_026, paused at leaf 2 of 3)",
+            "indent": 9
+          },
+          {
+            "field": "session",
+            "value": "ses_a992f"
+          },
+          {
+            "field": "intent",
+            "value": "\"fulfill urgent pending orders\""
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "ask",
-          "question",
-          "options",
-          "timeout",
-          "pending_asks",
-          "cockpit"
+        "items": [
+          {
+            "field": "ask",
+            "value": "ask_88a"
+          },
+          {
+            "field": "question",
+            "value": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\""
+          },
+          {
+            "field": "options",
+            "value": "approve, deny"
+          },
+          {
+            "field": "timeout",
+            "value": "60m (fail-closed)"
+          },
+          {
+            "field": "pending_asks",
+            "value": "1 enqueued (ask_88a)"
+          },
+          {
+            "field": "cockpit",
+            "value": "http://127.0.0.1:4040/ask/ask_88a"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "suspended_frame",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "ping"
+          },
+          {
+            "field": "suspended_frame",
+            "value": "frame_026"
+          },
+          {
+            "field": "remedy",
+            "value": "frame checkpointed to _pending_asks; human resolves via Cockpit or 'capcli ping resolve ask_88a --choice approve', frame auto-resumes after hash re-verification"
+          }
         ]
       }
     ]

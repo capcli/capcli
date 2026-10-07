@@ -14,23 +14,47 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exported"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "artifact",
-          "format",
-          "tools",
-          "bytes",
-          "sha256"
+        "items": [
+          {
+            "field": "artifact",
+            "value": "tools.json"
+          },
+          {
+            "field": "format",
+            "value": "mcp tool manifest"
+          },
+          {
+            "field": "tools",
+            "value": "2 (dispatch_order@4, report_summary@3)"
+          },
+          {
+            "field": "bytes",
+            "value": "1286"
+          },
+          {
+            "field": "sha256",
+            "value": "8c3e5d7012a4b6c8"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_1k6w"
+          }
         ]
       }
     ]

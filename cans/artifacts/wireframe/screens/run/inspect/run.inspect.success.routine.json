@@ -14,55 +14,147 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "plain",
+      "label": "[dev:tier_1]  capcli inspect cap://dispatch_order@4"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "trust",
-          "runtime",
-          "params",
-          "description"
+        "items": [
+          {
+            "field": "trust",
+            "value": "pinned"
+          },
+          {
+            "field": "runtime",
+            "value": "typescript (bun)"
+          },
+          {
+            "field": "params",
+            "value": "order_id: string, carrier: string"
+          },
+          {
+            "field": "description",
+            "value": "\"Dispatch paid order to carrier and update status\""
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "limits"
+        "items": [
+          {
+            "field": "limits",
+            "value": "8 ops · 15s · 500 result tokens"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "can_invoke_now",
-          "session_ops_remaining",
-          "session_duration_remaining",
-          "session_fuel_remaining",
-          "session_egress_remaining",
-          "session_rate_remaining",
-          "tightest_constraint"
+        "items": [
+          {
+            "text": "manifest:",
+            "indent": 2
+          },
+          {
+            "text": "1. db.query    orders (read)",
+            "indent": 4
+          },
+          {
+            "text": "2. api.call    logistics.shipments.create",
+            "indent": 4
+          },
+          {
+            "text": "3. db.execute  orders (write)",
+            "indent": 4
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "max_nesting_depth",
-          "budget_inheritance",
-          "child_routines"
+        "items": [
+          {
+            "text": "budget_status:",
+            "indent": 2
+          },
+          {
+            "field": "can_invoke_now",
+            "value": "true"
+          },
+          {
+            "field": "session_ops_remaining",
+            "value": "488"
+          },
+          {
+            "field": "session_duration_remaining",
+            "value": "555000ms"
+          },
+          {
+            "field": "session_fuel_remaining",
+            "value": "80400"
+          },
+          {
+            "field": "session_egress_remaining",
+            "value": "4181824 bytes"
+          },
+          {
+            "field": "session_rate_remaining",
+            "value": "287"
+          },
+          {
+            "field": "tightest_constraint",
+            "value": "null"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "total_runs",
-          "success_rate",
-          "p50_duration",
-          "p95_duration",
-          "last_run_at"
+        "items": [
+          {
+            "text": "composition:",
+            "indent": 2
+          },
+          {
+            "field": "max_nesting_depth",
+            "value": "5"
+          },
+          {
+            "field": "budget_inheritance",
+            "value": "min"
+          },
+          {
+            "field": "child_routines",
+            "value": "[]"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "stats:",
+            "indent": 2
+          },
+          {
+            "field": "total_runs",
+            "value": "214"
+          },
+          {
+            "field": "success_rate",
+            "value": "99.1%"
+          },
+          {
+            "field": "p50_duration",
+            "value": "340ms"
+          },
+          {
+            "field": "p95_duration",
+            "value": "890ms"
+          },
+          {
+            "field": "last_run_at",
+            "value": "2m ago"
+          }
         ]
       }
     ]

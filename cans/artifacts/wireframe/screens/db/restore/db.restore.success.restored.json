@@ -14,24 +14,51 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "restored"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "snapshot_id",
-          "database",
-          "tables",
-          "rows",
-          "reversed_ops",
-          "ledger_hash"
+        "items": [
+          {
+            "field": "snapshot_id",
+            "value": "snap_onboarding_01"
+          },
+          {
+            "field": "database",
+            "value": "envs/dev/workspace.db"
+          },
+          {
+            "field": "tables",
+            "value": "6"
+          },
+          {
+            "field": "rows",
+            "value": "6"
+          },
+          {
+            "field": "reversed_ops",
+            "value": "1 (post-snapshot writes undone)"
+          },
+          {
+            "field": "ledger_hash",
+            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_8d4a"
+          }
         ]
       }
     ]

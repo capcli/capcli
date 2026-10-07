@@ -18,22 +18,57 @@
     "remedy": "install bubblewrap >= 0.8.0, then re-run 'capcli sys doctor --boot-check'"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "bwrap",
-          "python3"
+        "items": [
+          {
+            "text": "FATAL  kernel.boot.missing_dependency",
+            "indent": 0
+          },
+          {
+            "text": "Host dependency probe failed on tier_1 (linux x86_64).",
+            "indent": 7
+          },
+          {
+            "field": "bwrap",
+            "value": "absent from PATH (floor: 0.8.0, mandatory on Tier 1)"
+          },
+          {
+            "field": "python3",
+            "value": "3.12.2 ok"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Boot aborted before workspace mount; no daemon started.",
+            "indent": 7
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          boot",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         install bubblewrap >= 0.8.0, then re-run 'capcli sys doctor --boot-check'",
+            "indent": 0
+          }
+        ]
       }
     ]
   }

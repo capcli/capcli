@@ -20,28 +20,64 @@
     "measured": "caller trust rung is draft; prod floor is reviewed"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "env",
-          "trust",
-          "caller"
+        "items": [
+          {
+            "text": "FAIL  policy.trust.forbidden",
+            "indent": 2
+          },
+          {
+            "field": "env",
+            "value": "prod"
+          },
+          {
+            "field": "trust",
+            "value": "draft"
+          },
+          {
+            "field": "caller",
+            "value": "agt_7f3k"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Draft identity cannot snapshot prod; unproven code cannot touch prod.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_71b2"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "measured",
+            "value": "caller trust rung is draft; prod floor is reviewed"
+          },
+          {
+            "field": "remedy",
+            "value": "prove the acting identity in sim and promote to reviewed, then retry the snapshot"
+          }
         ]
       }
     ]

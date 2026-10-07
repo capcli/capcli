@@ -14,25 +14,55 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "created"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "file",
-          "template",
-          "trust",
-          "version",
-          "shape"
+        "items": [
+          {
+            "field": "routine",
+            "value": "sync_orders"
+          },
+          {
+            "field": "file",
+            "value": "routines/sync_orders.py"
+          },
+          {
+            "field": "template",
+            "value": "tpl://routine/python_blank"
+          },
+          {
+            "field": "trust",
+            "value": "draft (unproven intake floor)"
+          },
+          {
+            "field": "version",
+            "value": "1"
+          },
+          {
+            "field": "shape",
+            "value": "38 LOC / 640 tokens / 2 params (ceilings: 150 / 2000 / 8)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit",
-          "next"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit",
+            "value": "op_new_01 (routine.draft committed with template_hash)"
+          },
+          {
+            "field": "next",
+            "value": "capcli routine prove sync_orders --env sim"
+          }
         ]
       }
     ]

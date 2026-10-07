@@ -20,28 +20,64 @@
     "measured": "platform ceiling reviewed (requested: pinned on tier_2 host)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "target",
-          "host"
+        "items": [
+          {
+            "text": "FAIL  policy.trust.tier2_refusal",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "order_sync@2 (current rung: reviewed)"
+          },
+          {
+            "field": "target",
+            "value": "pinned"
+          },
+          {
+            "field": "host",
+            "value": "tier_2 (degraded isolation; broker-mediated sandbox)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Pinned promotion denied on Tier 2; the platform ceiling caps this host at reviewed.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_ship_03"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "measured",
+            "value": "platform ceiling reviewed (requested: pinned on tier_2 host)"
+          },
+          {
+            "field": "remedy",
+            "value": "run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)"
+          }
         ]
       }
     ]

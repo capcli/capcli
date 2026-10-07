@@ -14,24 +14,51 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "synced"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "provider",
-          "spec_url",
-          "verbs_imported",
-          "spec_hash",
-          "catalog",
-          "interval",
-          "audit_op"
+        "items": [
+          {
+            "field": "provider",
+            "value": "stripe"
+          },
+          {
+            "field": "spec_url",
+            "value": "https://api.stripe.com/openapi.json"
+          },
+          {
+            "field": "verbs_imported",
+            "value": "418 (all dormant)"
+          },
+          {
+            "field": "spec_hash",
+            "value": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa"
+          },
+          {
+            "field": "catalog",
+            "value": "apis/stripe.yaml (2.1MB)"
+          },
+          {
+            "field": "interval",
+            "value": "7d"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2e"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
         ]
       }
     ]

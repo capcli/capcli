@@ -18,24 +18,48 @@
     "remedy": "declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "lookup"
+        "items": [
+          {
+            "text": "FAIL  validation.table_not_found",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "schema://invoices"
+          },
+          {
+            "field": "lookup",
+            "value": "compiled schema.yaml v12 (tables: customers, inventory, orders, order_items)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Table 'invoices' has no compiled declaration in this workspace.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'"
+          }
         ]
       }
     ]

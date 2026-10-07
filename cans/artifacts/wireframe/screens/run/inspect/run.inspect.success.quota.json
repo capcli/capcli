@@ -14,42 +14,102 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "quota://threads headroom"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "provider",
-          "window",
-          "status"
+        "items": [
+          {
+            "field": "provider",
+            "value": "threads"
+          },
+          {
+            "field": "window",
+            "value": "24h rolling"
+          },
+          {
+            "field": "status",
+            "value": "tracked"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "total",
-          "available",
-          "earmarked",
-          "unreserved"
+        "items": [
+          {
+            "text": "headroom:",
+            "indent": 2
+          },
+          {
+            "field": "total",
+            "value": "50"
+          },
+          {
+            "field": "available",
+            "value": "28"
+          },
+          {
+            "field": "earmarked",
+            "value": "7"
+          },
+          {
+            "field": "unreserved",
+            "value": "21"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "burst_bucket",
-          "writes_per_minute"
+        "items": [
+          {
+            "text": "reservations:",
+            "indent": 2
+          },
+          {
+            "text": "earmark_01c3 5 tokens   ttl 3h    \"newsletter batch send\"",
+            "indent": 4
+          },
+          {
+            "text": "earmark_01d8 2 tokens   ttl 45m   \"story reply sweep\"",
+            "indent": 4
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "can_invoke_now",
-          "deny_at",
-          "reset_at"
+        "items": [
+          {
+            "text": "rate:",
+            "indent": 2
+          },
+          {
+            "field": "burst_bucket",
+            "value": "10 (refill 1.0/s)"
+          },
+          {
+            "field": "writes_per_minute",
+            "value": "12 of 60 remaining"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "can_invoke_now",
+            "value": "true"
+          },
+          {
+            "field": "deny_at",
+            "value": "5 tokens (pre-call deny floor)"
+          },
+          {
+            "field": "reset_at",
+            "value": "18:00:00 UTC (in 4h 12m)"
+          }
         ]
       }
     ]

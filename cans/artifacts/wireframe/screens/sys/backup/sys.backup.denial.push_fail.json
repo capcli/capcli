@@ -20,19 +20,56 @@
     "measured": "0 of 2 remotes accepted"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "git",
-          "s3",
-          "snapshot"
+        "items": [
+          {
+            "text": "FAIL  policy.backup.push_rejected",
+            "indent": 0
+          },
+          {
+            "text": "Dual-storage push rejected; snapshot remains local and unbacked.",
+            "indent": 6
+          },
+          {
+            "field": "git",
+            "value": "origin rejected (remote ahead by 2 commits)"
+          },
+          {
+            "field": "s3",
+            "value": "PutObject returned 403 (credentials expired)"
+          },
+          {
+            "field": "snapshot",
+            "value": "snap_auto_2026-10-04T0300Z (retained locally)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          authorizer",
+            "indent": 0
+          },
+          {
+            "text": "measured:       0 of 2 remotes accepted (git: non-fast-forward, s3: HTTP 403)",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         refresh vault credentials and reconcile remotes, then retry 'capcli sys backup --push'",
+            "indent": 0
+          }
+        ]
       }
     ]
   }

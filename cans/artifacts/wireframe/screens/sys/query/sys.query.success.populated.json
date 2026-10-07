@@ -14,24 +14,60 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "queried"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "rows",
-          "duration"
+        "items": [
+          {
+            "field": "target",
+            "value": "_audit (read-only system table)"
+          },
+          {
+            "field": "rows",
+            "value": "3 returned (LIMIT 20)"
+          },
+          {
+            "field": "duration",
+            "value": "2ms"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "op_id      domain",
+            "indent": 2
+          },
+          {
+            "text": "──────────────────────",
+            "indent": 2
+          },
+          {
+            "text": "op_c44d1   policy.ast",
+            "indent": 2
+          },
+          {
+            "text": "op_31f8    policy.budget",
+            "indent": 2
+          },
+          {
+            "text": "op_b22e9   policy.trust",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "note"
+        "items": [
+          {
+            "field": "note",
+            "value": "writes to _audit are denied; queries served from the SSOT table"
+          }
         ]
       }
     ]

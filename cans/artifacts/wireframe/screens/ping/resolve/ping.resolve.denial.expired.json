@@ -20,21 +20,47 @@
     "measured": "ask_88a deadline passed 2h 14m ago (timeout: 24h, fail-closed)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "ask_id"
+        "items": [
+          {
+            "text": "FAIL  policy.notify.ask_expired",
+            "indent": 2
+          },
+          {
+            "field": "ask_id",
+            "value": "ask_88a"
+          },
+          {
+            "text": "Timeout elapsed; resolution window closed (fail-closed).",
+            "indent": 8
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "notify"
+          },
+          {
+            "field": "measured",
+            "value": "ask_88a deadline passed 2h 14m ago (timeout: 24h, fail-closed)"
+          },
+          {
+            "field": "remedy",
+            "value": "re-issue the ask if still relevant; expired inquiries never assume consent"
+          }
         ]
       }
     ]

@@ -18,17 +18,43 @@
     "remedy": "correct the SQL and re-run capcli sys query against _audit"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FATAL  compile.bad_syntax",
+            "indent": 2
+          },
+          {
+            "text": "SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20",
+            "indent": 9
+          },
+          {
+            "text": "^^^^",
+            "indent": 30
+          },
+          {
+            "text": "Expected FROM; found identifier 'FORM' at column 22.",
+            "indent": 9
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "correct the SQL and re-run capcli sys query against _audit"
+          }
         ]
       }
     ]

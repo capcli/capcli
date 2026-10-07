@@ -18,25 +18,52 @@
     "remedy": "list retained versions via capcli inspect cap://sync_orders, then target one that exists"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "target",
-          "history"
+        "items": [
+          {
+            "text": "FAIL  validation.rollback.version_not_found",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "sync_orders"
+          },
+          {
+            "field": "target",
+            "value": "v7"
+          },
+          {
+            "field": "history",
+            "value": "v1..v5 retained (cap: 25 versions)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Target version v7 not found in the retained provenance graph (v1..v5).",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "list retained versions via capcli inspect cap://sync_orders, then target one that exists"
+          }
         ]
       }
     ]

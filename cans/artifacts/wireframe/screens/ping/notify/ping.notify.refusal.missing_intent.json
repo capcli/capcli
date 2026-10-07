@@ -18,17 +18,43 @@
     "remedy": "re-run with --intent \"<why this notification is sent>\""
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FAIL  compile.no_intent",
+            "indent": 2
+          },
+          {
+            "text": "capcli ping notify user:alice \"Nightly sync finished\" --channel email",
+            "indent": 8
+          },
+          {
+            "text": "Missing intent declaration.",
+            "indent": 8
+          },
+          {
+            "text": "ping notify requires --intent \"...\" (policy: notify.require_intent).",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with --intent \"<why this notification is sent>\""
+          }
         ]
       }
     ]

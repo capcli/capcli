@@ -14,23 +14,47 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "binding_id",
-          "kind",
-          "name",
-          "transition",
-          "next_fire"
+        "items": [
+          {
+            "field": "binding_id",
+            "value": "bnd_3k2f"
+          },
+          {
+            "field": "kind",
+            "value": "cron"
+          },
+          {
+            "field": "name",
+            "value": "weekly_digest"
+          },
+          {
+            "field": "transition",
+            "value": "paused → active"
+          },
+          {
+            "field": "next_fire",
+            "value": "2026-10-05T06:00:00Z"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9k2w"
+          }
         ]
       }
     ]

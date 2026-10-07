@@ -14,35 +14,85 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "window"
+        "items": [
+          {
+            "field": "routine",
+            "value": "dispatch_order@4"
+          },
+          {
+            "field": "window",
+            "value": "214 runs (last 30d)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "runs",
-          "success_rate",
-          "p50_duration",
-          "p95_duration",
-          "last_run_at",
-          "drift_events"
+        "items": [
+          {
+            "field": "runs",
+            "value": "214"
+          },
+          {
+            "field": "success_rate",
+            "value": "99.1%"
+          },
+          {
+            "field": "p50_duration",
+            "value": "340ms"
+          },
+          {
+            "field": "p95_duration",
+            "value": "890ms"
+          },
+          {
+            "field": "last_run_at",
+            "value": "2m ago (op_9f2e, ses_a992f)"
+          },
+          {
+            "field": "drift_events",
+            "value": "0"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "leaves (--deep):",
+            "indent": 2
+          },
+          {
+            "text": "db.query    orders                     p50 12ms  p95 41ms  fuel 40",
+            "indent": 4
+          },
+          {
+            "text": "api.call    logistics.shipments.create p50 340ms p95 812ms fuel 610",
+            "indent": 4
+          },
+          {
+            "text": "db.execute  orders                     p50 18ms  p95 52ms  fuel 46",
+            "indent": 4
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "note"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "read-only profiling from routine_stats and the audit mirror"
+          }
         ]
       }
     ]

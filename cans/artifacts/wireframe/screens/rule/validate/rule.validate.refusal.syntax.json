@@ -18,27 +18,65 @@
     "remedy": "remove or rename the duplicate 'status' key, then re-run capcli rule validate"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "status"
+        "items": [
+          {
+            "text": "FAIL  compile.gate_1_bad_syntax",
+            "indent": 2
+          },
+          {
+            "text": "--> schema.yaml:54:7",
+            "indent": 8
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "columns:",
+            "indent": 8
+          },
+          {
+            "field": "status",
+            "value": "text=pending"
+          },
+          {
+            "field": "status",
+            "value": "text=shipped"
+          },
+          {
+            "text": "^^^^^^ duplicate_key",
+            "indent": 10
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "text": "Duplicate mapping key 'status' already defined at schema.yaml:52:11.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "remove or rename the duplicate 'status' key, then re-run capcli rule validate"
+          }
         ]
       }
     ]

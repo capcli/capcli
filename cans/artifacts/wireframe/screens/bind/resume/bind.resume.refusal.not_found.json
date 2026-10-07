@@ -18,24 +18,48 @@
     "remedy": "confirm the binding ID via capcli bind list"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "binding_id",
-          "action"
+        "items": [
+          {
+            "text": "FAIL  validation.binding_not_found",
+            "indent": 2
+          },
+          {
+            "field": "binding_id",
+            "value": "bnd_3k2f"
+          },
+          {
+            "field": "action",
+            "value": "resume"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Target binding ID not found. Trigger resume refused.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "confirm the binding ID via capcli bind list"
+          }
         ]
       }
     ]

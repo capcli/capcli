@@ -14,29 +14,56 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "state",
-          "reason"
+        "items": [
+          {
+            "field": "routine",
+            "value": "legacy_etl@6"
+          },
+          {
+            "field": "state",
+            "value": "active -> retired"
+          },
+          {
+            "field": "reason",
+            "value": "\"replaced by unified pipeline\""
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "schedule",
-          "callers"
+        "items": [
+          {
+            "field": "schedule",
+            "value": "legacy_etl_nightly auto-disabled (orphan protection)"
+          },
+          {
+            "field": "callers",
+            "value": "none (dependency graph clear)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit",
-          "note"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit",
+            "value": "op_retire_01 (routine.retire committed; provenance graph preserved)"
+          },
+          {
+            "field": "note",
+            "value": "routine remains inspectable via cap://legacy_etl for provenance"
+          }
         ]
       }
     ]

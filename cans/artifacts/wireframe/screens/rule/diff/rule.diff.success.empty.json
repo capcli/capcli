@@ -14,32 +14,61 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "in lockstep (schema vs HEAD)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "base",
-          "working",
-          "scope"
+        "items": [
+          {
+            "field": "base",
+            "value": "git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)"
+          },
+          {
+            "field": "working",
+            "value": "compiled schema.yaml v12 (lockfile verified)"
+          },
+          {
+            "field": "scope",
+            "value": "4 tables · 22 columns · 7 indexes · 2 triggers"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "added",
-          "changed",
-          "removed"
+        "items": [
+          {
+            "field": "added",
+            "value": "0"
+          },
+          {
+            "field": "changed",
+            "value": "0"
+          },
+          {
+            "field": "removed",
+            "value": "0"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "workspace is in lockstep with declared rules; no drift found.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
         ]
       }
     ]

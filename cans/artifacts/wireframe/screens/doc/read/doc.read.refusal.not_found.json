@@ -18,24 +18,52 @@
     "remedy": "verify the URP; nearest catalog match is doc://refund-policy"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target"
+        "items": [
+          {
+            "text": "FAIL  validation.doc.not_found",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "doc://refund-policies"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Document URP 'refund-policies' has no entry in the document catalog.",
+            "indent": 8
+          },
+          {
+            "text": "Reading is refused before any content is fetched.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "catalog"
+          },
+          {
+            "field": "remedy",
+            "value": "verify the URP; nearest catalog match is doc://refund-policy"
+          }
         ]
       }
     ]

@@ -14,24 +14,51 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "vaulted"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "key",
-          "cipher",
-          "fingerprint",
-          "scope",
-          "value"
+        "items": [
+          {
+            "field": "key",
+            "value": "stripe_key"
+          },
+          {
+            "field": "cipher",
+            "value": "aes-256-gcm"
+          },
+          {
+            "field": "fingerprint",
+            "value": "sha256:4c1b8e93a7d2f0065be34c881a9d20f7e5c3b6a8"
+          },
+          {
+            "field": "scope",
+            "value": "workspace root secret (envs/dev/workspace.db secrets table)"
+          },
+          {
+            "field": "value",
+            "value": "masked — plaintext never echoed to any output stream"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op",
-          "event"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_r704"
+          },
+          {
+            "field": "event",
+            "value": "vault.set committed to _audit with SHA-256 fingerprint"
+          }
         ]
       }
     ]

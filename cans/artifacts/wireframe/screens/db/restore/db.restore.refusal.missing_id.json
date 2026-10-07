@@ -18,24 +18,48 @@
     "remedy": "list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "command",
-          "target"
+        "items": [
+          {
+            "text": "FAIL  missing_param.restore.snapshot_id_required",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli db restore"
+          },
+          {
+            "field": "target",
+            "value": "(absent)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Target snapshot ID missing; restore requires an explicit recovery point.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'"
+          }
         ]
       }
     ]

@@ -19,26 +19,56 @@
     "layer": "authorizer"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "lease",
-          "caller"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.claim_not_holder",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "orders:ORD-10"
+          },
+          {
+            "field": "lease",
+            "value": "claim_c3d4 (holder: agt_9k2w)"
+          },
+          {
+            "field": "caller",
+            "value": "agt_7f3k"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Caller does not own the claim; only the holder may release a lease.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "remedy",
+            "value": "ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry"
+          }
         ]
       }
     ]

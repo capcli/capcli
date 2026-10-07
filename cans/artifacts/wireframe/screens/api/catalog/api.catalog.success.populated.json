@@ -14,26 +14,64 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "provider",
-          "state_filter",
-          "verbs"
+        "items": [
+          {
+            "field": "provider",
+            "value": "stripe"
+          },
+          {
+            "field": "state_filter",
+            "value": "active"
+          },
+          {
+            "field": "verbs",
+            "value": "4 active of 418 total (414 dormant)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "│     └── last_call"
+        "items": [
+          {
+            "text": "cap://stripe",
+            "indent": 2
+          },
+          {
+            "text": "├── refund_charge          active   draft   214 calls",
+            "indent": 2
+          },
+          {
+            "text": "├── create_payment_intent  active   draft    89 calls",
+            "indent": 2
+          },
+          {
+            "field": "│     └── last_call",
+            "value": "op_9f2e (ok)"
+          },
+          {
+            "text": "├── issue_credit_note      active   draft    12 calls",
+            "indent": 2
+          },
+          {
+            "text": "└── void_invoice           active   draft     4 calls",
+            "indent": 2
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
         ]
       }
     ]

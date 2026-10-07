@@ -14,22 +14,36 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "listed"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "registered"
+        "items": [
+          {
+            "field": "registered",
+            "value": "0 agents (cap: 8)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Zero registered agents. Identity registry empty.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "note"
+        "items": [
+          {
+            "field": "note",
+            "value": "register the first harness via capcli sys register"
+          }
         ]
       }
     ]

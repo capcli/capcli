@@ -14,23 +14,40 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "popped"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "channels_scanned",
-          "popped"
+        "items": [
+          {
+            "field": "channels_scanned",
+            "value": "4 (email, webhook, cron, ws)"
+          },
+          {
+            "field": "popped",
+            "value": "0 events"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Sensory inbox completely drained. Nothing to hand to the caller.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "note"
+        "items": [
+          {
+            "field": "note",
+            "value": "next poll blocks until an event arrives on any channel"
+          }
         ]
       }
     ]

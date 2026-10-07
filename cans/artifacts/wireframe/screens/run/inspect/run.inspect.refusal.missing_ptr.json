@@ -18,27 +18,52 @@
     "remedy": "restate as a typed URP, e.g. cap://dispatch_order@4"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target"
+        "items": [
+          {
+            "text": "FATAL  missing_param.unrecognized_ptr",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "'dispatch_order@4'"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "Unrecognized pointer format",
-          "Expected a typed URP"
+        "items": [
+          {
+            "field": "Unrecognized pointer format",
+            "value": "missing scheme prefix."
+          },
+          {
+            "field": "Expected a typed URP",
+            "value": "cap://, db://, quota://, doc://, ..."
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "cli"
+          },
+          {
+            "field": "remedy",
+            "value": "restate as a typed URP, e.g. cap://dispatch_order@4"
+          }
         ]
       }
     ]

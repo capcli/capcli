@@ -18,20 +18,55 @@
     "remedy": "guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 4"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "TypeError"
+        "items": [
+          {
+            "text": "CRASH  routine.runtime.exception",
+            "indent": 2
+          },
+          {
+            "text": "routines/sync_orders.py:34 in dispatch",
+            "indent": 9
+          },
+          {
+            "text": "total = carrier_fee + surcharge",
+            "indent": 9
+          },
+          {
+            "text": "^^^^^^^^^^^",
+            "indent": 17
+          },
+          {
+            "field": "TypeError",
+            "value": "unsupported operand types for +: 'NoneType' and 'int'"
+          },
+          {
+            "text": "carrier_fee is None on edge route 'pickup'; uncaught in sim test pass 3 of 10",
+            "indent": 9
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "rollback",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "rollback",
+            "value": "clean"
+          },
+          {
+            "field": "remedy",
+            "value": "guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim"
+          }
         ]
       }
     ]

@@ -14,18 +14,44 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "listed"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "registered",
-          "active"
+        "items": [
+          {
+            "field": "registered",
+            "value": "4 agents (cap: 8)"
+          },
+          {
+            "field": "active",
+            "value": "3 · revoked: 1"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "├── agt_7f3k  order-filler    claude-code  user:alice        active",
+            "indent": 2
+          },
+          {
+            "text": "├── agt_2m8p  inventory-sync  claude-code  user:alice        active",
+            "indent": 2
+          },
+          {
+            "text": "├── agt_9q4w  capcli-cron     kernel       scheduler         active",
+            "indent": 2
+          },
+          {
+            "text": "└── agt_4t6r  capcli-watch    kernel       partner:stripe    revoked",
+            "indent": 2
+          }
+        ]
       }
     ]
   }

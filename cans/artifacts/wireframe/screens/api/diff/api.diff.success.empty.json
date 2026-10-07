@@ -14,33 +14,65 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "empty"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "provider",
-          "local_hash",
-          "remote_hash",
-          "drift"
+        "items": [
+          {
+            "field": "provider",
+            "value": "threads"
+          },
+          {
+            "field": "local_hash",
+            "value": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a"
+          },
+          {
+            "field": "remote_hash",
+            "value": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a"
+          },
+          {
+            "field": "drift",
+            "value": "none (spec_hash match)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "added_verbs",
-          "changed_verbs",
-          "removed_verbs"
+        "items": [
+          {
+            "field": "added_verbs",
+            "value": "0"
+          },
+          {
+            "field": "changed_verbs",
+            "value": "0"
+          },
+          {
+            "field": "removed_verbs",
+            "value": "0"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Zero drift from active catalog.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
         ]
       }
     ]

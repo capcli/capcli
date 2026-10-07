@@ -20,26 +20,56 @@
     "measured": "routine trust: draft (floor: pinned)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "trust"
+        "items": [
+          {
+            "text": "FAIL  policy.trust.serve_requires_pinned",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "inventory_report@1"
+          },
+          {
+            "field": "trust",
+            "value": "draft"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Endpoint requires pinned trust. Unpinned routines cannot be exposed as endpoints.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "measured",
+            "value": "routine trust: draft (floor: pinned)"
+          },
+          {
+            "field": "remedy",
+            "value": "promote the routine first: capcli routine ship inventory_report pinned --reason \"expose to partners\""
+          }
         ]
       }
     ]

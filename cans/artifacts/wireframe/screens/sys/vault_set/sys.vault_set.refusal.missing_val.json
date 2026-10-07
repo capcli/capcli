@@ -18,17 +18,39 @@
     "remedy": "re-run as capcli sys vault set stripe_key --in @- and pipe the value on stdin"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FATAL  missing_param.missing_arg",
+            "indent": 2
+          },
+          {
+            "text": "vault set for key 'stripe_key' received no value (stdin empty)",
+            "indent": 9
+          },
+          {
+            "text": "plaintext values are never read from logs or transcripts",
+            "indent": 9
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run as capcli sys vault set stripe_key --in @- and pipe the value on stdin"
+          }
         ]
       }
     ]

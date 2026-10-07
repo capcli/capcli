@@ -14,23 +14,47 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "acquired"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "ttl",
-          "lease_id",
-          "holder",
-          "reason"
+        "items": [
+          {
+            "field": "target",
+            "value": "orders:ORD-10"
+          },
+          {
+            "field": "ttl",
+            "value": "300s"
+          },
+          {
+            "field": "lease_id",
+            "value": "claim_9d21"
+          },
+          {
+            "field": "holder",
+            "value": "agt_7f3k"
+          },
+          {
+            "field": "reason",
+            "value": "batch fulfillment"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_44c1"
+          }
         ]
       }
     ]

@@ -18,20 +18,47 @@
     "remedy": "correct the keyword to WHERE and restate the query"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "Unparseable SQL"
+        "items": [
+          {
+            "text": "FATAL  compile.bad_syntax",
+            "indent": 2
+          },
+          {
+            "text": "UPDATE orders SET status = 'shipped' WHER status = 'processing'",
+            "indent": 9
+          },
+          {
+            "text": "^^^^",
+            "indent": 46
+          },
+          {
+            "field": "Unparseable SQL",
+            "value": "'WHER' is not a recognized keyword; parser fails closed."
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "parser"
+          },
+          {
+            "field": "remedy",
+            "value": "correct the keyword to WHERE and restate the query"
+          }
         ]
       }
     ]

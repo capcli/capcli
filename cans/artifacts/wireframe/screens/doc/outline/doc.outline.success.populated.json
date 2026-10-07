@@ -14,18 +14,63 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "outline doc://refund-policy"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "doc://refund-policy (pinned)",
+            "indent": 2
+          },
+          {
+            "text": "├── 1. Scope",
+            "indent": 2
+          },
+          {
+            "text": "├── 2. Refund windows",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── 2.1 Standard window (30 days)",
+            "indent": 2
+          },
+          {
+            "text": "│     └── 2.2 Extended window (120 days, supervisor approval)",
+            "indent": 2
+          },
+          {
+            "text": "├── 3. Stripe integration notes",
+            "indent": 2
+          },
+          {
+            "text": "├── 4. Currency handling",
+            "indent": 2
+          },
+          {
+            "text": "└── 5. Escalation paths",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "nodes",
-          "sections",
-          "tokens"
+        "items": [
+          {
+            "field": "nodes",
+            "value": "8"
+          },
+          {
+            "field": "sections",
+            "value": "5"
+          },
+          {
+            "field": "tokens",
+            "value": "312 (full document)"
+          }
         ]
       }
     ]

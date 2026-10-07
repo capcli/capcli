@@ -19,25 +19,52 @@
     "layer": "authorizer"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "provider",
-          "signing"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.webhook_signature_required",
+            "indent": 2
+          },
+          {
+            "field": "provider",
+            "value": "stripe"
+          },
+          {
+            "field": "signing",
+            "value": "none armed (vault://stripe_webhook_secret absent)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Unsigned hooks rejected. HMAC-SHA256 verification must be armed at bind time.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "remedy",
+            "value": "store the provider signing secret via sys vault set, then re-run bind webhook"
+          }
         ]
       }
     ]

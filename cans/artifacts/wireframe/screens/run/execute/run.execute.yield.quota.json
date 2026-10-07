@@ -21,24 +21,59 @@
     "suspended_frame": "task_99a8b1"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 6"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "provider",
-          "verb"
+        "items": [
+          {
+            "text": "YIELD  policy.api.quota_exhausted",
+            "indent": 2
+          },
+          {
+            "text": "routine broadcast_newsletter@2 (frame_018)",
+            "indent": 9
+          },
+          {
+            "field": "provider",
+            "value": "threads"
+          },
+          {
+            "field": "verb",
+            "value": "threads.create_media_post"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "tokens_left",
-          "reset_at",
-          "suspended_frame",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "quota"
+          },
+          {
+            "field": "tokens_left",
+            "value": "0 / 50 (24h window)"
+          },
+          {
+            "field": "reset_at",
+            "value": "18:00:00 UTC (in 4h 12m)"
+          },
+          {
+            "field": "suspended_frame",
+            "value": "task_99a8b1"
+          },
+          {
+            "field": "remedy",
+            "value": "task safely yielded; daemon will auto-resume at reset_at"
+          }
         ]
       }
     ]

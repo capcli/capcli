@@ -14,21 +14,43 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 0"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "⚠  clock drift warning",
-          "causal ordering unaffected"
+        "items": [
+          {
+            "field": "⚠  clock drift warning",
+            "value": "host delta vs NTP is 840ms (warning threshold: 500ms)"
+          },
+          {
+            "field": "causal ordering unaffected",
+            "value": "CLOCK_MONOTONIC + SQLite sequence IDs"
+          },
+          {
+            "text": "lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only",
+            "indent": 9
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "host",
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "host",
+            "value": "ws-07 (chronyd reachable, not yet synced)"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "synchronize host system clock via 'chronyd' or 'ntpdate' when convenient; execution is not blocked"
+          }
         ]
       }
     ]

@@ -20,21 +20,55 @@
     "measured": "egress scope: account (permitted scopes: charge, invoice, customer)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "egress"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.forbidden",
+            "indent": 2
+          },
+          {
+            "text": "capcli api prove stripe.delete_account --env sim",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^^^^^^^^^^^^^^^^^",
+            "indent": 25
+          },
+          {
+            "text": "Verb egress rule rejected.",
+            "indent": 8
+          },
+          {
+            "field": "egress",
+            "value": "DELETE https://api.stripe.com/v1/account (account scope)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "egress scope: account (permitted scopes: charge, invoice, customer)"
+          },
+          {
+            "field": "remedy",
+            "value": "prove a scoped-down verb, or request an explicit egress grant for account-scope operations"
+          }
         ]
       }
     ]

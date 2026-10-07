@@ -14,22 +14,43 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "completed"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "verb",
-          "transition",
-          "reason",
-          "callable",
-          "audit_op"
+        "items": [
+          {
+            "field": "verb",
+            "value": "cap://stripe.refund_charge"
+          },
+          {
+            "field": "transition",
+            "value": "active → dormant"
+          },
+          {
+            "field": "reason",
+            "value": "deprecated upstream"
+          },
+          {
+            "field": "callable",
+            "value": "false (dormant verbs are discoverable, inspectable, uncallable)"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_3d8a2"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
         ]
       }
     ]

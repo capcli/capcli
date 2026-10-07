@@ -14,32 +14,78 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "recovery"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "⚠  break-glass active"
+        "items": [
+          {
+            "field": "⚠  break-glass active",
+            "value": "CAPCLI_RECOVERY=1 — policy disabled, audit sink online"
+          }
         ]
       },
       {
         "title": "recovery_shell",
-        "fields": [
-          "mode",
-          "policy_engine",
-          "audit_sink",
-          "chain_status",
-          "entry_event",
-          "allowlist"
+        "items": [
+          {
+            "field": "mode",
+            "value": "degraded (schema and audit sink loaded only)"
+          },
+          {
+            "field": "policy_engine",
+            "value": "disabled"
+          },
+          {
+            "field": "audit_sink",
+            "value": "online"
+          },
+          {
+            "field": "chain_status",
+            "value": "broken at _audit row 8,412 (op_84c1); rows 1-8,411 verified"
+          },
+          {
+            "field": "entry_event",
+            "value": "recovery_mode_entered logged on startup"
+          },
+          {
+            "field": "allowlist",
+            "value": "sql (read-only), db dump, sys audit tail, sys backup"
+          }
         ]
       },
       {
         "title": "repair",
-        "fields": []
+        "items": [
+          {
+            "text": "1. capcli sys audit tail --since 1h   inspect events around the break",
+            "indent": 2
+          },
+          {
+            "text": "2. capcli sys recover 3f9c2ab         reconstruct workspace from object store",
+            "indent": 2
+          },
+          {
+            "text": "3. capcli sys backup --push           re-anchor ledger root after repair",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "note:           diagnostics only; no writes permitted in recovery mode",
+            "indent": 0
+          }
+        ]
       }
     ]
   }

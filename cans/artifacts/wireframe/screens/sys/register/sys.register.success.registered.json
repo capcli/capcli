@@ -14,25 +14,55 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "registered"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "agent_id",
-          "name",
-          "principal",
-          "harness",
-          "token",
-          "status"
+        "items": [
+          {
+            "field": "agent_id",
+            "value": "agt_5k2p"
+          },
+          {
+            "field": "name",
+            "value": "refund-processor"
+          },
+          {
+            "field": "principal",
+            "value": "user:alice"
+          },
+          {
+            "field": "harness",
+            "value": "claude-code"
+          },
+          {
+            "field": "token",
+            "value": "kernel-minted HMAC capability token (bound to active _budget_frames)"
+          },
+          {
+            "field": "status",
+            "value": "active"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op",
-          "note"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_r702"
+          },
+          {
+            "field": "note",
+            "value": "ids and tokens are kernel-issued; self-declared identities are denied"
+          }
         ]
       }
     ]

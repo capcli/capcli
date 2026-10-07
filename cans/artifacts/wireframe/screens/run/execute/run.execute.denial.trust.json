@@ -19,24 +19,56 @@
     "layer": "trust"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target env"
+        "items": [
+          {
+            "text": "FAIL  policy.trust.unproven",
+            "indent": 2
+          },
+          {
+            "text": "routine sync_inventory@3 holds draft trust",
+            "indent": 8
+          },
+          {
+            "field": "target env",
+            "value": "prod (floor: reviewed)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Draft routines cannot execute in production.",
+            "indent": 8
+          },
+          {
+            "text": "Prove in sim first, then ship to reviewed.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "trust"
+          },
+          {
+            "field": "remedy",
+            "value": "prove in sim ('capcli routine prove sync_inventory --env sim'), then ship to reviewed"
+          }
         ]
       }
     ]

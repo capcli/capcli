@@ -14,19 +14,46 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "resolved"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "ask_id",
-          "choice",
-          "question",
-          "resolved_by",
-          "resumed_task",
-          "resumed_frame",
-          "audit_op",
-          "state_modified"
+        "items": [
+          {
+            "field": "ask_id",
+            "value": "ask_88a"
+          },
+          {
+            "field": "choice",
+            "value": "approve"
+          },
+          {
+            "field": "question",
+            "value": "\"Approve refund for order ORD-10?\""
+          },
+          {
+            "field": "resolved_by",
+            "value": "user:alice"
+          },
+          {
+            "field": "resumed_task",
+            "value": "task_99a8b1"
+          },
+          {
+            "field": "resumed_frame",
+            "value": "frame_018"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f34a"
+          },
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
         ]
       }
     ]

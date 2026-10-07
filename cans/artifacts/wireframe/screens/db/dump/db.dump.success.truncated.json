@@ -14,24 +14,51 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "truncated"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "database",
-          "format",
-          "tables",
-          "result_tokens",
-          "truncated",
-          "next_cursor"
+        "items": [
+          {
+            "field": "database",
+            "value": "envs/dev/workspace.db"
+          },
+          {
+            "field": "format",
+            "value": "world.sql (deterministic DDL + seed)"
+          },
+          {
+            "field": "tables",
+            "value": "41"
+          },
+          {
+            "field": "result_tokens",
+            "value": "500 of 31204 (cap: 500)"
+          },
+          {
+            "field": "truncated",
+            "value": "true"
+          },
+          {
+            "field": "next_cursor",
+            "value": "cur_5f2a"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "note"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "use --out <path> to write the full dump to disk"
+          }
         ]
       }
     ]

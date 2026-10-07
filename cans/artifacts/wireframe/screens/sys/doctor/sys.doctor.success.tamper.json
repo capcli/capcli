@@ -14,20 +14,39 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 0"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "⚠  audit tamper isolated"
+        "items": [
+          {
+            "field": "⚠  audit tamper isolated",
+            "value": "SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch"
+          },
+          {
+            "text": "corrupted block moved to quarantine branch; rows 1-8,411 verified, valid history remains operable",
+            "indent": 9
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "chain",
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "chain",
+            "value": "quarantine active (1 block isolated)"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "inspect quarantined block via 'capcli sys doctor' quarantine view, then rebuild proof bundle before any restore"
+          }
         ]
       }
     ]

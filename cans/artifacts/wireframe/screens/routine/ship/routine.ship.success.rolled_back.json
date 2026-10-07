@@ -14,31 +14,68 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "rolled_back"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "promoted_to",
-          "canary"
+        "items": [
+          {
+            "field": "routine",
+            "value": "order_sync@2"
+          },
+          {
+            "field": "promoted_to",
+            "value": "reviewed (auto-promotion conjunction met)"
+          },
+          {
+            "field": "canary",
+            "value": "1h veto window completed with anomalies"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "p95_duration",
-          "drift_events",
-          "action"
+        "items": [
+          {
+            "text": "canary_verdict:",
+            "indent": 2
+          },
+          {
+            "field": "p95_duration",
+            "value": "4120ms vs 890ms baseline (4.6x spike)"
+          },
+          {
+            "field": "drift_events",
+            "value": "2 fingerprint drift events"
+          },
+          {
+            "field": "action",
+            "value": "autonomous circuit-breaker rollback"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "final_rung",
-          "state_modified",
-          "audit",
-          "note"
+        "items": [
+          {
+            "field": "final_rung",
+            "value": "draft (promotion reverted)"
+          },
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit",
+            "value": "op_ship_07 (routine.canary_rollback committed)"
+          },
+          {
+            "field": "note",
+            "value": "re-prove in sim before re-promotion"
+          }
         ]
       }
     ]

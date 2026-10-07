@@ -20,25 +20,56 @@
     "measured": "71334 bytes (cap: 65536)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "delivery"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.webhook_payload_ceiling",
+            "indent": 2
+          },
+          {
+            "field": "delivery",
+            "value": "71334 bytes (ceiling: 65536)"
+          },
+          {
+            "text": "^^^^^",
+            "indent": 18
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Hook payload exceeds 64KB. Oversized deliveries refused at ingress.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "71334 bytes (cap: 65536)"
+          },
+          {
+            "field": "remedy",
+            "value": "trim provider event payloads or split events; ceiling is fixed at 65536 bytes"
+          }
         ]
       }
     ]

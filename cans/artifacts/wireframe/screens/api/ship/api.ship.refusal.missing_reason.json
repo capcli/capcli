@@ -18,24 +18,52 @@
     "remedy": "re-run with --reason stating why the verb is ready for the target rung"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "command",
-          "usage"
+        "items": [
+          {
+            "text": "FATAL  validation.missing_arg",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli api ship threads.create_media_post reviewed"
+          },
+          {
+            "field": "usage",
+            "value": "capcli api ship <provider.verb> <rung> --reason \"<why>\""
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Missing elevation justification.",
+            "indent": 9
+          },
+          {
+            "text": "Trust elevation requires --reason for the audit trail.",
+            "indent": 9
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with --reason stating why the verb is ready for the target rung"
+          }
         ]
       }
     ]

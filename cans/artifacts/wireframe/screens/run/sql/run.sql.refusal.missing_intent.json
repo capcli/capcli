@@ -18,25 +18,52 @@
     "remedy": "restate with -m \"<why>\", e.g. -m \"batch ship processing orders\""
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "Mutating write rejected",
-          "policy.query.writes_require_intent"
+        "items": [
+          {
+            "text": "FATAL  compile.missing_intent",
+            "indent": 2
+          },
+          {
+            "text": "UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100",
+            "indent": 9
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "remedy"
+        "items": [
+          {
+            "field": "Mutating write rejected",
+            "value": "-m/--intent is required for writes."
+          },
+          {
+            "field": "policy.query.writes_require_intent",
+            "value": "no intent, no execution."
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "compile"
+          },
+          {
+            "field": "remedy",
+            "value": "restate with -m \"<why>\", e.g. -m \"batch ship processing orders\""
+          }
         ]
       }
     ]

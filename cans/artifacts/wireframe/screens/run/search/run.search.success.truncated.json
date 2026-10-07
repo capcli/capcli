@@ -14,20 +14,119 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "20 matches for 'stripe' (capped)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "api://stripe.payment_intents.create        api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.payment_intents.confirm       api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.payment_intents.cancel        api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.refund_charge                 api    active",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.charges.list                  api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.customers.create              api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.customers.retrieve            api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.invoices.create               api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.invoices.send                 api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.invoice_items.create          api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.payment_methods.attach        api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.payouts.list                  api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.balance.retrieve              api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.disputes.list                 api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.verification_sessions.create  api    dormant",
+            "indent": 2
+          },
+          {
+            "text": "vault://stripe_secret_key                  vault  missing",
+            "indent": 2
+          },
+          {
+            "text": "vault://stripe_webhook_secret              vault  missing",
+            "indent": 2
+          },
+          {
+            "text": "quota://stripe                             quota  tracked",
+            "indent": 2
+          },
+          {
+            "text": "bind://webhook/stripe/invoice_paid         bind   active",
+            "indent": 2
+          },
+          {
+            "text": "doc://refund-policy                        doc    readable",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "truncated",
-          "result_cap",
-          "total",
-          "next_cursor",
-          "audit_op"
+        "items": [
+          {
+            "field": "truncated",
+            "value": "true"
+          },
+          {
+            "field": "result_cap",
+            "value": "20 (search.max_results)"
+          },
+          {
+            "field": "total",
+            "value": "34"
+          },
+          {
+            "field": "next_cursor",
+            "value": "doc://refund-policy"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2t"
+          }
         ]
       }
     ]

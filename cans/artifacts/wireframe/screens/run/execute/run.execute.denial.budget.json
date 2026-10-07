@@ -20,30 +20,72 @@
     "measured": "frame ops 20/20 · session remaining 488 ops"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "attempted_op",
-          "blocking_level",
-          "remaining",
-          "ancestors"
+        "items": [
+          {
+            "text": "FAIL  policy.budget.exhausted",
+            "indent": 2
+          },
+          {
+            "text": "archive_old_orders@3 (frame_005) exhausted ops: 20/20",
+            "indent": 8
+          },
+          {
+            "field": "attempted_op",
+            "value": "db.exec (op #21 crossed the frame ceiling)"
+          },
+          {
+            "field": "blocking_level",
+            "value": "frame"
+          },
+          {
+            "field": "remaining",
+            "value": "0 ops at frame level"
+          },
+          {
+            "field": "ancestors",
+            "value": "session remaining 488 ops (frame was the tightest constraint)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "No partial execution past budget"
+        "items": [
+          {
+            "field": "No partial execution past budget",
+            "value": "the routine failed cleanly"
+          },
+          {
+            "text": "with zero half-executed side effects.",
+            "indent": 8
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "budget"
+          },
+          {
+            "field": "measured",
+            "value": "frame ops 20/20 · session remaining 488 ops"
+          },
+          {
+            "field": "remedy",
+            "value": "split the work into chunked routines, or raise declared max_ops in a new routine version"
+          }
         ]
       }
     ]

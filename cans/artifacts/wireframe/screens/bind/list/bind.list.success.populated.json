@@ -14,22 +14,64 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "bindings"
+        "items": [
+          {
+            "field": "bindings",
+            "value": "5 total (4 active, 1 paused)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "├── cron",
+            "indent": 2
+          },
+          {
+            "text": "│   ├── bnd_5f8a  nightly_sync    cap://sync_orders       0 3 * * *          active",
+            "indent": 2
+          },
+          {
+            "text": "│   └── bnd_3k2f  weekly_digest   cap://report_summary    0 6 * * 1          paused",
+            "indent": 2
+          },
+          {
+            "text": "├── webhook",
+            "indent": 2
+          },
+          {
+            "text": "│   └── bnd_8d3k  stripe_hook     cap://sync_orders       payment_succeeded  active",
+            "indent": 2
+          },
+          {
+            "text": "└── endpoint",
+            "indent": 2
+          },
+          {
+            "text": "├── bnd_2m7p  dispatch_order  cap://dispatch_order@4  127.0.0.1:4040     active",
+            "indent": 6
+          },
+          {
+            "text": "└── bnd_9x4e  partner_hook    cap://report_summary@3  127.0.0.1:4040     active",
+            "indent": 6
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
         ]
       }
     ]

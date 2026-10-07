@@ -20,20 +20,55 @@
     "measured": "statement rejected at prepare; 0 rows touched"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.drop_table",
+            "indent": 2
+          },
+          {
+            "text": "DROP TABLE orders",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^^^^^^",
+            "indent": 8
+          },
+          {
+            "text": "Table destruction denied at the C authorizer; DDL flows through schema evolution.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_9f2k"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "statement rejected at prepare; 0 rows touched"
+          },
+          {
+            "field": "remedy",
+            "value": "declare removal in schema.yaml and apply via capcli rule apply schema"
+          }
         ]
       }
     ]

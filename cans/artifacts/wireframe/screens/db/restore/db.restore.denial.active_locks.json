@@ -20,27 +20,60 @@
     "measured": "orders:ORD-10 held by agt_9k2w, claim_c3d4; TTL remaining 187s of 300s"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "active"
+        "items": [
+          {
+            "text": "FAIL  db.claims.active_locks",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "snap_migration_004"
+          },
+          {
+            "field": "active",
+            "value": "1 claim on db://orders"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Active claims prevent state reversal; restoring under a live lease would orphan the holder.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_71c9"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "claims"
+          },
+          {
+            "field": "measured",
+            "value": "orders:ORD-10 held by agt_9k2w, claim_c3d4; TTL remaining 187s of 300s"
+          },
+          {
+            "field": "remedy",
+            "value": "wait for lease expiry or ask the holder to release, then re-run 'capcli db restore snap_migration_004'"
+          }
         ]
       }
     ]

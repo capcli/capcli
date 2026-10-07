@@ -18,17 +18,40 @@
     "remedy": "list recovery points with 'capcli sys recover --list', then target an existing commit"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "catalog"
+        "items": [
+          {
+            "text": "FAIL  validation.recovery_point_not_found",
+            "indent": 0
+          },
+          {
+            "text": "commit 1a2b3c4 not found in local catalog or object store.",
+            "indent": 6
+          },
+          {
+            "field": "catalog",
+            "value": "7 recovery points indexed (newest: snap_auto_2026-10-04T0300Z)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         list recovery points with 'capcli sys recover --list', then target an existing commit",
+            "indent": 0
+          }
+        ]
       }
     ]
   }

@@ -18,24 +18,48 @@
     "remedy": "upgrade the workspace policy_version or select a template compiled against policy 4"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "template",
-          "workspace policy_version"
+        "items": [
+          {
+            "text": "FAIL  policy.template.compat_fail",
+            "indent": 2
+          },
+          {
+            "field": "template",
+            "value": "tpl://order_sync@2 (policy_version 5)"
+          },
+          {
+            "field": "workspace policy_version",
+            "value": "4"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Template policy_version mismatch exits 3.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "upgrade the workspace policy_version or select a template compiled against policy 4"
+          }
         ]
       }
     ]

@@ -18,24 +18,52 @@
     "remedy": "sync the provider first, e.g. 'capcli api sync shopify <openapi-url>', or list configured providers via 'capcli api catalog'"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "command",
-          "provider"
+        "items": [
+          {
+            "text": "FATAL  validation.not_found",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli api stats shopify"
+          },
+          {
+            "field": "provider",
+            "value": "shopify"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Target provider not found.",
+            "indent": 9
+          },
+          {
+            "text": "No catalog entry for provider 'shopify' (providers configured: 2).",
+            "indent": 9
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "sync the provider first, e.g. 'capcli api sync shopify <openapi-url>', or list configured providers via 'capcli api catalog'"
+          }
         ]
       }
     ]

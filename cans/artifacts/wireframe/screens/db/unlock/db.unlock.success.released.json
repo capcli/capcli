@@ -14,22 +14,43 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "released"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "lease_id",
-          "holder",
-          "ttl_remaining"
+        "items": [
+          {
+            "field": "target",
+            "value": "orders:ORD-10"
+          },
+          {
+            "field": "lease_id",
+            "value": "claim_9d21"
+          },
+          {
+            "field": "holder",
+            "value": "agt_7f3k"
+          },
+          {
+            "field": "ttl_remaining",
+            "value": "187s (released ahead of TTL)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_6a33"
+          }
         ]
       }
     ]

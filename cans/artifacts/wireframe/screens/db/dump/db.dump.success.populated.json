@@ -14,25 +14,55 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "populated"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "database",
-          "format",
-          "tables",
-          "views",
-          "seed_rows",
-          "bytes",
-          "sha256"
+        "items": [
+          {
+            "field": "database",
+            "value": "envs/dev/workspace.db"
+          },
+          {
+            "field": "format",
+            "value": "world.sql (deterministic DDL + seed)"
+          },
+          {
+            "field": "tables",
+            "value": "6"
+          },
+          {
+            "field": "views",
+            "value": "3"
+          },
+          {
+            "field": "seed_rows",
+            "value": "6"
+          },
+          {
+            "field": "bytes",
+            "value": "18432"
+          },
+          {
+            "field": "sha256",
+            "value": "sha256:1c8b0e3d5a7f294c6e0b8d2a4f6c1e3b5d7a9f0c"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "note"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "deterministic; identical world yields identical bytes"
+          }
         ]
       }
     ]

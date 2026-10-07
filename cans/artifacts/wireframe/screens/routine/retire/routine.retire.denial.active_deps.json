@@ -20,26 +20,68 @@
     "measured": "2 active dependents (0 permitted for retirement)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.retire.deps_exist",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "dispatch_order@4"
+          },
+          {
+            "text": "callers (dependency graph):",
+            "indent": 8
+          },
+          {
+            "text": "├── order_sync@2   imports dispatch_order (reviewed)",
+            "indent": 10
+          },
+          {
+            "text": "└── sync_orders@1  imports dispatch_order (draft)",
+            "indent": 10
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Callee dependencies block retirement; dependents must be retired or rebound first.",
+            "indent": 8
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_retire_02"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "2 active dependents (0 permitted for retirement)"
+          },
+          {
+            "field": "remedy",
+            "value": "retire or rebind order_sync@2 and sync_orders@1 first, then re-run retire"
+          }
         ]
       }
     ]

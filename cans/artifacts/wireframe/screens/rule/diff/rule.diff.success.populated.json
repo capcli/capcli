@@ -14,31 +14,81 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "drift detected (schema vs HEAD)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "base",
-          "working",
-          "scope"
+        "items": [
+          {
+            "field": "base",
+            "value": "git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)"
+          },
+          {
+            "field": "working",
+            "value": "schema.yaml v13 (uncompiled draft)"
+          },
+          {
+            "field": "scope",
+            "value": "4 tables · 23 columns · 8 indexes"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "summary",
-          "next"
+        "items": [
+          {
+            "text": "orders",
+            "indent": 2
+          },
+          {
+            "text": "├── added",
+            "indent": 2
+          },
+          {
+            "text": "│     └── priority (integer default 0)",
+            "indent": 2
+          },
+          {
+            "text": "├── changed",
+            "indent": 2
+          },
+          {
+            "text": "│     └── version 12 -> 13",
+            "indent": 2
+          },
+          {
+            "text": "└── removed",
+            "indent": 2
+          },
+          {
+            "text": "└── none",
+            "indent": 8
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "summary",
+            "value": "1 added · 1 changed · 0 removed"
+          },
+          {
+            "field": "next",
+            "value": "capcli rule apply schema --dry-run"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
         ]
       }
     ]

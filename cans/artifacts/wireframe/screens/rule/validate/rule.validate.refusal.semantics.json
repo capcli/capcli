@@ -18,29 +18,69 @@
     "remedy": "break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "first_item"
+        "items": [
+          {
+            "text": "FAIL  compile.gate_2_circular_ref",
+            "indent": 2
+          },
+          {
+            "text": "--> schema.yaml:47:41",
+            "indent": 8
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "Dependency cycle detected"
+        "items": [
+          {
+            "text": "orders:",
+            "indent": 8
+          },
+          {
+            "text": "columns:",
+            "indent": 10
+          },
+          {
+            "field": "first_item",
+            "value": "int ref=order_items.id"
+          },
+          {
+            "text": "^^^^^^^^^^^^^^^^^^ cyclic_edge",
+            "indent": 28
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "Dependency cycle detected",
+            "value": "orders -> order_items -> orders."
+          },
+          {
+            "text": "Topological table compile order cannot be established.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate"
+          }
         ]
       }
     ]

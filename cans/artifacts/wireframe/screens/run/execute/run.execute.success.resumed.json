@@ -14,30 +14,60 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "resumed"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "task",
-          "routine",
-          "trigger",
-          "yielded_for"
+        "items": [
+          {
+            "field": "task",
+            "value": "task_99a8b1 (background)"
+          },
+          {
+            "field": "routine",
+            "value": "broadcast_newsletter@2 (frame_018 re-dispatched)"
+          },
+          {
+            "field": "trigger",
+            "value": "token refill epoch — threads pool restored to 50/50"
+          },
+          {
+            "field": "yielded_for",
+            "value": "4h 12m (yield_until elapsed at 18:00:00 UTC)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "queue",
-          "retry",
-          "result"
+        "items": [
+          {
+            "field": "queue",
+            "value": "daemon re-queued from _suspended_tasks"
+          },
+          {
+            "field": "retry",
+            "value": "threads.create_media_post replayed under idempotent key"
+          },
+          {
+            "field": "result",
+            "value": "posted (media_id 1793882)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f44e"
+          }
         ]
       }
     ]

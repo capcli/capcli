@@ -18,19 +18,39 @@
     "remedy": "run 'capcli ping list --pending' to list live ask IDs"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "ask_id"
+        "items": [
+          {
+            "text": "FAIL  validation.not_found",
+            "indent": 2
+          },
+          {
+            "field": "ask_id",
+            "value": "ask_51c7"
+          },
+          {
+            "text": "Invalid ask ID; no matching inquiry in _pending_asks.",
+            "indent": 8
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "run 'capcli ping list --pending' to list live ask IDs"
+          }
         ]
       }
     ]

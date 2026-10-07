@@ -20,21 +20,55 @@
     "measured": "1 column write denied (customers.email)"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "column 'email' is immutable (imm_cols"
+        "items": [
+          {
+            "text": "FAIL  policy.authorizer.deny_columns_write",
+            "indent": 2
+          },
+          {
+            "text": "UPDATE customers SET email = :new_email WHERE id = :id",
+            "indent": 8
+          },
+          {
+            "text": "^^^^^",
+            "indent": 29
+          },
+          {
+            "field": "column 'email' is immutable (imm_cols",
+            "value": "[email])"
+          },
+          {
+            "text": "The C authorizer denied the write at prepare time.",
+            "indent": 8
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "layer",
-          "measured",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authorizer"
+          },
+          {
+            "field": "measured",
+            "value": "1 column write denied (customers.email)"
+          },
+          {
+            "field": "remedy",
+            "value": "insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration"
+          }
         ]
       }
     ]

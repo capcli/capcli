@@ -14,38 +14,89 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "overview (487 tokens)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "pending_orders",
-          "shipped_today",
-          "low_stock_alerts",
-          "inbox_backlog"
+        "items": [
+          {
+            "text": "domain_kpis:",
+            "indent": 2
+          },
+          {
+            "field": "pending_orders",
+            "value": "14 (3 rush)"
+          },
+          {
+            "field": "shipped_today",
+            "value": "87"
+          },
+          {
+            "field": "low_stock_alerts",
+            "value": "2 (ethiopia_yirgacheffe, colombia_huila)"
+          },
+          {
+            "field": "inbox_backlog",
+            "value": "6 events queued"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "pending_asks",
-          "unresolved_vault",
-          "active_locks"
+        "items": [
+          {
+            "text": "blockers:",
+            "indent": 2
+          },
+          {
+            "field": "pending_asks",
+            "value": "1 (ask_8812 awaiting user:alice)"
+          },
+          {
+            "field": "unresolved_vault",
+            "value": "1 (stripe_secret_key)"
+          },
+          {
+            "field": "active_locks",
+            "value": "1 (db://orders held by op_9f1c, ttl 4m)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "session_ops",
-          "session_fuel",
-          "threads_quota"
+        "items": [
+          {
+            "text": "budget_headroom:",
+            "indent": 2
+          },
+          {
+            "field": "session_ops",
+            "value": "488 remaining"
+          },
+          {
+            "field": "session_fuel",
+            "value": "80400 remaining"
+          },
+          {
+            "field": "threads_quota",
+            "value": "287 remaining (24h window)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "system_health",
-          "audit_op"
+        "items": [
+          {
+            "field": "system_health",
+            "value": "nominal"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2p"
+          }
         ]
       }
     ]

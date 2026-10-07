@@ -14,24 +14,44 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "queried"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "target",
-          "rows",
-          "duration"
+        "items": [
+          {
+            "field": "target",
+            "value": "_audit (read-only system table)"
+          },
+          {
+            "field": "rows",
+            "value": "0 returned"
+          },
+          {
+            "field": "duration",
+            "value": "1ms"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Zero matching audit rows. Predicate matched nothing in 412 committed events.",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "note"
+        "items": [
+          {
+            "field": "note",
+            "value": "exit_code 5 (kernel.panic) has never fired in this workspace"
+          }
         ]
       }
     ]

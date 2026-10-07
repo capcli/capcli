@@ -14,29 +14,57 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "valid"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "source",
-          "scope"
+        "items": [
+          {
+            "field": "source",
+            "value": "schema.yaml v13"
+          },
+          {
+            "field": "scope",
+            "value": "4 tables · 23 columns · 8 indexes · 2 triggers"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "compiled"
+        "items": [
+          {
+            "text": "gates:",
+            "indent": 2
+          },
+          {
+            "text": "├── Gate 1  syntax     pass (YAML parsed; shorthands expanded; roots present)",
+            "indent": 2
+          },
+          {
+            "text": "└── Gate 2  semantics  pass (relational DAG verified: orders.customer_id -> customers.id)",
+            "indent": 2
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "compiled",
+            "value": "17 DDL statements (deterministic; byte-reproducible)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
         ]
       }
     ]

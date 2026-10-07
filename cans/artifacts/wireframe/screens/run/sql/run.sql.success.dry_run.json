@@ -14,25 +14,55 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "plain",
+      "label": "[dev:tier_1]  dry-run  ✓"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "statement",
-          "ast_check",
-          "authorizer",
-          "intent",
-          "schema_impact",
-          "estimated_rows",
-          "blast_radius"
+        "items": [
+          {
+            "field": "statement",
+            "value": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0"
+          },
+          {
+            "field": "ast_check",
+            "value": "pass"
+          },
+          {
+            "field": "authorizer",
+            "value": "pass (alter on orders allowed in dev)"
+          },
+          {
+            "field": "intent",
+            "value": "declared (\"add priority flag for rush shipping\")"
+          },
+          {
+            "field": "schema_impact",
+            "value": "+1 column (priority)"
+          },
+          {
+            "field": "estimated_rows",
+            "value": "4281"
+          },
+          {
+            "field": "blast_radius",
+            "value": "schema-only (non-destructive)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "note"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "note",
+            "value": "no execution occurred"
+          }
         ]
       }
     ]

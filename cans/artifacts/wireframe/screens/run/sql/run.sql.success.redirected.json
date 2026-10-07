@@ -14,15 +14,30 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "redirected"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "rows",
-          "out",
-          "sha256",
-          "audit_op"
+        "items": [
+          {
+            "field": "rows",
+            "value": "14290"
+          },
+          {
+            "field": "out",
+            "value": "out/orders_export.json (412 KB)"
+          },
+          {
+            "field": "sha256",
+            "value": "9c1f77ab02d4e8f1"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2h"
+          }
         ]
       }
     ]

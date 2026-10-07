@@ -14,28 +14,76 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "tailing"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "mirror",
-          "since",
-          "follow",
-          "events"
+        "items": [
+          {
+            "field": "mirror",
+            "value": "audit/2026-10-03.jsonl (synced, lag 0s)"
+          },
+          {
+            "field": "since",
+            "value": "1h window (from 23:04:11Z)"
+          },
+          {
+            "field": "follow",
+            "value": "live stream active — Ctrl-C to detach"
+          },
+          {
+            "field": "events",
+            "value": "6 in window"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "│     └── tracking",
-          "│     └── rule"
+        "items": [
+          {
+            "text": "├── 23:41:07Z  op_9f2c  routine.run  dispatch_order@4  allowed  340ms",
+            "indent": 2
+          },
+          {
+            "text": "├── 23:41:07Z  op_9f2d  db.query     orders            allowed   12ms",
+            "indent": 2
+          },
+          {
+            "text": "├── 23:41:08Z  op_9f2e  api.call     fedex.ship        allowed  340ms",
+            "indent": 2
+          },
+          {
+            "field": "│     └── tracking",
+            "value": "794644790133"
+          },
+          {
+            "text": "├── 23:41:08Z  op_9f2f  db.execute    orders            allowed   18ms",
+            "indent": 2
+          },
+          {
+            "text": "├── 23:52:30Z  op_c44d1  db.execute   orders            denied      1ms",
+            "indent": 2
+          },
+          {
+            "field": "│     └── rule",
+            "value": "policy.query.update_delete.require_limit"
+          },
+          {
+            "text": "└── 23:58:44Z  op_a11c7  ping.ask     user:alice        allowed     2ms",
+            "indent": 2
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "integrity"
+        "items": [
+          {
+            "field": "integrity",
+            "value": "hash chain valid (root sha256:7f9a1b2c...)"
+          }
         ]
       }
     ]

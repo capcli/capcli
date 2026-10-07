@@ -18,24 +18,52 @@
     "remedy": "list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "command",
-          "verb"
+        "items": [
+          {
+            "text": "FATAL  validation.not_found",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\""
+          },
+          {
+            "field": "verb",
+            "value": "cap://stripe.refund_charges"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Target verb not found.",
+            "indent": 9
+          },
+          {
+            "text": "No verb 'stripe.refund_charges' in provider catalog 'stripe' (verbs: 418).",
+            "indent": 9
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id"
+          }
         ]
       }
     ]

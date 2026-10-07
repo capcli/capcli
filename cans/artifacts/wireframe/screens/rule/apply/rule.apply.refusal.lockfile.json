@@ -18,25 +18,52 @@
     "remedy": "restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path"
   },
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "capcli.lock entry",
-          "compiled root hash",
-          "sources hashed"
+        "items": [
+          {
+            "text": "FATAL  lockfile_mismatch.root_hash_drift",
+            "indent": 2
+          },
+          {
+            "field": "capcli.lock entry",
+            "value": "sha256:4a8f9c2d11e9a4c0"
+          },
+          {
+            "field": "compiled root hash",
+            "value": "sha256:7b31d05e88c2f4a9"
+          },
+          {
+            "field": "sources hashed",
+            "value": "schema.yaml, system-schema.yaml, policy.yaml, governance.yaml"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "Working tree drifted from the locked manifest; DDL application refused.",
+            "indent": 9
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "remedy"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path"
+          }
         ]
       }
     ]

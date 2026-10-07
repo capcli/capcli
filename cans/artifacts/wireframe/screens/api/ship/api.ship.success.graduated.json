@@ -14,23 +14,47 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "graduated"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "verb",
-          "rung",
-          "training_wheels",
-          "evidence",
-          "call 4 executed under replayed contract",
-          "governance"
+        "items": [
+          {
+            "field": "verb",
+            "value": "cap://threads.create_media_post"
+          },
+          {
+            "field": "rung",
+            "value": "draft → reviewed"
+          },
+          {
+            "field": "training_wheels",
+            "value": "cleared on call 4 of 4"
+          },
+          {
+            "field": "evidence",
+            "value": "synthetic contract replay 3/3 passed (calls 1–3)"
+          },
+          {
+            "field": "call 4 executed under replayed contract",
+            "value": "pass"
+          },
+          {
+            "field": "governance",
+            "value": "standard (24h approval windows closed)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
         ]
       }
     ]

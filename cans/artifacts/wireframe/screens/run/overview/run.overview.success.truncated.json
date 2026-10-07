@@ -14,32 +14,80 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "overview (500 tokens, clipped)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "pending_orders",
-          "shipped_today",
-          "low_stock_alerts",
-          "inbox_backlog"
+        "items": [
+          {
+            "text": "domain_kpis:",
+            "indent": 2
+          },
+          {
+            "field": "pending_orders",
+            "value": "142 (11 rush)"
+          },
+          {
+            "field": "shipped_today",
+            "value": "893"
+          },
+          {
+            "field": "low_stock_alerts",
+            "value": "17"
+          },
+          {
+            "field": "inbox_backlog",
+            "value": "42 events queued"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "pending_asks",
-          "unresolved_vault",
-          "active_locks"
+        "items": [
+          {
+            "text": "blockers:",
+            "indent": 2
+          },
+          {
+            "field": "pending_asks",
+            "value": "3 (ask_8812, ask_8830, ask_8831)"
+          },
+          {
+            "field": "unresolved_vault",
+            "value": "2 (stripe_secret_key, fedex_api_key)"
+          },
+          {
+            "field": "active_locks",
+            "value": "4 (db://orders, db://products, db://claims, db://shipments)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "truncated",
-          "token_cap",
-          "next_cursor",
-          "audit_op"
+        "items": [
+          {
+            "text": "────────────────────────────────────────────────────────────────────────────",
+            "indent": 2
+          },
+          {
+            "field": "truncated",
+            "value": "true"
+          },
+          {
+            "field": "token_cap",
+            "value": "500 (max_result_tokens)"
+          },
+          {
+            "field": "next_cursor",
+            "value": "budget_headroom"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2q"
+          }
         ]
       }
     ]

@@ -14,21 +14,56 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "4 gaps since 7d"
+    },
     "sections": [
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "zero_result (ranked first):",
+            "indent": 2
+          },
+          {
+            "text": "\"kombucha supplier sync\"    4 searches · 0 hits · last 2h ago",
+            "indent": 4
+          },
+          {
+            "text": "\"batch invoice csv export\"  3 searches · 0 hits · last 1d ago",
+            "indent": 4
+          }
+        ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "low_conversion (searched, never invoked):",
+            "indent": 2
+          },
+          {
+            "text": "api://stripe.payouts.list   5 views · 0 invokes · last seen 3d ago",
+            "indent": 4
+          },
+          {
+            "text": "api://stripe.disputes.list  3 views · 0 invokes · last seen 5d ago",
+            "indent": 4
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "next_step",
-          "audit_op"
+        "items": [
+          {
+            "field": "next_step",
+            "value": "author a draft routine or expand catalog via capcli api sync"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_9f2u"
+          }
         ]
       }
     ]

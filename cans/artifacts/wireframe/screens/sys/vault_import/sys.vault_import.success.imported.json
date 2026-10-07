@@ -14,25 +14,52 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "imported"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "scanned",
-          "bound"
+        "items": [
+          {
+            "field": "scanned",
+            "value": "process environment for CAPCLI_SECRET_*"
+          },
+          {
+            "field": "bound",
+            "value": "2 secrets (values masked in all outputs)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "├── CAPCLI_SECRET_STRIPE_KEY      → vault://stripe_key      aes-256-gcm",
+            "indent": 2
+          },
+          {
+            "text": "└── CAPCLI_SECRET_RESEND_API_KEY  → vault://resend_api_key  aes-256-gcm",
+            "indent": 2
+          }
+        ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit_op",
-          "note"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit_op",
+            "value": "op_r705"
+          },
+          {
+            "field": "note",
+            "value": "vault.set events committed with SHA-256 fingerprints; plaintext zeroized after ingest"
+          }
         ]
       }
     ]

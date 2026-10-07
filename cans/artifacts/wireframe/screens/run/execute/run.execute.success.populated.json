@@ -14,36 +14,93 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "executed"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "session",
-          "intent",
-          "frame"
+        "items": [
+          {
+            "field": "routine",
+            "value": "dispatch_order@4 (pinned)"
+          },
+          {
+            "field": "session",
+            "value": "ses_a992f"
+          },
+          {
+            "field": "intent",
+            "value": "\"fulfill urgent pending orders\""
+          },
+          {
+            "field": "frame",
+            "value": "frame_021 (3/8 ops · 358ms)"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
-      },
-      {
-        "title": null,
-        "fields": [
-          "order_id",
-          "carrier",
-          "tracking",
-          "status"
+        "items": [
+          {
+            "text": "leaves:",
+            "indent": 2
+          },
+          {
+            "text": "1. db.query    orders (read)               12ms",
+            "indent": 4
+          },
+          {
+            "text": "2. api.call    logistics.shipments.create  340ms",
+            "indent": 4
+          },
+          {
+            "text": "3. db.execute  orders (write)              18ms",
+            "indent": 4
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op",
-          "result_hash",
-          "state_modified"
+        "items": [
+          {
+            "text": "result:",
+            "indent": 2
+          },
+          {
+            "field": "order_id",
+            "value": "ORD-1042"
+          },
+          {
+            "field": "carrier",
+            "value": "fedex"
+          },
+          {
+            "field": "tracking",
+            "value": "794644790133"
+          },
+          {
+            "field": "status",
+            "value": "shipped (1 row committed)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_9f2c"
+          },
+          {
+            "field": "result_hash",
+            "value": "sha256:9c41e7b0d2a8f513c6ee"
+          },
+          {
+            "field": "state_modified",
+            "value": "true"
+          }
         ]
       }
     ]

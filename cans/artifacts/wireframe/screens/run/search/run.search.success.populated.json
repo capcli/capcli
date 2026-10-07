@@ -14,36 +14,86 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "4 matches for 'order'"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "next"
+        "items": [
+          {
+            "text": "cap://dispatch_order@4              routine  pinned",
+            "indent": 2
+          },
+          {
+            "text": "Dispatch paid order to carrier and update status",
+            "indent": 4
+          },
+          {
+            "field": "next",
+            "value": "capcli inspect cap://dispatch_order@4"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "next"
+        "items": [
+          {
+            "text": "api://stripe.payment_intents.create api      dormant",
+            "indent": 2
+          },
+          {
+            "text": "Creates PaymentIntent for card/invoice capture",
+            "indent": 4
+          },
+          {
+            "field": "next",
+            "value": "capcli api activate stripe.payment_intents.create --intent \"...\""
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "next"
+        "items": [
+          {
+            "text": "db://orders                         view     read",
+            "indent": 2
+          },
+          {
+            "text": "Order rows with customer and fulfillment status",
+            "indent": 4
+          },
+          {
+            "field": "next",
+            "value": "capcli sql \"SELECT id FROM orders LIMIT 5\""
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "next"
+        "items": [
+          {
+            "text": "doc://refund-policy                 doc      readable",
+            "indent": 2
+          },
+          {
+            "text": "Refund routing rules and 120-day delegation boundary",
+            "indent": 4
+          },
+          {
+            "field": "next",
+            "value": "capcli doc read doc://refund-policy"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "audit_op"
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_9f2r"
+          }
         ]
       }
     ]

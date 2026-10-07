@@ -14,19 +14,48 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "plain",
+      "label": "[dev:tier_1]  doc://refund-policy (section 3)"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "outline_node",
-          "tokens",
-          "has_more"
+        "items": [
+          {
+            "field": "outline_node",
+            "value": "3. Stripe integration notes"
+          },
+          {
+            "field": "tokens",
+            "value": "84 (cap: 100)"
+          },
+          {
+            "field": "has_more",
+            "value": "false"
+          }
         ]
       },
       {
         "title": null,
-        "fields": []
+        "items": [
+          {
+            "text": "────────────────────────────────────────────────────────────────────────────",
+            "indent": 2
+          },
+          {
+            "text": "Outbound refunds must include `charge_id` and idempotent client request UUID.",
+            "indent": 2
+          },
+          {
+            "text": "Never refund a charge older than 120 days via automated routines; delegate",
+            "indent": 2
+          },
+          {
+            "text": "to human supervisor via `ctx.ping.ask`.",
+            "indent": 2
+          }
+        ]
       }
     ]
   }

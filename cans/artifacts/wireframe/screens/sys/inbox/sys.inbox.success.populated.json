@@ -14,28 +14,56 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "popped"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "channel",
-          "popped",
-          "remaining"
+        "items": [
+          {
+            "field": "channel",
+            "value": "email"
+          },
+          {
+            "field": "popped",
+            "value": "3 events"
+          },
+          {
+            "field": "remaining",
+            "value": "0 queued on channel"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "├── evt_ord_901  2m ago  order",
-          "├── evt_ord_902  5m ago  order",
-          "└── evt_ord_903  9m ago  refund request"
+        "items": [
+          {
+            "text": "events:",
+            "indent": 2
+          },
+          {
+            "text": "├── evt_ord_901  2m ago  order: 60x BEANS-LIGHT-1KG (bluebottle@cafe.com)",
+            "indent": 2
+          },
+          {
+            "text": "├── evt_ord_902  5m ago  order: 12x ESPRESSO-DARK-250G (heretical@roasters.io)",
+            "indent": 2
+          },
+          {
+            "text": "└── evt_ord_903  9m ago  refund request: charge ch_1N2x (ORD-1042)",
+            "indent": 2
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "note"
+        "items": [
+          {
+            "field": "note",
+            "value": "queue advanced; events delivered to caller exactly once"
+          }
         ]
       }
     ]

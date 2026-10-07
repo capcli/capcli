@@ -14,39 +14,89 @@
   },
   "diagnostic": null,
   "render": {
-    "header": "badge",
+    "header": {
+      "style": "badge",
+      "label": "shipped"
+    },
     "sections": [
       {
         "title": null,
-        "fields": [
-          "routine",
-          "rung",
-          "reason"
+        "items": [
+          {
+            "field": "routine",
+            "value": "order_sync@2"
+          },
+          {
+            "field": "rung",
+            "value": "reviewed -> pinned"
+          },
+          {
+            "field": "reason",
+            "value": "\"30d clean canary\""
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "git_status",
-          "invariant_suite",
-          "mutation_tests",
-          "success_rate",
-          "policy_denials",
-          "fingerprint_drift"
+        "items": [
+          {
+            "text": "evidence:",
+            "indent": 2
+          },
+          {
+            "field": "git_status",
+            "value": "prod worktree clean (branch merged, commit 4c89a0b)"
+          },
+          {
+            "field": "invariant_suite",
+            "value": "passed (boundary + idempotency assertions)"
+          },
+          {
+            "field": "mutation_tests",
+            "value": "passed (12/12)"
+          },
+          {
+            "field": "success_rate",
+            "value": "0.99 over 30d canary (floor: 0.95)"
+          },
+          {
+            "field": "policy_denials",
+            "value": "0"
+          },
+          {
+            "field": "fingerprint_drift",
+            "value": "0"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "may_run_unattended",
-          "audit_mode"
+        "items": [
+          {
+            "text": "unlocked:",
+            "indent": 2
+          },
+          {
+            "field": "may_run_unattended",
+            "value": "true"
+          },
+          {
+            "field": "audit_mode",
+            "value": "summary"
+          }
         ]
       },
       {
         "title": null,
-        "fields": [
-          "state_modified",
-          "audit"
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "true"
+          },
+          {
+            "field": "audit",
+            "value": "op_ship_04 (routine.ship committed; promoted_through recorded)"
+          }
         ]
       }
     ]
