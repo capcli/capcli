@@ -60,7 +60,7 @@
       - circuit demotion — sustained routine failure auto-demotes to draft: see time.md#decay-and-subtraction
   - Gates & promotion
     - Ship gate
-      - command — capcli routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
+      - command — see interface.md#Routine-path
       - verification — kernel checks routine_stats and audit mirror directly; --reason optional for human context
       - production prerequisites
         - git status — branch merged into prod worktree
