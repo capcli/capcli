@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.doctor.success.quarantine",
   "target": "sys://audit-chain",
   "command": "capcli sys doctor",

@@ -1,6 +1,6 @@
 {
-  "$schema": "prompt/manifest/v4",
-  "version": 4,
+  "$schema": "prompt/manifest/v1",
+  "version": 1,
   "pointer_type": "prompt://{bank}/{slug}@{version}",
   "ceilings": {
     "zero_turn_seed": 120,

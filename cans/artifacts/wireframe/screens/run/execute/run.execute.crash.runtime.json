@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.crash.runtime",
   "target": "cap://enrich_customers@2",
   "command": "capcli run cap://enrich_customers@2 -p cohort=enterprise -m \"enrich customer records\"",

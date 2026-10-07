@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "rule.apply.denial.trust",
   "target": "schema://orders",
   "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",

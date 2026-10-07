@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "db.lock.refusal.missing_reason",
   "target": "orders:ORD-10",
   "command": "capcli db lock orders:ORD-10 --ttl 300s",

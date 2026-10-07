@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.sql.denial.ast",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",

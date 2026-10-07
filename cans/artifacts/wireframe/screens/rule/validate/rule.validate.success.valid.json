@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "rule.validate.success.valid",
   "target": "schema://orders",
   "command": "capcli rule validate",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.notify.denial.quiet_hours",
   "target": "user:alice",
   "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",

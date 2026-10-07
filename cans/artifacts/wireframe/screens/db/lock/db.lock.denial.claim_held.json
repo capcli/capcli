@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "db.lock.denial.claim_held",
   "target": "orders:ORD-10",
   "command": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",

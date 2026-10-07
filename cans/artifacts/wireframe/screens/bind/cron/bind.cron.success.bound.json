@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.cron.success.bound",
   "target": "cap://sync_orders",
   "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.prove.denial.policy",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",

@@ -1,8 +1,8 @@
 {
-  "version": 4,
+  "version": 1,
   "policy_version": 5,
   "governance_version": 8,
-  "schema_version": 3,
+  "schema_version": 1,
   "lockfile": "capcli.lock",
   "compiled_at": "2026-10-04T00:00:00Z",
   "nouns": [

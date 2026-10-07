@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.denial.network_jail",
   "target": "cap://sneaky_exfil@1",
   "command": "capcli run cap://sneaky_exfil@1 -p db_host=10.0.0.5:5432 -m \"replicate orders to analytics host\"",

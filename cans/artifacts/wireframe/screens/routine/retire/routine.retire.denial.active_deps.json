@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.retire.denial.active_deps",
   "target": "dispatch_order",
   "command": "capcli routine retire dispatch_order --reason \"replaced by unified fulfillment path\"",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.crash.poll_timeout",
   "target": "cap://media_digest@2",
   "command": "capcli run cap://media_digest@2 -p audience=followers -m \"morning media digest\"",

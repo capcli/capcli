@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "api.stats.refusal.not_found",
   "target": "shopify",
   "command": "capcli api stats shopify",

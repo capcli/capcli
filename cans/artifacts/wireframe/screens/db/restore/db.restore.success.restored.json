@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "db.restore.success.restored",
   "target": "db://orders",
   "command": "capcli db restore snap_onboarding_01",

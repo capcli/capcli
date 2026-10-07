@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "api.prove.denial.sim_gap",
   "target": "cap://threads.create_media_post",
   "command": "capcli api prove threads.create_media_post --env sim",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.recover.refusal.not_found",
   "target": "git:1a2b3c4",
   "command": "capcli sys recover 1a2b3c4",

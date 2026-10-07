@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.endpoint.success.bound",
   "target": "cap://dispatch_order@4",
   "command": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",

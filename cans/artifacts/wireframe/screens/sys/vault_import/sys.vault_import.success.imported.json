@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.vault_import.success.imported",
   "target": "CAPCLI_SECRET_*",
   "command": "capcli sys vault import-env",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.revoke.success.revoked",
   "target": "agt_7f3k",
   "command": "capcli sys revoke agt_7f3k",

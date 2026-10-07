@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.denial.authorizer",
   "target": "cap://customer_migrate@2",
   "command": "capcli run cap://customer_migrate@2 -p customer_id=1 -p new_email=alice+corrected@acme.corp -m \"email correction\"",

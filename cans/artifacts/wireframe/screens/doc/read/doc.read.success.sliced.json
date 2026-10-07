@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "doc.read.success.sliced",
   "target": "doc://refund-policy",
   "command": "capcli doc read doc://refund-policy --max-tokens 100",

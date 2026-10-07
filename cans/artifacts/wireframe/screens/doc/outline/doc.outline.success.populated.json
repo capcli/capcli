@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "doc.outline.success.populated",
   "target": "doc://refund-policy",
   "command": "capcli doc outline doc://refund-policy",

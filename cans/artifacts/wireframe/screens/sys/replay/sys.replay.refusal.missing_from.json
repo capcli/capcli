@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.replay.refusal.missing_from",
   "target": "_audit",
   "command": "capcli sys replay",

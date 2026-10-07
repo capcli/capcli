@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.new.refusal.name_taken",
   "target": "sync_orders",
   "command": "capcli routine new sync_orders",

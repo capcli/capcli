@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "rule.show.refusal.not_found",
   "target": "schema://invoices",
   "command": "capcli rule show schema --table invoices",

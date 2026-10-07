@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.expire.success.completed",
   "target": "ask_88a",
   "command": "capcli ping expire ask_88a",

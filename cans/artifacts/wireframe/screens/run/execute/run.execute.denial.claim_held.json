@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.execute.denial.claim_held",
   "target": "cap://dispatch_order@4",
   "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-10 -p carrier=fedex --lock orders:ORD-10 -m \"fulfill urgent pending orders\"",

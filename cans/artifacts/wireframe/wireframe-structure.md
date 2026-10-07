@@ -696,7 +696,7 @@ in §6.2 from the shape and the contract, never copied into a fixture.
 
 ```json
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.sql.denial.ast",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
@@ -740,7 +740,7 @@ in §6.2 from the shape and the contract, never copied into a fixture.
 
 Field law:
 
-- `$schema` is `wireframe/v3`. `screen_id` is the identity; noun and
+- `$schema` is `wireframe/v1`. `screen_id` is the identity; noun and
   verb are its first two segments and appear nowhere else.
 - `target` and `command` state the invocation the screen answers.
 - `state` is the kernel state frame: exit code, domain, trust, env,

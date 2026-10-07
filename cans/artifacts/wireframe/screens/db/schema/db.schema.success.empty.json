@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "db.schema.success.empty",
   "target": "db://orders",
   "command": "capcli db schema",

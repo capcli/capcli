@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.keys.success.issued",
   "target": "partner_hook",
   "command": "capcli bind keys issue partner_hook --principal partner:acme",

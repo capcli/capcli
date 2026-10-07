@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.resolve.denial.expired",
   "target": "ask_88a",
   "command": "capcli ping resolve ask_88a --choice approve",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.search.success.gaps",
   "target": "gaps",
   "command": "capcli search gaps --since 7d",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.revoke.refusal.not_found",
   "target": "agt_0000",
   "command": "capcli sys revoke agt_0000",

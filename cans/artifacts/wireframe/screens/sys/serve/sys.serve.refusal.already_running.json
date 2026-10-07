@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.serve.refusal.already_running",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",

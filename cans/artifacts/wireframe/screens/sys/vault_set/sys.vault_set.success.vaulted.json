@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.vault_set.success.vaulted",
   "target": "stripe_key",
   "command": "capcli sys vault set stripe_key --in @-",

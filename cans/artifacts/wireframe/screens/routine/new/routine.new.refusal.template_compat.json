@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.new.refusal.template_compat",
   "target": "order_sync",
   "command": "capcli routine new order_sync --from tpl://order_sync@2",

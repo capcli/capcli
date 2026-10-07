@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "doc.read.refusal.not_found",
   "target": "doc://refund-policies",
   "command": "capcli doc read doc://refund-policies --max-tokens 100",

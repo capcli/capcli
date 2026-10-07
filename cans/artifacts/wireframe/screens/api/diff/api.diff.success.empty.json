@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "api.diff.success.empty",
   "target": "threads",
   "command": "capcli api diff threads",

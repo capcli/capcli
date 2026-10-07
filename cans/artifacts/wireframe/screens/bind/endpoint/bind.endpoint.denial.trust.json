@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.endpoint.denial.trust",
   "target": "cap://inventory_report@1",
   "command": "capcli bind endpoint inventory_report@1 --auth api-key --rate 60 --channel all",

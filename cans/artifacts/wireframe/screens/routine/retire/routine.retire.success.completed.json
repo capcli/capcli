@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.retire.success.completed",
   "target": "legacy_etl",
   "command": "capcli routine retire legacy_etl --reason \"replaced by unified pipeline\"",

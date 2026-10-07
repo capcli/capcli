@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.overview.success.populated",
   "target": "cap://overview@1",
   "command": "capcli run overview",

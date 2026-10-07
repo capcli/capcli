@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "api.prove.crash.runtime",
   "target": "cap://stripe.issue_credit_note",
   "command": "capcli api prove stripe.issue_credit_note --env sim",

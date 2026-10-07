@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.ship.success.rolled_back",
   "target": "order_sync",
   "command": "capcli routine ship order_sync reviewed",

@@ -1,6 +1,6 @@
 {
-  "$schema": "prompt/triggers/v4",
-  "version": 4,
+  "$schema": "prompt/triggers/v1",
+  "version": 1,
   "triggers": [
     {
       "id": "t_genesis_blank_world",

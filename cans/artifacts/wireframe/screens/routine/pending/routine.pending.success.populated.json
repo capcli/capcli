@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.pending.success.populated",
   "target": null,
   "command": "capcli routine pending",

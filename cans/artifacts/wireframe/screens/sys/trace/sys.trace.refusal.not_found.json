@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.trace.refusal.not_found",
   "target": "op_9f99",
   "command": "capcli sys trace op_9f99 --explain",

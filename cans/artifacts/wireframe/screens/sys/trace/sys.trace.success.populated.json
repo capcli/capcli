@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.trace.success.populated",
   "target": "op_9f2e",
   "command": "capcli sys trace op_9f2e --explain",

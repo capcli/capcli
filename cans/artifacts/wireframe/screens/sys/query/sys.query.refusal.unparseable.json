@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.query.refusal.unparseable",
   "target": "_audit",
   "command": "capcli sys query \"SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20\"",

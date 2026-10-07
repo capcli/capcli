@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.backup.success.completed",
   "target": "sys://workspace",
   "command": "capcli sys backup --push",

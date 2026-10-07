@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.inspect.denial.trust",
   "target": "cap://refund_and_archive@1",
   "command": "capcli inspect cap://refund_and_archive@1",

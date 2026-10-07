@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.register.denial.cap",
   "target": "agents",
   "command": "capcli sys register",

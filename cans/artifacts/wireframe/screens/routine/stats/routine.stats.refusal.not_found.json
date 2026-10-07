@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.stats.refusal.not_found",
   "target": "sync_inventory",
   "command": "capcli routine stats sync_inventory",

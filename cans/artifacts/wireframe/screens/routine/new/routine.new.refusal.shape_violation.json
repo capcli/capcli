@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.new.refusal.shape_violation",
   "target": "sync_orders",
   "command": "capcli routine new sync_orders --template tpl://routine/legacy_sync",

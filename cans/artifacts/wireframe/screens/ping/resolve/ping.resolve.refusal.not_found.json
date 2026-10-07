@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.resolve.refusal.not_found",
   "target": "ask_51c7",
   "command": "capcli ping resolve ask_51c7 --choice approve",

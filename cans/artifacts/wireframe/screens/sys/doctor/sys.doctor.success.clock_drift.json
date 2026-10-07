@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.doctor.success.clock_drift",
   "target": "sys://host",
   "command": "capcli sys doctor",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.inspect.success.populated",
   "target": "bnd_3k2f",
   "command": "capcli bind inspect bnd_3k2f",

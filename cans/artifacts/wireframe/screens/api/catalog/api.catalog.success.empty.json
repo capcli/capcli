@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "api.catalog.success.empty",
   "target": "api://catalog",
   "command": "capcli api catalog",

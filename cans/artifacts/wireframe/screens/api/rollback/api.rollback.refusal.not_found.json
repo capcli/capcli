@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "api.rollback.refusal.not_found",
   "target": "cap://threads.create_media_post",
   "command": "capcli api rollback threads.create_media_post 12",

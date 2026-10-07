@@ -1,6 +1,6 @@
 {
-  "$schema": "wireframe/flows/v2",
-  "version": 2,
+  "$schema": "wireframe/flows/v1",
+  "version": 1,
   "journeys": {
     "journey_human_onboarding": {
       "name": "S0–S10 Human Onboarding & First Write",

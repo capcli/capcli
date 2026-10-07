@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "db.snapshot.success.created",
   "target": "db://orders",
   "command": "capcli db snapshot -m \"pre-migration safety point\"",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.inspect.success.quota",
   "target": "quota://threads",
   "command": "capcli inspect quota://threads",

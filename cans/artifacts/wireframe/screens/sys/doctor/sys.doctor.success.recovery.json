@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.doctor.success.recovery",
   "target": "sys://host",
   "command": "CAPCLI_RECOVERY=1 capcli sys doctor",

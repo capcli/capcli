@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.remove.refusal.not_found",
   "target": "bnd_3k2f",
   "command": "capcli bind remove bnd_3k2f",

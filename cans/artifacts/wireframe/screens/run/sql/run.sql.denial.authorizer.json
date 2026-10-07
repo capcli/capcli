@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.sql.denial.authorizer",
   "target": "db://orders",
   "command": "capcli sql \"DROP TABLE orders\" -m \"remove stale orders table\"",

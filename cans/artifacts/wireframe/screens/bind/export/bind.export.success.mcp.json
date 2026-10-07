@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.export.success.mcp",
   "target": "bind://",
   "command": "capcli bind export mcp --out tools.json",

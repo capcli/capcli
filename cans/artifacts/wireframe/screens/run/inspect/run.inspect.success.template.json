@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.inspect.success.template",
   "target": "tpl://order_sync@2",
   "command": "capcli inspect tpl://order_sync@2",

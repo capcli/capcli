@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.sql.success.truncated",
   "target": "db://orders",
   "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\"",

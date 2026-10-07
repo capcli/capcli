@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.rollback.success.completed",
   "target": "sync_orders",
   "command": "capcli routine rollback sync_orders 3",

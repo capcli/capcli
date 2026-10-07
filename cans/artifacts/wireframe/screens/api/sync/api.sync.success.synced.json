@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "api.sync.success.synced",
   "target": "stripe",
   "command": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",

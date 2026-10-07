@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "routine.retire.refusal.not_found",
   "target": "legacy_etl_backup",
   "command": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",

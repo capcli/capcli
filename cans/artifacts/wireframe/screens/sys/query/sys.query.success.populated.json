@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "sys.query.success.populated",
   "target": "_audit",
   "command": "capcli sys query \"SELECT op_id, domain FROM _audit WHERE exit_code = 2 LIMIT 20\"",

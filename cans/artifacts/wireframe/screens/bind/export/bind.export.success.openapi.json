@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "bind.export.success.openapi",
   "target": "bind://",
   "command": "capcli bind export openapi --out openapi.json",

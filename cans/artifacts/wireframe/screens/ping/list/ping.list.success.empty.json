@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "ping.list.success.empty",
   "target": "_pending_asks",
   "command": "capcli ping list --pending",

@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "api.diff.success.populated",
   "target": "stripe",
   "command": "capcli api diff stripe",

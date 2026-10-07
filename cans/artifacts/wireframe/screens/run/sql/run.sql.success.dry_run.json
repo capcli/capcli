@@ -1,5 +1,5 @@
 {
-  "$schema": "wireframe/v3",
+  "$schema": "wireframe/v1",
   "screen_id": "run.sql.success.dry_run",
   "target": "db://orders",
   "command": "capcli sql \"ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0\" --dry-run -m \"add priority flag for rush shipping\"",
