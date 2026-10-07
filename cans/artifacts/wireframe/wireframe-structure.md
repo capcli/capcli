@@ -131,22 +131,292 @@ The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, 
 
 Canonical file: `flows.json` (same directory). It owns journeys and screen-to-screen routing; this document points at it and does not reproduce it.
 
-Every screen ID referenced by a flow must exist as a fixture pair under `screens/` — the validator enforces closure. Flow prose in §5 quotes individual screens for walkthroughs; the routing itself lives only in `flows.json`.
+Every screen ID referenced by a flow must exist as a fixture pair under `screens/` and as a row in §4 — the validator enforces closure. Flow prose in §5 quotes individual screens for walkthroughs; the routing itself lives only in `flows.json`.
 
 ---
 
-## 4. Screen Inventory
+## 4. Complete Screen Inventory & State Matrix
 
-The fixture pairs under `screens/` are the inventory. State and domain
-legality lives in `_states.json`; routing lives in `flows.json`. No
-screen table exists in this document: a hand-maintained copy of the
-fixture tree is a second inventory, and the two desync.
+This table is a context index: one scannable surface a reader loads
+before drilling into fixture pairs. It indexes; it does not originate.
+Fixture pairs under `screens/` are the source, `_states.json` owns
+state and domain legality, and `flows.json` owns routing. Every row
+resolves to one fixture pair and every fixture pair has one row —
+the validator enforces closure, and in any conflict the fixture wins.
 
-Validator closure: every fixture pair is a legal screen (state slot,
-exit, and domain agree with `_states.json`), every screen ID named in
-`flows.json` exists as a fixture pair, and every fixture pair follows
-the pairing and naming law in §1.1. Counts come from disk at validation
-time and appear in no document.
+
+### 4.1 `run/` (5 verbs $\\rightarrow$ 37 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `run.execute.success.populated` | success | 0 | — | populated | Deterministic execution and commit |
+| `run.execute.success.redirected` | success | 0 | — | redirected | Payload directed to file via `--out`; stdout emits receipt |
+| `run.execute.success.truncated` | success | 0 | — | truncated | Result $>500$ tokens; returns `next_cursor` |
+| `run.execute.denial.budget` | denial | 2 | policy.budget | exhausted | Frame ops/duration ceiling exhausted |
+| `run.execute.denial.budget_cascade` | denial | 2 | policy.budget | starved | Pre-flight call-tree analysis detects starved child branch; invocation blocked |
+| `run.execute.denial.trust` | denial | 2 | policy.trust | unproven | Draft routine executed in prod |
+| `run.execute.denial.tier2_pinned` | denial | 2 | policy.trust | tier2 | `E045_TIER2_PINNED_DENIED` on macOS/Win |
+| `run.execute.denial.authorizer` | denial | 2 | policy.authorizer | forbidden | Prohibited table or column mutation |
+| `run.execute.denial.network_jail` | denial | 2 | kernel.sandbox | syscall_42 | Trapped raw `connect()` via seccomp-bpf |
+| `run.execute.denial.claim_held` | denial | 2 | db.claims | locked | Exclusive `--lock` ref already held |
+| `run.execute.refusal.missing_secret`| refusal| 3 | policy.secrets | missing_key | Missing credential redirects to Cockpit URL |
+| `run.execute.yield.ask` | yield | 6 | ping.ask | suspended | Routine hit `ctx.ping.ask`; frame checkpointed to `_pending_asks`, exits 6 until human resolves |
+| `run.execute.yield.quota` | yield | 6 | api.quota | rate_limit | Suspends task; sets `yield_until` timestamp |
+| `run.execute.success.resumed` | success | 0 | — | resumed | Daemon re-dispatches task on token refill |
+| `run.execute.crash.runtime` | crash | 4 | routine.runtime | exception | Guest language uncaught error |
+| `run.execute.crash.poll_timeout` | crash | 4 | routine.runtime | timeout | `poll_until` exceeds 30-second ceiling |
+| `run.execute.panic.secret_leak` | panic | 5 | kernel.panic | leak | `kill_and_alert` triggered on plaintext secret leak |
+| `run.sql.success.populated` | success | 0 | — | populated | AST-vetted SQL commit |
+| `run.sql.success.dry_run` | success | 0 | — | dry_run | Execution plan preview with impact metrics |
+| `run.sql.success.redirected` | success | 0 | — | redirected | SQL export payload directed to disk via `--out` |
+| `run.sql.success.truncated` | success | 0 | — | truncated | SELECT result bounded at 10,000 rows |
+| `run.sql.denial.ast` | denial | 2 | policy.ast | unbounded | Missing `WHERE` or `LIMIT` clause |
+| `run.sql.denial.authorizer` | denial | 2 | policy.authorizer | schema_mod | Blocked `DROP TABLE` or system table write |
+| `run.sql.denial.engine_busy` | denial | 2 | db.engine | timeout | SQLite transaction queue wait timeout |
+| `run.sql.refusal.unparseable` | refusal | 3 | compile | bad_syntax | Malformed SQL string syntax |
+| `run.sql.refusal.missing_intent` | refusal | 3 | compile | no_intent | Mutating write missing `-m` / `--intent` |
+| `run.overview.success.populated` | success | 0 | — | populated | Situational KPI briefing ($<500$ tokens) |
+| `run.overview.success.truncated` | success | 0 | — | truncated | Oversized overview clipped |
+| `run.search.success.populated` | success | 0 | — | populated | Matched capabilities and URP pointers |
+| `run.search.success.empty` | success | 0 | — | empty | Zero hits; outputs semantic suggestions |
+| `run.search.success.truncated` | success | 0 | — | truncated | Search results capped at 20 |
+| `run.search.success.gaps` | success | 0 | — | gaps | Surfaces missing capabilities via `--since` |
+| `run.inspect.success.routine` | success | 0 | — | populated | Pre-flight envelope with `can_invoke_now` |
+| `run.inspect.success.quota` | success | 0 | — | populated | Headroom breakdown on `quota://` URP |
+| `run.inspect.success.template` | success | 0 | — | populated | Inspection envelope on `tpl://` blueprint |
+| `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
+| `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
+
+### 4.2 `db/` (6 verbs $\\rightarrow$ 14 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `db.lock.success.acquired` | success | 0 | — | acquired | Exclusive claim lease registered |
+| `db.lock.denial.claim_held` | denial | 2 | db.claims | held | Target resource currently claimed |
+| `db.lock.refusal.missing_reason` | refusal | 3 | validation | missing_arg | `--reason` required for locking |
+| `db.unlock.success.released` | success | 0 | — | released | Claim lease released ahead of TTL |
+| `db.unlock.denial.not_holder` | denial | 2 | policy.authorizer | unauthorized | Caller does not own the claim |
+| `db.schema.success.populated` | success | 0 | — | populated | Live DDL schema introspected |
+| `db.schema.success.empty` | success | 0 | — | empty | Empty database state |
+| `db.snapshot.success.created` | success | 0 | — | created | Point-in-time snapshot committed |
+| `db.snapshot.denial.prod_draft` | denial | 2 | policy.trust | forbidden | Draft identity cannot snapshot prod |
+| `db.restore.success.restored` | success | 0 | — | restored | DB state restored from snapshot |
+| `db.restore.refusal.missing_id` | refusal | 3 | missing_param | missing_arg | Target snapshot ID missing |
+| `db.restore.denial.active_locks` | denial | 2 | db.claims | active_locks | Active claims prevent state reversal |
+| `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
+| `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
+
+### 4.3 `routine/` (8 verbs $\\rightarrow$ 26 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `routine.new.success.created` | success | 0 | — | created | Routine scaffold committed |
+| `routine.new.refusal.name_taken` | refusal | 3 | validation | collision | Routine name already registered |
+| `routine.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates LOC or param limits |
+| `routine.new.refusal.template_compat` | refusal | 3 | policy.template | compat_fail | Template policy_version mismatch exits 3 |
+| `routine.prove.success.passed` | success | 0 | — | passed | Dynamic fingerprint verified |
+| `routine.prove.denial.shape` | denial | 2 | policy.authorizer | bad_shape | Execution violates declared limits |
+| `routine.prove.denial.policy` | denial | 2 | policy.authorizer | illegal_leaf | Routine attempts forbidden leaf op |
+| `routine.prove.denial.sandbox` | denial | 2 | kernel.sandbox | breach | Jail containment boundary violation |
+| `routine.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Uncaught exception in test pass |
+| `routine.ship.success.shipped` | success | 0 | — | shipped | Routine promoted to new trust rung |
+| `routine.ship.success.rolled_back` | success | 0 | — | rolled_back | Canary telemetry trips auto-rollback |
+| `routine.ship.denial.metrics` | denial | 2 | policy.authorizer | low_success | Success rate falls below 0.95 |
+| `routine.ship.refusal.missing_reason`| refusal | 3 | validation | missing_arg | Elevation to pinned requires reason |
+| `routine.ship.denial.trust` | denial | 2 | policy.trust | tier2_refusal | Pinned promotion denied on Tier 2 |
+| `routine.pending.success.populated` | success | 0 | — | populated | Batch promotion candidates listed |
+| `routine.pending.success.empty` | success | 0 | — | empty | No routines pending promotion |
+| `routine.sweep.success.populated` | success | 0 | — | populated | Deduplication proposals generated |
+| `routine.sweep.success.empty` | success | 0 | — | empty | No duplicate routines detected |
+| `routine.stats.success.populated` | success | 0 | — | populated | Routine p50/p95 execution metrics |
+| `routine.stats.refusal.not_found` | refusal | 3 | validation | not_found | Routine name does not exist |
+| `routine.rollback.success.completed`| success | 0 | — | completed | Reverts pointer to prior version |
+| `routine.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback depth of 5 |
+| `routine.rollback.refusal.not_found`| refusal | 3 | validation | not_found | Target version not found in history |
+| `routine.retire.success.completed` | success | 0 | — | completed | Routine retired from service |
+| `routine.retire.denial.active_deps` | denial | 2 | policy.authorizer | deps_exist | Callee dependencies block retirement |
+| `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
+
+### 4.4 `api/` (8 verbs $\\rightarrow$ 23 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `api.sync.success.synced` | success | 0 | — | synced | OpenAPI spec compiled to catalog |
+| `api.sync.denial.rate` | denial | 2 | api.quota | rate_limit | Sync call within 24h cooldown |
+| `api.sync.refusal.missing_url` | refusal | 3 | missing_param | missing_arg | Upstream spec URL omitted |
+| `api.diff.success.populated` | success | 0 | — | populated | Spec divergence detected |
+| `api.diff.success.empty` | success | 0 | — | empty | Zero drift from active catalog |
+| `api.catalog.success.populated` | success | 0 | — | populated | Imported catalog verbs listed |
+| `api.catalog.success.empty` | success | 0 | — | empty | Zero APIs configured |
+| `api.catalog.success.truncated` | success | 0 | — | truncated | Truncated at 500 verbs |
+| `api.prove.success.passed` | success | 0 | — | passed | Rehearsal in sim verified |
+| `api.prove.denial.sim_gap` | denial | 2 | policy.authorizer | sim_gap | Missing mock fixture in sim |
+| `api.prove.denial.policy` | denial | 2 | policy.authorizer | forbidden | Verb egress rule rejected |
+| `api.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Upstream contract format failure |
+| `api.ship.success.shipped` | success | 0 | — | shipped | Promoted to reviewed |
+| `api.ship.success.graduated` | success | 0 | — | graduated | 100% schema match & shadow canary passed |
+| `api.ship.denial.metrics` | denial | 2 | policy.authorizer | unproven | Fails synthetic contract replay |
+| `api.ship.refusal.missing_reason` | refusal | 3 | validation | missing_arg | Missing elevation justification |
+| `api.stats.success.populated` | success | 0 | — | populated | Quota usage and error metrics |
+| `api.stats.refusal.not_found` | refusal | 3 | validation | not_found | Target provider not found |
+| `api.retire.success.completed` | success | 0 | — | completed | API verb deactivated to dormant |
+| `api.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target verb not found |
+| `api.rollback.success.completed` | success | 0 | — | completed | Reverts API spec to prior hash |
+| `api.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback limit of 5 |
+| `api.rollback.refusal.not_found` | refusal | 3 | validation | not_found | Target version not found |
+
+### 4.5 `bind/` (10 verbs $\\rightarrow$ 26 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `bind.cron.success.bound` | success | 0 | — | bound | Schedule bound to routine |
+| `bind.cron.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 20 active schedules reached |
+| `bind.cron.denial.interval` | denial | 2 | policy.authorizer | interval_low| Interval lower than 5-minute cap |
+| `bind.cron.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent flag |
+| `bind.webhook.success.bound` | success | 0 | — | bound | Inbound hook route activated |
+| `bind.webhook.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active hooks reached |
+| `bind.webhook.denial.unsigned` | denial | 2 | policy.authorizer | unsigned | Unsigned hooks rejected |
+| `bind.webhook.denial.payload_size` | denial | 2 | policy.authorizer | too_large | Hook payload exceeds 64KB |
+| `bind.webhook.refusal.missing_ingress`| refusal| 3 | compile | no_ingress | Missing public ingress URL/tunnel |
+| `bind.endpoint.success.bound` | success | 0 | — | bound | Routine exposed as HTTP/MCP |
+| `bind.endpoint.denial.trust` | denial | 2 | policy.trust | unpinned | Endpoint requires pinned trust |
+| `bind.endpoint.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 10 active endpoints reached |
+| `bind.export.success.openapi` | success | 0 | — | exported | Bound OpenAPI schema exported |
+| `bind.export.success.mcp` | success | 0 | — | exported | Bound MCP tool definition exported |
+| `bind.list.success.populated` | success | 0 | — | populated | Active bindings displayed |
+| `bind.list.success.empty` | success | 0 | — | empty | Zero bindings active |
+| `bind.inspect.success.populated` | success | 0 | — | populated | Binding configuration envelope |
+| `bind.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
+| `bind.pause.success.completed` | success | 0 | — | completed | Trigger paused |
+| `bind.pause.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
+| `bind.resume.success.completed` | success | 0 | — | completed | Trigger resumed |
+| `bind.resume.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
+| `bind.remove.success.completed` | success | 0 | — | completed | Trigger dismantled |
+| `bind.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
+| `bind.keys.success.issued` | success | 0 | — | issued | API key stamped for endpoint (90d expiry) |
+| `bind.keys.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 25 keys reached |
+
+### 4.6 `ping/` (5 verbs $\\rightarrow$ 14 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `ping.notify.success.dispatched` | success | 0 | — | dispatched | Notification dispatched |
+| `ping.notify.denial.quiet_hours` | denial | 2 | policy.authorizer | quiet_hours | Blocked between 22:00 and 07:00 |
+| `ping.notify.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent declaration |
+| `ping.ask.success.suspended` | success | 0 | — | suspended | Human question queued with Cockpit URL |
+| `ping.ask.denial.options_cap` | denial | 2 | policy.authorizer | cap_exceeded| Exceeds 5 structured choices |
+| `ping.ask.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent declaration |
+| `ping.list.success.populated` | success | 0 | — | populated | Pending suspension questions |
+| `ping.list.success.empty` | success | 0 | — | empty | Zero pending inquiries |
+| `ping.resolve.success.resolved` | success | 0 | — | resolved | Choice selected; resumes task |
+| `ping.resolve.denial.occ_conflict`| denial | 2 | db.engine | stale_state | Touched rows modified during suspension; OCC fence violated |
+| `ping.resolve.refusal.not_found` | refusal | 3 | validation | not_found | Invalid ask ID |
+| `ping.resolve.denial.expired` | denial | 2 | policy.notify | expired | Timeout elapsed; fail-closed |
+| `ping.expire.success.completed` | success | 0 | — | completed | Explicit expiration executed |
+| `ping.expire.refusal.not_found` | refusal | 3 | validation | not_found | Target inquiry not found |
+
+### 4.7 `rule/` (4 verbs $\\rightarrow$ 12 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `rule.show.success.populated` | success | 0 | — | populated | Compiled DDL / authorizer rules |
+| `rule.show.refusal.not_found` | refusal | 3 | validation | not_found | Target rule/table not found |
+| `rule.diff.success.populated` | success | 0 | — | populated | Schema/policy drift detected |
+| `rule.diff.success.empty` | success | 0 | — | empty | Workspace in lockstep with rules |
+| `rule.apply.success.applied` | success | 0 | — | applied | DDL applied in transaction |
+| `rule.apply.success.dry_run` | success | 0 | — | dry_run | DDL impact preview on snapshot |
+| `rule.apply.denial.trust` | denial | 2 | policy.trust | unproven | `ALTER` requires reviewed trust |
+| `rule.apply.refusal.validation` | refusal | 3 | validation | rejected | Gate 2 semantic check fails |
+| `rule.apply.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
+| `rule.validate.success.valid` | success | 0 | — | valid | Declarations pass Gates 1 & 2 |
+| `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Gate 1 YAML syntax failure |
+| `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Gate 2 circular dependency detected |
+
+### 4.8 `env/` (7 verbs $\\rightarrow$ 20 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `env.new.success.created` | success | 0 | — | created | New worktree namespace created |
+| `env.new.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 5 environments reached |
+| `env.new.refusal.name_taken` | refusal | 3 | validation | collision | Environment name exists |
+| `env.new.refusal.bundle_too_large` | refusal | 3 | policy.template | size_overflow | Bundle exceeds 5MB ceiling |
+| `env.use.success.switched` | success | 0 | — | switched | Sticky context switched |
+| `env.use.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
+| `env.list.success.populated` | success | 0 | — | populated | Environments listed |
+| `env.inspect.success.populated` | success | 0 | — | populated | Health, staleness, and drift status |
+| `env.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
+| `env.doctor.success.healthy` | success | 0 | — | healthy | Verified schema and clean worktree |
+| `env.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Schema divergence detected |
+| `env.merge.success.merged` | success | 0 | — | merged | DDL forwarded to production |
+| `env.merge.denial.trust` | denial | 2 | policy.trust | unreviewed | Production merge requires reviewed |
+| `env.merge.refusal.plan_conflict` | refusal | 3 | compile | conflict | Target schema migration plan conflict blocks DDL |
+| `env.merge.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile out of sync |
+| `env.merge.refusal.unmerged` | refusal | 3 | compile | unmerged | Git branch conflict blocks DDL forwarding: env branches diverge on schema declaration |
+| `env.remove.success.removed` | success | 0 | — | removed | Environment dismantled |
+| `env.remove.denial.prod_flags` | denial | 2 | policy.authorizer | prod_flags | Prod removal requires dual confirmation flags; neither was present |
+| `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
+| `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
+
+### 4.9 `sys/` (16 verbs $\\rightarrow$ 45 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `sys.help.success.stub` | success | 0 | — | stub | 6-line minimalist help stub redirecting to search |
+| `sys.inbox.success.populated` | success | 0 | — | populated | Sensory events popped from queue |
+| `sys.inbox.success.empty` | success | 0 | — | empty | Sensory inbox completely drained |
+| `sys.tail.success.populated` | success | 0 | — | populated | Live streaming audit records |
+| `sys.tail.success.empty` | success | 0 | — | empty | No audit events within window |
+| `sys.trace.success.populated` | success | 0 | — | populated | Causal DAG walk with `--explain` tree |
+| `sys.trace.refusal.not_found` | refusal | 3 | validation | not_found | Target operation ID missing |
+| `sys.query.success.populated` | success | 0 | — | populated | SQL executed against `_audit` |
+| `sys.query.success.empty` | success | 0 | — | empty | Zero matching audit rows |
+| `sys.query.refusal.unparseable`| refusal | 3 | compile | bad_syntax | Malformed SQL audit query |
+| `sys.replay.success.replayed` | success | 0 | — | replayed | Deterministic execution from log |
+| `sys.replay.denial.external` | denial | 2 | policy.authorizer | external_op | HTTP calls require manual flag |
+| `sys.replay.refusal.missing_from`| refusal| 3 | missing_param | missing_arg | Target timestamp or commit omitted |
+| `sys.register.success.registered`| success| 0 | — | registered | Kernel-minted agent ID issued |
+| `sys.register.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max agents exceeded |
+| `sys.agents.success.populated` | success | 0 | — | populated | Registered agents listed |
+| `sys.agents.success.empty` | success | 0 | — | empty | Zero registered agents |
+| `sys.revoke.success.revoked` | success | 0 | — | revoked | Agent credentials killed |
+| `sys.revoke.refusal.not_found` | refusal | 3 | validation | not_found | Target agent ID not found |
+| `sys.vault_set.success.vaulted` | success | 0 | — | vaulted | AES-256-GCM secret encrypted |
+| `sys.vault_set.refusal.missing_val` | refusal | 3 | missing_param | missing_arg | Target secret value omitted |
+| `sys.vault_import.success.imported`| success| 0 | — | imported | Scanned and bound `CAPCLI_SECRET_*`|
+| `sys.vault_import.refusal.no_env_vars`|refusal|3 | validation | not_found | No matching environment variables |
+| `sys.doctor.success.nominal` | success | 0 | — | nominal | Host doctor readiness check |
+| `sys.doctor.success.report` | success | 0 | — | report | Full YAML Trust Receipt |
+| `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
+| `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or supported sandbox provider (bwrap/crun/microvm) |
+| `sys.doctor.success.clock_drift`| success| 0 | — | clock_skew | Host clock delta $>500$ms vs NTP (warning only; monotonic fallback active) |
+| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Audit SHA-256 chain broken with quarantine sink unreachable; kill_and_alert, boot refused |
+| `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode (CAPCLI_RECOVERY=1): policy disabled, audit sink online, diagnostics only |
+| `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
+| `sys.doctor.success.tamper` | success | 0 | — | tampered | Audit SHA-256 chain broken; corrupted block isolated to quarantine |
+| `sys.doctor.success.quarantine`| success | 0 | — | quarantine | Quarantine ledger inspection active |
+| `sys.doctor.denial.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
+| `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |
+| `sys.backup.denial.push_fail` | denial | 2 | policy.authorizer | push_fail | Remote S3/Git push rejected |
+| `sys.recover.success.restored` | success | 0 | — | restored | Reconstructed from object store |
+| `sys.recover.refusal.not_found` | refusal | 3 | validation | not_found | Recovery snapshot missing |
+| `sys.recover.denial.active_locks`| denial | 2 | db.claims | active_locks | Active locks prevent state reversal |
+| `sys.exec.success.completed` | success | 0 | — | completed | Isolated command executed in jail |
+| `sys.exec.denial.sandbox` | denial | 2 | kernel.sandbox | violation | Attempted unconfined escape |
+| `sys.exec.crash.runtime` | crash | 4 | routine.runtime | crash | Executable process crash |
+| `sys.serve.success.running` | success | 0 | — | running | IPC/WS/HTTP daemon active |
+| `sys.serve.refusal.already_running`| refusal| 3 | compile | port_bound | Daemon process already running |
+| `sys.serve.denial.port` | denial | 2 | db.engine | port_denied | Port 4040 binding rejected |
+
+### 4.10 `doc/` (3 verbs $\\rightarrow$ 6 screen pairs)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `doc.read.success.populated` | success | 0 | — | populated | Full document returned bounded |
+| `doc.read.success.sliced` | success | 0 | — | sliced | Progressive disclosure: section + token cap |
+| `doc.read.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
+| `doc.outline.success.populated` | success | 0 | — | populated | Outline node tree with section indices |
+| `doc.outline.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
+| `doc.inspect.success.populated` | success | 0 | — | populated | Document metadata, tokens, and node count |
 
 ---
 
