@@ -36,8 +36,16 @@
     "trailer": {
       "human_field": "trailer",
       "machine_field": "next_action",
-      "human_type": "string",
-      "machine_type": "object",
+      "human_format": "trailer: <prompt> - <reason>",
+      "machine_schema": {
+        "type": "object",
+        "required": ["prompt", "reason", "serve"],
+        "properties": {
+          "prompt": { "type": "string", "pattern": "^prompt://[a-z_]+/[a-z_]+@\\d+$" },
+          "reason": { "type": "string" },
+          "serve": { "type": "string", "enum": ["L1", "blocked"] }
+        }
+      },
       "position": "final line of human output; additive envelope key in --json",
       "effect": "rendering only: exit code, state_modified, and every other output byte of the host screen are unchanged"
     }

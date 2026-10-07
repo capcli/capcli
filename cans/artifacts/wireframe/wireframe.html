@@ -90,9 +90,61 @@ function updateTransform() {
   scene.setAttribute('transform', `matrix(${transform.k} 0 0 ${transform.k} ${transform.x} ${transform.y})`);
 }
 
-fetch('flows.json')
+fetch('_flows.json')
   .then(r => r.json())
-  .then(data => { flowsData = data; });
+  .then(data => { flowsData = data; renderGraph(data); });
+
+const EXIT_BY_STATE = { success: 0, denial: 2, refusal: 3, crash: 4, panic: 5, yield: 6 };
+const NODE_W = 180, NODE_H = 36, COL_W = 220, ROW_H = 80, ORIGIN = { x: 50, y: 100 }, COLS = 6;
+
+function exitCodeFor(screenId) {
+  return EXIT_BY_STATE[screenId.split('.')[2]] ?? 0;
+}
+
+function renderGraph(data) {
+  const ids = new Set();
+  data.transitions.forEach(t => { t.from.forEach(id => ids.add(id)); t.to.forEach(id => ids.add(id)); });
+  Object.values(data.journeys).forEach(j => { ids.add(j.entry); ids.add(j.terminal); });
+
+  const pos = new Map();
+  [...ids].sort().forEach((id, i) => {
+    pos.set(id, { x: ORIGIN.x + (i % COLS) * COL_W, y: ORIGIN.y + Math.floor(i / COLS) * ROW_H });
+  });
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+
+  data.transitions.forEach(t => {
+    t.from.forEach(fromId => t.to.forEach(toId => {
+      const a = pos.get(fromId), b = pos.get(toId);
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('class', `edge ${t.arrow_type || ''}`.trim());
+      path.setAttribute('d', `M ${a.x + NODE_W} ${a.y + NODE_H / 2} L ${b.x} ${b.y + NODE_H / 2}`);
+      scene.appendChild(path);
+    }));
+  });
+
+  pos.forEach((pt, id) => {
+    const g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'node');
+    g.setAttribute('transform', `translate(${pt.x}, ${pt.y})`);
+    g.onclick = () => {
+      const parts = id.split('.');
+      loadScreen(id, `screens/${parts[0]}/${parts[1]}/${id}.txt`, exitCodeFor(id));
+    };
+    const rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('width', NODE_W);
+    rect.setAttribute('height', NODE_H);
+    rect.setAttribute('fill', '#161b22');
+    rect.setAttribute('stroke', '#30363d');
+    const text = document.createElementNS(svgNS, 'text');
+    text.setAttribute('x', 10);
+    text.setAttribute('y', 22);
+    text.textContent = id.length > 22 ? id.slice(0, 20) + '\u2026' : id;
+    g.appendChild(rect);
+    g.appendChild(text);
+    scene.appendChild(g);
+  });
+}
 
 function loadScreen(screenId, txtPath, exitCode) {
   document.getElementById('screen-id-display').textContent = screenId;
@@ -125,7 +177,7 @@ function renderOutActions(screenId) {
       btn.onclick = () => {
         const parts = targetId.split('.');
         const txtPath = `screens/${parts[0]}/${parts[1]}/${targetId}.txt`;
-        loadScreen(targetId, txtPath, 0);
+        loadScreen(targetId, txtPath, exitCodeFor(targetId));
       };
       container.appendChild(btn);
     });
@@ -140,7 +192,7 @@ function focusJourney(journeyId) {
     document.getElementById('terminal-body').textContent = journey.description;
     const parts = journey.entry.split('.');
     const txtPath = `screens/${parts[0]}/${parts[1]}/${journey.entry}.txt`;
-    loadScreen(journey.entry, txtPath, 0);
+    loadScreen(journey.entry, txtPath, exitCodeFor(journey.entry));
   }
 }
 </script>

@@ -86,6 +86,10 @@ Caps, stated once:
 - `manifest.json` in this directory is the compiled campaign inventory
   (bank, stem, file, status), generated from bank frontmatter.
   `_triggers.json` is the sole trigger registry (§5).
+- Naming convention, both artifact directories: a leading underscore
+  marks internal engine configuration and graph state (`_triggers.json`,
+  `_states.json`, `_flows.json`); a clean name marks an externally
+  consumable compiler artifact (`manifest.json`).
 
 ## 5. Triggers
 
@@ -126,7 +130,7 @@ registry is a second inventory, and the two desync. Counts come from
 | Full schema / routine teaching | `docs/` via `doc://` pointers in bank `docs:` frontmatter; banks keep one action-sized fragment per stage |
 | Trigger registry | `cans/artifacts/prompt/_triggers.json` — the only home |
 | Campaign inventory | `cans/artifacts/prompt/manifest.json` |
-| Wireframe trailer slot | `cans/artifacts/wireframe/wireframe-structure.md` §6.1.1 — generic `trailer` / `next_action`, content opaque to the wireframe |
+| Wireframe trailer slot | `cans/artifacts/wireframe/wireframe-structure.md` §6.1.1 + wireframe `manifest.json` `output_contract.trailer` — generic slot, payload shape frozen in the manifest `machine_schema` (`prompt`, `reason`, `serve`); screen mapping lives only in `_triggers.json` |
 
 Decision records: `cans/_adr/002-prompt-three-layer.md` (pointer
 split and trigger SSOT in its 2026-10-07 amendment),

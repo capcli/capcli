@@ -6,12 +6,12 @@
 
 The wireframe layer serves a dual purpose: an **interactive edgeless canvas** for humans and harnesses, and a **deterministic golden-file test fixture suite** for the Rust kernel.
 
-Flow graphs, journey definitions, and multi-branch transition metadata are codified into `flows.json`. Individual screen fixtures remain atomic, stateless, and congruent with runtime compiler and authorizer output.
+Flow graphs, journey definitions, and multi-branch transition metadata are codified into `_flows.json`. Individual screen fixtures remain atomic, stateless, and congruent with runtime compiler and authorizer output.
 
 ```
 cans/artifacts/wireframe/
   manifest.json
-  flows.json
+  _flows.json
   _states.json
   wireframe.html
   screens/
@@ -119,6 +119,8 @@ Canonical file: `manifest.json` (same directory). It owns the noun list, the sta
 
 The domain registry lives only in `_states.json`. This manifest carries no copy of it; consumers read `_states.json` directly.
 
+Naming convention, both artifact directories (`wireframe/`, `prompt/`): a leading underscore marks internal engine configuration and graph state — `_states.json`, `_flows.json`, `_triggers.json`. A clean name marks an externally consumable compiler artifact — `manifest.json`.
+
 ### 2.2 `_states.json`
 
 Canonical file: `_states.json` (same directory). It is the single home of the state taxonomy: exit code → label, exit → legal domains, exit → required diagnostic fields. Not reproduced here by design.
@@ -127,11 +129,11 @@ The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, 
 
 ---
 
-## 3. Decoupled Flow & Journey Engine (`flows.json`)
+## 3. Decoupled Flow & Journey Engine (`_flows.json`)
 
-Canonical file: `flows.json` (same directory). It owns journeys and screen-to-screen routing; this document points at it and does not reproduce it.
+Canonical file: `_flows.json` (same directory). It owns journeys and screen-to-screen routing; this document points at it and does not reproduce it.
 
-Every screen ID referenced by a flow must exist as a fixture pair under `screens/` and as a row in §4 — the validator enforces closure. Flow prose in §5 quotes individual screens for walkthroughs; the routing itself lives only in `flows.json`.
+Every screen ID referenced by a flow must exist as a fixture pair under `screens/` and as a row in §4 — the validator enforces closure. Flow prose in §5 quotes individual screens for walkthroughs; the routing itself lives only in `_flows.json`.
 
 ---
 
@@ -140,7 +142,7 @@ Every screen ID referenced by a flow must exist as a fixture pair under `screens
 This table is a context index: one scannable surface a reader loads
 before drilling into fixture pairs. It indexes; it does not originate.
 Fixture pairs under `screens/` are the source, `_states.json` owns
-state and domain legality, and `flows.json` owns routing. Every row
+state and domain legality, and `_flows.json` owns routing. Every row
 resolves to one fixture pair and every fixture pair has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
@@ -736,37 +738,45 @@ Capabilities are discovered dynamically, not listed in static help.
 ### 6.1.1 Trailer Slot
 
 `output_contract.trailer` in `manifest.json` is the output contract's
-only producer-facing slot. A producer hands the wireframe finished
-content; the wireframe renders it and carries no producer facts — no
-campaign, bank, trigger, predicate, pointer scheme, token budget, or
-serving rule appears in a wireframe file, fixture, or runner check.
+only producer-facing slot, and the bridge is deterministic: the payload
+shape is frozen once in `manifest.json` (`human_format` +
+`machine_schema`), and the prompt engine and the wireframe fixtures
+validate against that same schema. The wireframe knows the shape of a
+trailer and nothing else about the producer — no campaign or bank
+inventory, no screen-to-trailer mapping, no trigger predicate, and no
+token budget appears in a wireframe file, fixture, or runner check.
+Which screens carry a trailer and what each payload says are producer
+facts, single-sourced in `cans/artifacts/prompt/_triggers.json`.
 
-- Human output: one optional final line, `trailer: <string>`.
+- Human output: one optional final line, `trailer: <prompt> - <reason>`.
 - JSON output: one optional additive envelope key, `next_action`, whose
-  value is an object.
-- The wireframe validates type (string / object) and position. It never
-  parses, resolves, or interprets the content. Human and machine parity
-  of the content is a producer obligation; each rendering is verbatim.
-- Absent is the default. A screen with no trailer renders exactly as it
-  renders without the slot. The slot never reorders, rewrites, or
-  suppresses host-screen output, and it leaves exit code and
-  `state_modified` unchanged.
+  value validates against `machine_schema` in `manifest.json`:
+  required keys `prompt` (`prompt://{bank}/{slug}@{version}`), `reason`,
+  and `serve` (`L1` or `blocked`).
+- The wireframe validates shape and position against the frozen schema.
+  It never evaluates a predicate, resolves a pointer, or originates a
+  payload. Human and machine parity of the content is a producer
+  obligation; each rendering is verbatim.
+- A payload with `serve: blocked` is never rendered. Absent is the
+  default: a screen with no trailer renders exactly as it renders
+  without the slot. The slot never reorders, rewrites, or suppresses
+  host-screen output, and it leaves exit code and `state_modified`
+  unchanged.
 
 One optional top-level block on a screen fixture pair carries a trailer:
 
 ```json
 "trailer": {
-  "human": "<producer-supplied string>",
-  "json": { }
+  "human": "<prompt> - <reason>",
+  "json": { "prompt": "prompt://{bank}/{slug}@{version}", "reason": "<reason>", "serve": "L1" }
 }
 ```
 
-The `.txt` pair renders `trailer: <human>` as its final line, and
-`test_assertions.stdout_contains` includes that exact line. Producer
-keys live inside the opaque `json` object and are invisible to the
-runner. A fixture gains a `trailer` block only when a producer hands
-the runner one; the wireframe never originates trailer content, and no
-producer inventory exists in this directory.
+The `.txt` pair renders `trailer: <prompt> - <reason>` as its final
+line, and `test_assertions.stdout_contains` includes that exact line.
+The fixture block is a schema instance, never a second mapping: a
+trailer appears in a fixture only when `_triggers.json` names that
+screen, and the cross-layer check in §6.2 enforces the correspondence.
 
 ### 6.2 Rust Integration Test Runner
 
@@ -844,8 +854,10 @@ fn execute_wireframe_golden_tests() {
 
 Trailer checks, applied by the runner in §6.2 to every fixture:
 
-a. **Type.** A `trailer` block carries exactly `human` (string) and
-   `json` (object). Any other top-level key fails.
+a. **Schema.** A `trailer` block carries exactly `human` (string) and
+   `json` (object), and `json` validates against `machine_schema` in
+   `manifest.json` `output_contract.trailer` — required `prompt`,
+   `reason`, `serve`; `prompt` matching the frozen `prompt://` pattern.
 b. **Position.** The human trailer is the final line of the `.txt`
    pair; the machine trailer is an additive envelope key. Every other
    key, value, exit code, and `state_modified` matches the
@@ -853,12 +865,41 @@ b. **Position.** The human trailer is the final line of the `.txt`
 c. **State neutrality.** For every trailer-carrying fixture, a twin
    assertion runs the same command with no trailer supplied: output is
    identical except the trailer line/key is absent.
-d. **Opacity.** The runner performs no lookup against trailer content:
-   no registry resolution, no substring scan against producer files, no
-   length budget. Content correctness is tested in the producer's own
-   suite, at the producer's home.
+d. **Correspondence.** Every `_triggers.json` entry resolves to a
+   fixture pair on disk, and every `_flows.json` transition endpoint
+   and §4 row resolves to a fixture pair (see the cross-layer test
+   below). A renamed screen fails the runner before any trailer is
+   served against a dead `screen_id`.
 e. **Negative space.** Every fixture without a `trailer` block asserts
    `stdout_not_contains: ["trailer:", "next_action"]`.
+
+Cross-layer referential test — one assertion set, run by the same
+runner, covering the prompt and wireframe layers together
+(`crates/capcli-cli/tests/e2e/test_wireframe_fixtures.rs` when the
+kernel lands; enforced today by the workspace validator):
+
+```rust
+#[test]
+fn assert_prompt_triggers_match_wireframe_screens() {
+    let triggers_raw = fs::read_to_string("cans/artifacts/prompt/_triggers.json").unwrap();
+    let triggers: serde_json::Value = serde_json::from_str(&triggers_raw).unwrap();
+
+    for t in triggers["triggers"].as_array().unwrap() {
+        let screen_id = t["screen_id"].as_str().unwrap();
+        let parts: Vec<&str> = screen_id.split('.').collect();
+
+        // Assert exact fixture file exists
+        let path = format!("cans/artifacts/wireframe/screens/{}/{}/{}.json", parts[0], parts[1], screen_id);
+        assert!(Path::new(&path).exists(), "Trigger {} references missing fixture: {}", t["id"], path);
+    }
+}
+```
+
+The same closure applies in the other directions: every `_flows.json`
+transition endpoint exists as a fixture pair, and every §4 row exists
+as a fixture pair. Screen IDs originate in exactly one place — the
+fixture filenames under `screens/` — and §4, `_flows.json`, and
+`_triggers.json` index them under validator enforcement.
 
 ---
 
@@ -957,9 +998,61 @@ function updateTransform() {
   scene.setAttribute('transform', `matrix(${transform.k} 0 0 ${transform.k} ${transform.x} ${transform.y})`);
 }
 
-fetch('flows.json')
+fetch('_flows.json')
   .then(r => r.json())
-  .then(data => { flowsData = data; });
+  .then(data => { flowsData = data; renderGraph(data); });
+
+const EXIT_BY_STATE = { success: 0, denial: 2, refusal: 3, crash: 4, panic: 5, yield: 6 };
+const NODE_W = 180, NODE_H = 36, COL_W = 220, ROW_H = 80, ORIGIN = { x: 50, y: 100 }, COLS = 6;
+
+function exitCodeFor(screenId) {
+  return EXIT_BY_STATE[screenId.split('.')[2]] ?? 0;
+}
+
+function renderGraph(data) {
+  const ids = new Set();
+  data.transitions.forEach(t => { t.from.forEach(id => ids.add(id)); t.to.forEach(id => ids.add(id)); });
+  Object.values(data.journeys).forEach(j => { ids.add(j.entry); ids.add(j.terminal); });
+
+  const pos = new Map();
+  [...ids].sort().forEach((id, i) => {
+    pos.set(id, { x: ORIGIN.x + (i % COLS) * COL_W, y: ORIGIN.y + Math.floor(i / COLS) * ROW_H });
+  });
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+
+  data.transitions.forEach(t => {
+    t.from.forEach(fromId => t.to.forEach(toId => {
+      const a = pos.get(fromId), b = pos.get(toId);
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('class', `edge ${t.arrow_type || ''}`.trim());
+      path.setAttribute('d', `M ${a.x + NODE_W} ${a.y + NODE_H / 2} L ${b.x} ${b.y + NODE_H / 2}`);
+      scene.appendChild(path);
+    }));
+  });
+
+  pos.forEach((pt, id) => {
+    const g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'node');
+    g.setAttribute('transform', `translate(${pt.x}, ${pt.y})`);
+    g.onclick = () => {
+      const parts = id.split('.');
+      loadScreen(id, `screens/${parts[0]}/${parts[1]}/${id}.txt`, exitCodeFor(id));
+    };
+    const rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('width', NODE_W);
+    rect.setAttribute('height', NODE_H);
+    rect.setAttribute('fill', '#161b22');
+    rect.setAttribute('stroke', '#30363d');
+    const text = document.createElementNS(svgNS, 'text');
+    text.setAttribute('x', 10);
+    text.setAttribute('y', 22);
+    text.textContent = id.length > 22 ? id.slice(0, 20) + '\u2026' : id;
+    g.appendChild(rect);
+    g.appendChild(text);
+    scene.appendChild(g);
+  });
+}
 
 function loadScreen(screenId, txtPath, exitCode) {
   document.getElementById('screen-id-display').textContent = screenId;
@@ -992,7 +1085,7 @@ function renderOutActions(screenId) {
       btn.onclick = () => {
         const parts = targetId.split('.');
         const txtPath = `screens/${parts[0]}/${parts[1]}/${targetId}.txt`;
-        loadScreen(targetId, txtPath, 0);
+        loadScreen(targetId, txtPath, exitCodeFor(targetId));
       };
       container.appendChild(btn);
     });
@@ -1007,7 +1100,7 @@ function focusJourney(journeyId) {
     document.getElementById('terminal-body').textContent = journey.description;
     const parts = journey.entry.split('.');
     const txtPath = `screens/${parts[0]}/${parts[1]}/${journey.entry}.txt`;
-    loadScreen(journey.entry, txtPath, 0);
+    loadScreen(journey.entry, txtPath, exitCodeFor(journey.entry));
   }
 }
 </script>
