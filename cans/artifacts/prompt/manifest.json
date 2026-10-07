@@ -1,7 +1,7 @@
 {
-  "$schema": "prompt/manifest/v3",
-  "version": 3,
-  "pointer_type": "doc://prompt/{bank}/{slug}@{version}",
+  "$schema": "prompt/manifest/v4",
+  "version": 4,
+  "pointer_type": "prompt://{bank}/{slug}@{version}",
   "ceilings": {
     "zero_turn_seed": 120,
     "l1_trailer_tokens": 30,
@@ -88,5 +88,5 @@
       "status": "served"
     }
   ],
-  "note": "Generated from bank frontmatter. All 11 campaigns served; forensics and hitl unblocked by ADR-003 screen renames."
+  "note": "Campaign inventory compiled from bank frontmatter. Trigger facts live only in _triggers.json."
 }

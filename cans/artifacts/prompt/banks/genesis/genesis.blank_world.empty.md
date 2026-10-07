@@ -1,14 +1,10 @@
 ---
-id: doc://prompt/genesis/blank_world@1
+id: prompt://genesis/blank_world@1
 stem: genesis.blank_world.empty
 bank: genesis
 slug: blank_world
 version: 1
 trust: draft
-trigger:
-  screens: ["db.schema.success.empty", "run.search.success.empty"]
-  predicate:
-    domain_tables: 0
 vars:
   - name: env
     type: string
@@ -26,7 +22,9 @@ sections:
   stage_4_overview: 190
   stage_5_wire: 100
 slice_max_tokens: 500
-docs: "docs/start/ + docs/understand/world.md"
+docs:
+  - doc://start
+  - doc://understand/world
 status: served
 ---
 

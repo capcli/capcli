@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "policy_version": 5,
   "governance_version": 8,
   "schema_version": 3,
@@ -15,31 +15,7 @@
     "env": ["dev", "sim", "prod"],
     "tier": ["tier_1", "tier_2"],
     "budget": ["active", "exhausted", "yielded"],
-    "data": ["populated", "empty", "truncated", "redirected", "dry_run"],
-    "domain_registry": [
-      "agent.thrashing",
-      "api.quota",
-      "compile",
-      "db.claims",
-      "db.engine",
-      "kernel.boot",
-      "kernel.panic",
-      "kernel.sandbox",
-      "lockfile_mismatch",
-      "missing_param",
-      "ping.ask",
-      "policy.ast",
-      "policy.authorizer",
-      "policy.budget",
-      "policy.notify",
-      "policy.secrets",
-      "policy.template",
-      "policy.trust",
-      "routine.runtime",
-      "schema_hash_mismatch",
-      "validation"
-    ],
-    "domain_registry_source": "_states.json — derived union of exit-grouped domains; canonical home is _states.json, never hand-edit this list to disagree"
+    "data": ["populated", "empty", "truncated", "redirected", "dry_run"]
   },
   "output_contract": {
     "prefix": "[{env}:{tier}]",
@@ -56,6 +32,14 @@
     },
     "help_stub_max_lines": 6,
     "banned_flags": ["--force", "--override-budget", "--force-prod", "--verbose"],
-    "payload_redirection": "--out writes payload to file; stdout emits <30 token receipt"
+    "payload_redirection": "--out writes payload to file; stdout emits <30 token receipt",
+    "trailer": {
+      "human_field": "trailer",
+      "machine_field": "next_action",
+      "human_type": "string",
+      "machine_type": "object",
+      "position": "final line of human output; additive envelope key in --json",
+      "effect": "rendering only: exit code, state_modified, and every other output byte of the host screen are unchanged"
+    }
   }
 }

@@ -6,7 +6,8 @@
       - Pointer taxonomy
         - cap:// — routines and imported API verbs
         - db:// — tables, columns, check constraints, and read views
-        - doc:// — markdown specs, playbooks, error codes, and rules
+        - doc:// — human-facing markdown docs, specs, error codes, and rules
+        - prompt:// — agent campaign banks, served in triggered slices only
         - audit:// — causal DAG events, failures, and sequence patterns
         - bind:// — cron schedules, webhooks, and endpoint ingress routes
         - vault:// — secret references and in-memory injection status
@@ -56,6 +57,7 @@
         - on-demand discovery — search and inspect optional; direct invocation permitted whenever signature is known
         - payload constraint — search returns pointers and summaries (<60 tokens), never raw blobs
         - doc inspection — inspect on doc:// returns outline nodes; doc read fetches targeted leaf
+        - prompt inspection — inspect on prompt:// returns campaign envelope; doc outline and doc read fetch one leaf
         - relevance floor — semantic matches below 0.60 rejected
       - Hybrid discovery engine
         - kernel search — exact, prefix, FTS5 BM25, and embedded local ONNX vector similarity; zero external API dependency

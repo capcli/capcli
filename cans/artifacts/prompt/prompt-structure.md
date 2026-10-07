@@ -24,8 +24,11 @@ Rules that follow from the table:
    does not define, the prompt is blocked and the change goes through the
    canonical home plus an ADR (`cans/_adr/`) first.
 2. **Completeness is deferred to `docs/`.** Every campaign slice ends with
-   a `docs:` pointer to the user-facing page that explains the full topic.
-   Slices never summarise `cans/` and never copy reference tables.
+   a `doc://` pointer (bank `docs:` frontmatter) to the user-facing page
+   that explains the full topic. `prompt://` addresses agent campaign
+   banks; `doc://` addresses human docs; the two schemes never substitute
+   for each other. Slices never summarise `cans/` and never copy
+   reference tables.
 3. **A prompt is served only when the next action is agent-authored work**
    (synthesis, authoring, judged migration/promotion). A single denial
    whose kernel `remedy:` line fully specifies the next command gets no
@@ -46,8 +49,8 @@ Rules that follow from the table:
 | Level | Surface (frozen in `cans/interface.md`) | Cap | Content |
 |---|---|---|---|
 | L0 | boot | 0 prompt tokens | nothing; no bank, catalog, or manifest is mounted |
-| L1 | trigger screen trailer / `next_prompt` (JSON) | ≤30 tokens (≤60 via `search`, per `cans/action.md`) | pointer `doc://prompt/{bank}/{slug}@{version}` + one-line reason |
-| L2 | `capcli inspect doc://prompt/{bank}/{slug}@{version}` | ≤150 tokens | envelope only: vars, section index, caps, blocked status; no body |
+| L1 | trigger screen trailer / `next_action` (JSON) | ≤30 tokens (≤60 via `search`, per `cans/action.md`) | pointer `prompt://{bank}/{slug}@{version}` + one-line reason, inside the wireframe's generic trailer slot (`wireframe-structure.md` §6.1.1) |
+| L2 | `capcli inspect prompt://{bank}/{slug}@{version}` | ≤150 tokens | envelope only: vars, section index, caps, blocked status; no body |
 | L3 | `capcli doc outline` → `capcli doc read <ptr> --max-tokens <n>` | 1 leaf/turn, leaf ≤500 tokens | exactly one rendered section, kernel-substituted vars |
 
 Caps, stated once:
@@ -69,54 +72,47 @@ Caps, stated once:
   companions in `banks/`. Depth is exactly 2 below `banks/`.
 - Filename: `{bank}.{slug}.{state}.{condition}.md`, where `state` is a
   legal wireframe state token. A campaign whose trigger screen is not a
-  legal screen ID is marked blocked (§6).
+  legal screen ID carries `"serve": "blocked"` in `_triggers.json` (§5).
 - Every command in a campaign body is legal `cans/interface.md` surface.
-- Every file starts with YAML frontmatter: `id` (`doc://prompt/...`),
-  `stem`, `bank`, `slug`, `version`, `trust`, `trigger.screens`,
-  `trigger.predicate`, `vars` (kernel sources only), `sections`
-  (per-section token caps, each ≤500; a cap covers its rendered size),
-  `slice_max_tokens: 500`, and `docs:` (the `docs/` page for completeness).
+- Every file starts with YAML frontmatter: `id`
+  (`prompt://{bank}/{slug}@{version}`), `stem`, `bank`, `slug`, `version`,
+  `trust`, `vars` (kernel sources only), `sections` (per-section token
+  caps, each ≤500; a cap covers its rendered size),
+  `slice_max_tokens: 500`, `docs:` (`doc://` pointers to the human-facing
+  pages for completeness; bare repo paths are illegal here), and `status`.
+  Frontmatter carries no trigger facts.
 - Variables resolve only from kernel state. Unresolvable variable →
   refusal (exit 3). The kernel never guesses state facts.
-- `manifest.json` and `_triggers.json` in this directory are the compiled
-  indexes of the banks, generated from bank frontmatter — never
-  hand-edited to disagree with it.
+- `manifest.json` in this directory is the compiled campaign inventory
+  (bank, stem, file, status), generated from bank frontmatter.
+  `_triggers.json` is the sole trigger registry (§5).
 
 ## 5. Triggers
 
-Defined in `_triggers.json` (12 entries). Precedence: most specific
-predicate wins — screen, then predicate keys, then bank order as declared
-in `manifest.json`. Two campaigns may share a screen only if their
-predicates are disjoint (genesis/authoring/promotion share
-`routine.prove.success.passed`, disjoint on `overview_exists` / `trust`).
+`_triggers.json` is the only trigger registry: screen, predicate,
+pointer, serve level, reason. Bank frontmatter, `manifest.json`, and
+every wireframe file carry no trigger facts. Precedence: most specific
+predicate wins — screen, then predicate keys, then bank order as
+declared in `manifest.json`. Two campaigns share a screen only when
+their predicates are disjoint. A trigger with `"serve": "blocked"`
+emits no L1 trailer.
 
-## 6. Bank inventory (9 banks, 11 campaigns)
+## 6. Bank inventory
 
-| Bank / stem | Trigger | Docs (completeness) | Status |
-|---|---|---|---|
-| genesis `genesis.blank_world.empty` | `db.schema.success.empty`, `run.search.success.empty` | `docs/start/`, `docs/understand/world.md` | served |
-| onboarding `onboarding.harness.empty` | `sys.doctor.success.nominal` (harness) | `docs/agents/` | served |
-| onboarding `onboarding.human.stub` | `sys.help.success.stub` (human) | `docs/start/` | served |
-| authoring `authoring.overview.absent` | `routine.prove.success.passed`, no overview | `docs/agents/codification.md` | served |
-| authoring `authoring.routine.gaps` | `run.search.success.gaps` | `docs/automate/repetition.md` | served |
-| crucible `crucible.execution.starved` | `run.execute.denial.budget_cascade` | `docs/reference/limits.md` | served |
-| evolution `evolution.schema.drift` | `rule.diff.success.populated` | `docs/guides/migration.md` | served |
-| promotion `promotion.routine.passed` | `routine.prove.success.passed`, draft | `docs/automate/promotion.md` | served |
-| wire `wire.catalog.empty` | `api.catalog.success.empty` | `docs/use/` (API catalog page: open) | served |
-| forensics `forensics.audit.tampered` | `sys.doctor.success.tamper` | `docs/understand/` (audit page: open) | served |
-| hitl `hitl.ping_ask.suspended` | `run.execute.yield.ask` | `docs/use/` (ask page: open) | served |
-
-All 11 campaigns serve. A blocked campaign would carry
-`"serve": "blocked"` in `_triggers.json` and emit no L1 trailer; none
-currently does.
+The inventory lives in `manifest.json` (bank, stem, file, status),
+compiled from bank frontmatter. Triggers live in `_triggers.json`.
+Completeness pointers live in each bank's `docs:` frontmatter. No
+inventory table exists in this file: a hand-maintained copy of the
+registry is a second inventory, and the two desync. Counts come from
+`manifest.json` at read time.
 
 ## 7. Open items
 
 1. Leaf addressing via `doc outline` node ids needs a `cans/interface.md`
    ruling (§3).
-2. `docs/` completeness is partial: several `docs:` targets above are open
-   pages. A missing page is docs debt, never licence to inline the content
-   into a bank.
+2. `docs/` completeness is partial: several `doc://` targets in bank
+   `docs:` frontmatter are open pages. A missing page is docs debt,
+   never licence to inline the content into a bank.
 3. Two remedy seams await `cans/` owner rulings (the `api sync` verb; the
    exit-5 scope for secret leaks) — tracked in `cans/_collab/conflicts.md`.
 
@@ -127,7 +123,11 @@ currently does.
 | Remedy catalogue | `docs/reference/errors.md` |
 | Prompt-serving engine | `cans/assembly.md` ownership; no code in this file |
 | Thresholds (promotion, budgets, shapes) | `cans/trust.md`, `cans/budget.md`, `cans/artifacts/governance.yaml` — cited, never restated |
-| Full schema / routine teaching | `docs/` via `docs:` pointers; banks keep one action-sized fragment per stage |
+| Full schema / routine teaching | `docs/` via `doc://` pointers in bank `docs:` frontmatter; banks keep one action-sized fragment per stage |
+| Trigger registry | `cans/artifacts/prompt/_triggers.json` — the only home |
+| Campaign inventory | `cans/artifacts/prompt/manifest.json` |
+| Wireframe trailer slot | `cans/artifacts/wireframe/wireframe-structure.md` §6.1.1 — generic `trailer` / `next_action`, content opaque to the wireframe |
 
-Decision records: `cans/_adr/002-prompt-three-layer.md`,
+Decision records: `cans/_adr/002-prompt-three-layer.md` (pointer
+split and trigger SSOT in its 2026-10-07 amendment),
 `cans/_adr/003-wireframe-state-taxonomy.md`.

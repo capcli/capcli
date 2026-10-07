@@ -1,13 +1,10 @@
 ---
-id: doc://prompt/evolution/schema_drift@1
+id: prompt://evolution/schema_drift@1
 stem: evolution.schema.drift
 bank: evolution
 slug: schema_drift
 version: 1
 trust: draft
-trigger:
-  screens: ["rule.diff.success.populated"]
-  predicate: {}
 vars:
   - name: env
     type: string
@@ -18,7 +15,8 @@ sections:
   stage_3_rehearse: 60
   stage_4_cutover: 60
 slice_max_tokens: 500
-docs: "docs/guides/migration.md"
+docs:
+  - doc://guides/migration
 status: served
 ---
 

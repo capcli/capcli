@@ -1,13 +1,10 @@
 ---
-id: doc://prompt/hitl/ping_ask_suspended@1
+id: prompt://hitl/ping_ask_suspended@1
 stem: hitl.ping_ask.suspended
 bank: hitl
 slug: ping_ask_suspended
 version: 1
 trust: draft
-trigger:
-  screens: ["run.execute.yield.ask"]
-  predicate: {}
 vars:
   - name: env
     type: string
@@ -17,7 +14,8 @@ sections:
   stage_2_resolve: 60
   stage_3_occ: 80
 slice_max_tokens: 500
-docs: "docs/use/ (ask page: docs debt)"
+docs:
+  - doc://use
 status: served
 ---
 
