@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "api.prove.denial.policy",
-  "noun": "api",
-  "verb": "prove",
   "target": "cap://stripe.delete_account",
   "command": "capcli api prove stripe.delete_account --env sim",
   "state": {
@@ -21,34 +19,24 @@
     "layer": "authorizer",
     "measured": "egress scope: account (permitted scopes: charge, invoice, customer)"
   },
-  "txt_pair": "screens/api/prove/api.prove.denial.policy.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[sim:tier_1]  ✗  exit 2",
-      "  FAIL  policy.authorizer.forbidden",
-      "        Verb egress rule rejected.",
-      "  state_modified:  false",
-      "  layer:           authorizer",
-      "  remedy:          prove a scoped-down verb, or request an explicit egress grant for account-scope operations"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "egress"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

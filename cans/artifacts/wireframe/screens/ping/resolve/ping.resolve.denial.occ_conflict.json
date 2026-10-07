@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "ping.resolve.denial.occ_conflict",
-  "noun": "ping",
-  "verb": "resolve",
   "target": "ask_88a",
   "command": "capcli ping resolve ask_88a --choice approve",
   "state": {
@@ -20,31 +18,28 @@
     "remedy": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame",
     "layer": "engine"
   },
-  "txt_pair": "screens/ping/resolve/ping.resolve.denial.occ_conflict.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  db.engine.stale_state",
-      "  state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "db.engine"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "ask",
+          "fence"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "layer",
+          "remedy"
+        ]
+      }
     ]
   }
 }

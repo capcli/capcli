@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "db.dump.success.populated",
-  "noun": "db",
-  "verb": "dump",
   "target": "db://orders",
   "command": "capcli db dump",
   "state": {
@@ -15,26 +13,28 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/db/dump/db.dump.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  populated",
-      "format:         world.sql (deterministic DDL + seed)",
-      "tables:         6",
-      "sha256:         sha256:1c8b0e3d5a7f294c6e0b8d2a4f6c1e3b5d7a9f0c",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "database",
+          "format",
+          "tables",
+          "views",
+          "seed_rows",
+          "bytes",
+          "sha256"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "note"
+        ]
+      }
     ]
   }
 }

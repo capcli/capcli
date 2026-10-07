@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.backup.denial.push_fail",
-  "noun": "sys",
-  "verb": "backup",
   "target": "sys://workspace",
   "command": "capcli sys backup --push",
   "state": {
@@ -21,34 +19,21 @@
     "layer": "authorizer",
     "measured": "0 of 2 remotes accepted"
   },
-  "txt_pair": "screens/sys/backup/sys.backup.denial.push_fail.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.backup.push_rejected",
-      "      git: origin rejected (remote ahead by 2 commits)",
-      "state_modified: false",
-      "layer:          authorizer",
-      "measured:       0 of 2 remotes accepted (git: non-fast-forward, s3: HTTP 403)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "git",
+          "s3",
+          "snapshot"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

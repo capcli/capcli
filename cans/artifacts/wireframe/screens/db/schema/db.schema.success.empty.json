@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "db.schema.success.empty",
-  "noun": "db",
-  "verb": "schema",
   "target": "db://orders",
   "command": "capcli db schema",
   "state": {
@@ -15,31 +13,31 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "trailer": {
-    "human": "prompt://genesis/blank_world@1 - blank world: 0 domain tables",
-    "json": {
-      "prompt": "prompt://genesis/blank_world@1",
-      "reason": "blank world: 0 domain tables",
-      "serve": "L1"
-    }
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "database",
+          "domain_tables",
+          "system_tables",
+          "views",
+          "triggers"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "note"
+        ]
+      }
+    ]
   },
-  "txt_pair": "screens/db/schema/db.schema.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  empty",
-      "domain_tables:  0",
-      "system_tables:  13 (kernel-managed, read-only)",
-      "state_modified: false",
-      "note:           no domain schema compiled; declare tables in schema.yaml",
-      "trailer: prompt://genesis/blank_world@1 - blank world: 0 domain tables"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "trailer": {
+    "prompt": "prompt://genesis/blank_world@1",
+    "reason": "blank world: 0 domain tables",
+    "serve": "L1"
   }
 }

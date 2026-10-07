@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.query.refusal.unparseable",
-  "noun": "sys",
-  "verb": "query",
   "target": "_audit",
   "command": "capcli sys query \"SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20\"",
   "state": {
@@ -19,33 +17,20 @@
     "culprit": "Expected FROM; found identifier 'FORM' at column 22.",
     "remedy": "correct the SQL and re-run capcli sys query against _audit"
   },
-  "txt_pair": "screens/sys/query/sys.query.refusal.unparseable.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FATAL  compile.bad_syntax",
-      "SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20",
-      "^^^^",
-      "state_modified: false",
-      "remedy: correct the SQL and re-run capcli sys query against _audit"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "compile"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "remedy"
+        ]
+      }
     ]
   }
 }

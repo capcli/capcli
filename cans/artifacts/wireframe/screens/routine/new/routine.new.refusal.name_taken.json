@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "routine.new.refusal.name_taken",
-  "noun": "routine",
-  "verb": "new",
   "target": "sync_orders",
   "command": "capcli routine new sync_orders",
   "state": {
@@ -19,32 +17,27 @@
     "culprit": "Routine name 'sync_orders' already registered; a scaffold would shadow it.",
     "remedy": "pick a different name, or edit routines/sync_orders.py directly (the routines/ filesystem is the draft SSOT)"
   },
-  "txt_pair": "screens/routine/new/routine.new.refusal.name_taken.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  validation.routine.name_taken",
-      "Routine name 'sync_orders' already registered; a scaffold would shadow it.",
-      "state_modified: false",
-      "remedy: pick a different name, or edit routines/sync_orders.py directly (the routines/ filesystem is the draft SSOT)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "routine",
+          "existing"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "remedy"
+        ]
+      }
     ]
   }
 }

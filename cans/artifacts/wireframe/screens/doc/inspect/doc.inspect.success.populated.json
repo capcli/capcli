@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "doc.inspect.success.populated",
-  "noun": "doc",
-  "verb": "inspect",
   "target": "doc://refund-policy",
   "command": "capcli doc inspect doc://refund-policy",
   "state": {
@@ -15,27 +13,24 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/doc/inspect/doc.inspect.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  inspect doc://refund-policy",
-      "document: doc://refund-policy",
-      "source:   git:docs/policies/refund-policy.md@2f6110a",
-      "mtime:    2026-10-02T14:18:33Z",
-      "nodes:    8",
-      "tokens:   312 (cap: 500)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "document",
+          "title",
+          "trust",
+          "source",
+          "sha256",
+          "mtime",
+          "nodes",
+          "sections",
+          "tokens",
+          "has_more"
+        ]
+      }
     ]
   }
 }

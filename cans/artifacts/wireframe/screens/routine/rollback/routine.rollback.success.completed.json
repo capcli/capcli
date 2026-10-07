@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "routine.rollback.success.completed",
-  "noun": "routine",
-  "verb": "rollback",
   "target": "sync_orders",
   "command": "capcli routine rollback sync_orders 3",
   "state": {
@@ -15,26 +13,26 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/rollback/routine.rollback.success.completed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  completed",
-      "routine:  sync_orders",
-      "pointer:  v5 -> v3",
-      "state_modified: true",
-      "audit:          op_roll_01 (routine.rollback committed; v5 retained in provenance graph)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "routine",
+          "pointer",
+          "version",
+          "trust"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "audit",
+          "note"
+        ]
+      }
     ]
   }
 }

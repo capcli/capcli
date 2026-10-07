@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "api.stats.success.populated",
-  "noun": "api",
-  "verb": "stats",
   "target": "stripe",
   "command": "capcli api stats stripe --deep",
   "state": {
@@ -15,26 +13,42 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/stats/api.stats.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  populated",
-      "  quota_used:       41 of 60 tokens (68%)",
-      "  error_rate:   0.8% (3 of 372 calls)",
-      "  p95_latency:  240ms",
-      "  state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "provider",
+          "window"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "quota_used",
+          "quota_remaining",
+          "reset_at"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "error_rate",
+          "p50_latency",
+          "p95_latency"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified"
+        ]
+      }
     ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.tail.success.empty",
-  "noun": "sys",
-  "verb": "tail",
   "target": "_audit",
   "command": "capcli sys tail --follow --since 1h",
   "state": {
@@ -15,25 +13,28 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/tail/sys.tail.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  tailing",
-      "events:  0 in window",
-      "No audit events within window. Ledger quiet — last commit before window opened.",
-      "integrity:  hash chain valid (root sha256:7f9a1b2c...)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "mirror",
+          "since",
+          "follow",
+          "events"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "integrity"
+        ]
+      }
     ]
   }
 }

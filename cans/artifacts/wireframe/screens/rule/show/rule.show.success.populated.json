@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "rule.show.success.populated",
-  "noun": "rule",
-  "verb": "show",
   "target": "schema://orders",
   "command": "capcli rule show schema --table orders",
   "state": {
@@ -15,27 +13,37 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/rule/show/rule.show.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  compiled rules (orders)",
-      "gates:        Gate 1 pass · Gate 2 pass",
-      "│     ├── customer_id    int ref=customers.id",
-      "├── alter:      require_trust reviewed",
-      "└── triggers:   deny_agent (kernel-compiled exempt)",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "source",
+          "engine",
+          "compiled_at",
+          "gates"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "├── alter",
+          "├── drop",
+          "├── vacuum",
+          "└── triggers"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified"
+        ]
+      }
     ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "rule.apply.success.applied",
-  "noun": "rule",
-  "verb": "apply",
   "target": "schema://orders",
   "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
   "state": {
@@ -15,27 +13,35 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/rule/apply/rule.apply.success.applied.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  applied (1 statement)",
-      "intent:       \"add priority flag for rush shipping\"",
-      "1.  ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
-      "transaction:  tx_5c81a2 committed (atomic)",
-      "lockfile:     capcli.lock re-locked (sha256:9e2b71c4)",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "intent",
+          "trust",
+          "snapshot"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "transaction",
+          "lockfile",
+          "audit"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified"
+        ]
+      }
     ]
   }
 }

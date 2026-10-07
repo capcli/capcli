@@ -683,12 +683,21 @@ Capabilities are discovered dynamically, not listed in static help.
 
 ### 6.1 Screen Fixture Schema (`screens/run/sql/run.sql.denial.ast.json`)
 
+A fixture JSON is the shape of the screen, and the single source the
+`.txt` pair renders from. Shape means envelope plus render skeleton:
+the invocation, the kernel state frame, the diagnostic frame, the
+sections and field labels the screen renders in order, and the trailer
+payload. Values live in the `.txt` pair only. A fixture carries no
+validation: no assertions, no expected-output needles, no hashes, and
+no path to its own pair (the pair path is `{screen_id}` under
+`screens/{noun}/{verb}/`). Development tests consume the shape and
+the `.txt` as a golden fixture; every check is derived by the harness
+in §6.2 from the shape and the contract, never copied into a fixture.
+
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.sql.denial.ast",
-  "noun": "run",
-  "verb": "sql",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
   "state": {
@@ -707,33 +716,45 @@ Capabilities are discovered dynamically, not listed in static help.
     "layer": "AST",
     "measured": "matches potentially 847 rows (cap: 100)"
   },
-  "txt_pair": "screens/run/sql/run.sql.denial.ast.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.query.update_delete.require_limit",
-      "No LIMIT clause. Blast radius unbounded.",
-      "state_modified: false",
-      "layer: AST",
-      "remedy: add LIMIT, or target specific primary key"
-    ],
-    "stdout_not_contains": [
-      "--force",
-      "SyntaxError",
-      "panic"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": ["domain", "culprit", "remedy", "state_modified", "layer"],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.ast"
-    }
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "audit_op",
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
+    ]
   }
 }
 ```
+
+Field law:
+
+- `$schema` is `wireframe/v3`. `screen_id` is the identity; noun and
+  verb are its first two segments and appear nowhere else.
+- `target` and `command` state the invocation the screen answers.
+- `state` is the kernel state frame: exit code, domain, trust, env,
+  tier, `state_modified`, data shape. Legality of states and domains
+  lives in `_states.json`.
+- `diagnostic` is the structured diagnostic frame for non-success
+  exits (required keys per exit, `_states.json`). Success screens
+  carry it as `null` or omit it.
+- `render.header` is `badge` (`[{env}:{tier}]` first line) or
+  `plain`. `render.sections` lists each block the `.txt` renders, in
+  order: `title` is the block's leading `name:` line or `null`, and
+  `fields` is the ordered field labels the block renders, values
+  excluded. The `.txt` is the only home of values.
+- `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
 
 ### 6.1.1 Trailer Slot
 
@@ -750,35 +771,24 @@ facts, single-sourced in `cans/artifacts/prompt/_triggers.json`.
 
 - Human output: one optional final line, `trailer: <prompt> - <reason>`.
 - JSON output: one optional additive envelope key, `next_action`, whose
-  value validates against `machine_schema` in `manifest.json`:
-  required keys `prompt` (`prompt://{bank}/{slug}@{version}`), `reason`,
-  and `serve` (`L1` or `blocked`).
+  value is the fixture's `trailer` payload and validates against
+  `machine_schema` in `manifest.json`: required keys `prompt`
+  (`prompt://{bank}/{slug}@{version}`), `reason`, and `serve`
+  (`L1` or `blocked`).
 - The wireframe validates shape and position against the frozen schema.
   It never evaluates a predicate, resolves a pointer, or originates a
-  payload. Human and machine parity of the content is a producer
-  obligation; each rendering is verbatim.
+  payload. Human and machine parity is a producer obligation.
 - A payload with `serve: blocked` is never rendered. Absent is the
-  default: a screen with no trailer renders exactly as it renders
-  without the slot. The slot never reorders, rewrites, or suppresses
-  host-screen output, and it leaves exit code and `state_modified`
-  unchanged.
-
-One optional top-level block on a screen fixture pair carries a trailer:
-
-```json
-"trailer": {
-  "human": "<prompt> - <reason>",
-  "json": { "prompt": "prompt://{bank}/{slug}@{version}", "reason": "<reason>", "serve": "L1" }
-}
-```
-
-The `.txt` pair renders `trailer: <prompt> - <reason>` as its final
-line, and `test_assertions.stdout_contains` includes that exact line.
-The fixture block is a schema instance, never a second mapping: a
-trailer appears in a fixture only when `_triggers.json` names that
-screen, and the cross-layer check in §6.2 enforces the correspondence.
+  default: a screen with no `trailer` in its shape renders no trailer,
+  and absence is the whole negative assertion — fixtures carry no
+  per-screen negative lists. The slot leaves exit code and
+  `state_modified` unchanged.
 
 ### 6.2 Rust Integration Test Runner
+
+The runner derives every check from the shape, the paired `.txt`, and
+the contract in `manifest.json`. It asserts nothing a fixture states
+about itself.
 
 ```rust
 // crates/capcli-cli/tests/e2e/test_wireframe_fixtures.rs
@@ -789,74 +799,59 @@ use glob::glob;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-struct TestAssertions {
-    exit_code: i32,
-    state_modified: bool,
-    stdout_contains: Vec<String>,
-    #[serde(default)]
-    stdout_not_contains: Vec<String>,
-    stderr_empty: bool,
-}
+struct StateFrame { exit_code: i32, state_modified: bool }
 
 #[derive(Deserialize)]
 struct WireframeFixture {
     screen_id: String,
     command: String,
-    test_assertions: TestAssertions,
-    txt_pair: String,
+    state: StateFrame,
+    trailer: Option<serde_json::Value>,
 }
 
 #[test]
 fn execute_wireframe_golden_tests() {
     let root = Path::new("cans/artifacts/wireframe/screens");
-    
+
     for entry in glob(&format!("{}/**/*.json", root.display())).unwrap() {
         let json_path = entry.unwrap();
         let content = fs::read_to_string(&json_path).unwrap();
         let fixture: WireframeFixture = serde_json::from_str(&content).unwrap();
 
-        // 1. Assert companion .txt file exists
+        // 1. Pairing: the .txt beside the shape exists and bans raw pipes
         let txt_path = json_path.with_extension("txt");
-        assert!(txt_path.exists(), "Missing TXT pairing for {}", json_path.display());
-
-        // 2. Assert TXT has zero raw table pipe characters
         let txt_content = fs::read_to_string(&txt_path).unwrap();
         assert!(!txt_content.contains('|'), "Pipe character | forbidden in {}", txt_path.display());
 
-        // 3. Dispatch CLI harness command
+        // 2. Dispatch the shape's command
         let output = capcli_test_exec(&fixture.command);
 
-        // 4. Assert exit code and strict rollback invariant
-        assert_eq!(output.exit_code, fixture.test_assertions.exit_code, "Exit mismatch at {}", fixture.screen_id);
-        assert_eq!(output.state_modified, fixture.test_assertions.state_modified, "State modified invariant failed at {}", fixture.screen_id);
+        // 3. State frame: exit and state_modified come from the shape
+        assert_eq!(output.exit_code, fixture.state.exit_code, "Exit mismatch at {}", fixture.screen_id);
+        assert_eq!(output.state_modified, fixture.state.state_modified, "State modified invariant failed at {}", fixture.screen_id);
 
-        // 5. Assert atomic output needles
-        for needle in &fixture.test_assertions.stdout_contains {
-            assert!(output.stdout.contains(needle), "{}: Missing expected output needle '{}'", fixture.screen_id, needle);
-        }
-        for banned in &fixture.test_assertions.stdout_not_contains {
-            assert!(!output.stdout.contains(banned), "{}: Output contains banned token '{}'", fixture.screen_id, banned);
-        }
+        // 4. Golden rendering: stdout equals the paired .txt, byte for byte
+        assert_eq!(output.stdout, txt_content, "Golden mismatch at {}", fixture.screen_id);
 
-        // Global negative: the parser-banned flags (cans/interface.md#Refusals)
-        // appear in no screen's output. Asserted once here, for every fixture;
-        // fixtures carry only screen-specific negatives.
+        // 5. Global negatives, asserted once for every fixture:
+        //    parser-banned flags (cans/interface.md#Refusals), and a
+        //    trailer on any screen whose shape carries none
         for banned in ["--force", "--override-budget", "--force-prod", "--verbose"] {
             assert!(!output.stdout.contains(banned), "{}: Output contains banned token '{}'", fixture.screen_id, banned);
         }
-
-        if fixture.test_assertions.stderr_empty {
-            assert!(output.stderr.is_empty(), "{}: Expected empty stderr, received: {}", fixture.screen_id, output.stderr);
+        if fixture.trailer.is_none() {
+            assert!(!output.stdout.contains("trailer:"), "{}: Trailer on screen with no trailer in shape", fixture.screen_id);
         }
+
+        assert!(output.stderr.is_empty(), "{}: Expected empty stderr, received: {}", fixture.screen_id, output.stderr);
     }
 }
 ```
 
 Trailer checks, applied by the runner in §6.2 to every fixture:
 
-a. **Schema.** A `trailer` block carries exactly `human` (string) and
-   `json` (object), and `json` validates against `machine_schema` in
-   `manifest.json` `output_contract.trailer` — required `prompt`,
+a. **Schema.** A `trailer` payload validates against `machine_schema`
+   in `manifest.json` `output_contract.trailer` — required `prompt`,
    `reason`, `serve`; `prompt` matching the frozen `prompt://` pattern.
 b. **Position.** The human trailer is the final line of the `.txt`
    pair; the machine trailer is an additive envelope key. Every other
@@ -870,8 +865,10 @@ d. **Correspondence.** Every `_triggers.json` entry resolves to a
    and §4 row resolves to a fixture pair (see the cross-layer test
    below). A renamed screen fails the runner before any trailer is
    served against a dead `screen_id`.
-e. **Negative space.** Every fixture without a `trailer` block asserts
-   `stdout_not_contains: ["trailer:", "next_action"]`.
+e. **Negative space.** A fixture with no `trailer` in its shape renders
+   no `trailer:` line and no `next_action` key; the runner asserts
+   this globally (step 5), and the shape's absence is the only
+   per-screen fact.
 
 Cross-layer referential test — one assertion set, run by the same
 runner, covering the prompt and wireframe layers together

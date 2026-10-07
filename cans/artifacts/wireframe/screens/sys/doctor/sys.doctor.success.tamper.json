@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.doctor.success.tamper",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://audit-chain",
   "command": "capcli sys doctor",
   "state": {
@@ -15,29 +13,28 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "trailer": {
-    "human": "prompt://forensics/audit_tampered@1 - causal DAG hash chain broken: quarantine active",
-    "json": {
-      "prompt": "prompt://forensics/audit_tampered@1",
-      "reason": "causal DAG hash chain broken: quarantine active",
-      "serve": "L1"
-    }
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "⚠  audit tamper isolated"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "chain",
+          "state_modified",
+          "remedy"
+        ]
+      }
+    ]
   },
-  "txt_pair": "screens/sys/doctor/sys.doctor.success.tamper.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  exit 0",
-      "  ⚠  audit tamper isolated",
-      "  state_modified: false",
-      "trailer: prompt://forensics/audit_tampered@1 - causal DAG hash chain broken: quarantine active"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "trailer": {
+    "prompt": "prompt://forensics/audit_tampered@1",
+    "reason": "causal DAG hash chain broken: quarantine active",
+    "serve": "L1"
   }
 }

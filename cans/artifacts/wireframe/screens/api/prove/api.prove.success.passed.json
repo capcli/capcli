@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "api.prove.success.passed",
-  "noun": "api",
-  "verb": "prove",
   "target": "cap://stripe.refund_charge",
   "command": "capcli api prove stripe.refund_charge --env sim",
   "state": {
@@ -15,26 +13,34 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/prove/api.prove.success.passed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[sim:tier_1]  ✓  passed",
-      "  verb:     cap://stripe.refund_charge",
-      "  contract_replay:  6/6 invariants passed",
-      "  policy_denials:   0",
-      "  state_modified:  false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "verb",
+          "mode",
+          "fixture",
+          "params"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "contract_replay",
+          "success_rate",
+          "policy_denials",
+          "p50_duration",
+          "p95_duration"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified"
+        ]
+      }
     ]
   }
 }

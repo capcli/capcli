@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "bind.endpoint.denial.cap",
-  "noun": "bind",
-  "verb": "endpoint",
   "target": "cap://dispatch_order@4",
   "command": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
   "state": {
@@ -21,34 +19,28 @@
     "layer": "authorizer",
     "measured": "10 active endpoints (cap: 10)"
   },
-  "txt_pair": "screens/bind/endpoint/bind.endpoint.denial.cap.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.endpoint_cap_exceeded",
-      "Max 10 active endpoints reached. Exposure surface stays small.",
-      "state_modified: false",
-      "layer:          authorizer",
-      "remedy:         retire an unused endpoint first (capcli bind remove)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "active endpoints"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

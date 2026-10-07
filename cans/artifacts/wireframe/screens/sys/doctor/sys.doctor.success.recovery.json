@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.doctor.success.recovery",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://host",
   "command": "CAPCLI_RECOVERY=1 capcli sys doctor",
   "state": {
@@ -15,26 +13,34 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/doctor/sys.doctor.success.recovery.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  recovery",
-      "  ⚠  break-glass active: CAPCLI_RECOVERY=1 — policy disabled, audit sink online",
-      "  chain_status:   broken at _audit row 8,412 (op_84c1); rows 1-8,411 verified",
-      "  allowlist:      sql (read-only), db dump, sys audit tail, sys backup",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "⚠  break-glass active"
+        ]
+      },
+      {
+        "title": "recovery_shell",
+        "fields": [
+          "mode",
+          "policy_engine",
+          "audit_sink",
+          "chain_status",
+          "entry_event",
+          "allowlist"
+        ]
+      },
+      {
+        "title": "repair",
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

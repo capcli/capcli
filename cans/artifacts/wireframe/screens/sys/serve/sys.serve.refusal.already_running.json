@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.serve.refusal.already_running",
-  "noun": "sys",
-  "verb": "serve",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",
   "state": {
@@ -19,32 +17,24 @@
     "culprit": "127.0.0.1:4040 already bound by active capcli-daemon pid 50211",
     "remedy": "inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'"
   },
-  "txt_pair": "screens/sys/serve/sys.serve.refusal.already_running.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  compile.port_bound",
-      "      holder: pid 50211 (uptime: 2h 14m, listening)",
-      "state_modified: false",
-      "remedy:         inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "compile"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "holder",
+          "candidate"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

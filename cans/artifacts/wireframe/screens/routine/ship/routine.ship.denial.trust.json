@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "routine.ship.denial.trust",
-  "noun": "routine",
-  "verb": "ship",
   "target": "order_sync",
   "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
   "state": {
@@ -21,34 +19,31 @@
     "layer": "trust",
     "measured": "platform ceiling reviewed (requested: pinned on tier_2 host)"
   },
-  "txt_pair": "screens/routine/ship/routine.ship.denial.trust.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_2]  ✗  exit 2",
-      "FAIL  policy.trust.tier2_refusal",
-      "Pinned promotion denied on Tier 2; the platform ceiling caps this host at reviewed.",
-      "state_modified: false",
-      "layer: trust",
-      "remedy: run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.trust"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "routine",
+          "target",
+          "host"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "audit_op",
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

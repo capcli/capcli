@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "db.snapshot.denial.prod_draft",
-  "noun": "db",
-  "verb": "snapshot",
   "target": "db://orders",
   "command": "capcli db snapshot --env prod -m \"nightly safety point\"",
   "state": {
@@ -21,34 +19,31 @@
     "layer": "trust",
     "measured": "caller trust rung is draft; prod floor is reviewed"
   },
-  "txt_pair": "screens/db/snapshot/db.snapshot.denial.prod_draft.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[prod:tier_1]  ✗  exit 2",
-      "FAIL  policy.trust.forbidden",
-      "Draft identity cannot snapshot prod; unproven code cannot touch prod.",
-      "state_modified: false",
-      "layer: trust",
-      "measured: caller trust rung is draft; prod floor is reviewed"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.trust"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "env",
+          "trust",
+          "caller"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "audit_op",
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

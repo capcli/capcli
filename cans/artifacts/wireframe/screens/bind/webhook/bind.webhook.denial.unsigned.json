@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "bind.webhook.denial.unsigned",
-  "noun": "bind",
-  "verb": "webhook",
   "target": "cap://sync_orders",
   "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
   "state": {
@@ -20,34 +18,28 @@
     "remedy": "store the provider signing secret via sys vault set, then re-run bind webhook",
     "layer": "authorizer"
   },
-  "txt_pair": "screens/bind/webhook/bind.webhook.denial.unsigned.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.webhook_signature_required",
-      "Unsigned hooks rejected. HMAC-SHA256 verification must be armed at bind time.",
-      "state_modified: false",
-      "layer:          authorizer",
-      "remedy:         store the provider signing secret via sys vault set, then re-run bind webhook"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "provider",
+          "signing"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "layer",
+          "remedy"
+        ]
+      }
     ]
   }
 }

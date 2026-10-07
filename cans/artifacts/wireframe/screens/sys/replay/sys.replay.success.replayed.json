@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.replay.success.replayed",
-  "noun": "sys",
-  "verb": "replay",
   "target": "_audit",
   "command": "capcli sys replay --from 2026-10-03T23:52:31Z",
   "state": {
@@ -15,26 +13,27 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/replay/sys.replay.success.replayed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  replayed",
-      "from:         2026-10-03T23:52:31Z",
-      "divergences:  0 — 16/16 result_hash identical to original ledger entries",
-      "state_modified: true",
-      "note:           idempotency keys suppressed duplicate side-effects; replay committed to _audit as new causal branch"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "from",
+          "window",
+          "re-executed",
+          "divergences",
+          "external"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "audit_op",
+          "note"
+        ]
+      }
     ]
   }
 }

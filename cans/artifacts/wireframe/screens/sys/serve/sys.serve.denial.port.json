@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.serve.denial.port",
-  "noun": "sys",
-  "verb": "serve",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",
   "state": {
@@ -21,34 +19,24 @@
     "layer": "engine",
     "measured": "port 4040 unavailable (required: 1 of 1)"
   },
-  "txt_pair": "screens/sys/serve/sys.serve.denial.port.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  db.engine.port_denied",
-      "      bind(127.0.0.1:4040) rejected: EADDRINUSE",
-      "state_modified: false",
-      "layer:          engine",
-      "measured:       port 4040 unavailable (required: 1 of 1)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "db.engine"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "holder",
+          "daemon"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

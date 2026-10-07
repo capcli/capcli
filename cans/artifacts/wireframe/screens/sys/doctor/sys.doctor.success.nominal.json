@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.doctor.success.nominal",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://host",
   "command": "capcli sys doctor --boot-check",
   "state": {
@@ -15,32 +13,35 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "trailer": {
-    "human": "prompt://onboarding/harness@1 - harness at nominal doctor with empty domain",
-    "json": {
-      "prompt": "prompt://onboarding/harness@1",
-      "reason": "harness at nominal doctor with empty domain",
-      "serve": "L1"
-    }
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": "boot_check",
+        "fields": [
+          "kernel",
+          "platform",
+          "python_runtime",
+          "git_version",
+          "engine",
+          "c_authorizer",
+          "sandbox_provider",
+          "seccomp_bpf",
+          "ntp_drift_ms",
+          "audit_sink",
+          "lockfile",
+          "workspace"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      }
+    ]
   },
-  "txt_pair": "screens/sys/doctor/sys.doctor.success.nominal.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  nominal",
-      "  sandbox_provider:  bwrap (unprivileged userns: supported)",
-      "  seccomp_bpf:       active",
-      "  ntp_drift_ms:      14 (cap: 500)",
-      "  audit_sink:        online",
-      "state_modified: false",
-      "trailer: prompt://onboarding/harness@1 - harness at nominal doctor with empty domain"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "trailer": {
+    "prompt": "prompt://onboarding/harness@1",
+    "reason": "harness at nominal doctor with empty domain",
+    "serve": "L1"
   }
 }

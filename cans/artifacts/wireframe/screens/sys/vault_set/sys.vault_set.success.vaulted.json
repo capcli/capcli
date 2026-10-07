@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.vault_set.success.vaulted",
-  "noun": "sys",
-  "verb": "vault_set",
   "target": "stripe_key",
   "command": "capcli sys vault set stripe_key --in @-",
   "state": {
@@ -15,27 +13,27 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/vault_set/sys.vault_set.success.vaulted.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  vaulted",
-      "key:          stripe_key",
-      "cipher:       aes-256-gcm",
-      "value:        masked — plaintext never echoed to any output stream",
-      "state_modified: true",
-      "event:          vault.set committed to _audit with SHA-256 fingerprint"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "key",
+          "cipher",
+          "fingerprint",
+          "scope",
+          "value"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "audit_op",
+          "event"
+        ]
+      }
     ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.exec.denial.sandbox",
-  "noun": "sys",
-  "verb": "exec",
   "target": "sys://sandbox",
   "command": "capcli sys exec \"python3 etl.py\" --sandbox",
   "state": {
@@ -21,34 +19,24 @@
     "layer": "sandbox",
     "measured": "2 containment violations (tolerated: 0)"
   },
-  "txt_pair": "screens/sys/exec/sys.exec.denial.sandbox.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  kernel.sandbox.escape_attempt",
-      "      violation: ptrace (syscall 101) outside profile_python allowlist",
-      "state_modified: false",
-      "layer:          sandbox",
-      "measured:       2 containment violations (tolerated: 0)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "kernel.sandbox"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "command",
+          "violation"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

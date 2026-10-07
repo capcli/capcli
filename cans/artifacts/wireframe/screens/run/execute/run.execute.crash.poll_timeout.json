@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.execute.crash.poll_timeout",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://media_digest@2",
   "command": "capcli run cap://media_digest@2 -p audience=followers -m \"morning media digest\"",
   "state": {
@@ -21,33 +19,31 @@
     "layer": "runtime",
     "measured": "poll duration 30.0s (ceiling 30s; requested 45s)"
   },
-  "txt_pair": "screens/run/execute/run.execute.crash.poll_timeout.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 4,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 4",
-      "  CRASH  routine.runtime.timeout",
-      "  state_modified: false",
-      "  rollback: clean (all ops reverted)",
-      "  measured: poll duration 30.0s (ceiling 30s; requested 45s)",
-      "  remedy: set timeout_s to 30 or less, or restructure into a scheduled watch"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "routine.runtime"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "routine",
+          "verb",
+          "waited"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "rollback",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "bind.cron.refusal.missing_intent",
-  "noun": "bind",
-  "verb": "cron",
   "target": "cap://sync_orders",
   "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\"",
   "state": {
@@ -19,32 +17,27 @@
     "culprit": "Mutating bind requires an intent declaration. Unattributed triggers are refused.",
     "remedy": "re-run with -m \"why this trigger exists\""
   },
-  "txt_pair": "screens/bind/cron/bind.cron.refusal.missing_intent.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  compile.intent_missing",
-      "Mutating bind requires an intent declaration. Unattributed triggers are refused.",
-      "state_modified: false",
-      "remedy:         re-run with -m \"why this trigger exists\""
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "compile"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "command",
+          "flag"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "remedy"
+        ]
+      }
     ]
   }
 }

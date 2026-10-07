@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.execute.denial.claim_held",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://dispatch_order@4",
   "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-10 -p carrier=fedex --lock orders:ORD-10 -m \"fulfill urgent pending orders\"",
   "state": {
@@ -21,34 +19,29 @@
     "layer": "claims",
     "measured": "1 active lease on orders:ORD-10 (expires in 14m 22s)"
   },
-  "txt_pair": "screens/run/execute/run.execute.denial.claim_held.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  db.claims.locked",
-      "        exclusive claim 'orders:ORD-10' already held",
-      "  state_modified: false",
-      "  layer: claims",
-      "  remedy: wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "db.claims"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "holder",
+          "lease"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

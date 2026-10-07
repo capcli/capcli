@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.doctor.denial.drift",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://host",
   "command": "capcli sys doctor",
   "state": {
@@ -21,34 +19,23 @@
     "layer": "authorizer",
     "measured": "2 drift items (declaration v3 vs envs/dev/workspace.db)"
   },
-  "txt_pair": "screens/sys/doctor/sys.doctor.denial.drift.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.authorizer.declaration_drift",
-      "state_modified: false",
-      "layer:          authorizer",
-      "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)",
-      "remedy:         reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "drift"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

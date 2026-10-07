@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "bind.cron.success.bound",
-  "noun": "bind",
-  "verb": "cron",
   "target": "cap://sync_orders",
   "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",
   "state": {
@@ -15,27 +13,27 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/bind/cron/bind.cron.success.bound.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  bound",
-      "binding_id:     bnd_5f8a",
-      "schedule:       0 3 * * *",
-      "target:         cap://sync_orders",
-      "next_fire:      2026-10-05T03:00:00Z",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "binding_id",
+          "name",
+          "schedule",
+          "target",
+          "next_fire",
+          "catchup_policy"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "audit_op"
+        ]
+      }
     ]
   }
 }

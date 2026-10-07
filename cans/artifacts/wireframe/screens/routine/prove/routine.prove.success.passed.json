@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "routine.prove.success.passed",
-  "noun": "routine",
-  "verb": "prove",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
   "state": {
@@ -15,31 +13,41 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "trailer": {
-    "human": "prompt://promotion/routine_passed@1 - proof passed: routine eligible for promotion",
-    "json": {
-      "prompt": "prompt://promotion/routine_passed@1",
-      "reason": "proof passed: routine eligible for promotion",
-      "serve": "L1"
-    }
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "routine",
+          "fingerprint",
+          "manifest",
+          "match"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "sandbox_rules",
+          "param_typing",
+          "policy_reachability",
+          "shape_limits",
+          "invariant_suite"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "note",
+          "audit"
+        ]
+      }
+    ]
   },
-  "txt_pair": "screens/routine/prove/routine.prove.success.passed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[sim:tier_1]  ✓  passed",
-      "fingerprint:  sha256:9e1b7c04... (dynamic leaf sequence from _audit mirror)",
-      "match:        5 executed / 5 declared (subset; 0 undeclared leaves)",
-      "invariant_suite:     pass (boundary + idempotency assertions)",
-      "state_modified: false",
-      "trailer: prompt://promotion/routine_passed@1 - proof passed: routine eligible for promotion"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    }
+  "trailer": {
+    "prompt": "prompt://promotion/routine_passed@1",
+    "reason": "proof passed: routine eligible for promotion",
+    "serve": "L1"
   }
 }

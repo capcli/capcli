@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.backup.success.completed",
-  "noun": "sys",
-  "verb": "backup",
   "target": "sys://workspace",
   "command": "capcli sys backup --push",
   "state": {
@@ -15,27 +13,27 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/backup/sys.backup.success.completed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  completed",
-      "  git_commit:       4c89a0b1 (origin accepted)",
-      "  s3_object:        s3://capcli-worm/envs-dev/snap_auto_2026-10-04T0300Z.db",
-      "  bytes:            18,442,240",
-      "  ledger_anchored:  sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": "backup",
+        "fields": [
+          "snapshot",
+          "mechanism",
+          "git_commit",
+          "s3_object",
+          "s3_status",
+          "bytes",
+          "ledger_anchored",
+          "audit_mirror",
+          "drift"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.revoke.refusal.not_found",
-  "noun": "sys",
-  "verb": "revoke",
   "target": "agt_0000",
   "command": "capcli sys revoke agt_0000",
   "state": {
@@ -19,32 +17,22 @@
     "culprit": "No registered agent with id 'agt_0000' in the agents system table.",
     "remedy": "list registered agents via capcli sys agents, then revoke a valid agent id"
   },
-  "txt_pair": "screens/sys/revoke/sys.revoke.refusal.not_found.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FATAL  validation.not_found",
-      "target: agt_0000",
-      "state_modified: false",
-      "remedy: list registered agents via capcli sys agents, then revoke a valid agent id"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "target"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "remedy"
+        ]
+      }
     ]
   }
 }

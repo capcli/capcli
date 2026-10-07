@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.execute.success.resumed",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://broadcast_newsletter@2",
   "command": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
   "state": {
@@ -15,25 +13,33 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/execute/run.execute.success.resumed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[prod:tier_1]  ✓  resumed",
-      "  task:           task_99a8b1 (background)",
-      "  queue:          daemon re-queued from _suspended_tasks",
-      "  state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "task",
+          "routine",
+          "trigger",
+          "yielded_for"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "queue",
+          "retry",
+          "result"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "audit_op"
+        ]
+      }
     ]
   }
 }

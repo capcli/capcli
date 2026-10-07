@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "routine.ship.success.rolled_back",
-  "noun": "routine",
-  "verb": "ship",
   "target": "order_sync",
   "command": "capcli routine ship order_sync reviewed",
   "state": {
@@ -15,26 +13,34 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/ship/routine.ship.success.rolled_back.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[prod:tier_1]  ✓  rolled_back",
-      "canary:      1h veto window completed with anomalies",
-      "action:        autonomous circuit-breaker rollback",
-      "final_rung:     draft (promotion reverted)",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "routine",
+          "promoted_to",
+          "canary"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "p95_duration",
+          "drift_events",
+          "action"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "final_rung",
+          "state_modified",
+          "audit",
+          "note"
+        ]
+      }
     ]
   }
 }

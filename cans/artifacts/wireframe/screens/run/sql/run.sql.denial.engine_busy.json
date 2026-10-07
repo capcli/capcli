@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.sql.denial.engine_busy",
-  "noun": "run",
-  "verb": "sql",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50\" -m \"batch ship processing orders\"",
   "state": {
@@ -21,34 +19,23 @@
     "layer": "engine",
     "measured": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active"
   },
-  "txt_pair": "screens/run/sql/run.sql.denial.engine_busy.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  db.engine.txn_queue_timeout",
-      "  state_modified:  false",
-      "  layer:           engine",
-      "  measured:        waited 5001ms (ceiling: 5000ms); holder op_9f1c still active",
-      "  remedy:          retry after holder commits, or inspect the claim via capcli inspect db://orders"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified",
-      "layer"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "db.engine"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "audit_op",
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

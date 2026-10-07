@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.sql.success.truncated",
-  "noun": "run",
-  "verb": "sql",
   "target": "db://orders",
   "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\"",
   "state": {
@@ -15,26 +13,27 @@
     "data_shape": "truncated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/sql/run.sql.success.truncated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  10000 rows (truncated)",
-      "  returned:       10000",
-      "  total_rows:     14290",
-      "  truncated:      true",
-      "  next_cursor:    10000"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "columns",
+          "returned",
+          "total_rows",
+          "row_cap"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "truncated",
+          "next_cursor",
+          "resume",
+          "audit_op"
+        ]
+      }
     ]
   }
 }

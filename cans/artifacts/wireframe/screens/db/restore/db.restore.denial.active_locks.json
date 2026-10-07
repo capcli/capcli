@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "db.restore.denial.active_locks",
-  "noun": "db",
-  "verb": "restore",
   "target": "db://orders",
   "command": "capcli db restore snap_migration_004",
   "state": {
@@ -21,34 +19,30 @@
     "layer": "claims",
     "measured": "orders:ORD-10 held by agt_9k2w, claim_c3d4; TTL remaining 187s of 300s"
   },
-  "txt_pair": "screens/db/restore/db.restore.denial.active_locks.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  db.claims.active_locks",
-      "Active claims prevent state reversal; restoring under a live lease would orphan the holder.",
-      "state_modified: false",
-      "layer: claims",
-      "measured: orders:ORD-10 held by agt_9k2w, claim_c3d4; TTL remaining 187s of 300s"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "db.claims"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "target",
+          "active"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "audit_op",
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

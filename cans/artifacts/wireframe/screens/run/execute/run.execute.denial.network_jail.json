@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.execute.denial.network_jail",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://sneaky_exfil@1",
   "command": "capcli run cap://sneaky_exfil@1 -p db_host=10.0.0.5:5432 -m \"replicate orders to analytics host\"",
   "state": {
@@ -20,34 +18,28 @@
     "remedy": "use ctx.api.call with an activated catalog verb",
     "layer": "sandbox"
   },
-  "txt_pair": "screens/run/execute/run.execute.denial.network_jail.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  kernel.network.jail",
-      "        syscall 42 (connect) trapped by seccomp-bpf",
-      "  state_modified: false",
-      "  layer: sandbox",
-      "  remedy: use ctx.api.call with an activated catalog verb"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "kernel.sandbox"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "target",
+          "caller"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "layer",
+          "remedy"
+        ]
+      }
     ]
   }
 }

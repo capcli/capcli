@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.sql.denial.ast",
-  "noun": "run",
-  "verb": "sql",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
   "state": {
@@ -21,36 +19,23 @@
     "layer": "AST",
     "measured": "matches potentially 847 rows (cap: 100)"
   },
-  "txt_pair": "screens/run/sql/run.sql.denial.ast.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "FAIL  policy.query.update_delete.require_limit",
-      "No LIMIT clause. Blast radius unbounded.",
-      "state_modified: false",
-      "layer: AST",
-      "remedy: add LIMIT, or target specific primary key"
-    ],
-    "stdout_not_contains": [
-      "SyntaxError",
-      "panic",
-      "trailer:",
-      "next_action"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified",
-      "layer"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.ast"
-    }
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "audit_op",
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
+    ]
   }
 }

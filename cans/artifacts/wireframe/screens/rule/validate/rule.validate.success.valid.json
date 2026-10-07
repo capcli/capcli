@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "rule.validate.success.valid",
-  "noun": "rule",
-  "verb": "validate",
   "target": "schema://orders",
   "command": "capcli rule validate",
   "state": {
@@ -15,26 +13,32 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/rule/validate/rule.validate.success.valid.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  valid",
-      "├── Gate 1  syntax     pass (YAML parsed; shorthands expanded; roots present)",
-      "└── Gate 2  semantics  pass (relational DAG verified: orders.customer_id -> customers.id)",
-      "compiled:  17 DDL statements (deterministic; byte-reproducible)",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "source",
+          "scope"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "compiled"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified"
+        ]
+      }
     ]
   }
 }

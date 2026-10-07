@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.query.success.empty",
-  "noun": "sys",
-  "verb": "query",
   "target": "_audit",
   "command": "capcli sys query \"SELECT op_id, domain FROM _audit WHERE exit_code = 5 LIMIT 20\"",
   "state": {
@@ -15,25 +13,27 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/query/sys.query.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  queried",
-      "rows:      0 returned",
-      "Zero matching audit rows. Predicate matched nothing in 412 committed events.",
-      "note:  exit_code 5 (kernel.panic) has never fired in this workspace"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "target",
+          "rows",
+          "duration"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "note"
+        ]
+      }
     ]
   }
 }

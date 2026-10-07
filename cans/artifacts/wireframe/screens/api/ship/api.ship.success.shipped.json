@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "api.ship.success.shipped",
-  "noun": "api",
-  "verb": "ship",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
   "state": {
@@ -15,26 +13,27 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/api/ship/api.ship.success.shipped.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  shipped",
-      "  rung:         draft → reviewed",
-      "  evidence:     synthetic contract replay 3/3 passed",
-      "  promoted_by:  agt_7f3k",
-      "  state_modified:  true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "verb",
+          "rung",
+          "evidence",
+          "sim success rate 1.00 (floor",
+          "policy_denials",
+          "promoted_by",
+          "audit_op"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified"
+        ]
+      }
     ]
   }
 }

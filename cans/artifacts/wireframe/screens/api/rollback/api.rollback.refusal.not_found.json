@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "api.rollback.refusal.not_found",
-  "noun": "api",
-  "verb": "rollback",
   "target": "cap://threads.create_media_post",
   "command": "capcli api rollback threads.create_media_post 12",
   "state": {
@@ -19,32 +17,30 @@
     "culprit": "Target version not found: version 12 (kept versions 1–8).",
     "remedy": "choose a version within the kept window, or re-sync the provider spec to rebuild history"
   },
-  "txt_pair": "screens/api/rollback/api.rollback.refusal.not_found.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "  FATAL  validation.not_found",
-      "         Target version not found.",
-      "  state_modified:  false",
-      "  remedy:          choose a version within the kept window, or re-sync the provider spec to rebuild history"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "command",
+          "verb",
+          "version"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "Kept versions for this verb"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "remedy"
+        ]
+      }
     ]
   }
 }

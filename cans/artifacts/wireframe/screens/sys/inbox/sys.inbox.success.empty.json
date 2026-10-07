@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.inbox.success.empty",
-  "noun": "sys",
-  "verb": "inbox",
   "target": "inbox://*",
   "command": "capcli sys inbox pop",
   "state": {
@@ -15,25 +13,26 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/inbox/sys.inbox.success.empty.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  popped",
-      "channels_scanned:  4 (email, webhook, cron, ws)",
-      "popped:            0 events",
-      "Sensory inbox completely drained. Nothing to hand to the caller."
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "channels_scanned",
+          "popped"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "note"
+        ]
+      }
     ]
   }
 }

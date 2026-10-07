@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.inspect.success.routine",
-  "noun": "run",
-  "verb": "inspect",
   "target": "cap://dispatch_order@4",
   "command": "capcli inspect cap://dispatch_order@4",
   "state": {
@@ -15,26 +13,58 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/inspect/run.inspect.success.routine.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  capcli inspect cap://dispatch_order@4",
-      "  trust:       pinned",
-      "    can_invoke_now:             true",
-      "    budget_inheritance:  min",
-      "    p95_duration:  890ms"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "trust",
+          "runtime",
+          "params",
+          "description"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "limits"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "can_invoke_now",
+          "session_ops_remaining",
+          "session_duration_remaining",
+          "session_fuel_remaining",
+          "session_egress_remaining",
+          "session_rate_remaining",
+          "tightest_constraint"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "max_nesting_depth",
+          "budget_inheritance",
+          "child_routines"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "total_runs",
+          "success_rate",
+          "p50_duration",
+          "p95_duration",
+          "last_run_at"
+        ]
+      }
     ]
   }
 }

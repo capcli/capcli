@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.trace.success.populated",
-  "noun": "sys",
-  "verb": "trace",
   "target": "op_9f2e",
   "command": "capcli sys trace op_9f2e --explain",
   "state": {
@@ -15,27 +13,23 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/trace/sys.trace.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  Causal DAG Trace (op_9f2e)",
-      "└── op_9f2c  routine.dispatch_order@4",
-      "├── op_9f2e  api.call (fedex.ship)     ✓ [allowed]  340ms",
-      "Root Intent: \"fulfill urgent pending orders\"",
-      "Authority:   user:alice (via agt_7f3k)",
-      "Integrity:   valid hash link (chain verified)"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "│     └── tracking"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "Root Intent",
+          "Authority",
+          "Integrity"
+        ]
+      }
     ]
   }
 }

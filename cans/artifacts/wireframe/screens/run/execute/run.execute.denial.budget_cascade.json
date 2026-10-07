@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.execute.denial.budget_cascade",
-  "noun": "run",
-  "verb": "execute",
   "target": "cap://sync_inventory@3",
   "command": "capcli run cap://sync_inventory@3 -p warehouse=west -m \"nightly inventory sync\"",
   "state": {
@@ -21,39 +19,39 @@
     "layer": "budget",
     "measured": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops"
   },
-  "trailer": {
-    "human": "prompt://crucible/execution_starved@1 - call-tree preflight failed budget cascade bounds",
-    "json": {
-      "prompt": "prompt://crucible/execution_starved@1",
-      "reason": "call-tree preflight failed budget cascade bounds",
-      "serve": "L1"
-    }
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "child",
+          "effective",
+          "exhausted at",
+          "parent frame",
+          "ancestors"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "Splitting is not escaping"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
+    ]
   },
-  "txt_pair": "screens/run/execute/run.execute.denial.budget_cascade.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  policy.budget.starved",
-      "        effective:      min(declared 6, governance 50, parent 2, session 488) -> 2 ops",
-      "  state_modified: false",
-      "  layer: budget",
-      "  remedy: shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain",
-      "trailer: prompt://crucible/execution_starved@1 - call-tree preflight failed budget cascade bounds"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.budget"
-    }
+  "trailer": {
+    "prompt": "prompt://crucible/execution_starved@1",
+    "reason": "call-tree preflight failed budget cascade bounds",
+    "serve": "L1"
   }
 }

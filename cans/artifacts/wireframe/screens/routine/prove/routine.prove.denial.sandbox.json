@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "routine.prove.denial.sandbox",
-  "noun": "routine",
-  "verb": "prove",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
   "state": {
@@ -21,34 +19,30 @@
     "layer": "sandbox",
     "measured": "1 containment violation (connect trapped at 0 bytes egress)"
   },
-  "txt_pair": "screens/routine/prove/routine.prove.denial.sandbox.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[sim:tier_1]  ✗  exit 2",
-      "FAIL  kernel.sandbox.breach",
-      "Jail containment boundary violated; raw network egress prohibited from guest sandboxes.",
-      "state_modified: false",
-      "layer: sandbox",
-      "remedy: use ctx.api.call with an activated catalog verb"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "kernel.sandbox"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "target",
+          "caller"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "audit_op",
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

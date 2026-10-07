@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "routine.ship.success.shipped",
-  "noun": "routine",
-  "verb": "ship",
   "target": "order_sync",
   "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
   "state": {
@@ -15,26 +13,42 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/ship/routine.ship.success.shipped.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[prod:tier_1]  ✓  shipped",
-      "rung:      reviewed -> pinned",
-      "success_rate:        0.99 over 30d canary (floor: 0.95)",
-      "may_run_unattended:  true",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "routine",
+          "rung",
+          "reason"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "git_status",
+          "invariant_suite",
+          "mutation_tests",
+          "success_rate",
+          "policy_denials",
+          "fingerprint_drift"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "may_run_unattended",
+          "audit_mode"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "audit"
+        ]
+      }
     ]
   }
 }

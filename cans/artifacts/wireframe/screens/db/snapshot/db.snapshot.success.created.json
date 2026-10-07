@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "db.snapshot.success.created",
-  "noun": "db",
-  "verb": "snapshot",
   "target": "db://orders",
   "command": "capcli db snapshot -m \"pre-migration safety point\"",
   "state": {
@@ -15,26 +13,27 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/db/snapshot/db.snapshot.success.created.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  created",
-      "snapshot_id:    snap_onboarding_01",
-      "tables:         6",
-      "ledger_hash:    sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "snapshot_id",
+          "database",
+          "tables",
+          "rows",
+          "ledger_hash",
+          "method"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "audit_op"
+        ]
+      }
     ]
   }
 }

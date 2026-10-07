@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.doctor.refusal.boot",
-  "noun": "sys",
-  "verb": "doctor",
   "target": "sys://host",
   "command": "capcli sys doctor --boot-check",
   "state": {
@@ -19,33 +17,24 @@
     "culprit": "bwrap absent from PATH on tier_1 host (floor: 0.8.0, mandatory on Tier 1)",
     "remedy": "install bubblewrap >= 0.8.0, then re-run 'capcli sys doctor --boot-check'"
   },
-  "txt_pair": "screens/sys/doctor/sys.doctor.refusal.boot.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FATAL  kernel.boot.missing_dependency",
-      "       bwrap: absent from PATH (floor: 0.8.0, mandatory on Tier 1)",
-      "state_modified: false",
-      "layer:          boot",
-      "remedy:         install bubblewrap >= 0.8.0, then re-run 'capcli sys doctor --boot-check'"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "compile"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "bwrap",
+          "python3"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

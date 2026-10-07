@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "routine.pending.success.populated",
-  "noun": "routine",
-  "verb": "pending",
   "target": null,
   "command": "capcli routine pending",
   "state": {
@@ -15,26 +13,27 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/routine/pending/routine.pending.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  populated",
-      "queue: promotion candidates (3)",
-      "order_sync@2   reviewed -> pinned  queued 2h ago    success 0.98",
-      "sync_orders@1  draft -> reviewed   queued 31m ago   success 1.00",
-      "state_modified: false"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "queue"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "sla",
+          "state_modified",
+          "note"
+        ]
+      }
     ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.exec.success.completed",
-  "noun": "sys",
-  "verb": "exec",
   "target": "sys://sandbox",
   "command": "capcli sys exec \"python3 etl.py\" --sandbox",
   "state": {
@@ -15,26 +13,26 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/exec/sys.exec.success.completed.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  completed",
-      "  command:       python3 etl.py",
-      "  jail:          bwrap (tier_1 unprivileged userns)",
-      "  exit_status:   0",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": "exec",
+        "fields": [
+          "command",
+          "jail",
+          "seccomp",
+          "scratch",
+          "exit_status",
+          "duration",
+          "stdout",
+          "side_effects"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

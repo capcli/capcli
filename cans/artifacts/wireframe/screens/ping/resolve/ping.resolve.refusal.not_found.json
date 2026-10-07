@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "ping.resolve.refusal.not_found",
-  "noun": "ping",
-  "verb": "resolve",
   "target": "ask_51c7",
   "command": "capcli ping resolve ask_51c7 --choice approve",
   "state": {
@@ -19,32 +17,22 @@
     "culprit": "Invalid ask ID; no matching inquiry in _pending_asks.",
     "remedy": "run 'capcli ping list --pending' to list live ask IDs"
   },
-  "txt_pair": "screens/ping/resolve/ping.resolve.refusal.not_found.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 3,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 3",
-      "FAIL  validation.not_found",
-      "Invalid ask ID; no matching inquiry in _pending_asks.",
-      "state_modified:  false",
-      "remedy:          run 'capcli ping list --pending' to list live ask IDs"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "validation"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "ask_id"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "remedy"
+        ]
+      }
     ]
   }
 }

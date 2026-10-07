@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.sql.success.populated",
-  "noun": "run",
-  "verb": "sql",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
   "state": {
@@ -15,27 +13,29 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/sql/run.sql.success.populated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  committed",
-      "  statement:      UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1",
-      "  rows_affected:  1",
-      "  result_hash:    sha256:3d91c4e7a8b2f0c5d9e6a1b7f834c2ad",
-      "  state_modified: true",
-      "  audit_op:       op_9f2g"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": [
+          "statement",
+          "bound_params",
+          "ast_check",
+          "authorizer",
+          "intent",
+          "rows_affected",
+          "txn",
+          "audit_op"
+        ]
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "result_hash"
+        ]
+      }
     ]
   }
 }

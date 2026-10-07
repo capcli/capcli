@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "api.rollback.denial.depth",
-  "noun": "api",
-  "verb": "rollback",
   "target": "cap://threads.create_media_post",
   "command": "capcli api rollback threads.create_media_post 2",
   "state": {
@@ -21,34 +19,22 @@
     "layer": "authorizer",
     "measured": "rollback depth 6 (cap: 5)"
   },
-  "txt_pair": "screens/api/rollback/api.rollback.denial.depth.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  policy.authorizer.depth_limit",
-      "        Exceeds max rollback limit of 5.",
-      "  state_modified:  false",
-      "  measured:        rollback depth 6 (cap: 5)",
-      "  remedy:          roll back to version 3 or later, or re-sync the exact prior spec to pin it fresh"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "layer",
-      "state_modified"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "sys.serve.success.running",
-  "noun": "sys",
-  "verb": "serve",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",
   "state": {
@@ -15,26 +13,26 @@
     "data_shape": null
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/serve/sys.serve.success.running.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": true,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  running",
-      "  pid:       50211",
-      "  rpc:       http://127.0.0.1:4040/rpc (HTTP POST)",
-      "  ws:        ws://127.0.0.1:4040/ws/audit (live tail)",
-      "state_modified: true"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": true
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": "daemon",
+        "fields": [
+          "pid",
+          "status",
+          "ipc",
+          "rpc",
+          "ws",
+          "tx_queue",
+          "policy",
+          "audit"
+        ]
+      },
+      {
+        "title": null,
+        "fields": []
+      }
     ]
   }
 }

@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.sql.denial.authorizer",
-  "noun": "run",
-  "verb": "sql",
   "target": "db://orders",
   "command": "capcli sql \"DROP TABLE orders\" -m \"remove stale orders table\"",
   "state": {
@@ -21,34 +19,23 @@
     "layer": "authorizer",
     "measured": "statement rejected at prepare; 0 rows touched"
   },
-  "txt_pair": "screens/run/sql/run.sql.denial.authorizer.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 2,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✗  exit 2",
-      "  FAIL  policy.authorizer.drop_table",
-      "        Table destruction denied at the C authorizer; DDL flows through schema evolution.",
-      "  state_modified:  false",
-      "  layer:           authorizer",
-      "  remedy:          declare removal in schema.yaml and apply via capcli rule apply schema"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [
-      "domain",
-      "culprit",
-      "remedy",
-      "state_modified",
-      "layer"
-    ],
-    "json_field_values": {
-      "state_modified": false,
-      "domain": "policy.authorizer"
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "audit_op",
+          "state_modified",
+          "layer",
+          "measured",
+          "remedy"
+        ]
+      }
     ]
   }
 }

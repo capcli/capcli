@@ -1,8 +1,6 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v3",
   "screen_id": "run.search.success.truncated",
-  "noun": "run",
-  "verb": "search",
   "target": "stripe",
   "command": "capcli search 'stripe'",
   "state": {
@@ -15,26 +13,23 @@
     "data_shape": "truncated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/run/search/run.search.success.truncated.txt",
-  "txt_sha256": null,
-  "test_assertions": {
-    "exit_code": 0,
-    "state_modified": false,
-    "stdout_contains": [
-      "[dev:tier_1]  ✓  20 matches for 'stripe' (capped)",
-      "  truncated:   true",
-      "  result_cap:  20 (search.max_results)",
-      "  next_cursor: doc://refund-policy",
-      "  api://stripe.refund_charge                 api    active"
-    ],
-    "stderr_empty": true,
-    "json_keys_required": [],
-    "json_field_values": {
-      "state_modified": false
-    },
-    "stdout_not_contains": [
-      "trailer:",
-      "next_action"
+  "render": {
+    "header": "badge",
+    "sections": [
+      {
+        "title": null,
+        "fields": []
+      },
+      {
+        "title": null,
+        "fields": [
+          "truncated",
+          "result_cap",
+          "total",
+          "next_cursor",
+          "audit_op"
+        ]
+      }
     ]
   }
 }
