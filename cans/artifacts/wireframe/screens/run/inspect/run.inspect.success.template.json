@@ -1,10 +1,10 @@
 {
   "$schema": "wireframe/v2",
-  "screen_id": "sys.doctor.recovery_mode",
-  "noun": "sys",
-  "verb": "doctor",
-  "target": "sys://host",
-  "command": "CAPCLI_RECOVERY=1 capcli sys doctor",
+  "screen_id": "run.inspect.success.template",
+  "noun": "run",
+  "verb": "inspect",
+  "target": "tpl://order_sync@2",
+  "command": "capcli inspect tpl://order_sync@2",
   "state": {
     "exit_code": 0,
     "domain": null,
@@ -12,20 +12,18 @@
     "env": "dev",
     "tier": "tier_1",
     "state_modified": false,
-    "data_shape": null
+    "data_shape": "populated"
   },
   "diagnostic": null,
-  "txt_pair": "screens/sys/doctor/sys.doctor.recovery_mode.txt",
+  "txt_pair": "screens/run/inspect/run.inspect.success.template.txt",
   "txt_sha256": null,
   "test_assertions": {
     "exit_code": 0,
     "state_modified": false,
     "stdout_contains": [
-      "[dev:tier_1]  ✓  recovery",
-      "  ⚠  break-glass active: CAPCLI_RECOVERY=1 — policy disabled, audit sink online",
-      "  chain_status:   broken at _audit row 8,412 (op_84c1); rows 1-8,411 verified",
-      "  allowlist:      sql (read-only), db dump, sys audit tail, sys backup",
-      "state_modified: false"
+      "[dev:tier_1]  \u2713  populated",
+      "  inspect: tpl://order_sync@2",
+      "  state_modified: false"
     ],
     "stdout_not_contains": [
       "--force",

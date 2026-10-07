@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "policy_version": 5,
   "governance_version": 8,
   "schema_version": 3,
@@ -16,25 +16,30 @@
     "tier": ["tier_1", "tier_2"],
     "budget": ["active", "exhausted", "yielded"],
     "data": ["populated", "empty", "truncated", "redirected", "dry_run"],
-    "denial_domain": [
-      "policy.authorizer",
+    "domain_registry": [
+      "agent.thrashing",
+      "api.quota",
+      "compile",
+      "db.claims",
+      "db.engine",
+      "kernel.boot",
+      "kernel.panic",
+      "kernel.sandbox",
+      "lockfile_mismatch",
+      "missing_param",
+      "ping.ask",
       "policy.ast",
+      "policy.authorizer",
       "policy.budget",
-      "policy.trust",
+      "policy.notify",
       "policy.secrets",
       "policy.template",
-      "policy.notify",
-      "db.engine",
-      "db.claims",
-      "api.upstream",
-      "api.quota",
+      "policy.trust",
       "routine.runtime",
-      "kernel.sandbox",
-      "kernel.panic",
-      "kernel.boot",
-      "host.ntp",
-      "agent.thrashing"
-    ]
+      "schema_hash_mismatch",
+      "validation"
+    ],
+    "domain_registry_source": "_states.json — derived union of exit-grouped domains; canonical home is _states.json, never hand-edit this list to disagree"
   },
   "output_contract": {
     "prefix": "[{env}:{tier}]",

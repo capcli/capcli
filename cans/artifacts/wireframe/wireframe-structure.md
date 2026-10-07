@@ -115,542 +115,29 @@ cans/artifacts/wireframe/
 
 ### 2.1 `manifest.json`
 
-```json
-{
-  "version": 2,
-  "policy_version": 5,
-  "governance_version": 8,
-  "schema_version": 3,
-  "lockfile": "capcli.lock",
-  "compiled_at": "2026-10-04T00:00:00Z",
-  "nouns": [
-    "run", "db", "routine", "api", "bind",
-    "ping", "rule", "env", "sys", "doc"
-  ],
-  "state_axes": {
-    "exit_code": [0, 2, 3, 4, 5, 6],
-    "trust": ["draft", "reviewed", "pinned"],
-    "env": ["dev", "sim", "prod"],
-    "tier": ["tier_1", "tier_2"],
-    "budget": ["active", "exhausted", "yielded"],
-    "data": ["populated", "empty", "truncated", "redirected", "dry_run"],
-    "denial_domain": [
-      "policy.authorizer",
-      "policy.ast",
-      "policy.budget",
-      "policy.trust",
-      "policy.secrets",
-      "policy.template",
-      "policy.notify",
-      "db.engine",
-      "db.claims",
-      "api.upstream",
-      "api.quota",
-      "routine.runtime",
-      "kernel.sandbox",
-      "kernel.panic",
-      "kernel.boot",
-      "host.ntp",
-      "agent.thrashing"
-    ]
-  },
-  "output_contract": {
-    "prefix": "[{env}:{tier}]",
-    "human_format": "rustc-style diagnostic with atomic blocks, source spans, and indented key-values",
-    "machine_format": "--json structured envelope",
-    "tree_characters_allowed": ["├──", "└──", "│"],
-    "banned_characters": ["|", "├─", "└─"],
-    "divider_character": "─",
-    "denial_keys": ["domain", "culprit", "remedy", "state_modified", "layer"],
-    "truncation": {
-      "max_result_tokens": 500,
-      "emits": ["truncated", "next_cursor"]
-    },
-    "help_stub_max_lines": 6,
-    "banned_flags": ["--force", "--override-budget", "--force-prod", "--verbose"],
-    "payload_redirection": "--out writes payload to file; stdout emits <30 token receipt"
-  }
-}
-```
+Canonical file: `manifest.json` (same directory). It owns the noun list, the state axes, and the output contract; this document points at it and does not reproduce it.
+
+One fact a reader needs here: `state_axes.domain_registry` is derived — the union of the exit-grouped domains in `_states.json`, which is the registry's canonical home.
 
 ### 2.2 `_states.json`
 
-```json
-{
-  "0": {
-    "label": "success",
-    "variants": {
-      "committed": { "state_modified": true },
-      "dry_run": { "state_modified": false },
-      "suspended": { "state_modified": false },
-      "resumed": { "state_modified": true }
-    },
-    "diagnostic": null,
-    "audit": "committed to _audit with result_hash"
-  },
-  "2": {
-    "label": "denial",
-    "state_modified": false,
-    "domains": [
-      "policy.authorizer",
-      "policy.ast",
-      "policy.budget",
-      "policy.trust",
-      "policy.notify",
-      "db.engine",
-      "db.claims",
-      "api.quota",
-      "kernel.sandbox",
-      "agent.thrashing"
-    ],
-    "diagnostic_required": ["domain", "culprit", "remedy", "layer", "state_modified"],
-    "denial_ux": {
-      "cite_measured_value": true,
-      "suggest_remediation": true,
-      "budget_cites_level": true,
-      "budget_cites_remaining": true,
-      "budget_cites_ancestors": true
-    }
-  },
-  "3": {
-    "label": "refusal",
-    "state_modified": false,
-    "domains": [
-      "compile",
-      "validation",
-      "kernel.boot",
-      "missing_param",
-      "lockfile_mismatch",
-      "schema_hash_mismatch",
-      "host.ntp",
-      "policy.secrets"
-    ],
-    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
-  },
-  "4": {
-    "label": "crash",
-    "state_modified": false,
-    "domains": ["routine.runtime"],
-    "rollback": "clean",
-    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
-  },
-  "5": {
-    "label": "panic",
-    "state_modified": false,
-    "domains": ["kernel.panic"],
-    "boot_refusal": true,
-    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
-  },
-  "6": {
-    "label": "yield",
-    "state_modified": false,
-    "domains": ["api.quota"],
-    "suspension": true,
-    "diagnostic_required": ["domain", "culprit", "remedy", "tokens_left", "reset_at", "suspended_frame", "state_modified"],
-    "resume": "daemon re-queues via _suspended_tasks on token refill"
-  }
-}
-```
+Canonical file: `_states.json` (same directory). It is the single home of the state taxonomy: exit code → label, exit → legal domains, exit → required diagnostic fields. Not reproduced here by design.
+
+The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6 (cans/physics.md#Exit-code-law). The screen-ID state slot takes exactly these labels; severity and lifecycle words (`warning`, `tamper`, `suspended`, `rolled_back`) live in the condition slot. A domain determines its exit: `api.quota` alone is dual-registered (exit 2 Critical, exit 6 Background). Exit 6 covers both quota yields and `ping.ask` frame suspensions (cans/action.md suspension contract).
 
 ---
 
 ## 3. Decoupled Flow & Journey Engine (`flows.json`)
 
-```json
-{
-  "$schema": "wireframe/flows/v2",
-  "version": 2,
-  "journeys": {
-    "journey_human_onboarding": {
-      "name": "S0–S10 Human Onboarding & First Write",
-      "color": "#58a6ff",
-      "entry": "sys.help.success.stub",
-      "terminal": "sys.doctor.success.report",
-      "description": "Host probe -> search capabilities -> pre-flight inspect -> deliberate AST denial -> bounded write -> snapshot creation -> state corruption -> restore proof -> trust receipt"
-    },
-    "journey_harness_onboarding": {
-      "name": "H0–H7 Autonomous Harness Machine Onboarding",
-      "color": "#79c0ff",
-      "entry": "sys.doctor.success.nominal",
-      "terminal": "routine.prove.success.passed",
-      "description": "Parse machine contract (--json) -> catalog discovery -> dry-run rehearsal -> dual probe -> composite prove -> parse denial feedback -> overview codification -> sim proving"
-    },
-    "journey_execution_crucible": {
-      "name": "Cascade Starvation, Jail Traps & Contention",
-      "color": "#f85149",
-      "entry": "run.inspect.success.routine",
-      "terminal": "run.execute.success.populated",
-      "description": "Exhaustion at child frame boundary -> syscall 42 trap -> concurrency lease recovery -> thrashing detection -> vault resolution"
-    },
-    "journey_trust_promotion": {
-      "name": "Draft to Pinned Canary Promotion",
-      "color": "#3fb950",
-      "entry": "routine.prove.success.passed",
-      "terminal": "routine.ship.success.shipped",
-      "description": "Sim replay verification -> ship promotion queue -> 1-hour canary telemetry window -> Tier 1 pinned lock"
-    },
-    "journey_quota_preemption": {
-      "name": "Wire Quota Starvation, Yield & Auto-Resume",
-      "color": "#d29922",
-      "entry": "run.execute.yield.quota",
-      "terminal": "run.execute.resume.quota",
-      "description": "Background task reaches dry pool -> Exit 6 suspension -> daemon parks frame -> refill epoch -> daemon auto-resume"
-    },
-    "journey_schema_evolution": {
-      "name": "Forward DDL & Snapshot Auto-Reversal",
-      "color": "#a371f7",
-      "entry": "rule.diff.success.populated",
-      "terminal": "env.merge.success.merged",
-      "description": "YAML diff -> Gate 2 circular ref block -> dry-run impact envelope -> snapshot commit -> atomic migration merge"
-    },
-    "journey_tamper_forensics": {
-      "name": "Tamper Quarantine & Forensic Isolation",
-      "color": "#f0883e",
-      "entry": "sys.doctor.warning.tamper",
-      "terminal": "sys.doctor.quarantine_mode",
-      "description": "Broken SHA-256 chain -> isolate corrupted block to audit.quarantine.jsonl -> alert dead-letter -> active state remains online"
-    },
-    "journey_human_in_the_loop": {
-      "name": "Ping Ask Suspension & Resolution",
-      "color": "#bc8cff",
-      "entry": "run.execute.suspended.ask",
-      "terminal": "run.execute.success.populated",
-      "description": "Routine hits ctx.ping.ask -> task suspends -> Cockpit inquiry card -> human resolves choice -> frame execution resumes"
-    }
-  },
-  "transitions": [
-    {
-      "id": "t_human_help_to_doctor",
-      "journeys": ["journey_human_onboarding", "journey_harness_onboarding"],
-      "from": ["sys.help.success.stub"],
-      "to": ["sys.doctor.success.nominal"],
-      "trigger": "exec_doctor",
-      "label": "capcli sys doctor",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_human_help_to_search",
-      "journeys": ["journey_human_onboarding", "journey_harness_onboarding"],
-      "from": ["sys.help.success.stub"],
-      "to": ["run.search.success.populated"],
-      "trigger": "exec_search",
-      "label": "capcli search 'order'",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_human_doctor_to_search",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["sys.doctor.success.nominal"],
-      "to": ["run.search.success.populated"],
-      "trigger": "exec_search",
-      "label": "capcli search 'order'",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_human_search_to_inspect",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.search.success.populated"],
-      "to": ["run.inspect.success.routine"],
-      "trigger": "exec_inspect",
-      "label": "capcli inspect cap://dispatch_order@4",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_human_inspect_to_read",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.inspect.success.routine"],
-      "to": ["run.sql.success.populated"],
-      "trigger": "exec_read",
-      "label": "capcli sql 'SELECT id FROM orders LIMIT 5'",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_human_deliberate_denial",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.sql.success.populated"],
-      "to": ["run.sql.denial.ast"],
-      "trigger": "exec_unbounded_write",
-      "label": "capcli sql 'UPDATE orders SET status = shipped'",
-      "arrow_type": "denial",
-      "ui": {
-        "button_text": "Trigger Deliberate Denial",
-        "hotkey": "x"
-      }
-    },
-    {
-      "id": "t_human_denial_to_trace",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.sql.denial.ast"],
-      "to": ["sys.trace.success.populated"],
-      "trigger": "inspect_trace",
-      "label": "capcli sys trace op_9f2e --explain",
-      "arrow_type": "denial",
-      "ui": {
-        "button_text": "Diagnose Cause (--explain)",
-        "hotkey": "d"
-      }
-    },
-    {
-      "id": "t_human_trace_to_dry_run",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["sys.trace.success.populated"],
-      "to": ["run.sql.success.dry_run"],
-      "trigger": "preview_remedy",
-      "label": "capcli sql 'UPDATE orders ...' --dry-run",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_human_dry_run_to_commit",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.sql.success.dry_run"],
-      "to": ["run.sql.success.populated"],
-      "trigger": "exec_bounded_write",
-      "label": "Execute Remediated Write (-m)",
-      "arrow_type": "success"
-    },
-    {
-      "id": "t_human_commit_to_snapshot",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.sql.success.populated"],
-      "to": ["db.snapshot.success.created"],
-      "trigger": "take_snapshot",
-      "label": "capcli db snapshot",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_human_snapshot_to_corrupt",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["db.snapshot.success.created"],
-      "to": ["db.restore.success.restored"],
-      "trigger": "test_restore",
-      "label": "capcli db restore snap_onboarding_01",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_human_restore_to_report",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["db.restore.success.restored"],
-      "to": ["sys.doctor.success.report"],
-      "trigger": "emit_receipt",
-      "label": "capcli sys doctor --report",
-      "arrow_type": "success"
-    },
-    {
-      "id": "t_harness_contract_to_search",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["sys.doctor.success.nominal"],
-      "to": ["run.search.success.populated"],
-      "trigger": "harness_search",
-      "label": "capcli search '' --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_search_to_dry_run",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["run.search.success.populated"],
-      "to": ["run.sql.success.dry_run"],
-      "trigger": "harness_dry_run",
-      "label": "capcli sql 'SELECT ...' --dry-run --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_dry_run_to_catalog",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["run.sql.success.dry_run"],
-      "to": ["api.catalog.success.populated"],
-      "trigger": "probe_api_catalog",
-      "label": "capcli api catalog stripe --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_catalog_to_prove_draft",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["api.catalog.success.populated"],
-      "to": ["routine.prove.success.passed"],
-      "trigger": "prove_hybrid",
-      "label": "capcli routine prove sync_orders --env sim",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_prove_to_trace_explain",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["routine.prove.success.passed"],
-      "to": ["sys.trace.success.populated"],
-      "trigger": "explain_feedback",
-      "label": "capcli sys trace op_prove_01 --explain --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_trace_to_overview",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["sys.trace.success.populated"],
-      "to": ["run.overview.success.populated"],
-      "trigger": "codify_overview",
-      "label": "capcli run overview",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_overview_to_final_prove",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["run.overview.success.populated"],
-      "to": ["routine.prove.success.passed"],
-      "trigger": "final_prove_sim",
-      "label": "capcli routine prove overview --env sim",
-      "arrow_type": "success"
-    },
-    {
-      "id": "t_crucible_inspect_to_cascade",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["run.inspect.success.routine"],
-      "to": ["run.execute.denial.budget_cascade"],
-      "trigger": "invoke_child_frame",
-      "label": "Child frame crosses min() bounds",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_cascade_to_jail",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["run.execute.denial.budget_cascade"],
-      "to": ["run.execute.denial.network_jail"],
-      "trigger": "raw_socket_attempt",
-      "label": "Syscall 42 connect() trapped",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_jail_to_claims",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["run.execute.denial.network_jail"],
-      "to": ["db.lock.denial.claim_held"],
-      "trigger": "contested_claim",
-      "label": "capcli db lock orders:ORD-10",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_claims_to_thrashing",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["db.lock.denial.claim_held"],
-      "to": ["sys.doctor.alarm.thrashing"],
-      "trigger": "sustained_denials",
-      "label": "20 sustained denials in 5m",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_thrashing_to_missing_secret",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["sys.doctor.alarm.thrashing"],
-      "to": ["run.execute.refusal.missing_secret"],
-      "trigger": "execute_without_vault",
-      "label": "capcli run cap://stripe.refund",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_secret_to_vault",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["run.execute.refusal.missing_secret"],
-      "to": ["sys.vault_set.success.vaulted"],
-      "trigger": "inject_vault_secret",
-      "label": "capcli sys vault_set stripe_key",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_crucible_vault_resume_exec",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["sys.vault_set.success.vaulted"],
-      "to": ["run.execute.success.populated"],
-      "trigger": "retry_execution",
-      "label": "capcli run cap://stripe.refund",
-      "arrow_type": "success"
-    },
-    {
-      "id": "t_promotion_prove_to_queue",
-      "journeys": ["journey_trust_promotion"],
-      "from": ["routine.prove.success.passed"],
-      "to": ["routine.pending.success.populated"],
-      "trigger": "enqueue_promotion",
-      "label": "capcli routine ship order_sync reviewed --queue",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_promotion_queue_to_ship",
-      "journeys": ["journey_trust_promotion"],
-      "from": ["routine.pending.success.populated"],
-      "to": ["routine.ship.success.shipped"],
-      "trigger": "commit_ship",
-      "label": "capcli routine ship order_sync pinned",
-      "arrow_type": "success"
-    },
-    {
-      "id": "t_quota_yield_to_park",
-      "journeys": ["journey_quota_preemption"],
-      "from": ["run.execute.yield.quota"],
-      "to": ["run.execute.resume.quota"],
-      "trigger": "daemon_auto_refill",
-      "label": "Daemon token refill tick",
-      "arrow_type": "yield"
-    },
-    {
-      "id": "t_schema_diff_to_apply_dry",
-      "journeys": ["journey_schema_evolution"],
-      "from": ["rule.diff.success.populated"],
-      "to": ["rule.apply.success.dry_run"],
-      "trigger": "exec_dry_run_ddl",
-      "label": "capcli rule apply schema --dry-run",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_schema_apply_dry_to_merge",
-      "journeys": ["journey_schema_evolution"],
-      "from": ["rule.apply.success.dry_run"],
-      "to": ["env.merge.success.merged"],
-      "trigger": "exec_env_merge",
-      "label": "capcli env merge dev prod -m 'forward DDL'",
-      "arrow_type": "success"
-    },
-    {
-      "id": "t_tamper_quarantine_inspect",
-      "journeys": ["journey_tamper_forensics"],
-      "from": ["sys.doctor.warning.tamper"],
-      "to": ["sys.doctor.quarantine_mode"],
-      "trigger": "inspect_quarantine",
-      "label": "capcli sys doctor --quarantine",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_ask_suspended_to_list",
-      "journeys": ["journey_human_in_the_loop"],
-      "from": ["run.execute.suspended.ask"],
-      "to": ["ping.list.success.populated"],
-      "trigger": "view_inquiries",
-      "label": "capcli ping list --pending",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_ask_list_to_resolve",
-      "journeys": ["journey_human_in_the_loop"],
-      "from": ["ping.list.success.populated"],
-      "to": ["ping.resolve.success.resolved"],
-      "trigger": "resolve_inquiry",
-      "label": "capcli ping resolve ask_88a --choice approve",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_ask_resolve_to_resumed_exec",
-      "journeys": ["journey_human_in_the_loop"],
-      "from": ["ping.resolve.success.resolved"],
-      "to": ["run.execute.success.populated"],
-      "trigger": "resume_routine",
-      "label": "Routine frame auto-resumes",
-      "arrow_type": "success"
-    }
-  ]
-}
-```
+Canonical file: `flows.json` (same directory). It owns journeys and screen-to-screen routing; this document points at it and does not reproduce it.
+
+Every screen ID referenced by a flow must exist as a fixture pair under `screens/` and as a row in §4 — the validator enforces closure. Flow prose in §5 quotes individual screens for walkthroughs; the routing itself lives only in `flows.json`.
 
 ---
 
 ## 4. Complete Screen Inventory & State Matrix
 
-### 4.1 `run/` (5 verbs $\rightarrow$ 37 screen pairs)
+### 4.1 `run/` (5 verbs $\\rightarrow$ 37 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -665,9 +152,9 @@ cans/artifacts/wireframe/
 | `run.execute.denial.network_jail` | denial | 2 | kernel.sandbox | syscall_42 | Trapped raw `connect()` via seccomp-bpf |
 | `run.execute.denial.claim_held` | denial | 2 | db.claims | locked | Exclusive `--lock` ref already held |
 | `run.execute.refusal.missing_secret`| refusal| 3 | policy.secrets | missing_key | Missing credential redirects to Cockpit URL |
-| `run.execute.suspended.ask` | success | 0 | — | suspended | Pauses frame; enqueues in `_pending_asks` |
+| `run.execute.yield.ask` | yield | 6 | ping.ask | suspended | Routine hit `ctx.ping.ask`; frame checkpointed to `_pending_asks`, exits 6 until human resolves |
 | `run.execute.yield.quota` | yield | 6 | api.quota | rate_limit | Suspends task; sets `yield_until` timestamp |
-| `run.execute.resume.quota` | success | 0 | — | resumed | Daemon re-dispatches task on token refill |
+| `run.execute.success.resumed` | success | 0 | — | resumed | Daemon re-dispatches task on token refill |
 | `run.execute.crash.runtime` | crash | 4 | routine.runtime | exception | Guest language uncaught error |
 | `run.execute.crash.poll_timeout` | crash | 4 | routine.runtime | timeout | `poll_until` exceeds 30-second ceiling |
 | `run.execute.panic.secret_leak` | panic | 5 | kernel.panic | leak | `kill_and_alert` triggered on plaintext secret leak |
@@ -692,7 +179,7 @@ cans/artifacts/wireframe/
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
 
-### 4.2 `db/` (6 verbs $\rightarrow$ 14 screen pairs)
+### 4.2 `db/` (6 verbs $\\rightarrow$ 14 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -700,7 +187,7 @@ cans/artifacts/wireframe/
 | `db.lock.denial.claim_held` | denial | 2 | db.claims | held | Target resource currently claimed |
 | `db.lock.refusal.missing_reason` | refusal | 3 | validation | missing_arg | `--reason` required for locking |
 | `db.unlock.success.released` | success | 0 | — | released | Claim lease released ahead of TTL |
-| `db.unlock.refusal.not_holder` | refusal | 3 | policy.authorizer | unauthorized | Caller does not own the claim |
+| `db.unlock.denial.not_holder` | denial | 2 | policy.authorizer | unauthorized | Caller does not own the claim |
 | `db.schema.success.populated` | success | 0 | — | populated | Live DDL schema introspected |
 | `db.schema.success.empty` | success | 0 | — | empty | Empty database state |
 | `db.snapshot.success.created` | success | 0 | — | created | Point-in-time snapshot committed |
@@ -711,7 +198,7 @@ cans/artifacts/wireframe/
 | `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
 | `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
 
-### 4.3 `routine/` (8 verbs $\rightarrow$ 27 screen pairs)
+### 4.3 `routine/` (8 verbs $\\rightarrow$ 26 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -725,7 +212,7 @@ cans/artifacts/wireframe/
 | `routine.prove.denial.sandbox` | denial | 2 | kernel.sandbox | breach | Jail containment boundary violation |
 | `routine.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Uncaught exception in test pass |
 | `routine.ship.success.shipped` | success | 0 | — | shipped | Routine promoted to new trust rung |
-| `routine.ship.rollback.canary` | success | 0 | — | rolled_back | Canary telemetry trips auto-rollback |
+| `routine.ship.success.rolled_back` | success | 0 | — | rolled_back | Canary telemetry trips auto-rollback |
 | `routine.ship.denial.metrics` | denial | 2 | policy.authorizer | low_success | Success rate falls below 0.95 |
 | `routine.ship.refusal.missing_reason`| refusal | 3 | validation | missing_arg | Elevation to pinned requires reason |
 | `routine.ship.denial.trust` | denial | 2 | policy.trust | tier2_refusal | Pinned promotion denied on Tier 2 |
@@ -742,7 +229,7 @@ cans/artifacts/wireframe/
 | `routine.retire.denial.active_deps` | denial | 2 | policy.authorizer | deps_exist | Callee dependencies block retirement |
 | `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
 
-### 4.4 `api/` (8 verbs $\rightarrow$ 19 screen pairs)
+### 4.4 `api/` (8 verbs $\\rightarrow$ 23 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -770,7 +257,7 @@ cans/artifacts/wireframe/
 | `api.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback limit of 5 |
 | `api.rollback.refusal.not_found` | refusal | 3 | validation | not_found | Target version not found |
 
-### 4.5 `bind/` (10 verbs $\rightarrow$ 23 screen pairs)
+### 4.5 `bind/` (10 verbs $\\rightarrow$ 26 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -801,7 +288,7 @@ cans/artifacts/wireframe/
 | `bind.keys.success.issued` | success | 0 | — | issued | API key stamped for endpoint (90d expiry) |
 | `bind.keys.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 25 keys reached |
 
-### 4.6 `ping/` (5 verbs $\rightarrow$ 11 screen pairs)
+### 4.6 `ping/` (5 verbs $\\rightarrow$ 14 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -820,7 +307,7 @@ cans/artifacts/wireframe/
 | `ping.expire.success.completed` | success | 0 | — | completed | Explicit expiration executed |
 | `ping.expire.refusal.not_found` | refusal | 3 | validation | not_found | Target inquiry not found |
 
-### 4.7 `rule/` (4 verbs $\rightarrow$ 12 screen pairs)
+### 4.7 `rule/` (4 verbs $\\rightarrow$ 12 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -837,7 +324,7 @@ cans/artifacts/wireframe/
 | `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Gate 1 YAML syntax failure |
 | `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Gate 2 circular dependency detected |
 
-### 4.8 `env/` (7 verbs $\rightarrow$ 16 screen pairs)
+### 4.8 `env/` (7 verbs $\\rightarrow$ 20 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -856,11 +343,13 @@ cans/artifacts/wireframe/
 | `env.merge.denial.trust` | denial | 2 | policy.trust | unreviewed | Production merge requires reviewed |
 | `env.merge.refusal.plan_conflict` | refusal | 3 | compile | conflict | Target schema migration plan conflict blocks DDL |
 | `env.merge.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile out of sync |
+| `env.merge.refusal.unmerged` | refusal | 3 | compile | unmerged | Git branch conflict blocks DDL forwarding: env branches diverge on schema declaration |
 | `env.remove.success.removed` | success | 0 | — | removed | Environment dismantled |
+| `env.remove.denial.prod_flags` | denial | 2 | policy.authorizer | prod_flags | Prod removal requires dual confirmation flags; neither was present |
 | `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (16 verbs $\rightarrow$ 43 screen pairs)
+### 4.9 `sys/` (16 verbs $\\rightarrow$ 45 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -891,11 +380,13 @@ cans/artifacts/wireframe/
 | `sys.doctor.success.report` | success | 0 | — | report | Full YAML Trust Receipt |
 | `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
 | `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or supported sandbox provider (bwrap/crun/microvm) |
-| `sys.doctor.warning.clock_drift`| success| 0 | host.ntp | clock_skew | Host clock delta $>500$ms vs NTP (monotonic fallback active) |
+| `sys.doctor.success.clock_drift`| success| 0 | — | clock_skew | Host clock delta $>500$ms vs NTP (warning only; monotonic fallback active) |
+| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Audit SHA-256 chain broken with quarantine sink unreachable; kill_and_alert, boot refused |
+| `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode (CAPCLI_RECOVERY=1): policy disabled, audit sink online, diagnostics only |
 | `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
-| `sys.doctor.warning.tamper` | success | 0 | — | tampered | Audit SHA-256 chain broken; corrupted block isolated to quarantine |
-| `sys.doctor.quarantine_mode`| success | 0 | — | quarantine | Quarantine ledger inspection active |
-| `sys.doctor.alarm.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
+| `sys.doctor.success.tamper` | success | 0 | — | tampered | Audit SHA-256 chain broken; corrupted block isolated to quarantine |
+| `sys.doctor.success.quarantine`| success | 0 | — | quarantine | Quarantine ledger inspection active |
+| `sys.doctor.denial.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
 | `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |
 | `sys.backup.denial.push_fail` | denial | 2 | policy.authorizer | push_fail | Remote S3/Git push rejected |
 | `sys.recover.success.restored` | success | 0 | — | restored | Reconstructed from object store |
@@ -908,7 +399,7 @@ cans/artifacts/wireframe/
 | `sys.serve.refusal.already_running`| refusal| 3 | compile | port_bound | Daemon process already running |
 | `sys.serve.denial.port` | denial | 2 | db.engine | port_denied | Port 4040 binding rejected |
 
-### 4.10 `doc/` (3 verbs $\rightarrow$ 6 screen pairs)
+### 4.10 `doc/` (3 verbs $\\rightarrow$ 6 screen pairs)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -1052,7 +543,7 @@ trust_receipt:
 
 ---
 
-### 5.6 Agent Thrashing Alarm (`screens/sys/doctor/sys.doctor.alarm.thrashing.txt`)
+### 5.6 Agent Thrashing Denial (`screens/sys/doctor/sys.doctor.denial.thrashing.txt`)
 
 ```text
 [dev:tier_1]  ⚠  agent.thrashing
@@ -1128,16 +619,20 @@ trust_receipt:
 
 ---
 
-### 5.11 NTP Clock Drift Diagnostic Warning (`screens/sys/doctor/sys.doctor.warning.clock_drift.txt`)
+### 5.11 NTP Clock Drift Diagnostic Warning (`screens/sys/doctor/sys.doctor.success.clock_drift.txt`)
+
+The rule (cans/physics.md): clock delta vs NTP > 500ms emits a diagnostic warning on an exit-0 screen — causal ordering and lease claims bind to CLOCK_MONOTONIC and SQLite sequence IDs, so drift degrades audit timestamps only and never refuses execution.
 
 ```text
-[dev:tier_1]  [WARN] host.ntp.clock_drift
+[dev:tier_1]  ✓  exit 0
 
-  WARN   Host clock delta vs NTP is 840ms.
-         Monotonic clock (CLOCK_MONOTONIC) and SQLite transaction sequencing active.
+  ⚠  clock drift warning: host delta vs NTP is 840ms (warning threshold: 500ms)
+         causal ordering unaffected: CLOCK_MONOTONIC + SQLite sequence IDs
+         lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only
 
+  host:            ws-07 (chronyd reachable, not yet synced)
   state_modified: false
-  remedy: run 'chronyd' or 'ntpdate' to re-align wall clock
+  remedy:          synchronize host system clock via 'chronyd' or 'ntpdate' when convenient; execution is not blocked
 ```
 
 ---

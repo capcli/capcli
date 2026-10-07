@@ -1,0 +1,8 @@
+capcli 0.4.2 — compiled execution firewall for AI agents
+
+Usage: capcli <noun> <verb> [target] [flags]
+
+Capabilities are discovered dynamically, not listed in static help.
+  Find actions:    capcli search <query>
+  Pre-flight:      capcli inspect <urp>
+  System status:   capcli sys doctor

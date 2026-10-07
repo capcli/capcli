@@ -1,0 +1,10 @@
+[dev:tier_1]  ✓  quarantine
+
+  quarantine ledger:
+    block:         op_84c1 (_audit row 8,412)
+    reason:        prev_hash mismatch (tamper isolation)
+    isolated_at:   2026-10-06T09:14:02Z
+    valid_history: rows 1-8,411 verified against root ledger hash
+
+  state_modified: false
+  note:            quarantine inspection only; restore path requires proof bundle review

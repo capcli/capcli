@@ -1,0 +1,36 @@
+- Status: proposed
+- Date: 2026-10-06
+- Decided by: pending maintainer review (branch wireframe/p0-state-taxonomy)
+- Context
+  - Screen IDs follow the naming law {noun}.{verb}.{state}.{condition}; the state slot held warning, alarm, suspended, resume, rollback — none of them states in _states.json — plus two 3-segment IDs (quarantine_mode, recovery_mode)
+  - The illegal IDs were load-bearing: flows.json routes through them, prompt triggers t_forensics_tamper and t_hitl_suspended sit blocked on them, docs/reference/errors.md inherited them
+  - cans/physics.md exit-code law fixes six exits; _states.json labels map 1:1 onto them: 0 success, 2 denial, 3 refusal, 4 crash, 5 panic, 6 yield
+  - The wireframe tables themselves already recorded the canonical State/Exit for every offender (warning.tamper: success/0; alarm.thrashing: denial/2; rollback.canary: success/0) — only the ID disagreed
+  - One genuine conflict: run.execute.suspended.ask fixture claimed exit 0, but cans/action.md suspension contract exits ctx.ping.ask frames with code 6
+  - Domain registry drifted three ways: _states.json (10 denial / 8 refusal / 1 crash / 1 panic / 1 yield), manifest state_axes (17 flat "denial_domain"), screens actually emitting 18 domains; host.ntp was placed at exit 3 in one fixture while cans/physics.md rules clock drift a diagnostic warning with monotonic fallback
+- Decision
+  - States are not legalised: the state vocabulary stays exactly the six exit labels. warning, alarm, suspended, resume, rollback are severities, outcomes, and lifecycle events — they belong in the condition slot, never the state slot
+  - Rename map
+    - sys.doctor.warning.tamper → sys.doctor.success.tamper (exit 0; quarantine-operable per cans/effect.md); sys.doctor.panic.tamper kept as the exit-5 sibling
+    - sys.doctor.warning.clock_drift → sys.doctor.success.clock_drift (exit 0; cans/physics.md warning rule wins over the exit-3 fixture)
+    - sys.doctor.alarm.thrashing → sys.doctor.denial.thrashing (exit 2)
+    - run.execute.suspended.ask → run.execute.yield.ask (exit 6 per cans/action.md; fixture exit corrected 0 → 6)
+    - run.execute.resume.quota → run.execute.success.resumed (exit 0)
+    - routine.ship.rollback.canary → routine.ship.success.rolled_back (exit 0)
+    - sys.doctor.quarantine_mode → sys.doctor.success.quarantine (exit 0, 4-segment)
+    - sys.doctor.recovery_mode → sys.doctor.success.recovery (exit 0, 4-segment)
+    - db.unlock.refusal.not_holder → db.unlock.denial.not_holder (exit 3 → 2: well-formed request, governance blocks; policy.authorizer is an exit-2 domain)
+  - Domain registry gets one canonical home: _states.json owns exit → domains. manifest.json derives its flat list from it and must never be hand-edited to disagree
+    - Exit 6 gains domain ping.ask (coined here: no cans domain string existed for ask suspension; ping owns the ask lifecycle and _pending_asks store, cans/action.md#suspension-contract). Maintainer may rename at acceptance
+    - api.quota stays dual-registered at exits 2 and 6 (Critical vs Background, cans/physics.md quota law)
+    - Dropped from the registry: api.upstream (named in cans/effect.md classification but emitted by no exit and no screen), host.ntp (warning metadata on an exit-0 screen, not an exit domain)
+  - Counts are regenerated, never hand-claimed: §4 per-noun headers equal fixture pairs on disk; every §4 row has a fixture pair and every fixture pair has a §4 row
+- Alternatives considered
+  - Legalise warning/alarm/suspended as first-class states — rejected: breaks the 1:1 state↔exit law; warning and success would share exit 0, suspended would collide with yield at exit 6
+  - Keep manifest as canonical domain list and derive _states.json — rejected: the exit grouping is the legality fact (a domain determines its exit); the flat list is the derived view
+  - Delete §4 rows lacking fixtures instead of creating pairs — rejected: rows state intended screens (help stub, sweep, plan_conflict); the pairing law demands fixtures, not smaller ambitions
+- Consequences
+  - Prompt triggers t_forensics_tamper and t_hitl_suspended unblock: sys.doctor.success.tamper and run.execute.yield.ask are legal screens
+  - flows.json, wireframe-structure.md (tables and embedded copies), bank frontmatter, and docs/reference/errors.md all carry the renamed IDs; no file keeps the old spellings
+  - Manifest version bumps 2 → 3; state_axes.denial_domain is replaced by derived state_axes.domain_registry
+  - Out of scope, still open: wireframe verb flattening vs cans/interface.md (sys.agents, sys.vault_import fixtures), doc.inspect legality, wireframe.html rendering

@@ -1,0 +1,119 @@
+{
+  "$schema": "prompt/triggers/v3",
+  "version": 3,
+  "triggers": [
+    {
+      "id": "t_genesis_blank_world",
+      "screen_id": "db.schema.success.empty",
+      "predicate": {
+        "domain_tables": 0
+      },
+      "prompt": "doc://prompt/genesis/blank_world@1",
+      "serve": "L1",
+      "reason": "blank world: 0 domain tables"
+    },
+    {
+      "id": "t_genesis_search_empty",
+      "screen_id": "run.search.success.empty",
+      "predicate": {
+        "domain_tables": 0
+      },
+      "prompt": "doc://prompt/genesis/blank_world@1",
+      "serve": "L1",
+      "reason": "no capabilities and no world to search"
+    },
+    {
+      "id": "t_onboarding_harness",
+      "screen_id": "sys.doctor.success.nominal",
+      "predicate": {
+        "caller": "harness",
+        "domain_tables": 0
+      },
+      "prompt": "doc://prompt/onboarding/harness@1",
+      "serve": "L1",
+      "reason": "harness at nominal doctor with empty domain"
+    },
+    {
+      "id": "t_onboarding_human",
+      "screen_id": "sys.help.success.stub",
+      "predicate": {
+        "caller": "human"
+      },
+      "prompt": "doc://prompt/onboarding/human@1",
+      "serve": "L1",
+      "reason": "human operator requested onboarding tour"
+    },
+    {
+      "id": "t_authoring_overview",
+      "screen_id": "routine.prove.success.passed",
+      "predicate": {
+        "overview_exists": false
+      },
+      "prompt": "doc://prompt/authoring/overview_absent@1",
+      "serve": "L1",
+      "reason": "world lacks ground zero situational overview"
+    },
+    {
+      "id": "t_authoring_gaps",
+      "screen_id": "run.search.success.gaps",
+      "predicate": {
+        "gap_count": ">=1"
+      },
+      "prompt": "doc://prompt/authoring/routine_gaps@1",
+      "serve": "L1",
+      "reason": "telemetry shows uncodified operational sequence"
+    },
+    {
+      "id": "t_crucible_starved",
+      "screen_id": "run.execute.denial.budget_cascade",
+      "predicate": {
+        "domain": "policy.budget"
+      },
+      "prompt": "doc://prompt/crucible/execution_starved@1",
+      "serve": "L1",
+      "reason": "call-tree preflight failed budget cascade bounds"
+    },
+    {
+      "id": "t_evolution_drift",
+      "screen_id": "rule.diff.success.populated",
+      "predicate": {},
+      "prompt": "doc://prompt/evolution/schema_drift@1",
+      "serve": "L1",
+      "reason": "schema drift requires forward migration plan"
+    },
+    {
+      "id": "t_promotion_passed",
+      "screen_id": "routine.prove.success.passed",
+      "predicate": {
+        "trust": "draft"
+      },
+      "prompt": "doc://prompt/promotion/routine_passed@1",
+      "serve": "L1",
+      "reason": "proof passed: routine eligible for promotion"
+    },
+    {
+      "id": "t_wire_empty",
+      "screen_id": "api.catalog.success.empty",
+      "predicate": {},
+      "prompt": "doc://prompt/wire/catalog_empty@1",
+      "serve": "L1",
+      "reason": "no external API catalogs configured"
+    },
+    {
+      "id": "t_forensics_tamper",
+      "screen_id": "sys.doctor.success.tamper",
+      "predicate": {},
+      "prompt": "doc://prompt/forensics/audit_tampered@1",
+      "serve": "L1",
+      "reason": "causal DAG hash chain broken: quarantine active"
+    },
+    {
+      "id": "t_hitl_suspended",
+      "screen_id": "run.execute.yield.ask",
+      "predicate": {},
+      "prompt": "doc://prompt/hitl/ping_ask_suspended@1",
+      "serve": "L1",
+      "reason": "frame suspended awaiting human inquiry resolution"
+    }
+  ]
+}

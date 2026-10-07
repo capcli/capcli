@@ -66,9 +66,13 @@
   "6": {
     "label": "yield",
     "state_modified": false,
-    "domains": ["api.quota"],
+    "domains": ["api.quota", "ping.ask"],
     "suspension": true,
-    "diagnostic_required": ["domain", "culprit", "remedy", "tokens_left", "reset_at", "suspended_frame", "state_modified"],
-    "resume": "daemon re-queues via _suspended_tasks on token refill"
+    "diagnostic_required": ["domain", "culprit", "remedy", "suspended_frame", "state_modified"],
+    "domain_fields": {
+      "api.quota": ["tokens_left", "reset_at"],
+      "ping.ask": ["ask_id", "pending_asks"]
+    },
+    "resume": "daemon re-queues via _suspended_tasks on token refill; ask suspensions resume via ping resolve"
   }
 }

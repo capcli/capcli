@@ -1,0 +1,40 @@
+{
+  "$schema": "wireframe/v2",
+  "screen_id": "routine.sweep.success.populated",
+  "noun": "routine",
+  "verb": "sweep",
+  "target": null,
+  "command": "capcli routine sweep",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "txt_pair": "screens/routine/sweep/routine.sweep.success.populated.txt",
+  "txt_sha256": null,
+  "test_assertions": {
+    "exit_code": 0,
+    "state_modified": false,
+    "stdout_contains": [
+      "[dev:tier_1]  \u2713  populated",
+      "  proposals (2):",
+      "  state_modified: false"
+    ],
+    "stdout_not_contains": [
+      "--force",
+      "--override-budget",
+      "--force-prod",
+      "--verbose"
+    ],
+    "stderr_empty": true,
+    "json_keys_required": [],
+    "json_field_values": {
+      "state_modified": false
+    }
+  }
+}

@@ -38,5 +38,19 @@ Task ID: 6-b (trust.md dedup+deepen)
 - min() precedence: budget.md#Cascade owns mechanics; trust.md#Overrides owns authority angle
 - world.md self-reference: resolved to physics.md#Fail-closed-stance lockfile check
 
+---
+Task ID: audit-2026-10-07 (errors.md row verification, docs/reference/errors.md R01–R48)
+Logged, not resolved — each needs its cans owner's ruling:
+- C-1 `api sync` verb: interface.md (CLI owner) defines no `api sync`; action.md bans full sync, yet action.md cadence pointer, effect.md `api.sync` event, governance `api.sync.min_interval_hours: 24`, and `api.sync.*` fixtures assume it. Blocks errors.md R23/R24.
+- C-2 webhook flags: interface.md bind webhook `[--ingress|--tunnel] [-m]` vs action.md `[--driver ...] [-m]` (no ingress). Fixture uses `--ingress`.
+- C-3 rollback syntax: interface.md `routine rollback <name> [version]` vs time.md `routine rollback <name> --to-version N`; fixture is positional.
+- C-4 `sys agent` flattening: interface.md/agent.md `sys agent register, list, revoke` vs wireframe `sys.register`/`sys.revoke` fixture commands.
+- C-5 `env merge` syntax: interface.md/space.md `env merge <name> [target=prod]` vs fixture `capcli env merge stg --into dev` (`--into` undefined by the CLI owner).
+- C-6 exit-5 scope: physics.md/effect.md reserve exit 5 (`kernel.panic`) for unrecoverable media loss; `run.execute.panic.secret_leak` fixture assigns exit 5 to a secret leak (physics mandates `kill_and_alert`, no exit). errors.md R10 follows the fixture pending ruling.
+- C-7 cassette vs mock: action.md bans static cassette replays from promotion gating; space.md replays `apis/<provider>.cassette.jsonl`; policy.yaml and the R25 fixture use `apis/<provider>.mock.yaml`. Three artefact names, one seam.
+- C-8 Tier 1 sandbox floor: physics.md absent bwrap → fallback container/microvm, abort only if all providers fail; `sys.doctor.refusal.boot` fixture calls bwrap "mandatory on Tier 1", floor 0.8.0. errors.md R43 follows the fixture.
+- C-9 doc slicing: `doc.read.success.sliced` fixture renders outline-node output from `doc read --max-tokens 100`; interface.md defines no leaf addressing (known open ruling; `--section` illegal in v1 regardless).
+- C-10 agent registry cap: "8 registered agents" cap exists only in the `sys.register.denial.cap` fixture; no owner (agent.md/governance.yaml/policy.yaml) states it.
+
 ## Still open
-None. All cross-file keepers and duplicate ownership claims reconciled.
+Task audit-2026-10-07 items C-1..C-10 above. All earlier cross-file keepers and duplicate ownership claims reconciled.
