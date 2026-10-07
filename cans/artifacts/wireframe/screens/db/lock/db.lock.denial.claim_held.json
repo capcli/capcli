@@ -45,6 +45,10 @@
     "json_field_values": {
       "state_modified": false,
       "domain": "db.claims"
-    }
+    },
+    "stdout_not_contains": [
+      "trailer:",
+      "next_action"
+    ]
   }
 }

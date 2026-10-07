@@ -32,10 +32,19 @@
       "remedy:          re-run with --intent \"<why this question is asked>\""
     ],
     "stderr_empty": true,
-    "json_keys_required": ["domain", "culprit", "remedy", "state_modified"],
+    "json_keys_required": [
+      "domain",
+      "culprit",
+      "remedy",
+      "state_modified"
+    ],
     "json_field_values": {
       "state_modified": false,
       "domain": "compile"
-    }
+    },
+    "stdout_not_contains": [
+      "trailer:",
+      "next_action"
+    ]
   }
 }

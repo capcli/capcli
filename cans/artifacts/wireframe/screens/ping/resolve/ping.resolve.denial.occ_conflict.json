@@ -16,7 +16,7 @@
   },
   "diagnostic": {
     "domain": "db.engine",
-    "culprit": "Touched rows modified during suspension; OCC fence violated (orders row version 41 \u2192 43)",
+    "culprit": "Touched rows modified during suspension; OCC fence violated (orders row version 41 → 43)",
     "remedy": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame",
     "layer": "engine"
   },
@@ -26,7 +26,7 @@
     "exit_code": 2,
     "state_modified": false,
     "stdout_contains": [
-      "[dev:tier_1]  \u2717  exit 2",
+      "[dev:tier_1]  ✗  exit 2",
       "  FAIL  db.engine.stale_state",
       "  state_modified: false"
     ],
@@ -41,6 +41,10 @@
     "json_field_values": {
       "state_modified": false,
       "domain": "db.engine"
-    }
+    },
+    "stdout_not_contains": [
+      "trailer:",
+      "next_action"
+    ]
   }
 }

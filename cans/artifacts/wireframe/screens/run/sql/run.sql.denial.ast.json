@@ -36,7 +36,9 @@
     ],
     "stdout_not_contains": [
       "SyntaxError",
-      "panic"
+      "panic",
+      "trailer:",
+      "next_action"
     ],
     "stderr_empty": true,
     "json_keys_required": [

@@ -15,6 +15,14 @@
     "data_shape": "populated"
   },
   "diagnostic": null,
+  "trailer": {
+    "human": "prompt://evolution/schema_drift@1 - schema drift requires forward migration plan",
+    "json": {
+      "prompt": "prompt://evolution/schema_drift@1",
+      "reason": "schema drift requires forward migration plan",
+      "serve": "L1"
+    }
+  },
   "txt_pair": "screens/rule/diff/rule.diff.success.populated.txt",
   "txt_sha256": null,
   "test_assertions": {
@@ -25,7 +33,8 @@
       "│     └── priority (integer default 0)",
       "summary:    1 added · 1 changed · 0 removed",
       "next:       capcli rule apply schema --dry-run",
-      "state_modified: false"
+      "state_modified: false",
+      "trailer: prompt://evolution/schema_drift@1 - schema drift requires forward migration plan"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

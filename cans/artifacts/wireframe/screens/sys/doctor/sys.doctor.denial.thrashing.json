@@ -27,7 +27,7 @@
     "exit_code": 2,
     "state_modified": false,
     "stdout_contains": [
-      "[dev:tier_1]  \u26a0  agent.thrashing",
+      "[dev:tier_1]  ⚠  agent.thrashing",
       "  agent:           agt_7f3k",
       "  denials_last_5m: 22",
       "  state_modified:  false",
@@ -45,6 +45,10 @@
     "json_field_values": {
       "state_modified": false,
       "domain": "agent.thrashing"
-    }
+    },
+    "stdout_not_contains": [
+      "trailer:",
+      "next_action"
+    ]
   }
 }

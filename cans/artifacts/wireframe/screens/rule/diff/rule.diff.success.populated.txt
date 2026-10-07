@@ -16,3 +16,4 @@
   next:       capcli rule apply schema --dry-run
 
   state_modified: false
+trailer: prompt://evolution/schema_drift@1 - schema drift requires forward migration plan

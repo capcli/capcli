@@ -42,6 +42,10 @@
     "json_field_values": {
       "state_modified": false,
       "domain": "lockfile_mismatch"
-    }
+    },
+    "stdout_not_contains": [
+      "trailer:",
+      "next_action"
+    ]
   }
 }

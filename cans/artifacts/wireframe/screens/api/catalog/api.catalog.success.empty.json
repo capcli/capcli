@@ -15,6 +15,14 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
+  "trailer": {
+    "human": "prompt://wire/catalog_empty@1 - no external API catalogs configured",
+    "json": {
+      "prompt": "prompt://wire/catalog_empty@1",
+      "reason": "no external API catalogs configured",
+      "serve": "L1"
+    }
+  },
   "txt_pair": "screens/api/catalog/api.catalog.success.empty.txt",
   "txt_sha256": null,
   "test_assertions": {
@@ -24,7 +32,8 @@
       "[dev:tier_1]  ✓  empty",
       "  providers:  0",
       "  Zero APIs configured.",
-      "  state_modified:  false"
+      "  state_modified:  false",
+      "trailer: prompt://wire/catalog_empty@1 - no external API catalogs configured"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

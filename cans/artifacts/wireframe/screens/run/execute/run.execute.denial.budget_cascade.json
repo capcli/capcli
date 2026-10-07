@@ -21,6 +21,14 @@
     "layer": "budget",
     "measured": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops"
   },
+  "trailer": {
+    "human": "prompt://crucible/execution_starved@1 - call-tree preflight failed budget cascade bounds",
+    "json": {
+      "prompt": "prompt://crucible/execution_starved@1",
+      "reason": "call-tree preflight failed budget cascade bounds",
+      "serve": "L1"
+    }
+  },
   "txt_pair": "screens/run/execute/run.execute.denial.budget_cascade.txt",
   "txt_sha256": null,
   "test_assertions": {
@@ -32,7 +40,8 @@
       "        effective:      min(declared 6, governance 50, parent 2, session 488) -> 2 ops",
       "  state_modified: false",
       "  layer: budget",
-      "  remedy: shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain"
+      "  remedy: shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain",
+      "trailer: prompt://crucible/execution_starved@1 - call-tree preflight failed budget cascade bounds"
     ],
     "stderr_empty": true,
     "json_keys_required": [

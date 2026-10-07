@@ -44,6 +44,10 @@
     "json_field_values": {
       "state_modified": false,
       "domain": "kernel.sandbox"
-    }
+    },
+    "stdout_not_contains": [
+      "trailer:",
+      "next_action"
+    ]
   }
 }

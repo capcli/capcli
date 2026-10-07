@@ -21,7 +21,7 @@
     "exit_code": 0,
     "state_modified": true,
     "stdout_contains": [
-      "[prod:tier_1]  \u2713  resumed",
+      "[prod:tier_1]  ✓  resumed",
       "  task:           task_99a8b1 (background)",
       "  queue:          daemon re-queued from _suspended_tasks",
       "  state_modified: true"
@@ -30,6 +30,10 @@
     "json_keys_required": [],
     "json_field_values": {
       "state_modified": true
-    }
+    },
+    "stdout_not_contains": [
+      "trailer:",
+      "next_action"
+    ]
   }
 }

@@ -21,7 +21,7 @@
     "exit_code": 0,
     "state_modified": false,
     "stdout_contains": [
-      "[dev:tier_1]  \u2713  populated",
+      "[dev:tier_1]  ✓  populated",
       "  inspect: tpl://order_sync@2",
       "  state_modified: false"
     ],
@@ -29,6 +29,10 @@
     "json_keys_required": [],
     "json_field_values": {
       "state_modified": false
-    }
+    },
+    "stdout_not_contains": [
+      "trailer:",
+      "next_action"
+    ]
   }
 }

@@ -8,3 +8,4 @@
 
   state_modified: false
   note:           no domain schema compiled; declare tables in schema.yaml
+trailer: prompt://genesis/blank_world@1 - blank world: 0 domain tables

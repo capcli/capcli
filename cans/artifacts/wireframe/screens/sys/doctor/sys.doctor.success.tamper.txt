@@ -6,3 +6,4 @@
   chain:           quarantine active (1 block isolated)
   state_modified: false
   remedy:          inspect quarantined block via 'capcli sys doctor' quarantine view, then rebuild proof bundle before any restore
+trailer: prompt://forensics/audit_tampered@1 - causal DAG hash chain broken: quarantine active

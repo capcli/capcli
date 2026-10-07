@@ -15,6 +15,14 @@
     "data_shape": "empty"
   },
   "diagnostic": null,
+  "trailer": {
+    "human": "prompt://genesis/blank_world@1 - no capabilities and no world to search",
+    "json": {
+      "prompt": "prompt://genesis/blank_world@1",
+      "reason": "no capabilities and no world to search",
+      "serve": "L1"
+    }
+  },
   "txt_pair": "screens/run/search/run.search.success.empty.txt",
   "txt_sha256": null,
   "test_assertions": {
@@ -25,7 +33,8 @@
       "  exact: 0 · prefix: 0 · fuzzy: 0 · semantic: below 0.60 floor",
       "  did_you_mean:",
       "    'supplier':     cap://process_wholesale_order@2 (routine, pinned)",
-      "  gap_signal:  1 of 3 zero-hit searches toward gap_threshold"
+      "  gap_signal:  1 of 3 zero-hit searches toward gap_threshold",
+      "trailer: prompt://genesis/blank_world@1 - no capabilities and no world to search"
     ],
     "stderr_empty": true,
     "json_keys_required": [],

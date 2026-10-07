@@ -31,6 +31,10 @@
     "json_keys_required": [],
     "json_field_values": {
       "state_modified": false
-    }
+    },
+    "stdout_not_contains": [
+      "trailer:",
+      "next_action"
+    ]
   }
 }

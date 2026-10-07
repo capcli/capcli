@@ -22,17 +22,26 @@
     "pending_asks": 1,
     "suspended_frame": "frame_026"
   },
+  "trailer": {
+    "human": "prompt://hitl/ping_ask_suspended@1 - frame suspended awaiting human inquiry resolution",
+    "json": {
+      "prompt": "prompt://hitl/ping_ask_suspended@1",
+      "reason": "frame suspended awaiting human inquiry resolution",
+      "serve": "L1"
+    }
+  },
   "txt_pair": "screens/run/execute/run.execute.yield.ask.txt",
   "txt_sha256": null,
   "test_assertions": {
     "exit_code": 6,
     "state_modified": false,
     "stdout_contains": [
-      "[dev:tier_1]  \u2717  exit 6",
+      "[dev:tier_1]  ✗  exit 6",
       "  YIELD  ping.ask_suspended",
       "  ask:             ask_88a",
       "  pending_asks:    1 enqueued (ask_88a)",
-      "  state_modified:  false"
+      "  state_modified:  false",
+      "trailer: prompt://hitl/ping_ask_suspended@1 - frame suspended awaiting human inquiry resolution"
     ],
     "stderr_empty": true,
     "json_keys_required": [
