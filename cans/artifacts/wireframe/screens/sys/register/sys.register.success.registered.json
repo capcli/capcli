@@ -27,12 +27,6 @@
       "state_modified: true",
       "note:           ids and tokens are kernel-issued; self-declared identities are denied"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

@@ -34,12 +34,6 @@
       "layer: authorizer",
       "remedy: retire or rebind order_sync@2 and sync_orders@1 first, then re-run retire"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

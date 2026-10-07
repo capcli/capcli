@@ -27,12 +27,6 @@
       "sync_orders@1  draft -> reviewed   queued 31m ago   success 1.00",
       "state_modified: false"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

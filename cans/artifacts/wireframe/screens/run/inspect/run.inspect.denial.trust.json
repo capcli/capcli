@@ -34,12 +34,6 @@
       "  layer:           trust",
       "  remedy:          promote via capcli routine ship refund_and_archive reviewed, then re-inspect"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

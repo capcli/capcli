@@ -740,6 +740,7 @@ struct TestAssertions {
     exit_code: i32,
     state_modified: bool,
     stdout_contains: Vec<String>,
+    #[serde(default)]
     stdout_not_contains: Vec<String>,
     stderr_empty: bool,
 }
@@ -781,6 +782,13 @@ fn execute_wireframe_golden_tests() {
             assert!(output.stdout.contains(needle), "{}: Missing expected output needle '{}'", fixture.screen_id, needle);
         }
         for banned in &fixture.test_assertions.stdout_not_contains {
+            assert!(!output.stdout.contains(banned), "{}: Output contains banned token '{}'", fixture.screen_id, banned);
+        }
+
+        // Global negative: the parser-banned flags (cans/interface.md#Refusals)
+        // appear in no screen's output. Asserted once here, for every fixture;
+        // fixtures carry only screen-specific negatives.
+        for banned in ["--force", "--override-budget", "--force-prod", "--verbose"] {
             assert!(!output.stdout.contains(banned), "{}: Output contains banned token '{}'", fixture.screen_id, banned);
         }
 

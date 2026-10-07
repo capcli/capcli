@@ -33,12 +33,6 @@
       "layer: authorizer",
       "remedy: ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

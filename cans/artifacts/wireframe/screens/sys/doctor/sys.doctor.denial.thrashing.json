@@ -34,12 +34,6 @@
       "  layer:           governance",
       "  remedy:          harness execution throttled; escalate to human or inspect remedy payload"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

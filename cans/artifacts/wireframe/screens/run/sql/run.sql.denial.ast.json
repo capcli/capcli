@@ -35,10 +35,6 @@
       "remedy: add LIMIT, or target specific primary key"
     ],
     "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose",
       "SyntaxError",
       "panic"
     ],

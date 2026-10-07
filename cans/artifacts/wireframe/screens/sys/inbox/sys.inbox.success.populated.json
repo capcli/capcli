@@ -27,12 +27,6 @@
       "└── evt_ord_903  9m ago  refund request: charge ch_1N2x (ORD-1042)",
       "note:  queue advanced; events delivered to caller exactly once"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

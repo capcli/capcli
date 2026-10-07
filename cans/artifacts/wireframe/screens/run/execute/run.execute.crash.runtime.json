@@ -32,12 +32,6 @@
       "  rollback: clean (all ops reverted)",
       "  remedy: guard the None case at routines/enrich_customers.py:42, then prove in sim before re-running"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

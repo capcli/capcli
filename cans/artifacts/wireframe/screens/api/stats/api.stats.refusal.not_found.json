@@ -31,12 +31,6 @@
       "  state_modified:  false",
       "  remedy:          sync the provider first, e.g. 'capcli api sync shopify <openapi-url>', or list configured providers via 'capcli api catalog'"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

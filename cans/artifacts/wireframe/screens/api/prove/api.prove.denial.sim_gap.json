@@ -34,12 +34,6 @@
       "  layer:           authorizer",
       "  remedy:          add a schema-validated mock fixture for 'threads.create_media_post' to apis/threads.mock.yaml, then re-run the prove"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

@@ -24,12 +24,6 @@
       "capcli 0.4.2 \u2014 compiled execution firewall for AI agents",
       "  Find actions:    capcli search <query>"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

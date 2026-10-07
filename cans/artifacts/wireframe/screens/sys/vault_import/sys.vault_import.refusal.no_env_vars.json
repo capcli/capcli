@@ -30,12 +30,6 @@
       "state_modified: false",
       "remedy: export CAPCLI_SECRET_<NAME> in the harness shell, or provision via capcli sys vault set"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

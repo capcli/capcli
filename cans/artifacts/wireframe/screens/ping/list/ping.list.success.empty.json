@@ -26,7 +26,6 @@
       "note:     no asks parked in _pending_asks; no frames awaiting human input",
       "state_modified:  false"
     ],
-    "stdout_not_contains": ["--force", "--override-budget", "--force-prod", "--verbose"],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

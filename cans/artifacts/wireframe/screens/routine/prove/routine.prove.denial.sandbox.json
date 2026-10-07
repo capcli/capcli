@@ -34,12 +34,6 @@
       "layer: sandbox",
       "remedy: use ctx.api.call with an activated catalog verb"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

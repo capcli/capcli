@@ -32,12 +32,6 @@
       "layer:          boot",
       "remedy:         recompile declarations via 'capcli rule validate' and re-lock; hand-editing capcli.lock is prohibited"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

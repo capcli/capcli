@@ -34,12 +34,6 @@
       "  pending_asks:    1 enqueued (ask_88a)",
       "  state_modified:  false"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

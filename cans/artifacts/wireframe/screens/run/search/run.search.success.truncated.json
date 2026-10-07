@@ -27,12 +27,6 @@
       "  next_cursor: doc://refund-policy",
       "  api://stripe.refund_charge                 api    active"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {

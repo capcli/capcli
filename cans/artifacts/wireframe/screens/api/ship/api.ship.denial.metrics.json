@@ -34,12 +34,6 @@
       "  layer:           authorizer",
       "  measured:        synthetic contract replay 2/3 passed (required: 3/3) · sim success rate 0.67 (floor: 0.90)"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

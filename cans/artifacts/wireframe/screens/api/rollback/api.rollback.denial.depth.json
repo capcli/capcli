@@ -34,12 +34,6 @@
       "  measured:        rollback depth 6 (cap: 5)",
       "  remedy:          roll back to version 3 or later, or re-sync the exact prior spec to pin it fresh"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

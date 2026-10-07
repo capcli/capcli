@@ -34,12 +34,6 @@
       "layer: authorizer",
       "remedy: fix the 3 failing replays, re-run capcli routine prove order_sync --env sim, then re-ship"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

@@ -34,12 +34,6 @@
       "  measured: poll duration 30.0s (ceiling 30s; requested 45s)",
       "  remedy: set timeout_s to 30 or less, or restructure into a scheduled watch"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

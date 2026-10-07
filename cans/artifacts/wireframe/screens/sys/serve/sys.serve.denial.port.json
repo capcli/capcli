@@ -34,12 +34,6 @@
       "layer:          engine",
       "measured:       port 4040 unavailable (required: 1 of 1)"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

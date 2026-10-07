@@ -34,12 +34,6 @@
       "layer:          authorizer",
       "measured:       0 of 2 remotes accepted (git: non-fast-forward, s3: HTTP 403)"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [
       "domain",

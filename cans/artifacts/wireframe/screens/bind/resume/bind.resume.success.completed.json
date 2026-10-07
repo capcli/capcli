@@ -27,12 +27,6 @@
       "next_fire:  2026-10-05T06:00:00Z",
       "state_modified: true"
     ],
-    "stdout_not_contains": [
-      "--force",
-      "--override-budget",
-      "--force-prod",
-      "--verbose"
-    ],
     "stderr_empty": true,
     "json_keys_required": [],
     "json_field_values": {
