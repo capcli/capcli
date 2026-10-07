@@ -974,7 +974,7 @@ fixture filenames under `screens/` — and §4, `_flows.json`, and
   #legend { display: flex; gap: 10px; flex-wrap: wrap; background: rgba(22,27,34,.85); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; font-size: 10px; color: var(--muted); }
   .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
   #hint { position: absolute; bottom: 12px; left: 12px; z-index: 10; font-size: 10px; color: var(--muted); background: rgba(22,27,34,.85); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
-  #terminal-panel { width: min(560px, 44vw); height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  #terminal-panel { width: min(380px, 32vw); height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
   #terminal-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   #screen-id-display { font-weight: 600; font-size: 12px; word-break: break-all; }
   #exit-badge { border: 1px solid currentColor; border-radius: 999px; padding: 2px 8px; font-size: 10px; white-space: nowrap; }
@@ -1041,6 +1041,7 @@ fixture filenames under `screens/` — and §4, `_flows.json`, and
   <div id="hint">Drag node to rearrange &middot; drag empty canvas to pan &middot; scroll to zoom &middot; click node to inspect</div>
 </div>
 
+<button class="tool-btn" id="panel-toggle" style="position:absolute;top:12px;right:12px;z-index:20;">Hide preview</button>
 <div id="terminal-panel">
   <div id="terminal-header">
     <span id="screen-id-display">select a state node</span>
@@ -1086,7 +1087,7 @@ fetch('_flows.json')
 
 const EXIT_BY_STATE = { success: 0, denial: 2, refusal: 3, crash: 4, panic: 5, yield: 6 };
 const STATE_COLOR = { success: '#3fb950', denial: '#f85149', refusal: '#db6d28', crash: '#d29922', panic: '#a371f7', yield: '#e3b341' };
-const NODE_W = 216, NODE_H = 44, COL_W = 264, ROW_H = 66, ORIGIN = { x: 40, y: 130 };
+const NODE_W = 208, NODE_H = 46, COL_W = 236, ROW_H = 72, ORIGIN = { x: 40, y: 150 };
 const positions = new Map();
 const nodeEls = new Map();
 const edgeEls = [];
@@ -1111,26 +1112,12 @@ function layout(ids, transitions) {
       if (!seen.has(nxt)) { seen.add(nxt); queue.push(nxt); }
     });
   }
-  ids.forEach(id => { if (!seen.has(id)) depth.set(id, 1); });
-  const layers = new Map();
-  ids.forEach(id => { const d = depth.get(id); if (!layers.has(d)) layers.set(d, []); layers.get(d).push(id); });
-  // barycenter ordering inside each layer reduces edge crossings
-  const yIndex = new Map();
-  const orderedLayers = [...layers.keys()].sort((a, b) => a - b).map(d => layers.get(d).sort());
-  orderedLayers.forEach((layer, li) => {
-    if (li > 0) {
-      const prev = new Map(orderedLayers[li - 1].map((id, i) => [id, i]));
-      layer.sort((a, b) => {
-        const score = id => { const ps = [...ids].filter(o => adj.get(o).includes(id) && prev.has(o)); return ps.length ? ps.reduce((s, o) => s + prev.get(o), 0) / ps.length : 0; };
-        return score(a) - score(b) || a.localeCompare(b);
-      });
-    }
-    layer.forEach((id, i) => yIndex.set(id, i));
-  });
+  const ordered = [...ids].sort((a, b) => (depth.get(a) - depth.get(b)) || a.localeCompare(b));
+  const COLS = 5;
   const pos = new Map();
-  orderedLayers.forEach((layer, li) => layer.forEach((id, i) => {
-    pos.set(id, { x: ORIGIN.x + li * COL_W, y: ORIGIN.y + i * ROW_H });
-  }));
+  ordered.forEach((id, i) => {
+    pos.set(id, { x: ORIGIN.x + (i % COLS) * COL_W, y: ORIGIN.y + Math.floor(i / COLS) * ROW_H });
+  });
   return pos;
 }
 
@@ -1231,7 +1218,7 @@ function fitView() {
   let maxX = 0, maxY = 0;
   positions.forEach(pt => { maxX = Math.max(maxX, pt.x + NODE_W); maxY = Math.max(maxY, pt.y + NODE_H); });
   const w = container.clientWidth || 1200, h = container.clientHeight || 800;
-  const k = Math.min(1, (w - 40) / (maxX - ORIGIN.x + 40), (h - 40) / (maxY - ORIGIN.y + 40));
+  const k = Math.max(0.55, Math.min(1, (w - 40) / (maxX - ORIGIN.x + 40), (h - 40) / (maxY - ORIGIN.y + 40)));
   transform = { x: 20 - ORIGIN.x * k, y: 20 - ORIGIN.y * k, k };
   updateTransform();
 }
@@ -1246,6 +1233,13 @@ document.getElementById('search').addEventListener('input', e => applyFilter(e.t
 document.getElementById('fit-btn').addEventListener('click', fitView);
 document.getElementById('reset-btn').addEventListener('click', () => { if (flowsData) renderGraph(flowsData); });
 window.addEventListener('resize', () => { /* canvas scales by CSS; transform preserved */ });
+const panelToggle = document.getElementById('panel-toggle');
+panelToggle.addEventListener('click', () => {
+  const panel = document.getElementById('terminal-panel');
+  const hidden = panel.style.display === 'none';
+  panel.style.display = hidden ? 'flex' : 'none';
+  panelToggle.textContent = hidden ? 'Hide preview' : 'Show preview';
+});
 
 function loadScreen(screenId, txtPath, exitCode) {
   document.getElementById('screen-id-display').textContent = screenId;
