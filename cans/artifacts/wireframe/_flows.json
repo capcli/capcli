@@ -120,6 +120,20 @@
       "entry": "doc.outline.refusal.not_found",
       "terminal": "doc.inspect.success.populated",
       "description": "Pointer hunt: outline on a missing doc://return-policy refuses, read on the typo'd doc://refund-policies refuses -> the live refund-policy doc reads fully, slices to 100 tokens, outlines, and inspects"
+    },
+    "journey_env_lifecycle": {
+      "name": "Environment Lifecycle: Provision, Audit, Promote, Deprovision",
+      "color": "#166534",
+      "entry": "env.new.success.created",
+      "terminal": "env.remove.success.removed",
+      "description": "Seed staging from prod -> provisioning gates (name taken, bundle ceiling, namespace cap) -> switch & audit namespaces (list, inspect) -> env doctor drift then healthy -> merge gauntlet to prod (unmerged, lockfile, plan conflict, trust) -> forward merge lands -> deprovision gauntlet (crypto sig, prod flags, unknown id) -> experiment_2 removed"
+    },
+    "journey_ping_lifecycle": {
+      "name": "Ping: Notifications, Inquiries & Fail-Closed Expiry",
+      "color": "#06b6d4",
+      "entry": "ping.list.success.empty",
+      "terminal": "ping.expire.success.completed",
+      "description": "Empty pending queue -> notify gates (intent required, quiet hours) -> ask gates (intent required, options cap) -> ask suspends a frame -> resolution gauntlet (unknown id, OCC fence, timeout expiry) -> unresolved ask expires fail-closed"
     }
   },
   "transitions": [
@@ -1392,6 +1406,456 @@
       "trigger": "inspect_doc",
       "label": "capcli doc inspect doc://refund-policy",
       "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_created_to_name_taken",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.new.success.created"
+      ],
+      "to": [
+        "env.new.refusal.name_taken"
+      ],
+      "trigger": "recreate_attempt",
+      "label": "capcli env new staging --seed prod",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_name_to_bundle",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.new.refusal.name_taken"
+      ],
+      "to": [
+        "env.new.refusal.bundle_too_large"
+      ],
+      "trigger": "restore_from_bundle",
+      "label": "capcli env new lab --from bundle.cap",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_bundle_to_cap",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.new.refusal.bundle_too_large"
+      ],
+      "to": [
+        "env.new.denial.cap"
+      ],
+      "trigger": "provision_extra_namespace",
+      "label": "capcli env new experiment_3 --seed prod",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_cap_to_use_nf",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.new.denial.cap"
+      ],
+      "to": [
+        "env.use.refusal.not_found"
+      ],
+      "trigger": "switch_unknown_env",
+      "label": "capcli env use canary",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_use_nf_to_switched",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.use.refusal.not_found"
+      ],
+      "to": [
+        "env.use.success.switched"
+      ],
+      "trigger": "switch_sim",
+      "label": "capcli env use sim",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_switched_to_list",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.use.success.switched"
+      ],
+      "to": [
+        "env.list.success.populated"
+      ],
+      "trigger": "list_namespaces",
+      "label": "capcli env list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_list_to_inspect_nf",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.list.success.populated"
+      ],
+      "to": [
+        "env.inspect.refusal.not_found"
+      ],
+      "trigger": "inspect_unknown_env",
+      "label": "capcli env inspect canary",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_inspect_nf_to_inspect",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.inspect.refusal.not_found"
+      ],
+      "to": [
+        "env.inspect.success.populated"
+      ],
+      "trigger": "inspect_staging",
+      "label": "capcli env inspect staging",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_inspect_to_doctor_drift",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.inspect.success.populated"
+      ],
+      "to": [
+        "env.doctor.denial.drift"
+      ],
+      "trigger": "doctor_envs",
+      "label": "capcli env doctor",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_doctor_drift_to_healthy",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.doctor.denial.drift"
+      ],
+      "to": [
+        "env.doctor.success.healthy"
+      ],
+      "trigger": "doctor_after_resync",
+      "label": "capcli env doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_healthy_to_merge_unmerged",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.doctor.success.healthy"
+      ],
+      "to": [
+        "env.merge.refusal.unmerged"
+      ],
+      "trigger": "merge_attempt",
+      "label": "capcli env merge dev prod -m \"forward DDL\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_merge_unmerged_to_lockfile",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.refusal.unmerged"
+      ],
+      "to": [
+        "env.merge.refusal.lockfile"
+      ],
+      "trigger": "merge_retry",
+      "label": "capcli env merge dev prod -m \"forward DDL\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_merge_lockfile_to_plan",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.refusal.lockfile"
+      ],
+      "to": [
+        "env.merge.refusal.plan_conflict"
+      ],
+      "trigger": "merge_stg_into_dev",
+      "label": "capcli env merge stg --into dev",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_merge_plan_to_trust",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.refusal.plan_conflict"
+      ],
+      "to": [
+        "env.merge.denial.trust"
+      ],
+      "trigger": "merge_draft_migration",
+      "label": "capcli env merge dev prod -m \"forward DDL\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_merge_trust_to_merged",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.denial.trust"
+      ],
+      "to": [
+        "env.merge.success.merged"
+      ],
+      "trigger": "merge_reviewed",
+      "label": "capcli env merge dev prod -m \"forward DDL\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_env_merged_to_remove_sig",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.success.merged"
+      ],
+      "to": [
+        "env.remove.denial.crypto_sig"
+      ],
+      "trigger": "remove_prod_attempt",
+      "label": "capcli env remove prod",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_remove_sig_to_flags",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.remove.denial.crypto_sig"
+      ],
+      "to": [
+        "env.remove.denial.prod_flags"
+      ],
+      "trigger": "remove_prod_retry",
+      "label": "capcli env remove prod",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_remove_flags_to_nf",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.remove.denial.prod_flags"
+      ],
+      "to": [
+        "env.remove.refusal.not_found"
+      ],
+      "trigger": "remove_unknown_env",
+      "label": "capcli env remove canary",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_remove_nf_to_removed",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.remove.refusal.not_found"
+      ],
+      "to": [
+        "env.remove.success.removed"
+      ],
+      "trigger": "remove_experiment",
+      "label": "capcli env remove experiment_2",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_ping_empty_to_notify_intent",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.list.success.empty"
+      ],
+      "to": [
+        "ping.notify.refusal.missing_intent"
+      ],
+      "trigger": "notify_attempt",
+      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel email",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_notify_intent_to_quiet",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.notify.refusal.missing_intent"
+      ],
+      "to": [
+        "ping.notify.denial.quiet_hours"
+      ],
+      "trigger": "notify_with_intent",
+      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_notify_quiet_to_dispatched",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.notify.denial.quiet_hours"
+      ],
+      "to": [
+        "ping.notify.success.dispatched"
+      ],
+      "trigger": "notify_in_window",
+      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_ping_dispatched_to_ask_intent",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.notify.success.dispatched"
+      ],
+      "to": [
+        "ping.ask.refusal.missing_intent"
+      ],
+      "trigger": "ask_attempt",
+      "label": "capcli ping ask user:alice \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_ask_intent_to_options_cap",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.ask.refusal.missing_intent"
+      ],
+      "to": [
+        "ping.ask.denial.options_cap"
+      ],
+      "trigger": "ask_six_options",
+      "label": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_ask_cap_to_suspended",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.ask.denial.options_cap"
+      ],
+      "to": [
+        "ping.ask.success.suspended"
+      ],
+      "trigger": "ask_fraud_gate",
+      "label": "capcli ping ask user:alice \"Fraud score 0.83 on ORD-1042. Approve dispatch?\" --options approve,deny --timeout 60m --intent \"fraud gate above dispatch threshold requires human sign-off\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_ping_suspended_to_resolve_nf",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.ask.success.suspended"
+      ],
+      "to": [
+        "ping.resolve.refusal.not_found"
+      ],
+      "trigger": "resolve_typo_id",
+      "label": "capcli ping resolve ask_51c7 --choice approve",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_resolve_nf_to_occ",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.resolve.refusal.not_found"
+      ],
+      "to": [
+        "ping.resolve.denial.occ_conflict"
+      ],
+      "trigger": "resolve_refund_ask",
+      "label": "capcli ping resolve ask_77c3 --choice approve",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_occ_to_expired",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.resolve.denial.occ_conflict"
+      ],
+      "to": [
+        "ping.resolve.denial.expired"
+      ],
+      "trigger": "resolve_after_timeout",
+      "label": "capcli ping resolve ask_77c3 --choice approve",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_expired_to_expire_nf",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.resolve.denial.expired"
+      ],
+      "to": [
+        "ping.expire.refusal.not_found"
+      ],
+      "trigger": "expire_typo_id",
+      "label": "capcli ping expire ask_51c7",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_expire_nf_to_completed",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.expire.refusal.not_found"
+      ],
+      "to": [
+        "ping.expire.success.completed"
+      ],
+      "trigger": "expire_unattended_ask",
+      "label": "capcli ping expire ask_77c3",
+      "arrow_type": "success"
     }
   ]
 }
