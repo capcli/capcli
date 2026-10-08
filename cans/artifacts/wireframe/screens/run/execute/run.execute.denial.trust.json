@@ -16,7 +16,8 @@
     "domain": "policy.trust",
     "culprit": "Draft routine sync_inventory@3 invoked in prod; the production floor requires the reviewed rung.",
     "remedy": "prove in sim ('capcli routine prove sync_inventory --env sim'), then ship to reviewed",
-    "layer": "trust"
+    "layer": "trust",
+    "state_modified": false
   },
   "render": {
     "header": {

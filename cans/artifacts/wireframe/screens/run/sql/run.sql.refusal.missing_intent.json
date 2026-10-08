@@ -5,7 +5,7 @@
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100\"",
   "state": {
     "exit_code": 3,
-    "domain": "compile",
+    "domain": "missing_param",
     "trust": "draft",
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +13,10 @@
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "compile",
+    "domain": "missing_param",
     "culprit": "Mutating write rejected: -m/--intent is required for writes.",
-    "remedy": "restate with -m \"<why>\", e.g. -m \"batch ship processing orders\""
+    "remedy": "restate with -m \"<why>\", e.g. -m \"batch ship processing orders\"",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -27,7 +28,7 @@
         "title": null,
         "items": [
           {
-            "text": "FATAL  compile.missing_intent",
+            "text": "FATAL  missing_param.missing_intent",
             "indent": 2
           },
           {
@@ -58,7 +59,7 @@
           },
           {
             "field": "layer",
-            "value": "compile"
+            "value": "missing_param"
           },
           {
             "field": "remedy",

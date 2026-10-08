@@ -18,7 +18,8 @@
     "remedy": "human resolves the inquiry in Cockpit or via 'capcli ping resolve'; frame auto-resumes after hash re-verification",
     "ask_id": "ask_88a",
     "pending_asks": 1,
-    "suspended_frame": "frame_026"
+    "suspended_frame": "frame_026",
+    "state_modified": false
   },
   "render": {
     "header": {

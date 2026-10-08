@@ -17,7 +17,8 @@
     "culprit": "write lock on db://orders held by op_9f1c; wait exceeded the 5000ms ceiling",
     "remedy": "retry after holder commits, or inspect the claim via capcli inspect db://orders",
     "layer": "engine",
-    "measured": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active"
+    "measured": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active",
+    "state_modified": false
   },
   "render": {
     "header": {

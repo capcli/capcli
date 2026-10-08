@@ -17,7 +17,8 @@
     "culprit": "Frame ops ceiling exhausted: archive_old_orders@3 (frame_005) hit 20/20 ops at attempted_op db.exec.",
     "remedy": "split the work into chunked routines, or raise declared max_ops in a new routine version",
     "layer": "budget",
-    "measured": "frame ops 20/20 · session remaining 488 ops"
+    "measured": "frame ops 20/20 · session remaining 488 ops",
+    "state_modified": false
   },
   "render": {
     "header": {
