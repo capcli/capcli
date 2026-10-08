@@ -155,6 +155,20 @@
       "entry": "api.sync.refusal.missing_url",
       "terminal": "api.retire.success.completed",
       "description": "Sync gates (spec url required, rate ceiling) -> stripe spec synced -> drift diff (threads clean, stripe populated) -> catalog shapes (empty, truncated, populated) -> prove gates (sim gap, policy) -> stripe.refund_charge passes in sim -> ship ladder (reason required, replay metrics, shipped, graduated) -> stats -> rollback gauntlet (depth, unknown version, restored) -> retirement"
+    },
+    "journey_routine_lifecycle": {
+      "name": "Routine Lifecycle: Author, Prove, Ship, Queue",
+      "color": "#6366f1",
+      "entry": "routine.new.refusal.name_taken",
+      "terminal": "routine.pending.success.populated",
+      "description": "Authoring gauntlet (name taken, shape violation, template incompatibility) -> sync_orders scaffolded -> prove gates (shape, sandbox escape, forbidden leaf op) -> sim prove passes -> ship ladder (reason required, trust floor, replay metrics) -> order_sync pinned ship -> canary rolled back -> promotion queue (empty, then populated)"
+    },
+    "journey_routine_maintenance": {
+      "name": "Routine Fleet Maintenance: Sweep, Stats, Rollback, Retire",
+      "color": "#a5b4fc",
+      "entry": "routine.sweep.success.empty",
+      "terminal": "routine.retire.success.completed",
+      "description": "Sweep (quiet window, then stale drafts harvested) -> profile gates (unknown routine, then dispatch_order deep stats) -> rollback gauntlet (unknown version, depth ceiling, then sync_orders restored to v3) -> retire gauntlet (active dependencies, unknown routine, then legacy_etl retired)"
     }
   },
   "transitions": [
@@ -2476,6 +2490,351 @@
       ],
       "trigger": "retire_refund_verb",
       "label": "capcli api retire stripe.refund_charge --reason \"deprecated upstream\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_name_taken_to_shape",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.refusal.name_taken"
+      ],
+      "to": [
+        "routine.new.refusal.shape_violation"
+      ],
+      "trigger": "scaffold_from_template",
+      "label": "capcli routine new sync_orders --template tpl://routine/legacy_sync",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_shape_to_template_compat",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.refusal.shape_violation"
+      ],
+      "to": [
+        "routine.new.refusal.template_compat"
+      ],
+      "trigger": "scaffold_incompatible_template",
+      "label": "capcli routine new order_sync --from tpl://order_sync@2",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_template_to_created",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.refusal.template_compat"
+      ],
+      "to": [
+        "routine.new.success.created"
+      ],
+      "trigger": "scaffold_blank",
+      "label": "capcli routine new sync_orders",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_created_to_prove_shape",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.success.created"
+      ],
+      "to": [
+        "routine.prove.denial.shape"
+      ],
+      "trigger": "prove_sim",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_prove_shape_to_sandbox",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.denial.shape"
+      ],
+      "to": [
+        "routine.prove.denial.sandbox"
+      ],
+      "trigger": "shrink_and_reprove",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_prove_sandbox_to_policy",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.denial.sandbox"
+      ],
+      "to": [
+        "routine.prove.denial.policy"
+      ],
+      "trigger": "reprove_after_manifest_fix",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_prove_policy_to_passed",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.denial.policy"
+      ],
+      "to": [
+        "routine.prove.success.passed"
+      ],
+      "trigger": "reprove_clean",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_prove_to_ship_reason",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.success.passed"
+      ],
+      "to": [
+        "routine.ship.refusal.missing_reason"
+      ],
+      "trigger": "ship_without_reason",
+      "label": "capcli routine ship order_sync pinned",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_ship_reason_to_trust",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.refusal.missing_reason"
+      ],
+      "to": [
+        "routine.ship.denial.trust"
+      ],
+      "trigger": "ship_reviewed_to_pinned",
+      "label": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_ship_trust_to_metrics",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.denial.trust"
+      ],
+      "to": [
+        "routine.ship.denial.metrics"
+      ],
+      "trigger": "ship_failing_canary",
+      "label": "capcli routine ship order_sync reviewed",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_ship_metrics_to_shipped",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.denial.metrics"
+      ],
+      "to": [
+        "routine.ship.success.shipped"
+      ],
+      "trigger": "ship_clean_canary",
+      "label": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_shipped_to_rolled_back",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.success.shipped"
+      ],
+      "to": [
+        "routine.ship.success.rolled_back"
+      ],
+      "trigger": "revert_promotion",
+      "label": "capcli routine ship order_sync reviewed",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_rolled_back_to_pending_empty",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.success.rolled_back"
+      ],
+      "to": [
+        "routine.pending.success.empty"
+      ],
+      "trigger": "check_queue",
+      "label": "capcli routine pending",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_pending_empty_to_populated",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.pending.success.empty"
+      ],
+      "to": [
+        "routine.pending.success.populated"
+      ],
+      "trigger": "queue_promotion",
+      "label": "capcli routine pending",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_sweep_empty_to_populated",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.sweep.success.empty"
+      ],
+      "to": [
+        "routine.sweep.success.populated"
+      ],
+      "trigger": "sweep_stale_drafts",
+      "label": "capcli routine sweep",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_sweep_to_stats_nf",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.sweep.success.populated"
+      ],
+      "to": [
+        "routine.stats.refusal.not_found"
+      ],
+      "trigger": "stats_unknown_routine",
+      "label": "capcli routine stats sync_inventory",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_stats_nf_to_stats",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.stats.refusal.not_found"
+      ],
+      "to": [
+        "routine.stats.success.populated"
+      ],
+      "trigger": "stats_dispatch_deep",
+      "label": "capcli routine stats dispatch_order --deep",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_stats_to_rollback_nf",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.stats.success.populated"
+      ],
+      "to": [
+        "routine.rollback.refusal.not_found"
+      ],
+      "trigger": "rollback_unknown_version",
+      "label": "capcli routine rollback sync_orders 7",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_rollback_nf_to_depth",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.rollback.refusal.not_found"
+      ],
+      "to": [
+        "routine.rollback.denial.depth"
+      ],
+      "trigger": "rollback_too_deep",
+      "label": "capcli routine rollback order_sync 3",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_rollback_depth_to_completed",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.rollback.denial.depth"
+      ],
+      "to": [
+        "routine.rollback.success.completed"
+      ],
+      "trigger": "rollback_to_v3",
+      "label": "capcli routine rollback sync_orders 3",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_rollback_to_retire_deps",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.rollback.success.completed"
+      ],
+      "to": [
+        "routine.retire.denial.active_deps"
+      ],
+      "trigger": "retire_depended_routine",
+      "label": "capcli routine retire dispatch_order --reason \"replaced by unified fulfillment path\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_retire_deps_to_nf",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.retire.denial.active_deps"
+      ],
+      "to": [
+        "routine.retire.refusal.not_found"
+      ],
+      "trigger": "retire_unknown_routine",
+      "label": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_retire_nf_to_completed",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.retire.refusal.not_found"
+      ],
+      "to": [
+        "routine.retire.success.completed"
+      ],
+      "trigger": "retire_legacy_etl",
+      "label": "capcli routine retire legacy_etl --reason \"replaced by unified pipeline\"",
       "arrow_type": "success"
     }
   ]
