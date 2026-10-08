@@ -712,6 +712,7 @@ this shape. No separate `.txt` file exists.
     "culprit": "No LIMIT clause. Blast radius unbounded.",
     "remedy": "add LIMIT, or target specific primary key",
     "layer": "AST",
+    "state_modified": false,
     "measured": "matches potentially 847 rows (cap: 100)"
   },
   "render": {
@@ -749,9 +750,11 @@ Field law:
 - `$schema` is `wireframe/v1`. `screen_id` is the identity; noun and verb are its first two segments and appear nowhere else.
 - `target` and `command` state the invocation the screen answers.
 - `state` is the kernel state frame: exit code, domain, trust, env, tier, `state_modified`, data shape. Legality of states and domains lives in `_states.json`.
-- `diagnostic` is the structured diagnostic frame for non-success exits (required keys per exit, `_states.json`). Success screens carry it as `null` or omit it.
-- `render` is the screen's full content model. A renderer consuming the shape alone — header from `state` plus `render.header.label`, sections in order, trailer from the payload — produces the terminal output exactly. `header.style` is `badge` (`[{env}:{tier}]` first line, `✓` on exit 0, `✗` otherwise) or `plain`; each section carries `title` (the block's leading `name:` line or `null`) and ordered `items`. An item is `{"field", "value"}` (rendered `  label: value`, values aligned per section) or `{"text", "indent"}` (a prose or code line at its indent).
+- `diagnostic` is the structured diagnostic frame for non-success exits. It carries every key in `_states.json` `diagnostic_required` for that exit: exit 2 — `domain`, `culprit`, `remedy`, `layer`, `state_modified`; exit 3/4/5 — `domain`, `culprit`, `remedy`, `state_modified`; exit 6 — `domain`, `culprit`, `remedy`, `suspended_frame`, `state_modified`. Exit-6 diagnostics additionally carry the domain fields registered in `_states.json` (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`, `pending_asks`). Denials may also cite `measured` (denial UX: cite the measured value). Success screens carry `diagnostic` as `null` or omit it.
+- `render` is the screen's full content model. A renderer consuming the shape alone — header from `state` plus `render.header.label`, sections in order, trailer from the payload — produces the terminal output exactly. `header.style` is `badge` (`[{env}:{tier}]` first line, `✓` on exit 0, `✗` otherwise) or `plain` (the label is the whole first line, verbatim — plain fixtures carry their own prefix or banner); each section carries `title` (the block's leading `name:` line or `null`) and ordered `items`. An item is `{"field", "value"}` (rendered `  label: value`, values aligned per section) or `{"text", "indent"}` (a prose or code line at its indent).
+- **Tree-glyph law:** tree characters (`├──`, `└──`, `│`) appear only in `{"text", "indent"}` items, which render at exactly their own indent. `{"field", "value"}` items never carry tree glyphs — field items always render as `  field: value`, so a glyph in a field label would double-indent the row and misalign the tree.
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
+- `pagination` appears exactly on screens whose `state.data_shape` is `truncated` (§6.1.2).
 
 ### 6.1.1 Trailer Slot
 
@@ -767,6 +770,25 @@ trailer and nothing else about the producer.
 - The wireframe validates shape and position against the frozen schema. It never evaluates a predicate, resolves a pointer, or originates a payload.
 - A payload with `serve: blocked` is never rendered. Absent is the default.
 - The slot leaves exit code and `state_modified` unchanged.
+
+The slot-naming bridge, stated once so it can never be confused: the fixture
+slot key is `trailer` — the `human_field`, producer-facing slot above. When a
+renderer emits the `--json` machine envelope, the key becomes `next_action`
+per `output_contract.trailer.machine_field` in `manifest.json`. Fixtures
+never serialize a `next_action` key.
+
+### 6.1.2 Pagination Slot
+
+Screens whose `state.data_shape` is `truncated` carry a top-level
+`"pagination"` object mirroring `output_contract.pagination.required_envelope_keys`
+in `manifest.json`:
+
+- `items` — a small representative array consistent with the screen's data
+  (the leading rows of the truncated payload, not the full set).
+- `next_cursor` — the keyset cursor a follow-up invocation passes to resume.
+- `has_more` — always `true` on a truncated screen.
+
+Non-truncated screens carry no `pagination` key.
 
 ### 6.2 Rust Integration Test Runner
 
