@@ -13,6 +13,8 @@
       - acting identity — --by declares machine agent identity for audit trails and token validation
       - beneficiary identity — --as declares target principal; bound directly to SQLite :principal for row-level security
       - identity generation — tokens and ids kernel-issued; self-declaration denied
+      - principal isolation — multi-tenant tables deny direct table access at Layer 1; access permitted solely via scoped: principal views or ctx.db.mutate
+      - mutation ownership — ctx.db.mutate asserts target row owner matches session :principal prior to physical commit; mismatch aborts with exit 2
     - System agent registry
       - storage — agents system table in workspace.db
       - schema — id pk, name unique, harness, principal, status
@@ -31,7 +33,8 @@
     - Concurrency scope
       - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE; writer transactions bounded to <50ms
       - writer priority — interactive agent and webhook mutations preempt bulk migration backfills
-      - application locks — business-level leases tracked in claims table with daemon TTL cleanup
+      - application locks — business-level leases tracked in claims table with daemon TTL cleanup; all active leases auto-drop on exit 6 yield
+      - suspension fence — kernel records OCC state_fence (sha256 of row state) on yield; resume verifies fence and aborts with exit 2 on external mutation
       - authoring mutex — filesystem lock on routines/<name>.py during edits; concurrent edits exit 2
       - collision handling — writers queue up to busy_timeout (default 5000ms); timeout exhaustion fails closed with exit 2
       - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
@@ -67,6 +70,7 @@
       - access — absolute zero-knowledge in guest runtime; guest address space never allocates credential bytes; guest SDK accepts and passes only opaque URP references (vault://name)
       - encryption — AES-256-GCM at rest; cached in memory by daemon or decrypted ephemerally per CLI run
       - ingestion — provisioned via CLI (`capcli sys vault set`), environment variables (`CAPCLI_SECRET_*`), or external client RPC
+      - echo defense — egress proxy maintains in-memory token set; upstream response bodies and error payloads scanned at wire edge; detected secret bytes scrubbed to [REDACTED_VAULT_TOKEN] before reaching sandbox or _audit
       - leak protection — plaintext credential exposure in return payloads triggers immediate kill_and_alert (exit 5) and session token revocation
     - Provisioning workflow
       - Lifecycle steps

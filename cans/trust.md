@@ -16,6 +16,7 @@
       - reviewed
         - status — proven through simulation and signed off
         - bounds
+          - simulation mock bounds — qualified by passing offline mock fixtures (apis/*.mock.yaml)
           - row ceiling — see artifacts/policy.yaml#trust.reviewed
           - bulk operations — unlocks mass updates: see artifacts/policy.yaml#query.bulk
         - provenance tracking
@@ -26,6 +27,8 @@
       - pinned
         - status — hardened operational production baseline
         - host prerequisite — execution requires Tier 1 host: see physics.md#Platform-tier-taxonomy
+        - mock disqualification — offline mock tests alone cannot grant pinned trust
+        - contract proof mandate — external API verbs require live contract proof (validated JSON Schema against live responses) or shadow canary execution before pinning
         - bounds
           - row ceiling — see artifacts/policy.yaml#trust.pinned
         - operational autonomy
@@ -57,6 +60,7 @@
       - verified promotion — promotion automated upon passing synthetic sim replay and invariant suite
       - dependency floor — cross-agent callee routines must hold trust >= reviewed
       - demotion priority — demotion commands execute without gate resistance
+      - mock drift demotion — upstream provider OpenAPI spec_hash changes or breaking contract changes immediately demote pinned capabilities to draft
       - circuit demotion — sustained routine failure auto-demotes to draft: see time.md#decay-and-subtraction
   - Gates & promotion
     - Ship gate

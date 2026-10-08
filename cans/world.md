@@ -74,6 +74,7 @@
         - exposed tables
           - declaration — exposes: [...] list mandatory
           - validation — compile-checked against known tables
+          - tenant isolation — tables tagged tenant: true can only be read through scoped: principal views
         - principal scoping
           - declaration — scoped: principal
           - parameter — requires :principal bind variable
@@ -98,6 +99,7 @@
         - uniqueness — text! expands to text unique
         - defaults — text=val expands to text default 'val'
         - immutability — int~ expands to integer immutable write-once
+        - tenant key — tenant: true tags table as multi-tenant; compiles Layer 1 authorizer rule blocking raw queries; mandates :principal-bound views
         - foreign relations — int ref=table.col expands to foreign key
           - blob reference — blob ref=storage expands to object metadata json
         - redaction — mask=true marks column for format-preserving anonymization (FPA)
@@ -115,6 +117,9 @@
         - row locking
           - tag — imm_rows: true
           - authorizer effect — UPDATE and DELETE denied physically
+      - concurrency & outbox
+        - claims lease lifecycle — all rows leased in claims table auto-delete when holder exits with code 6; prevents yield deadlocks
+        - outbox atomic claim — _outbox_events claims use UPDATE ... SET status = 'in_flight', locked_by = :worker WHERE id = (...) RETURNING *; guarantees single-worker dispatch across CLI and daemon
         - column locking
           - tag — imm_cols: [...]
           - authorizer effect — UPDATE denied on targeted columns

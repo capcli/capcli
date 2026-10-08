@@ -23,6 +23,8 @@
       - Scoped views
         - principal required via --as
         - kernel binds :principal
+        - multi-tenant isolation — raw SELECT on tables tagged scoped: principal blocked at authorizer; access forced through declared views
+        - mutation guard — mutating multi-tenant tables requires ctx.db.mutate with ownership predicate validation
         - unscoped views carry no principal requirement
       - Registry boundary
         - search targets — routines, api verbs, views, template blueprints
@@ -133,7 +135,8 @@
       - Yield handling
         - Signal capture — runner catches exit 6 from kernel
         - Reschedule — runner reads `yield_until` payload and re-queues via daemon cron (see time.md#Schedule)
-        - State preservation — zero partial side effects committed before yield
+        - Lock release — kernel drops all held claims leases on exit 6 dispatch
+        - State preservation — writes OCC state_fence checkpoint to _suspended_tasks; denies resumption if target state drifted
       - Provider backends
         - bwrap — Linux/WSL2 unprivileged namespace sandbox with host userns doctor check: see physics.md#Platform-tier-taxonomy
         - microvm — lightweight virtualization provider for macOS/Windows enforcing hardware-level network isolation
@@ -230,11 +233,11 @@
     - Surface methods
       - Database methods
         - ctx.db.view(name, params) — execute verified named AST view from schema.yaml (primary read mechanism)
-        - ctx.db.get(table, id=val, require={...}) — structured key-value predicate lookup compiled to parameterized C query
+        - ctx.db.get(table, id=val, require={...}) — structured key-value lookup; asserts owner == :principal on multi-tenant tables
         - ctx.db.query(sql, params) — dynamic parameterized SQL; raw string interpolation/concatenation fails with exit 3
-        - ctx.db.mutate(table, id=val, set={...}, intent="...") — structured single-row mutation
+        - ctx.db.mutate(table, id=val, set={...}, intent="...") — structured single-row mutation; asserts tenant ownership at kernel boundary
         - ctx.txn(egress=..., write=...) — kernel-mediated saga context; wraps compensating HTTP rollback and DB mutation
-        - ctx.db.lock(target, ttl) — application-level lease claim in claims; auto-expired by daemon tick
+        - ctx.db.lock(target, ttl) — application-level lease claim in claims; auto-released unconditionally on exit 6 yield
       - Deterministic inputs
         - ctx.now() — monotonic logical timestamp locked to causal frame start
         - ctx.uuid() — deterministic pseudo-random token minted via HMAC-SHA256(session_token, op_sequence)
@@ -268,7 +271,8 @@
         - kernel mediation — egress executed exclusively through kernel binary
         - auth engines — kernel resolves Bearer, Basic, OAuth2 refresh tokens, AWS SigV4 signing, and mTLS client certs from vault
         - wire projection — select JSONPath filters large upstream responses at kernel socket edge before passing payload to guest sandbox
-        - dual-write safety — mutating API calls staged to _outbox_events must map an explicit upstream idempotency header in apis/<provider>.yaml; routes lacking idempotency support require synchronous execution with declared compensating rollbacks
+        - dual-write safety — mutating API calls staged to _outbox_events require upstream idempotency headers; routes lacking support mandate synchronous execution
+        - outbox atomic lease — workers claim pending rows via UPDATE _outbox_events SET status = 'in_flight', locked_by = :worker_id WHERE id = (...) RETURNING *; prevents CLI/daemon duplicate dispatches
         - outbox draining — daemon drains _outbox_events asynchronously; headless subshell CLI executions drain pending outbox calls synchronously prior to exit 0
         - secret injection — boundary insertion in Rust egress proxy; guest language runtime address space never handles plaintext credential bytes
         - token refresh — daemon auto-refreshes bearer tokens; stateless CLI refreshes on demand and persists updated token to encrypted vault
@@ -279,7 +283,7 @@
       - Sandbox boundaries
         - runtime isolation — network namespace unshared (Tier 1) or virtual network interface dropped (Tier 2): see physics.md#Platform-tier-taxonomy
         - transport bridge — local IPC permitted exclusively to kernel endpoint
-        - suspension contract — ctx.ping.ask snapshots step checkpoint and OCC state_fences to _pending_asks and exits with code 6; resume verifies dependency entity hashes and aborts with exit 2 if data drifted during human review
+        - suspension contract — ctx.ping.ask snapshots step checkpoint and OCC state_fences to _pending_asks, releases active locks, and exits 6; resume verifies entity hashes and aborts with exit 2 if data drifted
         - interface definition — Param typing enforces input validation
     - Data protection
       - Context confinement — raw records stay inside sandbox
@@ -329,7 +333,9 @@
     - Catalog synchronization
       - Targeted import — capcli api import <provider> <path> <method> [--spec <url|file>] imports isolated endpoints on demand; full enterprise spec sync banned
       - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, and idempotency header mapping
-      - Live contract capture — capcli api record <verb> generates strict JSON Schema assertions from live responses; offline static cassette replays are banned from promotion gating
+      - Live contract capture — capcli api record <verb> generates strict JSON Schema assertions from live responses; offline fixtures capped at reviewed
+      - Promotion prerequisite — promotion to pinned requires live contract proof or shadow canary verification; static cassettes alone rejected
+      - Drift invalidation — upstream spec_hash change auto-demotes dependent pinned capabilities to draft
       - Sync cadence limits — see artifacts/governance.yaml#api.sync
       - Diff inspection — api diff <provider> compares spec_hash
     - State machine

@@ -27,6 +27,7 @@
       - scope — access control only (SQLITE_OK, SQLITE_DENY, SQLITE_IGNORE)
       - granularity — 3D action × table × column tuple evaluated per statement
       - intercepted actions
+        - tenant isolation — direct SELECT/UPDATE/DELETE on tables flagged tenant: true blocked; access forced through views compiled with :principal
         - table mutations — read, insert, update, delete allowlists
         - column writes — deny_columns_write protection on immutable keys
         - schema operations — drop, alter, vacuum restrictions
@@ -88,7 +89,7 @@
       - schema integrity — system_schema hash mismatch aborts boot
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
-      - leak prevention — secret exposure detected in output executes kill_and_alert
+      - leak prevention — upstream API error/response bodies scanned at wire proxy; echoed secrets redacted to [REDACTED_VAULT_TOKEN]; unredacted vault token escape triggers kill_and_alert (exit 5)
       - sql errors — unparseable SQL or authorizer errors fail closed
       - session errors — missing, forged, or expired session token aborts execution (exit 3)
       - latency SLA breach — rehearsal P95 exceeding 70% of timeout ceiling denies promotion
@@ -108,7 +109,7 @@
       - exit 3 — compile-time refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, unpaginated payload > 500 tokens
       - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
       - exit 5 — domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
-      - exit 6 — proactive yield; rate floor reached or cursor chunk yield (ctx.cursor.save_and_yield)
+      - exit 6 — proactive yield; releases all held claims locks, records OCC state_fence, persists resume target to _suspended_tasks
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
       - engine — native terminal diagnostics rendered procedurally via `miette` and `codespan`
