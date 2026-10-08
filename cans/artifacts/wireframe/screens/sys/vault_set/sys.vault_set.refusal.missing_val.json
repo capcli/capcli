@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v1",
   "screen_id": "sys.vault_set.refusal.missing_val",
-  "target": "stripe_key",
-  "command": "capcli sys vault set stripe_key",
+  "target": "stripe_secret_key",
+  "command": "capcli sys vault set stripe_secret_key",
   "state": {
     "exit_code": 3,
     "domain": "missing_param",
@@ -14,8 +14,9 @@
   },
   "diagnostic": {
     "domain": "missing_param",
-    "culprit": "vault set for key 'stripe_key' received no value (stdin empty)",
-    "remedy": "re-run as capcli sys vault set stripe_key --in @- and pipe the value on stdin"
+    "culprit": "vault set for key 'stripe_secret_key' received no value (stdin empty)",
+    "remedy": "re-run as capcli sys vault set stripe_secret_key --in @- and pipe the value on stdin",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -31,7 +32,7 @@
             "indent": 2
           },
           {
-            "text": "vault set for key 'stripe_key' received no value (stdin empty)",
+            "text": "vault set for key 'stripe_secret_key' received no value (stdin empty)",
             "indent": 9
           },
           {
@@ -49,7 +50,7 @@
           },
           {
             "field": "remedy",
-            "value": "re-run as capcli sys vault set stripe_key --in @- and pipe the value on stdin"
+            "value": "re-run as capcli sys vault set stripe_secret_key --in @- and pipe the value on stdin"
           }
         ]
       }
