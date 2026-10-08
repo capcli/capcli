@@ -3,7 +3,6 @@
   "version": 1,
   "pointer_type": "prompt://{bank}/{slug}@{version}",
   "ceilings": {
-    "zero_turn_seed": 120,
     "l1_trailer_tokens": 30,
     "search_pointer_tokens": 60,
     "l2_envelope_tokens": 150,
@@ -11,80 +10,66 @@
   },
   "banks": [
     "authoring",
-    "crucible",
+    "budget",
     "evolution",
-    "forensics",
     "genesis",
-    "hitl",
     "onboarding",
     "promotion",
-    "wire"
+    "api"
   ],
   "campaigns": [
     {
-      "stem": "genesis.blank_world.empty",
-      "bank": "genesis",
-      "file": "banks/genesis/genesis.blank_world.empty.md",
-      "status": "served"
-    },
-    {
-      "stem": "onboarding.harness.empty",
-      "bank": "onboarding",
-      "file": "banks/onboarding/onboarding.harness.empty.md",
-      "status": "served"
-    },
-    {
-      "stem": "onboarding.human.stub",
-      "bank": "onboarding",
-      "file": "banks/onboarding/onboarding.human.stub.md",
-      "status": "served"
-    },
-    {
-      "stem": "authoring.overview.absent",
+      "stem": "authoring.overview_absent.success.absent",
       "bank": "authoring",
-      "file": "banks/authoring/authoring.overview.absent.md",
+      "file": "banks/authoring/authoring.overview_absent.success.absent.md",
       "status": "served"
     },
     {
-      "stem": "authoring.routine.gaps",
+      "stem": "authoring.routine_gaps.success.gaps",
       "bank": "authoring",
-      "file": "banks/authoring/authoring.routine.gaps.md",
+      "file": "banks/authoring/authoring.routine_gaps.success.gaps.md",
       "status": "served"
     },
     {
-      "stem": "crucible.execution.starved",
-      "bank": "crucible",
-      "file": "banks/crucible/crucible.execution.starved.md",
+      "stem": "budget.execution_starved.denial.starved",
+      "bank": "budget",
+      "file": "banks/budget/budget.execution_starved.denial.starved.md",
       "status": "served"
     },
     {
-      "stem": "evolution.schema.drift",
+      "stem": "evolution.schema_drift.success.drift",
       "bank": "evolution",
-      "file": "banks/evolution/evolution.schema.drift.md",
+      "file": "banks/evolution/evolution.schema_drift.success.drift.md",
       "status": "served"
     },
     {
-      "stem": "promotion.routine.passed",
+      "stem": "genesis.blank_world.success.empty",
+      "bank": "genesis",
+      "file": "banks/genesis/genesis.blank_world.success.empty.md",
+      "status": "served"
+    },
+    {
+      "stem": "onboarding.harness.success.empty",
+      "bank": "onboarding",
+      "file": "banks/onboarding/onboarding.harness.success.empty.md",
+      "status": "served"
+    },
+    {
+      "stem": "onboarding.human.success.stub",
+      "bank": "onboarding",
+      "file": "banks/onboarding/onboarding.human.success.stub.md",
+      "status": "served"
+    },
+    {
+      "stem": "promotion.routine_passed.success.passed",
       "bank": "promotion",
-      "file": "banks/promotion/promotion.routine.passed.md",
+      "file": "banks/promotion/promotion.routine_passed.success.passed.md",
       "status": "served"
     },
     {
-      "stem": "wire.catalog.empty",
-      "bank": "wire",
-      "file": "banks/wire/wire.catalog.empty.md",
-      "status": "served"
-    },
-    {
-      "stem": "forensics.audit.tampered",
-      "bank": "forensics",
-      "file": "banks/forensics/forensics.audit.tampered.md",
-      "status": "served"
-    },
-    {
-      "stem": "hitl.ping_ask.suspended",
-      "bank": "hitl",
-      "file": "banks/hitl/hitl.ping_ask.suspended.md",
+      "stem": "api.catalog_empty.success.empty",
+      "bank": "api",
+      "file": "banks/api/api.catalog_empty.success.empty.md",
       "status": "served"
     }
   ],

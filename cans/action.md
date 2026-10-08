@@ -58,8 +58,11 @@
       - Progressive disclosure
         - on-demand discovery — search and inspect optional; direct invocation permitted whenever signature is known
         - payload constraint — search returns pointers and summaries (<60 tokens), never raw blobs
-        - doc inspection — inspect on doc:// returns outline nodes; doc read fetches targeted leaf
-        - prompt inspection — inspect on prompt:// returns campaign envelope; doc outline and doc read fetch one leaf
+        - doc inspection — inspect on doc:// returns outline nodes; doc read fetches one leaf via fragment
+        - prompt inspection — inspect on prompt:// returns the campaign envelope
+        - prompt outline — doc outline on prompt:// returns its section index
+        - prompt leaf — doc read on prompt://#<node> fetches one leaf (≤500 tokens)
+        - surface law — one surface, two schemes, no substitution
         - relevance floor — semantic matches below 0.60 rejected
       - Hybrid discovery engine
         - kernel search — exact, prefix, FTS5 BM25, and embedded local ONNX vector similarity; zero external API dependency

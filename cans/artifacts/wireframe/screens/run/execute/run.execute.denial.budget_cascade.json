@@ -92,7 +92,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://crucible/execution_starved@1",
+    "prompt": "prompt://budget/execution_starved@1",
     "reason": "call-tree preflight failed budget cascade bounds",
     "serve": "L1"
   }

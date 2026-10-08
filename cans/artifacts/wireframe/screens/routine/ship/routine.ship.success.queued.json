@@ -104,10 +104,5 @@
         ]
       }
     ]
-  },
-  "trailer": {
-    "prompt": "prompt://promotion/routine_passed@1",
-    "reason": "candidate enqueued: human review pending",
-    "serve": "L1"
   }
 }

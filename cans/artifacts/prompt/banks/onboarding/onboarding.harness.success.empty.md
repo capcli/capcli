@@ -1,6 +1,6 @@
 ---
 id: prompt://onboarding/harness@1
-stem: onboarding.harness.empty
+stem: onboarding.harness.success.empty
 bank: onboarding
 slug: harness
 version: 1

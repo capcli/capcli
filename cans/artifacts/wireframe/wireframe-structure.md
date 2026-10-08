@@ -150,7 +150,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (5 verbs → 38 screens)
+### 4.1 `run/` (5 verbs → 39 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -190,6 +190,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.success.routine` | success | 0 | — | populated | Pre-flight envelope with `can_invoke_now` |
 | `run.inspect.success.quota` | success | 0 | — | populated | Headroom breakdown on `quota://` URP |
 | `run.inspect.success.template` | success | 0 | — | populated | Inspection envelope on `tpl://` blueprint |
+| `run.inspect.success.prompt` | success | 0 | — | populated | Prompt L2 envelope only; no body content |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
 
@@ -380,7 +381,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
-| `sys.help.success.stub` | success | 0 | — | stub | 6-line minimalist help stub redirecting to search |
+| `sys.help.success.stub` | success | 0 | — | stub | Minimalist help stub redirecting to search; host line cap in `manifest.json` `output_contract` |
 | `sys.inbox.success.populated` | success | 0 | — | populated | Sensory events popped from the intake queue (cron/webhook sources; durable store TBD) |
 | `sys.inbox.success.empty` | success | 0 | — | empty | No stimulus queued; exits clean (sensory grounding) |
 | `sys.tail.success.populated` | success | 0 | — | populated | Live streaming audit records |
@@ -696,6 +697,8 @@ collection-law trio from `manifest.json` `output_contract.pagination`.
 
 ### 5.12 Minimalist Root Help Stub (`screens/sys/help/sys.help.success.stub.json`)
 
+Host screen only; the trailer line renders after it as an additive final line. Line-cap accounting: `manifest.json` `output_contract.trailer.line_cap_law`.
+
 ```text
 capcli 0.4.2 — compiled execution firewall for AI agents
 
@@ -798,6 +801,7 @@ trailer and nothing else about the producer.
 - The wireframe validates shape and position against the frozen schema. It never evaluates a predicate, resolves a pointer, or originates a payload.
 - A payload with `serve: blocked` is never rendered. Absent is the default.
 - The slot leaves exit code and `state_modified` unchanged.
+- Line-cap accounting lives in `manifest.json` `output_contract.trailer.line_cap_law`; this section carries no cap number.
 
 The slot-naming bridge, stated once so it can never be confused: the fixture
 slot key is `trailer` — the `human_field`, producer-facing slot above. When a
@@ -1010,6 +1014,8 @@ fn execute_wireframe_golden_tests() {
 ```
 
 Trailer checks, applied by the runner to every fixture:
+
+Trailer presence on a screen is decided solely by `cans/artifacts/prompt/_triggers.json`. This section carries no trailer-screen list.
 
 a. **Schema.** A `trailer` payload validates against `machine_schema` in `manifest.json`.
 b. **Position.** The human trailer is the final rendered line; the machine trailer is an additive envelope key.

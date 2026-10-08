@@ -71,10 +71,5 @@
         ]
       }
     ]
-  },
-  "trailer": {
-    "prompt": "prompt://forensics/audit_tampered@1",
-    "reason": "causal DAG hash chain broken: quarantine active",
-    "serve": "L1"
   }
 }

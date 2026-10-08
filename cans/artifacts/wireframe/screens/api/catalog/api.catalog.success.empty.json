@@ -61,7 +61,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://wire/catalog_empty@1",
+    "prompt": "prompt://api/catalog_empty@1",
     "reason": "no external API catalogs configured",
     "serve": "L1"
   }

@@ -1,6 +1,6 @@
 ---
 id: prompt://onboarding/human@1
-stem: onboarding.human.stub
+stem: onboarding.human.success.stub
 bank: onboarding
 slug: human
 version: 1

@@ -1,7 +1,7 @@
 ---
-id: prompt://wire/catalog_empty@1
-stem: wire.catalog.empty
-bank: wire
+id: prompt://api/catalog_empty@1
+stem: api.catalog_empty.success.empty
+bank: api
 slug: catalog_empty
 version: 1
 trust: draft
@@ -20,7 +20,7 @@ docs:
 status: served
 ---
 
-# ⚡ EXTERNAL WIRE CATALOG LOCKDOWN PROTOCOL
+# ⚡ EXTERNAL API CATALOG LOCKDOWN PROTOCOL
 No external API catalogs are configured. Outbound HTTP requests from routines are blocked
 at the socket layer until imported, proven, and registered.
 

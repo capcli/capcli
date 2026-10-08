@@ -52,6 +52,7 @@
         }
       },
       "position": "final line of human output; additive envelope key in --json",
+      "line_cap_law": "Line caps in this contract (help_stub_max_lines) count the host screen only. The trailer is an additive final line outside every host-screen cap.",
       "effect": "rendering only: exit code, state_modified, and every other output byte of the host screen are unchanged"
     }
   }

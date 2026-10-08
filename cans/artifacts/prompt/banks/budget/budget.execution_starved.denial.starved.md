@@ -1,7 +1,7 @@
 ---
-id: prompt://crucible/execution_starved@1
-stem: crucible.execution.starved
-bank: crucible
+id: prompt://budget/execution_starved@1
+stem: budget.execution_starved.denial.starved
+bank: budget
 slug: execution_starved
 version: 1
 trust: draft
@@ -20,7 +20,7 @@ docs:
 status: served
 ---
 
-# ⚡ EXECUTION CRUCIBLE RESOLUTION PROTOCOL
+# ⚡ BUDGET CASCADE RESOLUTION PROTOCOL
 Execution was intercepted by kernel boundary defenses (budget starvation, sandbox trap, or lease collision).
 Follow this 4-stage resolution pipeline:
 

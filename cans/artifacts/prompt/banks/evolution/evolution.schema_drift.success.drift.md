@@ -1,6 +1,6 @@
 ---
 id: prompt://evolution/schema_drift@1
-stem: evolution.schema.drift
+stem: evolution.schema_drift.success.drift
 bank: evolution
 slug: schema_drift
 version: 1

@@ -1,0 +1,96 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "run.inspect.success.prompt",
+  "target": "prompt://authoring/overview_absent@1",
+  "command": "capcli inspect prompt://authoring/overview_absent@1",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "render": {
+    "header": {
+      "style": "plain",
+      "label": "[dev:tier_1]  capcli inspect prompt://authoring/overview_absent@1"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "id",
+            "value": "prompt://authoring/overview_absent@1"
+          },
+          {
+            "field": "bank",
+            "value": "authoring"
+          },
+          {
+            "field": "version",
+            "value": "1"
+          },
+          {
+            "field": "status",
+            "value": "served"
+          },
+          {
+            "field": "tokens",
+            "value": "118"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "vars:",
+            "indent": 2
+          },
+          {
+            "text": "env: string (kernel.env)",
+            "indent": 4
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "sections:",
+            "indent": 2
+          },
+          {
+            "text": "stage_1_scaffold (cap 140)",
+            "indent": 4
+          },
+          {
+            "text": "stage_2_bound (cap 50)",
+            "indent": 4
+          },
+          {
+            "text": "stage_3_pin (cap 60)",
+            "indent": 4
+          },
+          {
+            "field": "slice_max_tokens",
+            "value": "500"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          }
+        ]
+      }
+    ]
+  }
+}

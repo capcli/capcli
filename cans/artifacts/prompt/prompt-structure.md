@@ -51,17 +51,16 @@ Rules that follow from the table:
 | L0 | boot | 0 prompt tokens | nothing; no bank, catalog, or manifest is mounted |
 | L1 | trigger screen trailer / `next_action` (JSON) | ≤30 tokens (≤60 via `search`, per `cans/action.md`) | pointer `prompt://{bank}/{slug}@{version}` + one-line reason, inside the wireframe's generic trailer slot (`wireframe-structure.md` §6.1.1) |
 | L2 | `capcli inspect prompt://{bank}/{slug}@{version}` | ≤150 tokens | envelope only: vars, section index, caps, blocked status; no body |
-| L3 | `capcli doc outline` → `capcli doc read <ptr> --max-tokens <n>` | 1 leaf/turn, leaf ≤500 tokens | exactly one rendered section, kernel-substituted vars |
+| L3 | `capcli doc outline prompt://{bank}/{slug}@{version}` → `capcli doc read prompt://{bank}/{slug}@{version}#<node> --max-tokens <n>` | 1 leaf/turn, leaf ≤500 tokens | exactly one rendered section, kernel-substituted vars; the `#<node>` fragment selects the outline node, with no new flag, noun, or verb |
 
 Caps, stated once:
 
 - Ordinary `doc read` defaults to `--max-tokens 100`
   (`cans/interface.md`); the global result ceiling is 500 tokens
   (`cans/action.md`). Prompt leaves request up to 500 explicitly.
-- Leaf selection rides `doc outline` node ids; there is no `--section`
-  flag. Open ruling: whether the kernel can address a leaf by outline
-  node without a new flag — a `cans/interface.md` amendment + ADR if not
-  (§7).
+- Leaf selection rides `doc outline` node ids carried as the `doc read`
+  URL fragment (`#<node>`) per `cans/interface.md`; there is no
+  `--section` flag and no new noun or verb.
 - No L1→L3 shortcut. Levels are not skipped; the ladder is the contract.
 - Serving never mutates state (`state_modified: false`), per exit-code law
   in `cans/physics.md`.
@@ -70,8 +69,12 @@ Caps, stated once:
 
 - One campaign = one `.md` file under `banks/{bank}/`. No `.json`/`.txt`
   companions in `banks/`. Depth is exactly 2 below `banks/`.
-- Filename: `{bank}.{slug}.{state}.{condition}.md`, where `state` is a
-  legal wireframe state token. A campaign whose trigger screen is not a
+- Filename: `{bank}.{slug}.{state}.{condition}.md` (exactly four dot
+  segments), where `state` is a legal wireframe state token taken from
+  the trigger screen's state segment. Segment 2 is the URI slug
+  verbatim; `condition` never enters the URI. Resolution:
+  `prompt://{bank}/{slug}@{version}` → `manifest.json` campaign
+  inventory (stem → file). A campaign whose trigger screen is not a
   legal screen ID carries `"serve": "blocked"` in `_triggers.json` (§5).
 - Every command in a campaign body is legal `cans/interface.md` surface.
 - Every file starts with YAML frontmatter: `id`
@@ -101,6 +104,19 @@ declared in `manifest.json`. Two campaigns share a screen only when
 their predicates are disjoint. A trigger with `"serve": "blocked"`
 emits no L1 trailer.
 
+- `routine.prove.success.passed` partition is exhaustive:
+  `overview_exists: false` → `prompt://authoring/overview_absent@1`;
+  `overview_exists: true` with `trust: "draft"` →
+  `prompt://promotion/routine_passed@1`.
+- Predicates keyed on actor identity are prohibited: the kernel is
+  actor-neutral (`cans/agent.md` Harness-neutrality); screen identity
+  carries the distinction.
+- Migration-class campaigns scope to reserved-root environments via
+  `env_in: ["dev", "prod"]`; dynamic experiment namespaces never fire
+  them.
+- A domain implied by the screen alone carries no predicate key (e.g.
+  `run.execute.denial.budget_cascade` carries only `policy.budget`).
+
 ## 6. Bank inventory
 
 The inventory lives in `manifest.json` (bank, stem, file, status),
@@ -112,12 +128,10 @@ registry is a second inventory, and the two desync. Counts come from
 
 ## 7. Open items
 
-1. Leaf addressing via `doc outline` node ids needs a `cans/interface.md`
-   ruling (§3).
-2. `docs/` completeness is partial: several `doc://` targets in bank
+1. `docs/` completeness is partial: several `doc://` targets in bank
    `docs:` frontmatter are open pages. A missing page is docs debt,
    never licence to inline the content into a bank.
-3. Two remedy seams await `cans/` owner rulings (the `api sync` verb; the
+2. Two remedy seams await `cans/` owner rulings (the `api sync` verb; the
    exit-5 scope for secret leaks) — tracked in `cans/_collab/conflicts.md`.
 
 ## 8. Where each kind of content lives

@@ -1,6 +1,6 @@
 ---
 id: prompt://genesis/blank_world@1
-stem: genesis.blank_world.empty
+stem: genesis.blank_world.success.empty
 bank: genesis
 slug: blank_world
 version: 1

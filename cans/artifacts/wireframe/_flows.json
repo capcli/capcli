@@ -14,7 +14,7 @@
       "color": "#79c0ff",
       "entry": "sys.doctor.success.nominal",
       "terminal": "run.overview.success.populated",
-      "description": "H0 parse machine contract (sys doctor --json, nominal host) -> H1 run search discovery (catalog verbs + schema views) -> H2 dry-run rehearsal -> H3 dual probe: sql local state + api catalog remote verbs -> H4 scaffold sync_orders + hybrid prove in sim (composite write + simulated egress) -> H5 feedback: audit trace --explain parses the prove observation and the denial rules -> H6 author the mandatory overview routine -> H7 prove overview in sim -> ship the proven routine pinned -> only then run overview, grounding future agents in domain state"
+      "description": "H0 parse machine contract (sys doctor --json, nominal host) -> H1 run search discovery (catalog verbs + schema views) -> H2 dry-run rehearsal -> H3 dual probe: sql local state + api catalog remote verbs -> H4 scaffold sync_orders + hybrid prove in sim (composite write + simulated egress) -> H5 feedback: audit trace --explain parses the prove observation and the denial rules -> H6 author the mandatory overview routine -> H7 prove overview in sim -> ship overview reviewed --queue -> run overview after sign-off, grounding future agents in domain state"
     },
     "journey_trust_promotion": {
       "name": "Draft to Pinned Canary Promotion",
@@ -3914,10 +3914,40 @@
         "routine.prove.success.overview"
       ],
       "to": [
+        "routine.ship.success.queued"
+      ],
+      "trigger": "ship_reviewed_queue",
+      "label": "capcli routine ship overview reviewed --queue --reason \"sim prove passed\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_harness_queued_to_pending",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "routine.ship.success.queued"
+      ],
+      "to": [
+        "routine.pending.success.populated"
+      ],
+      "trigger": "supervisor_inspects_queue",
+      "label": "capcli routine pending",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_pending_to_ship",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "routine.pending.success.populated"
+      ],
+      "to": [
         "routine.ship.success.shipped"
       ],
-      "trigger": "ship_pinned",
-      "label": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+      "trigger": "human_batch_signoff",
+      "label": "capcli routine ship overview reviewed",
       "arrow_type": "success"
     },
     {

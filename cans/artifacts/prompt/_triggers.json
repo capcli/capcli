@@ -26,7 +26,6 @@
       "id": "t_onboarding_harness",
       "screen_id": "sys.doctor.success.nominal",
       "predicate": {
-        "caller": "harness",
         "domain_tables": 0
       },
       "prompt": "prompt://onboarding/harness@1",
@@ -36,9 +35,7 @@
     {
       "id": "t_onboarding_human",
       "screen_id": "sys.help.success.stub",
-      "predicate": {
-        "caller": "human"
-      },
+      "predicate": {},
       "prompt": "prompt://onboarding/human@1",
       "serve": "L1",
       "reason": "human operator requested onboarding tour"
@@ -64,19 +61,22 @@
       "reason": "telemetry shows uncodified operational sequence"
     },
     {
-      "id": "t_crucible_starved",
+      "id": "t_budget_starved",
       "screen_id": "run.execute.denial.budget_cascade",
-      "predicate": {
-        "domain": "policy.budget"
-      },
-      "prompt": "prompt://crucible/execution_starved@1",
+      "predicate": {},
+      "prompt": "prompt://budget/execution_starved@1",
       "serve": "L1",
       "reason": "call-tree preflight failed budget cascade bounds"
     },
     {
       "id": "t_evolution_drift",
       "screen_id": "rule.diff.success.populated",
-      "predicate": {},
+      "predicate": {
+        "env_in": [
+          "dev",
+          "prod"
+        ]
+      },
       "prompt": "prompt://evolution/schema_drift@1",
       "serve": "L1",
       "reason": "schema drift requires forward migration plan"
@@ -85,6 +85,7 @@
       "id": "t_promotion_passed",
       "screen_id": "routine.prove.success.passed",
       "predicate": {
+        "overview_exists": true,
         "trust": "draft"
       },
       "prompt": "prompt://promotion/routine_passed@1",
@@ -92,36 +93,12 @@
       "reason": "proof passed: routine eligible for promotion"
     },
     {
-      "id": "t_promotion_queued",
-      "screen_id": "routine.ship.success.queued",
-      "predicate": {},
-      "prompt": "prompt://promotion/routine_passed@1",
-      "serve": "L1",
-      "reason": "candidate enqueued: human review pending"
-    },
-    {
-      "id": "t_wire_empty",
+      "id": "t_api_empty",
       "screen_id": "api.catalog.success.empty",
       "predicate": {},
-      "prompt": "prompt://wire/catalog_empty@1",
+      "prompt": "prompt://api/catalog_empty@1",
       "serve": "L1",
       "reason": "no external API catalogs configured"
-    },
-    {
-      "id": "t_forensics_tamper",
-      "screen_id": "sys.doctor.panic.quarantine",
-      "predicate": {},
-      "prompt": "prompt://forensics/audit_tampered@1",
-      "serve": "L1",
-      "reason": "causal DAG hash chain broken: quarantine active"
-    },
-    {
-      "id": "t_hitl_suspended",
-      "screen_id": "run.execute.yield.ask",
-      "predicate": {},
-      "prompt": "prompt://hitl/ping_ask_suspended@1",
-      "serve": "L1",
-      "reason": "frame suspended awaiting human inquiry resolution"
     }
   ],
   "registry": "Sole trigger registry: screen, predicate, pointer, serve level, reason. Bank frontmatter carries no trigger facts."

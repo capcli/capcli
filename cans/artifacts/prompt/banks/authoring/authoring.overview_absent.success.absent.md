@@ -1,6 +1,6 @@
 ---
 id: prompt://authoring/overview_absent@1
-stem: authoring.overview.absent
+stem: authoring.overview_absent.success.absent
 bank: authoring
 slug: overview_absent
 version: 1

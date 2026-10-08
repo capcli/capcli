@@ -100,10 +100,15 @@
       - Sandboxing — sys exec <cmd> --sandbox
       - Daemon control — sys serve --start, --stop, --restart, --status
     - Document path: doc noun
-      - Reading — doc read <ptr> [--max-tokens 100]
-      - Outline — doc outline <ptr>
-      - Pointer scope — doc:// addresses human docs; prompt:// addresses one agent campaign bank
-      - Prompt envelope — inspect prompt://{bank}/{slug}@{version} returns the campaign envelope
+      - Reading — doc read <ptr> [--max-tokens 100] serves doc:// documents and prompt:// campaign leaves
+      - Leaf selection — the pointer fragment #<node> selects exactly one outline node
+      - Token caps — --max-tokens defaults to 100 with a 500 ceiling
+      - Prompt leaf — a prompt:// leaf requests up to 500 and returns one rendered section
+      - Outline — doc outline <ptr> accepts doc:// and prompt://
+      - Prompt outline — on prompt://, doc outline returns the campaign section index; node ids are the L3 leaf addresses
+      - Pointer scope — doc:// addresses human docs; prompt:// addresses agent campaign banks; schemes never substitute
+      - Reading surface — the doc noun is the single reading surface for both schemes; no prompt noun exists
+      - Prompt envelope — inspect prompt://{bank}/{slug}@{version} returns the campaign envelope (L2, ≤150 tokens)
     - Refusals and banned operations
       - ssot enforcement — config mutations require git commits; direct `config set` or manual SQL DDL denied (exit 3)
       - banned bypass flags — `--force`, `--override-budget`, `--force-prod`, `--verbose` rejected at parser (exit 3)

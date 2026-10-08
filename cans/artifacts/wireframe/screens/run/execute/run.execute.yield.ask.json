@@ -99,10 +99,5 @@
         ]
       }
     ]
-  },
-  "trailer": {
-    "prompt": "prompt://hitl/ping_ask_suspended@1",
-    "reason": "frame suspended awaiting human inquiry resolution",
-    "serve": "L1"
   }
 }
