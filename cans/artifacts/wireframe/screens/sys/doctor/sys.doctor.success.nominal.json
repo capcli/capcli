@@ -24,7 +24,7 @@
         "items": [
           {
             "field": "kernel",
-            "value": "capcli 8.4.1"
+            "value": "capcli 0.4.2"
           },
           {
             "field": "platform",
@@ -36,7 +36,11 @@
           },
           {
             "field": "git_version",
-            "value": "2.43.0 (identity: configured)"
+            "value": "2.43.0 (floor: 2.30; identity: configured)"
+          },
+          {
+            "field": "git_worktree",
+            "value": "active — .git present; world.sql + migrations tracked (read-only declarations; kernel never auto-commits)"
           },
           {
             "field": "engine",
@@ -61,6 +65,10 @@
           {
             "field": "audit_sink",
             "value": "online"
+          },
+          {
+            "field": "witness_store",
+            "value": "unconfigured — S3/R2 unreachable, credentials absent (WORM checkpoint pending; local mirror only)"
           },
           {
             "field": "lockfile",

@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "missing_param",
     "culprit": "Target snapshot ID missing; restore requires an explicit recovery point.",
-    "remedy": "list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'"
+    "remedy": "list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'",
+    "state_modified": false
   },
   "render": {
     "header": {

@@ -17,7 +17,8 @@
     "culprit": "Missing mock fixture in sim for prod-only verb.",
     "remedy": "add a schema-validated mock fixture for 'threads.create_media_post' to apis/threads.mock.yaml, then re-run the prove",
     "layer": "authorizer",
-    "measured": "mock fixtures for provider 'threads': 0 (contract replay requires 1)"
+    "measured": "mock fixtures for provider 'threads': 0 (contract replay requires 1)",
+    "state_modified": false
   },
   "render": {
     "header": {

@@ -1,0 +1,77 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "ping.notify.refusal.unconfigured_channel",
+  "target": "user:alice",
+  "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel slack --intent \"morning briefing\"",
+  "state": {
+    "exit_code": 3,
+    "domain": "policy.secrets",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.secrets",
+    "culprit": "Channel 'slack' has no webhook configured in vault.",
+    "remedy": "prompt human supervisor to inject the channel webhook via Cockpit (http://127.0.0.1:4040/vault), or dispatch via a configured channel",
+    "layer": "vault",
+    "state_modified": false
+  },
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.secrets.missing",
+            "indent": 2
+          },
+          {
+            "field": "channel",
+            "value": "slack"
+          },
+          {
+            "field": "secret_ref",
+            "value": "vault://notify_slack_webhook"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Channel 'slack' has no webhook configured in vault.",
+            "indent": 8
+          },
+          {
+            "text": "Unconfigured channels fail closed; notifications are never silently dropped.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "vault"
+          },
+          {
+            "field": "remedy",
+            "value": "prompt human supervisor to inject the channel webhook via Cockpit (http://127.0.0.1:4040/vault), or dispatch via a configured channel"
+          }
+        ]
+      }
+    ]
+  }
+}

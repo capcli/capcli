@@ -17,7 +17,8 @@
     "culprit": "Remote push rejected during dual-storage guarantee (git: non-fast-forward, s3: HTTP 403)",
     "remedy": "refresh vault credentials and reconcile remotes, then retry 'capcli sys backup --push'",
     "layer": "authorizer",
-    "measured": "0 of 2 remotes accepted"
+    "measured": "0 of 2 remotes accepted",
+    "state_modified": false
   },
   "render": {
     "header": {

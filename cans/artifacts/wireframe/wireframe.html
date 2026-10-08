@@ -207,6 +207,7 @@ function App(){
   const[flows,setFlows]=useState(null);
   const[states,setStates]=useState(null);
   const[manifest,setManifest]=useState(null);
+  const[fixtures,setFixtures]=useState(null); // id → fixture json (preloaded for search)
   const[error,setError]=useState(null);
   const[positions,setPositions]=useState(new Map());
   const[selected,setSelected]=useState(null);
@@ -243,6 +244,26 @@ function App(){
     setPositions(pos);
   },[nodes]);
 
+  // Preload every node's fixture so the search filter can match command
+  // strings and render payloads, not just screen IDs. A failed fetch is
+  // non-fatal — that node stays ID-searchable only.
+  useEffect(()=>{
+    if(!nodes.length)return;
+    let cancelled=false;
+    Promise.all(nodes.map(id=>{
+      const parts=id.split('.');
+      const path=`screens/${parts[0]}/${parts[1]}/${id}.json`;
+      return fetch(path).then(r=>r.ok?r.json():null)
+        .then(f=>[id,f]).catch(()=>[id,null]);
+    })).then(pairs=>{
+      if(cancelled)return;
+      const m=new Map();
+      pairs.forEach(([id,f])=>{if(f)m.set(id,f)});
+      setFixtures(m);
+    });
+    return()=>{cancelled=true};
+  },[nodes]);
+
   const stateColor=useCallback((id)=>{
     const s=id.split('.')[2];
     const map={success:'#3fb950',denial:'#f85149',refusal:'#db6d28',crash:'#d29922',panic:'#a371f7',yield:'#e3b341'};
@@ -257,16 +278,40 @@ function App(){
     return s;
   },[flows,activeJourney]);
 
+  // Searchable haystack per node: screen id + command + render payload.
+  const searchIndex=useMemo(()=>{
+    if(!fixtures)return null;
+    const idx=new Map();
+    fixtures.forEach((f,id)=>{
+      idx.set(id,[id,f.command||'',JSON.stringify(f.render||{})].join(' ').toLowerCase());
+    });
+    return idx;
+  },[fixtures]);
+
   const dimmed=useCallback((id)=>{
-    if(search&&!id.toLowerCase().includes(search.toLowerCase()))return true;
+    if(search){
+      const q=search.toLowerCase();
+      const hay=searchIndex?searchIndex.get(id):null;
+      if(!(hay??id.toLowerCase()).includes(q))return true;
+    }
     if(journeyNodes&&!journeyNodes.has(id))return true;
     return false;
-  },[search,journeyNodes]);
+  },[search,journeyNodes,searchIndex]);
 
+  // Wheel zoom must be a native non-passive listener: React registers
+  // onWheel as passive, so e.preventDefault() inside it triggers the
+  // browser's passive-listener intervention and blocks zoom. Attach the
+  // handler to the SVG element via ref with {passive:false} instead.
   const handleWheel=useCallback(e=>{
     e.preventDefault();
     setTransform(t=>({...t,k:Math.max(.3,Math.min(3,t.k*(e.deltaY<0?1.08:.92)))}));
   },[]);
+  useEffect(()=>{
+    const svg=svgRef.current;
+    if(!svg)return;
+    svg.addEventListener('wheel',handleWheel,{passive:false});
+    return()=>svg.removeEventListener('wheel',handleWheel);
+  },[handleWheel]);
   const handleMouseDown=useCallback(e=>{
     if(e.target.closest('g[data-node]'))return;
     panRef.current={sx:e.clientX-transform.x,sy:e.clientY-transform.y};
@@ -336,11 +381,17 @@ function App(){
         </div>
 
         <svg ref={svgRef} className="w-full h-full relative z-10"
-          onWheel={handleWheel} onMouseDown={handleMouseDown}
+          onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
           <defs>
-            <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-              <path d="M0 0 L10 5 L0 10 z" fill="#484f58"/>
+            {/* Fixed-size head in graph space (markerUnits=userSpaceOnUse).
+              refX=12.5 puts the anchor 1.5u past the tip, so the tip lands
+              1.5 user-units before the path end — cleanly outside the node's
+              1.5px/2.5px border stroke (nodes paint after edges) instead of
+              underneath it. */}
+            <marker id="arrowhead" viewBox="0 0 12 12" markerUnits="userSpaceOnUse"
+              markerWidth="12" markerHeight="12" refX="12.5" refY="6" orient="auto-start-reverse">
+              <path d="M1 1 L11 6 L1 11 z" fill="#484f58"/>
             </marker>
           </defs>
           <g transform={`translate(${transform.x},${transform.y}) scale(${transform.k})`}>

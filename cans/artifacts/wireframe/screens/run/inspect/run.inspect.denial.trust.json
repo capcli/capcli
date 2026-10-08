@@ -17,6 +17,7 @@
     "culprit": "Draft routines cannot read secrets (trust.draft.can_read.secrets: false).",
     "remedy": "promote via capcli routine ship refund_and_archive reviewed, then re-inspect",
     "layer": "trust",
+    "state_modified": false,
     "measured": "1 envelope section masked (cost_envelope.secret_refs)"
   },
   "render": {

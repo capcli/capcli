@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "compile",
     "culprit": "127.0.0.1:4040 already bound by active capcli-daemon pid 50211",
-    "remedy": "inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'"
+    "remedy": "inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'",
+    "state_modified": false
   },
   "render": {
     "header": {

@@ -1,11 +1,11 @@
 {
   "$schema": "wireframe/v1",
   "screen_id": "ping.resolve.denial.occ_conflict",
-  "target": "ask_88a",
-  "command": "capcli ping resolve ask_88a --choice approve",
+  "target": "ask_77c3",
+  "command": "capcli ping resolve ask_77c3 --choice approve",
   "state": {
     "exit_code": 2,
-    "domain": "db.engine",
+    "domain": "policy.notify",
     "trust": "pinned",
     "env": "dev",
     "tier": "tier_1",
@@ -13,10 +13,12 @@
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "db.engine",
-    "culprit": "Touched rows modified during suspension; OCC fence violated (orders row version 41 → 43)",
+    "domain": "policy.notify",
+    "culprit": "occ_fence_gate verified dependency state_fences on resume and caught entity drift while ask_77c3 awaited human choice (orders row ORD-10 version 41 → 43)",
     "remedy": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame",
-    "layer": "engine"
+    "layer": "notify",
+    "measured": "orders row ORD-10 version 41 → 43 during suspension (fence recorded 41)",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -28,16 +30,16 @@
         "title": null,
         "items": [
           {
-            "text": "FAIL  db.engine.stale_state",
+            "text": "FAIL  policy.notify.occ_fence",
             "indent": 2
           },
           {
             "field": "ask",
-            "value": "ask_88a"
+            "value": "ask_77c3"
           },
           {
             "field": "fence",
-            "value": "orders row version 41 → 43 during suspension"
+            "value": "orders row ORD-10 version 41 → 43 during suspension"
           }
         ]
       },
@@ -45,7 +47,7 @@
         "title": null,
         "items": [
           {
-            "text": "Touched rows modified during suspension; OCC fence violated.",
+            "text": "Kernel OCC fence gate caught entity drift during suspension; resumption denied.",
             "indent": 8
           }
         ]
@@ -59,7 +61,11 @@
           },
           {
             "field": "layer",
-            "value": "engine"
+            "value": "notify"
+          },
+          {
+            "field": "measured",
+            "value": "orders row ORD-10 version 41 → 43 during suspension (fence recorded 41)"
           },
           {
             "field": "remedy",

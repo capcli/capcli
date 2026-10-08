@@ -17,7 +17,8 @@
     "culprit": "Interval lower than 5-minute cap. Sub-5-minute schedules refused.",
     "remedy": "raise the interval to 5 minutes or more; tighter reactivity belongs to inbound webhooks",
     "layer": "authorizer",
-    "measured": "interval 1m (floor: 5m)"
+    "measured": "interval 1m (floor: 5m)",
+    "state_modified": false
   },
   "render": {
     "header": {

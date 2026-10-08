@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "routine.runtime",
     "culprit": "TypeError: unsupported operand types for +: 'NoneType' and 'int'",
-    "remedy": "guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim"
+    "remedy": "guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim",
+    "state_modified": false
   },
   "render": {
     "header": {

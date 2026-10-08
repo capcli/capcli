@@ -62,5 +62,21 @@
         ]
       }
     ]
+  },
+  "pagination": {
+    "items": [
+      {
+        "object": "table",
+        "name": "orders",
+        "ddl": "CREATE TABLE orders (...)"
+      },
+      {
+        "object": "table",
+        "name": "order_items",
+        "ddl": "CREATE TABLE order_items (...)"
+      }
+    ],
+    "next_cursor": "cur_5f2a",
+    "has_more": true
   }
 }

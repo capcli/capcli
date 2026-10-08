@@ -11,7 +11,7 @@
 - Decision
   - States are not legalised: the state vocabulary stays exactly the six exit labels. warning, alarm, suspended, resume, rollback are severities, outcomes, and lifecycle events — they belong in the condition slot, never the state slot
   - Rename map
-    - sys.doctor.warning.tamper → sys.doctor.success.tamper (exit 0; quarantine-operable per cans/effect.md); sys.doctor.panic.tamper kept as the exit-5 sibling
+    - sys.doctor.warning.tamper → sys.doctor.success.tamper (exit 0; quarantine-operable per cans/effect.md); sys.doctor.panic.tamper kept as the exit-5 sibling — SUPERSEDED IN PART 2026-10-08 (round 2, branch wireframe/post-mortem-15): any hash-chain divergence must fail closed, so the row-level quarantine incident was reclassified to sys.doctor.panic.quarantine (exit 5, kernel.panic) per recovery.md hash-chain halt law; prompt trigger t_forensics_tamper re-pointed; see _collab/conflicts.md C-12
     - sys.doctor.warning.clock_drift → sys.doctor.success.clock_drift (exit 0; cans/physics.md warning rule wins over the exit-3 fixture)
     - sys.doctor.alarm.thrashing → sys.doctor.denial.thrashing (exit 2)
     - run.execute.suspended.ask → run.execute.yield.ask (exit 6 per cans/action.md; fixture exit corrected 0 → 6)

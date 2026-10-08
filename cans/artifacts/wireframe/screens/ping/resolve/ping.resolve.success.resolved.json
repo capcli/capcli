@@ -32,7 +32,7 @@
           },
           {
             "field": "question",
-            "value": "\"Approve refund for order ORD-10?\""
+            "value": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\""
           },
           {
             "field": "resolved_by",
@@ -40,11 +40,11 @@
           },
           {
             "field": "resumed_task",
-            "value": "task_99a8b1"
+            "value": "dispatch_order@4 (ORD-1042)"
           },
           {
             "field": "resumed_frame",
-            "value": "frame_018"
+            "value": "frame_026"
           },
           {
             "field": "audit_op",

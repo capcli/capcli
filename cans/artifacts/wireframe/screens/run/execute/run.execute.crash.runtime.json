@@ -16,7 +16,8 @@
     "domain": "routine.runtime",
     "culprit": "Uncaught guest exception: TypeError (unsupported operand for +: 'NoneType' and 'int') at routines/enrich_customers.py:42.",
     "remedy": "guard the None case at routines/enrich_customers.py:42, then prove in sim before re-running",
-    "layer": "runtime"
+    "layer": "runtime",
+    "state_modified": false
   },
   "render": {
     "header": {

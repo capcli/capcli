@@ -45,7 +45,7 @@
           },
           {
             "field": "chain_status",
-            "value": "broken at _audit row 8,412 (op_84c1); rows 1-8,411 verified"
+            "value": "unverifiable — audit.db ledger root unreadable (I/O error); await object-store restore"
           },
           {
             "field": "entry_event",

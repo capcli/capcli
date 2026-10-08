@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Target binding ID not found in workspace.db.",
-    "remedy": "confirm the binding ID via capcli bind list"
+    "remedy": "confirm the binding ID via capcli bind list",
+    "state_modified": false
   },
   "render": {
     "header": {

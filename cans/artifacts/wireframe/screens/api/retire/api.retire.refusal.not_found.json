@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Target verb not found: 'stripe.refund_charges'.",
-    "remedy": "list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id"
+    "remedy": "list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id",
+    "state_modified": false
   },
   "render": {
     "header": {

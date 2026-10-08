@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.replay.denial.external",
   "target": "_audit",
-  "command": "capcli sys replay --from 2026-10-03T22:41:07Z",
+  "command": "capcli sys audit replay --from 2026-10-03T22:41:07Z",
   "state": {
     "exit_code": 2,
     "domain": "policy.authorizer",
@@ -14,9 +14,10 @@
   },
   "diagnostic": {
     "domain": "policy.authorizer",
-    "culprit": "window contains external HTTP effect: op_9f2e api.call (fedex.ship); auto-replay of external calls is strictly forbidden",
-    "remedy": "confirm external re-execution manually via Cockpit (http://127.0.0.1:4040/audit), or narrow --from to a local-only window",
+    "culprit": "window contains external api.call effect: op_2c8d (fedex.ship) is flagged replay: manual in _audit; auto-replay of external calls is strictly forbidden (policy.yaml api.replay: manual)",
+    "remedy": "narrow --from to a local-only window (external ops are excluded from replay), or re-dispatch the external verb as a fresh governed call via 'capcli run' under current policy — the twelve universal flags include no egress override",
     "layer": "authorizer",
+    "state_modified": false,
     "measured": "1 external op in window (17 ops total: 16 local, 1 external)"
   },
   "render": {
@@ -29,15 +30,15 @@
         "title": null,
         "items": [
           {
-            "text": "FAIL  policy.replay.external_op",
+            "text": "FAIL  policy.api.replay",
             "indent": 2
           },
           {
-            "field": "window contains external HTTP effect",
-            "value": "op_9f2e api.call (fedex.ship) at 23:41:08Z"
+            "field": "window contains external api.call effect",
+            "value": "op_2c8d (fedex.ship) at 23:41:08Z — flagged replay: manual"
           },
           {
-            "text": "auto-replay of external calls is strictly forbidden — side-effects are not idempotent",
+            "text": "auto-replay of external calls is strictly forbidden; side-effects are not idempotent — no CLI flag authorizes replayed egress (flag ceiling: 12 universal flags)",
             "indent": 8
           }
         ]
@@ -59,7 +60,7 @@
           },
           {
             "field": "remedy",
-            "value": "confirm external re-execution manually via Cockpit (http://127.0.0.1:4040/audit), or narrow --from to a local-only window"
+            "value": "narrow --from to a local-only window (external ops are excluded from replay), or re-dispatch the external verb as a fresh governed call via 'capcli run' under current policy — the twelve universal flags include no egress override"
           }
         ]
       }

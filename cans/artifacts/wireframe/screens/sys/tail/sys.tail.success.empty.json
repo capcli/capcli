@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.tail.success.empty",
   "target": "_audit",
-  "command": "capcli sys tail --follow --since 1h",
+  "command": "capcli sys audit tail --follow --since 1h",
   "state": {
     "exit_code": 0,
     "domain": null,

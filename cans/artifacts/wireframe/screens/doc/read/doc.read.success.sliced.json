@@ -10,29 +10,33 @@
     "env": "dev",
     "tier": "tier_1",
     "state_modified": false,
-    "data_shape": null
+    "data_shape": "truncated"
   },
   "diagnostic": null,
   "render": {
     "header": {
       "style": "plain",
-      "label": "[dev:tier_1]  doc://refund-policy (section 3)"
+      "label": "[dev:tier_1]  doc://refund-policy (sections 1-2 of 5)"
     },
     "sections": [
       {
         "title": null,
         "items": [
           {
-            "field": "outline_node",
-            "value": "3. Stripe integration notes"
+            "field": "document",
+            "value": "doc://refund-policy"
           },
           {
             "field": "tokens",
-            "value": "84 (cap: 100)"
+            "value": "96 (cap: 100)"
           },
           {
             "field": "has_more",
-            "value": "false"
+            "value": "true"
+          },
+          {
+            "field": "next_cursor",
+            "value": "doc://refund-policy#3"
           }
         ]
       },
@@ -44,19 +48,43 @@
             "indent": 2
           },
           {
-            "text": "Outbound refunds must include `charge_id` and idempotent client request UUID.",
+            "text": "1. Scope",
             "indent": 2
           },
           {
-            "text": "Never refund a charge older than 120 days via automated routines; delegate",
+            "text": "Refund routing and approval rules for the storefront.",
             "indent": 2
           },
           {
-            "text": "to human supervisor via `ctx.ping.ask`.",
+            "text": "2. Refund windows",
+            "indent": 2
+          },
+          {
+            "text": "Standard window is 30 days. Extended window is 120 days and requires",
+            "indent": 2
+          },
+          {
+            "text": "supervisor approval.",
             "indent": 2
           }
         ]
       }
     ]
+  },
+  "pagination": {
+    "items": [
+      {
+        "section": 1,
+        "heading": "Scope",
+        "tokens": 22
+      },
+      {
+        "section": 2,
+        "heading": "Refund windows",
+        "tokens": 74
+      }
+    ],
+    "next_cursor": "doc://refund-policy#3",
+    "has_more": true
   }
 }

@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v1",
   "screen_id": "sys.vault_set.success.vaulted",
-  "target": "stripe_key",
-  "command": "capcli sys vault set stripe_key --in @-",
+  "target": "stripe_secret_key",
+  "command": "capcli sys vault set stripe_secret_key --in @-",
   "state": {
     "exit_code": 0,
     "domain": null,
@@ -24,7 +24,7 @@
         "items": [
           {
             "field": "key",
-            "value": "stripe_key"
+            "value": "stripe_secret_key"
           },
           {
             "field": "cipher",

@@ -108,6 +108,9 @@ cans/artifacts/wireframe/
   ```
   {noun}.{verb}.{state}.{condition}.json
   ```
+* **Root Aliases:** Exactly four ergonomic root shortcuts are legal invocation grammar (cans/interface.md#CLI-surface): `capcli sql` ≡ `capcli run sql`, `capcli search` ≡ `capcli run search`, `capcli inspect` ≡ `capcli run inspect`, and `capcli apply` ≡ `capcli rule apply schema`. These four root aliases may appear in fixture `command` strings; no other root shortcuts exist — everything else is `capcli <noun> <verb>`.
+* **Compound-Verb Mapping:** Screen IDs and directories keep underscore verb segments (`sys.vault_set`, `sys.vault_import`), while the invocation grammar follows cans/interface.md#CLI-surface: `capcli sys vault set <key> <val>`, `capcli sys vault import-env`, `capcli sys agent register|revoke`, `capcli sys audit tail|trace|query|replay`. The underscore form names the fixture; the spaced form is what the user types.
+* **Dynamic Environment Namespaces:** Environments are user-provisionable namespaces (`env new <slug>`, cans/interface.md#CLI-surface). `state_axes.env` in `manifest.json` lists only the kernel-reserved roots (`dev`, `sim`, `prod`); values like `staging` or `lab` are legal fixtures of dynamically provisioned namespaces (see `env_policy` in `manifest.json`).
 
 ---
 
@@ -147,7 +150,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (5 verbs → 37 screens)
+### 4.1 `run/` (5 verbs → 38 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -164,6 +167,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.execute.refusal.missing_secret`| refusal| 3 | policy.secrets | missing_key | Missing credential redirects to Cockpit URL |
 | `run.execute.yield.ask` | yield | 6 | ping.ask | suspended | Routine hit `ctx.ping.ask`; frame checkpointed to `_pending_asks`, exits 6 until human resolves |
 | `run.execute.yield.quota` | yield | 6 | api.quota | rate_limit | Suspends task; sets `yield_until` timestamp |
+| `run.execute.denial.quota` | denial | 2 | api.quota | hard_deny | Critical-priority task drained provider pool to 0; hard-denied, never yielded |
 | `run.execute.success.resumed` | success | 0 | — | resumed | Daemon re-dispatches task on token refill |
 | `run.execute.crash.runtime` | crash | 4 | routine.runtime | exception | Guest language uncaught error |
 | `run.execute.crash.poll_timeout` | crash | 4 | routine.runtime | timeout | `poll_until` exceeds 30-second ceiling |
@@ -176,9 +180,9 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.sql.denial.authorizer` | denial | 2 | policy.authorizer | schema_mod | Blocked `DROP TABLE` or system table write |
 | `run.sql.denial.engine_busy` | denial | 2 | db.engine | timeout | SQLite transaction queue wait timeout |
 | `run.sql.refusal.unparseable` | refusal | 3 | compile | bad_syntax | Malformed SQL string syntax |
-| `run.sql.refusal.missing_intent` | refusal | 3 | compile | no_intent | Mutating write missing `-m` / `--intent` |
+| `run.sql.refusal.missing_intent` | refusal | 3 | missing_param | no_intent | Mutating write missing `-m` / `--intent` |
 | `run.overview.success.populated` | success | 0 | — | populated | Situational KPI briefing (<500 tokens) |
-| `run.overview.success.truncated` | success | 0 | — | truncated | Oversized overview clipped |
+| `run.overview.refusal.oversized` | refusal | 3 | validation | oversized | Aggregate briefing exceeded the 500-token ceiling; refused, not clipped |
 | `run.search.success.populated` | success | 0 | — | populated | Matched capabilities and URP pointers |
 | `run.search.success.empty` | success | 0 | — | empty | Zero hits; outputs semantic suggestions |
 | `run.search.success.truncated` | success | 0 | — | truncated | Search results capped at 20 |
@@ -195,7 +199,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 |---|---|---|---|---|---|
 | `db.lock.success.acquired` | success | 0 | — | acquired | Exclusive claim lease registered |
 | `db.lock.denial.claim_held` | denial | 2 | db.claims | held | Target resource currently claimed |
-| `db.lock.refusal.missing_reason` | refusal | 3 | validation | missing_arg | `--reason` required for locking |
+| `db.lock.refusal.missing_reason` | refusal | 3 | missing_param | missing_arg | `--reason` required for locking |
 | `db.unlock.success.released` | success | 0 | — | released | Claim lease released ahead of TTL |
 | `db.unlock.denial.not_holder` | denial | 2 | policy.authorizer | unauthorized | Caller does not own the claim |
 | `db.schema.success.populated` | success | 0 | — | populated | Live DDL schema introspected |
@@ -208,15 +212,17 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
 | `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
 
-### 4.3 `routine/` (8 verbs → 26 screens)
+### 4.3 `routine/` (8 verbs → 28 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `routine.new.success.created` | success | 0 | — | created | Routine scaffold committed |
+| `routine.new.success.overview` | success | 0 | — | created | Mandatory overview routine scaffolded (harness H6) |
 | `routine.new.refusal.name_taken` | refusal | 3 | validation | collision | Routine name already registered |
 | `routine.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates LOC or param limits |
 | `routine.new.refusal.template_compat` | refusal | 3 | policy.template | compat_fail | Template policy_version mismatch exits 3 |
 | `routine.prove.success.passed` | success | 0 | — | passed | Dynamic fingerprint verified |
+| `routine.prove.success.overview` | success | 0 | — | passed | Overview routine sim rehearsal passes (harness H7) |
 | `routine.prove.denial.shape` | denial | 2 | policy.authorizer | bad_shape | Execution violates declared limits |
 | `routine.prove.denial.policy` | denial | 2 | policy.authorizer | illegal_leaf | Routine attempts forbidden leaf op |
 | `routine.prove.denial.sandbox` | denial | 2 | kernel.sandbox | breach | Jail containment boundary violation |
@@ -224,7 +230,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.ship.success.shipped` | success | 0 | — | shipped | Routine promoted to new trust rung |
 | `routine.ship.success.rolled_back` | success | 0 | — | rolled_back | Canary telemetry trips auto-rollback |
 | `routine.ship.denial.metrics` | denial | 2 | policy.authorizer | low_success | Success rate falls below 0.95 |
-| `routine.ship.refusal.missing_reason`| refusal | 3 | validation | missing_arg | Elevation to pinned requires reason |
+| `routine.ship.refusal.missing_reason`| refusal | 3 | missing_param | missing_arg | Elevation to pinned requires reason |
 | `routine.ship.denial.trust` | denial | 2 | policy.trust | tier2_refusal | Pinned promotion denied on Tier 2 |
 | `routine.pending.success.populated` | success | 0 | — | populated | Batch promotion candidates listed |
 | `routine.pending.success.empty` | success | 0 | — | empty | No routines pending promotion |
@@ -258,7 +264,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `api.ship.success.shipped` | success | 0 | — | shipped | Promoted to reviewed |
 | `api.ship.success.graduated` | success | 0 | — | graduated | 100% schema match & shadow canary passed |
 | `api.ship.denial.metrics` | denial | 2 | policy.authorizer | unproven | Fails synthetic contract replay |
-| `api.ship.refusal.missing_reason` | refusal | 3 | validation | missing_arg | Missing elevation justification |
+| `api.ship.refusal.missing_reason` | refusal | 3 | missing_param | missing_arg | Missing elevation justification |
 | `api.stats.success.populated` | success | 0 | — | populated | Quota usage and error metrics |
 | `api.stats.refusal.not_found` | refusal | 3 | validation | not_found | Target provider not found |
 | `api.retire.success.completed` | success | 0 | — | completed | API verb deactivated to dormant |
@@ -274,12 +280,12 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `bind.cron.success.bound` | success | 0 | — | bound | Schedule bound to routine |
 | `bind.cron.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 20 active schedules reached |
 | `bind.cron.denial.interval` | denial | 2 | policy.authorizer | interval_low| Interval lower than 5-minute cap |
-| `bind.cron.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent flag |
+| `bind.cron.refusal.missing_intent` | refusal | 3 | missing_param | no_intent | Missing intent flag |
 | `bind.webhook.success.bound` | success | 0 | — | bound | Inbound hook route activated |
 | `bind.webhook.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active hooks reached |
 | `bind.webhook.denial.unsigned` | denial | 2 | policy.authorizer | unsigned | Unsigned hooks rejected |
 | `bind.webhook.denial.payload_size` | denial | 2 | policy.authorizer | too_large | Hook payload exceeds 64KB |
-| `bind.webhook.refusal.missing_ingress`| refusal| 3 | compile | no_ingress | Missing public ingress URL/tunnel |
+| `bind.webhook.refusal.missing_ingress`| refusal| 3 | missing_param | no_ingress | Missing public ingress URL/tunnel |
 | `bind.endpoint.success.bound` | success | 0 | — | bound | Routine exposed as HTTP/MCP |
 | `bind.endpoint.denial.trust` | denial | 2 | policy.trust | unpinned | Endpoint requires pinned trust |
 | `bind.endpoint.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 10 active endpoints reached |
@@ -298,20 +304,23 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `bind.keys.success.issued` | success | 0 | — | issued | API key stamped for endpoint (90d expiry) |
 | `bind.keys.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 25 keys reached |
 
-### 4.6 `ping/` (5 verbs → 14 screens)
+### 4.6 `ping/` (5 verbs → 17 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `ping.notify.success.dispatched` | success | 0 | — | dispatched | Notification dispatched |
-| `ping.notify.denial.quiet_hours` | denial | 2 | policy.authorizer | quiet_hours | Blocked between 22:00 and 07:00 |
-| `ping.notify.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent declaration |
-| `ping.ask.success.suspended` | success | 0 | — | suspended | Human question queued with Cockpit URL |
-| `ping.ask.denial.options_cap` | denial | 2 | policy.authorizer | cap_exceeded| Exceeds 5 structured choices |
-| `ping.ask.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent declaration |
+| `ping.notify.denial.quiet_hours` | denial | 2 | policy.notify | quiet_hours | Blocked between 22:00 and 07:00 (notify engine policy) |
+| `ping.notify.refusal.missing_intent` | refusal | 3 | missing_param | no_intent | Missing intent declaration |
+| `ping.notify.refusal.unconfigured_channel` | refusal | 3 | policy.secrets | unconfigured_channel | Channel webhook missing in vault; fail-closed |
+| `ping.notify.denial.delivery_failed` | denial | 2 | policy.notify | delivery_failed | Transport failed (HTTP 5xx/timeout/TLS); fail-closed, cites measured value |
+| `ping.notify.refusal.unknown_principal` | refusal | 3 | validation | unknown_principal | Recipient principal not in agents registry |
+| `ping.ask.yield.suspended` | yield | 6 | ping.ask | suspended | Human question queued with Cockpit URL; exits 6 — callers must treat as suspension, not success |
+| `ping.ask.denial.options_cap` | denial | 2 | policy.notify | cap_exceeded | Exceeds 5 structured choices (option_gate) |
+| `ping.ask.refusal.missing_intent` | refusal | 3 | missing_param | no_intent | Missing intent declaration |
 | `ping.list.success.populated` | success | 0 | — | populated | Pending suspension questions |
 | `ping.list.success.empty` | success | 0 | — | empty | Zero pending inquiries |
 | `ping.resolve.success.resolved` | success | 0 | — | resolved | Choice selected; resumes task |
-| `ping.resolve.denial.occ_conflict`| denial | 2 | db.engine | stale_state | Touched rows modified during suspension; OCC fence violated |
+| `ping.resolve.denial.occ_conflict` | denial | 2 | policy.notify | occ_fence | Kernel OCC fence gate caught entity drift during suspension; resume denied |
 | `ping.resolve.refusal.not_found` | refusal | 3 | validation | not_found | Invalid ask ID |
 | `ping.resolve.denial.expired` | denial | 2 | policy.notify | expired | Timeout elapsed; fail-closed |
 | `ping.expire.success.completed` | success | 0 | — | completed | Explicit expiration executed |
@@ -355,26 +364,28 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `env.merge.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile out of sync |
 | `env.merge.refusal.unmerged` | refusal | 3 | compile | unmerged | Git branch conflict blocks DDL forwarding |
 | `env.remove.success.removed` | success | 0 | — | removed | Environment dismantled |
-| `env.remove.denial.prod_flags` | denial | 2 | policy.authorizer | prod_flags | Prod removal requires dual confirmation flags |
+| `env.remove.denial.backup_unverified` | denial | 2 | policy.authorizer | backup_pending | Final prod backup push unverified; teardown ordering mandates backup first |
 | `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (16 verbs → 45 screens)
+### 4.9 `sys/` (16 verbs → 47 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `sys.help.success.stub` | success | 0 | — | stub | 6-line minimalist help stub redirecting to search |
-| `sys.inbox.success.populated` | success | 0 | — | populated | Sensory events popped from queue |
-| `sys.inbox.success.empty` | success | 0 | — | empty | Sensory inbox completely drained |
+| `sys.inbox.success.populated` | success | 0 | — | populated | Sensory events popped from the intake queue (cron/webhook sources; durable store TBD) |
+| `sys.inbox.success.empty` | success | 0 | — | empty | No stimulus queued; exits clean (sensory grounding) |
 | `sys.tail.success.populated` | success | 0 | — | populated | Live streaming audit records |
 | `sys.tail.success.empty` | success | 0 | — | empty | No audit events within window |
 | `sys.trace.success.populated` | success | 0 | — | populated | Causal DAG walk with `--explain` tree |
+| `sys.trace.success.denial_trail` | success | 0 | — | denial_trail | Causal DAG walk of a denied op (`--explain`) |
+| `sys.trace.success.prove` | success | 0 | — | prove | Causal DAG walk of a routine prove op |
 | `sys.trace.refusal.not_found` | refusal | 3 | validation | not_found | Target operation ID missing |
 | `sys.query.success.populated` | success | 0 | — | populated | SQL executed against `_audit` |
 | `sys.query.success.empty` | success | 0 | — | empty | Zero matching audit rows |
 | `sys.query.refusal.unparseable`| refusal | 3 | compile | bad_syntax | Malformed SQL audit query |
 | `sys.replay.success.replayed` | success | 0 | — | replayed | Deterministic execution from log |
-| `sys.replay.denial.external` | denial | 2 | policy.authorizer | external_op | HTTP calls require manual flag |
+| `sys.replay.denial.external` | denial | 2 | policy.authorizer | external_op | Auto-replay of external `api.call` ops strictly forbidden (`api.replay: manual`); narrow window or re-dispatch fresh via `capcli run` — no flag bypass |
 | `sys.replay.refusal.missing_from`| refusal| 3 | missing_param | missing_arg | Target timestamp or commit omitted |
 | `sys.register.success.registered`| success| 0 | — | registered | Kernel-minted agent ID issued |
 | `sys.register.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max agents exceeded |
@@ -391,11 +402,11 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
 | `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or supported sandbox provider |
 | `sys.doctor.success.clock_drift`| success| 0 | — | clock_skew | Host clock delta >500ms vs NTP (warning only) |
-| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Audit SHA-256 chain broken; kill_and_alert |
+| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Total media loss: ledger root + WORM checkpoint unreadable; kill_and_alert |
 | `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode |
 | `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
-| `sys.doctor.success.tamper` | success | 0 | — | tampered | Audit chain broken; block isolated to quarantine |
-| `sys.doctor.success.quarantine`| success | 0 | — | quarantine | Quarantine ledger inspection active |
+| `sys.doctor.panic.quarantine`| panic | 5 | kernel.panic | tampered | Row-level chain tamper: sha256 link broken, block quarantined to `audit.quarantine.jsonl`; kernel halts boot (exit 5) until restore + WORM re-anchor |
+| `sys.doctor.success.quarantine`| success | 0 | — | quarantine | Break-glass read-only quarantine ledger inspection (`CAPCLI_RECOVERY=1`); valid history verified |
 | `sys.doctor.denial.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
 | `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |
 | `sys.backup.denial.push_fail` | denial | 2 | policy.authorizer | push_fail | Remote S3/Git push rejected |
@@ -414,7 +425,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `doc.read.success.populated` | success | 0 | — | populated | Full document returned bounded |
-| `doc.read.success.sliced` | success | 0 | — | sliced | Progressive disclosure: section + token cap |
+| `doc.read.success.sliced` | success | 0 | — | sliced | Progressive disclosure: leading sections under token cap; typed keyset envelope |
 | `doc.read.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
 | `doc.outline.success.populated` | success | 0 | — | populated | Outline node tree with section indices |
 | `doc.outline.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
@@ -459,13 +470,13 @@ Rendered output (what the HTML canvas and Rust harness produce):
 ### 5.2 Causal DAG Tree Walk (`screens/sys/trace/sys.trace.success.populated.json`)
 
 ```text
-[dev:tier_1]  Causal DAG Trace (op_9f2e)
+[dev:tier_1]  Causal DAG Trace (op_7c4f)
 
   ses_a992f  session.start        "fulfill urgent pending orders"
   └── op_9f2c  routine.dispatch_order@4
         ├── op_9f2d  db.query (orders)         ✓ [allowed]  12ms
-        ├── op_9f2e  api.call (fedex.ship)     ✓ [allowed]  340ms
-        │     └── tracking: 794644790133
+        ├── op_7c4f  api.call (fedex.ship)     ✓ [allowed]  340ms
+        │     └── tracking  794644790133
         └── op_9f2f  db.execute (orders)       ✓ [allowed]  18ms
               └── status = 'shipped' (1 row)
 
@@ -482,17 +493,19 @@ Rendered output (what the HTML canvas and Rust harness produce):
 [prod:tier_1]  capcli 0.4.2
 
 trust_receipt:
-  status:            nominal
+  status:            nominal (witness anchoring pending)
   host_tier:         tier_1 (hardened Linux namespaces)
   workspace:         envs/prod/workspace.db
   ledger_root_hash:  sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c
+  witness_store:     not configured — S3/R2 WORM probe unreachable (credentials absent from vault)
+  worm_checkpoint:   pending — ledger root is local-only until the first object-store anchor; provision s3/r2, then 'capcli sys backup --push'
   audited_events:    14290 committed to _audit
   policy_denials:    18 (intercepted pre-execution; state untouched)
   unaudited_writes:  0
   secret_leaks:      0
   pinned_routines:   32
   active_triggers:   4 crons, 3 webhooks, 1 endpoint
-  deployment:        headless_daemon (systemd Linux)
+  sleep_score:       100%
 ```
 
 ---
@@ -582,9 +595,9 @@ trust_receipt:
 
   FAIL  policy.secrets.missing
         capability: cap://stripe.refund_charge
-        secret_ref: vault://stripe_secret
+        secret_ref: vault://stripe_secret_key
 
-        Credential 'stripe_secret' not found in vault.
+        Credential 'stripe_secret_key' not found in vault.
         Direct CLI parameter injection is banned to prevent prompt leakage.
 
   state_modified: false
@@ -652,17 +665,24 @@ trust_receipt:
 ### 5.11 Progressive Disclosure Doc Reading (`screens/doc/read/doc.read.success.sliced.json`)
 
 ```text
-[dev:tier_1]  doc://refund-policy (section 3)
+[dev:tier_1]  doc://refund-policy (sections 1-2 of 5)
 
-  outline_node: 3. Stripe integration notes
-  tokens:       84 (cap: 100)
-  has_more:     false
+  tokens:       96 (cap: 100)
+  has_more:     true
+  next_cursor:  doc://refund-policy#3
 
   ────────────────────────────────────────────────────────────────────────────
-  Outbound refunds must include `charge_id` and idempotent client request UUID.
-  Never refund a charge older than 120 days via automated routines; delegate
-  to human supervisor via `ctx.ping.ask`.
+  1. Scope
+  Refund routing and approval rules for the storefront.
+  2. Refund windows
+  Standard window is 30 days. Extended window is 120 days and requires
+  supervisor approval.
 ```
+
+The machine payload carries the full keyset envelope (§6.1.2):
+`pagination.items` (typed section items), `pagination.next_cursor`
+(doc-pointer resume at section 3), `pagination.has_more: true` — the
+collection-law trio from `manifest.json` `output_contract.pagination`.
 
 ---
 
@@ -712,6 +732,7 @@ this shape. No separate `.txt` file exists.
     "culprit": "No LIMIT clause. Blast radius unbounded.",
     "remedy": "add LIMIT, or target specific primary key",
     "layer": "AST",
+    "state_modified": false,
     "measured": "matches potentially 847 rows (cap: 100)"
   },
   "render": {
@@ -749,9 +770,11 @@ Field law:
 - `$schema` is `wireframe/v1`. `screen_id` is the identity; noun and verb are its first two segments and appear nowhere else.
 - `target` and `command` state the invocation the screen answers.
 - `state` is the kernel state frame: exit code, domain, trust, env, tier, `state_modified`, data shape. Legality of states and domains lives in `_states.json`.
-- `diagnostic` is the structured diagnostic frame for non-success exits (required keys per exit, `_states.json`). Success screens carry it as `null` or omit it.
-- `render` is the screen's full content model. A renderer consuming the shape alone — header from `state` plus `render.header.label`, sections in order, trailer from the payload — produces the terminal output exactly. `header.style` is `badge` (`[{env}:{tier}]` first line, `✓` on exit 0, `✗` otherwise) or `plain`; each section carries `title` (the block's leading `name:` line or `null`) and ordered `items`. An item is `{"field", "value"}` (rendered `  label: value`, values aligned per section) or `{"text", "indent"}` (a prose or code line at its indent).
+- `diagnostic` is the structured diagnostic frame for non-success exits. It carries every key in `_states.json` `diagnostic_required` for that exit: exit 2 — `domain`, `culprit`, `remedy`, `layer`, `state_modified`; exit 3/4/5 — `domain`, `culprit`, `remedy`, `state_modified`; exit 6 — `domain`, `culprit`, `remedy`, `suspended_frame`, `state_modified`. Exit-6 diagnostics additionally carry the domain fields registered in `_states.json` (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`, `pending_asks`). Denials may also cite `measured` (denial UX: cite the measured value). Success screens carry `diagnostic` as `null` or omit it.
+- `render` is the screen's full content model. A renderer consuming the shape alone — header from `state` plus `render.header.label`, sections in order, trailer from the payload — produces the terminal output exactly. `header.style` is `badge` (`[{env}:{tier}]` first line, `✓` on exit 0, `✗` otherwise) or `plain` (the label is the whole first line, verbatim — plain fixtures carry their own prefix or banner); each section carries `title` (the block's leading `name:` line or `null`) and ordered `items`. An item is `{"field", "value"}` (rendered `  label: value`, values aligned per section) or `{"text", "indent"}` (a prose or code line at its indent).
+- **Tree-glyph law:** tree characters (`├──`, `└──`, `│`) appear only in `{"text", "indent"}` items, which render at exactly their own indent. `{"field", "value"}` items never carry tree glyphs — field items always render as `  field: value`, so a glyph in a field label would double-indent the row and misalign the tree.
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
+- `pagination` appears exactly on screens whose `state.data_shape` is `truncated` (§6.1.2).
 
 ### 6.1.1 Trailer Slot
 
@@ -768,6 +791,25 @@ trailer and nothing else about the producer.
 - A payload with `serve: blocked` is never rendered. Absent is the default.
 - The slot leaves exit code and `state_modified` unchanged.
 
+The slot-naming bridge, stated once so it can never be confused: the fixture
+slot key is `trailer` — the `human_field`, producer-facing slot above. When a
+renderer emits the `--json` machine envelope, the key becomes `next_action`
+per `output_contract.trailer.machine_field` in `manifest.json`. Fixtures
+never serialize a `next_action` key.
+
+### 6.1.2 Pagination Slot
+
+Screens whose `state.data_shape` is `truncated` carry a top-level
+`"pagination"` object mirroring `output_contract.pagination.required_envelope_keys`
+in `manifest.json`:
+
+- `items` — a small representative array consistent with the screen's data
+  (the leading rows of the truncated payload, not the full set).
+- `next_cursor` — the keyset cursor a follow-up invocation passes to resume.
+- `has_more` — always `true` on a truncated screen.
+
+Non-truncated screens carry no `pagination` key.
+
 ### 6.2 Rust Integration Test Runner
 
 The runner renders every fixture from its JSON shape, dispatches the command, and asserts the rendered output matches actual CLI stdout. No golden `.txt` files; the shape IS the golden source.
@@ -780,8 +822,45 @@ use std::path::Path;
 use glob::glob;
 use serde::Deserialize;
 
+/// Kernel state frame — mirrors the `state` block of every fixture (§6.1).
 #[derive(Deserialize)]
-struct StateFrame { exit_code: i32, state_modified: bool }
+struct StateFrame {
+    exit_code: i32,
+    domain: Option<String>,    // None on success (exit 0)
+    trust: String,
+    env: String,
+    tier: String,
+    state_modified: bool,
+    data_shape: Option<String>, // populated | empty | truncated | redirected | dry_run
+}
+
+/// Structured diagnostic frame for non-success exits (§6.1 field law).
+/// Required keys per exit live in `_states.json` `diagnostic_required`.
+#[derive(Deserialize)]
+struct DiagnosticFrame {
+    domain: String,
+    culprit: String,
+    remedy: String,
+    layer: Option<String>,            // required on exit 2; absent elsewhere
+    measured: Option<String>,         // denial UX: cite the measured value
+    suspended_frame: Option<String>,  // required on exit 6
+    state_modified: bool,
+    /// Flexible carrier: exit-6 diagnostics add their domain fields
+    /// (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`,
+    /// `pending_asks`) and values may be non-string, so they land here
+    /// instead of failing the harness. Any future additive key does too.
+    #[serde(flatten)]
+    extra: Option<serde_json::Value>,
+}
+
+/// Pagination envelope — carried iff `state.data_shape == "truncated"` (§6.1.2),
+/// mirroring `output_contract.pagination.required_envelope_keys` in `manifest.json`.
+#[derive(Deserialize)]
+struct PaginationEnvelope {
+    items: Vec<serde_json::Value>,
+    next_cursor: String,
+    has_more: bool,
+}
 
 #[derive(Deserialize)]
 struct RenderItem {
@@ -803,23 +882,42 @@ struct RenderHeader { style: String, label: String }
 #[derive(Deserialize)]
 struct WireframeFixture {
     screen_id: String,
+    target: Option<String>,
     command: String,
     state: StateFrame,
+    diagnostic: Option<DiagnosticFrame>, // None on success screens
     render: RenderBlock,
     trailer: Option<serde_json::Value>,
+    pagination: Option<PaginationEnvelope>,
 }
 
 /// Canonical renderer: JSON shape → terminal text.
 /// This is the single source of truth for what a screen looks like.
 fn render_screen(fixture: &WireframeFixture) -> String {
     let mut out = String::new();
-    let env = &fixture.state.env;
-    let tier = &fixture.state.tier;
-    let icon = if fixture.state.exit_code == 0 { "✓" } else { "✗" };
 
-    // Header line
-    out.push_str(&format!("[{}:{}]  {}  {}\n\n", env, tier, icon, fixture.render.header.label));
+    // Header line. `render.header.style` decides the shape:
+    // - "plain": the label is emitted verbatim — plain fixtures carry their
+    //   own prefix (e.g. `[dev:tier_1]  ⚠  agent.thrashing`) or a bare banner
+    //   (`capcli 0.4.2 — …`), so prepending `[{env}:{tier}]` or an icon here
+    //   would duplicate the badge.
+    // - "badge" (or any other value): the renderer owns the prefix.
+    match fixture.render.header.style.as_str() {
+        "plain" => {
+            out.push_str(&format!("{}\n\n", fixture.render.header.label));
+        }
+        _ => {
+            let env = &fixture.state.env;
+            let tier = &fixture.state.tier;
+            let icon = if fixture.state.exit_code == 0 { "✓" } else { "✗" };
+            out.push_str(&format!("[{}:{}]  {}  {}\n\n", env, tier, icon, fixture.render.header.label));
+        }
+    }
 
+    // Sections. Tree glyphs (├── └── │) are legal only in {"text", "indent"}
+    // items: a text line renders at exactly its own indent. {"field", "value"}
+    // items always render as `  field: value` and never carry tree glyphs —
+    // a glyph in a field label would double-indent the row and misalign the tree.
     // Sections
     for section in &fixture.render.sections {
         if let Some(title) = &section.title {
@@ -868,6 +966,18 @@ fn execute_wireframe_golden_tests() {
             "Exit mismatch at {}", fixture.screen_id);
         assert_eq!(output.state_modified, fixture.state.state_modified,
             "state_modified invariant failed at {}", fixture.screen_id);
+
+        // 3b. Fixture-schema contract (§6.1): non-success exits carry the
+        // diagnostic frame with their exit's required keys; truncated
+        // screens carry the pagination envelope (§6.1.2).
+        if fixture.state.exit_code != 0 {
+            assert!(fixture.diagnostic.is_some(),
+                "{}: exit {} without a diagnostic frame", fixture.screen_id, fixture.state.exit_code);
+        }
+        if fixture.state.data_shape.as_deref() == Some("truncated") {
+            assert!(fixture.pagination.is_some(),
+                "{}: truncated data_shape without a pagination envelope", fixture.screen_id);
+        }
 
         // 4. Golden rendering: stdout must match rendered shape
         assert_eq!(output.stdout, expected,

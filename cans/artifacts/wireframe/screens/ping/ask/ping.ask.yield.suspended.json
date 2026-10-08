@@ -1,0 +1,99 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "ping.ask.yield.suspended",
+  "target": "user:alice",
+  "command": "capcli ping ask user:alice \"Fraud score 0.83 on ORD-1042. Approve dispatch?\" --options approve,deny --timeout 60m --intent \"fraud gate above dispatch threshold requires human sign-off\"",
+  "state": {
+    "exit_code": 6,
+    "domain": "ping.ask",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "ping.ask",
+    "culprit": "inquiry issued (ask_88a); frame_026 suspended pending human choice, checkpoint and OCC state_fences persisted to _pending_asks",
+    "remedy": "exit 6 is a suspension, not success; resolve via Cockpit or 'capcli ping resolve ask_88a --choice approve', frame auto-resumes after hash re-verification",
+    "ask_id": "ask_88a",
+    "pending_asks": 1,
+    "suspended_frame": "frame_026",
+    "state_modified": false
+  },
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 6"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "YIELD  ping.ask_suspended",
+            "indent": 2
+          },
+          {
+            "field": "ask_id",
+            "value": "ask_88a"
+          },
+          {
+            "field": "principal",
+            "value": "user:alice"
+          },
+          {
+            "field": "asked_by",
+            "value": "agt_7f3k (dispatch_order@4, frame_026)"
+          },
+          {
+            "field": "question",
+            "value": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\""
+          },
+          {
+            "field": "options",
+            "value": "approve, deny"
+          },
+          {
+            "field": "timeout",
+            "value": "60m (fail-closed on expiry)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "cockpit",
+            "value": "http://127.0.0.1:4040/ask/ask_88a"
+          },
+          {
+            "field": "dispatch",
+            "value": "pwa_push -> user:alice"
+          },
+          {
+            "field": "pending_asks",
+            "value": "1 enqueued (ask_88a)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "suspended_frame",
+            "value": "frame_026"
+          },
+          {
+            "field": "remedy",
+            "value": "exit 6 is a suspension, not success; resolve via Cockpit or 'capcli ping resolve ask_88a --choice approve', frame auto-resumes after hash re-verification"
+          }
+        ]
+      }
+    ]
+  }
+}

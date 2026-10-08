@@ -17,6 +17,7 @@
     "culprit": "No LIMIT clause. Blast radius unbounded.",
     "remedy": "add LIMIT, or target specific primary key",
     "layer": "AST",
+    "state_modified": false,
     "measured": "matches potentially 847 rows (cap: 100)"
   },
   "render": {

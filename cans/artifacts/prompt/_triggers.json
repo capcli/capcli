@@ -101,7 +101,7 @@
     },
     {
       "id": "t_forensics_tamper",
-      "screen_id": "sys.doctor.success.tamper",
+      "screen_id": "sys.doctor.panic.quarantine",
       "predicate": {},
       "prompt": "prompt://forensics/audit_tampered@1",
       "serve": "L1",

@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v1",
   "screen_id": "ping.expire.success.completed",
-  "target": "ask_88a",
-  "command": "capcli ping expire ask_88a",
+  "target": "ask_77c3",
+  "command": "capcli ping expire ask_77c3",
   "state": {
     "exit_code": 0,
     "domain": null,
@@ -24,7 +24,7 @@
         "items": [
           {
             "field": "ask_id",
-            "value": "ask_88a"
+            "value": "ask_77c3"
           },
           {
             "field": "principal",

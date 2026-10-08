@@ -24,7 +24,7 @@
         "items": [
           {
             "field": "channels_scanned",
-            "value": "4 (email, webhook, cron, ws)"
+            "value": "2 intake channels (cron, webhook)"
           },
           {
             "field": "popped",
@@ -46,7 +46,7 @@
         "items": [
           {
             "field": "note",
-            "value": "next poll blocks until an event arrives on any channel"
+            "value": "subshell exits clean; the daemon wakes bound routines on the next cron dispatch or verified webhook intake"
           }
         ]
       }

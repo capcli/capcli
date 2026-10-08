@@ -14,8 +14,9 @@
   },
   "diagnostic": {
     "domain": "kernel.panic",
-    "culprit": "Audit SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch",
-    "remedy": "re-enter with 'CAPCLI_RECOVERY=1 capcli sys doctor', then restore from the last verified object-store checkpoint via 'capcli sys recover <commit>'"
+    "culprit": "Total media loss: audit.db ledger root unreadable AND S3 WORM checkpoint missing — both hash anchors gone, chain unverifiable end-to-end",
+    "remedy": "restore from the last verified object-store checkpoint via 'capcli sys recover <snapshot-id>', or re-enter read-only with CAPCLI_RECOVERY=1",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -27,20 +28,24 @@
         "title": null,
         "items": [
           {
-            "text": "PANIC  kernel.panic.audit_chain_tampered",
+            "text": "PANIC  kernel.panic.audit_chain_media_loss",
             "indent": 0
           },
           {
-            "text": "Audit SHA-256 chain broken at _audit row 8,412 (op_84c1).",
+            "text": "Ledger root unreadable and S3 WORM checkpoint missing.",
             "indent": 7
           },
           {
-            "field": "prev_hash mismatch",
-            "value": "expected sha256:9d41e6f0c2ab..., found sha256:00ab77c2d1e9..."
+            "field": "ledger_root",
+            "value": "envs/dev/audit.db unreadable (I/O error)"
           },
           {
-            "field": "Tamper blast radius",
-            "value": "all rows after 8,412 are invalidated."
+            "field": "worm_checkpoint",
+            "value": "s3://capcli-worm/audit/root.jsonl missing (404)"
+          },
+          {
+            "field": "chain verdict",
+            "value": "unverifiable end-to-end — no hash anchor survives"
           },
           {
             "field": "kill_and_alert executed",
@@ -48,7 +53,7 @@
           },
           {
             "field": "Boot refused",
-            "value": "no execution until chain integrity is restored."
+            "value": "no execution until a verified checkpoint is restored."
           }
         ]
       },
@@ -64,7 +69,7 @@
             "indent": 0
           },
           {
-            "text": "remedy:         re-enter with 'CAPCLI_RECOVERY=1 capcli sys doctor', then restore from the last verified object-store checkpoint via 'capcli sys recover <commit>'",
+            "text": "remedy:         restore from the last verified object-store checkpoint via 'capcli sys recover <snapshot-id>', or re-enter read-only with CAPCLI_RECOVERY=1",
             "indent": 0
           }
         ]

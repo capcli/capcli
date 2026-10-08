@@ -17,7 +17,8 @@
     "culprit": "Verb egress rule rejected: DELETE on account scope is forbidden.",
     "remedy": "prove a scoped-down verb, or request an explicit egress grant for account-scope operations",
     "layer": "authorizer",
-    "measured": "egress scope: account (permitted scopes: charge, invoice, customer)"
+    "measured": "egress scope: account (permitted scopes: charge, invoice, customer)",
+    "state_modified": false
   },
   "render": {
     "header": {

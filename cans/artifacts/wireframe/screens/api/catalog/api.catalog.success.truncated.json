@@ -112,5 +112,21 @@
         ]
       }
     ]
+  },
+  "pagination": {
+    "items": [
+      {
+        "verb": "stripe.refund_charge",
+        "state": "active",
+        "trust": "draft"
+      },
+      {
+        "verb": "threads.create_media_post",
+        "state": "active",
+        "trust": "draft"
+      }
+    ],
+    "next_cursor": "api://shipstation.create_order",
+    "has_more": true
   }
 }

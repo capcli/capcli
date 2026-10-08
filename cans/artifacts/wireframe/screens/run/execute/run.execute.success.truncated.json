@@ -49,5 +49,23 @@
         ]
       }
     ]
+  },
+  "pagination": {
+    "items": [
+      {
+        "step": 1,
+        "op": "db.query",
+        "target": "orders (read)",
+        "ms": 14
+      },
+      {
+        "step": 2,
+        "op": "db.query",
+        "target": "order_items (read)",
+        "ms": 31
+      }
+    ],
+    "next_cursor": "cur_0192f",
+    "has_more": true
   }
 }

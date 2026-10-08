@@ -32,47 +32,51 @@
         "title": null,
         "items": [
           {
-            "text": "├── ask_8812  awaiting_input  \"Missing Stripe credentials (API secret key & webhook signing secret).\"",
+            "text": "├── ask_88a  awaiting_input  \"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
             "indent": 2
           },
           {
-            "field": "│     ├── principal",
-            "value": "user:local"
+            "text": "│     ├── principal:  user:alice",
+            "indent": 8
           },
           {
-            "field": "│     ├── options",
-            "value": "keys_injected, abort"
+            "text": "│     ├── options:    approve, deny",
+            "indent": 8
           },
           {
-            "field": "│     ├── timeout",
-            "value": "60m (fail-closed)"
+            "text": "│     ├── timeout:    60m (fail-closed)",
+            "indent": 8
           },
           {
-            "field": "│     └── cockpit",
-            "value": "http://127.0.0.1:4040/vault"
+            "text": "│     ├── asked_by:   agt_7f3k (dispatch_order@4, frame_026)",
+            "indent": 8
           },
           {
-            "text": "└── ask_88a  awaiting_input  \"Approve refund for order ORD-10?\"",
+            "text": "│     └── cockpit:    http://127.0.0.1:4040/ask/ask_88a",
+            "indent": 8
+          },
+          {
+            "text": "└── ask_77c3  awaiting_input  \"Approve refund for order ORD-10?\"",
             "indent": 2
           },
           {
-            "text": "├── principal:  user:alice",
+            "text": "      ├── principal:  user:alice",
             "indent": 8
           },
           {
-            "text": "├── options:    approve, reject, escalate",
+            "text": "      ├── options:    approve, reject, escalate",
             "indent": 8
           },
           {
-            "text": "├── timeout:    24h (fail-closed)",
+            "text": "      ├── timeout:    24h (fail-closed)",
             "indent": 8
           },
           {
-            "text": "├── asked_by:   agt_7f3k (task_99a8b1, frame_018)",
+            "text": "      ├── asked_by:   agt_7f3k (task_99a8b1, frame_018)",
             "indent": 8
           },
           {
-            "text": "└── cockpit:    http://127.0.0.1:4040/ask/ask_88a",
+            "text": "      └── cockpit:    http://127.0.0.1:4040/ask/ask_77c3",
             "indent": 8
           }
         ]

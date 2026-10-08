@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "policy_version": 5,
   "governance_version": 8,
   "schema_version": 1,
@@ -16,6 +16,11 @@
     "tier": ["tier_1", "tier_2"],
     "budget": ["active", "exhausted", "yielded"],
     "data": ["populated", "empty", "truncated", "redirected", "dry_run"]
+  },
+  "env_policy": {
+    "reserved": ["dev", "sim", "prod"],
+    "dynamic_namespaces": true,
+    "law": "env new provisions arbitrary lowercase namespace slugs; state_axes.env lists the kernel-reserved roots only"
   },
   "output_contract": {
     "prefix": "[{env}:{tier}]",

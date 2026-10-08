@@ -17,7 +17,8 @@
     "culprit": "Prohibited column mutation: UPDATE on immutable column customers.email denied by the C authorizer.",
     "remedy": "insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration",
     "layer": "authorizer",
-    "measured": "1 column write denied (customers.email)"
+    "measured": "1 column write denied (customers.email)",
+    "state_modified": false
   },
   "render": {
     "header": {

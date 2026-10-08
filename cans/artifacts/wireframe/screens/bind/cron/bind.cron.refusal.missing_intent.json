@@ -5,7 +5,7 @@
   "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\"",
   "state": {
     "exit_code": 3,
-    "domain": "compile",
+    "domain": "missing_param",
     "trust": "draft",
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +13,10 @@
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "compile",
+    "domain": "missing_param",
     "culprit": "Mutating bind requires an intent declaration. Unattributed triggers are refused.",
-    "remedy": "re-run with -m \"why this trigger exists\""
+    "remedy": "re-run with -m \"why this trigger exists\"",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -27,7 +28,7 @@
         "title": null,
         "items": [
           {
-            "text": "FAIL  compile.intent_missing",
+            "text": "FAIL  missing_param.intent_missing",
             "indent": 2
           },
           {

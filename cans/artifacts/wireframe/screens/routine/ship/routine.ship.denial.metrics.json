@@ -17,7 +17,8 @@
     "culprit": "Success rate 0.87 falls below the 0.95 promotion floor; conjunction fails.",
     "remedy": "fix the 3 failing replays, re-run capcli routine prove order_sync --env sim, then re-ship",
     "layer": "authorizer",
-    "measured": "success rate 0.87 vs floor 0.95 (26 runs, 3 failures in sim replay)"
+    "measured": "success rate 0.87 vs floor 0.95 (26 runs, 3 failures in sim replay)",
+    "state_modified": false
   },
   "render": {
     "header": {

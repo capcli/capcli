@@ -17,7 +17,8 @@
     "culprit": "Child frame starved by min() cascade: recount_stock@2 (frame_025) granted 2 of 6 declared ops.",
     "remedy": "shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain",
     "layer": "budget",
-    "measured": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops"
+    "measured": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops",
+    "state_modified": false
   },
   "render": {
     "header": {

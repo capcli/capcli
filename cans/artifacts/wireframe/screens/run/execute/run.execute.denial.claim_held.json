@@ -17,7 +17,8 @@
     "culprit": "Exclusive --lock ref 'orders:ORD-10' already held by session ses_b4410 (14m 22s remaining).",
     "remedy": "wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'",
     "layer": "claims",
-    "measured": "1 active lease on orders:ORD-10 (expires in 14m 22s)"
+    "measured": "1 active lease on orders:ORD-10 (expires in 14m 22s)",
+    "state_modified": false
   },
   "render": {
     "header": {

@@ -5,7 +5,7 @@
   "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
   "state": {
     "exit_code": 2,
-    "domain": "policy.authorizer",
+    "domain": "policy.notify",
     "trust": "reviewed",
     "env": "dev",
     "tier": "tier_1",
@@ -13,11 +13,12 @@
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "policy.authorizer",
+    "domain": "policy.notify",
     "culprit": "Notifications blocked between 22:00 and 07:00.",
     "remedy": "re-dispatch after 07:00, or use ping ask (urgent asks bypass quiet hours)",
-    "layer": "authorizer",
-    "measured": "current time 23:12 inside quiet window (22:00-07:00)"
+    "layer": "notify",
+    "measured": "current time 23:12 inside quiet window (22:00-07:00)",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -29,7 +30,7 @@
         "title": null,
         "items": [
           {
-            "text": "FAIL  policy.authorizer.quiet_hours",
+            "text": "FAIL  policy.notify.quiet_hours",
             "indent": 2
           },
           {
@@ -51,7 +52,7 @@
           },
           {
             "field": "layer",
-            "value": "authorizer"
+            "value": "notify"
           },
           {
             "field": "measured",

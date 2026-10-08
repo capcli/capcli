@@ -5,7 +5,7 @@
   "command": "capcli api ship threads.create_media_post reviewed",
   "state": {
     "exit_code": 3,
-    "domain": "validation",
+    "domain": "missing_param",
     "trust": "draft",
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +13,10 @@
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "validation",
+    "domain": "missing_param",
     "culprit": "Missing elevation justification.",
-    "remedy": "re-run with --reason stating why the verb is ready for the target rung"
+    "remedy": "re-run with --reason stating why the verb is ready for the target rung",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -27,7 +28,7 @@
         "title": null,
         "items": [
           {
-            "text": "FATAL  validation.missing_arg",
+            "text": "FATAL  missing_param.missing_arg",
             "indent": 2
           },
           {

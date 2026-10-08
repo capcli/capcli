@@ -17,7 +17,8 @@
     "culprit": "Pinned promotion denied on Tier 2; the platform ceiling caps this host at reviewed.",
     "remedy": "run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)",
     "layer": "trust",
-    "measured": "platform ceiling reviewed (requested: pinned on tier_2 host)"
+    "measured": "platform ceiling reviewed (requested: pinned on tier_2 host)",
+    "state_modified": false
   },
   "render": {
     "header": {

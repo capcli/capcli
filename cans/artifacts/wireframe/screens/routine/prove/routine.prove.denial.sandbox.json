@@ -17,7 +17,8 @@
     "culprit": "Jail containment boundary violated; raw network egress prohibited from guest sandboxes.",
     "remedy": "use ctx.api.call with an activated catalog verb",
     "layer": "sandbox",
-    "measured": "1 containment violation (connect trapped at 0 bytes egress)"
+    "measured": "1 containment violation (connect trapped at 0 bytes egress)",
+    "state_modified": false
   },
   "render": {
     "header": {

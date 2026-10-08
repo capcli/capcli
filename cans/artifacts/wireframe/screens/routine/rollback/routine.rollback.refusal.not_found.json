@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Target version v7 not found in the retained provenance graph (v1..v5).",
-    "remedy": "list retained versions via capcli inspect cap://sync_orders, then target one that exists"
+    "remedy": "list retained versions via capcli inspect cap://sync_orders, then target one that exists",
+    "state_modified": false
   },
   "render": {
     "header": {

@@ -1,0 +1,80 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "sys.doctor.panic.quarantine",
+  "target": "sys://audit-chain",
+  "command": "capcli sys doctor --boot-check",
+  "state": {
+    "exit_code": 5,
+    "domain": "kernel.panic",
+    "trust": "reviewed",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": {
+    "domain": "kernel.panic",
+    "culprit": "_audit chain verification fails at row 8,412: recomputed SHA-256 of op_84c1 does not match the prev_hash stored on row 8,413; the tamper blast radius invalidates all subsequent events",
+    "remedy": "restore the ledger from the last object-store snapshot via 'capcli sys recover <snapshot-id>', re-anchor the root hash against the S3 Object Lock (WORM) checkpoint, then re-run 'capcli sys doctor --boot-check'; CAPCLI_RECOVERY=1 grants read-only quarantine inspection in the interim",
+    "state_modified": false
+  },
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 5"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "PANIC  kernel.panic.audit_chain_tamper",
+            "indent": 0
+          },
+          {
+            "text": "SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch.",
+            "indent": 7
+          },
+          {
+            "field": "chain verdict",
+            "value": "divergence at row 8,412 — rows 1-8,411 verified, all subsequent events invalidated"
+          },
+          {
+            "field": "quarantine",
+            "value": "corrupted block isolated to audit.quarantine.jsonl; reads stay operable, execution refused"
+          },
+          {
+            "field": "kill_and_alert executed",
+            "value": "process tree terminated, supervisor alerted."
+          },
+          {
+            "field": "Boot refused",
+            "value": "no execution on a forged history until the chain is restored and re-anchored."
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "state_modified: false",
+            "indent": 0
+          },
+          {
+            "text": "layer:          kernel",
+            "indent": 0
+          },
+          {
+            "text": "remedy:         restore via 'capcli sys recover <snapshot-id>', re-anchor against the S3 WORM checkpoint, re-run 'capcli sys doctor --boot-check' (CAPCLI_RECOVERY=1 for read-only forensics)",
+            "indent": 0
+          }
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://forensics/audit_tampered@1",
+    "reason": "causal DAG hash chain broken: quarantine active",
+    "serve": "L1"
+  }
+}

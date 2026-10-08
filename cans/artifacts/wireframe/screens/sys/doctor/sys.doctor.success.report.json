@@ -24,7 +24,7 @@
         "items": [
           {
             "field": "status",
-            "value": "nominal"
+            "value": "nominal (witness anchoring pending)"
           },
           {
             "field": "host_tier",
@@ -37,6 +37,14 @@
           {
             "field": "ledger_root_hash",
             "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          {
+            "field": "witness_store",
+            "value": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)"
+          },
+          {
+            "field": "worm_checkpoint",
+            "value": "pending — ledger root is local-only until the first object-store anchor; provision s3/r2, then 'capcli sys backup --push'"
           },
           {
             "field": "audited_events",

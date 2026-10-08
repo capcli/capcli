@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v1",
   "screen_id": "sys.inbox.success.populated",
-  "target": "inbox://email",
-  "command": "capcli sys inbox pop --channel email",
+  "target": "inbox://webhook",
+  "command": "capcli sys inbox pop --channel webhook",
   "state": {
     "exit_code": 0,
     "domain": null,
@@ -24,7 +24,11 @@
         "items": [
           {
             "field": "channel",
-            "value": "email"
+            "value": "webhook"
+          },
+          {
+            "field": "source_bindings",
+            "value": "bind://shopify_orders, bind://shopify_refunds (HMAC-verified intake)"
           },
           {
             "field": "popped",
@@ -32,7 +36,7 @@
           },
           {
             "field": "remaining",
-            "value": "0 queued on channel"
+            "value": "0 awaiting pickup on channel"
           }
         ]
       },
@@ -44,15 +48,15 @@
             "indent": 2
           },
           {
-            "text": "├── evt_ord_901  2m ago  order: 60x BEANS-LIGHT-1KG (bluebottle@cafe.com)",
+            "text": "├── evt_ord_901  2m ago  bind://shopify_orders → cap://fulfill_order@4 (60x BEANS-LIGHT-1KG)",
             "indent": 2
           },
           {
-            "text": "├── evt_ord_902  5m ago  order: 12x ESPRESSO-DARK-250G (heretical@roasters.io)",
+            "text": "├── evt_ord_902  5m ago  bind://shopify_orders → cap://fulfill_order@4 (12x ESPRESSO-DARK-250G)",
             "indent": 2
           },
           {
-            "text": "└── evt_ord_903  9m ago  refund request: charge ch_1N2x (ORD-1042)",
+            "text": "└── evt_ord_903  9m ago  bind://shopify_refunds → cap://issue_refund@2 (charge ch_1N2x, ORD-1042)",
             "indent": 2
           }
         ]
@@ -62,7 +66,7 @@
         "items": [
           {
             "field": "note",
-            "value": "queue advanced; events delivered to caller exactly once"
+            "value": "events delivered to caller exactly once; durable queue backing TBD — the intake queue is not among the 13 kernel-managed tables (world.md#managed-surfaces)"
           }
         ]
       }

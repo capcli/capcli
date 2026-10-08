@@ -5,7 +5,7 @@
   "command": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
   "state": {
     "exit_code": 2,
-    "domain": "policy.authorizer",
+    "domain": "policy.notify",
     "trust": "reviewed",
     "env": "dev",
     "tier": "tier_1",
@@ -13,11 +13,12 @@
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "policy.authorizer",
+    "domain": "policy.notify",
     "culprit": "Exceeds 5 structured choices; cognitive load capped for one-card decisions.",
     "remedy": "reduce to 5 or fewer structured options, or split into sequential asks",
-    "layer": "authorizer",
-    "measured": "options count 6 vs cap 5"
+    "layer": "notify",
+    "measured": "options count 6 vs cap 5",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -29,7 +30,7 @@
         "title": null,
         "items": [
           {
-            "text": "FAIL  policy.authorizer.ask_options_cap",
+            "text": "FAIL  policy.notify.ask_options_cap",
             "indent": 2
           },
           {
@@ -55,7 +56,7 @@
           },
           {
             "field": "layer",
-            "value": "authorizer"
+            "value": "notify"
           },
           {
             "field": "measured",
