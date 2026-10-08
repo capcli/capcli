@@ -57,6 +57,13 @@
       "entry": "run.execute.yield.ask",
       "terminal": "run.execute.success.populated",
       "description": "Routine hits ctx.ping.ask -> task suspends -> Cockpit inquiry card -> human resolves choice -> frame execution resumes"
+    },
+    "journey_audit_observation": {
+      "name": "Audit Spine Observation & Forensics",
+      "color": "#14b8a6",
+      "entry": "sys.tail.success.empty",
+      "terminal": "sys.replay.success.replayed",
+      "description": "Observe the audit spine: quiet tail then live events -> trace a typo'd op id, then the allowed fedex.ship op (op_7c4f) -> mirror queries (typo SQL, empty, populated) -> replay gates (missing --from, external op) -> a clean window replay"
     }
   },
   "transitions": [
@@ -164,10 +171,10 @@
         "run.sql.denial.ast"
       ],
       "to": [
-        "sys.trace.success.populated"
+        "sys.trace.success.denial_trail"
       ],
       "trigger": "inspect_trace",
-      "label": "capcli sys trace op_9f2e --explain",
+      "label": "capcli sys audit trace op_9f2e --explain",
       "arrow_type": "denial",
       "ui": {
         "button_text": "Diagnose Cause (--explain)",
@@ -180,7 +187,7 @@
         "journey_human_onboarding"
       ],
       "from": [
-        "sys.trace.success.populated"
+        "sys.trace.success.denial_trail"
       ],
       "to": [
         "run.sql.success.dry_run"
@@ -667,6 +674,141 @@
       ],
       "trigger": "h7_proving",
       "label": "capcli routine prove overview --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_audit_tail_empty_to_live",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.tail.success.empty"
+      ],
+      "to": [
+        "sys.tail.success.populated"
+      ],
+      "trigger": "tail_follow",
+      "label": "capcli sys audit tail --follow --since 1h",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_audit_live_to_trace_typo",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.tail.success.populated"
+      ],
+      "to": [
+        "sys.trace.refusal.not_found"
+      ],
+      "trigger": "trace_typo_id",
+      "label": "capcli sys audit trace op_9f99 --explain",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_audit_trace_typo_to_trace_ok",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.trace.refusal.not_found"
+      ],
+      "to": [
+        "sys.trace.success.populated"
+      ],
+      "trigger": "trace_allowed_op",
+      "label": "capcli sys audit trace op_7c4f --explain",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_audit_trace_to_query_typo",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.trace.success.populated"
+      ],
+      "to": [
+        "sys.query.refusal.unparseable"
+      ],
+      "trigger": "mirror_query",
+      "label": "capcli sys audit query \"SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_audit_query_typo_to_empty",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.query.refusal.unparseable"
+      ],
+      "to": [
+        "sys.query.success.empty"
+      ],
+      "trigger": "mirror_query_retry",
+      "label": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 5 LIMIT 20\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_audit_query_empty_to_populated",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.query.success.empty"
+      ],
+      "to": [
+        "sys.query.success.populated"
+      ],
+      "trigger": "mirror_query_populated",
+      "label": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 2 LIMIT 20\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_audit_query_to_replay_gate",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.query.success.populated"
+      ],
+      "to": [
+        "sys.replay.refusal.missing_from"
+      ],
+      "trigger": "replay_window",
+      "label": "capcli sys audit replay",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_audit_replay_gate_to_external",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.replay.refusal.missing_from"
+      ],
+      "to": [
+        "sys.replay.denial.external"
+      ],
+      "trigger": "replay_window_retry",
+      "label": "capcli sys audit replay --from 2026-10-03T22:41:07Z",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_audit_replay_external_to_ok",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.replay.denial.external"
+      ],
+      "to": [
+        "sys.replay.success.replayed"
+      ],
+      "trigger": "replay_window_ok",
+      "label": "capcli sys audit replay --from 2026-10-03T23:52:31Z",
       "arrow_type": "success"
     }
   ]
