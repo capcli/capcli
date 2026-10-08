@@ -17,7 +17,8 @@
     "culprit": "Active claims prevent state reversal; 1 lease still held on db://orders.",
     "remedy": "wait for lease expiry or ask the holder to release, then re-run 'capcli db restore snap_migration_004'",
     "layer": "claims",
-    "measured": "orders:ORD-10 held by agt_9k2w, claim_c3d4; TTL remaining 187s of 300s"
+    "measured": "orders:ORD-10 held by agt_9k2w, claim_c3d4; TTL remaining 187s of 300s",
+    "state_modified": false
   },
   "render": {
     "header": {
