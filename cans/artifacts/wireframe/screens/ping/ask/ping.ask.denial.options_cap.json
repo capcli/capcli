@@ -17,7 +17,8 @@
     "culprit": "Exceeds 5 structured choices; cognitive load capped for one-card decisions.",
     "remedy": "reduce to 5 or fewer structured options, or split into sequential asks",
     "layer": "authorizer",
-    "measured": "options count 6 vs cap 5"
+    "measured": "options count 6 vs cap 5",
+    "state_modified": false
   },
   "render": {
     "header": {

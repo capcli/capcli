@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Invalid ask ID; no matching inquiry in _pending_asks.",
-    "remedy": "run 'capcli ping list --pending' to list live ask IDs"
+    "remedy": "run 'capcli ping list --pending' to list live ask IDs",
+    "state_modified": false
   },
   "render": {
     "header": {
