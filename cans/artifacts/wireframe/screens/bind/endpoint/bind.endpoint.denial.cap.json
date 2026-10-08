@@ -17,7 +17,8 @@
     "culprit": "Max 10 active endpoints reached. Exposure surface stays small.",
     "remedy": "retire an unused endpoint first (capcli bind remove)",
     "layer": "authorizer",
-    "measured": "10 active endpoints (cap: 10)"
+    "measured": "10 active endpoints (cap: 10)",
+    "state_modified": false
   },
   "render": {
     "header": {

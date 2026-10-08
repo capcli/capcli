@@ -17,7 +17,8 @@
     "culprit": "Hook payload exceeds 64KB. Oversized deliveries refused at ingress.",
     "remedy": "trim provider event payloads or split events; ceiling is fixed at 65536 bytes",
     "layer": "authorizer",
-    "measured": "71334 bytes (cap: 65536)"
+    "measured": "71334 bytes (cap: 65536)",
+    "state_modified": false
   },
   "render": {
     "header": {
