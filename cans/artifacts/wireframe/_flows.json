@@ -92,6 +92,34 @@
       "entry": "run.execute.refusal.missing_secret",
       "terminal": "run.execute.success.populated",
       "description": "stripe.refund_charge refused (stripe_secret_key absent from vault) -> vault gates (value required via --in @-, env vars required for import-env) -> out-of-band injection lands -> pinned capability executes with the vault provisioned"
+    },
+    "journey_cron_binding_lifecycle": {
+      "name": "Cron Binding Lifecycle (bnd_3k2f)",
+      "color": "#4d7c0f",
+      "entry": "bind.list.success.empty",
+      "terminal": "bind.remove.refusal.not_found",
+      "description": "Empty binding registry -> cron binding gauntlet (intent required, 5-minute interval floor, 20-schedule cap) -> nightly_sync bound -> list + inspect -> pause -> resume -> remove -> the dismantled id refuses every management verb"
+    },
+    "journey_webhook_ingress": {
+      "name": "Webhook Ingress Binding Gauntlet",
+      "color": "#ea580c",
+      "entry": "bind.webhook.refusal.missing_ingress",
+      "terminal": "bind.webhook.success.bound",
+      "description": "stripe payment_succeeded hook: public --ingress required (raw 127.0.0.1 denied) -> HMAC-SHA256 signing secret must be armed in the vault -> 50-hook cap -> 64KB payload ceiling -> hook bound"
+    },
+    "journey_endpoint_exposure": {
+      "name": "Endpoint Exposure, Partner Keys & Manifest Export",
+      "color": "#be185d",
+      "entry": "bind.endpoint.denial.trust",
+      "terminal": "bind.export.success.mcp",
+      "description": "Expose a routine over HTTP: unpinned trust denied -> endpoint cap (10) -> pinned dispatch_order@4 endpoint bound -> partner API key issued (25-key cap first) -> OpenAPI and MCP manifests exported"
+    },
+    "journey_doc_reading": {
+      "name": "Doc Pointer Resolution & Reading",
+      "color": "#10b981",
+      "entry": "doc.outline.refusal.not_found",
+      "terminal": "doc.inspect.success.populated",
+      "description": "Pointer hunt: outline on a missing doc://return-policy refuses, read on the typo'd doc://refund-policies refuses -> the live refund-policy doc reads fully, slices to 100 tokens, outlines, and inspects"
     }
   },
   "transitions": [
@@ -944,6 +972,426 @@
       "trigger": "retry_execution",
       "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
       "arrow_type": "success"
+    },
+    {
+      "id": "t_cron_list_empty_to_bind_intent",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.list.success.empty"
+      ],
+      "to": [
+        "bind.cron.refusal.missing_intent"
+      ],
+      "trigger": "first_bind_attempt",
+      "label": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_intent_to_interval",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.cron.refusal.missing_intent"
+      ],
+      "to": [
+        "bind.cron.denial.interval"
+      ],
+      "trigger": "retry_sub_minute",
+      "label": "capcli bind cron poll_orders cap://sync_orders \"* * * * *\" -m \"poll order queue every minute\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_interval_to_cap",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.cron.denial.interval"
+      ],
+      "to": [
+        "bind.cron.denial.cap"
+      ],
+      "trigger": "hit_schedule_cap",
+      "label": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_cap_to_bound",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.cron.denial.cap"
+      ],
+      "to": [
+        "bind.cron.success.bound"
+      ],
+      "trigger": "bind_nightly",
+      "label": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_cron_bound_to_list",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.cron.success.bound"
+      ],
+      "to": [
+        "bind.list.success.populated"
+      ],
+      "trigger": "list_bindings",
+      "label": "capcli bind list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_list_to_inspect",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.list.success.populated"
+      ],
+      "to": [
+        "bind.inspect.success.populated"
+      ],
+      "trigger": "inspect_binding",
+      "label": "capcli bind inspect bnd_3k2f",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_inspect_to_pause",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.inspect.success.populated"
+      ],
+      "to": [
+        "bind.pause.success.completed"
+      ],
+      "trigger": "pause_binding",
+      "label": "capcli bind pause bnd_3k2f",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_pause_to_resume",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.pause.success.completed"
+      ],
+      "to": [
+        "bind.resume.success.completed"
+      ],
+      "trigger": "resume_binding",
+      "label": "capcli bind resume bnd_3k2f",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_resume_to_remove",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.resume.success.completed"
+      ],
+      "to": [
+        "bind.remove.success.completed"
+      ],
+      "trigger": "remove_binding",
+      "label": "capcli bind remove bnd_3k2f",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_removed_inspect_nf",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.remove.success.completed"
+      ],
+      "to": [
+        "bind.inspect.refusal.not_found"
+      ],
+      "trigger": "inspect_dismantled",
+      "label": "capcli bind inspect bnd_3k2f",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_removed_pause_nf",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.remove.success.completed"
+      ],
+      "to": [
+        "bind.pause.refusal.not_found"
+      ],
+      "trigger": "pause_dismantled",
+      "label": "capcli bind pause bnd_3k2f",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_removed_resume_nf",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.remove.success.completed"
+      ],
+      "to": [
+        "bind.resume.refusal.not_found"
+      ],
+      "trigger": "resume_dismantled",
+      "label": "capcli bind resume bnd_3k2f",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_removed_remove_nf",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.remove.success.completed"
+      ],
+      "to": [
+        "bind.remove.refusal.not_found"
+      ],
+      "trigger": "remove_dismantled",
+      "label": "capcli bind remove bnd_3k2f",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_webhook_ingress_to_unsigned",
+      "journeys": [
+        "journey_webhook_ingress"
+      ],
+      "from": [
+        "bind.webhook.refusal.missing_ingress"
+      ],
+      "to": [
+        "bind.webhook.denial.unsigned"
+      ],
+      "trigger": "arm_ingress",
+      "label": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_webhook_unsigned_to_cap",
+      "journeys": [
+        "journey_webhook_ingress"
+      ],
+      "from": [
+        "bind.webhook.denial.unsigned"
+      ],
+      "to": [
+        "bind.webhook.denial.cap"
+      ],
+      "trigger": "hit_hook_cap",
+      "label": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_webhook_cap_to_payload",
+      "journeys": [
+        "journey_webhook_ingress"
+      ],
+      "from": [
+        "bind.webhook.denial.cap"
+      ],
+      "to": [
+        "bind.webhook.denial.payload_size"
+      ],
+      "trigger": "oversized_delivery",
+      "label": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_webhook_payload_to_bound",
+      "journeys": [
+        "journey_webhook_ingress"
+      ],
+      "from": [
+        "bind.webhook.denial.payload_size"
+      ],
+      "to": [
+        "bind.webhook.success.bound"
+      ],
+      "trigger": "bind_signed_hook",
+      "label": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_endpoint_trust_to_cap",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.endpoint.denial.trust"
+      ],
+      "to": [
+        "bind.endpoint.denial.cap"
+      ],
+      "trigger": "hit_endpoint_cap",
+      "label": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_endpoint_cap_to_bound",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.endpoint.denial.cap"
+      ],
+      "to": [
+        "bind.endpoint.success.bound"
+      ],
+      "trigger": "bind_pinned_endpoint",
+      "label": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_endpoint_bound_to_keys_cap",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.endpoint.success.bound"
+      ],
+      "to": [
+        "bind.keys.denial.cap"
+      ],
+      "trigger": "issue_partner_key",
+      "label": "capcli bind keys issue partner_hook --principal partner:acme",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_endpoint_keys_cap_to_issued",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.keys.denial.cap"
+      ],
+      "to": [
+        "bind.keys.success.issued"
+      ],
+      "trigger": "issue_partner_key_retry",
+      "label": "capcli bind keys issue partner_hook --principal partner:acme",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_endpoint_keys_to_openapi",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.keys.success.issued"
+      ],
+      "to": [
+        "bind.export.success.openapi"
+      ],
+      "trigger": "export_openapi",
+      "label": "capcli bind export openapi --out openapi.json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_endpoint_openapi_to_mcp",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.export.success.openapi"
+      ],
+      "to": [
+        "bind.export.success.mcp"
+      ],
+      "trigger": "export_mcp",
+      "label": "capcli bind export mcp --out tools.json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_doc_outline_nf_to_read_nf",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.outline.refusal.not_found"
+      ],
+      "to": [
+        "doc.read.refusal.not_found"
+      ],
+      "trigger": "try_read_pointer",
+      "label": "capcli doc read doc://refund-policies --max-tokens 100",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_doc_read_nf_to_read",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.read.refusal.not_found"
+      ],
+      "to": [
+        "doc.read.success.populated"
+      ],
+      "trigger": "correct_pointer",
+      "label": "capcli doc read doc://refund-policy --max-tokens 500",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_doc_read_to_sliced",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.read.success.populated"
+      ],
+      "to": [
+        "doc.read.success.sliced"
+      ],
+      "trigger": "slice_tokens",
+      "label": "capcli doc read doc://refund-policy --max-tokens 100",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_doc_sliced_to_outline",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.read.success.sliced"
+      ],
+      "to": [
+        "doc.outline.success.populated"
+      ],
+      "trigger": "outline_doc",
+      "label": "capcli doc outline doc://refund-policy",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_doc_outline_to_inspect",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.outline.success.populated"
+      ],
+      "to": [
+        "doc.inspect.success.populated"
+      ],
+      "trigger": "inspect_doc",
+      "label": "capcli doc inspect doc://refund-policy",
+      "arrow_type": "progress"
     }
   ]
 }
