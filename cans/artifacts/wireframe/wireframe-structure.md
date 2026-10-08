@@ -780,8 +780,45 @@ use std::path::Path;
 use glob::glob;
 use serde::Deserialize;
 
+/// Kernel state frame — mirrors the `state` block of every fixture (§6.1).
 #[derive(Deserialize)]
-struct StateFrame { exit_code: i32, state_modified: bool }
+struct StateFrame {
+    exit_code: i32,
+    domain: Option<String>,    // None on success (exit 0)
+    trust: String,
+    env: String,
+    tier: String,
+    state_modified: bool,
+    data_shape: Option<String>, // populated | empty | truncated | redirected | dry_run
+}
+
+/// Structured diagnostic frame for non-success exits (§6.1 field law).
+/// Required keys per exit live in `_states.json` `diagnostic_required`.
+#[derive(Deserialize)]
+struct DiagnosticFrame {
+    domain: String,
+    culprit: String,
+    remedy: String,
+    layer: Option<String>,            // required on exit 2; absent elsewhere
+    measured: Option<String>,         // denial UX: cite the measured value
+    suspended_frame: Option<String>,  // required on exit 6
+    state_modified: bool,
+    /// Flexible carrier: exit-6 diagnostics add their domain fields
+    /// (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`,
+    /// `pending_asks`) and values may be non-string, so they land here
+    /// instead of failing the harness. Any future additive key does too.
+    #[serde(flatten)]
+    extra: Option<serde_json::Value>,
+}
+
+/// Pagination envelope — carried iff `state.data_shape == "truncated"` (§6.1.2),
+/// mirroring `output_contract.pagination.required_envelope_keys` in `manifest.json`.
+#[derive(Deserialize)]
+struct PaginationEnvelope {
+    items: Vec<serde_json::Value>,
+    next_cursor: String,
+    has_more: bool,
+}
 
 #[derive(Deserialize)]
 struct RenderItem {
@@ -803,23 +840,42 @@ struct RenderHeader { style: String, label: String }
 #[derive(Deserialize)]
 struct WireframeFixture {
     screen_id: String,
+    target: Option<String>,
     command: String,
     state: StateFrame,
+    diagnostic: Option<DiagnosticFrame>, // None on success screens
     render: RenderBlock,
     trailer: Option<serde_json::Value>,
+    pagination: Option<PaginationEnvelope>,
 }
 
 /// Canonical renderer: JSON shape → terminal text.
 /// This is the single source of truth for what a screen looks like.
 fn render_screen(fixture: &WireframeFixture) -> String {
     let mut out = String::new();
-    let env = &fixture.state.env;
-    let tier = &fixture.state.tier;
-    let icon = if fixture.state.exit_code == 0 { "✓" } else { "✗" };
 
-    // Header line
-    out.push_str(&format!("[{}:{}]  {}  {}\n\n", env, tier, icon, fixture.render.header.label));
+    // Header line. `render.header.style` decides the shape:
+    // - "plain": the label is emitted verbatim — plain fixtures carry their
+    //   own prefix (e.g. `[dev:tier_1]  ⚠  agent.thrashing`) or a bare banner
+    //   (`capcli 0.4.2 — …`), so prepending `[{env}:{tier}]` or an icon here
+    //   would duplicate the badge.
+    // - "badge" (or any other value): the renderer owns the prefix.
+    match fixture.render.header.style.as_str() {
+        "plain" => {
+            out.push_str(&format!("{}\n\n", fixture.render.header.label));
+        }
+        _ => {
+            let env = &fixture.state.env;
+            let tier = &fixture.state.tier;
+            let icon = if fixture.state.exit_code == 0 { "✓" } else { "✗" };
+            out.push_str(&format!("[{}:{}]  {}  {}\n\n", env, tier, icon, fixture.render.header.label));
+        }
+    }
 
+    // Sections. Tree glyphs (├── └── │) are legal only in {"text", "indent"}
+    // items: a text line renders at exactly its own indent. {"field", "value"}
+    // items always render as `  field: value` and never carry tree glyphs —
+    // a glyph in a field label would double-indent the row and misalign the tree.
     // Sections
     for section in &fixture.render.sections {
         if let Some(title) = &section.title {
@@ -868,6 +924,18 @@ fn execute_wireframe_golden_tests() {
             "Exit mismatch at {}", fixture.screen_id);
         assert_eq!(output.state_modified, fixture.state.state_modified,
             "state_modified invariant failed at {}", fixture.screen_id);
+
+        // 3b. Fixture-schema contract (§6.1): non-success exits carry the
+        // diagnostic frame with their exit's required keys; truncated
+        // screens carry the pagination envelope (§6.1.2).
+        if fixture.state.exit_code != 0 {
+            assert!(fixture.diagnostic.is_some(),
+                "{}: exit {} without a diagnostic frame", fixture.screen_id, fixture.state.exit_code);
+        }
+        if fixture.state.data_shape.as_deref() == Some("truncated") {
+            assert!(fixture.pagination.is_some(),
+                "{}: truncated data_shape without a pagination envelope", fixture.screen_id);
+        }
 
         // 4. Golden rendering: stdout must match rendered shape
         assert_eq!(output.stdout, expected,
