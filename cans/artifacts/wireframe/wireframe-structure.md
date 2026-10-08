@@ -179,7 +179,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.sql.denial.authorizer` | denial | 2 | policy.authorizer | schema_mod | Blocked `DROP TABLE` or system table write |
 | `run.sql.denial.engine_busy` | denial | 2 | db.engine | timeout | SQLite transaction queue wait timeout |
 | `run.sql.refusal.unparseable` | refusal | 3 | compile | bad_syntax | Malformed SQL string syntax |
-| `run.sql.refusal.missing_intent` | refusal | 3 | compile | no_intent | Mutating write missing `-m` / `--intent` |
+| `run.sql.refusal.missing_intent` | refusal | 3 | missing_param | no_intent | Mutating write missing `-m` / `--intent` |
 | `run.overview.success.populated` | success | 0 | — | populated | Situational KPI briefing (<500 tokens) |
 | `run.overview.success.truncated` | success | 0 | — | truncated | Oversized overview clipped |
 | `run.search.success.populated` | success | 0 | — | populated | Matched capabilities and URP pointers |
@@ -198,7 +198,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 |---|---|---|---|---|---|
 | `db.lock.success.acquired` | success | 0 | — | acquired | Exclusive claim lease registered |
 | `db.lock.denial.claim_held` | denial | 2 | db.claims | held | Target resource currently claimed |
-| `db.lock.refusal.missing_reason` | refusal | 3 | validation | missing_arg | `--reason` required for locking |
+| `db.lock.refusal.missing_reason` | refusal | 3 | missing_param | missing_arg | `--reason` required for locking |
 | `db.unlock.success.released` | success | 0 | — | released | Claim lease released ahead of TTL |
 | `db.unlock.denial.not_holder` | denial | 2 | policy.authorizer | unauthorized | Caller does not own the claim |
 | `db.schema.success.populated` | success | 0 | — | populated | Live DDL schema introspected |
@@ -211,15 +211,17 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
 | `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
 
-### 4.3 `routine/` (8 verbs → 26 screens)
+### 4.3 `routine/` (8 verbs → 28 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `routine.new.success.created` | success | 0 | — | created | Routine scaffold committed |
+| `routine.new.success.overview` | success | 0 | — | created | Mandatory overview routine scaffolded (harness H6) |
 | `routine.new.refusal.name_taken` | refusal | 3 | validation | collision | Routine name already registered |
 | `routine.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates LOC or param limits |
 | `routine.new.refusal.template_compat` | refusal | 3 | policy.template | compat_fail | Template policy_version mismatch exits 3 |
 | `routine.prove.success.passed` | success | 0 | — | passed | Dynamic fingerprint verified |
+| `routine.prove.success.overview` | success | 0 | — | passed | Overview routine sim rehearsal passes (harness H7) |
 | `routine.prove.denial.shape` | denial | 2 | policy.authorizer | bad_shape | Execution violates declared limits |
 | `routine.prove.denial.policy` | denial | 2 | policy.authorizer | illegal_leaf | Routine attempts forbidden leaf op |
 | `routine.prove.denial.sandbox` | denial | 2 | kernel.sandbox | breach | Jail containment boundary violation |
@@ -227,7 +229,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.ship.success.shipped` | success | 0 | — | shipped | Routine promoted to new trust rung |
 | `routine.ship.success.rolled_back` | success | 0 | — | rolled_back | Canary telemetry trips auto-rollback |
 | `routine.ship.denial.metrics` | denial | 2 | policy.authorizer | low_success | Success rate falls below 0.95 |
-| `routine.ship.refusal.missing_reason`| refusal | 3 | validation | missing_arg | Elevation to pinned requires reason |
+| `routine.ship.refusal.missing_reason`| refusal | 3 | missing_param | missing_arg | Elevation to pinned requires reason |
 | `routine.ship.denial.trust` | denial | 2 | policy.trust | tier2_refusal | Pinned promotion denied on Tier 2 |
 | `routine.pending.success.populated` | success | 0 | — | populated | Batch promotion candidates listed |
 | `routine.pending.success.empty` | success | 0 | — | empty | No routines pending promotion |
@@ -261,7 +263,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `api.ship.success.shipped` | success | 0 | — | shipped | Promoted to reviewed |
 | `api.ship.success.graduated` | success | 0 | — | graduated | 100% schema match & shadow canary passed |
 | `api.ship.denial.metrics` | denial | 2 | policy.authorizer | unproven | Fails synthetic contract replay |
-| `api.ship.refusal.missing_reason` | refusal | 3 | validation | missing_arg | Missing elevation justification |
+| `api.ship.refusal.missing_reason` | refusal | 3 | missing_param | missing_arg | Missing elevation justification |
 | `api.stats.success.populated` | success | 0 | — | populated | Quota usage and error metrics |
 | `api.stats.refusal.not_found` | refusal | 3 | validation | not_found | Target provider not found |
 | `api.retire.success.completed` | success | 0 | — | completed | API verb deactivated to dormant |
@@ -277,12 +279,12 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `bind.cron.success.bound` | success | 0 | — | bound | Schedule bound to routine |
 | `bind.cron.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 20 active schedules reached |
 | `bind.cron.denial.interval` | denial | 2 | policy.authorizer | interval_low| Interval lower than 5-minute cap |
-| `bind.cron.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent flag |
+| `bind.cron.refusal.missing_intent` | refusal | 3 | missing_param | no_intent | Missing intent flag |
 | `bind.webhook.success.bound` | success | 0 | — | bound | Inbound hook route activated |
 | `bind.webhook.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 50 active hooks reached |
 | `bind.webhook.denial.unsigned` | denial | 2 | policy.authorizer | unsigned | Unsigned hooks rejected |
 | `bind.webhook.denial.payload_size` | denial | 2 | policy.authorizer | too_large | Hook payload exceeds 64KB |
-| `bind.webhook.refusal.missing_ingress`| refusal| 3 | compile | no_ingress | Missing public ingress URL/tunnel |
+| `bind.webhook.refusal.missing_ingress`| refusal| 3 | missing_param | no_ingress | Missing public ingress URL/tunnel |
 | `bind.endpoint.success.bound` | success | 0 | — | bound | Routine exposed as HTTP/MCP |
 | `bind.endpoint.denial.trust` | denial | 2 | policy.trust | unpinned | Endpoint requires pinned trust |
 | `bind.endpoint.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 10 active endpoints reached |
@@ -307,10 +309,10 @@ the validator enforces closure, and in any conflict the fixture wins.
 |---|---|---|---|---|---|
 | `ping.notify.success.dispatched` | success | 0 | — | dispatched | Notification dispatched |
 | `ping.notify.denial.quiet_hours` | denial | 2 | policy.authorizer | quiet_hours | Blocked between 22:00 and 07:00 |
-| `ping.notify.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent declaration |
+| `ping.notify.refusal.missing_intent` | refusal | 3 | missing_param | no_intent | Missing intent declaration |
 | `ping.ask.success.suspended` | success | 0 | — | suspended | Human question queued with Cockpit URL |
 | `ping.ask.denial.options_cap` | denial | 2 | policy.authorizer | cap_exceeded| Exceeds 5 structured choices |
-| `ping.ask.refusal.missing_intent` | refusal | 3 | compile | no_intent | Missing intent declaration |
+| `ping.ask.refusal.missing_intent` | refusal | 3 | missing_param | no_intent | Missing intent declaration |
 | `ping.list.success.populated` | success | 0 | — | populated | Pending suspension questions |
 | `ping.list.success.empty` | success | 0 | — | empty | Zero pending inquiries |
 | `ping.resolve.success.resolved` | success | 0 | — | resolved | Choice selected; resumes task |
@@ -362,7 +364,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (16 verbs → 45 screens)
+### 4.9 `sys/` (16 verbs → 47 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -372,6 +374,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.tail.success.populated` | success | 0 | — | populated | Live streaming audit records |
 | `sys.tail.success.empty` | success | 0 | — | empty | No audit events within window |
 | `sys.trace.success.populated` | success | 0 | — | populated | Causal DAG walk with `--explain` tree |
+| `sys.trace.success.denial_trail` | success | 0 | — | denial_trail | Causal DAG walk of a denied op (`--explain`) |
+| `sys.trace.success.prove` | success | 0 | — | prove | Causal DAG walk of a routine prove op |
 | `sys.trace.refusal.not_found` | refusal | 3 | validation | not_found | Target operation ID missing |
 | `sys.query.success.populated` | success | 0 | — | populated | SQL executed against `_audit` |
 | `sys.query.success.empty` | success | 0 | — | empty | Zero matching audit rows |
@@ -394,7 +398,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
 | `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or supported sandbox provider |
 | `sys.doctor.success.clock_drift`| success| 0 | — | clock_skew | Host clock delta >500ms vs NTP (warning only) |
-| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Audit SHA-256 chain broken; kill_and_alert |
+| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Total media loss: ledger root + WORM checkpoint unreadable; kill_and_alert |
 | `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode |
 | `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
 | `sys.doctor.success.tamper` | success | 0 | — | tampered | Audit chain broken; block isolated to quarantine |
@@ -462,13 +466,13 @@ Rendered output (what the HTML canvas and Rust harness produce):
 ### 5.2 Causal DAG Tree Walk (`screens/sys/trace/sys.trace.success.populated.json`)
 
 ```text
-[dev:tier_1]  Causal DAG Trace (op_9f2e)
+[dev:tier_1]  Causal DAG Trace (op_7c4f)
 
   ses_a992f  session.start        "fulfill urgent pending orders"
   └── op_9f2c  routine.dispatch_order@4
         ├── op_9f2d  db.query (orders)         ✓ [allowed]  12ms
-        ├── op_9f2e  api.call (fedex.ship)     ✓ [allowed]  340ms
-        │     └── tracking: 794644790133
+        ├── op_7c4f  api.call (fedex.ship)     ✓ [allowed]  340ms
+        │     └── tracking  794644790133
         └── op_9f2f  db.execute (orders)       ✓ [allowed]  18ms
               └── status = 'shipped' (1 row)
 
@@ -585,9 +589,9 @@ trust_receipt:
 
   FAIL  policy.secrets.missing
         capability: cap://stripe.refund_charge
-        secret_ref: vault://stripe_secret
+        secret_ref: vault://stripe_secret_key
 
-        Credential 'stripe_secret' not found in vault.
+        Credential 'stripe_secret_key' not found in vault.
         Direct CLI parameter injection is banned to prevent prompt leakage.
 
   state_modified: false
