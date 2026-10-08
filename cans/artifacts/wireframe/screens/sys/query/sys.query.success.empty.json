@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.query.success.empty",
   "target": "_audit",
-  "command": "capcli sys query \"SELECT op_id, domain FROM _audit WHERE exit_code = 5 LIMIT 20\"",
+  "command": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 5 LIMIT 20\"",
   "state": {
     "exit_code": 0,
     "domain": null,

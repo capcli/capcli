@@ -16,7 +16,8 @@
     "domain": "kernel.sandbox",
     "culprit": "Raw connect() to 10.0.0.5:5432 trapped by seccomp-bpf filter (syscall 42).",
     "remedy": "use ctx.api.call with an activated catalog verb",
-    "layer": "sandbox"
+    "layer": "sandbox",
+    "state_modified": false
   },
   "render": {
     "header": {

@@ -16,7 +16,8 @@
     "domain": "policy.trust",
     "culprit": "Pinned routine dispatch_order@4 invoked on a tier_2 host (darwin); pinned execution requires Tier 1.",
     "remedy": "execute on a tier_1 host (Linux, WSL2), or demote via 'capcli routine rollback dispatch_order --to-trust reviewed'",
-    "layer": "trust"
+    "layer": "trust",
+    "state_modified": false
   },
   "render": {
     "header": {

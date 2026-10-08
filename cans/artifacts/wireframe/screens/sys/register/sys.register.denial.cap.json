@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.register.denial.cap",
   "target": "agents",
-  "command": "capcli sys register",
+  "command": "capcli sys agent register",
   "state": {
     "exit_code": 2,
     "domain": "policy.authorizer",
@@ -15,9 +15,10 @@
   "diagnostic": {
     "domain": "policy.authorizer",
     "culprit": "registration refused: agent registry at capacity",
-    "remedy": "revoke a dormant agent via capcli sys revoke <agent-id>, then re-register",
+    "remedy": "revoke a dormant agent via capcli sys agent revoke <agent-id>, then re-register",
     "layer": "authorizer",
-    "measured": "8 registered agents (cap: 8)"
+    "measured": "8 registered agents (cap: 8)",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -55,7 +56,7 @@
           },
           {
             "field": "remedy",
-            "value": "revoke a dormant agent via capcli sys revoke <agent-id>, then re-register"
+            "value": "revoke a dormant agent via capcli sys agent revoke <agent-id>, then re-register"
           }
         ]
       }

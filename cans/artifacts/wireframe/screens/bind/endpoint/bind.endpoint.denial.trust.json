@@ -17,7 +17,8 @@
     "culprit": "Endpoint requires pinned trust. Unpinned routines cannot be exposed as endpoints.",
     "remedy": "promote the routine first: capcli routine ship inventory_report pinned --reason \"expose to partners\"",
     "layer": "trust",
-    "measured": "routine trust: draft (floor: pinned)"
+    "measured": "routine trust: draft (floor: pinned)",
+    "state_modified": false
   },
   "render": {
     "header": {

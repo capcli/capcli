@@ -13,15 +13,8 @@
       "name": "H0–H7 Autonomous Harness Machine Onboarding",
       "color": "#79c0ff",
       "entry": "sys.doctor.success.nominal",
-      "terminal": "routine.prove.success.passed",
-      "description": "Parse machine contract (--json) -> catalog discovery -> dry-run rehearsal -> dual probe -> composite prove -> parse denial feedback -> overview codification -> sim proving"
-    },
-    "journey_execution_crucible": {
-      "name": "Cascade Starvation, Jail Traps & Contention",
-      "color": "#f85149",
-      "entry": "run.inspect.success.routine",
-      "terminal": "run.execute.success.populated",
-      "description": "Exhaustion at child frame boundary -> syscall 42 trap -> concurrency lease recovery -> thrashing detection -> vault resolution"
+      "terminal": "routine.prove.success.overview",
+      "description": "H0 parse machine contract (--json doctor) -> H1 overview grounding + search discovery -> H2 dry-run rehearsal -> H3 dual probe: sql state + api catalog -> H4 scaffold sync_orders + hybrid prove -> H5 parse feedback via audit trace --explain -> H6 codify the mandatory overview routine -> H7 prove overview in sim"
     },
     "journey_trust_promotion": {
       "name": "Draft to Pinned Canary Promotion",
@@ -42,7 +35,7 @@
       "color": "#a371f7",
       "entry": "rule.diff.success.populated",
       "terminal": "env.merge.success.merged",
-      "description": "YAML diff -> Gate 2 circular ref block -> dry-run impact envelope -> snapshot commit -> atomic migration merge"
+      "description": "YAML diff vs HEAD -> dry-run impact envelope -> apply DDL to dev -> pre-merge snapshot checkpoint -> atomic forward migration into prod"
     },
     "journey_tamper_forensics": {
       "name": "Tamper Quarantine & Forensic Isolation",
@@ -57,59 +50,320 @@
       "entry": "run.execute.yield.ask",
       "terminal": "run.execute.success.populated",
       "description": "Routine hits ctx.ping.ask -> task suspends -> Cockpit inquiry card -> human resolves choice -> frame execution resumes"
+    },
+    "journey_audit_observation": {
+      "name": "Audit Spine Observation & Forensics",
+      "color": "#14b8a6",
+      "entry": "sys.tail.success.empty",
+      "terminal": "sys.replay.success.replayed",
+      "description": "Observe the audit spine: quiet tail then live events -> trace a typo'd op id, then the allowed fedex.ship op (op_7c4f) -> mirror queries (typo SQL, empty, populated) -> replay gates (missing --from, external op) -> a clean window replay"
+    },
+    "journey_budget_cascade": {
+      "name": "Budget Cage: Session, Cascade & Quota Physics",
+      "color": "#d4a72c",
+      "entry": "run.inspect.success.routine",
+      "terminal": "run.execute.success.resumed",
+      "description": "Composite pre-flight envelope (budget_inheritance min) -> session ops ceiling starves the archive run -> child frame starved by min() cascade -> long runner parks on dry wire quota (exit 6) -> refill epoch auto-resume"
+    },
+    "journey_network_jail": {
+      "name": "Network Jail & Reviewed Egress",
+      "color": "#8250df",
+      "entry": "run.execute.denial.network_jail",
+      "terminal": "api.catalog.success.populated",
+      "description": "Raw connect() to 10.0.0.5:5432 trapped by the seccomp-bpf jail (syscall 42) -> remediation: route egress through activated catalog verbs via api catalog"
+    },
+    "journey_claims_contention": {
+      "name": "Row Claim Contention & Lease Handoff",
+      "color": "#bf8700",
+      "entry": "run.execute.denial.claim_held",
+      "terminal": "db.lock.success.acquired",
+      "description": "Execution blocked on a held claim (orders:ORD-10, holder agt_9k2w) -> manual lock denied -> unlock denied (caller is not the holder) -> holder releases the lease -> claim reacquired"
+    },
+    "journey_thrashing_recovery": {
+      "name": "Agent Thrashing Detection & Backoff",
+      "color": "#bc4c00",
+      "entry": "sys.doctor.denial.thrashing",
+      "terminal": "sys.doctor.success.nominal",
+      "description": "agent agt_7f3k stuck in a repetitive denial loop (22 denials / 5m, threshold 20) -> harness throttled, escalation + backoff -> re-probe reports a nominal host"
+    },
+    "journey_vault_secret_provisioning": {
+      "name": "Vault Secret Provisioning (stripe_secret_key)",
+      "color": "#0969da",
+      "entry": "run.execute.refusal.missing_secret",
+      "terminal": "run.execute.success.populated",
+      "description": "stripe.refund_charge refused (stripe_secret_key absent from vault) -> vault gates (value required via --in @-, env vars required for import-env) -> out-of-band injection lands -> pinned capability executes with the vault provisioned"
+    },
+    "journey_cron_binding_lifecycle": {
+      "name": "Cron Binding Lifecycle (bnd_3k2f)",
+      "color": "#4d7c0f",
+      "entry": "bind.list.success.empty",
+      "terminal": "bind.remove.refusal.not_found",
+      "description": "Empty binding registry -> cron binding gauntlet (intent required, 5-minute interval floor, 20-schedule cap) -> nightly_sync bound -> list + inspect -> pause -> resume -> remove -> the dismantled id refuses every management verb"
+    },
+    "journey_webhook_ingress": {
+      "name": "Webhook Ingress Binding Gauntlet",
+      "color": "#ea580c",
+      "entry": "bind.webhook.refusal.missing_ingress",
+      "terminal": "bind.webhook.success.bound",
+      "description": "stripe payment_succeeded hook: public --ingress required (raw 127.0.0.1 denied) -> HMAC-SHA256 signing secret must be armed in the vault -> 50-hook cap -> 64KB payload ceiling -> hook bound"
+    },
+    "journey_endpoint_exposure": {
+      "name": "Endpoint Exposure, Partner Keys & Manifest Export",
+      "color": "#be185d",
+      "entry": "bind.endpoint.denial.trust",
+      "terminal": "bind.export.success.mcp",
+      "description": "Expose a routine over HTTP: unpinned trust denied -> endpoint cap (10) -> pinned dispatch_order@4 endpoint bound -> partner API key issued (25-key cap first) -> OpenAPI and MCP manifests exported"
+    },
+    "journey_doc_reading": {
+      "name": "Doc Pointer Resolution & Reading",
+      "color": "#10b981",
+      "entry": "doc.outline.refusal.not_found",
+      "terminal": "doc.inspect.success.populated",
+      "description": "Pointer hunt: outline on a missing doc://return-policy refuses, read on the typo'd doc://refund-policies refuses -> the live refund-policy doc reads fully, slices to 100 tokens, outlines, and inspects"
+    },
+    "journey_env_lifecycle": {
+      "name": "Environment Lifecycle: Provision, Audit, Promote, Deprovision",
+      "color": "#166534",
+      "entry": "env.new.success.created",
+      "terminal": "env.remove.success.removed",
+      "description": "Seed staging from prod -> provisioning gates (name taken, bundle ceiling, namespace cap) -> switch & audit namespaces (list, inspect) -> env doctor drift then healthy -> merge gauntlet to prod (unmerged, lockfile, plan conflict, trust) -> forward merge lands -> deprovision gauntlet (crypto sig, prod flags, unknown id) -> experiment_2 removed"
+    },
+    "journey_ping_lifecycle": {
+      "name": "Ping: Notifications, Inquiries & Fail-Closed Expiry",
+      "color": "#06b6d4",
+      "entry": "ping.list.success.empty",
+      "terminal": "ping.expire.success.completed",
+      "description": "Empty pending queue -> notify gates (intent required, quiet hours) -> ask gates (intent required, options cap) -> ask suspends a frame -> resolution gauntlet (unknown id, OCC fence, timeout expiry) -> unresolved ask expires fail-closed"
+    },
+    "journey_rule_governance": {
+      "name": "Rule Governance: Validate, Show, Diff, Apply",
+      "color": "#64748b",
+      "entry": "rule.validate.refusal.syntax",
+      "terminal": "rule.apply.success.applied",
+      "description": "Validate gauntlet (syntax errors, then semantic errors, then valid) -> show compiled rules (unknown table refuses, orders compiles) -> diff vs HEAD (lockstep, then one pending orders.priority change) -> apply gates (DDL trust floor, lockfile sync, validation) -> DDL applied to dev"
+    },
+    "journey_db_operations": {
+      "name": "DB Storage Operations: Schema, Lock, Dump, Snapshot, Restore",
+      "color": "#0f766e",
+      "entry": "db.schema.success.empty",
+      "terminal": "db.restore.success.restored",
+      "description": "Schema survey (fresh workspace empty, then the orders table) -> lock gate (reason required) -> dump shapes (full, then over-cap truncated) -> snapshot gates (prod draft denial, then created) -> restore gauntlet (missing id, active locks, then a clean restore)"
+    },
+    "journey_api_lifecycle": {
+      "name": "Provider Lifecycle: Sync, Diff, Catalog, Prove, Ship, Retire",
+      "color": "#c026d3",
+      "entry": "api.sync.refusal.missing_url",
+      "terminal": "api.retire.success.completed",
+      "description": "Sync gates (spec url required, rate ceiling) -> stripe spec synced -> drift diff (threads clean, stripe populated) -> catalog shapes (empty, truncated, populated) -> prove gates (sim gap, policy) -> stripe.refund_charge passes in sim -> ship ladder (reason required, replay metrics, shipped, graduated) -> stats -> rollback gauntlet (depth, unknown version, restored) -> retirement"
+    },
+    "journey_routine_lifecycle": {
+      "name": "Routine Lifecycle: Author, Prove, Ship, Queue",
+      "color": "#6366f1",
+      "entry": "routine.new.refusal.name_taken",
+      "terminal": "routine.pending.success.populated",
+      "description": "Authoring gauntlet (name taken, shape violation, template incompatibility) -> sync_orders scaffolded -> prove gates (shape, sandbox escape, forbidden leaf op) -> sim prove passes -> ship ladder (reason required, trust floor, replay metrics) -> order_sync pinned ship -> canary rolled back -> promotion queue (empty, then populated)"
+    },
+    "journey_routine_maintenance": {
+      "name": "Routine Fleet Maintenance: Sweep, Stats, Rollback, Retire",
+      "color": "#a5b4fc",
+      "entry": "routine.sweep.success.empty",
+      "terminal": "routine.retire.success.completed",
+      "description": "Sweep (quiet window, then stale drafts harvested) -> profile gates (unknown routine, then dispatch_order deep stats) -> rollback gauntlet (unknown version, depth ceiling, then sync_orders restored to v3) -> retire gauntlet (active dependencies, unknown routine, then legacy_etl retired)"
+    },
+    "journey_identity_control": {
+      "name": "Agent Identity Control: Register, List, Revoke",
+      "color": "#84cc16",
+      "entry": "sys.agents.success.empty",
+      "terminal": "sys.revoke.success.revoked",
+      "description": "Empty agent registry -> first agent registered -> roster populated -> registry hits capacity -> revoke gauntlet (unknown id refuses, then the live agent revokes and frees a slot)"
+    },
+    "journey_backup_recovery": {
+      "name": "Workspace Backup & Snapshot Recovery",
+      "color": "#0ea5e9",
+      "entry": "sys.backup.denial.push_fail",
+      "terminal": "sys.recover.success.restored",
+      "description": "Dual-storage backup push rejected (git non-fast-forward, s3 403) -> retry lands -> recovery gauntlet (unknown commit, active claim leases) -> workspace restored from the 3f9c2ab checkpoint"
+    },
+    "journey_serve_lifecycle": {
+      "name": "Daemon Serve Lifecycle",
+      "color": "#94a3b8",
+      "entry": "sys.serve.denial.port",
+      "terminal": "sys.serve.success.running",
+      "description": "Daemon start gauntlet: foreign pid holds 127.0.0.1:4040 (EADDRINUSE) -> second start refused (own daemon already bound) -> clean start on a free port reports the daemon running"
+    },
+    "journey_inbox_drain": {
+      "name": "Sensory Inbox Drain",
+      "color": "#eab308",
+      "entry": "sys.inbox.success.empty",
+      "terminal": "sys.inbox.success.populated",
+      "description": "Channel-less pop finds nothing queued -> channel-scoped pop drains the queued email batch"
+    },
+    "journey_sandbox_exec": {
+      "name": "Sandboxed Subprocess Execution",
+      "color": "#e879f9",
+      "entry": "sys.exec.denial.sandbox",
+      "terminal": "sys.exec.success.completed",
+      "description": "bwrap escape attempt denied (pivot_root remount + ptrace outside the profile) -> retry SIGSEGVs in a native extension (jail torn down, scratch wiped) -> after pinning the extension the sandboxed run completes"
+    },
+    "journey_doctor_boot": {
+      "name": "Doctor Boot Gauntlet & Host Drift",
+      "color": "#39c5cf",
+      "entry": "sys.doctor.refusal.boot",
+      "terminal": "sys.doctor.success.clock_drift",
+      "description": "Boot-check refuses on a tier_1 host missing the bwrap sandbox floor -> lockfile root-hash mismatch refuses boot -> live schema drift denies (orders.idx_orders_status, customers.region) -> after re-sync the doctor passes with only benign clock drift reported"
+    },
+    "journey_secret_leak_containment": {
+      "name": "Exit-5 Secret Leak: Kill, Rotate, Re-Prove",
+      "color": "#f472b6",
+      "entry": "run.execute.panic.secret_leak",
+      "terminal": "api.prove.success.passed",
+      "description": "Plaintext stripe_secret_key detected in routine stdout -> kill_and_alert tears the session down -> credential rotated out-of-band via the vault -> the Stripe refund verb re-proves clean in sim"
+    },
+    "journey_media_loss_recovery": {
+      "name": "Exit-5 Total Media Loss & Break-Glass Recovery",
+      "color": "#6f42c1",
+      "entry": "sys.doctor.panic.tamper",
+      "terminal": "sys.doctor.success.recovery",
+      "description": "Ledger root unreadable and the S3 WORM checkpoint missing (chain unverifiable end-to-end) -> kill_and_alert, boot refused -> CAPCLI_RECOVERY=1 break-glass shell: policy disabled, audit sink online, recovery mode logged"
+    },
+    "journey_execution_gates": {
+      "name": "Execution Gates: Authorizer, Trust Ladder, Tier Ceiling",
+      "color": "#ec4899",
+      "entry": "run.execute.denial.authorizer",
+      "terminal": "run.execute.success.populated",
+      "description": "Authorizer blocks the immutable-column email rewrite on customer_migrate@2 -> draft sync_inventory@3 denied in prod (production floor requires reviewed) -> pinned dispatch_order@4 denied on a degraded tier_2 darwin host -> pinned on tier_1 executes cleanly"
+    },
+    "journey_crash_recovery": {
+      "name": "Exit-4 Crash Triage & Recovery Paths",
+      "color": "#cf222e",
+      "entry": "run.execute.crash.runtime",
+      "terminal": "api.sync.success.synced",
+      "description": "Guest TypeError escapes enrich_customers@2 (ops auto-reverted) -> workspace recovered from the object-store checkpoint -> next job hits the 30s poll ceiling -> snapshot restore -> the sim re-prove of sync_orders crashes on a None arithmetic bug -> rolled back to the last good version -> the stripe.issue_credit_note contract replay crashes on an upstream union type -> provider spec re-synced"
+    },
+    "journey_sql_gatekeeper": {
+      "name": "SQL Gatekeeper Tour (run sql)",
+      "color": "#312e81",
+      "entry": "run.sql.refusal.unparseable",
+      "terminal": "run.sql.success.populated",
+      "description": "Typo SQL refuses to parse -> write without -m intent refuses -> unbounded UPDATE denied at the AST gate -> DROP TABLE denied by the authorizer -> bounded UPDATE denied while the engine is busy -> legal shapes: DDL dry-run, then the bounded keyed write"
+    },
+    "journey_search_discovery": {
+      "name": "Search Surface & Gap Sweep",
+      "color": "#7dd3fc",
+      "entry": "run.search.success.empty",
+      "terminal": "run.search.success.gaps",
+      "description": "Novel query finds nothing (kombucha supplier sync) -> 'order' hits populate -> 'stripe' overflows the result cap -> the 7d gap sweep surfaces zero-result and low-conversion queries and proposes authoring a draft routine or expanding the catalog"
+    },
+    "journey_overview_briefing": {
+      "name": "Situational Briefing: Full vs Budget-Clipped",
+      "color": "#fb7185",
+      "entry": "run.overview.success.populated",
+      "terminal": "run.overview.success.truncated",
+      "description": "Single-shot domain briefing: the full overview at a fresh token budget -> the same briefing clipped to 500 tokens when the session budget is drained (KPIs + blockers survive, detail paginates)"
+    },
+    "journey_inspect_preflight": {
+      "name": "Pre-Flight Envelopes Across URP Types",
+      "color": "#86efac",
+      "entry": "run.inspect.refusal.missing_ptr",
+      "terminal": "run.inspect.success.routine",
+      "description": "Bare pointer refuses to resolve -> draft cap://refund_and_archive@1 denied by the trust gate -> tpl://order_sync@2 template blueprint -> quota://threads budget envelope -> pinned cap://dispatch_order@4 routine envelope"
+    },
+    "journey_large_result_delivery": {
+      "name": "Large Result Delivery: Clip or Redirect",
+      "color": "#fde68a",
+      "entry": "run.sql.success.truncated",
+      "terminal": "run.execute.success.redirected",
+      "description": "Big payloads: the orders export SELECT clips at the result cap -> same query lands clean via --out -> the quarterly report run clips -> same run redirects to disk with a token-lean summary"
     }
   },
   "transitions": [
     {
       "id": "t_human_help_to_doctor",
-      "journeys": ["journey_human_onboarding", "journey_harness_onboarding"],
-      "from": ["sys.help.success.stub"],
-      "to": ["sys.doctor.success.nominal"],
+      "journeys": [
+        "journey_human_onboarding",
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "sys.help.success.stub"
+      ],
+      "to": [
+        "sys.doctor.success.nominal"
+      ],
       "trigger": "exec_doctor",
       "label": "capcli sys doctor",
       "arrow_type": "progress"
     },
     {
       "id": "t_human_help_to_search",
-      "journeys": ["journey_human_onboarding", "journey_harness_onboarding"],
-      "from": ["sys.help.success.stub"],
-      "to": ["run.search.success.populated"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "sys.help.success.stub"
+      ],
+      "to": [
+        "run.search.success.populated"
+      ],
       "trigger": "exec_search",
       "label": "capcli search 'order'",
       "arrow_type": "progress"
     },
     {
       "id": "t_human_doctor_to_search",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["sys.doctor.success.nominal"],
-      "to": ["run.search.success.populated"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "sys.doctor.success.nominal"
+      ],
+      "to": [
+        "run.search.success.populated"
+      ],
       "trigger": "exec_search",
       "label": "capcli search 'order'",
       "arrow_type": "progress"
     },
     {
       "id": "t_human_search_to_inspect",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.search.success.populated"],
-      "to": ["run.inspect.success.routine"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "run.search.success.populated"
+      ],
+      "to": [
+        "run.inspect.success.routine"
+      ],
       "trigger": "exec_inspect",
       "label": "capcli inspect cap://dispatch_order@4",
       "arrow_type": "progress"
     },
     {
       "id": "t_human_inspect_to_read",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.inspect.success.routine"],
-      "to": ["run.sql.success.populated"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "run.inspect.success.routine"
+      ],
+      "to": [
+        "run.sql.success.populated"
+      ],
       "trigger": "exec_read",
       "label": "capcli sql 'SELECT id FROM orders LIMIT 5'",
       "arrow_type": "progress"
     },
     {
       "id": "t_human_deliberate_denial",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.sql.success.populated"],
-      "to": ["run.sql.denial.ast"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "run.sql.success.populated"
+      ],
+      "to": [
+        "run.sql.denial.ast"
+      ],
       "trigger": "exec_unbounded_write",
       "label": "capcli sql 'UPDATE orders SET status = shipped'",
       "arrow_type": "denial",
@@ -120,11 +374,17 @@
     },
     {
       "id": "t_human_denial_to_trace",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.sql.denial.ast"],
-      "to": ["sys.trace.success.populated"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "run.sql.denial.ast"
+      ],
+      "to": [
+        "sys.trace.success.denial_trail"
+      ],
       "trigger": "inspect_trace",
-      "label": "capcli sys trace op_9f2e --explain",
+      "label": "capcli sys audit trace op_9f2e --explain",
       "arrow_type": "denial",
       "ui": {
         "button_text": "Diagnose Cause (--explain)",
@@ -133,254 +393,3258 @@
     },
     {
       "id": "t_human_trace_to_dry_run",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["sys.trace.success.populated"],
-      "to": ["run.sql.success.dry_run"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "sys.trace.success.denial_trail"
+      ],
+      "to": [
+        "run.sql.success.dry_run"
+      ],
       "trigger": "preview_remedy",
       "label": "capcli sql 'UPDATE orders ...' --dry-run",
       "arrow_type": "progress"
     },
     {
       "id": "t_human_dry_run_to_commit",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.sql.success.dry_run"],
-      "to": ["run.sql.success.populated"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "run.sql.success.dry_run"
+      ],
+      "to": [
+        "run.sql.success.populated"
+      ],
       "trigger": "exec_bounded_write",
       "label": "Execute Remediated Write (-m)",
       "arrow_type": "success"
     },
     {
       "id": "t_human_commit_to_snapshot",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["run.sql.success.populated"],
-      "to": ["db.snapshot.success.created"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "run.sql.success.populated"
+      ],
+      "to": [
+        "db.snapshot.success.created"
+      ],
       "trigger": "take_snapshot",
       "label": "capcli db snapshot",
       "arrow_type": "progress"
     },
     {
       "id": "t_human_snapshot_to_corrupt",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["db.snapshot.success.created"],
-      "to": ["db.restore.success.restored"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "db.snapshot.success.created"
+      ],
+      "to": [
+        "db.restore.success.restored"
+      ],
       "trigger": "test_restore",
       "label": "capcli db restore snap_onboarding_01",
       "arrow_type": "progress"
     },
     {
       "id": "t_human_restore_to_report",
-      "journeys": ["journey_human_onboarding"],
-      "from": ["db.restore.success.restored"],
-      "to": ["sys.doctor.success.report"],
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "db.restore.success.restored"
+      ],
+      "to": [
+        "sys.doctor.success.report"
+      ],
       "trigger": "emit_receipt",
       "label": "capcli sys doctor --report",
       "arrow_type": "success"
     },
     {
-      "id": "t_harness_contract_to_search",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["sys.doctor.success.nominal"],
-      "to": ["run.search.success.populated"],
-      "trigger": "harness_search",
-      "label": "capcli search '' --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_search_to_dry_run",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["run.search.success.populated"],
-      "to": ["run.sql.success.dry_run"],
-      "trigger": "harness_dry_run",
-      "label": "capcli sql 'SELECT ...' --dry-run --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_dry_run_to_catalog",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["run.sql.success.dry_run"],
-      "to": ["api.catalog.success.populated"],
-      "trigger": "probe_api_catalog",
-      "label": "capcli api catalog stripe --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_catalog_to_prove_draft",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["api.catalog.success.populated"],
-      "to": ["routine.prove.success.passed"],
-      "trigger": "prove_hybrid",
-      "label": "capcli routine prove sync_orders --env sim",
-      "arrow_type": "progress"
-    },
-    {
       "id": "t_harness_prove_to_trace_explain",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["routine.prove.success.passed"],
-      "to": ["sys.trace.success.populated"],
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "routine.prove.success.passed"
+      ],
+      "to": [
+        "sys.trace.success.prove"
+      ],
       "trigger": "explain_feedback",
-      "label": "capcli sys trace op_prove_01 --explain --json",
+      "label": "capcli sys audit trace op_prove_01 --explain --json",
       "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_trace_to_overview",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["sys.trace.success.populated"],
-      "to": ["run.overview.success.populated"],
-      "trigger": "codify_overview",
-      "label": "capcli run overview",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_overview_to_final_prove",
-      "journeys": ["journey_harness_onboarding"],
-      "from": ["run.overview.success.populated"],
-      "to": ["routine.prove.success.passed"],
-      "trigger": "final_prove_sim",
-      "label": "capcli routine prove overview --env sim",
-      "arrow_type": "success"
-    },
-    {
-      "id": "t_crucible_inspect_to_cascade",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["run.inspect.success.routine"],
-      "to": ["run.execute.denial.budget_cascade"],
-      "trigger": "invoke_child_frame",
-      "label": "Child frame crosses min() bounds",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_cascade_to_jail",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["run.execute.denial.budget_cascade"],
-      "to": ["run.execute.denial.network_jail"],
-      "trigger": "raw_socket_attempt",
-      "label": "Syscall 42 connect() trapped",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_jail_to_claims",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["run.execute.denial.network_jail"],
-      "to": ["db.lock.denial.claim_held"],
-      "trigger": "contested_claim",
-      "label": "capcli db lock orders:ORD-10",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_claims_to_thrashing",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["db.lock.denial.claim_held"],
-      "to": ["sys.doctor.denial.thrashing"],
-      "trigger": "sustained_denials",
-      "label": "20 sustained denials in 5m",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_thrashing_to_missing_secret",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["sys.doctor.denial.thrashing"],
-      "to": ["run.execute.refusal.missing_secret"],
-      "trigger": "execute_without_vault",
-      "label": "capcli run cap://stripe.refund",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_secret_to_vault",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["run.execute.refusal.missing_secret"],
-      "to": ["sys.vault_set.success.vaulted"],
-      "trigger": "inject_vault_secret",
-      "label": "capcli sys vault_set stripe_key",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_crucible_vault_resume_exec",
-      "journeys": ["journey_execution_crucible"],
-      "from": ["sys.vault_set.success.vaulted"],
-      "to": ["run.execute.success.populated"],
-      "trigger": "retry_execution",
-      "label": "capcli run cap://stripe.refund",
-      "arrow_type": "success"
     },
     {
       "id": "t_promotion_prove_to_queue",
-      "journeys": ["journey_trust_promotion"],
-      "from": ["routine.prove.success.passed"],
-      "to": ["routine.pending.success.populated"],
+      "journeys": [
+        "journey_trust_promotion"
+      ],
+      "from": [
+        "routine.prove.success.passed"
+      ],
+      "to": [
+        "routine.pending.success.populated"
+      ],
       "trigger": "enqueue_promotion",
-      "label": "capcli routine ship order_sync reviewed --queue",
+      "label": "capcli routine pending",
       "arrow_type": "progress"
     },
     {
       "id": "t_promotion_queue_to_ship",
-      "journeys": ["journey_trust_promotion"],
-      "from": ["routine.pending.success.populated"],
-      "to": ["routine.ship.success.shipped"],
+      "journeys": [
+        "journey_trust_promotion"
+      ],
+      "from": [
+        "routine.pending.success.populated"
+      ],
+      "to": [
+        "routine.ship.success.shipped"
+      ],
       "trigger": "commit_ship",
-      "label": "capcli routine ship order_sync pinned",
+      "label": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
       "arrow_type": "success"
     },
     {
       "id": "t_quota_yield_to_park",
-      "journeys": ["journey_quota_preemption"],
-      "from": ["run.execute.yield.quota"],
-      "to": ["run.execute.success.resumed"],
+      "journeys": [
+        "journey_quota_preemption",
+        "journey_budget_cascade"
+      ],
+      "from": [
+        "run.execute.yield.quota"
+      ],
+      "to": [
+        "run.execute.success.resumed"
+      ],
       "trigger": "daemon_auto_refill",
       "label": "Daemon token refill tick",
       "arrow_type": "yield"
     },
     {
       "id": "t_schema_diff_to_apply_dry",
-      "journeys": ["journey_schema_evolution"],
-      "from": ["rule.diff.success.populated"],
-      "to": ["rule.apply.success.dry_run"],
+      "journeys": [
+        "journey_schema_evolution"
+      ],
+      "from": [
+        "rule.diff.success.populated"
+      ],
+      "to": [
+        "rule.apply.success.dry_run"
+      ],
       "trigger": "exec_dry_run_ddl",
       "label": "capcli rule apply schema --dry-run",
       "arrow_type": "progress"
     },
     {
-      "id": "t_schema_apply_dry_to_merge",
-      "journeys": ["journey_schema_evolution"],
-      "from": ["rule.apply.success.dry_run"],
-      "to": ["env.merge.success.merged"],
+      "id": "t_schema_dry_to_applied",
+      "journeys": [
+        "journey_schema_evolution"
+      ],
+      "from": [
+        "rule.apply.success.dry_run"
+      ],
+      "to": [
+        "rule.apply.success.applied"
+      ],
+      "trigger": "exec_apply_ddl",
+      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_schema_applied_to_snapshot",
+      "journeys": [
+        "journey_schema_evolution"
+      ],
+      "from": [
+        "rule.apply.success.applied"
+      ],
+      "to": [
+        "db.snapshot.success.created"
+      ],
+      "trigger": "take_snapshot",
+      "label": "capcli db snapshot -m \"pre-migration safety point\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_schema_snapshot_to_merge",
+      "journeys": [
+        "journey_schema_evolution"
+      ],
+      "from": [
+        "db.snapshot.success.created"
+      ],
+      "to": [
+        "env.merge.success.merged"
+      ],
       "trigger": "exec_env_merge",
-      "label": "capcli env merge dev prod -m 'forward DDL'",
+      "label": "capcli env merge dev prod -m \"forward DDL\"",
       "arrow_type": "success"
     },
     {
       "id": "t_tamper_quarantine_inspect",
-      "journeys": ["journey_tamper_forensics"],
-      "from": ["sys.doctor.success.tamper"],
-      "to": ["sys.doctor.success.quarantine"],
+      "journeys": [
+        "journey_tamper_forensics"
+      ],
+      "from": [
+        "sys.doctor.success.tamper"
+      ],
+      "to": [
+        "sys.doctor.success.quarantine"
+      ],
       "trigger": "inspect_quarantine",
       "label": "capcli sys doctor --quarantine",
       "arrow_type": "progress"
     },
     {
       "id": "t_ask_suspended_to_list",
-      "journeys": ["journey_human_in_the_loop"],
-      "from": ["run.execute.yield.ask"],
-      "to": ["ping.list.success.populated"],
+      "journeys": [
+        "journey_human_in_the_loop"
+      ],
+      "from": [
+        "run.execute.yield.ask"
+      ],
+      "to": [
+        "ping.list.success.populated"
+      ],
       "trigger": "view_inquiries",
       "label": "capcli ping list --pending",
       "arrow_type": "progress"
     },
     {
       "id": "t_ask_list_to_resolve",
-      "journeys": ["journey_human_in_the_loop"],
-      "from": ["ping.list.success.populated"],
-      "to": ["ping.resolve.success.resolved"],
+      "journeys": [
+        "journey_human_in_the_loop"
+      ],
+      "from": [
+        "ping.list.success.populated"
+      ],
+      "to": [
+        "ping.resolve.success.resolved"
+      ],
       "trigger": "resolve_inquiry",
       "label": "capcli ping resolve ask_88a --choice approve",
       "arrow_type": "progress"
     },
     {
       "id": "t_ask_resolve_to_resumed_exec",
-      "journeys": ["journey_human_in_the_loop"],
-      "from": ["ping.resolve.success.resolved"],
-      "to": ["run.execute.success.populated"],
+      "journeys": [
+        "journey_human_in_the_loop"
+      ],
+      "from": [
+        "ping.resolve.success.resolved"
+      ],
+      "to": [
+        "run.execute.success.populated"
+      ],
       "trigger": "resume_routine",
       "label": "Routine frame auto-resumes",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_harness_doctor_to_overview",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "sys.doctor.success.nominal"
+      ],
+      "to": [
+        "run.overview.success.populated"
+      ],
+      "trigger": "h1_grounding",
+      "label": "capcli run overview --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_overview_to_search",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "run.overview.success.populated"
+      ],
+      "to": [
+        "run.search.success.populated"
+      ],
+      "trigger": "h1_discovery",
+      "label": "capcli search 'order' --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_search_to_dry_run",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "run.search.success.populated"
+      ],
+      "to": [
+        "run.sql.success.dry_run"
+      ],
+      "trigger": "h2_rehearsal",
+      "label": "capcli sql 'ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0' --dry-run --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_dry_run_to_state_probe",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "run.sql.success.dry_run"
+      ],
+      "to": [
+        "run.sql.success.populated"
+      ],
+      "trigger": "h3_local_probe",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=4127 -m \"mark order 4127 shipped\" --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_state_to_catalog",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "run.sql.success.populated"
+      ],
+      "to": [
+        "api.catalog.success.populated"
+      ],
+      "trigger": "h3_remote_probe",
+      "label": "capcli api catalog stripe --state active --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_catalog_to_scaffold",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "api.catalog.success.populated"
+      ],
+      "to": [
+        "routine.new.success.created"
+      ],
+      "trigger": "h4_scaffold",
+      "label": "capcli routine new sync_orders",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_scaffold_to_prove",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "routine.new.success.created"
+      ],
+      "to": [
+        "routine.prove.success.passed"
+      ],
+      "trigger": "h4_hybrid_rehearsal",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_trace_to_overview_codify",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "sys.trace.success.prove"
+      ],
+      "to": [
+        "routine.new.success.overview"
+      ],
+      "trigger": "h6_codify",
+      "label": "capcli routine new overview",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_overview_to_final_prove",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "routine.new.success.overview"
+      ],
+      "to": [
+        "routine.prove.success.overview"
+      ],
+      "trigger": "h7_proving",
+      "label": "capcli routine prove overview --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_audit_tail_empty_to_live",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.tail.success.empty"
+      ],
+      "to": [
+        "sys.tail.success.populated"
+      ],
+      "trigger": "tail_follow",
+      "label": "capcli sys audit tail --follow --since 1h",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_audit_live_to_trace_typo",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.tail.success.populated"
+      ],
+      "to": [
+        "sys.trace.refusal.not_found"
+      ],
+      "trigger": "trace_typo_id",
+      "label": "capcli sys audit trace op_9f99 --explain",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_audit_trace_typo_to_trace_ok",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.trace.refusal.not_found"
+      ],
+      "to": [
+        "sys.trace.success.populated"
+      ],
+      "trigger": "trace_allowed_op",
+      "label": "capcli sys audit trace op_7c4f --explain",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_audit_trace_to_query_typo",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.trace.success.populated"
+      ],
+      "to": [
+        "sys.query.refusal.unparseable"
+      ],
+      "trigger": "mirror_query",
+      "label": "capcli sys audit query \"SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_audit_query_typo_to_empty",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.query.refusal.unparseable"
+      ],
+      "to": [
+        "sys.query.success.empty"
+      ],
+      "trigger": "mirror_query_retry",
+      "label": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 5 LIMIT 20\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_audit_query_empty_to_populated",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.query.success.empty"
+      ],
+      "to": [
+        "sys.query.success.populated"
+      ],
+      "trigger": "mirror_query_populated",
+      "label": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 2 LIMIT 20\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_audit_query_to_replay_gate",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.query.success.populated"
+      ],
+      "to": [
+        "sys.replay.refusal.missing_from"
+      ],
+      "trigger": "replay_window",
+      "label": "capcli sys audit replay",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_audit_replay_gate_to_external",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.replay.refusal.missing_from"
+      ],
+      "to": [
+        "sys.replay.denial.external"
+      ],
+      "trigger": "replay_window_retry",
+      "label": "capcli sys audit replay --from 2026-10-03T22:41:07Z",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_audit_replay_external_to_ok",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.replay.denial.external"
+      ],
+      "to": [
+        "sys.replay.success.replayed"
+      ],
+      "trigger": "replay_window_ok",
+      "label": "capcli sys audit replay --from 2026-10-03T23:52:31Z",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_budget_inspect_to_exec",
+      "journeys": [
+        "journey_budget_cascade"
+      ],
+      "from": [
+        "run.inspect.success.routine"
+      ],
+      "to": [
+        "run.execute.denial.budget"
+      ],
+      "trigger": "invoke_archive",
+      "label": "capcli run cap://archive_old_orders@3 -p cutoff=90d -m \"archive stale orders\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_budget_session_to_cascade",
+      "journeys": [
+        "journey_budget_cascade"
+      ],
+      "from": [
+        "run.execute.denial.budget"
+      ],
+      "to": [
+        "run.execute.denial.budget_cascade"
+      ],
+      "trigger": "invoke_composite",
+      "label": "capcli run cap://sync_inventory@3 -p warehouse=west -m \"nightly inventory sync\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_budget_cascade_to_quota",
+      "journeys": [
+        "journey_budget_cascade"
+      ],
+      "from": [
+        "run.execute.denial.budget_cascade"
+      ],
+      "to": [
+        "run.execute.yield.quota"
+      ],
+      "trigger": "long_runner_parks",
+      "label": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
+      "arrow_type": "yield"
+    },
+    {
+      "id": "t_jail_to_catalog",
+      "journeys": [
+        "journey_network_jail"
+      ],
+      "from": [
+        "run.execute.denial.network_jail"
+      ],
+      "to": [
+        "api.catalog.success.populated"
+      ],
+      "trigger": "discover_egress_verbs",
+      "label": "capcli api catalog stripe --state active --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_claims_exec_to_lock_probe",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "run.execute.denial.claim_held"
+      ],
+      "to": [
+        "db.lock.denial.claim_held"
+      ],
+      "trigger": "probe_claim",
+      "label": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_claims_lock_to_unlock_attempt",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "db.lock.denial.claim_held"
+      ],
+      "to": [
+        "db.unlock.denial.not_holder"
+      ],
+      "trigger": "attempt_release",
+      "label": "capcli db unlock orders:ORD-10",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_claims_not_holder_to_release",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "db.unlock.denial.not_holder"
+      ],
+      "to": [
+        "db.unlock.success.released"
+      ],
+      "trigger": "holder_releases",
+      "label": "lease holder agt_9k2w releases the claim",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_claims_release_to_reacquire",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "db.unlock.success.released"
+      ],
+      "to": [
+        "db.lock.success.acquired"
+      ],
+      "trigger": "retry_lock",
+      "label": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_thrashing_backoff_to_nominal",
+      "journeys": [
+        "journey_thrashing_recovery"
+      ],
+      "from": [
+        "sys.doctor.denial.thrashing"
+      ],
+      "to": [
+        "sys.doctor.success.nominal"
+      ],
+      "trigger": "backoff_recheck",
+      "label": "capcli sys doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_vault_refusal_to_set_gate",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "run.execute.refusal.missing_secret"
+      ],
+      "to": [
+        "sys.vault_set.refusal.missing_val"
+      ],
+      "trigger": "inject_attempt",
+      "label": "capcli sys vault set stripe_secret_key",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_vault_set_gate_to_vaulted",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "sys.vault_set.refusal.missing_val"
+      ],
+      "to": [
+        "sys.vault_set.success.vaulted"
+      ],
+      "trigger": "stdin_injection",
+      "label": "capcli sys vault set stripe_secret_key --in @-",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_vault_vaulted_to_import_env",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "sys.vault_set.success.vaulted"
+      ],
+      "to": [
+        "sys.vault_import.refusal.no_env_vars"
+      ],
+      "trigger": "bulk_attempt",
+      "label": "capcli sys vault import-env",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_vault_import_retry",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "sys.vault_import.refusal.no_env_vars"
+      ],
+      "to": [
+        "sys.vault_import.success.imported"
+      ],
+      "trigger": "export_secrets",
+      "label": "capcli sys vault import-env",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_vault_resume_exec",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "sys.vault_import.success.imported"
+      ],
+      "to": [
+        "run.execute.success.populated"
+      ],
+      "trigger": "retry_execution",
+      "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_cron_list_empty_to_bind_intent",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.list.success.empty"
+      ],
+      "to": [
+        "bind.cron.refusal.missing_intent"
+      ],
+      "trigger": "first_bind_attempt",
+      "label": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_intent_to_interval",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.cron.refusal.missing_intent"
+      ],
+      "to": [
+        "bind.cron.denial.interval"
+      ],
+      "trigger": "retry_sub_minute",
+      "label": "capcli bind cron poll_orders cap://sync_orders \"* * * * *\" -m \"poll order queue every minute\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_interval_to_cap",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.cron.denial.interval"
+      ],
+      "to": [
+        "bind.cron.denial.cap"
+      ],
+      "trigger": "hit_schedule_cap",
+      "label": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_cap_to_bound",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.cron.denial.cap"
+      ],
+      "to": [
+        "bind.cron.success.bound"
+      ],
+      "trigger": "bind_nightly",
+      "label": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_cron_bound_to_list",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.cron.success.bound"
+      ],
+      "to": [
+        "bind.list.success.populated"
+      ],
+      "trigger": "list_bindings",
+      "label": "capcli bind list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_list_to_inspect",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.list.success.populated"
+      ],
+      "to": [
+        "bind.inspect.success.populated"
+      ],
+      "trigger": "inspect_binding",
+      "label": "capcli bind inspect bnd_3k2f",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_inspect_to_pause",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.inspect.success.populated"
+      ],
+      "to": [
+        "bind.pause.success.completed"
+      ],
+      "trigger": "pause_binding",
+      "label": "capcli bind pause bnd_3k2f",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_pause_to_resume",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.pause.success.completed"
+      ],
+      "to": [
+        "bind.resume.success.completed"
+      ],
+      "trigger": "resume_binding",
+      "label": "capcli bind resume bnd_3k2f",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_resume_to_remove",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.resume.success.completed"
+      ],
+      "to": [
+        "bind.remove.success.completed"
+      ],
+      "trigger": "remove_binding",
+      "label": "capcli bind remove bnd_3k2f",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_cron_removed_inspect_nf",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.remove.success.completed"
+      ],
+      "to": [
+        "bind.inspect.refusal.not_found"
+      ],
+      "trigger": "inspect_dismantled",
+      "label": "capcli bind inspect bnd_3k2f",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_removed_pause_nf",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.remove.success.completed"
+      ],
+      "to": [
+        "bind.pause.refusal.not_found"
+      ],
+      "trigger": "pause_dismantled",
+      "label": "capcli bind pause bnd_3k2f",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_removed_resume_nf",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.remove.success.completed"
+      ],
+      "to": [
+        "bind.resume.refusal.not_found"
+      ],
+      "trigger": "resume_dismantled",
+      "label": "capcli bind resume bnd_3k2f",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_cron_removed_remove_nf",
+      "journeys": [
+        "journey_cron_binding_lifecycle"
+      ],
+      "from": [
+        "bind.remove.success.completed"
+      ],
+      "to": [
+        "bind.remove.refusal.not_found"
+      ],
+      "trigger": "remove_dismantled",
+      "label": "capcli bind remove bnd_3k2f",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_webhook_ingress_to_unsigned",
+      "journeys": [
+        "journey_webhook_ingress"
+      ],
+      "from": [
+        "bind.webhook.refusal.missing_ingress"
+      ],
+      "to": [
+        "bind.webhook.denial.unsigned"
+      ],
+      "trigger": "arm_ingress",
+      "label": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_webhook_unsigned_to_cap",
+      "journeys": [
+        "journey_webhook_ingress"
+      ],
+      "from": [
+        "bind.webhook.denial.unsigned"
+      ],
+      "to": [
+        "bind.webhook.denial.cap"
+      ],
+      "trigger": "hit_hook_cap",
+      "label": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_webhook_cap_to_payload",
+      "journeys": [
+        "journey_webhook_ingress"
+      ],
+      "from": [
+        "bind.webhook.denial.cap"
+      ],
+      "to": [
+        "bind.webhook.denial.payload_size"
+      ],
+      "trigger": "oversized_delivery",
+      "label": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_webhook_payload_to_bound",
+      "journeys": [
+        "journey_webhook_ingress"
+      ],
+      "from": [
+        "bind.webhook.denial.payload_size"
+      ],
+      "to": [
+        "bind.webhook.success.bound"
+      ],
+      "trigger": "bind_signed_hook",
+      "label": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_endpoint_trust_to_cap",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.endpoint.denial.trust"
+      ],
+      "to": [
+        "bind.endpoint.denial.cap"
+      ],
+      "trigger": "hit_endpoint_cap",
+      "label": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_endpoint_cap_to_bound",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.endpoint.denial.cap"
+      ],
+      "to": [
+        "bind.endpoint.success.bound"
+      ],
+      "trigger": "bind_pinned_endpoint",
+      "label": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_endpoint_bound_to_keys_cap",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.endpoint.success.bound"
+      ],
+      "to": [
+        "bind.keys.denial.cap"
+      ],
+      "trigger": "issue_partner_key",
+      "label": "capcli bind keys issue partner_hook --principal partner:acme",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_endpoint_keys_cap_to_issued",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.keys.denial.cap"
+      ],
+      "to": [
+        "bind.keys.success.issued"
+      ],
+      "trigger": "issue_partner_key_retry",
+      "label": "capcli bind keys issue partner_hook --principal partner:acme",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_endpoint_keys_to_openapi",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.keys.success.issued"
+      ],
+      "to": [
+        "bind.export.success.openapi"
+      ],
+      "trigger": "export_openapi",
+      "label": "capcli bind export openapi --out openapi.json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_endpoint_openapi_to_mcp",
+      "journeys": [
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "bind.export.success.openapi"
+      ],
+      "to": [
+        "bind.export.success.mcp"
+      ],
+      "trigger": "export_mcp",
+      "label": "capcli bind export mcp --out tools.json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_doc_outline_nf_to_read_nf",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.outline.refusal.not_found"
+      ],
+      "to": [
+        "doc.read.refusal.not_found"
+      ],
+      "trigger": "try_read_pointer",
+      "label": "capcli doc read doc://refund-policies --max-tokens 100",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_doc_read_nf_to_read",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.read.refusal.not_found"
+      ],
+      "to": [
+        "doc.read.success.populated"
+      ],
+      "trigger": "correct_pointer",
+      "label": "capcli doc read doc://refund-policy --max-tokens 500",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_doc_read_to_sliced",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.read.success.populated"
+      ],
+      "to": [
+        "doc.read.success.sliced"
+      ],
+      "trigger": "slice_tokens",
+      "label": "capcli doc read doc://refund-policy --max-tokens 100",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_doc_sliced_to_outline",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.read.success.sliced"
+      ],
+      "to": [
+        "doc.outline.success.populated"
+      ],
+      "trigger": "outline_doc",
+      "label": "capcli doc outline doc://refund-policy",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_doc_outline_to_inspect",
+      "journeys": [
+        "journey_doc_reading"
+      ],
+      "from": [
+        "doc.outline.success.populated"
+      ],
+      "to": [
+        "doc.inspect.success.populated"
+      ],
+      "trigger": "inspect_doc",
+      "label": "capcli doc inspect doc://refund-policy",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_created_to_name_taken",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.new.success.created"
+      ],
+      "to": [
+        "env.new.refusal.name_taken"
+      ],
+      "trigger": "recreate_attempt",
+      "label": "capcli env new staging --seed prod",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_name_to_bundle",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.new.refusal.name_taken"
+      ],
+      "to": [
+        "env.new.refusal.bundle_too_large"
+      ],
+      "trigger": "restore_from_bundle",
+      "label": "capcli env new lab --from bundle.cap",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_bundle_to_cap",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.new.refusal.bundle_too_large"
+      ],
+      "to": [
+        "env.new.denial.cap"
+      ],
+      "trigger": "provision_extra_namespace",
+      "label": "capcli env new experiment_3 --seed prod",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_cap_to_use_nf",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.new.denial.cap"
+      ],
+      "to": [
+        "env.use.refusal.not_found"
+      ],
+      "trigger": "switch_unknown_env",
+      "label": "capcli env use canary",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_use_nf_to_switched",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.use.refusal.not_found"
+      ],
+      "to": [
+        "env.use.success.switched"
+      ],
+      "trigger": "switch_sim",
+      "label": "capcli env use sim",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_switched_to_list",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.use.success.switched"
+      ],
+      "to": [
+        "env.list.success.populated"
+      ],
+      "trigger": "list_namespaces",
+      "label": "capcli env list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_list_to_inspect_nf",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.list.success.populated"
+      ],
+      "to": [
+        "env.inspect.refusal.not_found"
+      ],
+      "trigger": "inspect_unknown_env",
+      "label": "capcli env inspect canary",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_inspect_nf_to_inspect",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.inspect.refusal.not_found"
+      ],
+      "to": [
+        "env.inspect.success.populated"
+      ],
+      "trigger": "inspect_staging",
+      "label": "capcli env inspect staging",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_inspect_to_doctor_drift",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.inspect.success.populated"
+      ],
+      "to": [
+        "env.doctor.denial.drift"
+      ],
+      "trigger": "doctor_envs",
+      "label": "capcli env doctor",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_doctor_drift_to_healthy",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.doctor.denial.drift"
+      ],
+      "to": [
+        "env.doctor.success.healthy"
+      ],
+      "trigger": "doctor_after_resync",
+      "label": "capcli env doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_env_healthy_to_merge_unmerged",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.doctor.success.healthy"
+      ],
+      "to": [
+        "env.merge.refusal.unmerged"
+      ],
+      "trigger": "merge_attempt",
+      "label": "capcli env merge dev prod -m \"forward DDL\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_merge_unmerged_to_lockfile",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.refusal.unmerged"
+      ],
+      "to": [
+        "env.merge.refusal.lockfile"
+      ],
+      "trigger": "merge_retry",
+      "label": "capcli env merge dev prod -m \"forward DDL\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_merge_lockfile_to_plan",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.refusal.lockfile"
+      ],
+      "to": [
+        "env.merge.refusal.plan_conflict"
+      ],
+      "trigger": "merge_stg_into_dev",
+      "label": "capcli env merge stg --into dev",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_merge_plan_to_trust",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.refusal.plan_conflict"
+      ],
+      "to": [
+        "env.merge.denial.trust"
+      ],
+      "trigger": "merge_draft_migration",
+      "label": "capcli env merge dev prod -m \"forward DDL\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_merge_trust_to_merged",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.denial.trust"
+      ],
+      "to": [
+        "env.merge.success.merged"
+      ],
+      "trigger": "merge_reviewed",
+      "label": "capcli env merge dev prod -m \"forward DDL\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_env_merged_to_remove_sig",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.merge.success.merged"
+      ],
+      "to": [
+        "env.remove.denial.crypto_sig"
+      ],
+      "trigger": "remove_prod_attempt",
+      "label": "capcli env remove prod",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_remove_sig_to_flags",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.remove.denial.crypto_sig"
+      ],
+      "to": [
+        "env.remove.denial.prod_flags"
+      ],
+      "trigger": "remove_prod_retry",
+      "label": "capcli env remove prod",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_remove_flags_to_nf",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.remove.denial.prod_flags"
+      ],
+      "to": [
+        "env.remove.refusal.not_found"
+      ],
+      "trigger": "remove_unknown_env",
+      "label": "capcli env remove canary",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_env_remove_nf_to_removed",
+      "journeys": [
+        "journey_env_lifecycle"
+      ],
+      "from": [
+        "env.remove.refusal.not_found"
+      ],
+      "to": [
+        "env.remove.success.removed"
+      ],
+      "trigger": "remove_experiment",
+      "label": "capcli env remove experiment_2",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_ping_empty_to_notify_intent",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.list.success.empty"
+      ],
+      "to": [
+        "ping.notify.refusal.missing_intent"
+      ],
+      "trigger": "notify_attempt",
+      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel email",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_notify_intent_to_quiet",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.notify.refusal.missing_intent"
+      ],
+      "to": [
+        "ping.notify.denial.quiet_hours"
+      ],
+      "trigger": "notify_with_intent",
+      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_notify_quiet_to_dispatched",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.notify.denial.quiet_hours"
+      ],
+      "to": [
+        "ping.notify.success.dispatched"
+      ],
+      "trigger": "notify_in_window",
+      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_ping_dispatched_to_ask_intent",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.notify.success.dispatched"
+      ],
+      "to": [
+        "ping.ask.refusal.missing_intent"
+      ],
+      "trigger": "ask_attempt",
+      "label": "capcli ping ask user:alice \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_ask_intent_to_options_cap",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.ask.refusal.missing_intent"
+      ],
+      "to": [
+        "ping.ask.denial.options_cap"
+      ],
+      "trigger": "ask_six_options",
+      "label": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_ask_cap_to_suspended",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.ask.denial.options_cap"
+      ],
+      "to": [
+        "ping.ask.success.suspended"
+      ],
+      "trigger": "ask_fraud_gate",
+      "label": "capcli ping ask user:alice \"Fraud score 0.83 on ORD-1042. Approve dispatch?\" --options approve,deny --timeout 60m --intent \"fraud gate above dispatch threshold requires human sign-off\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_ping_suspended_to_resolve_nf",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.ask.success.suspended"
+      ],
+      "to": [
+        "ping.resolve.refusal.not_found"
+      ],
+      "trigger": "resolve_typo_id",
+      "label": "capcli ping resolve ask_51c7 --choice approve",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_resolve_nf_to_occ",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.resolve.refusal.not_found"
+      ],
+      "to": [
+        "ping.resolve.denial.occ_conflict"
+      ],
+      "trigger": "resolve_refund_ask",
+      "label": "capcli ping resolve ask_77c3 --choice approve",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_occ_to_expired",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.resolve.denial.occ_conflict"
+      ],
+      "to": [
+        "ping.resolve.denial.expired"
+      ],
+      "trigger": "resolve_after_timeout",
+      "label": "capcli ping resolve ask_77c3 --choice approve",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_expired_to_expire_nf",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.resolve.denial.expired"
+      ],
+      "to": [
+        "ping.expire.refusal.not_found"
+      ],
+      "trigger": "expire_typo_id",
+      "label": "capcli ping expire ask_51c7",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ping_expire_nf_to_completed",
+      "journeys": [
+        "journey_ping_lifecycle"
+      ],
+      "from": [
+        "ping.expire.refusal.not_found"
+      ],
+      "to": [
+        "ping.expire.success.completed"
+      ],
+      "trigger": "expire_unattended_ask",
+      "label": "capcli ping expire ask_77c3",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_rule_syntax_to_semantics",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.validate.refusal.syntax"
+      ],
+      "to": [
+        "rule.validate.refusal.semantics"
+      ],
+      "trigger": "fix_and_revalidate",
+      "label": "capcli rule validate",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_semantics_to_valid",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.validate.refusal.semantics"
+      ],
+      "to": [
+        "rule.validate.success.valid"
+      ],
+      "trigger": "fix_and_revalidate",
+      "label": "capcli rule validate",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_rule_valid_to_show_nf",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.validate.success.valid"
+      ],
+      "to": [
+        "rule.show.refusal.not_found"
+      ],
+      "trigger": "show_unknown_table",
+      "label": "capcli rule show schema --table invoices",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_show_nf_to_show",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.show.refusal.not_found"
+      ],
+      "to": [
+        "rule.show.success.populated"
+      ],
+      "trigger": "show_orders_rules",
+      "label": "capcli rule show schema --table orders",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_rule_show_to_diff_empty",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.show.success.populated"
+      ],
+      "to": [
+        "rule.diff.success.empty"
+      ],
+      "trigger": "diff_vs_head",
+      "label": "capcli rule diff schema --git",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_rule_diff_empty_to_populated",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.diff.success.empty"
+      ],
+      "to": [
+        "rule.diff.success.populated"
+      ],
+      "trigger": "edit_rules_then_diff",
+      "label": "capcli rule diff schema --git",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_rule_diff_to_apply_trust",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.diff.success.populated"
+      ],
+      "to": [
+        "rule.apply.denial.trust"
+      ],
+      "trigger": "apply_draft_ddl",
+      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_apply_trust_to_lockfile",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.apply.denial.trust"
+      ],
+      "to": [
+        "rule.apply.refusal.lockfile"
+      ],
+      "trigger": "apply_after_drift",
+      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_apply_lockfile_to_validation",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.apply.refusal.lockfile"
+      ],
+      "to": [
+        "rule.apply.refusal.validation"
+      ],
+      "trigger": "apply_bad_index",
+      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_apply_validation_to_applied",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.apply.refusal.validation"
+      ],
+      "to": [
+        "rule.apply.success.applied"
+      ],
+      "trigger": "apply_reviewed_ddl",
+      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_db_schema_empty_to_populated",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.schema.success.empty"
+      ],
+      "to": [
+        "db.schema.success.populated"
+      ],
+      "trigger": "schema_orders",
+      "label": "capcli db schema --table orders",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_db_schema_to_lock_gate",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.schema.success.populated"
+      ],
+      "to": [
+        "db.lock.refusal.missing_reason"
+      ],
+      "trigger": "lock_without_reason",
+      "label": "capcli db lock orders:ORD-10 --ttl 300s",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_db_lock_gate_to_dump",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.lock.refusal.missing_reason"
+      ],
+      "to": [
+        "db.dump.success.populated"
+      ],
+      "trigger": "dump_orders",
+      "label": "capcli db dump",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_db_dump_to_dump_truncated",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.dump.success.populated"
+      ],
+      "to": [
+        "db.dump.success.truncated"
+      ],
+      "trigger": "dump_over_cap",
+      "label": "capcli db dump",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_db_dump_truncated_to_snapshot_denial",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.dump.success.truncated"
+      ],
+      "to": [
+        "db.snapshot.denial.prod_draft"
+      ],
+      "trigger": "snapshot_prod_draft",
+      "label": "capcli db snapshot --env prod -m \"nightly safety point\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_db_snapshot_denial_to_created",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.snapshot.denial.prod_draft"
+      ],
+      "to": [
+        "db.snapshot.success.created"
+      ],
+      "trigger": "snapshot_dev",
+      "label": "capcli db snapshot -m \"pre-migration safety point\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_db_snapshot_to_restore_missing_id",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.snapshot.success.created"
+      ],
+      "to": [
+        "db.restore.refusal.missing_id"
+      ],
+      "trigger": "restore_no_id",
+      "label": "capcli db restore",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_db_restore_missing_to_locks",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.restore.refusal.missing_id"
+      ],
+      "to": [
+        "db.restore.denial.active_locks"
+      ],
+      "trigger": "restore_locked_table",
+      "label": "capcli db restore snap_migration_004",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_db_restore_locks_to_restored",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.restore.denial.active_locks"
+      ],
+      "to": [
+        "db.restore.success.restored"
+      ],
+      "trigger": "restore_after_release",
+      "label": "capcli db restore snap_onboarding_01",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_sync_nf_to_rate",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.sync.refusal.missing_url"
+      ],
+      "to": [
+        "api.sync.denial.rate"
+      ],
+      "trigger": "sync_with_url",
+      "label": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_sync_rate_to_synced",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.sync.denial.rate"
+      ],
+      "to": [
+        "api.sync.success.synced"
+      ],
+      "trigger": "sync_retry",
+      "label": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_synced_to_diff_empty",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.sync.success.synced"
+      ],
+      "to": [
+        "api.diff.success.empty"
+      ],
+      "trigger": "diff_threads",
+      "label": "capcli api diff threads",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_diff_empty_to_populated",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.diff.success.empty"
+      ],
+      "to": [
+        "api.diff.success.populated"
+      ],
+      "trigger": "diff_stripe",
+      "label": "capcli api diff stripe",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_diff_to_catalog_empty",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.diff.success.populated"
+      ],
+      "to": [
+        "api.catalog.success.empty"
+      ],
+      "trigger": "catalog_all",
+      "label": "capcli api catalog",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_catalog_empty_to_truncated",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.catalog.success.empty"
+      ],
+      "to": [
+        "api.catalog.success.truncated"
+      ],
+      "trigger": "catalog_overflow",
+      "label": "capcli api catalog",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_catalog_truncated_to_populated",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.catalog.success.truncated"
+      ],
+      "to": [
+        "api.catalog.success.populated"
+      ],
+      "trigger": "catalog_stripe_active",
+      "label": "capcli api catalog stripe --state active --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_catalog_to_prove_sim_gap",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.catalog.success.populated"
+      ],
+      "to": [
+        "api.prove.denial.sim_gap"
+      ],
+      "trigger": "prove_prod_only_verb",
+      "label": "capcli api prove threads.create_media_post --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_prove_sim_gap_to_policy",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.prove.denial.sim_gap"
+      ],
+      "to": [
+        "api.prove.denial.policy"
+      ],
+      "trigger": "prove_forbidden_scope",
+      "label": "capcli api prove stripe.delete_account --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_prove_policy_to_passed",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.prove.denial.policy"
+      ],
+      "to": [
+        "api.prove.success.passed"
+      ],
+      "trigger": "prove_refund_verb",
+      "label": "capcli api prove stripe.refund_charge --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_prove_to_ship_reason",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.prove.success.passed"
+      ],
+      "to": [
+        "api.ship.refusal.missing_reason"
+      ],
+      "trigger": "ship_without_reason",
+      "label": "capcli api ship threads.create_media_post reviewed",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_ship_reason_to_metrics",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.ship.refusal.missing_reason"
+      ],
+      "to": [
+        "api.ship.denial.metrics"
+      ],
+      "trigger": "ship_failing_replays",
+      "label": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_ship_metrics_to_shipped",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.ship.denial.metrics"
+      ],
+      "to": [
+        "api.ship.success.shipped"
+      ],
+      "trigger": "ship_clean_replays",
+      "label": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_shipped_to_graduated",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.ship.success.shipped"
+      ],
+      "to": [
+        "api.ship.success.graduated"
+      ],
+      "trigger": "graduate_training_wheels",
+      "label": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_graduated_to_stats_nf",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.ship.success.graduated"
+      ],
+      "to": [
+        "api.stats.refusal.not_found"
+      ],
+      "trigger": "stats_unknown_provider",
+      "label": "capcli api stats shopify",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_stats_nf_to_stats",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.stats.refusal.not_found"
+      ],
+      "to": [
+        "api.stats.success.populated"
+      ],
+      "trigger": "stats_stripe_deep",
+      "label": "capcli api stats stripe --deep",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_stats_to_rollback_depth",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.stats.success.populated"
+      ],
+      "to": [
+        "api.rollback.denial.depth"
+      ],
+      "trigger": "rollback_too_deep",
+      "label": "capcli api rollback threads.create_media_post 2",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_rollback_depth_to_nf",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.rollback.denial.depth"
+      ],
+      "to": [
+        "api.rollback.refusal.not_found"
+      ],
+      "trigger": "rollback_unknown_version",
+      "label": "capcli api rollback threads.create_media_post 12",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_rollback_nf_to_completed",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.rollback.refusal.not_found"
+      ],
+      "to": [
+        "api.rollback.success.completed"
+      ],
+      "trigger": "rollback_to_v4",
+      "label": "capcli api rollback threads.create_media_post 4",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_rollback_to_retire_nf",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.rollback.success.completed"
+      ],
+      "to": [
+        "api.retire.refusal.not_found"
+      ],
+      "trigger": "retire_unknown_verb",
+      "label": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_retire_nf_to_completed",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.retire.refusal.not_found"
+      ],
+      "to": [
+        "api.retire.success.completed"
+      ],
+      "trigger": "retire_refund_verb",
+      "label": "capcli api retire stripe.refund_charge --reason \"deprecated upstream\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_name_taken_to_shape",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.refusal.name_taken"
+      ],
+      "to": [
+        "routine.new.refusal.shape_violation"
+      ],
+      "trigger": "scaffold_from_template",
+      "label": "capcli routine new sync_orders --template tpl://routine/legacy_sync",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_shape_to_template_compat",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.refusal.shape_violation"
+      ],
+      "to": [
+        "routine.new.refusal.template_compat"
+      ],
+      "trigger": "scaffold_incompatible_template",
+      "label": "capcli routine new order_sync --from tpl://order_sync@2",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_template_to_created",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.refusal.template_compat"
+      ],
+      "to": [
+        "routine.new.success.created"
+      ],
+      "trigger": "scaffold_blank",
+      "label": "capcli routine new sync_orders",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_created_to_prove_shape",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.success.created"
+      ],
+      "to": [
+        "routine.prove.denial.shape"
+      ],
+      "trigger": "prove_sim",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_prove_shape_to_sandbox",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.denial.shape"
+      ],
+      "to": [
+        "routine.prove.denial.sandbox"
+      ],
+      "trigger": "shrink_and_reprove",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_prove_sandbox_to_policy",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.denial.sandbox"
+      ],
+      "to": [
+        "routine.prove.denial.policy"
+      ],
+      "trigger": "reprove_after_manifest_fix",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_prove_policy_to_passed",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.denial.policy"
+      ],
+      "to": [
+        "routine.prove.success.passed"
+      ],
+      "trigger": "reprove_clean",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_prove_to_ship_reason",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.success.passed"
+      ],
+      "to": [
+        "routine.ship.refusal.missing_reason"
+      ],
+      "trigger": "ship_without_reason",
+      "label": "capcli routine ship order_sync pinned",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_ship_reason_to_trust",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.refusal.missing_reason"
+      ],
+      "to": [
+        "routine.ship.denial.trust"
+      ],
+      "trigger": "ship_reviewed_to_pinned",
+      "label": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_ship_trust_to_metrics",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.denial.trust"
+      ],
+      "to": [
+        "routine.ship.denial.metrics"
+      ],
+      "trigger": "ship_failing_canary",
+      "label": "capcli routine ship order_sync reviewed",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_ship_metrics_to_shipped",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.denial.metrics"
+      ],
+      "to": [
+        "routine.ship.success.shipped"
+      ],
+      "trigger": "ship_clean_canary",
+      "label": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_shipped_to_rolled_back",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.success.shipped"
+      ],
+      "to": [
+        "routine.ship.success.rolled_back"
+      ],
+      "trigger": "revert_promotion",
+      "label": "capcli routine ship order_sync reviewed",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_rolled_back_to_pending_empty",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.ship.success.rolled_back"
+      ],
+      "to": [
+        "routine.pending.success.empty"
+      ],
+      "trigger": "check_queue",
+      "label": "capcli routine pending",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_pending_empty_to_populated",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.pending.success.empty"
+      ],
+      "to": [
+        "routine.pending.success.populated"
+      ],
+      "trigger": "queue_promotion",
+      "label": "capcli routine pending",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_sweep_empty_to_populated",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.sweep.success.empty"
+      ],
+      "to": [
+        "routine.sweep.success.populated"
+      ],
+      "trigger": "sweep_stale_drafts",
+      "label": "capcli routine sweep",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_sweep_to_stats_nf",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.sweep.success.populated"
+      ],
+      "to": [
+        "routine.stats.refusal.not_found"
+      ],
+      "trigger": "stats_unknown_routine",
+      "label": "capcli routine stats sync_inventory",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_stats_nf_to_stats",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.stats.refusal.not_found"
+      ],
+      "to": [
+        "routine.stats.success.populated"
+      ],
+      "trigger": "stats_dispatch_deep",
+      "label": "capcli routine stats dispatch_order --deep",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_stats_to_rollback_nf",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.stats.success.populated"
+      ],
+      "to": [
+        "routine.rollback.refusal.not_found"
+      ],
+      "trigger": "rollback_unknown_version",
+      "label": "capcli routine rollback sync_orders 7",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_rollback_nf_to_depth",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.rollback.refusal.not_found"
+      ],
+      "to": [
+        "routine.rollback.denial.depth"
+      ],
+      "trigger": "rollback_too_deep",
+      "label": "capcli routine rollback order_sync 3",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_rollback_depth_to_completed",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.rollback.denial.depth"
+      ],
+      "to": [
+        "routine.rollback.success.completed"
+      ],
+      "trigger": "rollback_to_v3",
+      "label": "capcli routine rollback sync_orders 3",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_rollback_to_retire_deps",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.rollback.success.completed"
+      ],
+      "to": [
+        "routine.retire.denial.active_deps"
+      ],
+      "trigger": "retire_depended_routine",
+      "label": "capcli routine retire dispatch_order --reason \"replaced by unified fulfillment path\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_retire_deps_to_nf",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.retire.denial.active_deps"
+      ],
+      "to": [
+        "routine.retire.refusal.not_found"
+      ],
+      "trigger": "retire_unknown_routine",
+      "label": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_retire_nf_to_completed",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.retire.refusal.not_found"
+      ],
+      "to": [
+        "routine.retire.success.completed"
+      ],
+      "trigger": "retire_legacy_etl",
+      "label": "capcli routine retire legacy_etl --reason \"replaced by unified pipeline\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_identity_empty_to_register",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.agents.success.empty"
+      ],
+      "to": [
+        "sys.register.success.registered"
+      ],
+      "trigger": "register_agent",
+      "label": "capcli sys agent register",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_identity_register_to_list",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.register.success.registered"
+      ],
+      "to": [
+        "sys.agents.success.populated"
+      ],
+      "trigger": "list_agents",
+      "label": "capcli sys agent list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_identity_list_to_register_cap",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.agents.success.populated"
+      ],
+      "to": [
+        "sys.register.denial.cap"
+      ],
+      "trigger": "register_beyond_cap",
+      "label": "capcli sys agent register",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_identity_cap_to_revoke_nf",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.register.denial.cap"
+      ],
+      "to": [
+        "sys.revoke.refusal.not_found"
+      ],
+      "trigger": "revoke_unknown_agent",
+      "label": "capcli sys agent revoke agt_0000",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_identity_revoke_nf_to_revoked",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.revoke.refusal.not_found"
+      ],
+      "to": [
+        "sys.revoke.success.revoked"
+      ],
+      "trigger": "revoke_live_agent",
+      "label": "capcli sys agent revoke agt_7f3k",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_backup_push_fail_to_completed",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.backup.denial.push_fail"
+      ],
+      "to": [
+        "sys.backup.success.completed"
+      ],
+      "trigger": "retry_backup_push",
+      "label": "capcli sys backup --push",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_backup_completed_to_recover_nf",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.backup.success.completed"
+      ],
+      "to": [
+        "sys.recover.refusal.not_found"
+      ],
+      "trigger": "recover_unknown_commit",
+      "label": "capcli sys recover 1a2b3c4",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_backup_recover_nf_to_locks",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.recover.refusal.not_found"
+      ],
+      "to": [
+        "sys.recover.denial.active_locks"
+      ],
+      "trigger": "recover_under_leases",
+      "label": "capcli sys recover 3f9c2ab",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_backup_recover_locks_to_restored",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.recover.denial.active_locks"
+      ],
+      "to": [
+        "sys.recover.success.restored"
+      ],
+      "trigger": "recover_after_release",
+      "label": "capcli sys recover 3f9c2ab",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_serve_port_to_already_running",
+      "journeys": [
+        "journey_serve_lifecycle"
+      ],
+      "from": [
+        "sys.serve.denial.port"
+      ],
+      "to": [
+        "sys.serve.refusal.already_running"
+      ],
+      "trigger": "retry_start",
+      "label": "capcli sys serve --start",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_serve_already_to_running",
+      "journeys": [
+        "journey_serve_lifecycle"
+      ],
+      "from": [
+        "sys.serve.refusal.already_running"
+      ],
+      "to": [
+        "sys.serve.success.running"
+      ],
+      "trigger": "start_clean",
+      "label": "capcli sys serve --start",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_inbox_empty_to_populated",
+      "journeys": [
+        "journey_inbox_drain"
+      ],
+      "from": [
+        "sys.inbox.success.empty"
+      ],
+      "to": [
+        "sys.inbox.success.populated"
+      ],
+      "trigger": "pop_channel",
+      "label": "capcli sys inbox pop --channel email",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_exec_denial_to_crash",
+      "journeys": [
+        "journey_sandbox_exec"
+      ],
+      "from": [
+        "sys.exec.denial.sandbox"
+      ],
+      "to": [
+        "sys.exec.crash.runtime"
+      ],
+      "trigger": "retry_sandboxed",
+      "label": "capcli sys exec \"python3 etl.py\" --sandbox",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_exec_crash_to_completed",
+      "journeys": [
+        "journey_sandbox_exec"
+      ],
+      "from": [
+        "sys.exec.crash.runtime"
+      ],
+      "to": [
+        "sys.exec.success.completed"
+      ],
+      "trigger": "retry_after_pin",
+      "label": "capcli sys exec \"python3 etl.py\" --sandbox",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_doctor_boot_to_lockfile",
+      "journeys": [
+        "journey_doctor_boot"
+      ],
+      "from": [
+        "sys.doctor.refusal.boot"
+      ],
+      "to": [
+        "sys.doctor.refusal.lockfile"
+      ],
+      "trigger": "boot_check",
+      "label": "capcli sys doctor --boot-check",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_doctor_lockfile_to_drift",
+      "journeys": [
+        "journey_doctor_boot"
+      ],
+      "from": [
+        "sys.doctor.refusal.lockfile"
+      ],
+      "to": [
+        "sys.doctor.denial.drift"
+      ],
+      "trigger": "doctor_probe",
+      "label": "capcli sys doctor",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_doctor_drift_to_clock",
+      "journeys": [
+        "journey_doctor_boot"
+      ],
+      "from": [
+        "sys.doctor.denial.drift"
+      ],
+      "to": [
+        "sys.doctor.success.clock_drift"
+      ],
+      "trigger": "doctor_after_resync",
+      "label": "capcli sys doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_leak_panic_to_rotation",
+      "journeys": [
+        "journey_secret_leak_containment"
+      ],
+      "from": [
+        "run.execute.panic.secret_leak"
+      ],
+      "to": [
+        "sys.vault_set.success.vaulted"
+      ],
+      "trigger": "rotate_secret",
+      "label": "capcli sys vault set stripe_secret_key --in @-",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_leak_rotation_to_reprove",
+      "journeys": [
+        "journey_secret_leak_containment"
+      ],
+      "from": [
+        "sys.vault_set.success.vaulted"
+      ],
+      "to": [
+        "api.prove.success.passed"
+      ],
+      "trigger": "reprove_in_sim",
+      "label": "capcli api prove stripe.refund_charge --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_media_loss_to_recovery",
+      "journeys": [
+        "journey_media_loss_recovery"
+      ],
+      "from": [
+        "sys.doctor.panic.tamper"
+      ],
+      "to": [
+        "sys.doctor.success.recovery"
+      ],
+      "trigger": "enter_recovery_shell",
+      "label": "CAPCLI_RECOVERY=1 capcli sys doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_gates_authorizer_to_trust",
+      "journeys": [
+        "journey_execution_gates"
+      ],
+      "from": [
+        "run.execute.denial.authorizer"
+      ],
+      "to": [
+        "run.execute.denial.trust"
+      ],
+      "trigger": "run_in_prod",
+      "label": "capcli run cap://sync_inventory@3 -p warehouse=west --env prod -m \"nightly inventory sync\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_gates_trust_to_tier2",
+      "journeys": [
+        "journey_execution_gates"
+      ],
+      "from": [
+        "run.execute.denial.trust"
+      ],
+      "to": [
+        "run.execute.denial.tier2_pinned"
+      ],
+      "trigger": "run_on_degraded_host",
+      "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_gates_tier2_to_success",
+      "journeys": [
+        "journey_execution_gates"
+      ],
+      "from": [
+        "run.execute.denial.tier2_pinned"
+      ],
+      "to": [
+        "run.execute.success.populated"
+      ],
+      "trigger": "run_on_tier1",
+      "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_crash_runtime_to_recover",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "run.execute.crash.runtime"
+      ],
+      "to": [
+        "sys.recover.success.restored"
+      ],
+      "trigger": "workspace_recover",
+      "label": "capcli sys recover 3f9c2ab",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_crash_recover_to_poll",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "sys.recover.success.restored"
+      ],
+      "to": [
+        "run.execute.crash.poll_timeout"
+      ],
+      "trigger": "run_media_digest",
+      "label": "capcli run cap://media_digest@2 -p audience=followers -m \"morning media digest\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crash_poll_to_restore",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "run.execute.crash.poll_timeout"
+      ],
+      "to": [
+        "db.restore.success.restored"
+      ],
+      "trigger": "snapshot_restore",
+      "label": "capcli db restore snap_onboarding_01",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_crash_restore_to_prove_crash",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "db.restore.success.restored"
+      ],
+      "to": [
+        "routine.prove.crash.runtime"
+      ],
+      "trigger": "reprove_sync_orders",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crash_prove_to_rollback",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "routine.prove.crash.runtime"
+      ],
+      "to": [
+        "routine.rollback.success.completed"
+      ],
+      "trigger": "rollback_last_good",
+      "label": "capcli routine rollback sync_orders 3",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_crash_rollback_to_api_crash",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "routine.rollback.success.completed"
+      ],
+      "to": [
+        "api.prove.crash.runtime"
+      ],
+      "trigger": "prove_credit_note",
+      "label": "capcli api prove stripe.issue_credit_note --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crash_api_to_resync",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "api.prove.crash.runtime"
+      ],
+      "to": [
+        "api.sync.success.synced"
+      ],
+      "trigger": "resync_provider_spec",
+      "label": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_sql_unparseable_to_missing_intent",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.refusal.unparseable"
+      ],
+      "to": [
+        "run.sql.refusal.missing_intent"
+      ],
+      "trigger": "fix_syntax",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_sql_intent_to_ast",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.refusal.missing_intent"
+      ],
+      "to": [
+        "run.sql.denial.ast"
+      ],
+      "trigger": "unbounded_write",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_sql_ast_to_authorizer",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.denial.ast"
+      ],
+      "to": [
+        "run.sql.denial.authorizer"
+      ],
+      "trigger": "drop_table",
+      "label": "capcli sql \"DROP TABLE orders\" -m \"remove stale orders table\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_sql_authorizer_to_engine_busy",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.denial.authorizer"
+      ],
+      "to": [
+        "run.sql.denial.engine_busy"
+      ],
+      "trigger": "bounded_write_contended",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50\" -m \"batch ship processing orders\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_sql_busy_to_dry_run",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.denial.engine_busy"
+      ],
+      "to": [
+        "run.sql.success.dry_run"
+      ],
+      "trigger": "dry_run_ddl",
+      "label": "capcli sql \"ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0\" --dry-run -m \"add priority flag for rush shipping\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_sql_dry_run_to_bounded_write",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.success.dry_run"
+      ],
+      "to": [
+        "run.sql.success.populated"
+      ],
+      "trigger": "bounded_keyed_write",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_search_empty_to_populated",
+      "journeys": [
+        "journey_search_discovery"
+      ],
+      "from": [
+        "run.search.success.empty"
+      ],
+      "to": [
+        "run.search.success.populated"
+      ],
+      "trigger": "search_order",
+      "label": "capcli search 'order'",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_search_populated_to_truncated",
+      "journeys": [
+        "journey_search_discovery"
+      ],
+      "from": [
+        "run.search.success.populated"
+      ],
+      "to": [
+        "run.search.success.truncated"
+      ],
+      "trigger": "search_stripe",
+      "label": "capcli search 'stripe'",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_search_truncated_to_gaps",
+      "journeys": [
+        "journey_search_discovery"
+      ],
+      "from": [
+        "run.search.success.truncated"
+      ],
+      "to": [
+        "run.search.success.gaps"
+      ],
+      "trigger": "gap_sweep",
+      "label": "capcli search gaps --since 7d",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_overview_full_to_truncated",
+      "journeys": [
+        "journey_overview_briefing"
+      ],
+      "from": [
+        "run.overview.success.populated"
+      ],
+      "to": [
+        "run.overview.success.truncated"
+      ],
+      "trigger": "rerun_at_drained_budget",
+      "label": "capcli run overview (drained budget: clipped at 500 tokens)",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_nf_to_trust",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.refusal.missing_ptr"
+      ],
+      "to": [
+        "run.inspect.denial.trust"
+      ],
+      "trigger": "inspect_draft_ptr",
+      "label": "capcli inspect cap://refund_and_archive@1",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_inspect_trust_to_template",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.denial.trust"
+      ],
+      "to": [
+        "run.inspect.success.template"
+      ],
+      "trigger": "inspect_template",
+      "label": "capcli inspect tpl://order_sync@2",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_template_to_quota",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.template"
+      ],
+      "to": [
+        "run.inspect.success.quota"
+      ],
+      "trigger": "inspect_quota",
+      "label": "capcli inspect quota://threads",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_quota_to_routine",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.quota"
+      ],
+      "to": [
+        "run.inspect.success.routine"
+      ],
+      "trigger": "inspect_routine",
+      "label": "capcli inspect cap://dispatch_order@4",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_large_sql_truncated_to_redirected",
+      "journeys": [
+        "journey_large_result_delivery"
+      ],
+      "from": [
+        "run.sql.success.truncated"
+      ],
+      "to": [
+        "run.sql.success.redirected"
+      ],
+      "trigger": "redirect_to_disk",
+      "label": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\" --out out/orders_export.json",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_large_sql_to_exec_truncated",
+      "journeys": [
+        "journey_large_result_delivery"
+      ],
+      "from": [
+        "run.sql.success.redirected"
+      ],
+      "to": [
+        "run.execute.success.truncated"
+      ],
+      "trigger": "run_quarterly_report",
+      "label": "capcli run cap://report_orders@2 -p quarter=2026Q3",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_large_exec_truncated_to_redirected",
+      "journeys": [
+        "journey_large_result_delivery"
+      ],
+      "from": [
+        "run.execute.success.truncated"
+      ],
+      "to": [
+        "run.execute.success.redirected"
+      ],
+      "trigger": "redirect_report",
+      "label": "capcli run cap://report_orders@2 -p quarter=2026Q3 --out report.json",
       "arrow_type": "success"
     }
   ]

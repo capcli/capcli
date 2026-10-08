@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "routine.runtime",
     "culprit": "SIGSEGV at 0x0 in native extension pandas/_libs/scanmap",
-    "remedy": "reproduce via 'capcli sys exec \"python3 -X faulthandler etl.py\" --sandbox' and pin the failing native extension"
+    "remedy": "reproduce via 'capcli sys exec \"python3 -X faulthandler etl.py\" --sandbox' and pin the failing native extension",
+    "state_modified": false
   },
   "render": {
     "header": {

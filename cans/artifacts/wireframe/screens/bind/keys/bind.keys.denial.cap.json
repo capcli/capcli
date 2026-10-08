@@ -17,7 +17,8 @@
     "culprit": "Max 25 keys reached. Key issuance refused.",
     "remedy": "remove an idle endpoint binding to release its keys, or await 90d rotation",
     "layer": "authorizer",
-    "measured": "25 active keys (cap: 25)"
+    "measured": "25 active keys (cap: 25)",
+    "state_modified": false
   },
   "render": {
     "header": {

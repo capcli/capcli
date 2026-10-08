@@ -16,7 +16,8 @@
     "domain": "policy.authorizer",
     "culprit": "Unsigned hooks rejected. HMAC-SHA256 verification must be armed at bind time.",
     "remedy": "store the provider signing secret via sys vault set, then re-run bind webhook",
-    "layer": "authorizer"
+    "layer": "authorizer",
+    "state_modified": false
   },
   "render": {
     "header": {

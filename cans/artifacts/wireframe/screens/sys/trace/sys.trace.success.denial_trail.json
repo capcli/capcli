@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v1",
-  "screen_id": "sys.trace.success.populated",
-  "target": "op_7c4f",
-  "command": "capcli sys audit trace op_7c4f --explain",
+  "screen_id": "sys.trace.success.denial_trail",
+  "target": "op_9f2e",
+  "command": "capcli sys audit trace op_9f2e --explain",
   "state": {
     "exit_code": 0,
     "domain": null,
@@ -16,7 +16,7 @@
   "render": {
     "header": {
       "style": "plain",
-      "label": "[dev:tier_1]  Causal DAG Trace (op_7c4f)"
+      "label": "[dev:tier_1]  Causal DAG Trace (op_9f2e)"
     },
     "sections": [
       {
@@ -27,28 +27,24 @@
             "indent": 2
           },
           {
-            "text": "└── op_9f2c  routine.dispatch_order@4",
+            "text": "└── op_9f2e  db.execute (orders)       ✗ [denied]  exit 2",
             "indent": 2
           },
           {
-            "text": "├── op_9f2d  db.query (orders)         ✓ [allowed]  12ms",
+            "text": "├── UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
             "indent": 8
           },
           {
-            "text": "├── op_7c4f  api.call (fedex.ship)     ✓ [allowed]  340ms",
+            "text": "├── ✗ policy.ast  policy.query.update_delete.require_limit",
             "indent": 8
           },
           {
-            "text": "│     └── tracking  794644790133",
+            "text": "│     └── effect: none (0 rows touched)",
             "indent": 14
           },
           {
-            "text": "└── op_9f2f  db.execute (orders)       ✓ [allowed]  18ms",
+            "text": "└── remedy  add LIMIT, or target specific primary key",
             "indent": 8
-          },
-          {
-            "text": "└── status = 'shipped' (1 row)",
-            "indent": 14
           }
         ]
       },

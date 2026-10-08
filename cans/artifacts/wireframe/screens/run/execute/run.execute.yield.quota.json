@@ -18,7 +18,8 @@
     "remedy": "task safely yielded; daemon will auto-resume at reset_at",
     "tokens_left": "0 / 50 (24h window)",
     "reset_at": "18:00:00 UTC (in 4h 12m)",
-    "suspended_frame": "task_99a8b1"
+    "suspended_frame": "task_99a8b1",
+    "state_modified": false
   },
   "render": {
     "header": {

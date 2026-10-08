@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "commit 1a2b3c4 not found in local catalog or object store",
-    "remedy": "list recovery points with 'capcli sys recover --list', then target an existing commit"
+    "remedy": "list recovery points with 'capcli sys recover --list', then target an existing commit",
+    "state_modified": false
   },
   "render": {
     "header": {

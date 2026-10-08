@@ -17,7 +17,8 @@
     "culprit": "Table destruction denied at the C authorizer; DDL flows through schema evolution.",
     "remedy": "declare removal in schema.yaml and apply via capcli rule apply schema",
     "layer": "authorizer",
-    "measured": "statement rejected at prepare; 0 rows touched"
+    "measured": "statement rejected at prepare; 0 rows touched",
+    "state_modified": false
   },
   "render": {
     "header": {

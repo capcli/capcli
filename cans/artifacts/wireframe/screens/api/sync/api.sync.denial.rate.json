@@ -17,7 +17,8 @@
     "culprit": "Sync call within 24h cooldown for provider 'stripe'.",
     "remedy": "wait for the 24h cooldown to reset, or inspect the live catalog via 'capcli api catalog stripe'",
     "layer": "quota",
-    "measured": "last sync completed 18h 24m ago (cooldown remaining: 5h 36m)"
+    "measured": "last sync completed 18h 24m ago (cooldown remaining: 5h 36m)",
+    "state_modified": false
   },
   "render": {
     "header": {

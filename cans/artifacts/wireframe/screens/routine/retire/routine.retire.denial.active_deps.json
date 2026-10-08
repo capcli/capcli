@@ -17,7 +17,8 @@
     "culprit": "Callee dependencies block retirement; dependents must be retired or rebound first.",
     "remedy": "retire or rebind order_sync@2 and sync_orders@1 first, then re-run retire",
     "layer": "authorizer",
-    "measured": "2 active dependents (0 permitted for retirement)"
+    "measured": "2 active dependents (0 permitted for retirement)",
+    "state_modified": false
   },
   "render": {
     "header": {

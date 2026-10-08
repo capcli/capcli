@@ -76,7 +76,15 @@
             "indent": 2
           },
           {
-            "text": "│     └── receipt        blob ref=storage",
+            "text": "│     ├── receipt        blob ref=storage",
+            "indent": 2
+          },
+          {
+            "text": "│     ├── created_by     text (prov)",
+            "indent": 2
+          },
+          {
+            "text": "│     └── modified_by    text (prov)",
             "indent": 2
           },
           {

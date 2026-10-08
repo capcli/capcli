@@ -17,7 +17,8 @@
     "culprit": "Test pass executed 12 ops against declared max_ops 8; execution caps are hard boundaries.",
     "remedy": "declare limits={\"max_ops\": 16} in a new version, or replace the carrier loop with ctx.api.poll_until",
     "layer": "authorizer",
-    "measured": "12 ops executed vs 8 declared (max_ops; governance ceiling: 50)"
+    "measured": "12 ops executed vs 8 declared (max_ops; governance ceiling: 50)",
+    "state_modified": false
   },
   "render": {
     "header": {

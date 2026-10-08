@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Document URP 'refund-policies' has no entry in the document catalog.",
-    "remedy": "verify the URP; nearest catalog match is doc://refund-policy"
+    "remedy": "verify the URP; nearest catalog match is doc://refund-policy",
+    "state_modified": false
   },
   "render": {
     "header": {

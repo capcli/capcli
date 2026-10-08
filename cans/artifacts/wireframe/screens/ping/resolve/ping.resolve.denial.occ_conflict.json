@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v1",
   "screen_id": "ping.resolve.denial.occ_conflict",
-  "target": "ask_88a",
-  "command": "capcli ping resolve ask_88a --choice approve",
+  "target": "ask_77c3",
+  "command": "capcli ping resolve ask_77c3 --choice approve",
   "state": {
     "exit_code": 2,
     "domain": "db.engine",
@@ -14,9 +14,10 @@
   },
   "diagnostic": {
     "domain": "db.engine",
-    "culprit": "Touched rows modified during suspension; OCC fence violated (orders row version 41 → 43)",
+    "culprit": "Touched rows modified during ask_77c3 suspension; OCC fence violated (orders row ORD-10 version 41 → 43)",
     "remedy": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame",
-    "layer": "engine"
+    "layer": "engine",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -33,11 +34,11 @@
           },
           {
             "field": "ask",
-            "value": "ask_88a"
+            "value": "ask_77c3"
           },
           {
             "field": "fence",
-            "value": "orders row version 41 → 43 during suspension"
+            "value": "orders row ORD-10 version 41 → 43 during suspension"
           }
         ]
       },

@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Table 'invoices' has no compiled declaration in this workspace.",
-    "remedy": "declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'"
+    "remedy": "declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'",
+    "state_modified": false
   },
   "render": {
     "header": {

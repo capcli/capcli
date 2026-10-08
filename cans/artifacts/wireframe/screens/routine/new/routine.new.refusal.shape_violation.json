@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Scaffold violates routine_shape ceilings: 214 LOC (max: 150), 11 params (max: 8).",
-    "remedy": "split the scaffold into composed routines under 150 LOC with at most 8 params each"
+    "remedy": "split the scaffold into composed routines under 150 LOC with at most 8 params each",
+    "state_modified": false
   },
   "render": {
     "header": {

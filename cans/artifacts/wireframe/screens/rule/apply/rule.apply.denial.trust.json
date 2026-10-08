@@ -16,7 +16,8 @@
     "domain": "policy.trust",
     "culprit": "DDL trust floor: alter requires reviewed trust; caller rung is draft.",
     "remedy": "ship the schema change for human review: capcli routine ship schema_13 reviewed",
-    "layer": "trust"
+    "layer": "trust",
+    "state_modified": false
   },
   "render": {
     "header": {

@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.register.success.registered",
   "target": "agents",
-  "command": "capcli sys register",
+  "command": "capcli sys agent register",
   "state": {
     "exit_code": 0,
     "domain": null,

@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "compile",
     "culprit": "bwrap absent from PATH on tier_1 host (floor: 0.8.0, mandatory on Tier 1)",
-    "remedy": "install bubblewrap >= 0.8.0, then re-run 'capcli sys doctor --boot-check'"
+    "remedy": "install bubblewrap >= 0.8.0, then re-run 'capcli sys doctor --boot-check'",
+    "state_modified": false
   },
   "render": {
     "header": {

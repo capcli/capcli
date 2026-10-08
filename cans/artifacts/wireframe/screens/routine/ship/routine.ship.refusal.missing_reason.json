@@ -5,7 +5,7 @@
   "command": "capcli routine ship order_sync pinned",
   "state": {
     "exit_code": 3,
-    "domain": "validation",
+    "domain": "missing_param",
     "trust": "reviewed",
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +13,10 @@
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "validation",
+    "domain": "missing_param",
     "culprit": "Elevation to pinned requires a --reason justification; threshold crossings need evidence.",
-    "remedy": "re-run with --reason, e.g. capcli routine ship order_sync pinned --reason \"30d clean canary\""
+    "remedy": "re-run with --reason, e.g. capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -27,7 +28,7 @@
         "title": null,
         "items": [
           {
-            "text": "FAIL  validation.promotion.reason_required",
+            "text": "FAIL  missing_param.promotion.reason_required",
             "indent": 2
           },
           {

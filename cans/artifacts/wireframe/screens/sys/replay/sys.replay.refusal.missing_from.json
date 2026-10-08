@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.replay.refusal.missing_from",
   "target": "_audit",
-  "command": "capcli sys replay",
+  "command": "capcli sys audit replay",
   "state": {
     "exit_code": 3,
     "domain": "missing_param",
@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "missing_param",
     "culprit": "replay anchor omitted: --from <timestamp> or --from <commit> is required",
-    "remedy": "re-run as capcli sys replay --from 2026-10-03T22:41:07Z"
+    "remedy": "re-run as capcli sys audit replay --from 2026-10-03T22:41:07Z",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -45,7 +46,7 @@
           },
           {
             "field": "remedy",
-            "value": "re-run as capcli sys replay --from 2026-10-03T22:41:07Z"
+            "value": "re-run as capcli sys audit replay --from 2026-10-03T22:41:07Z"
           }
         ]
       }

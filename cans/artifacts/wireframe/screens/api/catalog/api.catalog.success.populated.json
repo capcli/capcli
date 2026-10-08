@@ -52,8 +52,8 @@
             "indent": 2
           },
           {
-            "field": "│     └── last_call",
-            "value": "op_9f2e (ok)"
+            "text": "│     └── last_call  op_5a72 (ok)",
+            "indent": 8
           },
           {
             "text": "├── issue_credit_note      active   draft    12 calls",

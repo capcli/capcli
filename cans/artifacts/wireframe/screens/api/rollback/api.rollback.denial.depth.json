@@ -17,7 +17,8 @@
     "culprit": "Exceeds max rollback limit of 5: version 8 to version 2 spans depth 6.",
     "remedy": "roll back to version 3 or later, or re-sync the exact prior spec to pin it fresh",
     "layer": "authorizer",
-    "measured": "rollback depth 6 (cap: 5)"
+    "measured": "rollback depth 6 (cap: 5)",
+    "state_modified": false
   },
   "render": {
     "header": {
