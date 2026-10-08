@@ -16,13 +16,6 @@
       "terminal": "routine.prove.success.overview",
       "description": "H0 parse machine contract (--json doctor) -> H1 overview grounding + search discovery -> H2 dry-run rehearsal -> H3 dual probe: sql state + api catalog -> H4 scaffold sync_orders + hybrid prove -> H5 parse feedback via audit trace --explain -> H6 codify the mandatory overview routine -> H7 prove overview in sim"
     },
-    "journey_execution_crucible": {
-      "name": "Cascade Starvation, Jail Traps & Contention",
-      "color": "#f85149",
-      "entry": "run.inspect.success.routine",
-      "terminal": "run.execute.success.populated",
-      "description": "Exhaustion at child frame boundary -> syscall 42 trap -> concurrency lease recovery -> thrashing detection -> vault resolution"
-    },
     "journey_trust_promotion": {
       "name": "Draft to Pinned Canary Promotion",
       "color": "#3fb950",
@@ -64,6 +57,41 @@
       "entry": "sys.tail.success.empty",
       "terminal": "sys.replay.success.replayed",
       "description": "Observe the audit spine: quiet tail then live events -> trace a typo'd op id, then the allowed fedex.ship op (op_7c4f) -> mirror queries (typo SQL, empty, populated) -> replay gates (missing --from, external op) -> a clean window replay"
+    },
+    "journey_budget_cascade": {
+      "name": "Budget Cage: Session, Cascade & Quota Physics",
+      "color": "#d4a72c",
+      "entry": "run.inspect.success.routine",
+      "terminal": "run.execute.success.resumed",
+      "description": "Composite pre-flight envelope (budget_inheritance min) -> session ops ceiling starves the archive run -> child frame starved by min() cascade -> long runner parks on dry wire quota (exit 6) -> refill epoch auto-resume"
+    },
+    "journey_network_jail": {
+      "name": "Network Jail & Reviewed Egress",
+      "color": "#8250df",
+      "entry": "run.execute.denial.network_jail",
+      "terminal": "api.catalog.success.populated",
+      "description": "Raw connect() to 10.0.0.5:5432 trapped by the seccomp-bpf jail (syscall 42) -> remediation: route egress through activated catalog verbs via api catalog"
+    },
+    "journey_claims_contention": {
+      "name": "Row Claim Contention & Lease Handoff",
+      "color": "#bf8700",
+      "entry": "run.execute.denial.claim_held",
+      "terminal": "db.lock.success.acquired",
+      "description": "Execution blocked on a held claim (orders:ORD-10, holder agt_9k2w) -> manual lock denied -> unlock denied (caller is not the holder) -> holder releases the lease -> claim reacquired"
+    },
+    "journey_thrashing_recovery": {
+      "name": "Agent Thrashing Detection & Backoff",
+      "color": "#bc4c00",
+      "entry": "sys.doctor.denial.thrashing",
+      "terminal": "sys.doctor.success.nominal",
+      "description": "agent agt_7f3k stuck in a repetitive denial loop (22 denials / 5m, threshold 20) -> harness throttled, escalation + backoff -> re-probe reports a nominal host"
+    },
+    "journey_vault_secret_provisioning": {
+      "name": "Vault Secret Provisioning (stripe_secret_key)",
+      "color": "#0969da",
+      "entry": "run.execute.refusal.missing_secret",
+      "terminal": "run.execute.success.populated",
+      "description": "stripe.refund_charge refused (stripe_secret_key absent from vault) -> vault gates (value required via --in @-, env vars required for import-env) -> out-of-band injection lands -> pinned capability executes with the vault provisioned"
     }
   },
   "transitions": [
@@ -272,111 +300,6 @@
       "arrow_type": "progress"
     },
     {
-      "id": "t_crucible_inspect_to_cascade",
-      "journeys": [
-        "journey_execution_crucible"
-      ],
-      "from": [
-        "run.inspect.success.routine"
-      ],
-      "to": [
-        "run.execute.denial.budget_cascade"
-      ],
-      "trigger": "invoke_child_frame",
-      "label": "Child frame crosses min() bounds",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_cascade_to_jail",
-      "journeys": [
-        "journey_execution_crucible"
-      ],
-      "from": [
-        "run.execute.denial.budget_cascade"
-      ],
-      "to": [
-        "run.execute.denial.network_jail"
-      ],
-      "trigger": "raw_socket_attempt",
-      "label": "Syscall 42 connect() trapped",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_jail_to_claims",
-      "journeys": [
-        "journey_execution_crucible"
-      ],
-      "from": [
-        "run.execute.denial.network_jail"
-      ],
-      "to": [
-        "db.lock.denial.claim_held"
-      ],
-      "trigger": "contested_claim",
-      "label": "capcli db lock orders:ORD-10",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_claims_to_thrashing",
-      "journeys": [
-        "journey_execution_crucible"
-      ],
-      "from": [
-        "db.lock.denial.claim_held"
-      ],
-      "to": [
-        "sys.doctor.denial.thrashing"
-      ],
-      "trigger": "sustained_denials",
-      "label": "20 sustained denials in 5m",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_thrashing_to_missing_secret",
-      "journeys": [
-        "journey_execution_crucible"
-      ],
-      "from": [
-        "sys.doctor.denial.thrashing"
-      ],
-      "to": [
-        "run.execute.refusal.missing_secret"
-      ],
-      "trigger": "execute_without_vault",
-      "label": "capcli run cap://stripe.refund",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_crucible_secret_to_vault",
-      "journeys": [
-        "journey_execution_crucible"
-      ],
-      "from": [
-        "run.execute.refusal.missing_secret"
-      ],
-      "to": [
-        "sys.vault_set.success.vaulted"
-      ],
-      "trigger": "inject_vault_secret",
-      "label": "capcli sys vault_set stripe_key",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_crucible_vault_resume_exec",
-      "journeys": [
-        "journey_execution_crucible"
-      ],
-      "from": [
-        "sys.vault_set.success.vaulted"
-      ],
-      "to": [
-        "run.execute.success.populated"
-      ],
-      "trigger": "retry_execution",
-      "label": "capcli run cap://stripe.refund",
-      "arrow_type": "success"
-    },
-    {
       "id": "t_promotion_prove_to_queue",
       "journeys": [
         "journey_trust_promotion"
@@ -388,7 +311,7 @@
         "routine.pending.success.populated"
       ],
       "trigger": "enqueue_promotion",
-      "label": "capcli routine ship order_sync reviewed --queue",
+      "label": "capcli routine pending",
       "arrow_type": "progress"
     },
     {
@@ -403,13 +326,14 @@
         "routine.ship.success.shipped"
       ],
       "trigger": "commit_ship",
-      "label": "capcli routine ship order_sync pinned",
+      "label": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
       "arrow_type": "success"
     },
     {
       "id": "t_quota_yield_to_park",
       "journeys": [
-        "journey_quota_preemption"
+        "journey_quota_preemption",
+        "journey_budget_cascade"
       ],
       "from": [
         "run.execute.yield.quota"
@@ -809,6 +733,216 @@
       ],
       "trigger": "replay_window_ok",
       "label": "capcli sys audit replay --from 2026-10-03T23:52:31Z",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_budget_inspect_to_exec",
+      "journeys": [
+        "journey_budget_cascade"
+      ],
+      "from": [
+        "run.inspect.success.routine"
+      ],
+      "to": [
+        "run.execute.denial.budget"
+      ],
+      "trigger": "invoke_archive",
+      "label": "capcli run cap://archive_old_orders@3 -p cutoff=90d -m \"archive stale orders\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_budget_session_to_cascade",
+      "journeys": [
+        "journey_budget_cascade"
+      ],
+      "from": [
+        "run.execute.denial.budget"
+      ],
+      "to": [
+        "run.execute.denial.budget_cascade"
+      ],
+      "trigger": "invoke_composite",
+      "label": "capcli run cap://sync_inventory@3 -p warehouse=west -m \"nightly inventory sync\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_budget_cascade_to_quota",
+      "journeys": [
+        "journey_budget_cascade"
+      ],
+      "from": [
+        "run.execute.denial.budget_cascade"
+      ],
+      "to": [
+        "run.execute.yield.quota"
+      ],
+      "trigger": "long_runner_parks",
+      "label": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
+      "arrow_type": "yield"
+    },
+    {
+      "id": "t_jail_to_catalog",
+      "journeys": [
+        "journey_network_jail"
+      ],
+      "from": [
+        "run.execute.denial.network_jail"
+      ],
+      "to": [
+        "api.catalog.success.populated"
+      ],
+      "trigger": "discover_egress_verbs",
+      "label": "capcli api catalog stripe --state active --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_claims_exec_to_lock_probe",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "run.execute.denial.claim_held"
+      ],
+      "to": [
+        "db.lock.denial.claim_held"
+      ],
+      "trigger": "probe_claim",
+      "label": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_claims_lock_to_unlock_attempt",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "db.lock.denial.claim_held"
+      ],
+      "to": [
+        "db.unlock.denial.not_holder"
+      ],
+      "trigger": "attempt_release",
+      "label": "capcli db unlock orders:ORD-10",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_claims_not_holder_to_release",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "db.unlock.denial.not_holder"
+      ],
+      "to": [
+        "db.unlock.success.released"
+      ],
+      "trigger": "holder_releases",
+      "label": "lease holder agt_9k2w releases the claim",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_claims_release_to_reacquire",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "db.unlock.success.released"
+      ],
+      "to": [
+        "db.lock.success.acquired"
+      ],
+      "trigger": "retry_lock",
+      "label": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_thrashing_backoff_to_nominal",
+      "journeys": [
+        "journey_thrashing_recovery"
+      ],
+      "from": [
+        "sys.doctor.denial.thrashing"
+      ],
+      "to": [
+        "sys.doctor.success.nominal"
+      ],
+      "trigger": "backoff_recheck",
+      "label": "capcli sys doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_vault_refusal_to_set_gate",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "run.execute.refusal.missing_secret"
+      ],
+      "to": [
+        "sys.vault_set.refusal.missing_val"
+      ],
+      "trigger": "inject_attempt",
+      "label": "capcli sys vault set stripe_secret_key",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_vault_set_gate_to_vaulted",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "sys.vault_set.refusal.missing_val"
+      ],
+      "to": [
+        "sys.vault_set.success.vaulted"
+      ],
+      "trigger": "stdin_injection",
+      "label": "capcli sys vault set stripe_secret_key --in @-",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_vault_vaulted_to_import_env",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "sys.vault_set.success.vaulted"
+      ],
+      "to": [
+        "sys.vault_import.refusal.no_env_vars"
+      ],
+      "trigger": "bulk_attempt",
+      "label": "capcli sys vault import-env",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_vault_import_retry",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "sys.vault_import.refusal.no_env_vars"
+      ],
+      "to": [
+        "sys.vault_import.success.imported"
+      ],
+      "trigger": "export_secrets",
+      "label": "capcli sys vault import-env",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_vault_resume_exec",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "sys.vault_import.success.imported"
+      ],
+      "to": [
+        "run.execute.success.populated"
+      ],
+      "trigger": "retry_execution",
+      "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
       "arrow_type": "success"
     }
   ]
