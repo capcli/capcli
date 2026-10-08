@@ -108,6 +108,9 @@ cans/artifacts/wireframe/
   ```
   {noun}.{verb}.{state}.{condition}.json
   ```
+* **Root Aliases:** Exactly four ergonomic root shortcuts are legal invocation grammar (cans/interface.md#CLI-surface): `capcli sql` ≡ `capcli run sql`, `capcli search` ≡ `capcli run search`, `capcli inspect` ≡ `capcli run inspect`, and `capcli apply` ≡ `capcli rule apply schema`. These four root aliases may appear in fixture `command` strings; no other root shortcuts exist — everything else is `capcli <noun> <verb>`.
+* **Compound-Verb Mapping:** Screen IDs and directories keep underscore verb segments (`sys.vault_set`, `sys.vault_import`), while the invocation grammar follows cans/interface.md#CLI-surface: `capcli sys vault set <key> <val>`, `capcli sys vault import-env`, `capcli sys agent register|revoke`, `capcli sys audit tail|trace|query|replay`. The underscore form names the fixture; the spaced form is what the user types.
+* **Dynamic Environment Namespaces:** Environments are user-provisionable namespaces (`env new <slug>`, cans/interface.md#CLI-surface). `state_axes.env` in `manifest.json` lists only the kernel-reserved roots (`dev`, `sim`, `prod`); values like `staging` or `lab` are legal fixtures of dynamically provisioned namespaces (see `env_policy` in `manifest.json`).
 
 ---
 
