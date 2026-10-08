@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "compile",
     "culprit": "Duplicate mapping key 'status' already defined at schema.yaml:52:11.",
-    "remedy": "remove or rename the duplicate 'status' key, then re-run capcli rule validate"
+    "remedy": "remove or rename the duplicate 'status' key, then re-run capcli rule validate",
+    "state_modified": false
   },
   "render": {
     "header": {
