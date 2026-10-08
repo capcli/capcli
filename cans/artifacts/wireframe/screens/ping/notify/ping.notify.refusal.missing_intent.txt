@@ -1,9 +1,0 @@
-[dev:tier_1]  ✗  exit 3
-
-  FAIL  compile.no_intent
-        capcli ping notify user:alice "Nightly sync finished" --channel email
-        Missing intent declaration.
-        ping notify requires --intent "..." (policy: notify.require_intent).
-
-  state_modified:  false
-  remedy:          re-run with --intent "<why this notification is sent>"

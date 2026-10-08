@@ -6,7 +6,7 @@
 
 The wireframe layer serves a dual purpose: an **interactive edgeless canvas** for humans and harnesses, and a **deterministic golden-file test fixture suite** for the Rust kernel.
 
-Flow graphs, journey definitions, and multi-branch transition metadata are codified into `_flows.json`. Individual screen fixtures remain atomic, stateless, and congruent with runtime compiler and authorizer output.
+Flow graphs, journey definitions, and multi-branch transition metadata are codified into `_flows.json`. Individual screen fixtures are atomic, stateless JSON shapes congruent with runtime compiler and authorizer output. No `.txt` companions are committed; the renderer (HTML or Rust) is the sole consumer of the JSON shape.
 
 ```
 cans/artifacts/wireframe/
@@ -101,12 +101,12 @@ cans/artifacts/wireframe/
 
 ### 1.1 Structural Invariants
 * **Active Nouns:** Exactly 10 CLI nouns (`run`, `db`, `routine`, `api`, `bind`, `ping`, `rule`, `env`, `sys`, `doc`).
-* **Pairing Law:** Every `.json` fixture has an identical `.txt` companion in the same folder. No orphan files. No empty directories.
-* **Depth Ceiling:** File paths relative to `screens/` must remain exactly 3 path components: `{noun}/{verb}/{filename}`.
+* **Single-Source Law:** Every screen has exactly one `.json` fixture. No `.txt` files are committed. The JSON shape IS the screen; renderers (HTML canvas, Rust test harness) consume it directly.
+* **Depth Ceiling:** File paths relative to `screens/` must remain exactly 3 path components: `{noun}/{verb}/{filename}.json`.
 * **Sibling Invariants:** Min 3, max 16 verb directories per noun branch node.
 * **Naming Law:** Strict 4-segment token syntax:
   ```
-  {noun}.{verb}.{state}.{condition}.{json|txt}
+  {noun}.{verb}.{state}.{condition}.json
   ```
 
 ---
@@ -133,27 +133,27 @@ The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, 
 
 Canonical file: `_flows.json` (same directory). It owns journeys and screen-to-screen routing; this document points at it and does not reproduce it.
 
-Every screen ID referenced by a flow must exist as a fixture pair under `screens/` and as a row in §4 — the validator enforces closure. Flow prose in §5 quotes individual screens for walkthroughs; the routing itself lives only in `_flows.json`.
+Every screen ID referenced by a flow must exist as a `.json` fixture under `screens/` and as a row in §4 — the validator enforces closure. Flow prose in §5 quotes individual screens for walkthroughs; the routing itself lives only in `_flows.json`.
 
 ---
 
 ## 4. Complete Screen Inventory & State Matrix
 
 This table is a context index: one scannable surface a reader loads
-before drilling into fixture pairs. It indexes; it does not originate.
-Fixture pairs under `screens/` are the source, `_states.json` owns
+before drilling into fixture shapes. It indexes; it does not originate.
+Fixture `.json` files under `screens/` are the source, `_states.json` owns
 state and domain legality, and `_flows.json` owns routing. Every row
-resolves to one fixture pair and every fixture pair has one row —
+resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (5 verbs $\\rightarrow$ 37 screen pairs)
+### 4.1 `run/` (5 verbs → 37 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `run.execute.success.populated` | success | 0 | — | populated | Deterministic execution and commit |
 | `run.execute.success.redirected` | success | 0 | — | redirected | Payload directed to file via `--out`; stdout emits receipt |
-| `run.execute.success.truncated` | success | 0 | — | truncated | Result $>500$ tokens; returns `next_cursor` |
+| `run.execute.success.truncated` | success | 0 | — | truncated | Result >500 tokens; returns `next_cursor` |
 | `run.execute.denial.budget` | denial | 2 | policy.budget | exhausted | Frame ops/duration ceiling exhausted |
 | `run.execute.denial.budget_cascade` | denial | 2 | policy.budget | starved | Pre-flight call-tree analysis detects starved child branch; invocation blocked |
 | `run.execute.denial.trust` | denial | 2 | policy.trust | unproven | Draft routine executed in prod |
@@ -177,7 +177,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.sql.denial.engine_busy` | denial | 2 | db.engine | timeout | SQLite transaction queue wait timeout |
 | `run.sql.refusal.unparseable` | refusal | 3 | compile | bad_syntax | Malformed SQL string syntax |
 | `run.sql.refusal.missing_intent` | refusal | 3 | compile | no_intent | Mutating write missing `-m` / `--intent` |
-| `run.overview.success.populated` | success | 0 | — | populated | Situational KPI briefing ($<500$ tokens) |
+| `run.overview.success.populated` | success | 0 | — | populated | Situational KPI briefing (<500 tokens) |
 | `run.overview.success.truncated` | success | 0 | — | truncated | Oversized overview clipped |
 | `run.search.success.populated` | success | 0 | — | populated | Matched capabilities and URP pointers |
 | `run.search.success.empty` | success | 0 | — | empty | Zero hits; outputs semantic suggestions |
@@ -189,7 +189,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
 
-### 4.2 `db/` (6 verbs $\\rightarrow$ 14 screen pairs)
+### 4.2 `db/` (6 verbs → 14 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -208,7 +208,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
 | `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
 
-### 4.3 `routine/` (8 verbs $\\rightarrow$ 26 screen pairs)
+### 4.3 `routine/` (8 verbs → 26 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -239,7 +239,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.retire.denial.active_deps` | denial | 2 | policy.authorizer | deps_exist | Callee dependencies block retirement |
 | `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
 
-### 4.4 `api/` (8 verbs $\\rightarrow$ 23 screen pairs)
+### 4.4 `api/` (8 verbs → 23 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -267,7 +267,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `api.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback limit of 5 |
 | `api.rollback.refusal.not_found` | refusal | 3 | validation | not_found | Target version not found |
 
-### 4.5 `bind/` (10 verbs $\\rightarrow$ 26 screen pairs)
+### 4.5 `bind/` (10 verbs → 26 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -298,7 +298,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `bind.keys.success.issued` | success | 0 | — | issued | API key stamped for endpoint (90d expiry) |
 | `bind.keys.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 25 keys reached |
 
-### 4.6 `ping/` (5 verbs $\\rightarrow$ 14 screen pairs)
+### 4.6 `ping/` (5 verbs → 14 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -317,7 +317,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `ping.expire.success.completed` | success | 0 | — | completed | Explicit expiration executed |
 | `ping.expire.refusal.not_found` | refusal | 3 | validation | not_found | Target inquiry not found |
 
-### 4.7 `rule/` (4 verbs $\\rightarrow$ 12 screen pairs)
+### 4.7 `rule/` (4 verbs → 12 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -334,7 +334,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Gate 1 YAML syntax failure |
 | `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Gate 2 circular dependency detected |
 
-### 4.8 `env/` (7 verbs $\\rightarrow$ 20 screen pairs)
+### 4.8 `env/` (7 verbs → 20 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -353,13 +353,13 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `env.merge.denial.trust` | denial | 2 | policy.trust | unreviewed | Production merge requires reviewed |
 | `env.merge.refusal.plan_conflict` | refusal | 3 | compile | conflict | Target schema migration plan conflict blocks DDL |
 | `env.merge.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile out of sync |
-| `env.merge.refusal.unmerged` | refusal | 3 | compile | unmerged | Git branch conflict blocks DDL forwarding: env branches diverge on schema declaration |
+| `env.merge.refusal.unmerged` | refusal | 3 | compile | unmerged | Git branch conflict blocks DDL forwarding |
 | `env.remove.success.removed` | success | 0 | — | removed | Environment dismantled |
-| `env.remove.denial.prod_flags` | denial | 2 | policy.authorizer | prod_flags | Prod removal requires dual confirmation flags; neither was present |
+| `env.remove.denial.prod_flags` | denial | 2 | policy.authorizer | prod_flags | Prod removal requires dual confirmation flags |
 | `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (16 verbs $\\rightarrow$ 45 screen pairs)
+### 4.9 `sys/` (16 verbs → 45 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -389,12 +389,12 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.doctor.success.nominal` | success | 0 | — | nominal | Host doctor readiness check |
 | `sys.doctor.success.report` | success | 0 | — | report | Full YAML Trust Receipt |
 | `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
-| `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or supported sandbox provider (bwrap/crun/microvm) |
-| `sys.doctor.success.clock_drift`| success| 0 | — | clock_skew | Host clock delta $>500$ms vs NTP (warning only; monotonic fallback active) |
-| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Audit SHA-256 chain broken with quarantine sink unreachable; kill_and_alert, boot refused |
-| `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode (CAPCLI_RECOVERY=1): policy disabled, audit sink online, diagnostics only |
+| `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or supported sandbox provider |
+| `sys.doctor.success.clock_drift`| success| 0 | — | clock_skew | Host clock delta >500ms vs NTP (warning only) |
+| `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Audit SHA-256 chain broken; kill_and_alert |
+| `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode |
 | `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
-| `sys.doctor.success.tamper` | success | 0 | — | tampered | Audit SHA-256 chain broken; corrupted block isolated to quarantine |
+| `sys.doctor.success.tamper` | success | 0 | — | tampered | Audit chain broken; block isolated to quarantine |
 | `sys.doctor.success.quarantine`| success | 0 | — | quarantine | Quarantine ledger inspection active |
 | `sys.doctor.denial.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
 | `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |
@@ -409,7 +409,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.serve.refusal.already_running`| refusal| 3 | compile | port_bound | Daemon process already running |
 | `sys.serve.denial.port` | denial | 2 | db.engine | port_denied | Port 4040 binding rejected |
 
-### 4.10 `doc/` (3 verbs $\\rightarrow$ 6 screen pairs)
+### 4.10 `doc/` (3 verbs → 6 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -424,16 +424,20 @@ the validator enforces closure, and in any conflict the fixture wins.
 
 ## 5. Canonical Screen Fixtures
 
-Every terminal transcript follows strict typographic rules:
+Every fixture JSON follows strict typographic rules rendered by the consuming engine:
 1. **Header Badge:** Standardized `[{env}:{tier}]` runtime context prefix.
 2. **Visual Spans:** Source SQL or parameters underlined with carets (`^^^^`) directly pinpointing violations.
 3. **Indented Blocks:** Two-space hierarchical indentation; clean label columns.
 4. **Dividers:** Horizontal character lines (`─`) for separation. No random vertical pipe borders.
 5. **Machine/Human Duality:** Clean human presentation by default; JSON structure strictly matches `--json`.
 
+The renderer (HTML canvas or Rust test harness) consumes the JSON shape and produces the terminal output. No separate `.txt` files exist in the repo.
+
 ---
 
-### 5.1 AST Blast-Radius Denial (`screens/run/sql/run.sql.denial.ast.txt`)
+### 5.1 AST Blast-Radius Denial (`screens/run/sql/run.sql.denial.ast.json`)
+
+Rendered output (what the HTML canvas and Rust harness produce):
 
 ```text
 [dev:tier_1]  ✗  exit 2
@@ -452,7 +456,7 @@ Every terminal transcript follows strict typographic rules:
 
 ---
 
-### 5.2 Causal DAG Tree Walk (`screens/sys/trace/sys.trace.success.populated.txt`)
+### 5.2 Causal DAG Tree Walk (`screens/sys/trace/sys.trace.success.populated.json`)
 
 ```text
 [dev:tier_1]  Causal DAG Trace (op_9f2e)
@@ -472,7 +476,7 @@ Every terminal transcript follows strict typographic rules:
 
 ---
 
-### 5.3 YAML Trust Receipt (`screens/sys/doctor/sys.doctor.success.report.txt`)
+### 5.3 YAML Trust Receipt (`screens/sys/doctor/sys.doctor.success.report.json`)
 
 ```text
 [prod:tier_1]  capcli 0.4.2
@@ -493,7 +497,7 @@ trust_receipt:
 
 ---
 
-### 5.4 Pre-Flight Routine Inspection Envelope (`screens/run/inspect/run.inspect.success.routine.txt`)
+### 5.4 Pre-Flight Routine Inspection Envelope (`screens/run/inspect/run.inspect.success.routine.json`)
 
 ```text
 [dev:tier_1]  capcli inspect cap://dispatch_order@4
@@ -534,7 +538,7 @@ trust_receipt:
 
 ---
 
-### 5.5 Dry-Run Schema Impact Plan (`screens/run/sql/run.sql.success.dry_run.txt`)
+### 5.5 Dry-Run Schema Impact Plan (`screens/run/sql/run.sql.success.dry_run.json`)
 
 ```text
 [dev:tier_1]  dry-run  ✓
@@ -553,7 +557,7 @@ trust_receipt:
 
 ---
 
-### 5.6 Agent Thrashing Denial (`screens/sys/doctor/sys.doctor.denial.thrashing.txt`)
+### 5.6 Agent Thrashing Denial (`screens/sys/doctor/sys.doctor.denial.thrashing.json`)
 
 ```text
 [dev:tier_1]  ⚠  agent.thrashing
@@ -571,7 +575,7 @@ trust_receipt:
 
 ---
 
-### 5.7 Missing Vault Secret with Cockpit URL (`screens/run/execute/run.execute.refusal.missing_secret.txt`)
+### 5.7 Missing Vault Secret with Cockpit URL (`screens/run/execute/run.execute.refusal.missing_secret.json`)
 
 ```text
 [dev:tier_1]  ✗  exit 3
@@ -590,7 +594,7 @@ trust_receipt:
 
 ---
 
-### 5.8 Network Jail Syscall 42 Trapping (`screens/run/execute/run.execute.denial.network_jail.txt`)
+### 5.8 Network Jail Syscall 42 Trapping (`screens/run/execute/run.execute.denial.network_jail.json`)
 
 ```text
 [dev:tier_1]  ✗  exit 2
@@ -609,7 +613,7 @@ trust_receipt:
 
 ---
 
-### 5.9 Quota Yield Frame Suspension (`screens/run/execute/run.execute.yield.quota.txt`)
+### 5.9 Quota Yield Frame Suspension (`screens/run/execute/run.execute.yield.quota.json`)
 
 ```text
 [prod:tier_1]  ✗  exit 6
@@ -629,9 +633,7 @@ trust_receipt:
 
 ---
 
-### 5.11 NTP Clock Drift Diagnostic Warning (`screens/sys/doctor/sys.doctor.success.clock_drift.txt`)
-
-The rule (cans/physics.md): clock delta vs NTP > 500ms emits a diagnostic warning on an exit-0 screen — causal ordering and lease claims bind to CLOCK_MONOTONIC and SQLite sequence IDs, so drift degrades audit timestamps only and never refuses execution.
+### 5.10 NTP Clock Drift Diagnostic Warning (`screens/sys/doctor/sys.doctor.success.clock_drift.json`)
 
 ```text
 [dev:tier_1]  ✓  exit 0
@@ -647,7 +649,7 @@ The rule (cans/physics.md): clock delta vs NTP > 500ms emits a diagnostic warnin
 
 ---
 
-### 5.12 Progressive Disclosure Doc Reading (`screens/doc/read/doc.read.success.sliced.txt`)
+### 5.11 Progressive Disclosure Doc Reading (`screens/doc/read/doc.read.success.sliced.json`)
 
 ```text
 [dev:tier_1]  doc://refund-policy (section 3)
@@ -664,7 +666,7 @@ The rule (cans/physics.md): clock delta vs NTP > 500ms emits a diagnostic warnin
 
 ---
 
-### 5.13 Minimalist Root Help Stub (`screens/sys/help/sys.help.success.stub.txt`)
+### 5.12 Minimalist Root Help Stub (`screens/sys/help/sys.help.success.stub.json`)
 
 ```text
 capcli 0.4.2 — compiled execution firewall for AI agents
@@ -683,16 +685,12 @@ Capabilities are discovered dynamically, not listed in static help.
 
 ### 6.1 Screen Fixture Schema (`screens/run/sql/run.sql.denial.ast.json`)
 
-A fixture JSON is the shape of the screen, and the single source the
-`.txt` pair renders from. Shape means envelope plus render skeleton:
+A fixture JSON is the shape of the screen and the single source the
+renderer consumes. Shape means envelope plus render skeleton:
 the invocation, the kernel state frame, the diagnostic frame, the
 sections and field labels the screen renders in order, and the trailer
-payload. Values live in the `.txt` pair only. A fixture carries no
-validation: no assertions, no expected-output needles, no hashes, and
-no path to its own pair (the pair path is `{screen_id}` under
-`screens/{noun}/{verb}/`). Development tests consume the shape and
-the `.txt` as a golden fixture; every check is derived by the harness
-in §6.2 from the shape and the contract, never copied into a fixture.
+payload. The HTML canvas and the Rust test harness both render from
+this shape. No separate `.txt` file exists.
 
 ```json
 {
@@ -725,47 +723,20 @@ in §6.2 from the shape and the contract, never copied into a fixture.
       {
         "title": null,
         "items": [
-          {
-            "text": "FAIL  policy.query.update_delete.require_limit",
-            "indent": 2
-          },
-          {
-            "text": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^",
-            "indent": 67
-          },
-          {
-            "text": "No LIMIT clause. Blast radius unbounded.",
-            "indent": 8
-          }
+          { "text": "FAIL  policy.query.update_delete.require_limit", "indent": 2 },
+          { "text": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'", "indent": 8 },
+          { "text": "^^^^^^", "indent": 67 },
+          { "text": "No LIMIT clause. Blast radius unbounded.", "indent": 8 }
         ]
       },
       {
         "title": null,
         "items": [
-          {
-            "field": "audit_op",
-            "value": "op_9f2e"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "AST"
-          },
-          {
-            "field": "measured",
-            "value": "matches potentially 847 rows (cap: 100)"
-          },
-          {
-            "field": "remedy",
-            "value": "add LIMIT, or target specific primary key"
-          }
+          { "field": "audit_op", "value": "op_9f2e" },
+          { "field": "state_modified", "value": "false" },
+          { "field": "layer", "value": "AST" },
+          { "field": "measured", "value": "matches potentially 847 rows (cap: 100)" },
+          { "field": "remedy", "value": "add LIMIT, or target specific primary key" }
         ]
       }
     ]
@@ -775,26 +746,11 @@ in §6.2 from the shape and the contract, never copied into a fixture.
 
 Field law:
 
-- `$schema` is `wireframe/v1`. `screen_id` is the identity; noun and
-  verb are its first two segments and appear nowhere else.
+- `$schema` is `wireframe/v1`. `screen_id` is the identity; noun and verb are its first two segments and appear nowhere else.
 - `target` and `command` state the invocation the screen answers.
-- `state` is the kernel state frame: exit code, domain, trust, env,
-  tier, `state_modified`, data shape. Legality of states and domains
-  lives in `_states.json`.
-- `diagnostic` is the structured diagnostic frame for non-success
-  exits (required keys per exit, `_states.json`). Success screens
-  carry it as `null` or omit it.
-- `render` is the screen's full content model, and the `.txt` is its
-  rendering. A renderer consuming the shape alone — header from
-  `state` plus `render.header.label`, sections in order, trailer from
-  the payload — reproduces the `.txt` content exactly (whitespace-
-  normalized): `header.style` is `badge` (`[{env}:{tier}]` first
-  line, `✓` on exit 0, `✗` otherwise) or `plain`; each section
-  carries `title` (the block's leading `name:` line or `null`) and
-  ordered `items`. An item is `{"field", "value"}` (rendered
-  `  label: value`, values aligned per section) or `{"text",
-  "indent"}` (a prose or code line at its indent). Any screen whose
-  `.txt` holds content the shape cannot render has the wrong shape.
+- `state` is the kernel state frame: exit code, domain, trust, env, tier, `state_modified`, data shape. Legality of states and domains lives in `_states.json`.
+- `diagnostic` is the structured diagnostic frame for non-success exits (required keys per exit, `_states.json`). Success screens carry it as `null` or omit it.
+- `render` is the screen's full content model. A renderer consuming the shape alone — header from `state` plus `render.header.label`, sections in order, trailer from the payload — produces the terminal output exactly. `header.style` is `badge` (`[{env}:{tier}]` first line, `✓` on exit 0, `✗` otherwise) or `plain`; each section carries `title` (the block's leading `name:` line or `null`) and ordered `items`. An item is `{"field", "value"}` (rendered `  label: value`, values aligned per section) or `{"text", "indent"}` (a prose or code line at its indent).
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
 
 ### 6.1.1 Trailer Slot
@@ -804,32 +760,17 @@ only producer-facing slot, and the bridge is deterministic: the payload
 shape is frozen once in `manifest.json` (`human_format` +
 `machine_schema`), and the prompt engine and the wireframe fixtures
 validate against that same schema. The wireframe knows the shape of a
-trailer and nothing else about the producer — no campaign or bank
-inventory, no screen-to-trailer mapping, no trigger predicate, and no
-token budget appears in a wireframe file, fixture, or runner check.
-Which screens carry a trailer and what each payload says are producer
-facts, single-sourced in `cans/artifacts/prompt/_triggers.json`.
+trailer and nothing else about the producer.
 
 - Human output: one optional final line, `trailer: <prompt> - <reason>`.
-- JSON output: one optional additive envelope key, `next_action`, whose
-  value is the fixture's `trailer` payload and validates against
-  `machine_schema` in `manifest.json`: required keys `prompt`
-  (`prompt://{bank}/{slug}@{version}`), `reason`, and `serve`
-  (`L1` or `blocked`).
-- The wireframe validates shape and position against the frozen schema.
-  It never evaluates a predicate, resolves a pointer, or originates a
-  payload. Human and machine parity is a producer obligation.
-- A payload with `serve: blocked` is never rendered. Absent is the
-  default: a screen with no `trailer` in its shape renders no trailer,
-  and absence is the whole negative assertion — fixtures carry no
-  per-screen negative lists. The slot leaves exit code and
-  `state_modified` unchanged.
+- JSON output: one optional additive envelope key, `next_action`, whose value validates against `machine_schema` in `manifest.json`.
+- The wireframe validates shape and position against the frozen schema. It never evaluates a predicate, resolves a pointer, or originates a payload.
+- A payload with `serve: blocked` is never rendered. Absent is the default.
+- The slot leaves exit code and `state_modified` unchanged.
 
 ### 6.2 Rust Integration Test Runner
 
-The runner derives every check from the shape, the paired `.txt`, and
-the contract in `manifest.json`. It asserts nothing a fixture states
-about itself.
+The runner renders every fixture from its JSON shape, dispatches the command, and asserts the rendered output matches actual CLI stdout. No golden `.txt` files; the shape IS the golden source.
 
 ```rust
 // crates/capcli-cli/tests/e2e/test_wireframe_fixtures.rs
@@ -843,11 +784,68 @@ use serde::Deserialize;
 struct StateFrame { exit_code: i32, state_modified: bool }
 
 #[derive(Deserialize)]
+struct RenderItem {
+    text: Option<String>,
+    indent: Option<usize>,
+    field: Option<String>,
+    value: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct RenderSection { title: Option<String>, items: Vec<RenderItem> }
+
+#[derive(Deserialize)]
+struct RenderBlock { header: RenderHeader, sections: Vec<RenderSection> }
+
+#[derive(Deserialize)]
+struct RenderHeader { style: String, label: String }
+
+#[derive(Deserialize)]
 struct WireframeFixture {
     screen_id: String,
     command: String,
     state: StateFrame,
+    render: RenderBlock,
     trailer: Option<serde_json::Value>,
+}
+
+/// Canonical renderer: JSON shape → terminal text.
+/// This is the single source of truth for what a screen looks like.
+fn render_screen(fixture: &WireframeFixture) -> String {
+    let mut out = String::new();
+    let env = &fixture.state.env;
+    let tier = &fixture.state.tier;
+    let icon = if fixture.state.exit_code == 0 { "✓" } else { "✗" };
+
+    // Header line
+    out.push_str(&format!("[{}:{}]  {}  {}\n\n", env, tier, icon, fixture.render.header.label));
+
+    // Sections
+    for section in &fixture.render.sections {
+        if let Some(title) = &section.title {
+            out.push_str(&format!("  {}:\n", title));
+        }
+        for item in &section.items {
+            if let Some(text) = &item.text {
+                let indent = item.indent.unwrap_or(2);
+                out.push_str(&format!("{}{}\n", " ".repeat(indent), text));
+            } else if let (Some(field), Some(value)) = (&item.field, &item.value) {
+                out.push_str(&format!("  {}: {}\n", field, value));
+            }
+        }
+        out.push('\n');
+    }
+
+    // Trailer (if present)
+    if let Some(trailer) = &fixture.trailer {
+        if trailer.get("serve").and_then(|s| s.as_str()) != Some("blocked") {
+            let prompt = trailer["prompt"].as_str().unwrap_or("");
+            let reason = trailer["reason"].as_str().unwrap_or("");
+            out.push_str(&format!("trailer: {} - {}\n", prompt, reason));
+        }
+    }
+
+    out
 }
 
 #[test]
@@ -859,64 +857,49 @@ fn execute_wireframe_golden_tests() {
         let content = fs::read_to_string(&json_path).unwrap();
         let fixture: WireframeFixture = serde_json::from_str(&content).unwrap();
 
-        // 1. Pairing: the .txt beside the shape exists and bans raw pipes
-        let txt_path = json_path.with_extension("txt");
-        let txt_content = fs::read_to_string(&txt_path).unwrap();
-        assert!(!txt_content.contains('|'), "Pipe character | forbidden in {}", txt_path.display());
+        // 1. Render expected output from shape
+        let expected = render_screen(&fixture);
 
-        // 2. Dispatch the shape's command
+        // 2. Dispatch the shape's command against the real binary
         let output = capcli_test_exec(&fixture.command);
 
-        // 3. State frame: exit and state_modified come from the shape
-        assert_eq!(output.exit_code, fixture.state.exit_code, "Exit mismatch at {}", fixture.screen_id);
-        assert_eq!(output.state_modified, fixture.state.state_modified, "State modified invariant failed at {}", fixture.screen_id);
+        // 3. State frame assertions
+        assert_eq!(output.exit_code, fixture.state.exit_code,
+            "Exit mismatch at {}", fixture.screen_id);
+        assert_eq!(output.state_modified, fixture.state.state_modified,
+            "state_modified invariant failed at {}", fixture.screen_id);
 
-        // 4. Golden rendering: stdout equals the paired .txt, byte for byte.
-        // The .txt is itself regenerated from the shape in CI:
-        // rendering the JSON reproduces it, whitespace-normalized.
-        assert_eq!(output.stdout, txt_content, "Golden mismatch at {}", fixture.screen_id);
+        // 4. Golden rendering: stdout must match rendered shape
+        assert_eq!(output.stdout, expected,
+            "Render mismatch at {}", fixture.screen_id);
 
-        // 5. Global negatives, asserted once for every fixture:
-        //    parser-banned flags (cans/interface.md#Refusals), and a
-        //    trailer on any screen whose shape carries none
+        // 5. Global negatives
         for banned in ["--force", "--override-budget", "--force-prod", "--verbose"] {
-            assert!(!output.stdout.contains(banned), "{}: Output contains banned token '{}'", fixture.screen_id, banned);
+            assert!(!output.stdout.contains(banned),
+                "{}: banned token '{}'", fixture.screen_id, banned);
         }
+        assert!(!output.stdout.contains('|'),
+            "{}: pipe character forbidden", fixture.screen_id);
         if fixture.trailer.is_none() {
-            assert!(!output.stdout.contains("trailer:"), "{}: Trailer on screen with no trailer in shape", fixture.screen_id);
+            assert!(!output.stdout.contains("trailer:"),
+                "{}: trailer on shape with no trailer", fixture.screen_id);
         }
 
-        assert!(output.stderr.is_empty(), "{}: Expected empty stderr, received: {}", fixture.screen_id, output.stderr);
+        assert!(output.stderr.is_empty(),
+            "{}: unexpected stderr: {}", fixture.screen_id, output.stderr);
     }
 }
 ```
 
-Trailer checks, applied by the runner in §6.2 to every fixture:
+Trailer checks, applied by the runner to every fixture:
 
-a. **Schema.** A `trailer` payload validates against `machine_schema`
-   in `manifest.json` `output_contract.trailer` — required `prompt`,
-   `reason`, `serve`; `prompt` matching the frozen `prompt://` pattern.
-b. **Position.** The human trailer is the final line of the `.txt`
-   pair; the machine trailer is an additive envelope key. Every other
-   key, value, exit code, and `state_modified` matches the
-   trailer-free rendering.
-c. **State neutrality.** For every trailer-carrying fixture, a twin
-   assertion runs the same command with no trailer supplied: output is
-   identical except the trailer line/key is absent.
-d. **Correspondence.** Every `_triggers.json` entry resolves to a
-   fixture pair on disk, and every `_flows.json` transition endpoint
-   and §4 row resolves to a fixture pair (see the cross-layer test
-   below). A renamed screen fails the runner before any trailer is
-   served against a dead `screen_id`.
-e. **Negative space.** A fixture with no `trailer` in its shape renders
-   no `trailer:` line and no `next_action` key; the runner asserts
-   this globally (step 5), and the shape's absence is the only
-   per-screen fact.
+a. **Schema.** A `trailer` payload validates against `machine_schema` in `manifest.json`.
+b. **Position.** The human trailer is the final rendered line; the machine trailer is an additive envelope key.
+c. **State neutrality.** For every trailer-carrying fixture, a twin assertion runs the same command with no trailer: output is identical except the trailer line/key is absent.
+d. **Correspondence.** Every `_triggers.json` entry resolves to a fixture shape on disk, and every `_flows.json` transition endpoint resolves to a fixture shape.
+e. **Negative space.** A fixture with no `trailer` renders no `trailer:` line and no `next_action` key.
 
-Cross-layer referential test — one assertion set, run by the same
-runner, covering the prompt and wireframe layers together
-(`crates/capcli-cli/tests/e2e/test_wireframe_fixtures.rs` when the
-kernel lands; enforced today by the workspace validator):
+Cross-layer referential test:
 
 ```rust
 #[test]
@@ -927,368 +910,22 @@ fn assert_prompt_triggers_match_wireframe_screens() {
     for t in triggers["triggers"].as_array().unwrap() {
         let screen_id = t["screen_id"].as_str().unwrap();
         let parts: Vec<&str> = screen_id.split('.').collect();
-
-        // Assert exact fixture file exists
-        let path = format!("cans/artifacts/wireframe/screens/{}/{}/{}.json", parts[0], parts[1], screen_id);
-        assert!(Path::new(&path).exists(), "Trigger {} references missing fixture: {}", t["id"], path);
+        let path = format!(
+            "cans/artifacts/wireframe/screens/{}/{}/{}.json",
+            parts[0], parts[1], screen_id
+        );
+        assert!(Path::new(&path).exists(),
+            "Trigger {} references missing fixture: {}", t["id"], path);
     }
 }
 ```
-
-The same closure applies in the other directions: every `_flows.json`
-transition endpoint exists as a fixture pair, and every §4 row exists
-as a fixture pair. Screen IDs originate in exactly one place — the
-fixture filenames under `screens/` — and §4, `_flows.json`, and
-`_triggers.json` index them under validator enforcement.
 
 ---
 
 ## 7. Edgeless Playable Canvas Implementation (`wireframe.html`)
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>capcli State Machine &amp; Wireframe Engine</title>
-<style>
-  :root {
-    --bg: #0d1117; --panel: #161b22; --panel2: #1c2330; --border: #30363d;
-    --text: #e6edf3; --muted: #8b949e;
-    --success: #3fb950; --denial: #f85149; --refusal: #db6d28;
-    --crash: #d29922; --panic: #a371f7; --yield: #e3b341; --blue: #58a6ff;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: flex; height: 100vh; overflow: hidden; }
-  #canvas-container { flex: 1; position: relative; min-width: 0; cursor: grab; background: radial-gradient(circle at 1px 1px, #21262d 1px, transparent 0); background-size: 24px 24px; }
-  #canvas-container:active { cursor: grabbing; }
-  svg { width: 100%; height: 100%; display: block; }
-  #toolbar { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 10; pointer-events: none; }
-  #toolbar .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; pointer-events: auto; }
-  .hud-btn, .tool-btn { background: rgba(22,27,34,.92); border: 1px solid var(--border); color: var(--text); padding: 7px 11px; cursor: pointer; border-radius: 999px; font-family: inherit; font-size: 11px; }
-  .hud-btn:hover, .tool-btn:hover { border-color: var(--blue); color: #fff; }
-  .hud-btn.active { border-color: var(--blue); color: var(--blue); }
-  #search { background: rgba(22,27,34,.92); border: 1px solid var(--border); color: var(--text); border-radius: 999px; padding: 7px 12px; font-family: inherit; font-size: 11px; min-width: 200px; outline: none; }
-  #search:focus { border-color: var(--blue); }
-  #legend { display: flex; gap: 10px; flex-wrap: wrap; background: rgba(22,27,34,.85); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; font-size: 10px; color: var(--muted); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
-  #hint { position: absolute; bottom: 12px; left: 12px; z-index: 10; font-size: 10px; color: var(--muted); background: rgba(22,27,34,.85); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
-  #terminal-panel { width: min(380px, 32vw); height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
-  #terminal-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  #screen-id-display { font-weight: 600; font-size: 12px; word-break: break-all; }
-  #exit-badge { border: 1px solid currentColor; border-radius: 999px; padding: 2px 8px; font-size: 10px; white-space: nowrap; }
-  #terminal-body { padding: 16px; flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.55; }
-  #terminal-actions { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
-  .action-btn { background: #21262d; border: 1px solid var(--border); color: #fff; padding: 6px 10px; cursor: pointer; border-radius: 999px; font-size: 11px; font-family: inherit; }
-  .action-btn:hover { border-color: var(--success); }
-  .node { cursor: grab; }
-  .node:active { cursor: grabbing; }
-  .node rect { stroke-width: 2px; rx: 8px; }
-  .node .title { font-size: 11px; fill: var(--text); pointer-events: none; font-family: inherit; font-weight: 600; }
-  .node .sub { font-size: 9px; fill: var(--muted); pointer-events: none; font-family: inherit; }
-  .node.dim, .edge.dim { opacity: .12; }
-  .node.selected rect { stroke: #fff; stroke-width: 3px; }
-  .edge { stroke: #484f58; stroke-width: 1.6px; marker-end: url(#arrow); fill: none; opacity: .8; }
-  .edge.denial { stroke: var(--denial); stroke-dasharray: 5 4; }
-  .edge.refusal { stroke: var(--refusal); stroke-dasharray: 5 4; }
-  .edge.yield { stroke: var(--yield); stroke-dasharray: 7 4; }
-  .edge.progress { stroke: var(--blue); }
-  @media (max-width: 900px) {
-    body { flex-direction: column; }
-    #canvas-container { flex: none; height: 56vh; }
-    #terminal-panel { width: 100%; flex: 1; border-left: none; border-top: 1px solid var(--border); }
-    #search { min-width: 140px; }
-  }
-</style>
-</head>
-<body>
+The HTML canvas renders all screens directly from `.json` fixture shapes. No `.txt` files are fetched. The `TerminalPanel` component parses the JSON `render` block and produces the styled terminal output client-side.
 
-<div id="canvas-container">
-  <div id="toolbar">
-    <div class="row">
-      <input id="search" type="search" placeholder="Filter screens, e.g. doctor, denial, yield">
-      <button class="tool-btn" id="fit-btn">Fit view</button>
-      <button class="tool-btn" id="reset-btn">Reset layout</button>
-      <span id="legend">
-        <span><span class="dot" style="background:var(--success)"></span>success</span>
-        <span><span class="dot" style="background:var(--denial)"></span>denial</span>
-        <span><span class="dot" style="background:var(--refusal)"></span>refusal</span>
-        <span><span class="dot" style="background:var(--crash)"></span>crash</span>
-        <span><span class="dot" style="background:var(--panic)"></span>panic</span>
-        <span><span class="dot" style="background:var(--yield)"></span>yield</span>
-      </span>
-    </div>
-    <div class="row" id="hud">
-      <button class="hud-btn" onclick="focusJourney('journey_human_onboarding')">1. Human Onboarding (S0-S10)</button>
-      <button class="hud-btn" onclick="focusJourney('journey_harness_onboarding')">2. Harness Onboarding (H0-H7)</button>
-      <button class="hud-btn" onclick="focusJourney('journey_execution_crucible')">3. Execution Crucible</button>
-      <button class="hud-btn" onclick="focusJourney('journey_trust_promotion')">4. Trust Ladder</button>
-      <button class="hud-btn" onclick="focusJourney('journey_quota_preemption')">5. Quota Yield/Resume</button>
-      <button class="hud-btn" onclick="focusJourney('journey_schema_evolution')">6. DDL Evolution</button>
-      <button class="hud-btn" onclick="focusJourney('journey_tamper_forensics')">7. Forensics &amp; Panic</button>
-      <button class="hud-btn" onclick="focusJourney('journey_human_in_the_loop')">8. Ask &amp; Resolution</button>
-    </div>
-  </div>
-  <svg id="viewport">
-    <defs>
-      <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="#484f58" />
-      </marker>
-    </defs>
-    <g id="scene"></g>
-  </svg>
-  <div id="hint">Drag node to rearrange &middot; drag empty canvas to pan &middot; scroll to zoom &middot; click node to inspect</div>
-</div>
-
-<button class="tool-btn" id="panel-toggle" style="position:absolute;top:12px;right:12px;z-index:20;">Hide preview</button>
-<div id="terminal-panel">
-  <div id="terminal-header">
-    <span id="screen-id-display">select a state node</span>
-    <span id="exit-badge"></span>
-  </div>
-  <div id="terminal-body">Click any node on the canvas to inspect real CLI diagnostic output...</div>
-  <div id="terminal-actions"></div>
-</div>
-
-<script>
-let transform = { x: 0, y: 0, k: 1 };
-const scene = document.getElementById('scene');
-const viewport = document.getElementById('viewport');
-const container = document.getElementById('canvas-container');
-let isPanning = false, startPoint = { x: 0, y: 0 };
-let flowsData = null;
-
-viewport.addEventListener('mousedown', (e) => {
-  if (e.target.closest('.node')) return;
-  isPanning = true;
-  startPoint = { x: e.clientX - transform.x, y: e.clientY - transform.y };
-});
-window.addEventListener('mousemove', (e) => {
-  if (!isPanning) return;
-  transform.x = e.clientX - startPoint.x;
-  transform.y = e.clientY - startPoint.y;
-  updateTransform();
-});
-window.addEventListener('mouseup', () => isPanning = false);
-viewport.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  transform.k *= e.deltaY < 0 ? 1.1 : 0.9;
-  updateTransform();
-}, { passive: false });
-
-function updateTransform() {
-  scene.setAttribute('transform', `matrix(${transform.k} 0 0 ${transform.k} ${transform.x} ${transform.y})`);
-}
-
-fetch('_flows.json')
-  .then(r => r.json())
-  .then(data => { flowsData = data; renderGraph(data); });
-
-const EXIT_BY_STATE = { success: 0, denial: 2, refusal: 3, crash: 4, panic: 5, yield: 6 };
-const STATE_COLOR = { success: '#3fb950', denial: '#f85149', refusal: '#db6d28', crash: '#d29922', panic: '#a371f7', yield: '#e3b341' };
-const NODE_W = 208, NODE_H = 46, COL_W = 236, ROW_H = 72, ORIGIN = { x: 40, y: 150 };
-const positions = new Map();
-const nodeEls = new Map();
-const edgeEls = [];
-let selectedId = null;
-
-function stateOf(id) { return id.split('.')[2] || 'success'; }
-function exitCodeFor(screenId) { return EXIT_BY_STATE[stateOf(screenId)] ?? 0; }
-
-function layout(ids, transitions) {
-  const adj = new Map(), indeg = new Map();
-  ids.forEach(id => { adj.set(id, []); indeg.set(id, 0); });
-  transitions.forEach(t => t.from.forEach(f => t.to.forEach(to => {
-    if (adj.has(f) && adj.has(to)) { adj.get(f).push(to); indeg.set(to, indeg.get(to) + 1); }
-  })));
-  const depth = new Map(ids.map(id => [id, 0]));
-  const queue = ids.filter(id => indeg.get(id) === 0);
-  const seen = new Set(queue);
-  while (queue.length) {
-    const cur = queue.shift();
-    adj.get(cur).forEach(nxt => {
-      if (depth.get(nxt) < depth.get(cur) + 1) depth.set(nxt, depth.get(cur) + 1);
-      if (!seen.has(nxt)) { seen.add(nxt); queue.push(nxt); }
-    });
-  }
-  const ordered = [...ids].sort((a, b) => (depth.get(a) - depth.get(b)) || a.localeCompare(b));
-  const COLS = 5;
-  const pos = new Map();
-  ordered.forEach((id, i) => {
-    pos.set(id, { x: ORIGIN.x + (i % COLS) * COL_W, y: ORIGIN.y + Math.floor(i / COLS) * ROW_H });
-  });
-  return pos;
-}
-
-function edgePath(a, b) {
-  const mx = (a.x + NODE_W + b.x) / 2;
-  return `M ${a.x + NODE_W} ${a.y + NODE_H / 2} C ${mx} ${a.y + NODE_H / 2}, ${mx} ${b.y + NODE_H / 2}, ${b.x} ${b.y + NODE_H / 2}`;
-}
-
-function redrawEdges() {
-  edgeEls.forEach(({ el, from, to }) => el.setAttribute('d', edgePath(positions.get(from), positions.get(to))));
-}
-
-function renderGraph(data) {
-  const ids = new Set();
-  data.transitions.forEach(t => { t.from.forEach(id => ids.add(id)); t.to.forEach(id => ids.add(id)); });
-  Object.values(data.journeys).forEach(j => { ids.add(j.entry); ids.add(j.terminal); });
-  const idList = [...ids];
-  positions.clear(); nodeEls.clear(); edgeEls.length = 0; scene.innerHTML = '';
-  layout(idList, data.transitions).forEach((pt, id) => positions.set(id, pt));
-
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const edgeLayer = document.createElementNS(svgNS, 'g');
-  const nodeLayer = document.createElementNS(svgNS, 'g');
-  scene.appendChild(edgeLayer); scene.appendChild(nodeLayer);
-
-  data.transitions.forEach(t => {
-    t.from.forEach(fromId => t.to.forEach(toId => {
-      const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('class', `edge ${t.arrow_type || ''}`.trim());
-      path.setAttribute('data-from', fromId);
-      path.setAttribute('data-to', toId);
-      path.setAttribute('d', edgePath(positions.get(fromId), positions.get(toId)));
-      edgeLayer.appendChild(path);
-      edgeEls.push({ el: path, from: fromId, to: toId });
-    }));
-  });
-
-  positions.forEach((pt, id) => {
-    const g = document.createElementNS(svgNS, 'g');
-    g.setAttribute('class', 'node');
-    g.setAttribute('data-id', id);
-    g.setAttribute('transform', `translate(${pt.x}, ${pt.y})`);
-    const parts = id.split('.');
-    let dragMoved = false;
-    g.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
-      const rect = viewport.getBoundingClientRect();
-      const sx = (e.clientX - rect.left - transform.x) / transform.k;
-      const sy = (e.clientY - rect.top - transform.y) / transform.k;
-      const off = { x: sx - pt.x, y: sy - pt.y };
-      dragMoved = false;
-      const move = (ev) => {
-        const nx = (ev.clientX - rect.left - transform.x) / transform.k - off.x;
-        const ny = (ev.clientY - rect.top - transform.y) / transform.k - off.y;
-        if (Math.abs(nx - pt.x) + Math.abs(ny - pt.y) > 2) dragMoved = true;
-        pt.x = nx; pt.y = ny;
-        g.setAttribute('transform', `translate(${pt.x}, ${pt.y})`);
-        redrawEdges();
-      };
-      const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
-      window.addEventListener('mousemove', move);
-      window.addEventListener('mouseup', up);
-    });
-    g.addEventListener('click', () => {
-      if (dragMoved) return;
-      selectNode(id);
-      loadScreen(id, `screens/${parts[0]}/${parts[1]}/${id}.txt`, exitCodeFor(id));
-    });
-    const rect = document.createElementNS(svgNS, 'rect');
-    rect.setAttribute('width', NODE_W);
-    rect.setAttribute('height', NODE_H);
-    rect.setAttribute('fill', '#161b22');
-    rect.setAttribute('stroke', STATE_COLOR[stateOf(id)] || '#30363d');
-    const title = document.createElementNS(svgNS, 'text');
-    title.setAttribute('x', 10); title.setAttribute('y', 20);
-    title.setAttribute('class', 'title');
-    title.textContent = `${parts[0]}.${parts[1]}`;
-    const sub = document.createElementNS(svgNS, 'text');
-    sub.setAttribute('x', 10); sub.setAttribute('y', 35);
-    sub.setAttribute('class', 'sub');
-    sub.textContent = parts.slice(2).join('.');
-    const ttl = document.createElementNS(svgNS, 'title');
-    ttl.textContent = id;
-    g.appendChild(rect); g.appendChild(title); g.appendChild(sub); g.appendChild(ttl);
-    nodeLayer.appendChild(g);
-    nodeEls.set(id, g);
-  });
-  fitView();
-}
-
-function selectNode(id) {
-  selectedId = id;
-  nodeEls.forEach((el, nid) => el.classList.toggle('selected', nid === id));
-}
-
-function fitView() {
-  if (!positions.size) return;
-  let maxX = 0, maxY = 0;
-  positions.forEach(pt => { maxX = Math.max(maxX, pt.x + NODE_W); maxY = Math.max(maxY, pt.y + NODE_H); });
-  const w = container.clientWidth || 1200, h = container.clientHeight || 800;
-  const k = Math.max(0.55, Math.min(1, (w - 40) / (maxX - ORIGIN.x + 40), (h - 40) / (maxY - ORIGIN.y + 40)));
-  transform = { x: 20 - ORIGIN.x * k, y: 20 - ORIGIN.y * k, k };
-  updateTransform();
-}
-
-function applyFilter(q) {
-  const query = q.trim().toLowerCase();
-  nodeEls.forEach((el, id) => el.classList.toggle('dim', !!query && !id.toLowerCase().includes(query)));
-  edgeEls.forEach(({ el, from, to }) => el.classList.toggle('dim', !!query && !(from.toLowerCase().includes(query) || to.toLowerCase().includes(query))));
-}
-
-document.getElementById('search').addEventListener('input', e => applyFilter(e.target.value));
-document.getElementById('fit-btn').addEventListener('click', fitView);
-document.getElementById('reset-btn').addEventListener('click', () => { if (flowsData) renderGraph(flowsData); });
-window.addEventListener('resize', () => { /* canvas scales by CSS; transform preserved */ });
-const panelToggle = document.getElementById('panel-toggle');
-panelToggle.addEventListener('click', () => {
-  const panel = document.getElementById('terminal-panel');
-  const hidden = panel.style.display === 'none';
-  panel.style.display = hidden ? 'flex' : 'none';
-  panelToggle.textContent = hidden ? 'Hide preview' : 'Show preview';
-});
-
-function loadScreen(screenId, txtPath, exitCode) {
-  document.getElementById('screen-id-display').textContent = screenId;
-  const badge = document.getElementById('exit-badge');
-  badge.textContent = `Exit ${exitCode}`;
-  badge.style.color = exitCode === 0 ? 'var(--success)' : (exitCode === 6 ? 'var(--yield)' : 'var(--denial)');
-  fetch(txtPath)
-    .then(r => r.text())
-    .then(text => {
-      document.getElementById('terminal-body').textContent = text;
-      renderOutActions(screenId);
-    })
-    .catch(() => {
-      document.getElementById('terminal-body').textContent = "Failed to load fixture transcript.";
-    });
-}
-
-function renderOutActions(screenId) {
-  const actions = document.getElementById('terminal-actions');
-  actions.innerHTML = '';
-  if (!flowsData) return;
-  flowsData.transitions.filter(t => t.from.includes(screenId)).forEach(t => {
-    t.to.forEach(targetId => {
-      const btn = document.createElement('button');
-      btn.className = 'action-btn';
-      btn.textContent = t.ui?.button_text || `Transition -> ${targetId}`;
-      btn.onclick = () => {
-        selectNode(targetId);
-        const parts = targetId.split('.');
-        loadScreen(targetId, `screens/${parts[0]}/${parts[1]}/${targetId}.txt`, exitCodeFor(targetId));
-      };
-      actions.appendChild(btn);
-    });
-  });
-}
-
-function focusJourney(journeyId) {
-  if (!flowsData) return;
-  const journey = flowsData.journeys[journeyId];
-  if (journey) {
-    document.querySelectorAll('.hud-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('screen-id-display').textContent = `Journey: ${journey.name}`;
-    document.getElementById('terminal-body').textContent = journey.description;
-    selectNode(journey.entry);
-    const parts = journey.entry.split('.');
-    loadScreen(journey.entry, `screens/${parts[0]}/${parts[1]}/${journey.entry}.txt`, exitCodeFor(journey.entry));
-  }
-}
-</script>
-</body>
-</html>
+```
+zoomable, node draggable, click inspect (renders from json shape), scenario select to highlight the flows in canvas
 ```

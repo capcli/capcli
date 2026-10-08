@@ -1,7 +1,0 @@
-[dev:tier_1]  ✗  exit 3
-
-  FATAL  validation.not_found
-         no CAPCLI_SECRET_* environment variables present in process scope
-
-  state_modified: false
-  remedy: export CAPCLI_SECRET_<NAME> in the harness shell, or provision via capcli sys vault set

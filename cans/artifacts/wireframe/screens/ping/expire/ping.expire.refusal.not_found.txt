@@ -1,8 +1,0 @@
-[dev:tier_1]  ✗  exit 3
-
-  FAIL  validation.not_found
-        ask_id: ask_51c7
-        Target inquiry not found in _pending_asks.
-
-  state_modified:  false
-  remedy:          run 'capcli ping list --pending' to list live ask IDs

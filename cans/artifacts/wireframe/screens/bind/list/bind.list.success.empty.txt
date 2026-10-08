@@ -1,7 +1,0 @@
-[dev:tier_1]  ✓  empty
-
-  bindings: 0 active
-
-  No triggers bound. Schedules, hooks, and endpoints will appear here.
-
-  state_modified: false

@@ -1,7 +1,0 @@
-[dev:tier_1]  ✗  exit 3
-
-  FATAL  missing_param.missing_arg
-         replay anchor omitted: --from <timestamp> or --from <commit> is required
-
-  state_modified: false
-  remedy: re-run as capcli sys replay --from 2026-10-03T22:41:07Z

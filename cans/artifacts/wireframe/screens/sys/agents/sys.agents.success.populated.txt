@@ -1,9 +1,0 @@
-[dev:tier_1]  ✓  listed
-
-  registered:  4 agents (cap: 8)
-  active:      3 · revoked: 1
-
-  ├── agt_7f3k  order-filler    claude-code  user:alice        active
-  ├── agt_2m8p  inventory-sync  claude-code  user:alice        active
-  ├── agt_9q4w  capcli-cron     kernel       scheduler         active
-  └── agt_4t6r  capcli-watch    kernel       partner:stripe    revoked

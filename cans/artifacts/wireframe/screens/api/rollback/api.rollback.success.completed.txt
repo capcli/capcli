@@ -1,9 +1,0 @@
-[dev:tier_1]  ✓  completed
-
-  verb:       cap://threads.create_media_post
-  version:    8 → 4
-  spec_hash:  sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa (restored)
-  depth:      4 of 5 (max rollback depth)
-  audit_op:   op_7c4e9
-
-  state_modified:  true

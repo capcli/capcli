@@ -1,6 +1,0 @@
-[dev:tier_1]  ✓  redirected
-
-  payload:         1.2MB written to report.json
-  sha256:          9f3a71c0b8e2d455
-  state_modified:  false
-  audit_op:        op_9f31a

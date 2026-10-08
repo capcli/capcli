@@ -1,8 +1,0 @@
-[dev:tier_1]  ✗  exit 3
-
-  FATAL  missing_param.missing_arg
-         vault set for key 'stripe_key' received no value (stdin empty)
-         plaintext values are never read from logs or transcripts
-
-  state_modified: false
-  remedy: re-run as capcli sys vault set stripe_key --in @- and pipe the value on stdin

@@ -1,9 +1,0 @@
-[dev:tier_1]  ✓  populated
-
-  inspect: tpl://order_sync@2
-    kind:            template blueprint
-    policy_version:  5
-    leaves:          3 (sql, sql, ping ask)
-    can_invoke_now:  false (scaffold via 'capcli routine new <name> --from tpl://order_sync@2' first)
-
-  state_modified: false

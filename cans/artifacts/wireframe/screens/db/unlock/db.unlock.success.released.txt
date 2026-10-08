@@ -1,9 +1,0 @@
-[dev:tier_1]  ✓  released
-
-  target:         orders:ORD-10
-  lease_id:       claim_9d21
-  holder:         agt_7f3k
-  ttl_remaining:  187s (released ahead of TTL)
-
-  state_modified: true
-  audit_op:       op_6a33

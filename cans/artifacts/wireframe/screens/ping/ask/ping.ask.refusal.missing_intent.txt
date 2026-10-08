@@ -1,9 +1,0 @@
-[dev:tier_1]  ✗  exit 3
-
-  FAIL  compile.no_intent
-        capcli ping ask user:alice "Approve refund for order ORD-10?" --options approve,reject,escalate --timeout 24h
-        Missing intent declaration.
-        ping ask requires --intent "..." (policy: notify.require_intent).
-
-  state_modified:  false
-  remedy:          re-run with --intent "<why this question is asked>"

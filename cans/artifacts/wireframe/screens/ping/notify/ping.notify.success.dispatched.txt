@@ -1,9 +1,0 @@
-[dev:tier_1]  ✓  dispatched
-
-  channel:         email
-  principal:       user:alice
-  message:         "Nightly sync finished"
-  intent:          declared ("morning briefing")
-  receipt:         ntf_4c1d9e
-  audit_op:        op_9f31c
-  state_modified:  true

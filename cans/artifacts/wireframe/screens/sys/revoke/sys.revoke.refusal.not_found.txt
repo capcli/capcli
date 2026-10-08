@@ -1,8 +1,0 @@
-[dev:tier_1]  ✗  exit 3
-
-  FATAL  validation.not_found
-         target: agt_0000
-         No registered agent with id 'agt_0000' in the agents system table.
-
-  state_modified: false
-  remedy: list registered agents via capcli sys agents, then revoke a valid agent id

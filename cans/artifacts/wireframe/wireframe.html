@@ -1,345 +1,400 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>capcli State Machine &amp; Wireframe Engine</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>capcli · Wireframe Engine</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{mono:['ui-monospace','SFMono-Regular','Menlo','Monaco','Consolas','monospace']},colors:{surface:'#0d1117',panel:'#161b22',panel2:'#1c2330',border:'#30363d',success:'#3fb950',denial:'#f85149',refusal:'#db6d28',crash:'#d29922',panic:'#a371f7',yield:'#e3b341',accent:'#58a6ff',muted:'#8b949e'}}}}</script>
 <style>
-  :root {
-    --bg: #0d1117; --panel: #161b22; --panel2: #1c2330; --border: #30363d;
-    --text: #e6edf3; --muted: #8b949e;
-    --success: #3fb950; --denial: #f85149; --refusal: #db6d28;
-    --crash: #d29922; --panic: #a371f7; --yield: #e3b341; --blue: #58a6ff;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: flex; height: 100vh; overflow: hidden; }
-  #canvas-container { flex: 1; position: relative; min-width: 0; cursor: grab; background: radial-gradient(circle at 1px 1px, #21262d 1px, transparent 0); background-size: 24px 24px; }
-  #canvas-container:active { cursor: grabbing; }
-  svg { width: 100%; height: 100%; display: block; }
-  #toolbar { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 10; pointer-events: none; }
-  #toolbar .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; pointer-events: auto; }
-  .hud-btn, .tool-btn { background: rgba(22,27,34,.92); border: 1px solid var(--border); color: var(--text); padding: 7px 11px; cursor: pointer; border-radius: 999px; font-family: inherit; font-size: 11px; }
-  .hud-btn:hover, .tool-btn:hover { border-color: var(--blue); color: #fff; }
-  .hud-btn.active { border-color: var(--blue); color: var(--blue); }
-  #search { background: rgba(22,27,34,.92); border: 1px solid var(--border); color: var(--text); border-radius: 999px; padding: 7px 12px; font-family: inherit; font-size: 11px; min-width: 200px; outline: none; }
-  #search:focus { border-color: var(--blue); }
-  #legend { display: flex; gap: 10px; flex-wrap: wrap; background: rgba(22,27,34,.85); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; font-size: 10px; color: var(--muted); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
-  #hint { position: absolute; bottom: 12px; left: 12px; z-index: 10; font-size: 10px; color: var(--muted); background: rgba(22,27,34,.85); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
-  #terminal-panel { width: min(380px, 32vw); height: 100%; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
-  #terminal-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  #screen-id-display { font-weight: 600; font-size: 12px; word-break: break-all; }
-  #exit-badge { border: 1px solid currentColor; border-radius: 999px; padding: 2px 8px; font-size: 10px; white-space: nowrap; }
-  #terminal-body { padding: 16px; flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.55; }
-  #terminal-actions { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
-  .action-btn { background: #21262d; border: 1px solid var(--border); color: #fff; padding: 6px 10px; cursor: pointer; border-radius: 999px; font-size: 11px; font-family: inherit; }
-  .action-btn:hover { border-color: var(--success); }
-  .node { cursor: grab; }
-  .node:active { cursor: grabbing; }
-  .node rect { stroke-width: 2px; rx: 8px; }
-  .node .title { font-size: 11px; fill: var(--text); pointer-events: none; font-family: inherit; font-weight: 600; }
-  .node .sub { font-size: 9px; fill: var(--muted); pointer-events: none; font-family: inherit; }
-  .node.dim, .edge.dim { opacity: .12; }
-  .node.selected rect { stroke: #fff; stroke-width: 3px; }
-  .edge { stroke: #484f58; stroke-width: 1.6px; marker-end: url(#arrow); fill: none; opacity: .8; }
-  .edge.denial { stroke: var(--denial); stroke-dasharray: 5 4; }
-  .edge.refusal { stroke: var(--refusal); stroke-dasharray: 5 4; }
-  .edge.yield { stroke: var(--yield); stroke-dasharray: 7 4; }
-  .edge.progress { stroke: var(--blue); }
-  @media (max-width: 900px) {
-    body { flex-direction: column; }
-    #canvas-container { flex: none; height: 56vh; }
-    #terminal-panel { width: 100%; flex: 1; border-left: none; border-top: 1px solid var(--border); }
-    #search { min-width: 140px; }
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#161b22}
+::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#484f58}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes dash{to{stroke-dashoffset:-20}}
+.animate-in{animation:fadeIn .3s ease}
+.edge-animated{animation:dash 1.2s linear infinite}
 </style>
 </head>
-<body>
+<body class="bg-surface text-white font-mono overflow-hidden h-screen">
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useRef,useCallback,useMemo}=React;
 
-<div id="canvas-container">
-  <div id="toolbar">
-    <div class="row">
-      <input id="search" type="search" placeholder="Filter screens, e.g. doctor, denial, yield">
-      <button class="tool-btn" id="fit-btn">Fit view</button>
-      <button class="tool-btn" id="reset-btn">Reset layout</button>
-      <span id="legend">
-        <span><span class="dot" style="background:var(--success)"></span>success</span>
-        <span><span class="dot" style="background:var(--denial)"></span>denial</span>
-        <span><span class="dot" style="background:var(--refusal)"></span>refusal</span>
-        <span><span class="dot" style="background:var(--crash)"></span>crash</span>
-        <span><span class="dot" style="background:var(--panic)"></span>panic</span>
-        <span><span class="dot" style="background:var(--yield)"></span>yield</span>
-      </span>
+// ─── Data Loader ───────────────────────────────────────────────
+const DATA_SOURCES={
+  flows:'_flows.json',
+  states:'_states.json',
+  manifest:'manifest.json'
+};
+
+async function loadJSON(path){
+  const r=await fetch(path);
+  if(!r.ok)throw new Error(`fetch ${path}: ${r.status}`);
+  return r.json();
+}
+
+// ─── Screen Renderer (JSON shape → styled output) ──────────────
+function RenderScreen({fixture}){
+  if(!fixture)return null;
+  const{state,render,diagnostic,trailer}=fixture;
+  const env=state?.env||'dev';
+  const tier=state?.tier||'tier_1';
+  const exit=state?.exit_code??0;
+  const icon=exit===0?'✓':'✗';
+  const exitColors={0:'text-success',2:'text-denial',3:'text-refusal',4:'text-crash',5:'text-panic',6:'text-yield'};
+  const headerColor=exitColors[exit]||'text-white';
+
+  return(
+    <div className="text-[11px] leading-relaxed whitespace-pre-wrap text-[#c9d1d9] p-4 overflow-y-auto flex-1">
+      {/* Header badge */}
+      <div className="mb-3">
+        <span className="text-muted">[{env}:{tier}]</span>{'  '}
+        <span className={headerColor}>{icon}</span>{'  '}
+        <span className={headerColor}>{render?.header?.label||`exit ${exit}`}</span>
+      </div>
+
+      {/* Sections */}
+      {render?.sections?.map((sec,si)=>(
+        <div key={si} className="mb-3">
+          {sec.title&&<div className="text-muted mb-1">  {sec.title}:</div>}
+          {sec.items?.map((item,ii)=>{
+            if(item.text!==undefined){
+              const indent=item.indent??2;
+              return <div key={ii} style={{paddingLeft:`${indent*4}px`}}>{item.text}</div>;
+            }
+            if(item.field!==undefined){
+              return(
+                <div key={ii} className="flex gap-2 pl-2">
+                  <span className="text-muted min-w-[140px]">{item.field}:</span>
+                  <span>{item.value}</span>
+                </div>
+              );
+            }
+            return null;
+          })}
+        </div>
+      ))}
+
+      {/* Trailer */}
+      {trailer&&trailer.serve!=='blocked'&&(
+        <div className="mt-3 pt-2 border-t border-border text-muted">
+          trailer: {trailer.prompt} - {trailer.reason}
+        </div>
+      )}
     </div>
-    <div class="row" id="hud">
-      <button class="hud-btn" onclick="focusJourney('journey_human_onboarding')">1. Human Onboarding (S0-S10)</button>
-      <button class="hud-btn" onclick="focusJourney('journey_harness_onboarding')">2. Harness Onboarding (H0-H7)</button>
-      <button class="hud-btn" onclick="focusJourney('journey_execution_crucible')">3. Execution Crucible</button>
-      <button class="hud-btn" onclick="focusJourney('journey_trust_promotion')">4. Trust Ladder</button>
-      <button class="hud-btn" onclick="focusJourney('journey_quota_preemption')">5. Quota Yield/Resume</button>
-      <button class="hud-btn" onclick="focusJourney('journey_schema_evolution')">6. DDL Evolution</button>
-      <button class="hud-btn" onclick="focusJourney('journey_tamper_forensics')">7. Forensics &amp; Panic</button>
-      <button class="hud-btn" onclick="focusJourney('journey_human_in_the_loop')">8. Ask &amp; Resolution</button>
+  );
+}
+
+// ─── Canvas Background ─────────────────────────────────────────
+function CanvasBackground(){
+  const ref=useRef(null);
+  useEffect(()=>{
+    const c=ref.current,ctx=c.getContext('2d');
+    let raf,particles=[];
+    const resize=()=>{c.width=c.offsetWidth;c.height=c.offsetHeight};
+    resize();window.addEventListener('resize',resize);
+    for(let i=0;i<40;i++)particles.push({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5});
+    function draw(){
+      ctx.clearRect(0,0,c.width,c.height);
+      ctx.strokeStyle='rgba(48,54,61,0.4)';ctx.lineWidth=.5;
+      const gs=24;
+      for(let x=0;x<c.width;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,c.height);ctx.stroke()}
+      for(let y=0;y<c.height;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(c.width,y);ctx.stroke()}
+      ctx.fillStyle='rgba(88,166,255,0.15)';
+      particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>c.width)p.vx*=-1;if(p.y<0||p.y>c.height)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()});
+      raf=requestAnimationFrame(draw);
+    }
+    draw();
+    return()=>{cancelAnimationFrame(raf);window.removeEventListener('resize',resize)};
+  },[]);
+  return <canvas ref={ref} className="absolute inset-0 w-full h-full pointer-events-none opacity-60"/>;
+}
+
+// ─── Journey Chip ──────────────────────────────────────────────
+function JourneyChip({journey,active,onClick}){
+  return(
+    <button onClick={onClick}
+      className={`px-3 py-1.5 rounded-full text-[11px] border transition-all whitespace-nowrap ${active?'border-accent text-accent bg-accent/10 shadow-lg shadow-accent/10':'border-border text-muted hover:border-accent/50 hover:text-white'}`}>
+      <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{background:journey.color}}/>
+      {journey.name}
+    </button>
+  );
+}
+
+// ─── Graph Node ────────────────────────────────────────────────
+function GraphNode({id,pos,selected,dim,onSelect,onDrag,stateColor}){
+  const parts=id.split('.');
+  const noun=parts[0],verb=parts[1],state=parts[2],condition=parts[3];
+  return(
+    <g transform={`translate(${pos.x},${pos.y})`}
+       className={`cursor-grab active:cursor-grabbing transition-opacity ${dim?'opacity-10':''} ${selected?'drop-shadow-[0_0_8px_rgba(88,166,255,0.4)]':''}`}
+       onMouseDown={e=>onDrag(e,id)}
+       onClick={()=>onSelect(id)}>
+      <rect width="210" height="52" rx="10" fill="#161b22"
+        stroke={selected?'#fff':stateColor} strokeWidth={selected?2.5:1.5}/>
+      <rect width="4" height="52" rx="2" fill={stateColor}/>
+      <text x="14" y="22" fill="#e6edf3" fontSize="11" fontWeight="600" fontFamily="inherit">{noun}.{verb}</text>
+      <text x="14" y="38" fill="#8b949e" fontSize="9" fontFamily="inherit">{state}.{condition}</text>
+      {selected&&<rect width="210" height="52" rx="10" fill="none" stroke="#fff" strokeWidth="1" opacity=".3"/>}
+    </g>
+  );
+}
+
+// ─── Graph Edge ────────────────────────────────────────────────
+function GraphEdge({from,to,type,dim,highlighted}){
+  const mx=(from.x+210+to.x)/2;
+  const d=`M ${from.x+210} ${from.y+26} C ${mx} ${from.y+26}, ${mx} ${to.y+26}, ${to.x} ${to.y+26}`;
+  const colors={progress:'#58a6ff',denial:'#f85149',success:'#3fb950',yield:'#e3b341'};
+  const dash=type==='denial'?'6 4':type==='yield'?'8 5':'none';
+  return(
+    <path d={d} fill="none"
+      stroke={highlighted?'#fff':colors[type]||'#484f58'}
+      strokeWidth={highlighted?2.5:1.4}
+      strokeDasharray={dash}
+      className={`transition-opacity ${dim?'opacity-5':'opacity-70'} ${highlighted?'edge-animated':''}`}
+      markerEnd="url(#arrowhead)"/>
+  );
+}
+
+// ─── Terminal Panel (renders from JSON shape) ──────────────────
+function TerminalPanel({screenId,visible,onClose}){
+  const[fixture,setFixture]=useState(null);
+  const[error,setError]=useState(null);
+  const[loading,setLoading]=useState(false);
+
+  useEffect(()=>{
+    if(!screenId){setFixture(null);return;}
+    const parts=screenId.split('.');
+    const path=`screens/${parts[0]}/${parts[1]}/${screenId}.json`;
+    setLoading(true);setError(null);
+    fetch(path)
+      .then(r=>{if(!r.ok)throw new Error(`${r.status}`);return r.json()})
+      .then(data=>{setFixture(data);setLoading(false)})
+      .catch(e=>{setError(`[fixture not found] ${path} (${e.message})`);setFixture(null);setLoading(false)});
+  },[screenId]);
+
+  if(!visible)return null;
+
+  const exit=fixture?.state?.exit_code??0;
+  const exitColors={0:'text-success',2:'text-denial',3:'text-refusal',4:'text-crash',5:'text-panic',6:'text-yield'};
+
+  return(
+    <div className="w-[380px] max-w-[35vw] h-full bg-panel border-l border-border flex flex-col flex-shrink-0 animate-in">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold break-all">{screenId||'—'}</span>
+        <div className="flex items-center gap-2">
+          {fixture&&<span className={`text-[10px] px-2 py-0.5 rounded-full border ${exitColors[exit]} border-current`}>exit {exit}</span>}
+          <button onClick={onClose} className="text-muted hover:text-white text-sm">✕</button>
+        </div>
+      </div>
+      {loading&&<div className="flex-1 flex items-center justify-center text-muted text-[11px] animate-pulse">Loading fixture…</div>}
+      {error&&<div className="flex-1 flex items-center justify-center text-denial text-[11px] p-4">{error}</div>}
+      {fixture&&<RenderScreen fixture={fixture}/>}
+      {!fixture&&!loading&&!error&&<div className="flex-1 flex items-center justify-center text-muted text-[11px]">Select a node to inspect.</div>}
     </div>
-  </div>
-  <svg id="viewport">
-    <defs>
-      <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="#484f58" />
-      </marker>
-    </defs>
-    <g id="scene"></g>
-  </svg>
-  <div id="hint">Drag node to rearrange &middot; drag empty canvas to pan &middot; scroll to zoom &middot; click node to inspect</div>
-</div>
-
-<button class="tool-btn" id="panel-toggle" style="position:absolute;top:12px;right:12px;z-index:20;">Hide preview</button>
-<div id="terminal-panel">
-  <div id="terminal-header">
-    <span id="screen-id-display">select a state node</span>
-    <span id="exit-badge"></span>
-  </div>
-  <div id="terminal-body">Click any node on the canvas to inspect real CLI diagnostic output...</div>
-  <div id="terminal-actions"></div>
-</div>
-
-<script>
-let transform = { x: 0, y: 0, k: 1 };
-const scene = document.getElementById('scene');
-const viewport = document.getElementById('viewport');
-const container = document.getElementById('canvas-container');
-let isPanning = false, startPoint = { x: 0, y: 0 };
-let flowsData = null;
-
-viewport.addEventListener('mousedown', (e) => {
-  if (e.target.closest('.node')) return;
-  isPanning = true;
-  startPoint = { x: e.clientX - transform.x, y: e.clientY - transform.y };
-});
-window.addEventListener('mousemove', (e) => {
-  if (!isPanning) return;
-  transform.x = e.clientX - startPoint.x;
-  transform.y = e.clientY - startPoint.y;
-  updateTransform();
-});
-window.addEventListener('mouseup', () => isPanning = false);
-viewport.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  transform.k *= e.deltaY < 0 ? 1.1 : 0.9;
-  updateTransform();
-}, { passive: false });
-
-function updateTransform() {
-  scene.setAttribute('transform', `matrix(${transform.k} 0 0 ${transform.k} ${transform.x} ${transform.y})`);
+  );
 }
 
-fetch('_flows.json')
-  .then(r => r.json())
-  .then(data => { flowsData = data; renderGraph(data); });
+// ─── Main App ──────────────────────────────────────────────────
+function App(){
+  const[flows,setFlows]=useState(null);
+  const[states,setStates]=useState(null);
+  const[manifest,setManifest]=useState(null);
+  const[error,setError]=useState(null);
+  const[positions,setPositions]=useState(new Map());
+  const[selected,setSelected]=useState(null);
+  const[activeJourney,setActiveJourney]=useState(null);
+  const[search,setSearch]=useState('');
+  const[panelVisible,setPanelVisible]=useState(true);
+  const[transform,setTransform]=useState({x:0,y:0,k:1});
+  const[loading,setLoading]=useState(true);
+  const svgRef=useRef(null);
+  const containerRef=useRef(null);
+  const dragRef=useRef(null);
+  const panRef=useRef(null);
 
-const EXIT_BY_STATE = { success: 0, denial: 2, refusal: 3, crash: 4, panic: 5, yield: 6 };
-const STATE_COLOR = { success: '#3fb950', denial: '#f85149', refusal: '#db6d28', crash: '#d29922', panic: '#a371f7', yield: '#e3b341' };
-const NODE_W = 208, NODE_H = 46, COL_W = 236, ROW_H = 72, ORIGIN = { x: 40, y: 150 };
-const positions = new Map();
-const nodeEls = new Map();
-const edgeEls = [];
-let selectedId = null;
+  useEffect(()=>{
+    Promise.all([loadJSON(DATA_SOURCES.flows),loadJSON(DATA_SOURCES.states),loadJSON(DATA_SOURCES.manifest)])
+      .then(([f,s,m])=>{setFlows(f);setStates(s);setManifest(m);setLoading(false)})
+      .catch(e=>{setError(e.message);setLoading(false)});
+  },[]);
 
-function stateOf(id) { return id.split('.')[2] || 'success'; }
-function exitCodeFor(screenId) { return EXIT_BY_STATE[stateOf(screenId)] ?? 0; }
+  const nodes=useMemo(()=>{
+    if(!flows)return[];
+    const ids=new Set();
+    flows.transitions.forEach(t=>{t.from.forEach(id=>ids.add(id));t.to.forEach(id=>ids.add(id))});
+    Object.values(flows.journeys).forEach(j=>{ids.add(j.entry);ids.add(j.terminal)});
+    return[...ids];
+  },[flows]);
 
-function layout(ids, transitions) {
-  const adj = new Map(), indeg = new Map();
-  ids.forEach(id => { adj.set(id, []); indeg.set(id, 0); });
-  transitions.forEach(t => t.from.forEach(f => t.to.forEach(to => {
-    if (adj.has(f) && adj.has(to)) { adj.get(f).push(to); indeg.set(to, indeg.get(to) + 1); }
-  })));
-  const depth = new Map(ids.map(id => [id, 0]));
-  const queue = ids.filter(id => indeg.get(id) === 0);
-  const seen = new Set(queue);
-  while (queue.length) {
-    const cur = queue.shift();
-    adj.get(cur).forEach(nxt => {
-      if (depth.get(nxt) < depth.get(cur) + 1) depth.set(nxt, depth.get(cur) + 1);
-      if (!seen.has(nxt)) { seen.add(nxt); queue.push(nxt); }
-    });
-  }
-  const ordered = [...ids].sort((a, b) => (depth.get(a) - depth.get(b)) || a.localeCompare(b));
-  const COLS = 5;
-  const pos = new Map();
-  ordered.forEach((id, i) => {
-    pos.set(id, { x: ORIGIN.x + (i % COLS) * COL_W, y: ORIGIN.y + Math.floor(i / COLS) * ROW_H });
-  });
-  return pos;
+  useEffect(()=>{
+    if(!nodes.length)return;
+    const pos=new Map();
+    const COLS=5,CW=250,RH=76,OX=60,OY=160;
+    const sorted=[...nodes].sort();
+    sorted.forEach((id,i)=>pos.set(id,{x:OX+(i%COLS)*CW,y:OY+Math.floor(i/COLS)*RH}));
+    setPositions(pos);
+  },[nodes]);
+
+  const stateColor=useCallback((id)=>{
+    const s=id.split('.')[2];
+    const map={success:'#3fb950',denial:'#f85149',refusal:'#db6d28',crash:'#d29922',panic:'#a371f7',yield:'#e3b341'};
+    return map[s]||'#30363d';
+  },[]);
+
+  const journeyNodes=useMemo(()=>{
+    if(!flows||!activeJourney)return null;
+    const j=flows.transitions.filter(t=>t.journeys?.includes(activeJourney));
+    const s=new Set();
+    j.forEach(t=>{t.from.forEach(id=>s.add(id));t.to.forEach(id=>s.add(id))});
+    return s;
+  },[flows,activeJourney]);
+
+  const dimmed=useCallback((id)=>{
+    if(search&&!id.toLowerCase().includes(search.toLowerCase()))return true;
+    if(journeyNodes&&!journeyNodes.has(id))return true;
+    return false;
+  },[search,journeyNodes]);
+
+  const handleWheel=useCallback(e=>{
+    e.preventDefault();
+    setTransform(t=>({...t,k:Math.max(.3,Math.min(3,t.k*(e.deltaY<0?1.08:.92)))}));
+  },[]);
+  const handleMouseDown=useCallback(e=>{
+    if(e.target.closest('g[data-node]'))return;
+    panRef.current={sx:e.clientX-transform.x,sy:e.clientY-transform.y};
+  },[transform]);
+  const handleMouseMove=useCallback(e=>{
+    const cx=e.clientX,cy=e.clientY;
+    const pan=panRef.current;
+    if(pan){setTransform(t=>({...t,x:cx-pan.sx,y:cy-pan.sy}));return;}
+    if(dragRef.current){
+      const{nodeId,offX,offY}=dragRef.current;
+      const rect=svgRef.current.getBoundingClientRect();
+      const nx=(e.clientX-rect.left-transform.x)/transform.k-offX;
+      const ny=(e.clientY-rect.top-transform.y)/transform.k-offY;
+      setPositions(p=>{const n=new Map(p);n.set(nodeId,{x:nx,y:ny});return n});
+    }
+  },[transform]);
+  const handleMouseUp=useCallback(()=>{panRef.current=null;dragRef.current=null},[]);
+  const handleNodeDrag=useCallback((e,id)=>{
+    e.stopPropagation();
+    const rect=svgRef.current.getBoundingClientRect();
+    const pos=positions.get(id);
+    dragRef.current={nodeId:id,offX:(e.clientX-rect.left-transform.x)/transform.k-pos.x,offY:(e.clientY-rect.top-transform.y)/transform.k-pos.y};
+  },[positions,transform]);
+
+  const fitView=useCallback(()=>{
+    if(!positions.size)return;
+    let mx=0,my=0;
+    positions.forEach(p=>{mx=Math.max(mx,p.x+210);my=Math.max(my,p.y+52)});
+    const w=containerRef.current?.clientWidth||1200,h=containerRef.current?.clientHeight||800;
+    const k=Math.max(.3,Math.min(1,(w-80)/mx,(h-80)/my));
+    setTransform({x:40,y:40,k});
+  },[positions]);
+  useEffect(()=>{if(positions.size)fitView()},[positions.size]);
+
+  if(loading)return<div className="h-screen flex items-center justify-center"><span className="text-muted animate-pulse">Loading wireframe data…</span></div>;
+  if(error)return<div className="h-screen flex items-center justify-center text-denial">Data load failed: {error}<br/><span className="text-muted text-xs mt-2">Ensure {Object.values(DATA_SOURCES).join(', ')} exist alongside this file.</span></div>;
+
+  const journeys=flows?Object.entries(flows.journeys):[];
+  const stateEntries=states?Object.entries(states):[];
+
+  return(
+    <div className="flex h-screen overflow-hidden">
+      <div ref={containerRef} className="flex-1 relative min-w-0">
+        <CanvasBackground/>
+
+        <div className="absolute top-3 left-3 right-3 z-20 flex flex-col gap-2 pointer-events-none">
+          <div className="flex gap-2 items-center flex-wrap pointer-events-auto">
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Filter nodes…"
+              className="bg-panel/90 border border-border rounded-full px-3 py-1.5 text-[11px] outline-none focus:border-accent min-w-[180px] placeholder:text-muted"/>
+            <button onClick={fitView} className="bg-panel/90 border border-border rounded-full px-3 py-1.5 text-[11px] hover:border-accent transition-colors">Fit</button>
+            <button onClick={()=>setActiveJourney(null)} className={`bg-panel/90 border rounded-full px-3 py-1.5 text-[11px] transition-colors ${!activeJourney?'border-accent text-accent':'border-border text-muted hover:border-accent/50'}`}>All</button>
+            <div className="flex gap-2 bg-panel/85 border border-border rounded-full px-3 py-1.5 ml-auto">
+              {stateEntries.map(([code,info])=>(
+                <span key={code} className="flex items-center gap-1 text-[9px] text-muted">
+                  <span className="w-2 h-2 rounded-full" style={{background:stateColor(`x.x.${info.label}.x`)}}/>
+                  {info.label}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 pointer-events-auto">
+            {journeys.map(([key,j])=>(
+              <JourneyChip key={key} journey={j} active={activeJourney===key}
+                onClick={()=>setActiveJourney(activeJourney===key?null:key)}/>
+            ))}
+          </div>
+        </div>
+
+        <svg ref={svgRef} className="w-full h-full relative z-10"
+          onWheel={handleWheel} onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+          <defs>
+            <marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="#484f58"/>
+            </marker>
+          </defs>
+          <g transform={`translate(${transform.x},${transform.y}) scale(${transform.k})`}>
+            {flows?.transitions.map((t,ti)=>
+              t.from.map(f=>t.to.map(to=>{
+                const fp=positions.get(f),tp=positions.get(to);
+                if(!fp||!tp)return null;
+                const hl=journeyNodes&&t.journeys?.includes(activeJourney);
+                return<GraphEdge key={`${ti}-${f}-${to}`} from={fp} to={tp} type={t.arrow_type}
+                  dim={dimmed(f)||dimmed(to)} highlighted={hl}/>;
+              }))
+            )}
+            {nodes.map(id=>{
+              const pos=positions.get(id);
+              if(!pos)return null;
+              return<GraphNode key={id} id={id} pos={pos} selected={selected===id}
+                dim={dimmed(id)} onSelect={setSelected} onDrag={handleNodeDrag}
+                stateColor={stateColor(id)}/>;
+            })}
+          </g>
+        </svg>
+
+        {activeJourney&&flows?.journeys[activeJourney]&&(
+          <div className="absolute bottom-4 left-4 right-4 z-20 bg-panel/95 border border-border rounded-xl p-4 animate-in pointer-events-auto">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2.5 h-2.5 rounded-full" style={{background:flows.journeys[activeJourney].color}}/>
+              <span className="text-xs font-semibold">{flows.journeys[activeJourney].name}</span>
+            </div>
+            <p className="text-[11px] text-muted leading-relaxed">{flows.journeys[activeJourney].description}</p>
+            <div className="flex gap-4 mt-2 text-[10px] text-muted">
+              <span>entry: <span className="text-accent">{flows.journeys[activeJourney].entry}</span></span>
+              <span>terminal: <span className="text-success">{flows.journeys[activeJourney].terminal}</span></span>
+            </div>
+          </div>
+        )}
+
+        <div className="absolute bottom-3 right-3 z-10 text-[9px] text-muted bg-panel/80 border border-border rounded-lg px-3 py-1.5">
+          drag nodes · scroll zoom · click inspect
+        </div>
+      </div>
+
+      <TerminalPanel screenId={selected} visible={panelVisible} onClose={()=>setPanelVisible(false)}/>
+
+      {!panelVisible&&(
+        <button onClick={()=>setPanelVisible(true)}
+          className="fixed top-3 right-3 z-30 bg-panel border border-border rounded-full px-3 py-1.5 text-[11px] hover:border-accent">
+          Show panel
+        </button>
+      )}
+    </div>
+  );
 }
 
-function edgePath(a, b) {
-  const mx = (a.x + NODE_W + b.x) / 2;
-  return `M ${a.x + NODE_W} ${a.y + NODE_H / 2} C ${mx} ${a.y + NODE_H / 2}, ${mx} ${b.y + NODE_H / 2}, ${b.x} ${b.y + NODE_H / 2}`;
-}
-
-function redrawEdges() {
-  edgeEls.forEach(({ el, from, to }) => el.setAttribute('d', edgePath(positions.get(from), positions.get(to))));
-}
-
-function renderGraph(data) {
-  const ids = new Set();
-  data.transitions.forEach(t => { t.from.forEach(id => ids.add(id)); t.to.forEach(id => ids.add(id)); });
-  Object.values(data.journeys).forEach(j => { ids.add(j.entry); ids.add(j.terminal); });
-  const idList = [...ids];
-  positions.clear(); nodeEls.clear(); edgeEls.length = 0; scene.innerHTML = '';
-  layout(idList, data.transitions).forEach((pt, id) => positions.set(id, pt));
-
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const edgeLayer = document.createElementNS(svgNS, 'g');
-  const nodeLayer = document.createElementNS(svgNS, 'g');
-  scene.appendChild(edgeLayer); scene.appendChild(nodeLayer);
-
-  data.transitions.forEach(t => {
-    t.from.forEach(fromId => t.to.forEach(toId => {
-      const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('class', `edge ${t.arrow_type || ''}`.trim());
-      path.setAttribute('data-from', fromId);
-      path.setAttribute('data-to', toId);
-      path.setAttribute('d', edgePath(positions.get(fromId), positions.get(toId)));
-      edgeLayer.appendChild(path);
-      edgeEls.push({ el: path, from: fromId, to: toId });
-    }));
-  });
-
-  positions.forEach((pt, id) => {
-    const g = document.createElementNS(svgNS, 'g');
-    g.setAttribute('class', 'node');
-    g.setAttribute('data-id', id);
-    g.setAttribute('transform', `translate(${pt.x}, ${pt.y})`);
-    const parts = id.split('.');
-    let dragMoved = false;
-    g.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
-      const rect = viewport.getBoundingClientRect();
-      const sx = (e.clientX - rect.left - transform.x) / transform.k;
-      const sy = (e.clientY - rect.top - transform.y) / transform.k;
-      const off = { x: sx - pt.x, y: sy - pt.y };
-      dragMoved = false;
-      const move = (ev) => {
-        const nx = (ev.clientX - rect.left - transform.x) / transform.k - off.x;
-        const ny = (ev.clientY - rect.top - transform.y) / transform.k - off.y;
-        if (Math.abs(nx - pt.x) + Math.abs(ny - pt.y) > 2) dragMoved = true;
-        pt.x = nx; pt.y = ny;
-        g.setAttribute('transform', `translate(${pt.x}, ${pt.y})`);
-        redrawEdges();
-      };
-      const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
-      window.addEventListener('mousemove', move);
-      window.addEventListener('mouseup', up);
-    });
-    g.addEventListener('click', () => {
-      if (dragMoved) return;
-      selectNode(id);
-      loadScreen(id, `screens/${parts[0]}/${parts[1]}/${id}.txt`, exitCodeFor(id));
-    });
-    const rect = document.createElementNS(svgNS, 'rect');
-    rect.setAttribute('width', NODE_W);
-    rect.setAttribute('height', NODE_H);
-    rect.setAttribute('fill', '#161b22');
-    rect.setAttribute('stroke', STATE_COLOR[stateOf(id)] || '#30363d');
-    const title = document.createElementNS(svgNS, 'text');
-    title.setAttribute('x', 10); title.setAttribute('y', 20);
-    title.setAttribute('class', 'title');
-    title.textContent = `${parts[0]}.${parts[1]}`;
-    const sub = document.createElementNS(svgNS, 'text');
-    sub.setAttribute('x', 10); sub.setAttribute('y', 35);
-    sub.setAttribute('class', 'sub');
-    sub.textContent = parts.slice(2).join('.');
-    const ttl = document.createElementNS(svgNS, 'title');
-    ttl.textContent = id;
-    g.appendChild(rect); g.appendChild(title); g.appendChild(sub); g.appendChild(ttl);
-    nodeLayer.appendChild(g);
-    nodeEls.set(id, g);
-  });
-  fitView();
-}
-
-function selectNode(id) {
-  selectedId = id;
-  nodeEls.forEach((el, nid) => el.classList.toggle('selected', nid === id));
-}
-
-function fitView() {
-  if (!positions.size) return;
-  let maxX = 0, maxY = 0;
-  positions.forEach(pt => { maxX = Math.max(maxX, pt.x + NODE_W); maxY = Math.max(maxY, pt.y + NODE_H); });
-  const w = container.clientWidth || 1200, h = container.clientHeight || 800;
-  const k = Math.max(0.55, Math.min(1, (w - 40) / (maxX - ORIGIN.x + 40), (h - 40) / (maxY - ORIGIN.y + 40)));
-  transform = { x: 20 - ORIGIN.x * k, y: 20 - ORIGIN.y * k, k };
-  updateTransform();
-}
-
-function applyFilter(q) {
-  const query = q.trim().toLowerCase();
-  nodeEls.forEach((el, id) => el.classList.toggle('dim', !!query && !id.toLowerCase().includes(query)));
-  edgeEls.forEach(({ el, from, to }) => el.classList.toggle('dim', !!query && !(from.toLowerCase().includes(query) || to.toLowerCase().includes(query))));
-}
-
-document.getElementById('search').addEventListener('input', e => applyFilter(e.target.value));
-document.getElementById('fit-btn').addEventListener('click', fitView);
-document.getElementById('reset-btn').addEventListener('click', () => { if (flowsData) renderGraph(flowsData); });
-window.addEventListener('resize', () => { /* canvas scales by CSS; transform preserved */ });
-const panelToggle = document.getElementById('panel-toggle');
-panelToggle.addEventListener('click', () => {
-  const panel = document.getElementById('terminal-panel');
-  const hidden = panel.style.display === 'none';
-  panel.style.display = hidden ? 'flex' : 'none';
-  panelToggle.textContent = hidden ? 'Hide preview' : 'Show preview';
-});
-
-function loadScreen(screenId, txtPath, exitCode) {
-  document.getElementById('screen-id-display').textContent = screenId;
-  const badge = document.getElementById('exit-badge');
-  badge.textContent = `Exit ${exitCode}`;
-  badge.style.color = exitCode === 0 ? 'var(--success)' : (exitCode === 6 ? 'var(--yield)' : 'var(--denial)');
-  fetch(txtPath)
-    .then(r => r.text())
-    .then(text => {
-      document.getElementById('terminal-body').textContent = text;
-      renderOutActions(screenId);
-    })
-    .catch(() => {
-      document.getElementById('terminal-body').textContent = "Failed to load fixture transcript.";
-    });
-}
-
-function renderOutActions(screenId) {
-  const actions = document.getElementById('terminal-actions');
-  actions.innerHTML = '';
-  if (!flowsData) return;
-  flowsData.transitions.filter(t => t.from.includes(screenId)).forEach(t => {
-    t.to.forEach(targetId => {
-      const btn = document.createElement('button');
-      btn.className = 'action-btn';
-      btn.textContent = t.ui?.button_text || `Transition -> ${targetId}`;
-      btn.onclick = () => {
-        selectNode(targetId);
-        const parts = targetId.split('.');
-        loadScreen(targetId, `screens/${parts[0]}/${parts[1]}/${targetId}.txt`, exitCodeFor(targetId));
-      };
-      actions.appendChild(btn);
-    });
-  });
-}
-
-function focusJourney(journeyId) {
-  if (!flowsData) return;
-  const journey = flowsData.journeys[journeyId];
-  if (journey) {
-    document.querySelectorAll('.hud-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('screen-id-display').textContent = `Journey: ${journey.name}`;
-    document.getElementById('terminal-body').textContent = journey.description;
-    selectNode(journey.entry);
-    const parts = journey.entry.split('.');
-    loadScreen(journey.entry, `screens/${parts[0]}/${parts[1]}/${journey.entry}.txt`, exitCodeFor(journey.entry));
-  }
-}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>
