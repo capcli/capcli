@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.revoke.refusal.not_found",
   "target": "agt_0000",
-  "command": "capcli sys revoke agt_0000",
+  "command": "capcli sys agent revoke agt_0000",
   "state": {
     "exit_code": 3,
     "domain": "validation",
@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "No registered agent with id 'agt_0000' in the agents system table.",
-    "remedy": "list registered agents via capcli sys agents, then revoke a valid agent id"
+    "remedy": "list registered agents via capcli sys agents, then revoke a valid agent id",
+    "state_modified": false
   },
   "render": {
     "header": {

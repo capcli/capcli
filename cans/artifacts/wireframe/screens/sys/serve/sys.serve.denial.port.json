@@ -17,7 +17,8 @@
     "culprit": "bind(127.0.0.1:4040) rejected: EADDRINUSE (foreign pid 49012)",
     "remedy": "stop the foreign listener on 4040, then retry 'capcli sys serve --start'",
     "layer": "engine",
-    "measured": "port 4040 unavailable (required: 1 of 1)"
+    "measured": "port 4040 unavailable (required: 1 of 1)",
+    "state_modified": false
   },
   "render": {
     "header": {

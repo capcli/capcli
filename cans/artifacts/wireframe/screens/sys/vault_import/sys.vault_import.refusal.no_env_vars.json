@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "no CAPCLI_SECRET_* environment variables present in process scope",
-    "remedy": "export CAPCLI_SECRET_<NAME> in the harness shell, or provision via capcli sys vault set"
+    "remedy": "export CAPCLI_SECRET_<NAME> in the harness shell, or provision via capcli sys vault set",
+    "state_modified": false
   },
   "render": {
     "header": {
