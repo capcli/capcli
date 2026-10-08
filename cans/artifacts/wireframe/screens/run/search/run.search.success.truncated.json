@@ -130,5 +130,14 @@
         ]
       }
     ]
+  },
+  "pagination": {
+    "items": [
+      "api://stripe.refund_charge",
+      "vault://stripe_secret_key",
+      "quota://stripe"
+    ],
+    "next_cursor": "doc://refund-policy",
+    "has_more": true
   }
 }

@@ -24,7 +24,7 @@
         "items": [
           {
             "field": "kernel",
-            "value": "capcli 8.4.1"
+            "value": "capcli 0.4.2"
           },
           {
             "field": "platform",

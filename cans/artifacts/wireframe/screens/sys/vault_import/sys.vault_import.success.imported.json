@@ -36,7 +36,7 @@
         "title": null,
         "items": [
           {
-            "text": "├── CAPCLI_SECRET_STRIPE_KEY      → vault://stripe_key      aes-256-gcm",
+            "text": "├── CAPCLI_SECRET_STRIPE_KEY      → vault://stripe_secret_key  aes-256-gcm",
             "indent": 2
           },
           {

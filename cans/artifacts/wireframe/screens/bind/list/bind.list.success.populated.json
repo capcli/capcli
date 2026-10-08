@@ -24,7 +24,7 @@
         "items": [
           {
             "field": "bindings",
-            "value": "5 total (4 active, 1 paused)"
+            "value": "5 total (5 active, 0 paused)"
           }
         ]
       },
@@ -40,7 +40,7 @@
             "indent": 2
           },
           {
-            "text": "│   └── bnd_3k2f  weekly_digest   cap://report_summary    0 6 * * 1          paused",
+            "text": "│   └── bnd_3k2f  weekly_digest   cap://report_summary    0 6 * * 1          active",
             "indent": 2
           },
           {

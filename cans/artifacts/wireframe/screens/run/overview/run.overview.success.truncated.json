@@ -91,5 +91,14 @@
         ]
       }
     ]
+  },
+  "pagination": {
+    "items": [
+      "pending_orders: 142 (11 rush)",
+      "shipped_today: 893",
+      "unresolved_vault: 2 (stripe_secret_key, fedex_api_key)"
+    ],
+    "next_cursor": "budget_headroom",
+    "has_more": true
   }
 }

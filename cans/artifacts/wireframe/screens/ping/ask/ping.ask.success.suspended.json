@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "ping.ask.success.suspended",
   "target": "user:alice",
-  "command": "capcli ping ask user:alice \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h --intent \"refund policy requires human sign-off\"",
+  "command": "capcli ping ask user:alice \"Fraud score 0.83 on ORD-1042. Approve dispatch?\" --options approve,deny --timeout 60m --intent \"fraud gate above dispatch threshold requires human sign-off\"",
   "state": {
     "exit_code": 0,
     "domain": null,
@@ -31,16 +31,20 @@
             "value": "user:alice"
           },
           {
+            "field": "asked_by",
+            "value": "agt_7f3k (dispatch_order@4, frame_026)"
+          },
+          {
             "field": "question",
-            "value": "\"Approve refund for order ORD-10?\""
+            "value": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\""
           },
           {
             "field": "options",
-            "value": "approve, reject, escalate"
+            "value": "approve, deny"
           },
           {
             "field": "timeout",
-            "value": "24h (fail-closed on expiry)"
+            "value": "60m (fail-closed on expiry)"
           },
           {
             "field": "cockpit",

@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.tail.success.populated",
   "target": "_audit",
-  "command": "capcli sys tail --follow --since 1h",
+  "command": "capcli sys audit tail --follow --since 1h",
   "state": {
     "exit_code": 0,
     "domain": null,
@@ -52,12 +52,12 @@
             "indent": 2
           },
           {
-            "text": "├── 23:41:08Z  op_9f2e  api.call     fedex.ship        allowed  340ms",
+            "text": "├── 23:41:08Z  op_7c4f  api.call     fedex.ship        allowed  340ms",
             "indent": 2
           },
           {
-            "field": "│     └── tracking",
-            "value": "794644790133"
+            "text": "│     └── tracking  794644790133",
+            "indent": 8
           },
           {
             "text": "├── 23:41:08Z  op_9f2f  db.execute    orders            allowed   18ms",
@@ -68,8 +68,8 @@
             "indent": 2
           },
           {
-            "field": "│     └── rule",
-            "value": "policy.query.update_delete.require_limit"
+            "text": "│     └── rule  policy.query.update_delete.require_limit",
+            "indent": 8
           },
           {
             "text": "└── 23:58:44Z  op_a11c7  ping.ask     user:alice        allowed     2ms",
