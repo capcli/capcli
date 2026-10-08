@@ -134,6 +134,27 @@
       "entry": "ping.list.success.empty",
       "terminal": "ping.expire.success.completed",
       "description": "Empty pending queue -> notify gates (intent required, quiet hours) -> ask gates (intent required, options cap) -> ask suspends a frame -> resolution gauntlet (unknown id, OCC fence, timeout expiry) -> unresolved ask expires fail-closed"
+    },
+    "journey_rule_governance": {
+      "name": "Rule Governance: Validate, Show, Diff, Apply",
+      "color": "#64748b",
+      "entry": "rule.validate.refusal.syntax",
+      "terminal": "rule.apply.success.applied",
+      "description": "Validate gauntlet (syntax errors, then semantic errors, then valid) -> show compiled rules (unknown table refuses, orders compiles) -> diff vs HEAD (lockstep, then one pending orders.priority change) -> apply gates (DDL trust floor, lockfile sync, validation) -> DDL applied to dev"
+    },
+    "journey_db_operations": {
+      "name": "DB Storage Operations: Schema, Lock, Dump, Snapshot, Restore",
+      "color": "#0f766e",
+      "entry": "db.schema.success.empty",
+      "terminal": "db.restore.success.restored",
+      "description": "Schema survey (fresh workspace empty, then the orders table) -> lock gate (reason required) -> dump shapes (full, then over-cap truncated) -> snapshot gates (prod draft denial, then created) -> restore gauntlet (missing id, active locks, then a clean restore)"
+    },
+    "journey_api_lifecycle": {
+      "name": "Provider Lifecycle: Sync, Diff, Catalog, Prove, Ship, Retire",
+      "color": "#c026d3",
+      "entry": "api.sync.refusal.missing_url",
+      "terminal": "api.retire.success.completed",
+      "description": "Sync gates (spec url required, rate ceiling) -> stripe spec synced -> drift diff (threads clean, stripe populated) -> catalog shapes (empty, truncated, populated) -> prove gates (sim gap, policy) -> stripe.refund_charge passes in sim -> ship ladder (reason required, replay metrics, shipped, graduated) -> stats -> rollback gauntlet (depth, unknown version, restored) -> retirement"
     }
   },
   "transitions": [
@@ -1855,6 +1876,606 @@
       ],
       "trigger": "expire_unattended_ask",
       "label": "capcli ping expire ask_77c3",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_rule_syntax_to_semantics",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.validate.refusal.syntax"
+      ],
+      "to": [
+        "rule.validate.refusal.semantics"
+      ],
+      "trigger": "fix_and_revalidate",
+      "label": "capcli rule validate",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_semantics_to_valid",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.validate.refusal.semantics"
+      ],
+      "to": [
+        "rule.validate.success.valid"
+      ],
+      "trigger": "fix_and_revalidate",
+      "label": "capcli rule validate",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_rule_valid_to_show_nf",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.validate.success.valid"
+      ],
+      "to": [
+        "rule.show.refusal.not_found"
+      ],
+      "trigger": "show_unknown_table",
+      "label": "capcli rule show schema --table invoices",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_show_nf_to_show",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.show.refusal.not_found"
+      ],
+      "to": [
+        "rule.show.success.populated"
+      ],
+      "trigger": "show_orders_rules",
+      "label": "capcli rule show schema --table orders",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_rule_show_to_diff_empty",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.show.success.populated"
+      ],
+      "to": [
+        "rule.diff.success.empty"
+      ],
+      "trigger": "diff_vs_head",
+      "label": "capcli rule diff schema --git",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_rule_diff_empty_to_populated",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.diff.success.empty"
+      ],
+      "to": [
+        "rule.diff.success.populated"
+      ],
+      "trigger": "edit_rules_then_diff",
+      "label": "capcli rule diff schema --git",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_rule_diff_to_apply_trust",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.diff.success.populated"
+      ],
+      "to": [
+        "rule.apply.denial.trust"
+      ],
+      "trigger": "apply_draft_ddl",
+      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_apply_trust_to_lockfile",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.apply.denial.trust"
+      ],
+      "to": [
+        "rule.apply.refusal.lockfile"
+      ],
+      "trigger": "apply_after_drift",
+      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_apply_lockfile_to_validation",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.apply.refusal.lockfile"
+      ],
+      "to": [
+        "rule.apply.refusal.validation"
+      ],
+      "trigger": "apply_bad_index",
+      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_rule_apply_validation_to_applied",
+      "journeys": [
+        "journey_rule_governance"
+      ],
+      "from": [
+        "rule.apply.refusal.validation"
+      ],
+      "to": [
+        "rule.apply.success.applied"
+      ],
+      "trigger": "apply_reviewed_ddl",
+      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_db_schema_empty_to_populated",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.schema.success.empty"
+      ],
+      "to": [
+        "db.schema.success.populated"
+      ],
+      "trigger": "schema_orders",
+      "label": "capcli db schema --table orders",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_db_schema_to_lock_gate",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.schema.success.populated"
+      ],
+      "to": [
+        "db.lock.refusal.missing_reason"
+      ],
+      "trigger": "lock_without_reason",
+      "label": "capcli db lock orders:ORD-10 --ttl 300s",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_db_lock_gate_to_dump",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.lock.refusal.missing_reason"
+      ],
+      "to": [
+        "db.dump.success.populated"
+      ],
+      "trigger": "dump_orders",
+      "label": "capcli db dump",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_db_dump_to_dump_truncated",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.dump.success.populated"
+      ],
+      "to": [
+        "db.dump.success.truncated"
+      ],
+      "trigger": "dump_over_cap",
+      "label": "capcli db dump",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_db_dump_truncated_to_snapshot_denial",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.dump.success.truncated"
+      ],
+      "to": [
+        "db.snapshot.denial.prod_draft"
+      ],
+      "trigger": "snapshot_prod_draft",
+      "label": "capcli db snapshot --env prod -m \"nightly safety point\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_db_snapshot_denial_to_created",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.snapshot.denial.prod_draft"
+      ],
+      "to": [
+        "db.snapshot.success.created"
+      ],
+      "trigger": "snapshot_dev",
+      "label": "capcli db snapshot -m \"pre-migration safety point\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_db_snapshot_to_restore_missing_id",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.snapshot.success.created"
+      ],
+      "to": [
+        "db.restore.refusal.missing_id"
+      ],
+      "trigger": "restore_no_id",
+      "label": "capcli db restore",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_db_restore_missing_to_locks",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.restore.refusal.missing_id"
+      ],
+      "to": [
+        "db.restore.denial.active_locks"
+      ],
+      "trigger": "restore_locked_table",
+      "label": "capcli db restore snap_migration_004",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_db_restore_locks_to_restored",
+      "journeys": [
+        "journey_db_operations"
+      ],
+      "from": [
+        "db.restore.denial.active_locks"
+      ],
+      "to": [
+        "db.restore.success.restored"
+      ],
+      "trigger": "restore_after_release",
+      "label": "capcli db restore snap_onboarding_01",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_sync_nf_to_rate",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.sync.refusal.missing_url"
+      ],
+      "to": [
+        "api.sync.denial.rate"
+      ],
+      "trigger": "sync_with_url",
+      "label": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_sync_rate_to_synced",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.sync.denial.rate"
+      ],
+      "to": [
+        "api.sync.success.synced"
+      ],
+      "trigger": "sync_retry",
+      "label": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_synced_to_diff_empty",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.sync.success.synced"
+      ],
+      "to": [
+        "api.diff.success.empty"
+      ],
+      "trigger": "diff_threads",
+      "label": "capcli api diff threads",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_diff_empty_to_populated",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.diff.success.empty"
+      ],
+      "to": [
+        "api.diff.success.populated"
+      ],
+      "trigger": "diff_stripe",
+      "label": "capcli api diff stripe",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_diff_to_catalog_empty",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.diff.success.populated"
+      ],
+      "to": [
+        "api.catalog.success.empty"
+      ],
+      "trigger": "catalog_all",
+      "label": "capcli api catalog",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_catalog_empty_to_truncated",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.catalog.success.empty"
+      ],
+      "to": [
+        "api.catalog.success.truncated"
+      ],
+      "trigger": "catalog_overflow",
+      "label": "capcli api catalog",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_catalog_truncated_to_populated",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.catalog.success.truncated"
+      ],
+      "to": [
+        "api.catalog.success.populated"
+      ],
+      "trigger": "catalog_stripe_active",
+      "label": "capcli api catalog stripe --state active --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_catalog_to_prove_sim_gap",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.catalog.success.populated"
+      ],
+      "to": [
+        "api.prove.denial.sim_gap"
+      ],
+      "trigger": "prove_prod_only_verb",
+      "label": "capcli api prove threads.create_media_post --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_prove_sim_gap_to_policy",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.prove.denial.sim_gap"
+      ],
+      "to": [
+        "api.prove.denial.policy"
+      ],
+      "trigger": "prove_forbidden_scope",
+      "label": "capcli api prove stripe.delete_account --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_prove_policy_to_passed",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.prove.denial.policy"
+      ],
+      "to": [
+        "api.prove.success.passed"
+      ],
+      "trigger": "prove_refund_verb",
+      "label": "capcli api prove stripe.refund_charge --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_prove_to_ship_reason",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.prove.success.passed"
+      ],
+      "to": [
+        "api.ship.refusal.missing_reason"
+      ],
+      "trigger": "ship_without_reason",
+      "label": "capcli api ship threads.create_media_post reviewed",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_ship_reason_to_metrics",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.ship.refusal.missing_reason"
+      ],
+      "to": [
+        "api.ship.denial.metrics"
+      ],
+      "trigger": "ship_failing_replays",
+      "label": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_ship_metrics_to_shipped",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.ship.denial.metrics"
+      ],
+      "to": [
+        "api.ship.success.shipped"
+      ],
+      "trigger": "ship_clean_replays",
+      "label": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_shipped_to_graduated",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.ship.success.shipped"
+      ],
+      "to": [
+        "api.ship.success.graduated"
+      ],
+      "trigger": "graduate_training_wheels",
+      "label": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_graduated_to_stats_nf",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.ship.success.graduated"
+      ],
+      "to": [
+        "api.stats.refusal.not_found"
+      ],
+      "trigger": "stats_unknown_provider",
+      "label": "capcli api stats shopify",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_stats_nf_to_stats",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.stats.refusal.not_found"
+      ],
+      "to": [
+        "api.stats.success.populated"
+      ],
+      "trigger": "stats_stripe_deep",
+      "label": "capcli api stats stripe --deep",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_api_stats_to_rollback_depth",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.stats.success.populated"
+      ],
+      "to": [
+        "api.rollback.denial.depth"
+      ],
+      "trigger": "rollback_too_deep",
+      "label": "capcli api rollback threads.create_media_post 2",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_rollback_depth_to_nf",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.rollback.denial.depth"
+      ],
+      "to": [
+        "api.rollback.refusal.not_found"
+      ],
+      "trigger": "rollback_unknown_version",
+      "label": "capcli api rollback threads.create_media_post 12",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_rollback_nf_to_completed",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.rollback.refusal.not_found"
+      ],
+      "to": [
+        "api.rollback.success.completed"
+      ],
+      "trigger": "rollback_to_v4",
+      "label": "capcli api rollback threads.create_media_post 4",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_api_rollback_to_retire_nf",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.rollback.success.completed"
+      ],
+      "to": [
+        "api.retire.refusal.not_found"
+      ],
+      "trigger": "retire_unknown_verb",
+      "label": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_api_retire_nf_to_completed",
+      "journeys": [
+        "journey_api_lifecycle"
+      ],
+      "from": [
+        "api.retire.refusal.not_found"
+      ],
+      "to": [
+        "api.retire.success.completed"
+      ],
+      "trigger": "retire_refund_verb",
+      "label": "capcli api retire stripe.refund_charge --reason \"deprecated upstream\"",
       "arrow_type": "success"
     }
   ]
