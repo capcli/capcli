@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Routine name 'sync_inventory' does not exist in the registry.",
-    "remedy": "check the spelling, or discover candidates via capcli search 'sync' --trust draft"
+    "remedy": "check the spelling, or discover candidates via capcli search 'sync' --trust draft",
+    "state_modified": false
   },
   "render": {
     "header": {

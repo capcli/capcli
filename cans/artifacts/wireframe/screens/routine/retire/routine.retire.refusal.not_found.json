@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Target routine 'legacy_etl_backup' does not exist in the registry.",
-    "remedy": "verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl"
+    "remedy": "verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl",
+    "state_modified": false
   },
   "render": {
     "header": {
