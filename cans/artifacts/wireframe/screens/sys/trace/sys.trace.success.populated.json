@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v1",
   "screen_id": "sys.trace.success.populated",
-  "target": "op_9f2e",
-  "command": "capcli sys trace op_9f2e --explain",
+  "target": "op_7c4f",
+  "command": "capcli sys audit trace op_7c4f --explain",
   "state": {
     "exit_code": 0,
     "domain": null,
@@ -16,7 +16,7 @@
   "render": {
     "header": {
       "style": "plain",
-      "label": "[dev:tier_1]  Causal DAG Trace (op_9f2e)"
+      "label": "[dev:tier_1]  Causal DAG Trace (op_7c4f)"
     },
     "sections": [
       {
@@ -35,12 +35,12 @@
             "indent": 8
           },
           {
-            "text": "├── op_9f2e  api.call (fedex.ship)     ✓ [allowed]  340ms",
+            "text": "├── op_7c4f  api.call (fedex.ship)     ✓ [allowed]  340ms",
             "indent": 8
           },
           {
-            "field": "│     └── tracking",
-            "value": "794644790133"
+            "text": "│     └── tracking  794644790133",
+            "indent": 14
           },
           {
             "text": "└── op_9f2f  db.execute (orders)       ✓ [allowed]  18ms",

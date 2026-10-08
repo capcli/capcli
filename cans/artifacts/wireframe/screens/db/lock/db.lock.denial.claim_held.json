@@ -17,6 +17,7 @@
     "culprit": "Target resource currently claimed; exclusive lease is active.",
     "remedy": "wait for lease expiry or holder release, then retry; inspect via 'capcli inspect db://orders'",
     "layer": "claims",
+    "state_modified": false,
     "measured": "TTL remaining 187s of 300s; holder agt_9k2w"
   },
   "render": {
@@ -38,7 +39,7 @@
           },
           {
             "field": "lease",
-            "value": "claim_c3d4 (holder: agt_9k2w, op_9f2e)"
+            "value": "claim_c3d4 (holder: agt_9k2w, op_8e07)"
           }
         ]
       },
