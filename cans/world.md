@@ -68,7 +68,7 @@
         - enforcement — validated at compile time
       - component declarations
         - domain tables — data models, constraints, and indexes
-        - read views — pre-defined queries with declared exposure
+        - read views — pre-defined queries serving as SSOT for routines (ctx.db.view); encapsulates joins and aggregates outside routine code
         - triggers — policy-vetted SQLite triggers
       - view governance
         - exposed tables
@@ -230,6 +230,7 @@
     - Gate 5: Migration safety
       - timing — apply-time during rule apply
       - execution — rehearsal runs on masked sim snapshot; checks PRAGMA foreign_key_check
+      - pinned routine safety — kernel executes simulated rehearsal of ALL pinned routines against migrated schema; any query break or column drop aborts migration with exit 2
       - online cutover gate — verifies shadow table delta lag reaches zero before executing atomic <20ms table swap
       - backfill safety — validates backfill routine terminates cleanly within session fuel bounds
       - failure code — aborts cutover, discards rehearsal state, returns exit 2 or 3

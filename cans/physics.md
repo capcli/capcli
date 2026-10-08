@@ -45,7 +45,7 @@
     - Layer 2: SQL AST check
       - engine — sqlparser crate pre-check (secondary to Layer 1.2 runtime mutation hook)
       - checks
-        - parameterization — bound parameters mandatory; interpolation denied
+        - parameterization — bound parameters mandatory; raw SQL string interpolation and f-strings fail compilation with exit 3
         - transaction isolation — ctx.api.call in ctx.db.txn blocks rejected
         - execution mode — multi-statement raw query strings denied structurally
         - intent gate — mutating writes require valid non-empty causal intent
@@ -102,12 +102,13 @@
       - exit 2 — invariant or governance block; state untouched (state_modified: false)
         - domain db.engine — SQLite check constraints, foreign key violations, busy timeout
         - domain policy.authorizer — C-level table/column write denied
-        - domain policy.budget — frame limits or session op/fuel ceilings exhausted
+        - domain policy.budget — frame limits, session op/fuel ceilings exhausted, or call nesting > 5
+        - domain policy.migration — Gate 5 rehearsal broke pinned routine contract
         - domain policy.trust — action forbidden by caller trust rung (e.g. draft touching prod)
-      - exit 3 — compile-time refusal, validation failure, boot lockfile mismatch, or missing parameter
+      - exit 3 — compile-time refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, unpaginated payload > 500 tokens
       - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
-      - exit 5 — domain kernel.panic; unrecoverable media corruption or storage exhaustion across both primary and quarantine sinks
-      - exit 6 — domain api.quota; proactive rate yield; task suspended until yield_until timestamp
+      - exit 5 — domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
+      - exit 6 — proactive yield; rate floor reached or cursor chunk yield (ctx.cursor.save_and_yield)
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
       - engine — native terminal diagnostics rendered procedurally via `miette` and `codespan`

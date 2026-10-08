@@ -53,7 +53,7 @@
         - Background tasks yield at 15 tokens remaining (reserving quota for scheduled posts)
         - Standard tasks yield at 5 tokens remaining
         - Critical tasks drain pool to 0
-      - Safe Yield — Frames suspended at floor return exit 6 and land cleanly in `_suspended_tasks`
+      - Safe Yield — Frames suspended at floor return exit 6 and land cleanly in `_suspended_tasks`; batch cursor routines yield via exit 6 saving state to `_watch_cursors`
 
     - min() law
       - Static call-graph evaluation — kernel inspects declared child dependency trees prior to root frame execution
@@ -95,7 +95,8 @@
       - ops_cascade: true, duration_cascade: true
       - fuel_scope: session, rate_scope: session, rows_scope: trust_session
       - result_tokens_scope: routine
-      - max_nesting_depth: 5 caps composition depth
+      - max_nesting_depth: 5 caps composition depth; nesting > 5 aborts execution with exit 2
+      - call_preflight: static call-tree validated with petgraph; cycles (A -> B -> A) fail compile with exit 3
       - budget_exhaustion: deny — exhausted budget = exit 2, never silent truncation
     - Cascade view in `inspect`
       - pre-flight check

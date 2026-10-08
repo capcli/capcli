@@ -27,6 +27,8 @@
       - capability.search — query, results_count, resolution_stage: see action.md#Search-surface
       - db.exec — sql, params, vdbe_inspect, rules_matched, rows_affected, result_hash
       - routine.run — routine, version, hashes, triggered_by, outcome: see action.md#Routines
+      - saga.execute — egress_verb, compensate_verb, db_mutation, outcome
+      - saga.compensate — parent_op, compensate_verb, reason: db_abort, status
       - template.import — urp, kind, bundle_hash, policy_version, target_env: see world.md#World-templates
       - api.sync — provider, added, removed, changed, unchanged: see action.md#Catalog-synchronization
       - api.token_refresh — provider, token_type, expires_in, refresh_outcome
@@ -101,6 +103,7 @@
       - retention bounds — versions kept: see artifacts/governance.yaml#routine_shape
     - Replay invariants
       - integrity anchoring — ledger roots checkpointed offsite: see recovery.md#Hash-chains
+      - deterministic inputs — replay recreates identical state; ctx.now() bound to frame start; ctx.uuid() uses PRNG seeded by HMAC-SHA256(session_token, op_sequence)
       - policy enforcement — replay executes under current policy, not historical
       - external effects — external API calls flagged replay: manual; auto-replay strictly forbidden
       - idempotency — environment-scoped idempotency keys prevent duplicate execution

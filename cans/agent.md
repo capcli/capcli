@@ -10,8 +10,8 @@
       - capability token — kernel-minted HMAC session token bound to active _budget_frames
       - workspace pinning — active session and principal pinned to envs/<name>/workspace.db
       - session fork — child agents inherit scoped parent token via session fork
-      - acting identity — --session and --by validated against active token registry
-      - beneficiary identity — --as declares target principal
+      - acting identity — --by declares machine agent identity for audit trails and token validation
+      - beneficiary identity — --as declares target principal; bound directly to SQLite :principal for row-level security
       - identity generation — tokens and ids kernel-issued; self-declaration denied
     - System agent registry
       - storage — agents system table in workspace.db
@@ -67,6 +67,7 @@
       - access — absolute zero-knowledge in guest runtime; guest address space never allocates credential bytes; guest SDK accepts and passes only opaque URP references (vault://name)
       - encryption — AES-256-GCM at rest; cached in memory by daemon or decrypted ephemerally per CLI run
       - ingestion — provisioned via CLI (`capcli sys vault set`), environment variables (`CAPCLI_SECRET_*`), or external client RPC
+      - leak protection — plaintext credential exposure in return payloads triggers immediate kill_and_alert (exit 5) and session token revocation
     - Provisioning workflow
       - Lifecycle steps
         - detection — missing secret_ref trips pre-call check before egress

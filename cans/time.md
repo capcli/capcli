@@ -34,7 +34,7 @@
         - sandbox rules — subprocess, os, and raw socket access trapped by jail
         - parameter typing — Param schemas validated
         - policy reachability — table and egress permissions verified
-        - shape limits — token and LOC limits: see artifacts/governance.yaml#routine_shape
+        - shape limits — token envelope <= 2,000 tokens; cyclomatic complexity <= 10 branch paths; LOC unrestricted
       - manifest proof
         - cost extraction — estimated_cost_class saved with version
         - partial match — skipped verbs report fractional match (e.g. 3/4)
@@ -69,7 +69,7 @@
       - dependency protection — routine dependency graph (in-memory DAG) blocks retirement of active dependencies
       - decay thresholds
         - inactivity — unused for 30 days flags retirement candidate
-        - failure rate — success below 0.70 over 20 runs triggers demotion to draft
+        - failure rate — failure rate > 0.30 over 20 runs triggers autonomous circuit-breaker demotion from pinned to draft, suspends active crons, and alerts Cockpit
         - structural rot — dropped tables or deprecated APIs force quarantine
         - versioning caps — max 25 versions retained; max rollback depth 5
   - Learning loop

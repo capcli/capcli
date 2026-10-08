@@ -76,7 +76,7 @@
     - Procedure layer
       - Substrate — Python (.py, 1st class), JavaScript (.js, 2nd class), or TypeScript (.ts, 3rd class) files in routines/ or declared binaries
       - Purpose — branching, retries, multi-step composition
-      - Mental model — see overview.md#Mental-model
+      - Execution pipeline — strictly 3 non-interleaved phases: Gather (reads) -> Compute (pure logic) -> Commit & Saga (atomic effects)
       - Evolution — raw SQL exploration becomes routine exploitation
       - Granularity definitions
         - op — single atomic capability call
@@ -102,7 +102,8 @@
         - db write — ctx.db.txn context wrapping ctx.db.execute
         - return value — summary-sized dict
     - Shape constraints
-      - file size — max 150 lines of code; max 2,000 tokens
+      - token envelope — max 2,000 tokens (LOC unrestricted; whitespace, comments, docstrings unpenalized)
+      - complexity — cyclomatic complexity <= 10 branch paths; evaluated at AST prepare-time
       - signatures — max 8 typed Param declarations; description required
       - execution caps — max 50 ops per run; max 300s duration; max 10 txn statements
       - pagination posture — routines must encapsulate iteration and filtering loops internally; multi-turn LLM subshell pagination loops banned
@@ -165,11 +166,13 @@
         - failure modes — callbacks break DAG linearity, txn boundaries, replay
         - architecture law — events start routines, routines never consume events
     - Composition and cascade
-      - Mechanism — standard python imports between routine modules
+      - Mechanism — strictly executed via ctx.call(routine, params); direct cross-routine module imports banned
       - Static call-tree preflight — root invocation verifies that worst-case call-graph branch depth can be fully funded before execution begins
+      - Dependency graph — petgraph preflights call graph; cycles (A -> B -> A) abort at compile-time with exit 3
+      - Trust floor — callee must have equal or higher trust: pinned routines call pinned only; reviewed calls reviewed or pinned; draft callees strictly banned
       - Context inheritance — child frames consume parent pools; starvation aborts before root dispatch rather than decapitating child frames mid-flight
       - Rules and caps
-        - nesting ceiling — see artifacts/governance.yaml#routine_shape
+        - nesting ceiling — max 5 nested frames; breach fails closed with exit 2
         - import ceiling — see artifacts/governance.yaml#routine_shape
         - cross-agent deduplication — near-duplicate across agents forces merge or fork
         - counter scopes — fuel, wire bytes, rate, rows session-scoped
@@ -226,12 +229,17 @@
   - The ctx contract
     - Surface methods
       - Database methods
-        - ctx.db.query(sql, params) — read returning list[dict]
-        - ctx.db.execute(sql, params, intent) — write returning Result
-        - ctx.db.txn() — transaction context manager
+        - ctx.db.view(name, params) — execute verified named AST view from schema.yaml (primary read mechanism)
+        - ctx.db.get(table, id=val, require={...}) — structured key-value predicate lookup compiled to parameterized C query
+        - ctx.db.query(sql, params) — dynamic parameterized SQL; raw string interpolation/concatenation fails with exit 3
+        - ctx.db.mutate(table, id=val, set={...}, intent="...") — structured single-row mutation
+        - ctx.txn(egress=..., write=...) — kernel-mediated saga context; wraps compensating HTTP rollback and DB mutation
         - ctx.db.lock(target, ttl) — application-level lease claim in claims; auto-expired by daemon tick
+      - Deterministic inputs
+        - ctx.now() — monotonic logical timestamp locked to causal frame start
+        - ctx.uuid() — deterministic pseudo-random token minted via HMAC-SHA256(session_token, op_sequence)
       - External api methods
-        - ctx.api.call(verb, params, intent, select=None) — governed HTTP egress with optional JSONPath wire projection; params accepts JSON dict, multipart fields, or ctx.storage blob handles
+        - ctx.api.call(verb, params, intent, compensate=None, select=None) — governed HTTP egress; declare compensate verb for kernel saga auto-rollback
         - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) — kernel-managed in-flight polling (1 aggregate op)
         - egress retry — idempotent verbs (GET/PUT/DELETE) auto-retry on 429/503/network-drop; mutating POST without declared idempotency header fails closed immediately (exit 4)
         - ctx.api.verify(verb, key) — key validation check
@@ -241,7 +249,10 @@
         - ctx.storage.put(name, data, mime) — uploads blob and returns metadata
         - ctx.storage.get(key) — retrieves stream and verified sha256
         - ctx.storage.url(key, ttl) — mints signed temporary access url
-      - Cursor persistence — chunked batch routines persist cursor state to _watch_cursors; carrying cursors across LLM turns prohibited
+      - Cursor & batch processing
+        - ctx.cursor.load(name, default=0) — loads persistent cursor position from _watch_cursors
+        - ctx.cursor.save_and_yield(name, next_cursor) — commits chunk state, yields routine via exit 6; daemon auto-reenqueues
+        - ctx.cursor.reset(name) — clears completed cursor sequence
       - Hand triggers
         - ctx.bind.cron — time declaration
         - ctx.bind.webhook — async event subscription
@@ -273,7 +284,8 @@
     - Data protection
       - Context confinement — raw records stay inside sandbox
       - Egress truncation — token cap: see artifacts/governance.yaml#routine_shape
-      - Data masking — redact columns: see artifacts/policy.yaml#authorizer
+      - Data masking — format-preserving anonymization (FPA) on mask=true columns before terminal output
+      - Leak defense — output scanned for high-entropy secrets and plaintext vault tokens; matches trigger kill_and_alert (exit 5)
       - System columns — created_by and modified_by populated by kernel
     - System introspection
       - Discovery tables — _audit, _api_quota, _budget_frames

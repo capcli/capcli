@@ -116,7 +116,7 @@
     - TypeScript SDK modules (packages/ts/src/)
       - routine.ts — routine() wrapper emitting JSON-RPC manifest over IPC
       - param.ts — Param<T> type definitions for runtime validation
-      - ctx.ts — ctx.db, ctx.api, ctx.storage, ctx.quota wrappers
+      - ctx.ts — ctx.db (view, get, query, mutate), ctx.txn, ctx.now, ctx.uuid, ctx.cursor, ctx.api, ctx.call
       - ipc.ts — streaming JSON-RPC client over /run/capcli/kernel.sock
   - Python runtime harness package
     - Package identity and layout
@@ -127,8 +127,9 @@
     - Python SDK modules (packages/py/capcli/)
       - routine.py — @routine decorator storing manifests: see action.md#Anatomy-and-decorator
       - param.py — Param[T] generic typing for input schemas: see action.md#Anatomy-and-decorator
-      - context_db.py — ctx.db query, execute, txn, and lock wrappers: see action.md#The-ctx-contract
+      - context_db.py — ctx.db view, get, query, mutate, txn, lock wrappers: see action.md#The-ctx-contract
       - context_api.py — ctx.api call, verify, and poll_until IPC bridge: see action.md#The-ctx-contract
+      - context_runtime.py — ctx.now, ctx.uuid, ctx.cursor, and ctx.call runtime wrappers
       - context_quota.py — ctx.quota inspect SDK wrapper
       - context_storage.py — ctx.storage put, get, and url wrappers: see action.md#The-ctx-contract
       - context_ping.py — ctx.ping notify and ask suspension handlers: see action.md#The-ctx-contract
@@ -151,7 +152,8 @@
       - Subsystem modules
         - runner.rs — multi-runtime process supervisor (bun, python3, native)
         - jail.rs — multi-backend sandbox manager (bwrap, crun, gVisor) applying runtime seccomp profiles
-        - shape_gate.rs — AST parser for source mode; JSON schema validator for contract mode
+        - shape_gate.rs — enforces <= 2,000 tokens envelope, cyclomatic complexity <= 10, max 8 params
+        - saga.rs — dual-write coordinator; handles compensation rollbacks on DB commit failure
         - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
         - manifest.rs — receives declared manifests via runner IPC: see action.md#Manifests-&-fingerprints
         - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)

@@ -51,7 +51,7 @@
         - production writes — fully autonomous; governed by pinned trust rungs and AST limits
         - bulk modifications — autonomous up to declared routine row ceilings
         - external egress — HTTP calls leaving perimeter require explicit grant
-      - cross-agent floor — cross-agent calls require callee trust >= reviewed; drafts cannot be dependencies
+      - composition trust floor — callees must match or exceed caller trust: pinned can call pinned only; reviewed can call reviewed or pinned; drafts cannot be dependencies
       - contract proof promotion — external verbs promote only via validated JSON Schema contract proofs and shadow canary runs; arbitrary call-count graduation is banned
       - monotonic ascent — ladder climbed sequentially; elevation skips denied
       - verified promotion — promotion automated upon passing synthetic sim replay and invariant suite
