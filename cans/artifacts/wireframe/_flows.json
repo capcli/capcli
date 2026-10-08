@@ -239,6 +239,41 @@
       "entry": "run.execute.crash.runtime",
       "terminal": "api.sync.success.synced",
       "description": "Guest TypeError escapes enrich_customers@2 (ops auto-reverted) -> workspace recovered from the object-store checkpoint -> next job hits the 30s poll ceiling -> snapshot restore -> the sim re-prove of sync_orders crashes on a None arithmetic bug -> rolled back to the last good version -> the stripe.issue_credit_note contract replay crashes on an upstream union type -> provider spec re-synced"
+    },
+    "journey_sql_gatekeeper": {
+      "name": "SQL Gatekeeper Tour (run sql)",
+      "color": "#312e81",
+      "entry": "run.sql.refusal.unparseable",
+      "terminal": "run.sql.success.populated",
+      "description": "Typo SQL refuses to parse -> write without -m intent refuses -> unbounded UPDATE denied at the AST gate -> DROP TABLE denied by the authorizer -> bounded UPDATE denied while the engine is busy -> legal shapes: DDL dry-run, then the bounded keyed write"
+    },
+    "journey_search_discovery": {
+      "name": "Search Surface & Gap Sweep",
+      "color": "#7dd3fc",
+      "entry": "run.search.success.empty",
+      "terminal": "run.search.success.gaps",
+      "description": "Novel query finds nothing (kombucha supplier sync) -> 'order' hits populate -> 'stripe' overflows the result cap -> the 7d gap sweep surfaces zero-result and low-conversion queries and proposes authoring a draft routine or expanding the catalog"
+    },
+    "journey_overview_briefing": {
+      "name": "Situational Briefing: Full vs Budget-Clipped",
+      "color": "#fb7185",
+      "entry": "run.overview.success.populated",
+      "terminal": "run.overview.success.truncated",
+      "description": "Single-shot domain briefing: the full overview at a fresh token budget -> the same briefing clipped to 500 tokens when the session budget is drained (KPIs + blockers survive, detail paginates)"
+    },
+    "journey_inspect_preflight": {
+      "name": "Pre-Flight Envelopes Across URP Types",
+      "color": "#86efac",
+      "entry": "run.inspect.refusal.missing_ptr",
+      "terminal": "run.inspect.success.routine",
+      "description": "Bare pointer refuses to resolve -> draft cap://refund_and_archive@1 denied by the trust gate -> tpl://order_sync@2 template blueprint -> quota://threads budget envelope -> pinned cap://dispatch_order@4 routine envelope"
+    },
+    "journey_large_result_delivery": {
+      "name": "Large Result Delivery: Clip or Redirect",
+      "color": "#fde68a",
+      "entry": "run.sql.success.truncated",
+      "terminal": "run.execute.success.redirected",
+      "description": "Big payloads: the orders export SELECT clips at the result cap -> same query lands clean via --out -> the quarterly report run clips -> same run redirects to disk with a token-lean summary"
     }
   },
   "transitions": [
@@ -3356,6 +3391,261 @@
       "trigger": "resync_provider_spec",
       "label": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
       "arrow_type": "progress"
+    },
+    {
+      "id": "t_sql_unparseable_to_missing_intent",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.refusal.unparseable"
+      ],
+      "to": [
+        "run.sql.refusal.missing_intent"
+      ],
+      "trigger": "fix_syntax",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_sql_intent_to_ast",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.refusal.missing_intent"
+      ],
+      "to": [
+        "run.sql.denial.ast"
+      ],
+      "trigger": "unbounded_write",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_sql_ast_to_authorizer",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.denial.ast"
+      ],
+      "to": [
+        "run.sql.denial.authorizer"
+      ],
+      "trigger": "drop_table",
+      "label": "capcli sql \"DROP TABLE orders\" -m \"remove stale orders table\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_sql_authorizer_to_engine_busy",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.denial.authorizer"
+      ],
+      "to": [
+        "run.sql.denial.engine_busy"
+      ],
+      "trigger": "bounded_write_contended",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50\" -m \"batch ship processing orders\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_sql_busy_to_dry_run",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.denial.engine_busy"
+      ],
+      "to": [
+        "run.sql.success.dry_run"
+      ],
+      "trigger": "dry_run_ddl",
+      "label": "capcli sql \"ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0\" --dry-run -m \"add priority flag for rush shipping\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_sql_dry_run_to_bounded_write",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.success.dry_run"
+      ],
+      "to": [
+        "run.sql.success.populated"
+      ],
+      "trigger": "bounded_keyed_write",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_search_empty_to_populated",
+      "journeys": [
+        "journey_search_discovery"
+      ],
+      "from": [
+        "run.search.success.empty"
+      ],
+      "to": [
+        "run.search.success.populated"
+      ],
+      "trigger": "search_order",
+      "label": "capcli search 'order'",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_search_populated_to_truncated",
+      "journeys": [
+        "journey_search_discovery"
+      ],
+      "from": [
+        "run.search.success.populated"
+      ],
+      "to": [
+        "run.search.success.truncated"
+      ],
+      "trigger": "search_stripe",
+      "label": "capcli search 'stripe'",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_search_truncated_to_gaps",
+      "journeys": [
+        "journey_search_discovery"
+      ],
+      "from": [
+        "run.search.success.truncated"
+      ],
+      "to": [
+        "run.search.success.gaps"
+      ],
+      "trigger": "gap_sweep",
+      "label": "capcli search gaps --since 7d",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_overview_full_to_truncated",
+      "journeys": [
+        "journey_overview_briefing"
+      ],
+      "from": [
+        "run.overview.success.populated"
+      ],
+      "to": [
+        "run.overview.success.truncated"
+      ],
+      "trigger": "rerun_at_drained_budget",
+      "label": "capcli run overview (drained budget: clipped at 500 tokens)",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_nf_to_trust",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.refusal.missing_ptr"
+      ],
+      "to": [
+        "run.inspect.denial.trust"
+      ],
+      "trigger": "inspect_draft_ptr",
+      "label": "capcli inspect cap://refund_and_archive@1",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_inspect_trust_to_template",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.denial.trust"
+      ],
+      "to": [
+        "run.inspect.success.template"
+      ],
+      "trigger": "inspect_template",
+      "label": "capcli inspect tpl://order_sync@2",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_template_to_quota",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.template"
+      ],
+      "to": [
+        "run.inspect.success.quota"
+      ],
+      "trigger": "inspect_quota",
+      "label": "capcli inspect quota://threads",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_quota_to_routine",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.quota"
+      ],
+      "to": [
+        "run.inspect.success.routine"
+      ],
+      "trigger": "inspect_routine",
+      "label": "capcli inspect cap://dispatch_order@4",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_large_sql_truncated_to_redirected",
+      "journeys": [
+        "journey_large_result_delivery"
+      ],
+      "from": [
+        "run.sql.success.truncated"
+      ],
+      "to": [
+        "run.sql.success.redirected"
+      ],
+      "trigger": "redirect_to_disk",
+      "label": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\" --out out/orders_export.json",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_large_sql_to_exec_truncated",
+      "journeys": [
+        "journey_large_result_delivery"
+      ],
+      "from": [
+        "run.sql.success.redirected"
+      ],
+      "to": [
+        "run.execute.success.truncated"
+      ],
+      "trigger": "run_quarterly_report",
+      "label": "capcli run cap://report_orders@2 -p quarter=2026Q3",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_large_exec_truncated_to_redirected",
+      "journeys": [
+        "journey_large_result_delivery"
+      ],
+      "from": [
+        "run.execute.success.truncated"
+      ],
+      "to": [
+        "run.execute.success.redirected"
+      ],
+      "trigger": "redirect_report",
+      "label": "capcli run cap://report_orders@2 -p quarter=2026Q3 --out report.json",
+      "arrow_type": "success"
     }
   ]
 }
