@@ -17,7 +17,8 @@
     "culprit": "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
     "remedy": "declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine",
     "layer": "authorizer",
-    "measured": "1 undeclared leaf (manifest declares 5; DDL not among them)"
+    "measured": "1 undeclared leaf (manifest declares 5; DDL not among them)",
+    "state_modified": false
   },
   "render": {
     "header": {

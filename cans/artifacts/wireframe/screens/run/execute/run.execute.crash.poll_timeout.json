@@ -17,7 +17,8 @@
     "culprit": "ctx.api.poll_until exceeded the 30-second in-flight ceiling while polling threads.create_media_post.",
     "remedy": "set timeout_s to 30 or less, or restructure into a scheduled watch",
     "layer": "runtime",
-    "measured": "poll duration 30.0s (ceiling 30s; requested 45s)"
+    "measured": "poll duration 30.0s (ceiling 30s; requested 45s)",
+    "state_modified": false
   },
   "render": {
     "header": {

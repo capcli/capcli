@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "lockfile_mismatch",
     "culprit": "Working tree drifted from the locked manifest; DDL application refused.",
-    "remedy": "restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path"
+    "remedy": "restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path",
+    "state_modified": false
   },
   "render": {
     "header": {

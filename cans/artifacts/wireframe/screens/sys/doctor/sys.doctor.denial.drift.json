@@ -17,7 +17,8 @@
     "culprit": "Live DB schema diverges from the compiled declaration (orders.idx_orders_status, customers.region)",
     "remedy": "reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'",
     "layer": "authorizer",
-    "measured": "2 drift items (declaration v3 vs envs/dev/workspace.db)"
+    "measured": "2 drift items (declaration v3 vs envs/dev/workspace.db)",
+    "state_modified": false
   },
   "render": {
     "header": {

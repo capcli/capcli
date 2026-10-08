@@ -17,7 +17,8 @@
     "culprit": "Max 50 active hooks reached. New webhook binding refused.",
     "remedy": "remove a dormant hook first (capcli bind list)",
     "layer": "authorizer",
-    "measured": "50 active hooks (cap: 50)"
+    "measured": "50 active hooks (cap: 50)",
+    "state_modified": false
   },
   "render": {
     "header": {

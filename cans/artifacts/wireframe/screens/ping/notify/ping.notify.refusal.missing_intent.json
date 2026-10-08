@@ -5,7 +5,7 @@
   "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel email",
   "state": {
     "exit_code": 3,
-    "domain": "compile",
+    "domain": "missing_param",
     "trust": "reviewed",
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +13,10 @@
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "compile",
+    "domain": "missing_param",
     "culprit": "Missing intent declaration.",
-    "remedy": "re-run with --intent \"<why this notification is sent>\""
+    "remedy": "re-run with --intent \"<why this notification is sent>\"",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -27,7 +28,7 @@
         "title": null,
         "items": [
           {
-            "text": "FAIL  compile.no_intent",
+            "text": "FAIL  missing_param.no_intent",
             "indent": 2
           },
           {

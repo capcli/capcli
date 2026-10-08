@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "lockfile_mismatch",
     "culprit": "Compiled capcli.lock root hash does not match the locked declarations",
-    "remedy": "recompile declarations via 'capcli rule validate' and re-lock; hand-editing capcli.lock is prohibited"
+    "remedy": "recompile declarations via 'capcli rule validate' and re-lock; hand-editing capcli.lock is prohibited",
+    "state_modified": false
   },
   "render": {
     "header": {

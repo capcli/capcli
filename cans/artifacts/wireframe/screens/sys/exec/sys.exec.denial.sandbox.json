@@ -17,7 +17,8 @@
     "culprit": "Attempted unconfined escape: bwrap pivot_root remount plus ptrace (syscall 101) outside profile_python",
     "remedy": "strip escape attempts from the command; raw host access is never granted inside the jail",
     "layer": "sandbox",
-    "measured": "2 containment violations (tolerated: 0)"
+    "measured": "2 containment violations (tolerated: 0)",
+    "state_modified": false
   },
   "render": {
     "header": {

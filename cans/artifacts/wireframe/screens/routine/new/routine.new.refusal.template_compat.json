@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "policy.template",
     "culprit": "Template policy_version mismatch (template requires policy 5, workspace policy 4)",
-    "remedy": "upgrade the workspace policy_version or select a template compiled against policy 4"
+    "remedy": "upgrade the workspace policy_version or select a template compiled against policy 4",
+    "state_modified": false
   },
   "render": {
     "header": {

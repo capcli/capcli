@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "compile",
     "culprit": "Dependency cycle detected: orders -> order_items -> orders.",
-    "remedy": "break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate"
+    "remedy": "break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate",
+    "state_modified": false
   },
   "render": {
     "header": {

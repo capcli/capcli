@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.trace.refusal.not_found",
   "target": "op_9f99",
-  "command": "capcli sys trace op_9f99 --explain",
+  "command": "capcli sys audit trace op_9f99 --explain",
   "state": {
     "exit_code": 3,
     "domain": "validation",
@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "No audit operation with id 'op_9f99' exists in _audit.",
-    "remedy": "verify the operation id via capcli sys tail or sys query, then re-run sys trace <op-id> --explain"
+    "remedy": "verify the operation id via capcli sys audit tail or sys audit query, then re-run sys audit trace <op-id> --explain",
+    "state_modified": false
   },
   "render": {
     "header": {
@@ -49,7 +50,7 @@
           },
           {
             "field": "remedy",
-            "value": "verify the operation id via capcli sys tail or sys query, then re-run sys trace <op-id> --explain"
+            "value": "verify the operation id via capcli sys audit tail or sys audit query, then re-run sys audit trace <op-id> --explain"
           }
         ]
       }

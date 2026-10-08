@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.agents.success.populated",
   "target": "agents",
-  "command": "capcli sys agents",
+  "command": "capcli sys agent list",
   "state": {
     "exit_code": 0,
     "domain": null,

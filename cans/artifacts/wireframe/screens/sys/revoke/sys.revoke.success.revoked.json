@@ -2,7 +2,7 @@
   "$schema": "wireframe/v1",
   "screen_id": "sys.revoke.success.revoked",
   "target": "agt_7f3k",
-  "command": "capcli sys revoke agt_7f3k",
+  "command": "capcli sys agent revoke agt_7f3k",
   "state": {
     "exit_code": 0,
     "domain": null,

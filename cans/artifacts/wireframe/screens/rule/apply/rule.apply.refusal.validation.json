@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Indexed column 'prio' does not exist in parent table 'orders'.",
-    "remedy": "fix the index target to a declared column, then re-run capcli rule validate"
+    "remedy": "fix the index target to a declared column, then re-run capcli rule validate",
+    "state_modified": false
   },
   "render": {
     "header": {

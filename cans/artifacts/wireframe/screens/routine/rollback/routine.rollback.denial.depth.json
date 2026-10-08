@@ -17,7 +17,8 @@
     "culprit": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5.",
     "remedy": "roll back incrementally to a version within 5 of the pointer, or ship a new version reverting the change",
     "layer": "authorizer",
-    "measured": "rollback depth 6 (max: 5)"
+    "measured": "rollback depth 6 (max: 5)",
+    "state_modified": false
   },
   "render": {
     "header": {

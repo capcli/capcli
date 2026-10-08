@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "compile",
     "culprit": "Unparseable SQL: 'WHER' is not a recognized keyword; parser fails closed.",
-    "remedy": "correct the keyword to WHERE and restate the query"
+    "remedy": "correct the keyword to WHERE and restate the query",
+    "state_modified": false
   },
   "render": {
     "header": {

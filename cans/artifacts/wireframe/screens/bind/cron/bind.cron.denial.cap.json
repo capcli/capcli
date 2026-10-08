@@ -17,7 +17,8 @@
     "culprit": "Max 20 active schedules reached. New schedule binding refused.",
     "remedy": "pause or remove an idle schedule first (capcli bind list)",
     "layer": "authorizer",
-    "measured": "20 active schedules (cap: 20)"
+    "measured": "20 active schedules (cap: 20)",
+    "state_modified": false
   },
   "render": {
     "header": {

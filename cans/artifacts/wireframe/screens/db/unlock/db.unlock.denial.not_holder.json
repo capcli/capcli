@@ -16,7 +16,8 @@
     "domain": "policy.authorizer",
     "culprit": "Caller does not own the claim; lease held by agt_9k2w.",
     "remedy": "ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry",
-    "layer": "authorizer"
+    "layer": "authorizer",
+    "state_modified": false
   },
   "render": {
     "header": {

@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Target provider not found: 'shopify'.",
-    "remedy": "sync the provider first, e.g. 'capcli api sync shopify <openapi-url>', or list configured providers via 'capcli api catalog'"
+    "remedy": "sync the provider first, e.g. 'capcli api sync shopify <openapi-url>', or list configured providers via 'capcli api catalog'",
+    "state_modified": false
   },
   "render": {
     "header": {
