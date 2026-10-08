@@ -204,6 +204,41 @@
       "entry": "sys.exec.denial.sandbox",
       "terminal": "sys.exec.success.completed",
       "description": "bwrap escape attempt denied (pivot_root remount + ptrace outside the profile) -> retry SIGSEGVs in a native extension (jail torn down, scratch wiped) -> after pinning the extension the sandboxed run completes"
+    },
+    "journey_doctor_boot": {
+      "name": "Doctor Boot Gauntlet & Host Drift",
+      "color": "#39c5cf",
+      "entry": "sys.doctor.refusal.boot",
+      "terminal": "sys.doctor.success.clock_drift",
+      "description": "Boot-check refuses on a tier_1 host missing the bwrap sandbox floor -> lockfile root-hash mismatch refuses boot -> live schema drift denies (orders.idx_orders_status, customers.region) -> after re-sync the doctor passes with only benign clock drift reported"
+    },
+    "journey_secret_leak_containment": {
+      "name": "Exit-5 Secret Leak: Kill, Rotate, Re-Prove",
+      "color": "#f472b6",
+      "entry": "run.execute.panic.secret_leak",
+      "terminal": "api.prove.success.passed",
+      "description": "Plaintext stripe_secret_key detected in routine stdout -> kill_and_alert tears the session down -> credential rotated out-of-band via the vault -> the Stripe refund verb re-proves clean in sim"
+    },
+    "journey_media_loss_recovery": {
+      "name": "Exit-5 Total Media Loss & Break-Glass Recovery",
+      "color": "#6f42c1",
+      "entry": "sys.doctor.panic.tamper",
+      "terminal": "sys.doctor.success.recovery",
+      "description": "Ledger root unreadable and the S3 WORM checkpoint missing (chain unverifiable end-to-end) -> kill_and_alert, boot refused -> CAPCLI_RECOVERY=1 break-glass shell: policy disabled, audit sink online, recovery mode logged"
+    },
+    "journey_execution_gates": {
+      "name": "Execution Gates: Authorizer, Trust Ladder, Tier Ceiling",
+      "color": "#ec4899",
+      "entry": "run.execute.denial.authorizer",
+      "terminal": "run.execute.success.populated",
+      "description": "Authorizer blocks the immutable-column email rewrite on customer_migrate@2 -> draft sync_inventory@3 denied in prod (production floor requires reviewed) -> pinned dispatch_order@4 denied on a degraded tier_2 darwin host -> pinned on tier_1 executes cleanly"
+    },
+    "journey_crash_recovery": {
+      "name": "Exit-4 Crash Triage & Recovery Paths",
+      "color": "#cf222e",
+      "entry": "run.execute.crash.runtime",
+      "terminal": "api.sync.success.synced",
+      "description": "Guest TypeError escapes enrich_customers@2 (ops auto-reverted) -> workspace recovered from the object-store checkpoint -> next job hits the 30s poll ceiling -> snapshot restore -> the sim re-prove of sync_orders crashes on a None arithmetic bug -> rolled back to the last good version -> the stripe.issue_credit_note contract replay crashes on an upstream union type -> provider spec re-synced"
     }
   },
   "transitions": [
@@ -3081,6 +3116,246 @@
       "trigger": "retry_after_pin",
       "label": "capcli sys exec \"python3 etl.py\" --sandbox",
       "arrow_type": "success"
+    },
+    {
+      "id": "t_doctor_boot_to_lockfile",
+      "journeys": [
+        "journey_doctor_boot"
+      ],
+      "from": [
+        "sys.doctor.refusal.boot"
+      ],
+      "to": [
+        "sys.doctor.refusal.lockfile"
+      ],
+      "trigger": "boot_check",
+      "label": "capcli sys doctor --boot-check",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_doctor_lockfile_to_drift",
+      "journeys": [
+        "journey_doctor_boot"
+      ],
+      "from": [
+        "sys.doctor.refusal.lockfile"
+      ],
+      "to": [
+        "sys.doctor.denial.drift"
+      ],
+      "trigger": "doctor_probe",
+      "label": "capcli sys doctor",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_doctor_drift_to_clock",
+      "journeys": [
+        "journey_doctor_boot"
+      ],
+      "from": [
+        "sys.doctor.denial.drift"
+      ],
+      "to": [
+        "sys.doctor.success.clock_drift"
+      ],
+      "trigger": "doctor_after_resync",
+      "label": "capcli sys doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_leak_panic_to_rotation",
+      "journeys": [
+        "journey_secret_leak_containment"
+      ],
+      "from": [
+        "run.execute.panic.secret_leak"
+      ],
+      "to": [
+        "sys.vault_set.success.vaulted"
+      ],
+      "trigger": "rotate_secret",
+      "label": "capcli sys vault set stripe_secret_key --in @-",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_leak_rotation_to_reprove",
+      "journeys": [
+        "journey_secret_leak_containment"
+      ],
+      "from": [
+        "sys.vault_set.success.vaulted"
+      ],
+      "to": [
+        "api.prove.success.passed"
+      ],
+      "trigger": "reprove_in_sim",
+      "label": "capcli api prove stripe.refund_charge --env sim",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_media_loss_to_recovery",
+      "journeys": [
+        "journey_media_loss_recovery"
+      ],
+      "from": [
+        "sys.doctor.panic.tamper"
+      ],
+      "to": [
+        "sys.doctor.success.recovery"
+      ],
+      "trigger": "enter_recovery_shell",
+      "label": "CAPCLI_RECOVERY=1 capcli sys doctor",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_gates_authorizer_to_trust",
+      "journeys": [
+        "journey_execution_gates"
+      ],
+      "from": [
+        "run.execute.denial.authorizer"
+      ],
+      "to": [
+        "run.execute.denial.trust"
+      ],
+      "trigger": "run_in_prod",
+      "label": "capcli run cap://sync_inventory@3 -p warehouse=west --env prod -m \"nightly inventory sync\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_gates_trust_to_tier2",
+      "journeys": [
+        "journey_execution_gates"
+      ],
+      "from": [
+        "run.execute.denial.trust"
+      ],
+      "to": [
+        "run.execute.denial.tier2_pinned"
+      ],
+      "trigger": "run_on_degraded_host",
+      "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_gates_tier2_to_success",
+      "journeys": [
+        "journey_execution_gates"
+      ],
+      "from": [
+        "run.execute.denial.tier2_pinned"
+      ],
+      "to": [
+        "run.execute.success.populated"
+      ],
+      "trigger": "run_on_tier1",
+      "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_crash_runtime_to_recover",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "run.execute.crash.runtime"
+      ],
+      "to": [
+        "sys.recover.success.restored"
+      ],
+      "trigger": "workspace_recover",
+      "label": "capcli sys recover 3f9c2ab",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_crash_recover_to_poll",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "sys.recover.success.restored"
+      ],
+      "to": [
+        "run.execute.crash.poll_timeout"
+      ],
+      "trigger": "run_media_digest",
+      "label": "capcli run cap://media_digest@2 -p audience=followers -m \"morning media digest\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crash_poll_to_restore",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "run.execute.crash.poll_timeout"
+      ],
+      "to": [
+        "db.restore.success.restored"
+      ],
+      "trigger": "snapshot_restore",
+      "label": "capcli db restore snap_onboarding_01",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_crash_restore_to_prove_crash",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "db.restore.success.restored"
+      ],
+      "to": [
+        "routine.prove.crash.runtime"
+      ],
+      "trigger": "reprove_sync_orders",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crash_prove_to_rollback",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "routine.prove.crash.runtime"
+      ],
+      "to": [
+        "routine.rollback.success.completed"
+      ],
+      "trigger": "rollback_last_good",
+      "label": "capcli routine rollback sync_orders 3",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_crash_rollback_to_api_crash",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "routine.rollback.success.completed"
+      ],
+      "to": [
+        "api.prove.crash.runtime"
+      ],
+      "trigger": "prove_credit_note",
+      "label": "capcli api prove stripe.issue_credit_note --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_crash_api_to_resync",
+      "journeys": [
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "api.prove.crash.runtime"
+      ],
+      "to": [
+        "api.sync.success.synced"
+      ],
+      "trigger": "resync_provider_spec",
+      "label": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
+      "arrow_type": "progress"
     }
   ]
 }
