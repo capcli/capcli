@@ -169,6 +169,41 @@
       "entry": "routine.sweep.success.empty",
       "terminal": "routine.retire.success.completed",
       "description": "Sweep (quiet window, then stale drafts harvested) -> profile gates (unknown routine, then dispatch_order deep stats) -> rollback gauntlet (unknown version, depth ceiling, then sync_orders restored to v3) -> retire gauntlet (active dependencies, unknown routine, then legacy_etl retired)"
+    },
+    "journey_identity_control": {
+      "name": "Agent Identity Control: Register, List, Revoke",
+      "color": "#84cc16",
+      "entry": "sys.agents.success.empty",
+      "terminal": "sys.revoke.success.revoked",
+      "description": "Empty agent registry -> first agent registered -> roster populated -> registry hits capacity -> revoke gauntlet (unknown id refuses, then the live agent revokes and frees a slot)"
+    },
+    "journey_backup_recovery": {
+      "name": "Workspace Backup & Snapshot Recovery",
+      "color": "#0ea5e9",
+      "entry": "sys.backup.denial.push_fail",
+      "terminal": "sys.recover.success.restored",
+      "description": "Dual-storage backup push rejected (git non-fast-forward, s3 403) -> retry lands -> recovery gauntlet (unknown commit, active claim leases) -> workspace restored from the 3f9c2ab checkpoint"
+    },
+    "journey_serve_lifecycle": {
+      "name": "Daemon Serve Lifecycle",
+      "color": "#94a3b8",
+      "entry": "sys.serve.denial.port",
+      "terminal": "sys.serve.success.running",
+      "description": "Daemon start gauntlet: foreign pid holds 127.0.0.1:4040 (EADDRINUSE) -> second start refused (own daemon already bound) -> clean start on a free port reports the daemon running"
+    },
+    "journey_inbox_drain": {
+      "name": "Sensory Inbox Drain",
+      "color": "#eab308",
+      "entry": "sys.inbox.success.empty",
+      "terminal": "sys.inbox.success.populated",
+      "description": "Channel-less pop finds nothing queued -> channel-scoped pop drains the queued email batch"
+    },
+    "journey_sandbox_exec": {
+      "name": "Sandboxed Subprocess Execution",
+      "color": "#e879f9",
+      "entry": "sys.exec.denial.sandbox",
+      "terminal": "sys.exec.success.completed",
+      "description": "bwrap escape attempt denied (pivot_root remount + ptrace outside the profile) -> retry SIGSEGVs in a native extension (jail torn down, scratch wiped) -> after pinning the extension the sandboxed run completes"
     }
   },
   "transitions": [
@@ -2835,6 +2870,216 @@
       ],
       "trigger": "retire_legacy_etl",
       "label": "capcli routine retire legacy_etl --reason \"replaced by unified pipeline\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_identity_empty_to_register",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.agents.success.empty"
+      ],
+      "to": [
+        "sys.register.success.registered"
+      ],
+      "trigger": "register_agent",
+      "label": "capcli sys agent register",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_identity_register_to_list",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.register.success.registered"
+      ],
+      "to": [
+        "sys.agents.success.populated"
+      ],
+      "trigger": "list_agents",
+      "label": "capcli sys agent list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_identity_list_to_register_cap",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.agents.success.populated"
+      ],
+      "to": [
+        "sys.register.denial.cap"
+      ],
+      "trigger": "register_beyond_cap",
+      "label": "capcli sys agent register",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_identity_cap_to_revoke_nf",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.register.denial.cap"
+      ],
+      "to": [
+        "sys.revoke.refusal.not_found"
+      ],
+      "trigger": "revoke_unknown_agent",
+      "label": "capcli sys agent revoke agt_0000",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_identity_revoke_nf_to_revoked",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.revoke.refusal.not_found"
+      ],
+      "to": [
+        "sys.revoke.success.revoked"
+      ],
+      "trigger": "revoke_live_agent",
+      "label": "capcli sys agent revoke agt_7f3k",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_backup_push_fail_to_completed",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.backup.denial.push_fail"
+      ],
+      "to": [
+        "sys.backup.success.completed"
+      ],
+      "trigger": "retry_backup_push",
+      "label": "capcli sys backup --push",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_backup_completed_to_recover_nf",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.backup.success.completed"
+      ],
+      "to": [
+        "sys.recover.refusal.not_found"
+      ],
+      "trigger": "recover_unknown_commit",
+      "label": "capcli sys recover 1a2b3c4",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_backup_recover_nf_to_locks",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.recover.refusal.not_found"
+      ],
+      "to": [
+        "sys.recover.denial.active_locks"
+      ],
+      "trigger": "recover_under_leases",
+      "label": "capcli sys recover 3f9c2ab",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_backup_recover_locks_to_restored",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.recover.denial.active_locks"
+      ],
+      "to": [
+        "sys.recover.success.restored"
+      ],
+      "trigger": "recover_after_release",
+      "label": "capcli sys recover 3f9c2ab",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_serve_port_to_already_running",
+      "journeys": [
+        "journey_serve_lifecycle"
+      ],
+      "from": [
+        "sys.serve.denial.port"
+      ],
+      "to": [
+        "sys.serve.refusal.already_running"
+      ],
+      "trigger": "retry_start",
+      "label": "capcli sys serve --start",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_serve_already_to_running",
+      "journeys": [
+        "journey_serve_lifecycle"
+      ],
+      "from": [
+        "sys.serve.refusal.already_running"
+      ],
+      "to": [
+        "sys.serve.success.running"
+      ],
+      "trigger": "start_clean",
+      "label": "capcli sys serve --start",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_inbox_empty_to_populated",
+      "journeys": [
+        "journey_inbox_drain"
+      ],
+      "from": [
+        "sys.inbox.success.empty"
+      ],
+      "to": [
+        "sys.inbox.success.populated"
+      ],
+      "trigger": "pop_channel",
+      "label": "capcli sys inbox pop --channel email",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_exec_denial_to_crash",
+      "journeys": [
+        "journey_sandbox_exec"
+      ],
+      "from": [
+        "sys.exec.denial.sandbox"
+      ],
+      "to": [
+        "sys.exec.crash.runtime"
+      ],
+      "trigger": "retry_sandboxed",
+      "label": "capcli sys exec \"python3 etl.py\" --sandbox",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_exec_crash_to_completed",
+      "journeys": [
+        "journey_sandbox_exec"
+      ],
+      "from": [
+        "sys.exec.crash.runtime"
+      ],
+      "to": [
+        "sys.exec.success.completed"
+      ],
+      "trigger": "retry_after_pin",
+      "label": "capcli sys exec \"python3 etl.py\" --sandbox",
       "arrow_type": "success"
     }
   ]
