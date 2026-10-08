@@ -13,8 +13,8 @@
       "name": "H0–H7 Autonomous Harness Machine Onboarding",
       "color": "#79c0ff",
       "entry": "sys.doctor.success.nominal",
-      "terminal": "routine.prove.success.passed",
-      "description": "Parse machine contract (--json) -> catalog discovery -> dry-run rehearsal -> dual probe -> composite prove -> parse denial feedback -> overview codification -> sim proving"
+      "terminal": "routine.prove.success.overview",
+      "description": "H0 parse machine contract (--json doctor) -> H1 overview grounding + search discovery -> H2 dry-run rehearsal -> H3 dual probe: sql state + api catalog -> H4 scaffold sync_orders + hybrid prove -> H5 parse feedback via audit trace --explain -> H6 codify the mandatory overview routine -> H7 prove overview in sim"
     },
     "journey_execution_crucible": {
       "name": "Cascade Starvation, Jail Traps & Contention",
@@ -79,8 +79,7 @@
     {
       "id": "t_human_help_to_search",
       "journeys": [
-        "journey_human_onboarding",
-        "journey_harness_onboarding"
+        "journey_human_onboarding"
       ],
       "from": [
         "sys.help.success.stub"
@@ -251,66 +250,6 @@
       "arrow_type": "success"
     },
     {
-      "id": "t_harness_contract_to_search",
-      "journeys": [
-        "journey_harness_onboarding"
-      ],
-      "from": [
-        "sys.doctor.success.nominal"
-      ],
-      "to": [
-        "run.search.success.populated"
-      ],
-      "trigger": "harness_search",
-      "label": "capcli search '' --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_search_to_dry_run",
-      "journeys": [
-        "journey_harness_onboarding"
-      ],
-      "from": [
-        "run.search.success.populated"
-      ],
-      "to": [
-        "run.sql.success.dry_run"
-      ],
-      "trigger": "harness_dry_run",
-      "label": "capcli sql 'SELECT ...' --dry-run --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_dry_run_to_catalog",
-      "journeys": [
-        "journey_harness_onboarding"
-      ],
-      "from": [
-        "run.sql.success.dry_run"
-      ],
-      "to": [
-        "api.catalog.success.populated"
-      ],
-      "trigger": "probe_api_catalog",
-      "label": "capcli api catalog stripe --json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_catalog_to_prove_draft",
-      "journeys": [
-        "journey_harness_onboarding"
-      ],
-      "from": [
-        "api.catalog.success.populated"
-      ],
-      "to": [
-        "routine.prove.success.passed"
-      ],
-      "trigger": "prove_hybrid",
-      "label": "capcli routine prove sync_orders --env sim",
-      "arrow_type": "progress"
-    },
-    {
       "id": "t_harness_prove_to_trace_explain",
       "journeys": [
         "journey_harness_onboarding"
@@ -319,41 +258,11 @@
         "routine.prove.success.passed"
       ],
       "to": [
-        "sys.trace.success.populated"
+        "sys.trace.success.prove"
       ],
       "trigger": "explain_feedback",
-      "label": "capcli sys trace op_prove_01 --explain --json",
+      "label": "capcli sys audit trace op_prove_01 --explain --json",
       "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_trace_to_overview",
-      "journeys": [
-        "journey_harness_onboarding"
-      ],
-      "from": [
-        "sys.trace.success.populated"
-      ],
-      "to": [
-        "run.overview.success.populated"
-      ],
-      "trigger": "codify_overview",
-      "label": "capcli run overview",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_harness_overview_to_final_prove",
-      "journeys": [
-        "journey_harness_onboarding"
-      ],
-      "from": [
-        "run.overview.success.populated"
-      ],
-      "to": [
-        "routine.prove.success.passed"
-      ],
-      "trigger": "final_prove_sim",
-      "label": "capcli routine prove overview --env sim",
-      "arrow_type": "success"
     },
     {
       "id": "t_crucible_inspect_to_cascade",
@@ -623,6 +532,141 @@
       ],
       "trigger": "resume_routine",
       "label": "Routine frame auto-resumes",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_harness_doctor_to_overview",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "sys.doctor.success.nominal"
+      ],
+      "to": [
+        "run.overview.success.populated"
+      ],
+      "trigger": "h1_grounding",
+      "label": "capcli run overview --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_overview_to_search",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "run.overview.success.populated"
+      ],
+      "to": [
+        "run.search.success.populated"
+      ],
+      "trigger": "h1_discovery",
+      "label": "capcli search 'order' --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_search_to_dry_run",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "run.search.success.populated"
+      ],
+      "to": [
+        "run.sql.success.dry_run"
+      ],
+      "trigger": "h2_rehearsal",
+      "label": "capcli sql 'ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0' --dry-run --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_dry_run_to_state_probe",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "run.sql.success.dry_run"
+      ],
+      "to": [
+        "run.sql.success.populated"
+      ],
+      "trigger": "h3_local_probe",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=4127 -m \"mark order 4127 shipped\" --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_state_to_catalog",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "run.sql.success.populated"
+      ],
+      "to": [
+        "api.catalog.success.populated"
+      ],
+      "trigger": "h3_remote_probe",
+      "label": "capcli api catalog stripe --state active --json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_catalog_to_scaffold",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "api.catalog.success.populated"
+      ],
+      "to": [
+        "routine.new.success.created"
+      ],
+      "trigger": "h4_scaffold",
+      "label": "capcli routine new sync_orders",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_scaffold_to_prove",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "routine.new.success.created"
+      ],
+      "to": [
+        "routine.prove.success.passed"
+      ],
+      "trigger": "h4_hybrid_rehearsal",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_trace_to_overview_codify",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "sys.trace.success.prove"
+      ],
+      "to": [
+        "routine.new.success.overview"
+      ],
+      "trigger": "h6_codify",
+      "label": "capcli routine new overview",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_harness_overview_to_final_prove",
+      "journeys": [
+        "journey_harness_onboarding"
+      ],
+      "from": [
+        "routine.new.success.overview"
+      ],
+      "to": [
+        "routine.prove.success.overview"
+      ],
+      "trigger": "h7_proving",
+      "label": "capcli routine prove overview --env sim",
       "arrow_type": "success"
     }
   ]
