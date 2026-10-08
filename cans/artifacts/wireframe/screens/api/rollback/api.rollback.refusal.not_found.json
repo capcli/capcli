@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "validation",
     "culprit": "Target version not found: version 12 (kept versions 1–8).",
-    "remedy": "choose a version within the kept window, or re-sync the provider spec to rebuild history"
+    "remedy": "choose a version within the kept window, or re-sync the provider spec to rebuild history",
+    "state_modified": false
   },
   "render": {
     "header": {

@@ -17,7 +17,8 @@
     "culprit": "Fails synthetic contract replay: 2 of 3 replays passed.",
     "remedy": "fix the failing invariant, re-run 'capcli api prove threads.create_media_post --env sim', then re-ship",
     "layer": "authorizer",
-    "measured": "synthetic contract replay 2/3 passed (required: 3/3) · sim success rate 0.67 (floor: 0.90)"
+    "measured": "synthetic contract replay 2/3 passed (required: 3/3) · sim success rate 0.67 (floor: 0.90)",
+    "state_modified": false
   },
   "render": {
     "header": {

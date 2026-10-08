@@ -15,7 +15,8 @@
   "diagnostic": {
     "domain": "missing_param",
     "culprit": "Upstream spec URL omitted.",
-    "remedy": "re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'"
+    "remedy": "re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'",
+    "state_modified": false
   },
   "render": {
     "header": {
