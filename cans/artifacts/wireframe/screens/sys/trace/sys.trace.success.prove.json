@@ -1,0 +1,78 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "sys.trace.success.prove",
+  "target": "op_prove_01",
+  "command": "capcli sys audit trace op_prove_01 --explain",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "render": {
+    "header": {
+      "style": "plain",
+      "label": "[dev:tier_1]  Causal DAG Trace (op_prove_01)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "ses_a992f  session.start        \"fulfill urgent pending orders\"",
+            "indent": 2
+          },
+          {
+            "text": "└── op_prove_01  routine.prove (sync_orders@3)     ✓ [passed]  sim",
+            "indent": 2
+          },
+          {
+            "text": "├── op_7a91  db.query (orders)         ✓ [sim]  6ms",
+            "indent": 8
+          },
+          {
+            "text": "├── op_7a92  db.query (inventory)      ✓ [sim]  4ms",
+            "indent": 8
+          },
+          {
+            "text": "├── op_7a93  db.execute (orders)       ✓ [sim]  9ms",
+            "indent": 8
+          },
+          {
+            "text": "├── op_7a94  api.call (logistics.shipments.create)  ✓ [sim]  210ms",
+            "indent": 8
+          },
+          {
+            "text": "└── op_7a95  db.query (orders)         ✓ [sim]  5ms",
+            "indent": 8
+          },
+          {
+            "text": "└── 5 executed / 5 declared (subset; 0 undeclared leaves)",
+            "indent": 14
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "Root Intent",
+            "value": "\"fulfill urgent pending orders\""
+          },
+          {
+            "field": "Authority",
+            "value": "user:alice (via agt_7f3k)"
+          },
+          {
+            "field": "Integrity",
+            "value": "valid hash link (chain verified)"
+          }
+        ]
+      }
+    ]
+  }
+}

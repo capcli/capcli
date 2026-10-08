@@ -1,0 +1,70 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "sys.trace.success.denial_trail",
+  "target": "op_9f2e",
+  "command": "capcli sys audit trace op_9f2e --explain",
+  "state": {
+    "exit_code": 0,
+    "domain": null,
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": "populated"
+  },
+  "diagnostic": null,
+  "render": {
+    "header": {
+      "style": "plain",
+      "label": "[dev:tier_1]  Causal DAG Trace (op_9f2e)"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "ses_a992f  session.start        \"fulfill urgent pending orders\"",
+            "indent": 2
+          },
+          {
+            "text": "└── op_9f2e  db.execute (orders)       ✗ [denied]  exit 2",
+            "indent": 2
+          },
+          {
+            "text": "├── UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
+            "indent": 8
+          },
+          {
+            "text": "├── ✗ policy.ast  policy.query.update_delete.require_limit",
+            "indent": 8
+          },
+          {
+            "text": "│     └── effect: none (0 rows touched)",
+            "indent": 14
+          },
+          {
+            "text": "└── remedy  add LIMIT, or target specific primary key",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "Root Intent",
+            "value": "\"fulfill urgent pending orders\""
+          },
+          {
+            "field": "Authority",
+            "value": "user:alice (via agt_7f3k)"
+          },
+          {
+            "field": "Integrity",
+            "value": "valid hash link (chain verified)"
+          }
+        ]
+      }
+    ]
+  }
+}
