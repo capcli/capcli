@@ -5,7 +5,7 @@
   "command": "capcli routine rollback order_sync 3",
   "state": {
     "exit_code": 2,
-    "domain": "policy.authorizer",
+    "domain": "policy.governance",
     "trust": "reviewed",
     "env": "dev",
     "tier": "tier_1",
@@ -13,10 +13,10 @@
     "data_shape": null
   },
   "diagnostic": {
-    "domain": "policy.authorizer",
-    "culprit": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5.",
+    "domain": "policy.governance",
+    "culprit": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5 (versioning cap on the retained history).",
     "remedy": "roll back incrementally to a version within 5 of the pointer, or ship a new version reverting the change",
-    "layer": "authorizer",
+    "layer": "governance",
     "measured": "rollback depth 6 (max: 5)",
     "state_modified": false
   },
@@ -30,7 +30,7 @@
         "title": null,
         "items": [
           {
-            "text": "FAIL  policy.authorizer.rollback.depth_limit",
+            "text": "FAIL  policy.governance.rollback.depth_limit",
             "indent": 2
           },
           {
@@ -42,7 +42,7 @@
             "indent": 44
           },
           {
-            "text": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5.",
+            "text": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5 (versioning cap on the retained history).",
             "indent": 8
           }
         ]
@@ -60,11 +60,15 @@
           },
           {
             "field": "layer",
-            "value": "authorizer"
+            "value": "governance"
           },
           {
             "field": "measured",
             "value": "rollback depth 6 (max: 5)"
+          },
+          {
+            "field": "version_history",
+            "value": "v1..v9 retained (cap 25 versions) in routines/ files and Git manifests"
           },
           {
             "field": "remedy",

@@ -1,0 +1,87 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "routine.prove.refusal.param_cap",
+  "target": "sync_orders",
+  "command": "capcli routine prove sync_orders --env sim",
+  "state": {
+    "exit_code": 3,
+    "domain": "validation",
+    "trust": "draft",
+    "env": "sim",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "validation",
+    "culprit": "Signature bloat: 9 typed Param declarations vs ceiling 8 (interface bloat guard, governance.yaml#routine_shape params max 8; action.md signatures law — max 8 typed Param declarations).",
+    "remedy": "drop or fold the ninth parameter (order notes can ride the request payload), then re-run prove in sim",
+    "state_modified": false
+  },
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  validation.routine.param_cap",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "sync_orders@1 (draft)"
+          },
+          {
+            "text": "routines/sync_orders.py:25 — signature:",
+            "indent": 8
+          },
+          {
+            "text": "def dispatch(order_id: Param[str], carrier: Param[str], warehouse: Param[str],",
+            "indent": 8
+          },
+          {
+            "text": "    rush: Param[bool], note: Param[str], locale: Param[str], region: Param[str],",
+            "indent": 8
+          },
+          {
+            "text": "    dry_run: Param[bool]) -> dict:",
+            "indent": 8
+          },
+          {
+            "field": "params_declared",
+            "value": "9 (ceiling: 8)"
+          },
+          {
+            "text": "^",
+            "indent": 18
+          },
+          {
+            "field": "law",
+            "value": "governance.yaml#routine_shape params max 8 — interface bloat guard; action.md signatures"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_prove_09"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "drop or fold the ninth parameter (order notes can ride the request payload), then re-run prove in sim"
+          }
+        ]
+      }
+    ]
+  }
+}

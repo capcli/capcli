@@ -212,7 +212,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
 | `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
 
-### 4.3 `routine/` (8 verbs → 28 screens)
+### 4.3 `routine/` (8 verbs → 36 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -221,14 +221,21 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.new.refusal.name_taken` | refusal | 3 | validation | collision | Routine name already registered |
 | `routine.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates LOC or param limits |
 | `routine.new.refusal.template_compat` | refusal | 3 | policy.template | compat_fail | Template policy_version mismatch exits 3 |
+| `routine.new.refusal.near_duplicate` | refusal | 3 | validation | near_duplicate | Similarity >= 0.85 without a justifying `--reason` |
+| `routine.new.denial.file_locked` | denial | 2 | policy.authoring | file_locked | Concurrent edit blocked by the authoring mutex |
 | `routine.prove.success.passed` | success | 0 | — | passed | Dynamic fingerprint verified |
 | `routine.prove.success.overview` | success | 0 | — | passed | Overview routine sim rehearsal passes (harness H7) |
+| `routine.prove.refusal.syntax` | refusal | 3 | compile | bad_syntax | py_compile rejects malformed guest code |
+| `routine.prove.refusal.param_cap` | refusal | 3 | validation | param_cap | 9 typed Param declarations vs the max-8 ceiling |
+| `routine.prove.refusal.missing_docstring` | refusal | 3 | validation | missing_docstring | Required description/docstring absent |
+| `routine.prove.refusal.oversized_output` | refusal | 3 | validation | oversized | Unpaginated output exceeds the 500-token envelope |
 | `routine.prove.denial.shape` | denial | 2 | policy.authorizer | bad_shape | Execution violates declared limits |
 | `routine.prove.denial.policy` | denial | 2 | policy.authorizer | illegal_leaf | Routine attempts forbidden leaf op |
 | `routine.prove.denial.sandbox` | denial | 2 | kernel.sandbox | breach | Jail containment boundary violation |
 | `routine.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Uncaught exception in test pass |
 | `routine.ship.success.shipped` | success | 0 | — | shipped | Routine promoted to new trust rung |
 | `routine.ship.success.rolled_back` | success | 0 | — | rolled_back | Canary telemetry trips auto-rollback |
+| `routine.ship.success.queued` | success | 0 | — | queued | Enqueued for human review; zero code shipped |
 | `routine.ship.denial.metrics` | denial | 2 | policy.authorizer | low_success | Success rate falls below 0.95 |
 | `routine.ship.refusal.missing_reason`| refusal | 3 | missing_param | missing_arg | Elevation to pinned requires reason |
 | `routine.ship.denial.trust` | denial | 2 | policy.trust | tier2_refusal | Pinned promotion denied on Tier 2 |
@@ -239,10 +246,11 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.stats.success.populated` | success | 0 | — | populated | Routine p50/p95 execution metrics |
 | `routine.stats.refusal.not_found` | refusal | 3 | validation | not_found | Routine name does not exist |
 | `routine.rollback.success.completed`| success | 0 | — | completed | Reverts pointer to prior version |
-| `routine.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback depth of 5 |
+| `routine.rollback.denial.depth` | denial | 2 | policy.governance | depth_limit | Versioning cap on retained history: exceeds max rollback depth of 5 |
 | `routine.rollback.refusal.not_found`| refusal | 3 | validation | not_found | Target version not found in history |
-| `routine.retire.success.completed` | success | 0 | — | completed | Routine retired from service |
-| `routine.retire.denial.active_deps` | denial | 2 | policy.authorizer | deps_exist | Callee dependencies block retirement |
+| `routine.retire.success.completed` | success | 0 | — | completed | Routine retired; bound ingress loudly dismantled (cron paused→dissolved by daemon, endpoint revoked) |
+| `routine.retire.denial.active_deps` | denial | 2 | policy.governance | deps_exist | In-memory routine DAG blocks retirement of active dependencies |
+| `routine.retire.refusal.missing_reason` | refusal | 3 | missing_param | missing_arg | Prod retire of an operational routine demands --reason |
 | `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
 
 ### 4.4 `api/` (8 verbs → 23 screens)

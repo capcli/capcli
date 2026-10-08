@@ -21,7 +21,7 @@
       "color": "#3fb950",
       "entry": "routine.prove.success.passed",
       "terminal": "routine.ship.success.shipped",
-      "description": "Sim replay verification -> ship promotion queue -> Tier 1 pinned lock"
+      "description": "Sim replay verification -> enqueue for human review (ship --queue) -> supervisor queue inspection -> Tier 1 pinned sign-off ship"
     },
     "journey_quota_preemption": {
       "name": "Wire Quota Starvation, Yield & Auto-Resume",
@@ -160,15 +160,15 @@
       "name": "Routine Lifecycle: Author, Prove, Ship, Queue",
       "color": "#6366f1",
       "entry": "routine.new.refusal.name_taken",
-      "terminal": "routine.pending.success.populated",
-      "description": "Authoring gauntlet (name taken, shape violation, template incompatibility) -> sync_orders scaffolded -> prove gates (shape, sandbox escape, forbidden leaf op) -> sim prove passes -> ship ladder (reason required, trust floor, replay metrics) -> order_sync pinned ship -> canary rolled back -> promotion queue (empty, then populated)"
+      "terminal": "routine.pending.success.empty",
+      "description": "Authoring gauntlet (name taken, shape violation, template incompatibility, unjustified near-duplicate, concurrent-edit mutex) -> sync_orders scaffolded -> prove gauntlet (exit-3 compiler refusals: syntax, param cap, missing docstring, oversized output; then exit-2 gates: shape, sandbox escape, forbidden leaf op) -> sim prove passes -> two promotion routes: the review path (enqueue via ship --queue, supervisor pending inspection, human batch sign-off ships) beside the direct ship ladder (reason required, trust floor, replay metrics) -> order_sync pinned ship -> canary rolled back -> promotion queue drained empty"
     },
     "journey_routine_maintenance": {
       "name": "Routine Fleet Maintenance: Sweep, Stats, Rollback, Retire",
       "color": "#a5b4fc",
       "entry": "routine.sweep.success.empty",
       "terminal": "routine.retire.success.completed",
-      "description": "Sweep (quiet window, then stale drafts harvested) -> profile gates (unknown routine, then dispatch_order deep stats) -> rollback gauntlet (unknown version, depth ceiling, then sync_orders restored to v3) -> retire gauntlet (active dependencies, unknown routine, then legacy_etl retired)"
+      "description": "Sweep (quiet window, then stale drafts harvested) -> profile gates (unknown routine, then dispatch_order deep stats) -> rollback gauntlet (unknown version, depth ceiling, then sync_orders restored to v3) -> retire gauntlet (active dependencies, unknown routine, unjustified prod retire refused, then legacy_etl retired with loud bound-ingress teardown)"
     },
     "journey_identity_control": {
       "name": "Agent Identity Control: Register, List, Revoke",
@@ -379,7 +379,6 @@
     {
       "id": "t_promotion_prove_to_queue",
       "journeys": [
-        "journey_trust_promotion",
         "journey_human_onboarding"
       ],
       "from": [
@@ -2570,7 +2569,7 @@
       "arrow_type": "denial"
     },
     {
-      "id": "t_routine_template_to_created",
+      "id": "t_routine_template_to_near_duplicate",
       "journeys": [
         "journey_routine_lifecycle"
       ],
@@ -2578,14 +2577,44 @@
         "routine.new.refusal.template_compat"
       ],
       "to": [
+        "routine.new.refusal.near_duplicate"
+      ],
+      "trigger": "draft_near_copy",
+      "label": "capcli routine new sync_orders_v2 --reason \"cleanup copy\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_near_duplicate_to_file_locked",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.refusal.near_duplicate"
+      ],
+      "to": [
+        "routine.new.denial.file_locked"
+      ],
+      "trigger": "retry_concurrent_draft",
+      "label": "capcli routine new sync_orders_v2",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_file_locked_to_created",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.new.denial.file_locked"
+      ],
+      "to": [
         "routine.new.success.created"
       ],
-      "trigger": "scaffold_blank",
+      "trigger": "handoff_then_scaffold",
       "label": "capcli routine new sync_orders",
       "arrow_type": "success"
     },
     {
-      "id": "t_routine_created_to_prove_shape",
+      "id": "t_routine_created_to_prove_syntax",
       "journeys": [
         "journey_routine_lifecycle"
       ],
@@ -2593,9 +2622,69 @@
         "routine.new.success.created"
       ],
       "to": [
-        "routine.prove.denial.shape"
+        "routine.prove.refusal.syntax"
       ],
       "trigger": "prove_sim",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_syntax_to_param_cap",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.refusal.syntax"
+      ],
+      "to": [
+        "routine.prove.refusal.param_cap"
+      ],
+      "trigger": "fix_indentation",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_param_cap_to_docstring",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.refusal.param_cap"
+      ],
+      "to": [
+        "routine.prove.refusal.missing_docstring"
+      ],
+      "trigger": "fold_ninth_param",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_docstring_to_oversized",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.refusal.missing_docstring"
+      ],
+      "to": [
+        "routine.prove.refusal.oversized_output"
+      ],
+      "trigger": "add_description",
+      "label": "capcli routine prove sync_orders --env sim",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_oversized_to_shape",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.prove.refusal.oversized_output"
+      ],
+      "to": [
+        "routine.prove.denial.shape"
+      ],
+      "trigger": "paginate_output",
       "label": "capcli routine prove sync_orders --env sim",
       "arrow_type": "denial"
     },
@@ -2735,19 +2824,51 @@
       "arrow_type": "progress"
     },
     {
-      "id": "t_routine_pending_empty_to_populated",
+      "id": "t_routine_passed_to_queued",
       "journeys": [
-        "journey_routine_lifecycle"
+        "journey_routine_lifecycle",
+        "journey_trust_promotion"
       ],
       "from": [
-        "routine.pending.success.empty"
+        "routine.prove.success.passed"
+      ],
+      "to": [
+        "routine.ship.success.queued"
+      ],
+      "trigger": "enqueue_for_review",
+      "label": "capcli routine ship sync_orders reviewed --queue --reason \"recurring fulfillment sync, human-reviewed\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_routine_queued_to_populated",
+      "journeys": [
+        "journey_routine_lifecycle",
+        "journey_trust_promotion"
+      ],
+      "from": [
+        "routine.ship.success.queued"
       ],
       "to": [
         "routine.pending.success.populated"
       ],
-      "trigger": "queue_promotion",
+      "trigger": "supervisor_inspects_queue",
       "label": "capcli routine pending",
       "arrow_type": "progress"
+    },
+    {
+      "id": "t_routine_populated_to_shipped",
+      "journeys": [
+        "journey_routine_lifecycle"
+      ],
+      "from": [
+        "routine.pending.success.populated"
+      ],
+      "to": [
+        "routine.ship.success.shipped"
+      ],
+      "trigger": "human_batch_signoff",
+      "label": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+      "arrow_type": "success"
     },
     {
       "id": "t_routine_sweep_empty_to_populated",
@@ -2870,12 +2991,27 @@
       "arrow_type": "denial"
     },
     {
-      "id": "t_routine_retire_nf_to_completed",
+      "id": "t_routine_retire_nf_to_missing_reason",
       "journeys": [
         "journey_routine_maintenance"
       ],
       "from": [
         "routine.retire.refusal.not_found"
+      ],
+      "to": [
+        "routine.retire.refusal.missing_reason"
+      ],
+      "trigger": "retire_without_reason",
+      "label": "capcli routine retire legacy_etl",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_routine_retire_missing_reason_to_completed",
+      "journeys": [
+        "journey_routine_maintenance"
+      ],
+      "from": [
+        "routine.retire.refusal.missing_reason"
       ],
       "to": [
         "routine.retire.success.completed"

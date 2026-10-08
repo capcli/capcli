@@ -1,0 +1,84 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "routine.new.refusal.near_duplicate",
+  "target": "sync_orders_v2",
+  "command": "capcli routine new sync_orders_v2 --reason \"cleanup copy\"",
+  "state": {
+    "exit_code": 3,
+    "domain": "validation",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "validation",
+    "culprit": "Near-duplicate scaffold: normalized similarity 0.87 vs routines/sync_orders.py (v3, draft) crosses the 0.85 threshold and --reason \"cleanup copy\" does not justify keeping a near-copy (governance.yaml maintenance.duplicate_similarity: 0.85).",
+    "remedy": "re-run with a --reason that justifies the fork, merge the changes into routines/sync_orders.py instead, or diverge the scaffold below the threshold — near-duplicates force merge or fork",
+    "state_modified": false
+  },
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  validation.routine.near_duplicate",
+            "indent": 2
+          },
+          {
+            "field": "candidate",
+            "value": "routines/sync_orders_v2.py"
+          },
+          {
+            "field": "existing",
+            "value": "routines/sync_orders.py (v3, draft, registered by agt_7f3k)"
+          },
+          {
+            "text": "near-duplicate scan (strsim normalized Levenshtein):",
+            "indent": 8
+          },
+          {
+            "field": "similarity",
+            "value": "0.87 (threshold: 0.85)"
+          },
+          {
+            "text": "^^^^",
+            "indent": 14
+          },
+          {
+            "field": "reason",
+            "value": "\"cleanup copy\" (present, not justifying)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Near-duplicate scaffold: normalized similarity 0.87 vs routines/sync_orders.py (v3, draft) crosses the 0.85 threshold and --reason \"cleanup copy\" does not justify keeping a near-copy (governance.yaml maintenance.duplicate_similarity: 0.85).",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with a --reason that justifies the fork, merge the changes into routines/sync_orders.py instead, or diverge the scaffold below the threshold — near-duplicates force merge or fork"
+          }
+        ]
+      }
+    ]
+  }
+}

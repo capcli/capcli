@@ -1,0 +1,84 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "routine.prove.refusal.oversized_output",
+  "target": "sync_orders",
+  "command": "capcli routine prove sync_orders --env sim",
+  "state": {
+    "exit_code": 3,
+    "domain": "validation",
+    "trust": "draft",
+    "env": "sim",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "validation",
+    "culprit": "Output envelope violation: the sim test pass returned an unpaginated dump of 612 result tokens (cap: 500); outputs exceeding 500 tokens must return a valid keyset pagination schema, and raw string slicing is banned.",
+    "remedy": "return {items, pagination: {has_more, next_cursor}} from a new version — encapsulate the iteration internally — or condense the summary under 500 tokens",
+    "state_modified": false
+  },
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  validation.routine.oversized_output",
+            "indent": 2
+          },
+          {
+            "field": "routine",
+            "value": "sync_orders@1 (draft)"
+          },
+          {
+            "text": "result gate: sim test pass measured at 612 tokens (cap: 500)",
+            "indent": 8
+          },
+          {
+            "field": "emitted",
+            "value": "raw dump of 847 order rows (unpaginated)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "keyset_pagination",
+            "value": "absent (no {items, next_cursor, has_more} envelope)"
+          },
+          {
+            "field": "raw_string_slicing",
+            "value": "banned (action.md output envelope law)"
+          },
+          {
+            "field": "measured",
+            "value": "612 result tokens vs 500 cap (governance.yaml#execution max_result_tokens)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_prove_11"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "return {items, pagination: {has_more, next_cursor}} from a new version — encapsulate the iteration internally — or condense the summary under 500 tokens"
+          }
+        ]
+      }
+    ]
+  }
+}

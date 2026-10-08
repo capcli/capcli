@@ -92,6 +92,14 @@
       "reason": "proof passed: routine eligible for promotion"
     },
     {
+      "id": "t_promotion_queued",
+      "screen_id": "routine.ship.success.queued",
+      "predicate": {},
+      "prompt": "prompt://promotion/routine_passed@1",
+      "serve": "L1",
+      "reason": "candidate enqueued: human review pending"
+    },
+    {
       "id": "t_wire_empty",
       "screen_id": "api.catalog.success.empty",
       "predicate": {},

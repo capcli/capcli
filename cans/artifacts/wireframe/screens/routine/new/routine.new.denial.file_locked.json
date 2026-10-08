@@ -1,0 +1,90 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "routine.new.denial.file_locked",
+  "target": "sync_orders_v2",
+  "command": "capcli routine new sync_orders_v2",
+  "state": {
+    "exit_code": 2,
+    "domain": "policy.authoring",
+    "trust": "draft",
+    "env": "dev",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "policy.authoring",
+    "culprit": "filesystem authoring mutex on routines/sync_orders_v2.py is held by agt_9k2w (session ses_c31e8, edit in progress); concurrent edit by agt_7f3k refused — mutual exclusion, no overwrite",
+    "remedy": "wait for agt_9k2w to release the authoring lock (or coordinate the handoff), then retry; never force-write past the mutex",
+    "layer": "authoring",
+    "measured": "lock held 34s (edit in progress); routines/sync_orders_v2.py sha256 unchanged before/after the refused write",
+    "state_modified": false
+  },
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 2"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  policy.authoring.file_locked",
+            "indent": 2
+          },
+          {
+            "field": "target",
+            "value": "routines/sync_orders_v2.py"
+          },
+          {
+            "field": "holder",
+            "value": "agt_9k2w (session ses_c31e8, edit in progress)"
+          },
+          {
+            "field": "contender",
+            "value": "agt_7f3k (session ses_a992f)"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "concurrent draft blocked: one authoring claim per routine file;",
+            "indent": 8
+          },
+          {
+            "text": "concurrent edits exit 2 — no interleaving, no last-writer-wins.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "audit_op",
+            "value": "op_new_03"
+          },
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "layer",
+            "value": "authoring"
+          },
+          {
+            "field": "measured",
+            "value": "lock held 34s (edit in progress); routines/sync_orders_v2.py sha256 unchanged before/after the refused write"
+          },
+          {
+            "field": "remedy",
+            "value": "wait for agt_9k2w to release the authoring lock (or coordinate the handoff), then retry; never force-write past the mutex"
+          }
+        ]
+      }
+    ]
+  }
+}

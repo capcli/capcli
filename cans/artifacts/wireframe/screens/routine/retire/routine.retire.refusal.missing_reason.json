@@ -1,0 +1,72 @@
+{
+  "$schema": "wireframe/v1",
+  "screen_id": "routine.retire.refusal.missing_reason",
+  "target": "legacy_etl",
+  "command": "capcli routine retire legacy_etl",
+  "state": {
+    "exit_code": 3,
+    "domain": "missing_param",
+    "trust": "pinned",
+    "env": "prod",
+    "tier": "tier_1",
+    "state_modified": false,
+    "data_shape": null
+  },
+  "diagnostic": {
+    "domain": "missing_param",
+    "culprit": "Retiring an operational routine in prod is a high-impact write; threshold justifications demand --reason.",
+    "remedy": "re-run with --reason, e.g. capcli routine retire legacy_etl --reason \"replaced by unified pipeline\"",
+    "state_modified": false
+  },
+  "render": {
+    "header": {
+      "style": "badge",
+      "label": "exit 3"
+    },
+    "sections": [
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "FAIL  missing_param.retire.reason_required",
+            "indent": 2
+          },
+          {
+            "field": "command",
+            "value": "capcli routine retire legacy_etl"
+          },
+          {
+            "field": "routine",
+            "value": "legacy_etl@6 (active, pinned, prod)"
+          },
+          {
+            "field": "bound_ingress",
+            "value": "cron bnd_3k2f + endpoint bnd_8d3p would be dismantled by this retirement"
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "text": "Retiring an operational routine in prod is a high-impact write; threshold justifications demand --reason.",
+            "indent": 8
+          }
+        ]
+      },
+      {
+        "title": null,
+        "items": [
+          {
+            "field": "state_modified",
+            "value": "false"
+          },
+          {
+            "field": "remedy",
+            "value": "re-run with --reason, e.g. capcli routine retire legacy_etl --reason \"replaced by unified pipeline\""
+          }
+        ]
+      }
+    ]
+  }
+}

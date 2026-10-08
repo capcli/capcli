@@ -6,8 +6,8 @@
   "state": {
     "exit_code": 0,
     "domain": null,
-    "trust": "reviewed",
-    "env": "dev",
+    "trust": "pinned",
+    "env": "prod",
     "tier": "tier_1",
     "state_modified": true,
     "data_shape": null
@@ -40,18 +40,30 @@
         "title": null,
         "items": [
           {
-            "field": "schedule",
-            "value": "legacy_etl_nightly auto-disabled (orphan protection)"
+            "field": "⚠  orphan trigger warning",
+            "value": "retiring legacy_etl@6 orphans 2 bound ingress routes; the kernel dismantles them loudly"
           },
           {
-            "field": "callers",
-            "value": "none (dependency graph clear)"
+            "field": "cron binding",
+            "value": "bnd_3k2f \"legacy_etl_nightly\" (0 4 * * *) paused -> dissolved by daemon on next tick (dead_schedule_disable: true)"
+          },
+          {
+            "field": "endpoint binding",
+            "value": "bnd_8d3p legacy_etl@6 (http://127.0.0.1:4040/endpoints/legacy_etl, api-key) revoked with retirement — retired = uncallable"
+          },
+          {
+            "field": "audit events",
+            "value": "op_retire_01 (routine.retire committed) + bind.delete chains in _audit on the next daemon tick"
           }
         ]
       },
       {
         "title": null,
         "items": [
+          {
+            "field": "callers",
+            "value": "none (dependency graph clear)"
+          },
           {
             "field": "state_modified",
             "value": "true"
@@ -62,7 +74,7 @@
           },
           {
             "field": "note",
-            "value": "routine remains inspectable via cap://legacy_etl for provenance"
+            "value": "no deletion — routine remains inspectable via cap://legacy_etl for provenance; re-binding requires a live capability target"
           }
         ]
       }

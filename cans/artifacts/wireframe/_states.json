@@ -19,6 +19,8 @@
       "policy.budget",
       "policy.trust",
       "policy.notify",
+      "policy.authoring",
+      "policy.governance",
       "db.engine",
       "db.claims",
       "api.quota",
