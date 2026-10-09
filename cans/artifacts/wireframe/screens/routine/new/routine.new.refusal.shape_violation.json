@@ -2,7 +2,7 @@
   "$schema": "wireframe/v2",
   "id": "routine.new.refusal.shape_violation",
   "target": "sync_orders",
-  "command": "capcli routine new sync_orders --template tpl://routine/legacy_sync",
+  "command": "capcli routine new sync_orders",
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,20 +12,19 @@
   "component": {
     "rule": "validation.routine.shape_violation",
     "domain": "validation",
-    "culprit": "Scaffold violates routine_shape ceilings: 214 LOC (max: 150), 11 params (max: 8).",
-    "remedy": "split the scaffold into composed routines under 150 LOC with at most 8 params each",
+    "culprit": "Direct scaffold violates routine_shape ceilings: 11 params (max: 8), cyclomatic complexity 14 (max: 10).",
+    "remedy": "split the scaffold into composed routines with at most 8 params each and complexity at most 10",
     "span": {
-      "source": "shape_gate report (routines/legacy_sync.py):",
+      "source": "shape_gate report (routines/sync_orders.py):",
       "highlight": " re"
     },
-    "template": "tpl://routine/legacy_sync",
-    "loc": "214 (max: 150)",
+    "complexity": "14 (max: 10)",
     "params": "11 (max: 8)",
     "tokens": "1840 (max: 2000)",
-    "routine_shape_ceilings": "214 LOC (max: 150), 11 params (max: 8).",
+    "routine_shape_ceilings": "11 params (max: 8), cyclomatic complexity 14 (max: 10).",
     "spans": [
       {
-        "source": "shape_gate report (routines/legacy_sync.py):",
+        "source": "shape_gate report (routines/sync_orders.py):",
         "caret_length": 2
       }
     ],

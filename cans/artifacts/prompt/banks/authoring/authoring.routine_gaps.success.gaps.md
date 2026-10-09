@@ -36,7 +36,7 @@ Scaffold a typed routine wrapping the operational sequence:
 capcli routine new <routine_name>
 ```
 Enforce strict boundaries:
-- Maximum 150 Lines of Code (LOC)
+- Maximum 2,000-token envelope (LOC unrestricted)
 - Maximum 8 typed `Param` variables
 - Explicit `limits={"max_ops": N, "max_duration_seconds": S}`
 

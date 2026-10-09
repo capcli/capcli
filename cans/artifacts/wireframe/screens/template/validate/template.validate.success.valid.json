@@ -1,0 +1,40 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.validate.success.valid",
+  "target": "templates/webhook_receiver",
+  "command": "capcli template validate templates/webhook_receiver",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "tree",
+  "component": {
+    "title": "valid",
+    "root": "gates:",
+    "nodes": [
+      {
+        "label": "Gate 1 syntax pass (capcli-template.yaml parsed; py_compile clean; schema.yaml syntax clean)",
+        "children": []
+      },
+      {
+        "label": "Gate 2 semantics pass (typed inputs bound; capabilities declared; AST complexity 4 under ceiling 10)",
+        "children": []
+      }
+    ],
+    "footer": {
+      "source": "templates/webhook_receiver/capcli-template.yaml",
+      "template": "tpl://routine/webhook_receiver",
+      "policy_version": "5"
+    }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli template pack templates/webhook_receiver",
+      "intent": "Freeze blueprint into a signed bundle",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
+}

@@ -22,7 +22,7 @@ curl -fsSL https://capcli.dev/install.sh | bash
 | **Understand the token-bucket floors & multi-day limits.** | [Budgets & Priority Floors →](understand/budgets.md) |
 | **Open the local web cockpit.** | [Administrative Cockpit →](concepts/cockpit.md) |
 | **Hit an exit code or denial? Check the ceilings.** | [Hard Limits & Ceilings →](reference/limits.md) |
-| **Look up exact CLI command contracts (10 surface nouns).** | [Command Reference →](reference/index.md) |
+| **Look up exact CLI command contracts (11 surface nouns).** | [Command Reference →](reference/index.md) |
 
 ---
 

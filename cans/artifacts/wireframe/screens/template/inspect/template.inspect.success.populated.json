@@ -1,0 +1,43 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.inspect.success.populated",
+  "target": "tpl://routine/webhook_receiver",
+  "command": "capcli template inspect tpl://routine/webhook_receiver",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "template": "tpl://routine/webhook_receiver",
+          "kind": "routine",
+          "policy_version": "5",
+          "min_kernel_version": "2.1",
+          "can_apply": "true"
+        }
+      },
+      {
+        "fields": {
+          "inputs": "endpoint_url: string (required); retry_limit: integer (default 3); secret_ref: string (optional)",
+          "capabilities": "net.egress, db.write, audit.emit",
+          "seed_rows": "0"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli template apply tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+      "intent": "Instantiate draft routine sync_orders",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
+}

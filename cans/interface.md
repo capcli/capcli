@@ -4,7 +4,7 @@
     - Design laws
       - exit code laws — strict integer contract (0, 2, 3, 4, 5, 6): see physics.md#Exit-code-law
       - Command shape — capcli <noun> <verb> [target] [--flags]
-      - Subcommand tree — ten nouns (run, db, routine, api, bind, ping, rule, env, sys, doc)
+      - Subcommand tree — eleven nouns (run, db, routine, api, bind, ping, rule, env, sys, doc, template)
       - Ergonomic alias — `capcli apply` aliases `capcli rule apply schema`; `capcli sql` aliases `capcli run sql`
       - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
       - Registry law — all capabilities resolve through unified registry
@@ -23,7 +23,7 @@
         - overview — run overview [--as <principal>] — single-shot domain situational briefing
         - search — search <query> [--type <domain>] [--trust X] [--env X]
         - gap detection — run search gaps --since 7d
-        - inspect — inspect <ptr> — resolves pre-flight envelopes across all URP types
+        - inspect — inspect <ptr> — resolves pre-flight envelopes across URP types; tpl:// blueprints resolve via template inspect
       - Aliases — capcli sql, capcli search, capcli inspect
       - Inspect envelope
         - sla guarantee — single-response zero-roundtrip go/no-go verdict via can_invoke_now
@@ -45,7 +45,7 @@
       - Schema — db schema [--table]
       - Snapshots — db snapshot, restore <id>, dump
     - Routine path: routine noun
-      - Authoring — direct write in routines/<name>.py (or optional scaffold via routine new <name> [--template <ptr>] [-p k=v])
+      - Authoring — direct write in routines/<name>.py or scaffold via routine new <name>; blueprints instantiate via `capcli template apply tpl://routine/<name> <target> [-p k=v]`
       - Verification — routine prove <name> [-p k=v] [--env sim]
       - Promotion — routine ship <name> <reviewed|pinned> [--env X] [--reason "..."] [--queue]
       - Maintenance — routine sweep [--since 30d]
@@ -87,7 +87,7 @@
       - Application — rule apply [target=schema] [--dry-run] [-m|--intent "<why>")
       - Validation — rule validate
     - World path: env noun
-      - Provisioning — env new <name> [--seed prod] [--from <path|git-url|ptr>] [--from-branch <b>]
+      - Provisioning — environments are provisioned empty via `capcli env new <name> [--seed prod]`, or populated from blueprints via `capcli template apply tpl://world/<name> <target> [-p k=v]`
       - Switching — env use <name>
       - Audit — env list, inspect, doctor
       - Promotion — env merge <name> [target=prod] [-m "<why>"]
@@ -116,6 +116,13 @@
       - Pointer scope — doc:// addresses human docs; prompt:// addresses agent campaign banks; schemes never substitute
       - Reading surface — the doc noun is the single reading surface for both schemes; no prompt noun exists
       - Prompt envelope — inspect prompt://{bank}/{slug}@{version} returns the campaign envelope (L2, ≤150 tokens)
+    - Template path: template noun
+      - List — template list surfaces registered blueprints (tpl://routine/*, tpl://world/*) with target type, policy_version
+      - Inspect — template inspect <urp> pre-flights required typed inputs (-p), declared capabilities, seed row count; tpl:// resolution surface
+      - Validate — template validate <path> lints bundle before workspace contact: see world.md#World-templates
+      - New — template new <name> --type routine|world scaffolds blueprint (capcli-template.yaml + starter code) under templates/
+      - Pack — template pack <dir> [--out bundle.cap] freezes blueprint into immutable SHA-256-signed bundle: see world.md#World-templates
+      - Apply — template apply <urp> <target-name> [-p k=v] single entry point: routine to routines/<target-name>.py at draft; world to envs/<target-name> with schema and seeds
     - Refusals and banned operations
       - ssot enforcement — config mutations require git commits; direct `config set` or manual SQL DDL denied (exit 3)
       - banned bypass flags — `--force`, `--override-budget`, `--force-prod`, `--verbose` rejected at parser (exit 3)
@@ -172,7 +179,7 @@
       - presentation stance — neutral kernel inspector; renders engine primitives without domain abstractions
     - Cockpit functional layers
       - Layer 1: State Inspector — renders schema tables, columns, indexes, and format-preserved masked cells (████)
-      - Layer 2: Capability Inspector — routine catalog, template blueprints (tpl://), version diffs, OpenAPI verb states, and manifest-vs-fingerprint graphs
+      - Layer 2: Capability Inspector — routine catalog, template blueprints via template inspect (tpl://), version diffs, OpenAPI verb states, and manifest-vs-fingerprint graphs
       - Layer 3: Policy & Governance — live policy authorizer rules, lockfile SHA256 integrity, and rate ceilings
       - Layer 4: Audit Spine — live streaming event tail, causal DAG trace explorer, and machine denial decoders
       - Layer 5: Budget & Telemetry — call stack frame trees, fuel consumption meters, wire byte counters, and token-bucket drain gauges

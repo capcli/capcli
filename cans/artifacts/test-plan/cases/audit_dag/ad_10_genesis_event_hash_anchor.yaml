@@ -34,9 +34,9 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli env new shop --from ./templates/shop"
+  command: "capcli template apply tpl://world/shop shop"
   input_params:
-    template: "./templates/shop (valid schema.yaml + starter configuration; passes Gate 1 and Gate 2 before disk write)"
+    template: "tpl://world/shop (valid schema.yaml + starter configuration; passes Gate 1 and Gate 2 before disk write)"
     expected_genesis_order: ["rule.apply", "sql query", "sql write deny", "sql write ok"]
     expected_audit_rows_after: 5 # genesis x4 + env.init_from_template
 

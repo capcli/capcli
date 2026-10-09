@@ -165,7 +165,7 @@ All of them. Claude Code, Hermes, OpenAI Swarms, DeepSeek, custom LangChain loop
 | **[Start Tour](docs/start/index.md)** | Install the static binary and run your first bounded task in 60 seconds. |
 | **[Daily Use](docs/use/index.md)** | Discovering capabilities, calling APIs, handling webhooks, and asking humans. |
 | **[Understand Physics](docs/understand/index.md)** | The Causal DAG, optimistic token brokerage, and the 3-rung trust ladder. |
-| **[CLI & Command Reference](docs/reference/index.md)** | Machine-grade contracts for all 10 surface nouns (`run`, `api`, `bind`, etc.). |
+| **[CLI & Command Reference](docs/reference/index.md)** | Machine-grade contracts for all 11 surface nouns (`run`, `api`, `bind`, etc.). |
 | **[Deep Concepts](docs/concepts/index.md)** | `seccomp-bpf` profiles, the 5-Gate compiler, and the embedded Cockpit. |
 
 ---

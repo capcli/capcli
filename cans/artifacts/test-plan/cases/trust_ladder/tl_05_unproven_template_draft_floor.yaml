@@ -45,10 +45,10 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli routine new payout_v2 --template cap://templates/payout_bundle --reason \"vendor payout automation import\""
+  command: "capcli template apply tpl://routine/payout_bundle payout_v2"
   input_params:
     name: "payout_v2"
-    template_ptr: "cap://templates/payout_bundle"
+    template_ptr: "tpl://routine/payout_bundle"
     template_manifest_claim:
       trust: "pinned"
       declared_versions_shipped: 18
@@ -69,7 +69,7 @@ expected_observations:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "routine.draft (payload: template_source = cap://templates/payout_bundle, template_hash; trust recorded 'draft', version 1)"
+    event_emitted: "routine.draft (payload: template_source = tpl://routine/payout_bundle, template_hash; trust recorded 'draft', version 1)"
     chain_valid: true
     state_modified_field: true
 

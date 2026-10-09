@@ -14,7 +14,7 @@ capcli routine <verb> [args] [--flags]
 
 | Verb | Syntax | Description |
 |---|---|---|
-| **`new`** | `capcli routine new <name> [--template <ptr>]` | Scaffolds a compliant starter script in `routines/<name>.py`. |
+| **`new`** | `capcli routine new <name>` | Scaffolds a compliant starter script in `routines/<name>.py`. Blueprint intake: `capcli template apply tpl://routine/<name> <target>`. |
 | **`prove`** | `capcli routine prove <name> [-p k=v] [--env sim]` | Runs synthetic replay tests against masked simulation data. |
 | **`ship`** | `capcli routine ship <name> <reviewed\|pinned> [--reason "..."]` | Submits candidate for promotion up the trust ladder. |
 | **`stats`** | `capcli routine stats <name> [--deep]` | Displays p50/p95 latency, run counts, and historical success rates. |
@@ -31,8 +31,7 @@ Your LLM loves writing 600-line monolithic scripts full of custom utility classe
 
 Before a routine can be registered, proved, or shipped, the Rust kernel measures its physical dimensions. If it violates any of these, it dies at the intake gate (`exit 2`):
 
-* **Max 150 Lines of Code (LOC):** If it's 151 lines, split it. You are writing an atomic procedure, not Django.
-* **Max 2,000 Tokens:** Keeps file sizes small so inspecting them doesn't bankrupt your LLM context window.
+* **Max 2,000 Tokens:** Keeps file sizes small so inspecting them doesn't bankrupt your LLM context window. Lines of code are unrestricted — whitespace and comments don't count.
 * **Max 8 Parameters (`Param`):** If a routine needs 14 arguments, your design is bad and you should feel bad. Use an object or break up the task.
 * **Max 3 Routine Imports:** Routines can import other routines, but composition depth is capped. No 12-layer lasagna code.
 * **Mandatory Description (Min 5 words, max 60 tokens):** If an agent can’t search for it, it doesn’t ship. Unsearchable code is dead code.

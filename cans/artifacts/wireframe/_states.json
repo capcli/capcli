@@ -24,6 +24,7 @@
       "policy.notify",
       "policy.authoring",
       "policy.governance",
+      "policy.template",
       "db.engine",
       "db.claims",
       "api.quota",

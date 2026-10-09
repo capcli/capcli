@@ -1,0 +1,26 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.new.refusal.shape_violation",
+  "target": "chunked_batch",
+  "command": "capcli template new chunked_batch --type routine",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.template.shape_violation",
+    "domain": "validation",
+    "culprit": "Scaffold starter violates shape bounds: AST complexity 12 over ceiling 10; 9 params over max 8.",
+    "remedy": "split the starter under the ceilings (AST complexity 10 max, 8 params max), then re-run capcli template new chunked_batch --type routine",
+    "template": "chunked_batch",
+    "ast_complexity": "12 (ceiling: 10)",
+    "params": "9 (max: 8)",
+    "lines": [
+      "FATAL  validation.template.shape_violation",
+      "AST complexity 12 over ceiling 10.",
+      "Params 9 over max 8."
+    ]
+  }
+}

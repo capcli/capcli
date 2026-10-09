@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "routine.new.success.created",
+  "id": "template.apply.success.applied",
   "target": "sync_orders",
-  "command": "capcli routine new sync_orders",
+  "command": "capcli template apply tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,18 +14,16 @@
     "groups": [
       {
         "fields": {
-          "routine": "sync_orders",
-          "file": "routines/sync_orders.py",
-          "scaffold": "direct write (routines/sync_orders.py)",
-          "trust": "draft (unproven intake floor)",
+          "routine": "routines/sync_orders.py",
+          "trust": "draft",
           "version": "1",
-          "shape": "640 tokens / 2 params (ceilings: 2000 tokens / 8 params)"
+          "template_source": "tpl://routine/webhook_receiver",
+          "template_hash": "sha256:a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4"
         }
       },
       {
         "fields": {
-          "audit": "op_new_01 (routine.draft committed)",
-          "next": "capcli routine prove sync_orders --env sim"
+          "audit": "op_template_apply_01 (routine draft instantiated from tpl://routine/webhook_receiver)"
         }
       }
     ]

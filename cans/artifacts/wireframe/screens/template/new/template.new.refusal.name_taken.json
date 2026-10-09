@@ -1,0 +1,24 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.new.refusal.name_taken",
+  "target": "webhook_receiver",
+  "command": "capcli template new webhook_receiver --type routine",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.template.name_taken",
+    "domain": "validation",
+    "culprit": "Template name 'webhook_receiver' already registered at tpl://routine/webhook_receiver.",
+    "remedy": "pick a distinct name or inspect the existing blueprint via capcli template inspect tpl://routine/webhook_receiver",
+    "template": "tpl://routine/webhook_receiver",
+    "existing": "templates/webhook_receiver (routine, policy_version 5)",
+    "lines": [
+      "FATAL  validation.template.name_taken",
+      "Template name already registered."
+    ]
+  }
+}

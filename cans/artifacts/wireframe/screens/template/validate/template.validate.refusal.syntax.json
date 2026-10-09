@@ -1,0 +1,25 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.validate.refusal.syntax",
+  "target": "templates/broken_hook",
+  "command": "capcli template validate templates/broken_hook",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "compile.template.bad_syntax",
+    "domain": "compile",
+    "culprit": "Gate 1 syntax failure in templates/broken_hook/capcli-template.yaml:14:3: mapping values are not allowed here.",
+    "remedy": "fix the YAML or Python syntax at the cited line, then re-run capcli template validate templates/broken_hook",
+    "file": "templates/broken_hook/capcli-template.yaml",
+    "error": "mapping values are not allowed here",
+    "lines": [
+      "--> templates/broken_hook/capcli-template.yaml:14:3",
+      "inputs: endpoint_url: string",
+      "       ^ mapping values are not allowed here"
+    ]
+  }
+}

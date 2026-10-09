@@ -190,14 +190,15 @@
       - zero trust inheritance — all imported routines, views, and verbs register strictly at draft trust (v1) with zero promotional credit
       - no lifecycle hooks — post-install scripts and dynamic execution during unpack strictly banned; static AST expansion only
     - Intake pipeline
-      - provisioning command — env new <name> --from <path|git-url|urp> [-p key=val]
+      - provisioning — environments are provisioned empty via capcli env new, or populated via capcli template apply tpl://world/<name> <target> [-p k=v]
+      - packaging — capcli template pack <dir> [--out bundle.cap] freezes blueprint into immutable SHA-256-signed bundle; world template bundles enforce 5MB ceiling
       - destination isolation — template unpacks strictly into dev worktree; prod direct-init denied
-      - validation sequence — validates -p against manifest inputs; passes Gate 1 (Syntax) and Gate 2 (Semantics) before disk write
+      - validation sequence — capcli template validate checks min_kernel_version, policy_version, py_compile, AST complexity (≤10), and schema.yaml syntax (Gate 1) with bundle semantics (Gate 2) before disk write
+      - parameter validation — capcli template apply validates -p against manifest inputs at stamping
       - dry-run migration — Gate 5 test migration executes on temporary snapshot
       - seed constraints — table seed arrays capped at 50 rows per table
     - Audit and provenance
-      - event type — env.init_from_template
-      - audit payload — source_uri, bundle_sha256, schema_version, seed_tables_count
+      - event type — env.init_from_template: see effect.md#Kernel-event-payloads
   - Validation gates
     - Gate 1: Syntax
       - timing — parse-time on file load

@@ -1,0 +1,26 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.pack.denial.size_limit",
+  "target": "templates/atlas_world",
+  "command": "capcli template pack templates/atlas_world",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.template.size_limit",
+    "domain": "policy.template",
+    "layer": "authorizer",
+    "culprit": "World template bundle measures 7.2MB, over the 5MB ceiling.",
+    "measured": "bundle: 7.2MB (ceiling: 5MB)",
+    "remedy": "prune assets under 5MB or split the bundle, then re-run capcli template pack templates/atlas_world",
+    "template": "tpl://world/atlas_world",
+    "kind": "world",
+    "lines": [
+      "bundle: 7.2MB (ceiling: 5MB)",
+      "World template bundle exceeds the size ceiling."
+    ]
+  }
+}

@@ -29,7 +29,8 @@
       - routine.run — routine, version, hashes, triggered_by, outcome: see action.md#Routines
       - saga.execute — egress_verb, compensate_verb, db_mutation, outcome
       - saga.compensate — parent_op, compensate_verb, reason: db_abort, status
-      - template.import — urp, kind, bundle_hash, policy_version, target_env: see world.md#World-templates
+      - routine.draft — template_source, template_hash, trust, version: see action.md#Routine-templates
+      - env.init_from_template — source_uri, bundle_sha256, schema_version, seed_tables_count: see world.md#World-templates
       - api.sync — provider, added, removed, changed, unchanged: see action.md#Catalog-synchronization
       - api.token_refresh — provider, token_type, expires_in, refresh_outcome
       - api.call sim — sim_mode, http_called, fixture_used: see space.md#Sim-mode-taxonomy
@@ -38,6 +39,7 @@
       - serve.request — endpoint, channel (rest|mcp), trace_id, routine@version, api_key_id, status
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
+      - template instantiation — capcli template apply emits exactly one event: routine.draft (routine kind) or env.init_from_template (world kind)
       - failure buffer — audit sink failure streams uncommitted events to audit/audit.quarantine.jsonl without halting execution
       - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok
       - no synthetic types — onboarding.* and fake lifecycle events denied

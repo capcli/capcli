@@ -1,0 +1,36 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.pack.success.packed",
+  "target": "templates/webhook_receiver",
+  "command": "capcli template pack templates/webhook_receiver",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "template": "tpl://routine/webhook_receiver",
+          "bundle": "webhook_receiver.cap",
+          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          "size": "1.8MB",
+          "signature": "sha256 signed (kernel keyring)",
+          "files": "4"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli template apply tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+      "intent": "Instantiate draft routine sync_orders",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
+}

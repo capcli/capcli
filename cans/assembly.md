@@ -97,7 +97,7 @@
       - configuration — Cargo.toml linking clap derive, tokio, capcli-core, capcli-types
       - command surface (crates/capcli-cli/src/)
         - main.rs — entrypoint routing subcommands and exit codes: see interface.md#CLI-surface
-        - commands/ — clap subcommand handlers for ten nouns: see interface.md#CLI-surface
+        - commands/ — clap subcommand handlers for the CLI nouns: see interface.md#CLI-surface
         - terminal/ — procedural renderers for the 3 visual archetypes (Diagnostic, Tree, Receipt) over CliEnvelope<T>: see physics.md#Diagnostic-output-law
     - Persistent daemon crate
       - crate identity — crates/capcli-daemon (targets systemd service on headless Linux servers for 24/7 background automation)

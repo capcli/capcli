@@ -15,7 +15,7 @@ prompt campaign — see `cans/artifacts/prompt/prompt-structure.md`.
 
 ---
 
-Every single refusal, denial, yield, and crash condition across all 10 CLI nouns possesses an exact, top-loaded Line 1 remedy:
+Every single refusal, denial, yield, and crash condition across all 11 CLI nouns possesses an exact, top-loaded Line 1 remedy:
 
 ```
 [dev:tier_1]  ✗  exit {code} | ACTION: {command}
@@ -122,7 +122,7 @@ Every single refusal, denial, yield, and crash condition across all 10 CLI nouns
 | ID | Screen ID | Exit | Domain | Condition | Line 1 ACTION | Diagnostic Needle / Remedy Text |
 |---|---|---|---|---|---|---|
 | R39 | `env.new.denial.cap` | 2 | `policy.authorizer` | `cap_exceeded` | `ACTION: capcli env list` | `remedy: maximum 5 environments reached; remove stale worktrees` |
-| R40 | `env.new.refusal.bundle_too_large` | 3 | `policy.template` | `size_overflow`| `ACTION: capcli env list` | `remedy: template bundle exceeds 5MB ceiling; remove seed dumps` |
+| R40 | `template.pack.denial.size_limit` | 2 | `policy.template` | `size_limit`| `ACTION: capcli template pack <dir>` | `remedy: world template bundle exceeds 5MB ceiling; prune assets or split the bundle` |
 | R41 | `env.remove.denial.crypto_sig` | 2 | `policy.authorizer` | `confirmation` | `ACTION: open http://127.0.0.1:4040/admin` | `remedy: production teardown requires hardware challenge signature` |
 | R42 | `env.merge.refusal.plan_conflict` | 3 | `compile` | `conflict` | `ACTION: git pull origin main` | `remedy: target schema migration plan conflict; rebase worktree` |
 

@@ -233,7 +233,7 @@ tables:
     imm_cols: [urp, bundle_hash]
     columns:
       id: pk
-      urp: text! unique                # tpl://routines/webhook_receiver
+      urp: text! unique                # tpl://routine/webhook_receiver
       kind: text!                      # world | routine
       bundle_hash: text!               # sha256 checksum of bundle
       min_kernel_version: text!        # compatibility floor

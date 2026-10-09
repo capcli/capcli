@@ -1,0 +1,38 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.list.success.populated",
+  "command": "capcli template list",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "populated"
+  },
+  "archetype": "tree",
+  "component": {
+    "title": "populated",
+    "root": "tpl://",
+    "nodes": [
+      {
+        "label": "routine webhook_receiver policy_version 5",
+        "children": []
+      },
+      {
+        "label": "routine idempotent_action policy_version 5",
+        "children": []
+      },
+      {
+        "label": "routine chunked_batch policy_version 5",
+        "children": []
+      },
+      {
+        "label": "world atlas_world policy_version 5",
+        "children": []
+      }
+    ],
+    "footer": {
+      "templates": "4 (routine: 3, world: 1)",
+      "policy_version": "5"
+    }
+  }
+}

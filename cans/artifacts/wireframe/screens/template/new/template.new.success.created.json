@@ -1,0 +1,36 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.new.success.created",
+  "target": "webhook_receiver",
+  "command": "capcli template new webhook_receiver --type routine",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "template": "tpl://routine/webhook_receiver",
+          "type": "routine",
+          "path": "templates/webhook_receiver",
+          "files": "capcli-template.yaml, webhook_receiver.py (starter)",
+          "policy_version": "5",
+          "trust": "draft"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli template validate templates/webhook_receiver",
+      "intent": "Lint blueprint syntax and semantics",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
+}

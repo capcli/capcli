@@ -1,0 +1,27 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.apply.denial.target_exists",
+  "target": "lab",
+  "command": "capcli template apply tpl://world/atlas_world lab",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authoring.target_exists",
+    "domain": "policy.authoring",
+    "layer": "authoring",
+    "culprit": "Target environment 'lab' already exists at envs/lab.",
+    "measured": "envs/lab present (world atlas_world, draft)",
+    "remedy": "pick a distinct target name or remove the existing environment (capcli env remove lab), then re-run capcli template apply tpl://world/atlas_world <target>",
+    "target_env": "envs/lab",
+    "existing": "envs/lab (draft)",
+    "lines": [
+      "layer:           authoring",
+      "measured:        envs/lab present",
+      "remedy:          pick a distinct target name or remove envs/lab"
+    ]
+  }
+}
