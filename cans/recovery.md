@@ -1,5 +1,5 @@
 - Recovery
-<!-- ref-by: assembly.md, effect.md, interface.md, overview.md, space.md, world.md -->
+<!-- ref-by: assembly.md, cicd.md, effect.md, interface.md, overview.md, space.md, world.md -->
   - Snapshots
     - Local point-in-time
       - mechanics — db.snapshot.rs executes VACUUM INTO

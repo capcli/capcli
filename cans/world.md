@@ -1,5 +1,5 @@
 - World
-<!-- ref-by: action.md, assembly.md, budget.md, effect.md, interface.md, overview.md, physics.md, recovery.md, space.md -->
+<!-- ref-by: action.md, assembly.md, budget.md, cicd.md, effect.md, interface.md, overview.md, physics.md, recovery.md, space.md -->
   - SQLite as SSOT
     - Storage trinity
       - workspace.db
@@ -226,7 +226,7 @@
       - failure code — throws exit 3
     - Gate 3: Manifest lock
       - timing — boot-time check on engine initialization
-      - prod enforcement — hash mismatch against capcli.lock aborts boot immediately with exit 3
+      - prod enforcement — hash mismatch against capcli.lock aborts boot immediately with exit 3: see cicd.md#Integrity-and-containment-gates
       - dev/sim reconciliation — if Gate 1 and Gate 2 pass, engine auto-recompiles capcli.lock and logs [WARN] lockfile.auto_recompiled
     - Gate 4: Live drift
       - timing — runtime inspection via sys doctor

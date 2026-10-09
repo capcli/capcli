@@ -1,5 +1,5 @@
 - Interface
-<!-- ref-by: action.md, assembly.md, budget.md, overview.md, physics.md, recovery.md, time.md, trust.md -->
+<!-- ref-by: action.md, assembly.md, budget.md, cicd.md, overview.md, physics.md, recovery.md, time.md, trust.md -->
   - CLI surface
     - Design laws
       - exit code laws — strict integer contract (0, 2, 3, 4, 5, 6): see physics.md#Exit-code-law

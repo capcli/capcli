@@ -1,5 +1,5 @@
 - Assembly
-<!-- ref-by: action.md, budget.md, effect.md, interface.md, physics.md, recovery.md -->
+<!-- ref-by: action.md, budget.md, cicd.md, effect.md, interface.md, physics.md, recovery.md -->
   - Monorepo root layout
     - Workspace configuration files
       - Cargo.toml — defines workspace members, musl targets, and release profiles
@@ -292,6 +292,7 @@
       - test_petgraph.rs — checks relational cycle rejection: see world.md#Gate-2:-Semantics
       - test_hashchain.rs — verifies sha256 link calculations: see recovery.md#Hash-chains
       - test_vault.rs — tests zeroize and AES-256-GCM decryption: see agent.md#Secrets
+      - test_trinity.rs — pointer validation runner: see cicd.md#Checker-tool-architecture
     - Integration test tier (crates/capcli-core/tests/integration/)
       - test_bwrap.rs — verifies bwrap network isolation and scratch wipe: see action.md#Sandbox-execution
       - test_ipc_socket.rs — tests JSON-Lines over /run/capcli/kernel.sock: see #Python-runtime-harness-package

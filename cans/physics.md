@@ -1,5 +1,5 @@
 - Physics
-<!-- ref-by: action.md, assembly.md, budget.md, interface.md, overview.md, recovery.md, space.md, trust.md, world.md -->
+<!-- ref-by: action.md, assembly.md, budget.md, cicd.md, interface.md, overview.md, recovery.md, space.md, trust.md, world.md -->
   - Platform tiering and dual-engine enforcement
     - Platform tier taxonomy
       - tier 1 (hardened) — Linux bare-metal, VPS, Docker (with userns), WSL2
@@ -129,7 +129,7 @@
     - Break-glass paths
       - recovery shell — CAPCLI_RECOVERY=1 loads schema and audit sink only
       - diagnostic check — sys doctor --boot-check verifies boot without daemon
-      - validation check — rule validate runs in CI prior to commits
+      - validation check — rule validate runs in CI prior to commits: see cicd.md#Pull-request-gate-pipeline
   - Raw SQL rules
     - Baseline stance
       - exploration — raw SQL permitted for data exploration
