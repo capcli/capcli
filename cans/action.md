@@ -1,5 +1,5 @@
 - Action
-<!-- ref-by: assembly.md, budget.md, effect.md, interface.md, overview.md, physics.md, recovery.md, time.md, trust.md, world.md -->
+<!-- ref-by: assembly.md, budget.md, cicd.md, effect.md, interface.md, overview.md, physics.md, recovery.md, time.md, trust.md, world.md -->
   - Global pointer registry
     - Unifying concept
       - Universal Resource Pointers (URP) — typed URN pointers across entire workspace

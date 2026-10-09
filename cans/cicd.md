@@ -1,0 +1,297 @@
+- CICD
+<!-- ref-by: assembly.md, interface.md, physics.md, world.md -->
+  - Monorepo dependency topology
+    - Sequencing invariants
+      - Assets and embeds
+        - pwa compilation order — packages/pwa compiles to dist prior to crates/capcli-daemon
+        - missing assets refusal — daemon compilation fails immediately on missing web dist assets
+        - rust-embed linkage — daemon embeds static assets: see assembly.md#Persistent-daemon-crate
+      - Declarative artifact sync
+        - lockfile parity — schema.yaml and policy.yaml verified against capcli.lock checksum
+        - uncommitted drift refusal — uncommitted hash changes abort CI run with exit 3: see physics.md#Exit-code-law
+        - auto-recompile stance — non-prod auto-recompiles, CI enforces diff: see world.md#Gate-3:-Manifest-lock
+      - Subsystem compilation order
+        - types crate baseline — crates/capcli-types compiles prior to all crates: see assembly.md#Shared-contracts-crate
+        - FFI bridge prerequisites — crates/capcli-core compiles prior to packages/py maturin build
+        - Astro docs independence — docs site builds cleanly with bun before Trinity verification runs
+    - Workspace crates graph
+      - capcli-types foundations
+        - serde models — zero-bloat contracts for capabilities, schemas, errors: see assembly.md#Shared-contracts-crate
+        - exit codes — shared strict integer exit code definitions: see physics.md#Exit-code-law
+        - downstream imports — consumed by core, cli, and daemon crates: see assembly.md#Inter-crate-dependency-flow
+      - capcli-core domain engine
+        - engine dependencies — links rusqlite, petgraph, aes-gcm, tract-onnx: see assembly.md#Core-domain-engine-crate
+        - authorizer logic — compiles SQLite C authorizer callback: see physics.md#Layer-1:-sqlite3_set_authorizer
+        - consumer crates — imported exclusively by capcli-cli, capcli-daemon, and native py bridge
+      - Binary target heads
+        - capcli-cli head — routes clap subcommands, renders visual archetypes: see interface.md#CLI-surface
+        - capcli-daemon head — axum HTTP/WS server hosting cockpit PWA: see assembly.md#Persistent-daemon-crate
+        - polyglot FFI head — native dynamic library exposes in-process SQLite FFI: see action.md#Sandbox-execution
+    - Path filter isolation
+      - PR compute containment
+        - filter rule — dorny/paths-filter gates execution based on modified file paths
+        - docs path exemption — raw markdown doc updates bypass heavy Rust compiler matrix
+        - runner economics — zero-cost execution bounds on GitHub Actions: see artifacts/cicd.yaml#cost_controls
+      - Package boundary detection
+        - pwa trigger — modifications in packages/pwa/** trigger build-pwa and test-rust
+        - python trigger — packages/py/** diffs trigger ruff linting, maturin build, and pytest
+        - typescript trigger — packages/ts/** diffs trigger bun test suite execution
+      - Core boundary detection
+        - rust trigger — crates/** or Cargo.* changes trigger full clippy and test suite
+        - artifacts trigger — artifacts/**, cans/**, capcli.lock changes trigger Trinity and AST checks
+        - docs trigger — docs/** changes trigger Astro static site build verification
+  - The trinity integrity gate
+    - Boundary coordination
+      - Wireframe ground truth
+        - golden screen fixtures — cans/artifacts/wireframe screens define CLI layouts: see assembly.md#Declarative-artifacts-directory
+        - strict exit mapping — golden screen JSON records exit codes 0 through 6: see physics.md#Exit-code-law
+        - trailer presence — every screen with trailer must map to trigger rule: see artifacts/cicd.yaml#trinity
+      - Prompt campaign bank
+        - progressive slices — prompt:// URP serves triggers and leaf sections: see action.md#Search-surface
+        - trigger schema — cans/artifacts/prompt/_triggers.json coordinates screen associations
+        - four-segment naming — screen_id must follow noun.verb.descriptor.state syntax law
+      - Documentation root
+        - human deep truth — doc:// URP maps to markdown specifications under docs/: see action.md#Search-surface
+        - Astro framework engine — docs/ site builds via Astro with Bun runtime engine
+        - slug synchronization — anchor slugs must resolve to exact markdown headers
+    - Token cage ceilings
+      - L1 trailer boundary
+        - token limit — trailer string capped at 30 tokens maximum: see artifacts/cicd.yaml#trinity
+        - format law — structured trailer: prompt://... - <reason> syntax required
+        - breach penalty — excess tokens trigger immediate verification abort with exit 1
+      - L2 envelope boundary
+        - token limit — prompt campaign envelopes capped at 150 tokens maximum: see interface.md#Document-path:-doc-noun
+        - inspection contract — inspect prompt://{bank}/{slug}@{version} returns envelope: see interface.md#Document-path:-doc-noun
+        - content scope — metadata and section index only; deep instructions denied
+      - L3 leaf boundary
+        - token limit — prompt leaf sections capped at 500 tokens maximum: see action.md#Search-surface
+        - doc read contract — doc read prompt://...#node fetches single leaf slice: see interface.md#Document-path:-doc-noun
+        - overflow denial — leaves exceeding 500 tokens fail Trinity validation check
+    - Checker tool architecture
+      - Tool execution substrate
+        - script identity — tools/check-trinity.py executes without third-party dependencies
+        - dual execution — runs identically in local Justfile and CI workflow environments
+        - exit code contract — returns exit 0 on intact links; returns exit 1 on breaches
+      - Link resolution mechanics
+        - fixture resolution — every screen_id resolves to existing wireframe JSON fixture
+        - doc resolution — every doc:// URI resolves to real markdown file in docs/
+        - anchor slug resolution — anchor fragments verified against generated heading slugs
+      - Measurement algorithms
+        - token estimation — text length divided by 3.5 characters per token ratio: see cans/_rules.yaml#token_budget
+        - trailer extraction — scans trailer fields in screens JSON objects for validation
+        - regex scanning — finds all doc:// URI instances across prompt markdown files
+  - Local developer interface
+    - Command orchestrator
+      - Justfile configuration
+        - tool runner — Justfile coordinates local developer verification tasks
+        - parity principle — local tasks mirror GitHub Actions PR gate jobs exactly
+        - execution floor — inner loop checks target runtime under 15 seconds: see artifacts/cicd.yaml#sla
+      - Fast inner-loop targets
+        - check target — runs cargo fmt, clippy, check-trinity, pwa build, cargo test
+        - check-trinity target — executes tools/check-trinity.py for pointer validation
+        - check-docs target — runs bun build in docs/ to verify Astro documentation
+      - Engine validation targets
+        - validate target — executes capcli rule validate and verifies git diff on lockfile
+        - test-sdks target — runs bun test in packages/ts and pytest in packages/py
+        - test-sandbox target — runs bwrap sandbox integration tests on Linux hosts
+    - Pre-push enforcement
+      - Pre-push recipe composite
+        - target chaining — pre-push calls check, validate, check-docs, and test-sdks
+        - fail-closed halt — failure of any subtask aborts git push pipeline immediately
+        - velocity constraint — full pre-push run completes under 45 seconds: see artifacts/cicd.yaml#sla
+      - Hygiene and style checks
+        - formatting law — cargo fmt --all --check forbids formatting discrepancies
+        - lint severity — cargo clippy enforces -D warnings across all workspace targets
+        - python linting — ruff checks Python SDK code for formatting and syntax errors
+      - State clean check
+        - diff verification — git diff --exit-code capcli.lock ensures lockfile is checked in
+        - dirty tree refusal — uncommitted modifications to declarative artifacts fail push
+        - test isolation — local database files ignored: see assembly.md#Workspace-configuration-files
+    - Platform tier parity
+      - Tier 1 workstation behavior
+        - Linux local tests — executes bwrap and seccomp integration tests: see physics.md#Platform-tier-taxonomy
+        - namespace checks — verifies unprivileged user namespaces via sysctl probes
+        - musl verification — optional local compilation targeting musl targets
+      - Tier 2 workstation behavior
+        - Darwin/Windows tests — executes unit and AST tests with degraded sandbox warnings
+        - sandbox fallback — skips bwrap tests; executes broker tests: see physics.md#Boot-refusals
+        - CI delegation — Tier 2 developers rely on Linux CI runners for Tier 1 validation
+      - Diagnostic alignment
+        - doctor parity — local sys doctor matches CI boot check assertions: see interface.md#System-path:-sys-noun
+        - envelope fidelity — CLI stdout matches CliEnvelope models: see physics.md#Diagnostic-output-law
+        - miette rendering — local terminal renders diagnostic carets identically: see physics.md#Diagnostic-output-law
+  - Pull request gate pipeline
+    - Trigger rules & concurrency
+      - Path ignore policy
+        - workflow source — configured in .github/workflows/pr-gate.yml
+        - root readme exemption — changes strictly to root README.md skip CI execution
+        - docs inclusion — docs/** changes trigger Astro check and Trinity validation
+      - Concurrency controls
+        - group definition — scoped to github.workflow and github.ref in pr-gate.yml
+        - cancel-in-progress — true cancels superseded in-flight runs on new commits
+        - compute economy — avoids wasted GitHub Actions free-tier runner minutes
+      - Execution budget
+        - PR gate SLA — completes under 4 minutes total: see artifacts/cicd.yaml#sla
+        - failure posture — fail-closed halts PR pipeline on first failing subtask
+        - branch scope — executes on pull requests and pushes to main branch
+    - Static analysis and asset builds
+      - Cockpit PWA build job
+        - frozen lockfile — bun install --frozen-lockfile installs UI dependencies
+        - compilation target — bun run build compiles assets into packages/pwa/dist
+        - artifact sharing — uploads pwa-dist artifact for consumption by Rust daemon
+      - Astro documentation build job
+        - frozen lockfile — bun install --frozen-lockfile installs Astro site packages
+        - compilation target — bun run build validates all markdown, MDX, and route links
+        - failure isolation — broken frontmatter or malformed MDX halts PR gate
+      - Trinity integrity job
+        - python setup — uses Python 3.11 environment on ubuntu-latest runner
+        - link verification — runs tools/check-trinity.py against wireframe, prompt, and docs
+        - ceiling assertion — enforces L1, L2, L3 token cages before compiler dispatch
+    - Core engine testing
+      - Rust toolchain initialization
+        - version pin — pins Rust toolchain 1.85.0 with rustfmt and clippy
+        - rust-cache action — caches Cargo build artifacts across workflow invocations
+        - asset retrieval — downloads pwa-dist artifact prior to compilation
+      - Static quality checks
+        - cargo fmt — enforces workspace code formatting rules
+        - clippy linter — treats all linter warnings as fatal compiler errors (-D warnings)
+        - AST validation — capcli rule validate enforces schema integrity: see world.md#Gate-1:-Syntax
+      - Schema lock assertion
+        - git diff verification — git diff --exit-code capcli.lock artifacts/
+        - mismatch consequence — uncommitted schema changes fail build with exit 3
+        - unit test run — cargo test --workspace --lib --bins executes core logic tests
+    - SDK verification jobs
+      - TypeScript SDK test job
+        - bun runner — uses setup-bun action on ubuntu-latest runner
+        - dependency locking — bun install --frozen-lockfile in packages/ts
+        - unit testing — bun test executes TypeScript SDK test suite
+      - Python SDK test job
+        - python runner — uses setup-python action with Python 3.11
+        - package tooling — installs ruff, pytest, and maturin via pip
+        - native build — maturin develop compiles native capcli_native.so FFI bridge
+        - test execution — ruff checks code syntax; pytest executes test suite
+      - Job coordination and gates
+        - dependency mapping — test-py and test-rust run only when dependencies build cleanly
+        - fail-fast behavior — syntax errors in SDK code block root pull request approval
+        - gate progression — PR gate success unlocks manual merge and deep test execution
+  - Platform matrix and security pipeline
+    - Trigger context and cadence
+      - Pipeline execution policy
+        - workflow source — defined in .github/workflows/deep-test.yml
+        - push trigger — runs automatically on commits merged to main branch
+        - execution SLA — deep-test runs complete under 20 minutes: see artifacts/cicd.yaml#cost_controls
+      - Supply chain security audit
+        - cargo-deny integration — EmbarkStudios/cargo-deny-action audits Rust dependencies
+        - security advisories — scans RustSec advisory database for published vulnerabilities
+        - license governance — denies non-compliant and restrictive commercial software licenses
+      - Multi-OS test strategy
+        - failure mode — fail-fast disabled across platform matrix to collect complete results
+        - os coverage — executes on Ubuntu Linux, Apple macOS, and Microsoft Windows hosts
+        - cache coordination — Swatinem/rust-cache keys cache stores by target operating system
+    - Linux Tier 1 sandboxing environment
+      - Host kernel configuration
+        - AppArmor tuning — configures kernel.apparmor_restrict_unprivileged_userns sysctl flag
+        - user namespace support — unprivileged_userns_clone enabled for unprivileged sandboxing
+        - security dependencies — installs bubblewrap and libseccomp-dev packages on Ubuntu runner
+      - Isolation verification
+        - bwrap integration test — executes test_bwrap asserting tmpfs wipe: see action.md#Provider-backends
+        - raw socket trapping — seccomp filter traps raw socket connect attempts: see physics.md#Platform-tier-taxonomy
+        - syscall enforcement — verifies engine-specific seccomp profiles: see physics.md#Platform-tier-taxonomy
+      - Cockpit PWA dependency preparation
+        - bun toolchain — uses setup-bun action to install runtime on runner
+        - asset building — bun run build compiles Cockpit static SPA before Rust integration test
+        - asset linkage — daemon embeds built PWA assets via rust-embed: see assembly.md#Persistent-daemon-crate
+    - Tier 2 virtualization environments
+      - Darwin macOS validation
+        - platform tier — operates under Tier 2 virtualization rules: see physics.md#Platform-tier-taxonomy
+        - degraded isolation — logs host.degraded_isolation warning: see interface.md#Design-laws
+        - integration scope — executes unit, parser, and AST validation tests without bwrap
+      - Windows MSVC validation
+        - platform tier — operates under Tier 2 native Windows rules: see physics.md#Platform-tier-taxonomy
+        - named pipe IPC — tests IPC socket listener using Windows Named Pipes: see assembly.md#Persistent-daemon-crate
+        - path separators — asserts cross-platform path handling across URP resolvers
+      - E2E test suite execution
+        - integration target — cargo test --workspace --tests runs integration test tier
+        - wireframe fixtures — validates CLI render outputs against golden fixtures: see assembly.md#End-to-end-test-tier
+        - recovery drill — tests snapshot restore flow across platform runners: see recovery.md#Restore-path
+  - Deterministic semantic release pipeline
+    - Release triggers and permissions
+      - Trigger patterns
+        - workflow source — defined in .github/workflows/release.yml
+        - semver tag pattern — triggers on git tags matching v[0-9]+.[0-9]+.[0-9]+* syntax
+        - immutable release law — tags are write-once; modifying tags requires new release version
+      - Workflow token permissions
+        - contents write — grants permission to commit release tags and upload GitHub Release assets
+        - packages write — grants permission to publish binary packages and container images
+        - id-token write — enables OIDC token minting for passwordless PyPI trusted publishing
+      - PWA asset prerequisite
+        - release PWA build — bun run build compiles production cockpit assets with Vite 6
+        - artifact handoff — upload-artifact shares pwa-dist with binary compilation jobs
+        - embed integrity — ensures release daemon binary contains matching frontend bundle
+    - Binary cross-compilation matrix
+      - Linux musl compilation
+        - zigbuild toolchain — uses cargo-zigbuild with zig compiler for glibc-free musl compilation
+        - x86_64 target — compiles static x86_64-unknown-linux-musl binary: see assembly.md#Root-management-commands
+        - aarch64 target — cross-compiles static aarch64-unknown-linux-musl binary for ARM servers
+      - Darwin macOS compilation
+        - x86_64 darwin target — compiles native Intel macOS release binary using standard cargo
+        - aarch64 darwin target — compiles native Apple Silicon release binary on macos runner
+        - static linkage — links system libraries without host brew or node dependencies
+      - Windows MSVC compilation
+        - x86_64 windows target — compiles native Windows executable (capcli.exe and daemon.exe)
+        - binary naming law — appends .exe extension to binary artifacts on Windows host
+        - artifact staging — stages compiled executables in dist/ for packaging step
+    - Package publishing and attestation
+      - Polyglot SDK publishing
+        - npm publishing — publishes TypeScript SDK (@capcli/sdk) to npm registry with token
+        - maturin wheel build — compiles native Python FFI wheel linking capcli_native.so
+        - PyPI publishing — publishes wheel to PyPI via OIDC trusted publishing action
+      - Checksum attestation
+        - artifact consolidation — download-artifact merges binary builds into release-binaries
+        - sha256 generation — generates SHA256SUMS.txt containing hashes of all release binaries
+        - root anchoring — checksums anchor binary integrity: see recovery.md#Hash-chains
+      - GitHub release dispatch
+        - release creation — softprops/action-gh-release attaches binary files and checksums
+        - release notes — auto-generates semantic release notes from committed git pull requests
+        - immutability stance — releases marked public and permanent without draft status
+  - Verification checklist and gates
+    - Pre-build and compile gates
+      - Gate 0 Workspace Diff
+        - target tested — detects changed files across pull request diff boundaries
+        - verification mechanism — dorny/paths-filter evaluates git commit tree against file globs
+        - failure consequence — skips redundant jobs; prevents runner minute waste
+      - Gate 1 Schema & AST Syntax
+        - target tested — validates YAML schema layout, constraints, and column expansions
+        - verification mechanism — capcli rule validate parses syntax: see world.md#Gate-1:-Syntax
+        - failure consequence — non-compliant syntax aborts PR build with exit code 3
+      - Gate 2 Relational Semantics
+        - target tested — checks foreign keys, index targets, view exposes, and cycles
+        - verification mechanism — petgraph acyclic validation in core: see world.md#Gate-2:-Semantics
+        - failure consequence — circular dependency or unmapped FK aborts compile with exit code 3
+    - Integrity and containment gates
+      - Gate 3 Lockfile Integrity
+        - target tested — asserts capcli.lock matches compiled hash of schema, system, and policy
+        - verification mechanism — git diff --exit-code capcli.lock detects uncommitted changes
+        - failure consequence — uncommitted drift fails PR build: see world.md#Gate-3:-Manifest-lock
+        - dev auto-recompilation — dev and sim auto-update lockfile: see world.md#Gate-3:-Manifest-lock
+      - Gate 4 Trinity Integrity
+        - target tested — validates pointer links and token cages across wireframe, prompt, and docs
+        - verification mechanism — tools/check-trinity.py validates links: see #The-trinity-integrity-gate
+        - failure consequence — dangling pointer, missing screen, or token overflow exits with code 1
+      - Gate 5 UI Asset Compilation
+        - target tested — verifies Cockpit PWA compiles into dist without bundling errors
+        - verification mechanism — bun run build in packages/pwa verifies TypeScript and React build
+        - failure consequence — missing PWA assets causes capcli-daemon compilation failure
+    - Runtime and deployment gates
+      - Gate 6 Platform Sandboxing
+        - target tested — verifies Linux unprivileged user namespaces and bwrap jail security
+        - verification mechanism — integration test test_bwrap exercises jail: see action.md#Sandbox-execution
+        - failure consequence — broken namespace isolation or socket leaks fails deep-test pipeline
+      - Release Gate Binary Distribution
+        - target tested — verifies cross-compilation produces functional standalone binaries
+        - verification mechanism — cargo-zigbuild produces musl binaries without glibc links
+        - failure consequence — missing target symbol blocks release asset publishing to GitHub
+      - Release Gate Polyglot Distribution
+        - target tested — validates npm packages and native Python wheels with embedded FFI
+        - verification mechanism — maturin and npm publish deploy artifacts through OIDC tokens
+        - failure consequence — compilation failure or missing symbols halts PyPI/npm deployment

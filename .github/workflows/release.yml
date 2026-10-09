@@ -1,0 +1,147 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  build-pwa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: |
+          cd packages/pwa
+          bun install --frozen-lockfile
+          bun run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pwa-dist
+          path: packages/pwa/dist
+          retention-days: 1
+
+  build-binaries:
+    needs: build-pwa
+    name: build-binary (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            use_zig: true
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            use_zig: true
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            use_zig: false
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            use_zig: false
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            use_zig: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: pwa-dist
+          path: packages/pwa/dist
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+          targets: ${{ matrix.target }}
+
+      - name: Install cargo-zigbuild
+        if: matrix.use_zig
+        run: |
+          pip install cargo-zigbuild
+          sudo snap install zig --classic --beta
+
+      - name: Compile CLI and Daemon
+        shell: bash
+        run: |
+          if [ "${{ matrix.use_zig }}" = "true" ]; then
+            cargo zigbuild --release --target ${{ matrix.target }} -p capcli-cli -p capcli-daemon
+          else
+            cargo build --release --target ${{ matrix.target }} -p capcli-cli -p capcli-daemon
+          fi
+
+      - name: Package Release Assets
+        shell: bash
+        run: |
+          EXT=""
+          [ "${{ runner.os }}" = "Windows" ] && EXT=".exe"
+          mkdir -p dist
+          
+          cp target/${{ matrix.target }}/release/capcli${EXT} dist/capcli-${{ matrix.target }}${EXT}
+          cp target/${{ matrix.target }}/release/capcli-daemon${EXT} dist/capcli-daemon-${{ matrix.target }}${EXT}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ matrix.target }}
+          path: dist/*
+          retention-days: 1
+
+  publish-sdks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+      - run: |
+          cd packages/ts
+          npm install
+          npm run build || true
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build Python FFI Wheel
+        run: |
+          cd packages/py
+          pip install maturin
+          maturin build --release --out dist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/py/dist/
+
+  publish-github-release:
+    needs: [build-binaries, publish-sdks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bin-*
+          path: release-binaries
+          merge-multiple: true
+
+      - name: Generate Checksums
+        run: |
+          cd release-binaries
+          sha256sum capcli-* > SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-binaries/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false

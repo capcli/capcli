@@ -3,7 +3,7 @@
 You are working in a CANS project. Specs live in `cans/`.
 This spec describes **capcli**: a governed agent kernel where agents author, a kernel compiles, humans approve.
 
-## The 13 canonical files
+## The 14 canonical files
 
 - overview.md — what capcli is: philosophy, mental model, kernel stance
 - world.md — what exists: SQLite SSOT, dual schema, DDL evolution, validation
@@ -18,6 +18,7 @@ This spec describes **capcli**: a governed agent kernel where agents author, a k
 - recovery.md — how to undo: snapshots, backup, restore, git integration
 - interface.md — how humans and agents touch the world: CLI, @capcli/client, PWA, onboarding
 - assembly.md — how the kernel is built: monorepo, packages, naming, tests
+- cicd.md — how the workspace is verified and released: pipelines, matrix, trinity gates
 
 Artifacts live at `artifacts/` (governance.yaml, policy.yaml, repomix.config.json) — read them, never edit or duplicate them.
 
@@ -39,6 +40,7 @@ Artifacts live at `artifacts/` (governance.yaml, policy.yaml, repomix.config.jso
 | snapshots, backup, restore, git integration | recovery.md |
 | CLI surface, client, PWA layers, onboarding journeys | interface.md |
 | monorepo, packages, naming law, tests, build | assembly.md |
+| CI/CD pipelines, trinity integrity, release matrix, verification gates | cicd.md |
 
 If your file needs a concept owned elsewhere: write `- <context>: see <file>.md#<Node>` — ONE hop, never chain. Never duplicate content across files. Never duplicate content that lives in `artifacts/*.yaml` — cite the artifact path instead.
 

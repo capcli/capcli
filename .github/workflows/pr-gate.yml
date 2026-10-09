@@ -1,0 +1,152 @@
+name: pr-gate
+
+on:
+  pull_request:
+    paths-ignore:
+      - '*.md'
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+      pwa: ${{ steps.filter.outputs.pwa }}
+      docs: ${{ steps.filter.outputs.docs }}
+      ts: ${{ steps.filter.outputs.ts }}
+      py: ${{ steps.filter.outputs.py }}
+      artifacts: ${{ steps.filter.outputs.artifacts }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - 'crates/**'
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+              - 'rust-toolchain.toml'
+            pwa:
+              - 'packages/pwa/**'
+            docs:
+              - 'docs/**'
+            ts:
+              - 'packages/ts/**'
+            py:
+              - 'packages/py/**'
+            artifacts:
+              - 'artifacts/**'
+              - 'cans/**'
+              - 'capcli.lock'
+
+  test-trinity:
+    needs: changes
+    if: ${{ needs.changes.outputs.artifacts == 'true' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.docs == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify Trinity Links, Anchors, and Token Envelopes
+        run: python3 tools/check-trinity.py
+
+  build-pwa:
+    needs: changes
+    if: ${{ needs.changes.outputs.pwa == 'true' || needs.changes.outputs.rust == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Build Cockpit PWA Assets
+        run: |
+          cd packages/pwa
+          bun install --frozen-lockfile
+          bun run build
+      - name: Cache Cockpit Dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-dist
+          path: packages/pwa/dist
+          retention-days: 1
+
+  build-docs:
+    needs: changes
+    if: ${{ needs.changes.outputs.docs == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Build Astro Docs Site
+        run: |
+          cd docs
+          bun install --frozen-lockfile
+          bun run build
+
+  test-rust:
+    needs: [changes, build-pwa]
+    if: ${{ needs.changes.outputs.rust == 'true' || needs.changes.outputs.pwa == 'true' || needs.changes.outputs.artifacts == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: pwa-dist
+          path: packages/pwa/dist
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Code Formatting
+        run: cargo fmt --all --check
+
+      - name: Clippy Linter (-D warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Gate 3 Manifest Lock & AST Validation
+        run: |
+          cargo run -p capcli-cli -- rule validate
+          git diff --exit-code capcli.lock artifacts/
+
+      - name: Unit Tests
+        run: cargo test --workspace --lib --bins
+
+  test-ts:
+    needs: changes
+    if: ${{ needs.changes.outputs.ts == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: |
+          cd packages/ts
+          bun install --frozen-lockfile
+          bun test
+
+  test-py:
+    needs: changes
+    if: ${{ needs.changes.outputs.py == 'true' || needs.changes.outputs.rust == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          cd packages/py
+          pip install ruff pytest maturin
+          ruff check .
+          maturin develop
+          pytest tests/
