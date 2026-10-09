@@ -1,0 +1,53 @@
+name: deep-test
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+
+  platform-matrix:
+    name: platform-test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            tier: tier_1
+          - os: macos-latest
+            tier: tier_2
+          - os: windows-latest
+            tier: tier_2
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+      - name: Build PWA dependency
+        run: |
+          cd packages/pwa
+          bun install --frozen-lockfile
+          bun run build
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}
+
+      - name: Setup Linux Kernel userns & bwrap
+        if: runner.os == 'Linux'
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          sudo sysctl -w kernel.unprivileged_userns_clone=1 || true
+          sudo apt-get update && sudo apt-get install -y bubblewrap libseccomp-dev
+
+      - name: Integration & E2E Tests
+        run: cargo test --workspace --tests
