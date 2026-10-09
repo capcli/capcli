@@ -104,10 +104,15 @@ declared in `manifest.json`. Two campaigns share a screen only when
 their predicates are disjoint. A trigger with `"serve": "blocked"`
 emits no L1 trailer.
 
-- `routine.prove.success.passed` partition is exhaustive:
+- `routine.prove.success.passed` partition covers both authoring states:
   `overview_exists: false` → `prompt://authoring/overview_absent@1`;
   `overview_exists: true` with `trust: "draft"` →
-  `prompt://promotion/routine_passed@1`.
+  `prompt://promotion/routine_passed@1`;
+  `overview_exists: true` at reviewed or pinned trust serves no trailer.
+- Branch selection is predicate evaluation over kernel state at serve
+  time. A screen fixture renders only the single trailer its recorded
+  state resolves to; both partition branches live in `_triggers.json`,
+  never in fixture count.
 - Predicates keyed on actor identity are prohibited: the kernel is
   actor-neutral (`cans/agent.md` Harness-neutrality); screen identity
   carries the distinction.

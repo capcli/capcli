@@ -23,7 +23,6 @@
     ],
     "lines": [
       "Attempted unconfined escape; jail torn down mid-execution.",
-      "state_modified: false",
       "layer:          sandbox",
       "measured:       2 containment violations (tolerated: 0)",
       "remedy:         strip escape attempts from the command; raw host access is never granted inside the jail"

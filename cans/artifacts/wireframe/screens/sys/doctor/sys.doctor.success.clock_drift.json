@@ -25,7 +25,6 @@
       {
         "fields": {
           "host": "ws-07 (chronyd reachable, not yet synced)",
-          "state_modified": "false",
           "remedy": "synchronize host system clock via 'chronyd' or 'ntpdate' when convenient; execution is not blocked"
         }
       }

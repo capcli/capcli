@@ -38,8 +38,16 @@
       "drift": "spec divergence detected",
       "added_verbs": "3",
       "changed_verbs": "1",
-      "removed_verbs": "1",
-      "state_modified": "false"
+      "removed_verbs": "1"
     }
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api catalog",
+      "intent": "Zero APIs configured",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

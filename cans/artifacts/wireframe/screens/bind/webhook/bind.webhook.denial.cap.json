@@ -16,6 +16,6 @@
     "culprit": "Max 50 active hooks reached. New webhook binding refused.",
     "measured": "50 active hooks (cap: 50)",
     "remedy": "remove a dormant hook first (capcli bind list)",
-    "active hooks": "50 of 50"
+    "active_hooks": "50 of 50"
   }
 }

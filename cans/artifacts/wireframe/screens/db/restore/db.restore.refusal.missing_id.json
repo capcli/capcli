@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "db.restore.refusal.missing_id",
-  "target": "db://orders",
+  "target": "db://",
   "command": "capcli db restore",
   "context": {
     "env": "dev",

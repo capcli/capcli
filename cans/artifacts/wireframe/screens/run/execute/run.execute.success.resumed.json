@@ -27,11 +27,6 @@
           "retry": "threads.create_media_post replayed under idempotent key",
           "result": "posted (media_id 1793882)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
   }

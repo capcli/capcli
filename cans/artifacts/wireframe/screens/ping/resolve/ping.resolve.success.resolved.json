@@ -20,10 +20,18 @@
           "question": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
           "resolved_by": "user:alice",
           "resumed_task": "dispatch_order@4 (ORD-1042)",
-          "resumed_frame": "frame_026",
-          "state_modified": "true"
+          "resumed_frame": "frame_026"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+      "intent": "Deterministic execution and commit",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "db.schema.success.empty",
-  "target": "db://orders",
+  "target": "db://",
   "command": "capcli db schema",
   "context": {
     "env": "dev",
@@ -24,7 +24,6 @@
       },
       {
         "fields": {
-          "state_modified": "false",
           "note": "no domain schema compiled; declare tables in schema.yaml"
         }
       }
@@ -34,5 +33,14 @@
     "prompt": "prompt://genesis/blank_world@1",
     "reason": "blank world: 0 domain tables",
     "serve": "L1"
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli db schema --table orders",
+      "intent": "Live DDL schema introspected",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

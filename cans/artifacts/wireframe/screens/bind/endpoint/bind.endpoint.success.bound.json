@@ -24,11 +24,6 @@
           "writes": "denied by default",
           "trust": "pinned (serve floor)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
   }

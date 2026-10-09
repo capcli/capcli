@@ -13,7 +13,7 @@
     "domain": "missing_param",
     "culprit": "replay anchor omitted: --from <timestamp> or --from <commit> is required",
     "remedy": "re-run as capcli sys audit replay --from 2026-10-03T22:41:07Z",
-    "replay anchor omitted": "--from <timestamp> or --from <commit> is required",
+    "replay_anchor": "--from <timestamp> or --from <commit> is required",
     "lines": [
       "FATAL  missing_param.missing_arg"
     ]

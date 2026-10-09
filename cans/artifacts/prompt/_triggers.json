@@ -69,6 +69,30 @@
       "reason": "call-tree preflight failed budget cascade bounds"
     },
     {
+      "id": "t_budget_network_jail",
+      "screen_id": "run.execute.denial.network_jail",
+      "predicate": {},
+      "prompt": "prompt://budget/execution_starved@1",
+      "serve": "L1",
+      "reason": "network jail denial: sandbox egress trapped"
+    },
+    {
+      "id": "t_budget_claim_held",
+      "screen_id": "run.execute.denial.claim_held",
+      "predicate": {},
+      "prompt": "prompt://budget/execution_starved@1",
+      "serve": "L1",
+      "reason": "claim held denial: entity lease contested"
+    },
+    {
+      "id": "t_budget_missing_secret",
+      "screen_id": "run.execute.refusal.missing_secret",
+      "predicate": {},
+      "prompt": "prompt://budget/execution_starved@1",
+      "serve": "L1",
+      "reason": "missing secret refusal: vault credential absent"
+    },
+    {
       "id": "t_evolution_drift",
       "screen_id": "rule.diff.success.populated",
       "predicate": {
@@ -91,6 +115,16 @@
       "prompt": "prompt://promotion/routine_passed@1",
       "serve": "L1",
       "reason": "proof passed: routine eligible for promotion"
+    },
+    {
+      "id": "t_promotion_overview",
+      "screen_id": "routine.prove.success.overview",
+      "predicate": {
+        "trust": "draft"
+      },
+      "prompt": "prompt://promotion/routine_passed@1",
+      "serve": "L1",
+      "reason": "overview proof passed: promotion handoff"
     },
     {
       "id": "t_api_empty",

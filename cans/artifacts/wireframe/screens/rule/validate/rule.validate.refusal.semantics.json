@@ -15,7 +15,7 @@
     "culprit": "Dependency cycle detected: orders -> order_items -> orders.",
     "remedy": "break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate",
     "first_item": "int ref=order_items.id",
-    "Dependency cycle detected": "orders -> order_items -> orders.",
+    "dependency_cycle": "orders -> order_items -> orders.",
     "lines": [
       "--> schema.yaml:47:41",
       "orders:",

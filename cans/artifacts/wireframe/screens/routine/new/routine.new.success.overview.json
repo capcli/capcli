@@ -25,11 +25,19 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "audit": "op_new_02 (routine.draft committed with template_hash)",
           "next": "capcli routine prove overview --env sim"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine prove overview --env sim",
+      "intent": "Overview routine sim rehearsal passes (harness H7)",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

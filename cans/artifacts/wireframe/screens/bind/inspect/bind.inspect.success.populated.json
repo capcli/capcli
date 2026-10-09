@@ -34,12 +34,16 @@
         "lines": [
           "defenses:"
         ]
-      },
-      {
-        "fields": {
-          "state_modified": "false"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli bind pause bnd_3k2f",
+      "intent": "Trigger paused",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

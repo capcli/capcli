@@ -29,5 +29,14 @@
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli sys agent register",
+      "intent": "Empty agent registry -> first agent registered -> roster populated -> registry hits capacity -> revoke gauntlet (unknown id refuses, then the live agent revokes and frees a slot)",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

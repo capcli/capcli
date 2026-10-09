@@ -15,10 +15,7 @@
     "culprit": "inquiry issued (ask_88a); frame_026 suspended pending human choice, checkpoint and OCC state_fences persisted to _pending_asks",
     "remedy": "exit 6 is a suspension, not success; resolve via Cockpit or 'capcli ping resolve ask_88a --choice approve', frame auto-resumes after hash re-verification",
     "ask_id": "ask_88a",
-    "pending_asks": [
-      1,
-      "1 enqueued (ask_88a)"
-    ],
+    "pending_asks": "1 enqueued (ask_88a)",
     "suspended_frame": "frame_026",
     "principal": "user:alice",
     "asked_by": "agt_7f3k (dispatch_order@4, frame_026)",

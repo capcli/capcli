@@ -16,7 +16,7 @@
     "command": "capcli api rollback threads.create_media_post 12",
     "verb": "cap://threads.create_media_post",
     "version": "12",
-    "Kept versions for this verb": "1–8 (max_versions_kept: 10).",
+    "kept_versions": "1–8 (max_versions_kept: 10).",
     "lines": [
       "FATAL  validation.not_found",
       "Target version not found."

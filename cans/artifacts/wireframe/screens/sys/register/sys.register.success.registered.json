@@ -25,10 +25,18 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "note": "ids and tokens are kernel-issued; self-declared identities are denied"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli sys agent list",
+      "intent": "Registered agents listed",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

@@ -19,7 +19,6 @@
     "lines": [
       "127.0.0.1:4040 is already bound by an active capcli-daemon.",
       "One daemon per workspace; duplicate start refused at port check.",
-      "state_modified: false",
       "layer:          daemon",
       "remedy:         inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'"
     ]

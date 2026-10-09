@@ -25,7 +25,7 @@
           "audit_sink": "online",
           "chain_status": "unverifiable — audit.db ledger root unreadable (I/O error); await object-store restore",
           "entry_event": "recovery_mode_entered logged on startup",
-          "allowlist": "sql (read-only), db dump, sys audit tail, sys backup"
+          "allowlist": "sql (read-only), db dump, sys audit tail, sys backup, sys recover"
         }
       },
       {
@@ -38,7 +38,6 @@
       },
       {
         "lines": [
-          "state_modified: false",
           "note:           diagnostics only; no writes permitted in recovery mode"
         ]
       }

@@ -26,7 +26,6 @@
       },
       {
         "fields": {
-          "state_modified": "false",
           "note": "proposals only; deduplication requires explicit ship-time review"
         }
       }

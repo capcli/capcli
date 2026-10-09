@@ -18,11 +18,6 @@
           "pending": "0 inquiries",
           "note": "no asks parked in _pending_asks; no frames awaiting human input"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "false"
-        }
       }
     ]
   }

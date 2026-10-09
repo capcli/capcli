@@ -16,6 +16,6 @@
     "culprit": "Max 20 active schedules reached. New schedule binding refused.",
     "measured": "20 active schedules (cap: 20)",
     "remedy": "pause or remove an idle schedule first (capcli bind list)",
-    "active schedules": "20 of 20"
+    "active_schedules": "20 of 20"
   }
 }

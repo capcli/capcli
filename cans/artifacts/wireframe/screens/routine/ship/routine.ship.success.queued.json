@@ -41,11 +41,19 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "audit": "op_ship_05 (promotion queue row committed; no routine version change)",
           "note": "batch approval commits a single audit event per queue"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine pending",
+      "intent": "Batch promotion candidates listed",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

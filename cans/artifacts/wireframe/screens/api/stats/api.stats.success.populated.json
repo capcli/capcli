@@ -35,8 +35,7 @@
       "reset_at": "18:00:00 UTC (in 4h 12m)",
       "error_rate": "0.8% (3 of 372 calls)",
       "p50_latency": "118ms",
-      "p95_latency": "240ms",
-      "state_modified": "false"
+      "p95_latency": "240ms"
     }
   }
 }

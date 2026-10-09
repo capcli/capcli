@@ -61,8 +61,16 @@
       }
     ],
     "footer": {
-      "pending": "2 inquiries",
-      "state_modified": "false"
+      "pending": "2 inquiries"
     }
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli ping resolve ask_88a --choice approve",
+      "intent": "Choice selected; resumes task",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

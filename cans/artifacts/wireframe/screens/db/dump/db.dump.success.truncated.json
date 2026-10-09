@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "db.dump.success.truncated",
-  "target": "db://orders",
+  "target": "db://",
   "command": "capcli db dump",
   "context": {
     "env": "dev",
@@ -38,7 +38,6 @@
       "tables": "41",
       "result_tokens": "500 of 31204 (cap: 500)",
       "truncated": "true",
-      "state_modified": "false",
       "note": "use --out <path> to write the full dump to disk"
     },
     "body": []

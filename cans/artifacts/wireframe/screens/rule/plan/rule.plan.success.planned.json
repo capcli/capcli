@@ -1,0 +1,39 @@
+{
+  "$schema": "wireframe/v2",
+  "archetype": "receipt",
+  "audit_op": "op_7c48",
+  "command": "capcli rule plan --name \"add_order_priority\" -m \"rush shipping priority flag\"",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "intent": "\"rush shipping priority flag\"",
+          "migration": "add_order_priority"
+        }
+      },
+      {
+        "lines": [
+          "bundle:",
+          "plan.json",
+          "backfill stub"
+        ]
+      }
+    ],
+    "title": null
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "id": "rule.plan.success.planned",
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli rule prove add_order_priority --env sim",
+      "intent": "Rehearse the planned migration in sim",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
+}

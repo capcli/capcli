@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "db.snapshot.success.created",
-  "target": "db://orders",
+  "target": "db://",
   "command": "capcli db snapshot -m \"pre-migration safety point\"",
   "context": {
     "env": "dev",
@@ -22,12 +22,16 @@
           "ledger_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
           "method": "VACUUM INTO (clean copy under traffic)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli env merge dev prod -m \"forward DDL\"",
+      "intent": "DDL forwarded to production",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

@@ -1,0 +1,42 @@
+{
+  "$schema": "wireframe/v2",
+  "archetype": "receipt",
+  "audit_op": "op_8d52",
+  "command": "capcli rule prove add_order_priority --env sim",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "backfill": "pass",
+          "contract_sla": "pass",
+          "expand": "pass",
+          "migration": "add_order_priority",
+          "mode": "sim (rehearsal)"
+        }
+      },
+      {
+        "fields": {
+          "audit": "op_8d52 (rule.prove) committed to _audit",
+          "note": "verification only; no sim world state committed"
+        }
+      }
+    ],
+    "title": null
+  },
+  "context": {
+    "env": "sim",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "id": "rule.prove.success.proven",
+  "target": "add_order_priority",
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+      "intent": "Apply the rehearsed migration",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
+}

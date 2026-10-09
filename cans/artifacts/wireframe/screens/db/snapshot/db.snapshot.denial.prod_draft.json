@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "db.snapshot.denial.prod_draft",
-  "target": "db://orders",
+  "target": "db://",
   "command": "capcli db snapshot --env prod -m \"nightly safety point\"",
   "context": {
     "env": "prod",

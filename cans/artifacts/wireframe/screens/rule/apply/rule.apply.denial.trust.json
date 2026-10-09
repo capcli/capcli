@@ -20,7 +20,7 @@
       "source": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
       "highlight": "ALTER"
     },
-    "DDL trust floor": "alter requires reviewed trust; caller rung is draft.",
+    "ddl_trust_floor": "alter requires reviewed trust; caller rung is draft.",
     "measured": "caller trust rung draft (required: reviewed)"
   }
 }

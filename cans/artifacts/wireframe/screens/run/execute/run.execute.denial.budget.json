@@ -20,7 +20,7 @@
     "blocking_level": "frame",
     "remaining": "0 ops at frame level",
     "ancestors": "session remaining 488 ops (frame was the tightest constraint)",
-    "No partial execution past budget": "the routine failed cleanly",
+    "partial_execution": "the routine failed cleanly",
     "lines": [
       "archive_old_orders@3 (frame_005) exhausted ops: 20/20",
       "with zero half-executed side effects."

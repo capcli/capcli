@@ -28,7 +28,6 @@
       },
       {
         "lines": [
-          "state_modified: true",
           "note:           dual-storage guarantee satisfied (git + object store)"
         ]
       }

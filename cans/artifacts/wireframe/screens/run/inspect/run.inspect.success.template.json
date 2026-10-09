@@ -21,12 +21,16 @@
           "leaves": "3 (sql, sql, ping ask)",
           "can_invoke_now": "false (scaffold via 'capcli routine new <name> --from tpl://order_sync@2' first)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "false"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli inspect quota://threads",
+      "intent": "Headroom breakdown on `quota://` URP",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

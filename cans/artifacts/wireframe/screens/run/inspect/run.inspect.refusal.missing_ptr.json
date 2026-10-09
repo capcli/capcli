@@ -14,8 +14,8 @@
     "culprit": "Unrecognized pointer format: missing scheme prefix.",
     "remedy": "restate as a typed URP, e.g. cap://dispatch_order@4",
     "target": "'dispatch_order@4'",
-    "Unrecognized pointer format": "missing scheme prefix.",
-    "Expected a typed URP": "cap://, db://, quota://, doc://, ...",
+    "pointer_format": "missing scheme prefix.",
+    "expected_urp_types": "cap://, db://, quota://, doc://, ...",
     "layer": "cli",
     "lines": [
       "FATAL  missing_param.unrecognized_ptr"

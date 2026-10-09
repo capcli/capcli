@@ -1,0 +1,35 @@
+{
+  "$schema": "wireframe/v2",
+  "archetype": "receipt",
+  "audit_op": "op_9e63",
+  "command": "capcli run abort frame_026",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "audit": "frame_aborted event written to _audit",
+          "frame": "frame_026",
+          "state_fence": "OCC state_fence released",
+          "suspended_tasks": "resume target purged from _suspended_tasks"
+        }
+      }
+    ],
+    "title": null
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "id": "run.abort.success.aborted",
+  "target": "frame_026",
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli run overview",
+      "intent": "Reground on situational state after the abort",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
+}

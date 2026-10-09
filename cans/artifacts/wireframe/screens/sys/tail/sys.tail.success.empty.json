@@ -32,5 +32,14 @@
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli sys audit tail --follow --since 1h",
+      "intent": "Live streaming audit records",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

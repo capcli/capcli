@@ -40,5 +40,14 @@
     "prompt": "prompt://genesis/blank_world@1",
     "reason": "no capabilities and no world to search",
     "serve": "L1"
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli search 'order'",
+      "intent": "Matched capabilities and URP pointers",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

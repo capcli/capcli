@@ -23,5 +23,10 @@
       "Exclusive --lock refs serialize mutations per target;",
       "concurrent dispatch refused to prevent lost updates."
     ]
+  },
+  "trailer": {
+    "prompt": "prompt://budget/execution_starved@1",
+    "reason": "claim held denial: entity lease contested",
+    "serve": "L1"
   }
 }

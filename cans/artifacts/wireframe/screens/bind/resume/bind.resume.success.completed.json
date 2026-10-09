@@ -21,12 +21,16 @@
           "transition": "paused → active",
           "next_fire": "2026-10-05T06:00:00Z"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli bind remove bnd_3k2f",
+      "intent": "Trigger dismantled",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

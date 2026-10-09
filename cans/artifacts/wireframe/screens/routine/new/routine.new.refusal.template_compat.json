@@ -15,7 +15,7 @@
     "culprit": "Template policy_version mismatch (template requires policy 5, workspace policy 4)",
     "remedy": "upgrade the workspace policy_version or select a template compiled against policy 4",
     "template": "tpl://order_sync@2 (policy_version 5)",
-    "workspace policy_version": "4",
+    "workspace_policy_version": "4",
     "lines": [
       "Template policy_version mismatch exits 3."
     ]

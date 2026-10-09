@@ -22,7 +22,6 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "audit": "op_roll_01 (routine.rollback committed; v5 retained in provenance graph)",
           "note": "edits to v3 still require a new version; in-place modification banned"
         }

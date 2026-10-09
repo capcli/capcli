@@ -22,11 +22,6 @@
         "lines": [
           "No triggers bound. Schedules, hooks, and endpoints will appear here."
         ]
-      },
-      {
-        "fields": {
-          "state_modified": "false"
-        }
       }
     ]
   }

@@ -24,7 +24,6 @@
       },
       {
         "fields": {
-          "state_modified": "false",
           "note": "enqueue via capcli routine ship <name> reviewed --queue"
         }
       }

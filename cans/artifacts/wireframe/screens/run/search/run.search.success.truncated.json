@@ -53,5 +53,14 @@
       "bind://webhook/stripe/invoice_paid         bind   active",
       "doc://refund-policy                        doc    readable"
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli search gaps --since 7d",
+      "intent": "Surfaces missing capabilities via `--since`",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

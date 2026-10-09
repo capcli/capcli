@@ -42,5 +42,14 @@
       "Authority": "user:alice (via agt_7f3k)",
       "Integrity": "valid hash link (chain verified)"
     }
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine new overview",
+      "intent": "Mandatory overview routine scaffolded (harness H6)",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

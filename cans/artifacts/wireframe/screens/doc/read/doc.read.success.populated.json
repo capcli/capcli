@@ -15,7 +15,7 @@
     "meta": {
       "document": "doc://refund-policy",
       "tokens": "312 (cap: 500)",
-      "has_more": "false"
+      "has_more": false
     },
     "fields": {
       "trust": "pinned",
@@ -37,5 +37,14 @@
       "5. Escalation paths",
       "Disputed or partial refunds escalate to a human supervisor via `ctx.ping.ask`."
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli doc read doc://refund-policy --max-tokens 100",
+      "intent": "Progressive disclosure: leading sections under token cap; typed keyset envelope",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

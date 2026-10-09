@@ -21,12 +21,16 @@
           "transition": "active → paused",
           "next_fire": "none (was 2026-10-05T06:00:00Z)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli bind resume bnd_3k2f",
+      "intent": "Trigger resumed",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

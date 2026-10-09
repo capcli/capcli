@@ -30,7 +30,6 @@
       {
         "fields": {
           "callers": "none (dependency graph clear)",
-          "state_modified": "true",
           "audit": "op_retire_01 (routine.retire committed; provenance graph preserved)",
           "note": "no deletion — routine remains inspectable via cap://legacy_etl for provenance; re-binding requires a live capability target"
         }

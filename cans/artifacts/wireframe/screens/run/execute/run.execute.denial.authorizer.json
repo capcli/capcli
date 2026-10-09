@@ -20,7 +20,7 @@
       "source": "UPDATE customers SET email = :new_email WHERE id = :id",
       "highlight": "email"
     },
-    "column 'email' is immutable (imm_cols": "[email])",
+    "immutable_column": "customers.email (imm_cols: [email])",
     "lines": [
       "The C authorizer denied the write at prepare time."
     ]

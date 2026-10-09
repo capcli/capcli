@@ -22,12 +22,16 @@
           "bytes": "2418",
           "sha256": "4f9a1b2c7d3e5f60"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli bind export mcp --out tools.json",
+      "intent": "Bound MCP tool definition exported",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

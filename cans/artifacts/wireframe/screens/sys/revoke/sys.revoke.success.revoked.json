@@ -24,7 +24,6 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "note": "revoked_agent: deny_all — no grace period, no further dispatch under this identity"
         }
       }

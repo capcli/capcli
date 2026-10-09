@@ -21,11 +21,6 @@
           "holder": "agt_7f3k",
           "reason": "batch fulfillment"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
   }

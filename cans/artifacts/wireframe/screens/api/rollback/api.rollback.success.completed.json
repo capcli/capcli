@@ -20,11 +20,6 @@
           "spec_hash": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa (restored)",
           "depth": "4 of 5 (max rollback depth)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
   }

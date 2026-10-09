@@ -18,8 +18,7 @@
           "ask_id": "ask_77c3",
           "principal": "user:alice",
           "action": "explicit expiration",
-          "outcome": "inquiry closed; fail-closed (expired asks never assume consent)",
-          "state_modified": "true"
+          "outcome": "inquiry closed; fail-closed (expired asks never assume consent)"
         }
       }
     ]

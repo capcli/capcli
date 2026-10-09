@@ -22,12 +22,16 @@
           "next_fire": "2026-10-05T03:00:00Z",
           "catchup_policy": "max 1 fire on daemon restart"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli bind list",
+      "intent": "Active bindings displayed",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

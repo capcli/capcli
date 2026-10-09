@@ -45,8 +45,16 @@
       }
     ],
     "footer": {
-      "bindings": "5 total (5 active, 0 paused)",
-      "state_modified": "false"
+      "bindings": "5 total (5 active, 0 paused)"
     }
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli bind inspect bnd_3k2f",
+      "intent": "Binding configuration envelope",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

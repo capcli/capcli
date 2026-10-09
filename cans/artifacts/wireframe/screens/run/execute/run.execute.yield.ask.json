@@ -13,15 +13,9 @@
     "rule": "ping.ask_suspended",
     "domain": "ping.ask",
     "culprit": "routine reached ctx.ping.ask (ask_88a); frame checkpoint snapshotted to _pending_asks",
-    "remedy": [
-      "human resolves the inquiry in Cockpit or via 'capcli ping resolve'; frame auto-resumes after hash re-verification",
-      "frame checkpointed to _pending_asks; human resolves via Cockpit or 'capcli ping resolve ask_88a --choice approve', frame auto-resumes after hash re-verification"
-    ],
+    "remedy": "frame checkpointed to _pending_asks; human resolves the inquiry in Cockpit or via 'capcli ping resolve ask_88a --choice approve'; frame auto-resumes after hash re-verification",
     "ask_id": "ask_88a",
-    "pending_asks": [
-      1,
-      "1 enqueued (ask_88a)"
-    ],
+    "pending_asks": "1 enqueued (ask_88a)",
     "suspended_frame": "frame_026",
     "session": "ses_a992f",
     "intent": "\"fulfill urgent pending orders\"",

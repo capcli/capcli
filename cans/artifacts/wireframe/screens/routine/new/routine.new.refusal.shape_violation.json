@@ -22,7 +22,7 @@
     "loc": "214 (max: 150)",
     "params": "11 (max: 8)",
     "tokens": "1840 (max: 2000)",
-    "Scaffold violates routine_shape ceilings": "214 LOC (max: 150), 11 params (max: 8).",
+    "routine_shape_ceilings": "214 LOC (max: 150), 11 params (max: 8).",
     "spans": [
       {
         "source": "shape_gate report (routines/legacy_sync.py):",

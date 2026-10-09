@@ -334,7 +334,8 @@
       - Pre-call policy — checks enforced before egress leaves kernel
       - Idempotency mandate — non-idempotent retries denied
     - Catalog synchronization
-      - Targeted import — capcli api import <provider> <path> <method> [--spec <url|file>] imports isolated endpoints on demand; full enterprise spec sync banned
+      - Targeted import — capcli api import <provider> <path> <method> [--spec <url|file>] imports isolated endpoints on demand
+      - Full sync — capcli api sync <provider> <spec_url> refreshes the whole provider catalog under the sync cadence limits
       - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, and idempotency header mapping
       - Live contract capture — capcli api record <verb> generates strict JSON Schema assertions from live responses; offline fixtures capped at reviewed
       - Promotion prerequisite — promotion to pinned requires live contract proof or shadow canary verification; static cassettes alone rejected

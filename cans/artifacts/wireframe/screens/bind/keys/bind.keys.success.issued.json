@@ -24,10 +24,18 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "note": "key material sealed in vault; no secret printed to stdout"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli bind export openapi --out openapi.json",
+      "intent": "Bound OpenAPI schema exported",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

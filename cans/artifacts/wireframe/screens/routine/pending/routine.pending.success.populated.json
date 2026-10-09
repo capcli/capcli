@@ -27,10 +27,18 @@
       {
         "fields": {
           "sla": "oldest entry 2h old (promotion.sla_breached alert at 48h)",
-          "state_modified": "false",
           "note": "batch approval commits a single audit event per queue"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+      "intent": "Routine promoted to new trust rung",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

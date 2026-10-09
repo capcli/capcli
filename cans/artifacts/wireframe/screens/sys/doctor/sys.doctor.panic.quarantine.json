@@ -15,13 +15,12 @@
     "domain": "kernel.panic",
     "culprit": "_audit chain verification fails at row 8,412: recomputed SHA-256 of op_84c1 does not match the prev_hash stored on row 8,413; the tamper blast radius invalidates all subsequent events",
     "remedy": "restore the ledger from the last object-store snapshot via 'capcli sys recover <snapshot-id>', re-anchor the root hash against the S3 Object Lock (WORM) checkpoint, then re-run 'capcli sys doctor --boot-check'; CAPCLI_RECOVERY=1 grants read-only quarantine inspection in the interim",
-    "chain verdict": "divergence at row 8,412 — rows 1-8,411 verified, all subsequent events invalidated",
+    "chain_verdict": "divergence at row 8,412 — rows 1-8,411 verified, all subsequent events invalidated",
     "quarantine": "corrupted block isolated to audit.quarantine.jsonl; reads stay operable, execution refused",
-    "kill_and_alert executed": "process tree terminated, supervisor alerted.",
-    "Boot refused": "no execution on a forged history until the chain is restored and re-anchored.",
+    "kill_and_alert": "process tree terminated, supervisor alerted.",
+    "boot_refusal": "no execution on a forged history until the chain is restored and re-anchored.",
     "lines": [
       "SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch.",
-      "state_modified: false",
       "layer:          kernel",
       "remedy:         restore via 'capcli sys recover <snapshot-id>', re-anchor against the S3 WORM checkpoint, re-run 'capcli sys doctor --boot-check' (CAPCLI_RECOVERY=1 for read-only forensics)"
     ]

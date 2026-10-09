@@ -17,7 +17,7 @@
       "source": "UPDATE orders SET status = 'shipped' WHER status = 'processing'",
       "highlight": "WHER"
     },
-    "Unparseable SQL": "'WHER' is not a recognized keyword; parser fails closed.",
+    "unparseable_sql": "'WHER' is not a recognized keyword; parser fails closed.",
     "layer": "parser",
     "lines": [
       "FATAL  compile.bad_syntax"

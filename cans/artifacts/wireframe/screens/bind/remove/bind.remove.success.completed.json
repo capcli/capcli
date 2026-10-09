@@ -21,11 +21,6 @@
           "target": "cap://report_summary",
           "transition": "active → dismantled"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
   }

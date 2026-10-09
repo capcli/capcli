@@ -19,7 +19,6 @@
       "FATAL  kernel.boot.missing_dependency",
       "Host dependency probe failed on tier_1 (linux x86_64).",
       "Boot aborted before workspace mount; no daemon started.",
-      "state_modified: false",
       "layer:          boot",
       "remedy:         install bubblewrap >= 0.8.0, then re-run 'capcli sys doctor --boot-check'"
     ]

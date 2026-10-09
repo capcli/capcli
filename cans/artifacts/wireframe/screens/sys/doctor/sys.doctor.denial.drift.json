@@ -23,7 +23,6 @@
     "lines": [
       "Live DB schema diverges from the compiled declaration.",
       "Doctor refuses to certify a drifted workspace.",
-      "state_modified: false",
       "layer:          authorizer",
       "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)",
       "remedy:         reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'"

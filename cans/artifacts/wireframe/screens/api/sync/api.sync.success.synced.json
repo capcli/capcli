@@ -22,12 +22,16 @@
           "catalog": "apis/stripe.yaml (2.1MB)",
           "interval": "7d"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api diff threads",
+      "intent": "Zero drift from active catalog",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

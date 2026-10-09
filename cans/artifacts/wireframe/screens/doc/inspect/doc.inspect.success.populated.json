@@ -15,7 +15,7 @@
     "meta": {
       "document": "doc://refund-policy",
       "tokens": "312 (cap: 500)",
-      "has_more": "false"
+      "has_more": false
     },
     "fields": {
       "title": "Refund Policy",

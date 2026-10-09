@@ -16,6 +16,6 @@
     "culprit": "registration refused: agent registry at capacity",
     "measured": "8 registered agents (cap: 8)",
     "remedy": "revoke a dormant agent via capcli sys agent revoke <agent-id>, then re-register",
-    "registration refused": "agent registry at capacity"
+    "registration_refusal": "agent registry at capacity"
   }
 }

@@ -24,11 +24,6 @@
           "signing": "vault://stripe_webhook_secret (hmac-sha256)",
           "ingress": "verified (public https)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
   }

@@ -36,8 +36,7 @@
       "providers": "10",
       "verbs_total": "1204",
       "verbs_listed": "500 (listing cap)",
-      "truncated": "true",
-      "state_modified": "false"
+      "truncated": "true"
     },
     "body": [
       "catalog",
@@ -53,5 +52,14 @@
       "└── track                   active    reviewed",
       "... 493 further verbs elided (listing capped at 500) ..."
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api catalog stripe --state active --json",
+      "intent": "Imported catalog verbs listed",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

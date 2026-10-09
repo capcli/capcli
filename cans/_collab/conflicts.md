@@ -41,7 +41,7 @@ Task ID: 6-b (trust.md dedup+deepen)
 ---
 Task ID: audit-2026-10-07 (errors.md row verification, docs/reference/errors.md R01–R48)
 Logged, not resolved — each needs its cans owner's ruling:
-- C-1 `api sync` verb: interface.md (CLI owner) defines no `api sync`; action.md bans full sync, yet action.md cadence pointer, effect.md `api.sync` event, governance `api.sync.min_interval_hours: 24`, and `api.sync.*` fixtures assume it. Blocks errors.md R23/R24.
+- C-1 `api sync` verb: interface.md (CLI owner) defines no `api sync`; action.md bans full sync, yet action.md cadence pointer, effect.md `api.sync` event, governance `api.sync.min_interval_hours: 24`, and `api.sync.*` fixtures assume it. Blocks errors.md R23/R24. RESOLVED 2026-10-09 by owner ruling: `api sync` legalized (interface.md API path entry; action.md Full sync bullet under cadence limits).
 - C-2 webhook flags: interface.md bind webhook `[--ingress|--tunnel] [-m]` vs action.md `[--driver ...] [-m]` (no ingress). Fixture uses `--ingress`.
 - C-3 rollback syntax: interface.md `routine rollback <name> [version]` vs time.md `routine rollback <name> --to-version N`; fixture is positional.
 - C-4 `sys agent` flattening: interface.md/agent.md `sys agent register, list, revoke` vs wireframe `sys.register`/`sys.revoke` fixture commands.

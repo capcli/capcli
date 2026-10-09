@@ -1,0 +1,37 @@
+{
+  "$schema": "wireframe/v2",
+  "archetype": "receipt",
+  "audit_op": "op_6b34",
+  "command": "capcli api record stripe.charges.create -p charge_id=\"ch_1032ZX\"",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "assertions": "14 generated",
+          "cassette": "apis/stripe.cassette.jsonl",
+          "contract": "strict JSON Schema compiled from live response",
+          "live_response": "200 (captured)",
+          "request": "charge_id: ch_1032ZX",
+          "verb": "cap://stripe.charges.create"
+        }
+      }
+    ],
+    "title": null
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "id": "api.record.success.recorded",
+  "target": "cap://stripe.charges.create",
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api catalog stripe --state active --json",
+      "intent": "Confirm the recorded contract sits in the catalog",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
+}

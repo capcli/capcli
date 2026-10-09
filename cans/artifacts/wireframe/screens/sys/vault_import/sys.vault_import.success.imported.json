@@ -22,8 +22,16 @@
     "footer": {
       "scanned": "process environment for CAPCLI_SECRET_*",
       "bound": "2 secrets (values masked in all outputs)",
-      "state_modified": "true",
       "note": "vault.set events committed with SHA-256 fingerprints; plaintext zeroized after ingest"
     }
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+      "intent": "Deterministic execution and commit",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

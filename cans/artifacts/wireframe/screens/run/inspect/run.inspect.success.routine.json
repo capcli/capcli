@@ -71,5 +71,14 @@
         ]
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine new sync_orders",
+      "intent": "Routine scaffold committed",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

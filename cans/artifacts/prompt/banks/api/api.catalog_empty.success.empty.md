@@ -10,8 +10,8 @@ vars:
     type: string
     source: kernel.env
 sections:
-  stage_1_import: 70
-  stage_2_record: 70
+  stage_1_sync: 70
+  stage_2_catalog: 70
   stage_3_prove: 60
   stage_4_ship: 50
 slice_max_tokens: 500
@@ -22,24 +22,27 @@ status: served
 
 # ⚡ EXTERNAL API CATALOG LOCKDOWN PROTOCOL
 No external API catalogs are configured. Outbound HTTP requests from routines are blocked
-at the socket layer until imported, proven, and registered.
+at the socket layer until synced, proven, and registered.
 
-## section:stage_1_import
-Import an external OpenAPI endpoint into the local catalog:
+## section:stage_1_sync
+Sync the provider's OpenAPI spec into the local catalog:
 ```bash
-capcli api import <provider> <path> <method> --spec <spec_url_or_file>
+capcli api sync <provider> <spec_url>
 ```
 Example:
 ```bash
-capcli api import stripe /v1/refunds POST --spec https://api.stripe.com/openapi.yaml
+capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d
 ```
 
-## section:stage_2_record
-Record an idempotent live request to capture response schemas and create simulation cassettes:
+## section:stage_2_catalog
+Confirm the synced verbs landed in the catalog:
 ```bash
-capcli api record stripe.refunds.create -p charge_id="ch_test_123"
+capcli api catalog <provider>
 ```
-This writes fixtures into `apis/<provider>.cassette.jsonl`.
+Example:
+```bash
+capcli api catalog stripe --state active
+```
 
 ## section:stage_3_prove
 Prove the API verb inside the simulation environment:

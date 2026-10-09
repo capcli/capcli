@@ -39,7 +39,6 @@
       },
       {
         "fields": {
-          "state_modified": "false",
           "note": "read-only profiling from routine_stats and the audit mirror"
         }
       }

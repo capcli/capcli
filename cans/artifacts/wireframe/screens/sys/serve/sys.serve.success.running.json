@@ -27,7 +27,6 @@
       },
       {
         "lines": [
-          "state_modified: true",
           "note:           bind address locked to 127.0.0.1 per governance"
         ]
       }

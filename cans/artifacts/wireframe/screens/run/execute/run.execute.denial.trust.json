@@ -15,7 +15,7 @@
     "layer": "trust",
     "culprit": "Draft routine sync_inventory@3 invoked in prod; the production floor requires the reviewed rung.",
     "remedy": "prove in sim ('capcli routine prove sync_inventory --env sim'), then ship to reviewed",
-    "target env": "prod (floor: reviewed)",
+    "target_env": "prod (floor: reviewed)",
     "lines": [
       "routine sync_inventory@3 holds draft trust",
       "Draft routines cannot execute in production.",

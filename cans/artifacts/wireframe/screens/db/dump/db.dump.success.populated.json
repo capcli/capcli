@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "db.dump.success.populated",
-  "target": "db://orders",
+  "target": "db://",
   "command": "capcli db dump",
   "context": {
     "env": "dev",
@@ -26,10 +26,18 @@
       },
       {
         "fields": {
-          "state_modified": "false",
           "note": "deterministic; identical world yields identical bytes"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli db dump",
+      "intent": "Dump output payload truncated",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

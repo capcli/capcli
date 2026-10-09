@@ -29,5 +29,14 @@
       "├── 4. Currency handling",
       "└── 5. Escalation paths"
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli doc inspect doc://refund-policy",
+      "intent": "Document metadata, tokens, and node count",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

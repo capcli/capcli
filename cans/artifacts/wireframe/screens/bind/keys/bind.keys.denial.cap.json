@@ -16,6 +16,6 @@
     "culprit": "Max 25 keys reached. Key issuance refused.",
     "measured": "25 active keys (cap: 25)",
     "remedy": "remove an idle endpoint binding to release its keys, or await 90d rotation",
-    "active keys": "25 of 25"
+    "active_keys": "25 of 25"
   }
 }

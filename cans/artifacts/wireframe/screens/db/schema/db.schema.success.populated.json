@@ -82,8 +82,7 @@
       "columns": "9",
       "indexes": "2",
       "checks": "2",
-      "triggers": "1 (validate_total, BEFORE INSERT)",
-      "state_modified": "false"
+      "triggers": "1 (validate_total, BEFORE INSERT)"
     }
   }
 }

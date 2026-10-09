@@ -21,11 +21,6 @@
           "call 4 executed under replayed contract": "pass",
           "governance": "standard (24h approval windows closed)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
   }

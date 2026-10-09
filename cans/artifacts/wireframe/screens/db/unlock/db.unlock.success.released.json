@@ -20,12 +20,16 @@
           "holder": "agt_7f3k",
           "ttl_remaining": "187s (released ahead of TTL)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
+      "intent": "Exclusive claim lease registered",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

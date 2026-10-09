@@ -24,10 +24,18 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "event": "vault.set committed to _audit with SHA-256 fingerprint"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api prove stripe.refund_charge --env sim",
+      "intent": "Rehearsal in sim verified",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

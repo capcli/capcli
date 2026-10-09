@@ -25,6 +25,7 @@
     "law": "env new provisions arbitrary lowercase namespace slugs; state_axes.env lists the kernel-reserved roots only"
   },
   "output_contract": {
+    "pointer_schemes": ["doc://", "prompt://"],
     "prefix": "[{env}:{tier}]",
     "human_format": "rustc-style diagnostic with atomic blocks, source spans, and indented key-values",
     "machine_format": "--json structured envelope",
@@ -54,6 +55,25 @@
       },
       "position": "final line of human output; additive envelope key in --json",
       "line_cap_law": "Line caps in this contract (help_stub_max_lines) count the host screen only. The trailer is an additive final line outside every host-screen cap.",
+      "effect": "rendering only: exit code, state_modified, and every other output byte of the host screen are unchanged"
+    },
+    "affordances": {
+      "machine_field": "affordances",
+      "machine_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["rel", "command", "intent", "risk", "requires_intent"],
+          "properties": {
+            "rel": { "type": "string", "enum": ["next", "abort", "inspect"] },
+            "command": { "type": "string" },
+            "intent": { "type": "string" },
+            "risk": { "type": "string", "enum": ["safe", "mutating"] },
+            "requires_intent": { "type": "boolean" }
+          }
+        }
+      },
+      "position": "exit-0 envelopes only; additive --json envelope key, never a human output line",
       "effect": "rendering only: exit code, state_modified, and every other output byte of the host screen are unchanged"
     }
   }

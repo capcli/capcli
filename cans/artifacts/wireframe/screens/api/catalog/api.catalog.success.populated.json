@@ -39,8 +39,16 @@
     "footer": {
       "provider": "stripe",
       "state_filter": "active",
-      "verbs": "4 active of 418 total (414 dormant)",
-      "state_modified": "false"
+      "verbs": "4 active of 418 total (414 dormant)"
     }
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine new sync_orders",
+      "intent": "Routine scaffold committed",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

@@ -1,0 +1,23 @@
+{
+  "$schema": "wireframe/v2",
+  "archetype": "diagnostic",
+  "command": "capcli api import stripe /v1/charges POST",
+  "component": {
+    "culprit": "No spec source supplied for endpoint 'POST /v1/charges'.",
+    "domain": "missing_param",
+    "endpoint": "POST /v1/charges",
+    "layer": "cli",
+    "lines": [
+      "capcli api import stripe /v1/charges POST"
+    ],
+    "remedy": "re-run with --spec <url|file>, e.g. capcli api import stripe /v1/charges POST --spec https://api.stripe.com/openapi.json",
+    "rule": "missing_param.no_spec"
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "id": "api.import.refusal.missing_spec",
+  "target": "stripe"
+}

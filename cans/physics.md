@@ -110,10 +110,12 @@
       - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
       - exit 5 — domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
       - exit 6 — proactive yield; releases all held claims locks, records OCC state_fence, persists resume target to _suspended_tasks
+      - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence, writes an audit event; the frame never resumes
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
       - engine — native terminal diagnostics rendered procedurally via `miette` and `codespan`
       - data contract — all commands return `CliEnvelope<T>`: { context, exit_code, state_modified, data, diagnostic, audit_op }
+      - success affordances — typed next actions on exit 0: see interface.md#CLI-surface
       - layout archetypes — human output maps to exactly 4 procedural formats:
         - archetype A (diagnostic) — exits 2, 3, 4, 5, 6; renders header, failing span with carets (`^^^^`), and indented metadata block
         - archetype B (tree) — hierarchical DAGs (`sys trace`, `inspect`); renders unicode branches (`├──`, `└──`, `│`)

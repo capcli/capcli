@@ -109,16 +109,16 @@ def overview():
         "kpis": kpis
     }
 ```
-Prove and pin it:
+Prove it and enqueue it for reviewed trust:
 ```bash
 capcli routine prove overview --env sim
-capcli routine ship overview pinned --reason "Mount system overview baseline"
+capcli routine ship overview reviewed --queue --reason "Mount system overview baseline"
 ```
 
 ## section:stage_5_wire
-Import and lock external wire egress before invoking external endpoints:
+Sync and lock external wire egress before invoking external endpoints:
 ```bash
-capcli api import stripe /v1/charges POST --spec https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.yaml
+capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d
 capcli api prove stripe.charges.create --env sim
 capcli api ship stripe.charges.create reviewed --reason "Order billing capability"
 ```

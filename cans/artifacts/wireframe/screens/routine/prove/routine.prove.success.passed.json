@@ -34,7 +34,6 @@
       },
       {
         "fields": {
-          "state_modified": "false",
           "note": "verification only; no sim world state committed",
           "audit": "op_prove_01"
         }
@@ -45,5 +44,21 @@
     "prompt": "prompt://promotion/routine_passed@1",
     "reason": "proof passed: routine eligible for promotion",
     "serve": "L1"
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli sys audit trace op_prove_01 --explain",
+      "intent": "Causal DAG walk of a routine prove op",
+      "risk": "safe",
+      "requires_intent": false
+    },
+    {
+      "rel": "inspect",
+      "command": "capcli routine pending",
+      "intent": "Batch promotion candidates listed",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

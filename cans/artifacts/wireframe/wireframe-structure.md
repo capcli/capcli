@@ -109,6 +109,7 @@ cans/artifacts/wireframe/
   {noun}.{verb}.{state}.{condition}.json
   ```
 * **Root Aliases:** Exactly four ergonomic root shortcuts are legal invocation grammar (cans/interface.md#CLI-surface): `capcli sql` ≡ `capcli run sql`, `capcli search` ≡ `capcli run search`, `capcli inspect` ≡ `capcli run inspect`, and `capcli apply` ≡ `capcli rule apply schema`. These four root aliases may appear in fixture `command` strings; no other root shortcuts exist — everything else is `capcli <noun> <verb>`.
+* **Run Execute Form:** `capcli run <cap://...>` is the execute invocation (cans/interface.md#CLI-surface: `execute — run <capability>`); `execute` names the screen family and the fixture directory and does not appear in the typed command, and no `capcli run execute ...` form exists.
 * **Compound-Verb Mapping:** Screen IDs and directories keep underscore verb segments (`sys.vault_set`, `sys.vault_import`), while the invocation grammar follows cans/interface.md#CLI-surface: `capcli sys vault set <key> <val>`, `capcli sys vault import-env`, `capcli sys agent register|revoke`, `capcli sys audit tail|trace|query|replay`. The underscore form names the fixture; the spaced form is what the user types.
 * **Dynamic Environment Namespaces:** Environments are user-provisionable namespaces (`env new <slug>`, cans/interface.md#CLI-surface). `state_axes.env` in `manifest.json` lists only the kernel-reserved roots (`dev`, `sim`, `prod`); values like `staging` or `lab` are legal fixtures of dynamically provisioned namespaces (see `env_policy` in `manifest.json`).
 
@@ -150,7 +151,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (5 verbs → 39 screens)
+### 4.1 `run/` (6 verbs → 41 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -193,6 +194,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.success.prompt` | success | 0 | — | populated | Prompt L2 envelope only; no body content |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
+| `run.abort.success.aborted` | success | 0 | — | aborted | Suspended frame purged; OCC fence released |
+| `run.abort.refusal.unknown_frame` | refusal | 3 | missing_param | unknown_frame | Abort target frame not suspended |
 
 ### 4.2 `db/` (6 verbs → 14 screens)
 
@@ -254,7 +257,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.retire.refusal.missing_reason` | refusal | 3 | missing_param | missing_arg | Prod retire of an operational routine demands --reason |
 | `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
 
-### 4.4 `api/` (8 verbs → 23 screens)
+### 4.4 `api/` (10 verbs → 26 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -281,6 +284,9 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `api.rollback.success.completed` | success | 0 | — | completed | Reverts API spec to prior hash |
 | `api.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback limit of 5 |
 | `api.rollback.refusal.not_found` | refusal | 3 | validation | not_found | Target version not found |
+| `api.import.success.imported` | success | 0 | — | imported | OpenAPI endpoint imported to catalog at draft |
+| `api.import.refusal.missing_spec` | refusal | 3 | missing_param | missing_spec | Import requires a spec source |
+| `api.record.success.recorded` | success | 0 | — | recorded | Live response captured as JSON Schema contract |
 
 ### 4.5 `bind/` (10 verbs → 26 screens)
 
@@ -335,7 +341,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `ping.expire.success.completed` | success | 0 | — | completed | Explicit expiration executed |
 | `ping.expire.refusal.not_found` | refusal | 3 | validation | not_found | Target inquiry not found |
 
-### 4.7 `rule/` (4 verbs → 12 screens)
+### 4.7 `rule/` (6 verbs → 14 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -351,6 +357,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `rule.validate.success.valid` | success | 0 | — | valid | Declarations pass Gates 1 & 2 |
 | `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Gate 1 YAML syntax failure |
 | `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Gate 2 circular dependency detected |
+| `rule.plan.success.planned` | success | 0 | — | planned | Migration bundle generated (plan.json, backfill stub) |
+| `rule.prove.success.proven` | success | 0 | — | proven | Migration rehearsed in sim (expand, backfill, SLA) |
 
 ### 4.8 `env/` (7 verbs → 20 screens)
 
@@ -463,21 +471,26 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "run.sql.denial.ast",
+  "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
   "audit_op": "op_9f2e",
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.query.update_delete.require_limit",
     "domain": "policy.ast",
     "layer": "AST",
-    "span": {
-      "source": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
-      "highlight": "processing"
-    },
     "culprit": "No LIMIT clause. Blast radius unbounded.",
     "measured": "matches potentially 847 rows (cap: 100)",
-    "remedy": "add LIMIT, or target specific primary key"
+    "remedy": "add LIMIT, or target specific primary key",
+    "span": {
+      "source": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
+      "highlight": "sing'"
+    }
   }
 }
 ```
@@ -509,21 +522,44 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "sys.trace.success.populated",
+  "target": "op_7c4f",
   "command": "capcli sys audit trace op_7c4f --explain",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
-  "audit_op": "op_7c4f",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "populated"
+  },
   "archetype": "tree",
   "component": {
     "title": "Causal DAG Trace (op_7c4f)",
-    "root": { "id": "ses_a992f", "type": "session.start", "intent": "fulfill urgent pending orders" },
+    "root": "ses_a992f session.start \"fulfill urgent pending orders\"",
     "nodes": [
       {
-        "id": "op_9f2c",
-        "label": "routine.dispatch_order@4",
+        "label": "op_9f2c routine.dispatch_order@4",
         "children": [
-          { "id": "op_9f2d", "label": "db.query (orders)", "status": "allowed", "duration_ms": 12 },
-          { "id": "op_7c4f", "label": "api.call (fedex.ship)", "status": "allowed", "duration_ms": 340, "detail": "tracking 794644790133" },
-          { "id": "op_9f2f", "label": "db.execute (orders)", "status": "allowed", "duration_ms": 18, "detail": "status = 'shipped' (1 row)" }
+          {
+            "label": "op_9f2d db.query (orders) ✓ [allowed] 12ms",
+            "children": []
+          },
+          {
+            "label": "op_7c4f api.call (fedex.ship) ✓ [allowed] 340ms",
+            "children": [
+              {
+                "label": "tracking 794644790133",
+                "children": []
+              }
+            ]
+          },
+          {
+            "label": "op_9f2f db.execute (orders) ✓ [allowed] 18ms",
+            "children": [
+              {
+                "label": "status = 'shipped' (1 row)",
+                "children": []
+              }
+            ]
+          }
         ]
       }
     ],
@@ -564,13 +600,19 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.success.report",
+  "target": "sys://host",
   "command": "capcli sys doctor --report",
-  "context": { "env": "prod", "tier": "tier_1", "trust": "reviewed" },
+  "context": {
+    "env": "prod",
+    "tier": "tier_1",
+    "trust": "reviewed"
+  },
   "archetype": "receipt",
   "component": {
     "title": "trust_receipt",
     "groups": [
       {
+        "title": "trust_receipt",
         "fields": {
           "status": "nominal (witness anchoring pending)",
           "host_tier": "tier_1 (hardened Linux namespaces)",
@@ -623,35 +665,40 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "run.inspect.success.routine",
+  "target": "cap://dispatch_order@4",
   "command": "capcli inspect cap://dispatch_order@4",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "pinned" },
-  "archetype": "tree",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
   "component": {
-    "title": "capcli inspect cap://dispatch_order@4",
-    "root": {
-      "id": "cap://dispatch_order@4",
-      "type": "routine",
-      "intent": "Dispatch paid order to carrier and update status",
-      "fields": {
-        "trust": "pinned",
-        "runtime": "typescript (bun)",
-        "params": "order_id: string, carrier: string",
-        "limits": "8 ops · 15s · 500 result tokens"
-      }
-    },
-    "nodes": [
+    "title": null,
+    "groups": [
       {
-        "id": "manifest",
-        "label": "manifest",
-        "children": [
-          { "id": "step.1", "label": "db.query    orders (read)" },
-          { "id": "step.2", "label": "api.call    logistics.shipments.create" },
-          { "id": "step.3", "label": "db.execute  orders (write)" }
+        "fields": {
+          "trust": "pinned",
+          "runtime": "typescript (bun)",
+          "params": "order_id: string, carrier: string",
+          "description": "\"Dispatch paid order to carrier and update status\""
+        }
+      },
+      {
+        "fields": {
+          "limits": "8 ops · 15s · 500 result tokens"
+        }
+      },
+      {
+        "lines": [
+          "manifest:",
+          "1. db.query    orders (read)",
+          "2. api.call    logistics.shipments.create",
+          "3. db.execute  orders (write)"
         ]
       },
       {
-        "id": "budget_status",
-        "label": "budget_status",
         "fields": {
           "can_invoke_now": "true",
           "session_ops_remaining": "488",
@@ -660,30 +707,44 @@ Fixture (`wireframe/v2`):
           "session_egress_remaining": "4181824 bytes",
           "session_rate_remaining": "287",
           "tightest_constraint": "null"
-        }
+        },
+        "lines": [
+          "budget_status:"
+        ]
       },
       {
-        "id": "composition",
-        "label": "composition",
         "fields": {
           "max_nesting_depth": "5",
           "budget_inheritance": "min",
           "child_routines": "[]"
-        }
+        },
+        "lines": [
+          "composition:"
+        ]
       },
       {
-        "id": "stats",
-        "label": "stats",
         "fields": {
           "total_runs": "214",
           "success_rate": "99.1%",
           "p50_duration": "340ms",
           "p95_duration": "890ms",
           "last_run_at": "2m ago"
-        }
+        },
+        "lines": [
+          "stats:"
+        ]
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine new sync_orders",
+      "intent": "Routine scaffold committed",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }
 ```
 
@@ -736,11 +797,17 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "run.sql.success.dry_run",
+  "target": "db://orders",
   "command": "capcli sql \"ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0\" --dry-run -m \"add priority flag for rush shipping\"",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "dry_run"
+  },
   "archetype": "receipt",
   "component": {
-    "title": "dry-run",
+    "title": null,
     "groups": [
       {
         "fields": {
@@ -759,7 +826,16 @@ Fixture (`wireframe/v2`):
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\"",
+      "intent": "SELECT result bounded at 10,000 rows",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }
 ```
 
@@ -790,22 +866,25 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.denial.thrashing",
+  "target": "sys://host",
   "command": "capcli sys doctor",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "reviewed" },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed"
+  },
   "archetype": "diagnostic",
   "component": {
-    "rule": "agent.thrashing",
     "domain": "agent.thrashing",
     "layer": "governance",
     "culprit": "agent agt_7f3k stuck in repetitive denial loop (rule: policy.query.update_delete.require_limit, target: db://orders)",
+    "measured": "denials_last_5m: 22 (threshold: 20)",
     "remedy": "harness execution throttled; escalate to human or inspect remedy payload",
-    "fields": {
-      "agent": "agt_7f3k",
-      "denials_last_5m": "22",
-      "rule_hit": "policy.query.update_delete.require_limit",
-      "target": "db://orders",
-      "harness_status": "stuck in repetitive denial loop"
-    }
+    "agent": "agt_7f3k",
+    "denials_last_5m": "22",
+    "rule_hit": "policy.query.update_delete.require_limit",
+    "target": "db://orders",
+    "harness_status": "stuck in repetitive denial loop"
   }
 }
 ```
@@ -836,23 +915,30 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "run.execute.refusal.missing_secret",
+  "target": "cap://stripe.refund_charge",
   "command": "capcli run cap://stripe.refund_charge -p charge_id=ch_1F2a9b -p amount_cents=8400 -m \"refund duplicate charge\"",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.secrets.missing",
     "domain": "policy.secrets",
     "layer": "vault",
-    "span": {
-      "source": "vault://stripe_secret_key",
-      "detail": "Direct CLI parameter injection is banned to prevent prompt leakage."
-    },
     "culprit": "Credential 'stripe_secret_key' not found in vault.",
     "remedy": "prompt human supervisor to inject credential via Cockpit (http://127.0.0.1:4040/vault)",
-    "fields": {
-      "capability": "cap://stripe.refund_charge",
-      "secret_ref": "vault://stripe_secret_key"
-    }
+    "capability": "cap://stripe.refund_charge",
+    "secret_ref": "vault://stripe_secret_key",
+    "lines": [
+      "Direct CLI parameter injection is banned to prevent prompt leakage."
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://budget/execution_starved@1",
+    "reason": "missing secret refusal: vault credential absent",
+    "serve": "L1"
   }
 }
 ```
@@ -884,23 +970,31 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "run.execute.denial.network_jail",
+  "target": "cap://sneaky_exfil@1",
   "command": "capcli run cap://sneaky_exfil@1 -p db_host=10.0.0.5:5432 -m \"replicate orders to analytics host\"",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "kernel.network.jail",
     "domain": "kernel.sandbox",
     "layer": "sandbox",
-    "span": {
-      "source": "routines/sneaky_exfil.py",
-      "detail": "syscall 42 (connect) trapped by seccomp-bpf -> 10.0.0.5:5432"
-    },
-    "culprit": "Raw network egress prohibited from guest sandboxes.",
+    "culprit": "Raw connect() to 10.0.0.5:5432 trapped by seccomp-bpf filter (syscall 42).",
     "remedy": "use ctx.api.call with an activated catalog verb",
-    "fields": {
-      "target": "10.0.0.5:5432",
-      "caller": "routines/sneaky_exfil.py"
-    }
+    "target": "10.0.0.5:5432",
+    "caller": "routines/sneaky_exfil.py",
+    "lines": [
+      "syscall 42 (connect) trapped by seccomp-bpf",
+      "Raw network egress prohibited from guest sandboxes."
+    ]
+  },
+  "trailer": {
+    "prompt": "prompt://budget/execution_starved@1",
+    "reason": "network jail denial: sandbox egress trapped",
+    "serve": "L1"
   }
 }
 ```
@@ -932,26 +1026,28 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "run.execute.yield.quota",
+  "target": "cap://broadcast_newsletter@2",
   "command": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
-  "context": { "env": "prod", "tier": "tier_1", "trust": "pinned" },
+  "context": {
+    "env": "prod",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.api.quota_exhausted",
     "domain": "api.quota",
-    "layer": "quota",
-    "span": {
-      "source": "cap://broadcast_newsletter@2",
-      "detail": "routine broadcast_newsletter@2 (frame_018)"
-    },
     "culprit": "Provider quota exhausted: threads has 0/50 tokens left in the 24h window.",
     "remedy": "task safely yielded; daemon will auto-resume at reset_at",
-    "suspended_frame": "task_99a8b1",
     "tokens_left": "0 / 50 (24h window)",
     "reset_at": "18:00:00 UTC (in 4h 12m)",
-    "fields": {
-      "provider": "threads",
-      "verb": "threads.create_media_post"
-    }
+    "suspended_frame": "task_99a8b1",
+    "provider": "threads",
+    "verb": "threads.create_media_post",
+    "layer": "quota",
+    "lines": [
+      "routine broadcast_newsletter@2 (frame_018)"
+    ]
   }
 }
 ```
@@ -984,14 +1080,21 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.success.clock_drift",
+  "target": "sys://host",
   "command": "capcli sys doctor",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "reviewed" },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed",
+    "data_shape": "populated"
+  },
   "archetype": "receipt",
   "component": {
+    "title": null,
     "groups": [
       {
         "fields": {
-          "clock drift warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
+          "⚠  clock drift warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
           "causal ordering unaffected": "CLOCK_MONOTONIC + SQLite sequence IDs"
         },
         "lines": [
@@ -1033,25 +1136,56 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "doc.read.success.sliced",
+  "target": "doc://refund-policy",
   "command": "capcli doc read doc://refund-policy --max-tokens 100",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "pinned" },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned",
+    "data_shape": "truncated"
+  },
   "archetype": "document",
   "component": {
     "header_badge": "doc://refund-policy (sections 1-2 of 5)",
+    "pagination": {
+      "items": [
+        {
+          "section": 1,
+          "heading": "Scope",
+          "tokens": 22
+        },
+        {
+          "section": 2,
+          "heading": "Refund windows",
+          "tokens": 74
+        }
+      ],
+      "next_cursor": "doc://refund-policy#3",
+      "has_more": true
+    },
     "meta": {
+      "document": "doc://refund-policy",
       "tokens": "96 (cap: 100)",
       "has_more": true,
       "next_cursor": "doc://refund-policy#3"
     },
-    "items": [
-      { "section": 1, "heading": "Scope", "tokens": 22 },
-      { "section": 2, "heading": "Refund windows", "tokens": 74 }
-    ],
     "body": [
-      "1. Scope\nRefund routing and approval rules for the storefront.",
-      "2. Refund windows\nStandard window is 30 days. Extended window is 120 days and requires supervisor approval."
+      "1. Scope",
+      "Refund routing and approval rules for the storefront.",
+      "2. Refund windows",
+      "Standard window is 30 days. Extended window is 120 days and requires",
+      "supervisor approval."
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli doc outline doc://refund-policy",
+      "intent": "Outline node tree with section indices",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }
 ```
 
@@ -1090,18 +1224,38 @@ Fixture (`wireframe/v2`):
   "$schema": "wireframe/v2",
   "id": "sys.help.success.stub",
   "command": "capcli",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "reviewed" },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed"
+  },
   "archetype": "document",
   "component": {
     "header_badge": "capcli 0.4.2 — compiled execution firewall for AI agents",
+    "fields": {
+      "Find actions": "capcli search <query>",
+      "Pre-flight": "capcli inspect <urp>",
+      "System status": "capcli sys doctor"
+    },
     "body": [
       "Usage: capcli <noun> <verb> [target] [flags]",
-      "Capabilities are discovered dynamically, not listed in static help.",
-      "  Find actions:    capcli search <query>",
-      "  Pre-flight:      capcli inspect <urp>",
-      "  System status:   capcli sys doctor"
+      "Capabilities are discovered dynamically, not listed in static help."
     ]
-  }
+  },
+  "trailer": {
+    "prompt": "prompt://onboarding/human@1",
+    "reason": "human operator requested onboarding tour",
+    "serve": "L1"
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli sys doctor --boot-check",
+      "intent": "Host doctor readiness check",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }
 ```
 
@@ -1157,25 +1311,28 @@ Root field law:
 
 - `$schema` is `wireframe/v2`. `id` is the screen identity; noun and verb are its first two segments and appear nowhere else.
 - `command` states the invocation the screen answers; any target pointer lives inside the command string.
-- `context` is the `CliEnvelope` context frame: `env`, `tier`, `trust`. The renderer derives the `[{env}:{tier}]` badge from it.
+- `target` names the single invocation target when the command carries one (238/247 fixtures on disk) and is absent on targetless commands.
+- `context` is the `CliEnvelope` context frame: `env`, `tier`, `trust`, plus optional `data_shape` (61/247 fixtures on disk). The renderer derives the `[{env}:{tier}]` badge from it.
 - `audit_op` names the audit operation the envelope reports. It appears when the screen reports one and is absent otherwise.
 - `archetype` is exactly one of `diagnostic`, `tree`, `receipt`, `document` (archetype law: cans/physics.md#Diagnostic-output-law). `component` carries that archetype's payload and nothing else.
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
+- `affordances` is an optional root key on exit-0 fixtures only (state segment `success`; archetype `receipt`, `tree`, or `document`). Each entry is `{ rel, command, intent, risk, requires_intent }` (cans/interface.md#CLI-surface Success affordances); `command` is the target screen's fixture `command` string verbatim, sourced from `_flows.json` transitions, and `risk` is `mutating` exactly when `requires_intent` is `true`. It is a machine envelope key: renderers never emit it as a human output line, and its presence or absence changes no exit, state, or payload byte. Shape: `output_contract.affordances.machine_schema` in `manifest.json`.
 
 Derived-state law:
 
 - The exit code derives from the `id` state segment: `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6. Fixtures carry no `exit_code`; state and domain legality lives in `_states.json`.
 - Fixtures carry no `state_modified`. A non-zero exit carries `state_modified: false` as a kernel invariant (cans/physics.md#Exit-code-law). Success screens take `state_modified` from the exit-0 variants in `_states.json` (`committed`, `dry_run`, `suspended`, `resumed`). A renderer emits a `state_modified` row from the derived value only; the fixture never stores it.
+- A stored `state_modified` key at envelope root, inside `component.groups[].fields`, inside `component.footer`, or inside `component.fields` carries the same ban at every depth; `_states.json` and the exit are the single home of the value.
 - A diagnostic component carries `domain` once, in the component. Success components carry no `domain`.
 - Archetype dispatch is deterministic: states `denial`, `refusal`, `crash`, `panic`, `yield` are `diagnostic`; `success` resolves to `receipt`, `tree`, or `document` by content (key-value summary, hierarchy, prose slice or help).
 - Visual typography is renderer output, never fixture data: caret strings and their column offsets, indentation, tree branch glyphs (`├──`, `└──`, `│`), divider lines (`─`), and key-column alignment are computed by the component renderers from component data.
 
 Component law:
 
-- **diagnostic** — `{ rule, domain, layer, span, culprit, measured?, remedy, fields?, suspended_frame?, tokens_left?, reset_at?, ask_id?, pending_asks? }`. `rule` is the violated rule id; `domain` is the `_states.json` domain, stored once here; `layer` names the enforcement layer. `span` is `{ source, highlight?, detail? }`: `source` is the offending source text, `highlight` is the exact substring the renderer underlines with carets at its computed offset, `detail` carries indented span context lines. `culprit` is the failure statement; `measured` cites the measured value on denials that carry one; `remedy` is the remediation line. `fields` is an optional ordered key-value block of screen-specific rows. Exit 6 components additionally carry `suspended_frame`, plus the domain fields registered in `_states.json` (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`, `pending_asks`). Required diagnostic fields per exit live in `_states.json` `diagnostic_required`; a fixture carries each value once, in this component.
-- **tree** — `{ title, root, nodes, footer? }`. `title` is the header line after the badge. `root` is `{ id, type, intent, fields? }`: the walk origin, its kind, its stated intent, and optional ordered key-value rows. `nodes` is an ordered array of `{ id, label, status?, duration_ms?, detail?, fields?, children? }`; `children` recurses with the same shape. The renderer computes indentation and branch glyphs from nesting; a node's `detail` renders as its indented leaf line. `footer` is an optional ordered key-value block rendered after the walk.
-- **receipt** — `{ title?, groups }`. `title` renders as the receipt heading (block heading line or badge suffix, per screen). `groups` is an ordered array of `{ name?, fields?, lines? }`: `name` renders as the group's `name:` heading line, `fields` is an ordered key-value map the renderer aligns into label columns, `lines` carries verbatim content lines the renderer indents under the group. Key order in `fields` is render order.
-- **document** — `{ header_badge, meta?, body, items? }`. `header_badge` is the document header line after the context badge. `meta` is `{ tokens?, has_more?, next_cursor? }`: the slice token accounting and the keyset pagination state. `body` is an ordered array of prose strings; the renderer emits divider lines and wraps body text. `items` carries the typed leading items of a truncated payload (§6.1.2).
+- **diagnostic** — `{ rule?, domain, layer?, span?, culprit, measured?, remedy, lines?, suspended_frame?, tokens_left?, reset_at?, ask_id?, pending_asks?, ...fields }`. `domain`, `culprit`, and `remedy` are present on every diagnostic fixture (131/131 on disk); `remedy` is a single string. `rule` (110/131 on disk) is the violated rule id, stored once here; `layer` (71/131 on disk) names the enforcement layer. Required fields per exit live in `_states.json` `diagnostic_required` and every fixture carries its exit's required set. `span` is `{ source, highlight?, detail? }`: `source` is the offending source text, `highlight` is the exact substring the renderer underlines with carets at its computed offset, `detail` carries indented span context lines. `measured` cites the measured value on denials that carry one. `lines` is an optional array of verbatim content strings (90/131 on disk). Every other key at component root is a screen-specific field row captured by the flattened fields map; no diagnostic fixture carries a nested `fields` key (0/131 on disk), and field values are strings or list values. A flattened key is the rendered field label: one complete label, never a truncated sentence fragment; the value carries the data. Exit 6 components additionally carry `suspended_frame`, plus the domain fields registered in `_states.json` (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`, `pending_asks`).
+- **tree** — `{ title, root, nodes, footer? }`. `title` is the header line after the badge. `root` is a string (17/17 on disk): the rendered root line. `nodes` is an ordered array of `{ label, children }` (115 nodes on disk); `children` recurses with the same shape and is present on every node, empty at leaves. The renderer computes indentation and branch glyphs from nesting; the node label carries the full line text. `footer` is an optional ordered key-value block rendered after the walk.
+- **receipt** — `{ title, groups }`. `title` renders as the receipt heading and is `null` on fixtures that carry no heading (83/89 null, 6/89 string on disk). `groups` is an ordered array of `{ title?, fields?, lines? }` (183 groups on disk): `title` renders as the group's heading line (8/183 on disk; the former `name` key is unattested, 0/183), `fields` is an ordered key-value map the renderer aligns into label columns (154/183), `lines` carries verbatim content lines the renderer indents under the group (54/183). Key order in `fields` is render order.
+- **document** — `{ header_badge, pagination?, meta?, fields?, body }`. `header_badge` is the document header line after the context badge. `pagination` is the keyset envelope of a truncated or sliced payload (§6.1.2). `meta` is an ordered key-value map (9/10 on disk) carrying slice accounting and the pagination cursor mirror. `fields` is an ordered key-value map (9/10 on disk) carrying the screen's rows. `body` is an ordered array of prose strings (10/10 on disk); the renderer emits divider lines and wraps body text.
 
 ### 6.1.1 Trailer Slot
 
@@ -1205,11 +1362,12 @@ never serialize a `next_action` key.
 Truncated screens carry the keyset envelope inside the component, mirroring
 `output_contract.pagination.required_envelope_keys` in `manifest.json`:
 
-- `document` components: `items` at component level (a small representative
-  array of typed leading items, not the full set), with `next_cursor` and
-  `has_more` in `meta`.
-- `receipt` components: `items`, `next_cursor`, and `has_more` at component
-  level, beside `groups`.
+- `document` components (6/10 on disk, every truncated or sliced screen):
+  a `pagination` object `{ items, next_cursor, has_more }` at component
+  level, with `items` as the typed leading items (not the full set) and
+  `meta` mirroring `next_cursor` and `has_more`.
+- `receipt` components: no fixture on disk carries pagination keys; every
+  truncated screen is a `document`.
 
 `next_cursor` is the keyset cursor a follow-up invocation passes to resume;
 `has_more` is always `true` on a truncated screen. Non-truncated screens
@@ -1242,6 +1400,7 @@ struct Context {
     env: String,
     tier: String,
     trust: String,
+    data_shape: Option<String>,
 }
 
 /// Semantic span. Caret runs and offsets are computed at render time
@@ -1253,46 +1412,41 @@ struct Span {
     detail: Option<String>,
 }
 
-/// Archetype A payload (§6.1 component law).
+/// Archetype A payload (§6.1 component law). Required fields per exit
+/// live in `_states.json` `diagnostic_required`; every fixture carries
+/// its exit's set. Screen-specific field rows are flattened at component
+/// root (see `fields`); no fixture carries a nested `fields` key.
 #[derive(Deserialize)]
 struct DiagnosticComponent {
-    rule: String,
+    rule: Option<String>,
     domain: String,
-    layer: String,
+    layer: Option<String>,
     span: Option<Span>,
     culprit: String,
     measured: Option<String>,
     remedy: String,
-    fields: Option<serde_json::Map<String, serde_json::Value>>,
+    lines: Option<Vec<String>>,
     suspended_frame: Option<String>,
     tokens_left: Option<String>,
     reset_at: Option<String>,
     ask_id: Option<String>,
     pending_asks: Option<String>,
+    #[serde(flatten)]
+    fields: serde_json::Map<String, serde_json::Value>,
 }
 
-/// Archetype B node; `children` recurses. Branch glyphs and indentation
-/// are computed at render time from nesting.
+/// Archetype B node; `children` recurses and is present on every node,
+/// empty at leaves. Branch glyphs and indentation are computed at
+/// render time from nesting; the label carries the full line text.
 #[derive(Deserialize)]
 struct TreeNode {
-    id: String,
     label: String,
-    status: Option<String>,
-    duration_ms: Option<u64>,
-    detail: Option<String>,
-    fields: Option<serde_json::Map<String, serde_json::Value>>,
     #[serde(default)]
     children: Vec<TreeNode>,
 }
 
-#[derive(Deserialize)]
-struct TreeRoot {
-    id: String,
-    #[serde(rename = "type")]
-    kind: String,
-    intent: String,
-    fields: Option<serde_json::Map<String, serde_json::Value>>,
-}
+/// Archetype B root: the rendered root line as a plain string.
+type TreeRoot = String;
 
 /// Archetype B payload (§6.1 component law).
 #[derive(Deserialize)]
@@ -1306,38 +1460,39 @@ struct TreeComponent {
 /// Archetype C group; key order in `fields` is render order.
 #[derive(Deserialize)]
 struct ReceiptGroup {
-    name: Option<String>,
+    title: Option<String>,
     fields: Option<serde_json::Map<String, serde_json::Value>>,
     lines: Option<Vec<String>>,
 }
 
-/// Archetype C payload (§6.1 component law). Truncated receipts carry
-/// the pagination keys at component level (§6.1.2).
+/// Archetype C payload (§6.1 component law). `title` is `null` on
+/// fixtures that carry no heading.
 #[derive(Deserialize)]
 struct ReceiptComponent {
     title: Option<String>,
     groups: Vec<ReceiptGroup>,
-    items: Option<Vec<serde_json::Value>>,
-    next_cursor: Option<String>,
-    has_more: Option<bool>,
 }
 
-/// Archetype D pagination/slice meta.
+/// Archetype D pagination envelope (§6.1.2): typed leading items plus
+/// the keyset cursor state. Every truncated or sliced screen on disk is
+/// a `document` carrying this object.
 #[derive(Deserialize)]
-struct DocumentMeta {
-    tokens: Option<String>,
-    has_more: Option<bool>,
-    next_cursor: Option<String>,
+struct DocumentPagination {
+    items: Vec<serde_json::Value>,
+    next_cursor: String,
+    has_more: bool,
 }
 
-/// Archetype D payload (§6.1 component law). Truncated documents carry
-/// typed leading `items` at component level (§6.1.2).
+/// Archetype D payload (§6.1 component law). `meta` carries slice
+/// accounting and the pagination cursor mirror; `fields` carries the
+/// screen's rows. Both are ordered key-value maps.
 #[derive(Deserialize)]
 struct DocumentComponent {
     header_badge: String,
-    meta: Option<DocumentMeta>,
+    pagination: Option<DocumentPagination>,
+    meta: Option<serde_json::Map<String, serde_json::Value>>,
+    fields: Option<serde_json::Map<String, serde_json::Value>>,
     body: Vec<String>,
-    items: Option<Vec<serde_json::Value>>,
 }
 
 /// The four layout components, dispatched on the `archetype` key.
@@ -1354,17 +1509,32 @@ enum ComponentPayload {
     Document(DocumentComponent),
 }
 
+/// Exit-0 next action (§6.1 root field law; cans/interface.md#CLI-surface
+/// Success affordances). The command is a fixture command string verbatim.
+#[derive(Deserialize)]
+struct Affordance {
+    rel: String,
+    command: String,
+    intent: String,
+    risk: String,
+    requires_intent: bool,
+}
+
 /// Root fixture: a serialized CliEnvelope payload (§6.1).
 /// Exit code and state_modified are derived, never stored.
 #[derive(Deserialize)]
 struct AtomicFixture {
+    #[serde(rename = "$schema")]
+    schema: String,
     id: String,
+    target: Option<String>,
     command: String,
     context: Context,
     audit_op: Option<String>,
     #[serde(flatten)]
     payload: ComponentPayload,
     trailer: Option<serde_json::Value>,
+    affordances: Option<Vec<Affordance>>,
 }
 
 impl AtomicFixture {
@@ -1448,6 +1618,8 @@ fn execute_wireframe_golden_tests() {
 Trailer checks, applied by the runner to every fixture:
 
 Trailer presence on a screen is decided solely by `cans/artifacts/prompt/_triggers.json`. This section carries no trailer-screen list.
+
+Predicate branches on a single screen are trigger-level tests: the runner evaluates each `_triggers.json` predicate for that screen against the runtime context and asserts the selected pointer, the fixture carries the one trailer instance for the branch its context represents, and no second fixture for the same screen id is created for another branch.
 
 a. **Schema.** A `trailer` payload validates against `machine_schema` in `manifest.json`.
 b. **Position.** The human trailer is the final rendered line; the machine trailer is an additive envelope key.

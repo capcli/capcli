@@ -38,11 +38,6 @@
           "stage_2_bound (cap 50)",
           "stage_3_pin (cap 60)"
         ]
-      },
-      {
-        "fields": {
-          "state_modified": "false"
-        }
       }
     ]
   }

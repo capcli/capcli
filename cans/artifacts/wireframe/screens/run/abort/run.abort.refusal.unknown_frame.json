@@ -1,0 +1,23 @@
+{
+  "$schema": "wireframe/v2",
+  "archetype": "diagnostic",
+  "command": "capcli run abort frame_999",
+  "component": {
+    "culprit": "No suspended frame 'frame_999' exists in _suspended_tasks.",
+    "domain": "missing_param",
+    "frame": "frame_999",
+    "layer": "cli",
+    "lines": [
+      "capcli run abort frame_999"
+    ],
+    "remedy": "inspect suspended frames via 'capcli run overview', then re-run with a listed frame id",
+    "rule": "missing_param.unknown_frame"
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "id": "run.abort.refusal.unknown_frame",
+  "target": "frame_999"
+}

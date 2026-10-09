@@ -56,5 +56,21 @@
       "resume": "append WHERE id > :cursor to continue past the cap"
     },
     "body": []
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api catalog stripe --state active --json",
+      "intent": "Imported catalog verbs listed",
+      "risk": "safe",
+      "requires_intent": false
+    },
+    {
+      "rel": "inspect",
+      "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\" --out out/orders_export.json",
+      "intent": "SQL export payload directed to disk via `--out`",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

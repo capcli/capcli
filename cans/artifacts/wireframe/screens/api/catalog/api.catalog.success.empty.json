@@ -25,11 +25,6 @@
           "Sync a provider spec to populate the catalog, e.g.",
           "'capcli api sync stripe https://api.stripe.com/openapi.json'"
         ]
-      },
-      {
-        "fields": {
-          "state_modified": "false"
-        }
       }
     ]
   },
@@ -37,5 +32,14 @@
     "prompt": "prompt://api/catalog_empty@1",
     "reason": "no external API catalogs configured",
     "serve": "L1"
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api catalog",
+      "intent": "Truncated at 500 verbs",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

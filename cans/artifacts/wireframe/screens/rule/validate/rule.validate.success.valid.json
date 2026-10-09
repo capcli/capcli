@@ -25,8 +25,7 @@
     "footer": {
       "source": "schema.yaml v13",
       "scope": "4 tables · 23 columns · 8 indexes · 2 triggers",
-      "compiled": "17 DDL statements (deterministic; byte-reproducible)",
-      "state_modified": "false"
+      "compiled": "17 DDL statements (deterministic; byte-reproducible)"
     }
   }
 }

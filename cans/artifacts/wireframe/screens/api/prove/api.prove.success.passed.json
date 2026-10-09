@@ -28,11 +28,6 @@
           "p50_duration": "118ms",
           "p95_duration": "240ms"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "false"
-        }
       }
     ]
   }

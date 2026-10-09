@@ -43,8 +43,7 @@
       },
       {
         "fields": {
-          "result_hash": "sha256:9c41e7b0d2a8f513c6ee",
-          "state_modified": "true"
+          "result_hash": "sha256:9c41e7b0d2a8f513c6ee"
         }
       }
     ]

@@ -21,5 +21,10 @@
       "syscall 42 (connect) trapped by seccomp-bpf",
       "Raw network egress prohibited from guest sandboxes."
     ]
+  },
+  "trailer": {
+    "prompt": "prompt://budget/execution_starved@1",
+    "reason": "network jail denial: sandbox egress trapped",
+    "serve": "L1"
   }
 }

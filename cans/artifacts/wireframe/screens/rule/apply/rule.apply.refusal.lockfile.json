@@ -13,9 +13,9 @@
     "domain": "lockfile_mismatch",
     "culprit": "Working tree drifted from the locked manifest; DDL application refused.",
     "remedy": "restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path",
-    "capcli.lock entry": "sha256:4a8f9c2d11e9a4c0",
-    "compiled root hash": "sha256:7b31d05e88c2f4a9",
-    "sources hashed": "schema.yaml, system-schema.yaml, policy.yaml, governance.yaml",
+    "lockfile_entry": "sha256:4a8f9c2d11e9a4c0",
+    "compiled_root_hash": "sha256:7b31d05e88c2f4a9",
+    "hashed_sources": "schema.yaml, system-schema.yaml, policy.yaml, governance.yaml",
     "lines": [
       "FATAL  lockfile_mismatch.root_hash_drift"
     ]

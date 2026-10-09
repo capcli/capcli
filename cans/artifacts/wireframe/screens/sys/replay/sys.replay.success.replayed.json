@@ -24,7 +24,6 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "note": "idempotency keys suppressed duplicate side-effects; replay committed to _audit as new causal branch"
         }
       }

@@ -14,7 +14,7 @@
     "domain": "missing_param",
     "culprit": "Missing intent declaration.",
     "remedy": "re-run with --intent \"<why this question is asked>\"",
-    "ping ask requires --intent \"...\" (policy": "notify.require_intent).",
+    "intent_policy": "notify.require_intent",
     "lines": [
       "capcli ping ask user:alice \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h"
     ]

@@ -32,12 +32,16 @@
         "lines": [
           "Zero drift from active catalog."
         ]
-      },
-      {
-        "fields": {
-          "state_modified": "false"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api diff stripe",
+      "intent": "Spec divergence detected",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

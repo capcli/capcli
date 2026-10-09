@@ -34,11 +34,24 @@
       },
       {
         "fields": {
-          "state_modified": "false",
           "note": "verification only; no sim world state committed",
           "audit": "op_prove_02"
         }
       }
     ]
-  }
+  },
+  "trailer": {
+    "prompt": "prompt://promotion/routine_passed@1",
+    "reason": "overview proof passed: promotion handoff",
+    "serve": "L1"
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine ship sync_orders reviewed --queue --reason \"recurring fulfillment sync, human-reviewed\"",
+      "intent": "Enqueued for human review; zero code shipped",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

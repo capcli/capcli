@@ -116,8 +116,16 @@
       "source": "schema.yaml v12 (compiled)",
       "engine": "sqlite (envs/dev/workspace.db)",
       "compiled_at": "2026-10-04T00:00:00Z",
-      "gates": "Gate 1 pass · Gate 2 pass",
-      "state_modified": "false"
+      "gates": "Gate 1 pass · Gate 2 pass"
     }
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli rule diff schema --git",
+      "intent": "Workspace in lockstep with rules",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

@@ -1,0 +1,37 @@
+{
+  "$schema": "wireframe/v2",
+  "archetype": "receipt",
+  "audit_op": "op_5a21",
+  "command": "capcli api import stripe /v1/charges POST --spec https://api.stripe.com/openapi.json",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "catalog": "apis/stripe.yaml",
+          "endpoint": "POST /v1/charges",
+          "provider": "stripe",
+          "spec": "https://api.stripe.com/openapi.json",
+          "trust": "draft",
+          "verb": "cap://stripe.charges.create (dormant)"
+        }
+      }
+    ],
+    "title": null
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "id": "api.import.success.imported",
+  "target": "stripe",
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api catalog stripe --state active --json",
+      "intent": "Confirm the imported verb sits in the catalog",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
+}

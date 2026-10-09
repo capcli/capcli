@@ -20,11 +20,6 @@
           "reason": "deprecated upstream",
           "callable": "false (dormant verbs are discoverable, inspectable, uncallable)"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
   }

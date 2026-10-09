@@ -18,10 +18,10 @@
     "remedy": "shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain",
     "child": "recount_stock@2 (frame_025) declared 6 ops",
     "effective": "min(declared 6, governance 50, parent 2, session 488) -> 2 ops",
-    "exhausted at": "op 3 (db.query crossed the clipped ceiling)",
-    "parent frame": "frame_024 (sync_inventory@3) 2 ops remaining",
+    "exhausted_at": "op 3 (db.query crossed the clipped ceiling)",
+    "parent_frame": "frame_024 (sync_inventory@3) 2 ops remaining",
     "ancestors": "session remaining 488 ops (parent was the tightest constraint)",
-    "Splitting is not escaping": "the cage tightens, never widens.",
+    "frame_splitting": "the cage tightens, never widens.",
     "lines": [
       "child frame starved by min() cascade"
     ]

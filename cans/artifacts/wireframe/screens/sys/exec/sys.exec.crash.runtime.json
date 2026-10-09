@@ -19,7 +19,6 @@
     "jail": "torn down; tmpfs scratch wiped",
     "lines": [
       "Guest process crashed before returning an audit outcome.",
-      "state_modified: false",
       "rollback:       clean",
       "remedy:         reproduce via 'capcli sys exec \"python3 -X faulthandler etl.py\" --sandbox' and pin the failing native extension"
     ]

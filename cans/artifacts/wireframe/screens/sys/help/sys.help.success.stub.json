@@ -24,5 +24,14 @@
     "prompt": "prompt://onboarding/human@1",
     "reason": "human operator requested onboarding tour",
     "serve": "L1"
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli sys doctor --boot-check",
+      "intent": "Host doctor readiness check",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

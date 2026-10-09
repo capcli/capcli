@@ -19,8 +19,7 @@
           "principal": "user:alice",
           "message": "\"Nightly sync finished\"",
           "intent": "declared (\"morning briefing\")",
-          "receipt": "ntf_4c1d9e",
-          "state_modified": "true"
+          "receipt": "ntf_4c1d9e"
         }
       }
     ]

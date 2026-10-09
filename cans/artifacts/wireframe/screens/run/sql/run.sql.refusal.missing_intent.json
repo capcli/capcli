@@ -13,7 +13,7 @@
     "domain": "missing_param",
     "culprit": "Mutating write rejected: -m/--intent is required for writes.",
     "remedy": "restate with -m \"<why>\", e.g. -m \"batch ship processing orders\"",
-    "Mutating write rejected": "-m/--intent is required for writes.",
+    "mutating_write": "-m/--intent is required for writes.",
     "policy.query.writes_require_intent": "no intent, no execution.",
     "layer": "missing_param",
     "lines": [

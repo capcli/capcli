@@ -43,10 +43,32 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "audit": "op_ship_04 (routine.ship committed; promoted_through recorded)"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine ship order_sync reviewed",
+      "intent": "Canary telemetry trips auto-rollback",
+      "risk": "mutating",
+      "requires_intent": true
+    },
+    {
+      "rel": "inspect",
+      "command": "capcli sys doctor --report",
+      "intent": "Full YAML Trust Receipt",
+      "risk": "safe",
+      "requires_intent": false
+    },
+    {
+      "rel": "inspect",
+      "command": "capcli run overview",
+      "intent": "Situational KPI briefing (<500 tokens)",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

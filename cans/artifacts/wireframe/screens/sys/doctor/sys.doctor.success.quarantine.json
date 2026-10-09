@@ -27,7 +27,6 @@
       },
       {
         "fields": {
-          "state_modified": "false",
           "note": "reads stay operable per quarantine law; restore path requires proof bundle review before re-anchor"
         }
       }

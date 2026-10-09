@@ -20,6 +20,6 @@
       "source": "FAIL  policy.authorizer.schedule_min_interval",
       "highlight": "orizer.sc"
     },
-    "cron expr": "* * * * *"
+    "cron_expr": "* * * * *"
   }
 }

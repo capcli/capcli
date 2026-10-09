@@ -26,10 +26,18 @@
       },
       {
         "fields": {
-          "state_modified": "false",
           "note": "no execution occurred"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\"",
+      "intent": "SELECT result bounded at 10,000 rows",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

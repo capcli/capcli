@@ -42,5 +42,14 @@
       "truncated": "true"
     },
     "body": []
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli run cap://report_orders@2 -p quarter=2026Q3 --out report.json",
+      "intent": "Payload directed to file via `--out`; stdout emits receipt",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

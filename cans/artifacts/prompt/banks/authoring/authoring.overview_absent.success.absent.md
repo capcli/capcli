@@ -44,8 +44,8 @@ Ensure the overview output envelope stays strictly below 500 result tokens.
 Never return unbounded lists or raw JSON blobs inside overview payloads.
 
 ## section:stage_3_pin
-Rehearse in simulation and promote to pinned:
+Rehearse in simulation and enqueue for reviewed trust:
 ```bash
 capcli routine prove overview --env sim
-capcli routine ship overview pinned --reason "Establish system overview baseline"
+capcli routine ship overview reviewed --queue --reason "Establish system overview baseline"
 ```

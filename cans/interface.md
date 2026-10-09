@@ -18,6 +18,7 @@
     - Hot path: run noun
       - Commands
         - execute — run <capability> [-p k=v]
+        - abort — run abort <frame_id> — cancels a suspended frame; fence release law: see physics.md#Exit-code-law
         - sql — sql "<query>" [-p k=v] [-m "intent"] [--dry-run] — unified AST-gated query & execution
         - overview — run overview [--as <principal>] — single-shot domain situational briefing
         - search — search <query> [--type <domain>] [--trust X] [--env X]
@@ -33,6 +34,11 @@
         - api metrics — quota, session fuel remaining, sim mode
         - composition — nesting depth, child routines, budget cascade
         - pre-flight check — can_invoke_now boolean verdict
+      - Success affordances
+        - exit 0 only — success envelopes carry an `affordances` array; non-zero exits carry remedy instead
+        - entry — { rel, command, intent, risk, requires_intent }; rel names the step (next, abort, inspect)
+        - execution — an agent runs an affordance command verbatim; no command is inferred from prose
+        - optionality — the array is additive and optional; absence changes no exit, state, or payload byte
     - Storage path: db noun
       - Locking — db lock <table>:<ref> --ttl <duration> --reason "..."
       - Release — db unlock <target>
@@ -41,13 +47,14 @@
     - Routine path: routine noun
       - Authoring — direct write in routines/<name>.py (or optional scaffold via routine new <name> [--template <ptr>] [-p k=v])
       - Verification — routine prove <name> [-p k=v] [--env sim]
-      - Promotion — routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
+      - Promotion — routine ship <name> <reviewed|pinned> [--env X] [--reason "..."] [--queue]
       - Maintenance — routine sweep [--since 30d]
       - Profiling — routine stats <name> [--deep]
       - Recovery — routine rollback <name> [version]
       - Retirement — routine retire <name> [--reason]
     - API path: api noun
       - Import — api import <provider> <path> <method> [--spec <url|file>]
+      - Sync — api sync <provider> <spec_url> [--interval <duration>] — full catalog refresh; cadence: see action.md#Catalog-synchronization
       - Record — api record <provider.verb> [-p k=v] — captures live response and compiles JSON Schema contract
       - Drift — api diff <provider>
       - Catalog — api catalog <provider> [--state <state>]

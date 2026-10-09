@@ -43,7 +43,7 @@
       - activation — CAPCLI_RECOVERY=1 environment variable: see physics.md#Break-glass-paths
       - handler — native recover command in crates/capcli-cli/src/commands/
       - components — loads schema and audit sink only; policy disabled
-      - allowlist — sql (read-only), db dump, sys audit tail, sys backup
+      - allowlist — sql (read-only), db dump, sys audit tail, sys backup, sys recover
       - audit trail — logs recovery_mode_entered event on startup
     - Re-entry context
       - context reinstatement

@@ -31,12 +31,16 @@
         "lines": [
           "workspace is in lockstep with declared rules; no drift found."
         ]
-      },
-      {
-        "fields": {
-          "state_modified": "false"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli rule diff schema --git",
+      "intent": "Schema/policy drift detected",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

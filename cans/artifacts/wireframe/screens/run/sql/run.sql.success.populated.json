@@ -27,7 +27,6 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "result_hash": "sha256:3d91c4e7a8b2f0c5d9e6a1b7f834c2ad"
         },
         "lines": [
@@ -35,5 +34,14 @@
         ]
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli db snapshot -m \"pre-migration safety point\"",
+      "intent": "Point-in-time snapshot committed",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

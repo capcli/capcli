@@ -24,11 +24,19 @@
       },
       {
         "fields": {
-          "state_modified": "true",
           "audit": "op_new_01 (routine.draft committed with template_hash)",
           "next": "capcli routine prove sync_orders --env sim"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine prove sync_orders --env sim",
+      "intent": "Dynamic fingerprint verified",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

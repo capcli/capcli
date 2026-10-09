@@ -32,11 +32,19 @@
       {
         "fields": {
           "final_rung": "draft (promotion reverted)",
-          "state_modified": "true",
           "audit": "op_ship_07 (routine.canary_rollback committed)",
           "note": "re-prove in sim before re-promotion"
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli routine pending",
+      "intent": "No routines pending promotion",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

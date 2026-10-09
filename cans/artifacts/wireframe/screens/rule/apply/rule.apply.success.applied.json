@@ -31,12 +31,16 @@
           "lockfile": "capcli.lock re-locked (sha256:9e2b71c4)",
           "audit": "op_13f9 (rule.apply) committed to _audit"
         }
-      },
-      {
-        "fields": {
-          "state_modified": "true"
-        }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli db snapshot -m \"pre-migration safety point\"",
+      "intent": "Point-in-time snapshot committed",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
 }

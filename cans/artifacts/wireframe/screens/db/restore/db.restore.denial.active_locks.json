@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "db.restore.denial.active_locks",
-  "target": "db://orders",
+  "target": "db://",
   "command": "capcli db restore snap_migration_004",
   "context": {
     "env": "dev",

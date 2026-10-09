@@ -31,5 +31,14 @@
         }
       }
     ]
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 2 LIMIT 20\"",
+      "intent": "SQL executed against `_audit`",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

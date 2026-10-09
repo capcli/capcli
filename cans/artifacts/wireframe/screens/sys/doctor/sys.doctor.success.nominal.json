@@ -33,7 +33,6 @@
       },
       {
         "lines": [
-          "state_modified: false",
           "note:           boot-check probes only; no execution occurred"
         ]
       }
@@ -43,5 +42,21 @@
     "prompt": "prompt://onboarding/harness@1",
     "reason": "harness at nominal doctor with empty domain",
     "serve": "L1"
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli search 'kombucha supplier sync'",
+      "intent": "Zero hits; outputs semantic suggestions",
+      "risk": "safe",
+      "requires_intent": false
+    },
+    {
+      "rel": "inspect",
+      "command": "capcli search 'order'",
+      "intent": "Matched capabilities and URP pointers",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }
