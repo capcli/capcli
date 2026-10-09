@@ -1,73 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.doctor.denial.thrashing",
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.denial.thrashing",
   "target": "sys://host",
   "command": "capcli sys doctor",
-  "state": {
-    "exit_code": 2,
-    "domain": "agent.thrashing",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "agent.thrashing",
-    "culprit": "agent agt_7f3k stuck in repetitive denial loop (rule: policy.query.update_delete.require_limit, target: db://orders)",
-    "remedy": "harness execution throttled; escalate to human or inspect remedy payload",
     "layer": "governance",
+    "culprit": "agent agt_7f3k stuck in repetitive denial loop (rule: policy.query.update_delete.require_limit, target: db://orders)",
     "measured": "denials_last_5m: 22 (threshold: 20)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "plain",
-      "label": "[dev:tier_1]  ⚠  agent.thrashing"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "agent",
-            "value": "agt_7f3k"
-          },
-          {
-            "field": "denials_last_5m",
-            "value": "22"
-          },
-          {
-            "field": "rule_hit",
-            "value": "policy.query.update_delete.require_limit"
-          },
-          {
-            "field": "target",
-            "value": "db://orders"
-          },
-          {
-            "field": "harness_status",
-            "value": "stuck in repetitive denial loop"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "governance"
-          },
-          {
-            "field": "remedy",
-            "value": "harness execution throttled; escalate to human or inspect remedy payload"
-          }
-        ]
-      }
-    ]
+    "remedy": "harness execution throttled; escalate to human or inspect remedy payload",
+    "agent": "agt_7f3k",
+    "denials_last_5m": "22",
+    "rule_hit": "policy.query.update_delete.require_limit",
+    "target": "db://orders",
+    "harness_status": "stuck in repetitive denial loop"
   }
 }

@@ -1,73 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.ask.denial.options_cap",
+  "$schema": "wireframe/v2",
+  "id": "ping.ask.denial.options_cap",
   "target": "user:alice",
   "command": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.notify",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.notify.ask_options_cap",
     "domain": "policy.notify",
-    "culprit": "Exceeds 5 structured choices; cognitive load capped for one-card decisions.",
-    "remedy": "reduce to 5 or fewer structured options, or split into sequential asks",
     "layer": "notify",
+    "culprit": "Exceeds 5 structured choices; cognitive load capped for one-card decisions.",
     "measured": "options count 6 vs cap 5",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.notify.ask_options_cap",
-            "indent": 2
-          },
-          {
-            "text": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
-            "indent": 87
-          },
-          {
-            "text": "Exceeds 5 structured choices; cognitive load capped for one-card decisions.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "notify"
-          },
-          {
-            "field": "measured",
-            "value": "options count 6 vs cap 5"
-          },
-          {
-            "field": "remedy",
-            "value": "reduce to 5 or fewer structured options, or split into sequential asks"
-          }
-        ]
-      }
-    ]
+    "remedy": "reduce to 5 or fewer structured options, or split into sequential asks",
+    "span": {
+      "source": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex",
+      "highlight": "fedex,ups,usps,dhl,royal,aramex"
+    }
   }
 }

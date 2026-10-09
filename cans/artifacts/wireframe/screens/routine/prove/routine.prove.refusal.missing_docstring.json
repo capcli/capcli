@@ -1,75 +1,26 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.prove.refusal.missing_docstring",
+  "$schema": "wireframe/v2",
+  "id": "routine.prove.refusal.missing_docstring",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "sim",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_prove_10",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.routine.missing_docstring",
     "domain": "validation",
     "culprit": "Description required: routines/sync_orders.py declares no module docstring and the @routine wrapper carries description=\"\" — unsearchable code does not ship (action.md decorator fields: description required; governance.yaml#routine_shape description min_words 5).",
     "remedy": "write a summary description of at least 5 words into the @routine decorator plus a module docstring, then re-run prove in sim",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.routine.missing_docstring",
-            "indent": 2
-          },
-          {
-            "text": "routines/sync_orders.py:19 — decorator wrapper:",
-            "indent": 8
-          },
-          {
-            "text": "@routine(name=\"sync_orders\", trust=\"draft\", description=\"\")",
-            "indent": 8
-          },
-          {
-            "text": "                                       ^^^^^^^^^^^^^",
-            "indent": 39
-          },
-          {
-            "field": "module_docstring",
-            "value": "absent"
-          },
-          {
-            "field": "law",
-            "value": "action.md decorator fields — description required; governance.yaml#routine_shape description min_words 5 (searchable or it doesn't ship)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_prove_10"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "write a summary description of at least 5 words into the @routine decorator plus a module docstring, then re-run prove in sim"
-          }
-        ]
-      }
+    "module_docstring": "absent",
+    "law": "action.md decorator fields — description required; governance.yaml#routine_shape description min_words 5 (searchable or it doesn't ship)",
+    "lines": [
+      "routines/sync_orders.py:19 — decorator wrapper:",
+      "@routine(name=\"sync_orders\", trust=\"draft\", description=\"\")",
+      "                                       ^^^^^^^^^^^^^"
     ]
   }
 }

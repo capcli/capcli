@@ -1,45 +1,28 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.list.success.empty",
+  "$schema": "wireframe/v2",
+  "id": "ping.list.success.empty",
   "target": "_pending_asks",
   "command": "capcli ping list --pending",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "empty"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "pending",
-            "value": "0 inquiries"
-          },
-          {
-            "field": "note",
-            "value": "no asks parked in _pending_asks; no frames awaiting human input"
-          }
-        ]
+        "fields": {
+          "pending": "0 inquiries",
+          "note": "no asks parked in _pending_asks; no frames awaiting human input"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "fields": {
+          "state_modified": "false"
+        }
       }
     ]
   }

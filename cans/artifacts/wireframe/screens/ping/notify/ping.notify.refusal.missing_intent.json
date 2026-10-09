@@ -1,63 +1,22 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.notify.refusal.missing_intent",
+  "$schema": "wireframe/v2",
+  "id": "ping.notify.refusal.missing_intent",
   "target": "user:alice",
   "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel email",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "missing_param.no_intent",
     "domain": "missing_param",
     "culprit": "Missing intent declaration.",
     "remedy": "re-run with --intent \"<why this notification is sent>\"",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  missing_param.no_intent",
-            "indent": 2
-          },
-          {
-            "text": "capcli ping notify user:alice \"Nightly sync finished\" --channel email",
-            "indent": 8
-          },
-          {
-            "text": "Missing intent declaration.",
-            "indent": 8
-          },
-          {
-            "text": "ping notify requires --intent \"...\" (policy: notify.require_intent).",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "re-run with --intent \"<why this notification is sent>\""
-          }
-        ]
-      }
+    "lines": [
+      "capcli ping notify user:alice \"Nightly sync finished\" --channel email",
+      "ping notify requires --intent \"...\" (policy: notify.require_intent)."
     ]
   }
 }

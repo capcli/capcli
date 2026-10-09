@@ -1,96 +1,60 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.success.truncated",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.success.truncated",
   "target": "db://orders",
   "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "truncated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "10000 rows (truncated)"
+  "audit_op": "op_9f2i",
+  "archetype": "document",
+  "component": {
+    "header_badge": "10000 rows (truncated)",
+    "pagination": {
+      "items": [
+        [
+          10001,
+          "tomas.novak@example.com",
+          "SKU-7741",
+          3,
+          "processing",
+          129.8
+        ],
+        [
+          10002,
+          "irene.holt@example.com",
+          "SKU-2318",
+          1,
+          "shipped",
+          45.2
+        ],
+        [
+          10003,
+          "dana.kral@example.com",
+          "SKU-7741",
+          2,
+          "processing",
+          86.4
+        ]
+      ],
+      "next_cursor": "10000",
+      "has_more": true
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "columns",
-            "value": "id, customer_email, product_id, quantity, status, total"
-          },
-          {
-            "field": "returned",
-            "value": "10000"
-          },
-          {
-            "field": "total_rows",
-            "value": "14290"
-          },
-          {
-            "field": "row_cap",
-            "value": "10000 (select.max_limit)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "truncated",
-            "value": "true"
-          },
-          {
-            "field": "next_cursor",
-            "value": "10000"
-          },
-          {
-            "field": "resume",
-            "value": "append WHERE id > :cursor to continue past the cap"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f2i"
-          }
-        ]
-      }
-    ]
-  },
-  "pagination": {
-    "items": [
-      [
-        10001,
-        "tomas.novak@example.com",
-        "SKU-7741",
-        3,
-        "processing",
-        129.8
-      ],
-      [
-        10002,
-        "irene.holt@example.com",
-        "SKU-2318",
-        1,
-        "shipped",
-        45.2
-      ],
-      [
-        10003,
-        "dana.kral@example.com",
-        "SKU-7741",
-        2,
-        "processing",
-        86.4
-      ]
-    ],
-    "next_cursor": "10000",
-    "has_more": true
+    "meta": {
+      "next_cursor": "10000",
+      "has_more": true
+    },
+    "fields": {
+      "columns": "id, customer_email, product_id, quantity, status, total",
+      "returned": "10000",
+      "total_rows": "14290",
+      "row_cap": "10000 (select.max_limit)",
+      "truncated": "true",
+      "resume": "append WHERE id > :cursor to continue past the cap"
+    },
+    "body": []
   }
 }

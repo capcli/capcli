@@ -1,81 +1,28 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.prove.denial.policy",
+  "$schema": "wireframe/v2",
+  "id": "routine.prove.denial.policy",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "draft",
+  "context": {
     "env": "sim",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_prove_05",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.routine.illegal_leaf",
     "domain": "policy.authorizer",
-    "culprit": "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
-    "remedy": "declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine",
     "layer": "authorizer",
+    "culprit": "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
     "measured": "1 undeclared leaf (manifest declares 5; DDL not among them)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
+    "remedy": "declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine",
+    "span": {
+      "source": "ctx.db.execute(\"ALTER TABLE orders ADD COLUMN rush boolean\")",
+      "highlight": "ALTER TABLE orders ADD COLUMN rush boolean"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.routine.illegal_leaf",
-            "indent": 2
-          },
-          {
-            "text": "routines/sync_orders.py:41 (test pass leaf 6)",
-            "indent": 8
-          },
-          {
-            "text": "ctx.db.execute(\"ALTER TABLE orders ADD COLUMN rush boolean\")",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
-            "indent": 24
-          },
-          {
-            "text": "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_prove_05"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "1 undeclared leaf (manifest declares 5; DDL not among them)"
-          },
-          {
-            "field": "remedy",
-            "value": "declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine"
-          }
-        ]
-      }
+    "lines": [
+      "routines/sync_orders.py:41 (test pass leaf 6)"
     ]
   }
 }

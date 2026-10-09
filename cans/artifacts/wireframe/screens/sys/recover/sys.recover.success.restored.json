@@ -1,72 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.recover.success.restored",
+  "$schema": "wireframe/v2",
+  "id": "sys.recover.success.restored",
   "target": "git:3f9c2ab",
   "command": "capcli sys recover 3f9c2ab",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "restored"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": "recover",
+    "groups": [
       {
         "title": "recover",
-        "items": [
-          {
-            "field": "commit",
-            "value": "3f9c2ab"
-          },
-          {
-            "field": "source",
-            "value": "object store (s3://capcli-worm/envs-dev/)"
-          },
-          {
-            "field": "workspace",
-            "value": "envs/dev/workspace.db"
-          },
-          {
-            "field": "schema_version",
-            "value": "3 (system-schema hash verified)"
-          },
-          {
-            "field": "ledger_root_hash",
-            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
-          },
-          {
-            "field": "events_restored",
-            "value": "14290 rows from _audit mirror"
-          },
-          {
-            "field": "chain_walk",
-            "value": "passed (0 broken links)"
-          },
-          {
-            "field": "drift_discarded",
-            "value": "local uncommitted mutations dropped"
-          }
-        ]
+        "fields": {
+          "commit": "3f9c2ab",
+          "source": "object store (s3://capcli-worm/envs-dev/)",
+          "workspace": "envs/dev/workspace.db",
+          "schema_version": "3 (system-schema hash verified)",
+          "ledger_root_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
+          "events_restored": "14290 rows from _audit mirror",
+          "chain_walk": "passed (0 broken links)",
+          "drift_discarded": "local uncommitted mutations dropped"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: true",
-            "indent": 0
-          },
-          {
-            "text": "note:           workspace reconstructed from offsite archive",
-            "indent": 0
-          }
+        "lines": [
+          "state_modified: true",
+          "note:           workspace reconstructed from offsite archive"
         ]
       }
     ]

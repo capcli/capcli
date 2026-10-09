@@ -1,65 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.cron.success.bound",
+  "$schema": "wireframe/v2",
+  "id": "bind.cron.success.bound",
   "target": "cap://sync_orders",
   "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "bound"
-    },
-    "sections": [
+  "audit_op": "op_7c41",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "binding_id",
-            "value": "bnd_5f8a"
-          },
-          {
-            "field": "name",
-            "value": "nightly_sync"
-          },
-          {
-            "field": "schedule",
-            "value": "0 3 * * *"
-          },
-          {
-            "field": "target",
-            "value": "cap://sync_orders"
-          },
-          {
-            "field": "next_fire",
-            "value": "2026-10-05T03:00:00Z"
-          },
-          {
-            "field": "catchup_policy",
-            "value": "max 1 fire on daemon restart"
-          }
-        ]
+        "fields": {
+          "binding_id": "bnd_5f8a",
+          "name": "nightly_sync",
+          "schedule": "0 3 * * *",
+          "target": "cap://sync_orders",
+          "next_fire": "2026-10-05T03:00:00Z",
+          "catchup_policy": "max 1 fire on daemon restart"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_7c41"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

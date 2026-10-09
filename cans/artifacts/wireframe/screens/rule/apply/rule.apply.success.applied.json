@@ -1,79 +1,41 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "rule.apply.success.applied",
+  "$schema": "wireframe/v2",
+  "id": "rule.apply.success.applied",
   "target": "schema://orders",
   "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "applied (1 statement)"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "intent",
-            "value": "\"add priority flag for rush shipping\""
-          },
-          {
-            "field": "trust",
-            "value": "reviewed"
-          },
-          {
-            "field": "snapshot",
-            "value": "snap_schema_013 (pre-DDL rollback point)"
-          }
+        "fields": {
+          "intent": "\"add priority flag for rush shipping\"",
+          "trust": "reviewed",
+          "snapshot": "snap_schema_013 (pre-DDL rollback point)"
+        }
+      },
+      {
+        "lines": [
+          "statements applied:",
+          "1.  ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "statements applied:",
-            "indent": 2
-          },
-          {
-            "text": "1.  ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
-            "indent": 4
-          }
-        ]
+        "fields": {
+          "transaction": "tx_5c81a2 committed (atomic)",
+          "lockfile": "capcli.lock re-locked (sha256:9e2b71c4)",
+          "audit": "op_13f9 (rule.apply) committed to _audit"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "transaction",
-            "value": "tx_5c81a2 committed (atomic)"
-          },
-          {
-            "field": "lockfile",
-            "value": "capcli.lock re-locked (sha256:9e2b71c4)"
-          },
-          {
-            "field": "audit",
-            "value": "op_13f9 (rule.apply) committed to _audit"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

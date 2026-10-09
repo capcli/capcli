@@ -1,94 +1,29 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.denial.budget_cascade",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.denial.budget_cascade",
   "target": "cap://sync_inventory@3",
   "command": "capcli run cap://sync_inventory@3 -p warehouse=west -m \"nightly inventory sync\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.budget",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.budget.starved",
     "domain": "policy.budget",
-    "culprit": "Child frame starved by min() cascade: recount_stock@2 (frame_025) granted 2 of 6 declared ops.",
-    "remedy": "shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain",
     "layer": "budget",
+    "culprit": "Child frame starved by min() cascade: recount_stock@2 (frame_025) granted 2 of 6 declared ops.",
     "measured": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.budget.starved",
-            "indent": 2
-          },
-          {
-            "text": "child frame starved by min() cascade",
-            "indent": 8
-          },
-          {
-            "field": "child",
-            "value": "recount_stock@2 (frame_025) declared 6 ops"
-          },
-          {
-            "field": "effective",
-            "value": "min(declared 6, governance 50, parent 2, session 488) -> 2 ops"
-          },
-          {
-            "field": "exhausted at",
-            "value": "op 3 (db.query crossed the clipped ceiling)"
-          },
-          {
-            "field": "parent frame",
-            "value": "frame_024 (sync_inventory@3) 2 ops remaining"
-          },
-          {
-            "field": "ancestors",
-            "value": "session remaining 488 ops (parent was the tightest constraint)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "Splitting is not escaping",
-            "value": "the cage tightens, never widens."
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "budget"
-          },
-          {
-            "field": "measured",
-            "value": "child effective 2 ops (declared 6); parent remaining 2 ops; session remaining 488 ops"
-          },
-          {
-            "field": "remedy",
-            "value": "shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain"
-          }
-        ]
-      }
+    "remedy": "shrink the child manifest, or invoke the child earlier in the parent DAG while ops remain",
+    "child": "recount_stock@2 (frame_025) declared 6 ops",
+    "effective": "min(declared 6, governance 50, parent 2, session 488) -> 2 ops",
+    "exhausted at": "op 3 (db.query crossed the clipped ceiling)",
+    "parent frame": "frame_024 (sync_inventory@3) 2 ops remaining",
+    "ancestors": "session remaining 488 ops (parent was the tightest constraint)",
+    "Splitting is not escaping": "the cage tightens, never widens.",
+    "lines": [
+      "child frame starved by min() cascade"
     ]
   },
   "trailer": {

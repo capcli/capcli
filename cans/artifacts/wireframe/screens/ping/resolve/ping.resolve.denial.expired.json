@@ -1,69 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.resolve.denial.expired",
+  "$schema": "wireframe/v2",
+  "id": "ping.resolve.denial.expired",
   "target": "ask_77c3",
   "command": "capcli ping resolve ask_77c3 --choice approve",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.notify",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.notify.ask_expired",
     "domain": "policy.notify",
-    "culprit": "Timeout elapsed; resolution window closed (fail-closed).",
-    "remedy": "re-issue the ask if still relevant; expired inquiries never assume consent",
     "layer": "notify",
-    "state_modified": false,
-    "measured": "ask_77c3 deadline passed 2h 14m ago (timeout: 24h, fail-closed)"
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.notify.ask_expired",
-            "indent": 2
-          },
-          {
-            "field": "ask_id",
-            "value": "ask_77c3"
-          },
-          {
-            "text": "Timeout elapsed; resolution window closed (fail-closed).",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "notify"
-          },
-          {
-            "field": "measured",
-            "value": "ask_77c3 deadline passed 2h 14m ago (timeout: 24h, fail-closed)"
-          },
-          {
-            "field": "remedy",
-            "value": "re-issue the ask if still relevant; expired inquiries never assume consent"
-          }
-        ]
-      }
-    ]
+    "culprit": "Timeout elapsed; resolution window closed (fail-closed).",
+    "measured": "ask_77c3 deadline passed 2h 14m ago (timeout: 24h, fail-closed)",
+    "remedy": "re-issue the ask if still relevant; expired inquiries never assume consent",
+    "ask_id": "ask_77c3"
   }
 }

@@ -1,68 +1,23 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.new.refusal.template_compat",
+  "$schema": "wireframe/v2",
+  "id": "routine.new.refusal.template_compat",
   "target": "order_sync",
   "command": "capcli routine new order_sync --from tpl://order_sync@2",
-  "state": {
-    "exit_code": 3,
-    "domain": "policy.template",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.template.compat_fail",
     "domain": "policy.template",
     "culprit": "Template policy_version mismatch (template requires policy 5, workspace policy 4)",
     "remedy": "upgrade the workspace policy_version or select a template compiled against policy 4",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.template.compat_fail",
-            "indent": 2
-          },
-          {
-            "field": "template",
-            "value": "tpl://order_sync@2 (policy_version 5)"
-          },
-          {
-            "field": "workspace policy_version",
-            "value": "4"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Template policy_version mismatch exits 3.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "upgrade the workspace policy_version or select a template compiled against policy 4"
-          }
-        ]
-      }
+    "template": "tpl://order_sync@2 (policy_version 5)",
+    "workspace policy_version": "4",
+    "lines": [
+      "Template policy_version mismatch exits 3."
     ]
   }
 }

@@ -1,67 +1,26 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.refusal.unparseable",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.refusal.unparseable",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHER status = 'processing'\" -m \"batch ship\"",
-  "state": {
-    "exit_code": 3,
-    "domain": "compile",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "compile",
     "culprit": "Unparseable SQL: 'WHER' is not a recognized keyword; parser fails closed.",
     "remedy": "correct the keyword to WHERE and restate the query",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
+    "span": {
+      "source": "UPDATE orders SET status = 'shipped' WHER status = 'processing'",
+      "highlight": "WHER"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  compile.bad_syntax",
-            "indent": 2
-          },
-          {
-            "text": "UPDATE orders SET status = 'shipped' WHER status = 'processing'",
-            "indent": 9
-          },
-          {
-            "text": "^^^^",
-            "indent": 46
-          },
-          {
-            "field": "Unparseable SQL",
-            "value": "'WHER' is not a recognized keyword; parser fails closed."
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "parser"
-          },
-          {
-            "field": "remedy",
-            "value": "correct the keyword to WHERE and restate the query"
-          }
-        ]
-      }
+    "Unparseable SQL": "'WHER' is not a recognized keyword; parser fails closed.",
+    "layer": "parser",
+    "lines": [
+      "FATAL  compile.bad_syntax"
     ]
   }
 }

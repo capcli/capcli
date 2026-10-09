@@ -1,77 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.sync.denial.rate",
+  "$schema": "wireframe/v2",
+  "id": "api.sync.denial.rate",
   "target": "stripe",
   "command": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
-  "state": {
-    "exit_code": 2,
-    "domain": "api.quota",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "api.quota.rate_limit",
     "domain": "api.quota",
-    "culprit": "Sync call within 24h cooldown for provider 'stripe'.",
-    "remedy": "wait for the 24h cooldown to reset, or inspect the live catalog via 'capcli api catalog stripe'",
     "layer": "quota",
+    "culprit": "Sync call within 24h cooldown for provider 'stripe'.",
     "measured": "last sync completed 18h 24m ago (cooldown remaining: 5h 36m)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
+    "remedy": "wait for the 24h cooldown to reset, or inspect the live catalog via 'capcli api catalog stripe'",
+    "span": {
+      "source": "capcli api sync stripe https://api.stripe.com/openapi.json",
+      "highlight": "stripe"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  api.quota.rate_limit",
-            "indent": 2
-          },
-          {
-            "text": "capcli api sync stripe https://api.stripe.com/openapi.json",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^",
-            "indent": 24
-          },
-          {
-            "text": "Sync call within 24h cooldown for provider 'stripe'.",
-            "indent": 8
-          },
-          {
-            "field": "min_interval_hours",
-            "value": "24 (governance.yaml api.sync)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "quota"
-          },
-          {
-            "field": "measured",
-            "value": "last sync completed 18h 24m ago (cooldown remaining: 5h 36m)"
-          },
-          {
-            "field": "remedy",
-            "value": "wait for the 24h cooldown to reset, or inspect the live catalog via 'capcli api catalog stripe'"
-          }
-        ]
-      }
-    ]
+    "min_interval_hours": "24 (governance.yaml api.sync)"
   }
 }

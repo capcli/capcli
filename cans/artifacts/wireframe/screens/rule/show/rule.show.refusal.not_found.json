@@ -1,68 +1,20 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "rule.show.refusal.not_found",
+  "$schema": "wireframe/v2",
+  "id": "rule.show.refusal.not_found",
   "target": "schema://invoices",
   "command": "capcli rule show schema --table invoices",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.table_not_found",
     "domain": "validation",
     "culprit": "Table 'invoices' has no compiled declaration in this workspace.",
     "remedy": "declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.table_not_found",
-            "indent": 2
-          },
-          {
-            "field": "target",
-            "value": "schema://invoices"
-          },
-          {
-            "field": "lookup",
-            "value": "compiled schema.yaml v12 (tables: customers, inventory, orders, order_items)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Table 'invoices' has no compiled declaration in this workspace.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'"
-          }
-        ]
-      }
-    ]
+    "target": "schema://invoices",
+    "lookup": "compiled schema.yaml v12 (tables: customers, inventory, orders, order_items)"
   }
 }

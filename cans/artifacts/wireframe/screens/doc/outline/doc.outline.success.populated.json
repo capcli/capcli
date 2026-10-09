@@ -1,78 +1,33 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "doc.outline.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "doc.outline.success.populated",
   "target": "doc://refund-policy",
   "command": "capcli doc outline doc://refund-policy",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "pinned",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "outline doc://refund-policy"
+  "archetype": "document",
+  "component": {
+    "header_badge": "outline doc://refund-policy",
+    "meta": {
+      "tokens": "312 (full document)"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "doc://refund-policy (pinned)",
-            "indent": 2
-          },
-          {
-            "text": "├── 1. Scope",
-            "indent": 2
-          },
-          {
-            "text": "├── 2. Refund windows",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── 2.1 Standard window (30 days)",
-            "indent": 2
-          },
-          {
-            "text": "│     └── 2.2 Extended window (120 days, supervisor approval)",
-            "indent": 2
-          },
-          {
-            "text": "├── 3. Stripe integration notes",
-            "indent": 2
-          },
-          {
-            "text": "├── 4. Currency handling",
-            "indent": 2
-          },
-          {
-            "text": "└── 5. Escalation paths",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "nodes",
-            "value": "8"
-          },
-          {
-            "field": "sections",
-            "value": "5"
-          },
-          {
-            "field": "tokens",
-            "value": "312 (full document)"
-          }
-        ]
-      }
+    "fields": {
+      "nodes": "8",
+      "sections": "5"
+    },
+    "body": [
+      "doc://refund-policy (pinned)",
+      "├── 1. Scope",
+      "├── 2. Refund windows",
+      "│     ├── 2.1 Standard window (30 days)",
+      "│     └── 2.2 Extended window (120 days, supervisor approval)",
+      "├── 3. Stripe integration notes",
+      "├── 4. Currency handling",
+      "└── 5. Escalation paths"
     ]
   }
 }

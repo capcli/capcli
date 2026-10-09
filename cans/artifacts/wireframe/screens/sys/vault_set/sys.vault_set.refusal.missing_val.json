@@ -1,59 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.vault_set.refusal.missing_val",
+  "$schema": "wireframe/v2",
+  "id": "sys.vault_set.refusal.missing_val",
   "target": "stripe_secret_key",
   "command": "capcli sys vault set stripe_secret_key",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "missing_param",
     "culprit": "vault set for key 'stripe_secret_key' received no value (stdin empty)",
     "remedy": "re-run as capcli sys vault set stripe_secret_key --in @- and pipe the value on stdin",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  missing_param.missing_arg",
-            "indent": 2
-          },
-          {
-            "text": "vault set for key 'stripe_secret_key' received no value (stdin empty)",
-            "indent": 9
-          },
-          {
-            "text": "plaintext values are never read from logs or transcripts",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "re-run as capcli sys vault set stripe_secret_key --in @- and pipe the value on stdin"
-          }
-        ]
-      }
+    "lines": [
+      "FATAL  missing_param.missing_arg",
+      "plaintext values are never read from logs or transcripts"
     ]
   }
 }

@@ -1,77 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.denial.authorizer",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.denial.authorizer",
   "target": "db://orders",
   "command": "capcli sql \"DROP TABLE orders\" -m \"remove stale orders table\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_9f2k",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.drop_table",
     "domain": "policy.authorizer",
-    "culprit": "Table destruction denied at the C authorizer; DDL flows through schema evolution.",
-    "remedy": "declare removal in schema.yaml and apply via capcli rule apply schema",
     "layer": "authorizer",
+    "culprit": "Table destruction denied at the C authorizer; DDL flows through schema evolution.",
     "measured": "statement rejected at prepare; 0 rows touched",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.drop_table",
-            "indent": 2
-          },
-          {
-            "text": "DROP TABLE orders",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^^^^^",
-            "indent": 8
-          },
-          {
-            "text": "Table destruction denied at the C authorizer; DDL flows through schema evolution.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_9f2k"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "statement rejected at prepare; 0 rows touched"
-          },
-          {
-            "field": "remedy",
-            "value": "declare removal in schema.yaml and apply via capcli rule apply schema"
-          }
-        ]
-      }
-    ]
+    "remedy": "declare removal in schema.yaml and apply via capcli rule apply schema",
+    "span": {
+      "source": "DROP TABLE orders",
+      "highlight": "DROP TABLE"
+    }
   }
 }

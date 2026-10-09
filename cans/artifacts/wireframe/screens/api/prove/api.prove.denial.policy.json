@@ -1,77 +1,28 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.prove.denial.policy",
+  "$schema": "wireframe/v2",
+  "id": "api.prove.denial.policy",
   "target": "cap://stripe.delete_account",
   "command": "capcli api prove stripe.delete_account --env sim",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "draft",
+  "context": {
     "env": "sim",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.forbidden",
     "domain": "policy.authorizer",
-    "culprit": "Verb egress rule rejected: DELETE on account scope is forbidden.",
-    "remedy": "prove a scoped-down verb, or request an explicit egress grant for account-scope operations",
     "layer": "authorizer",
+    "culprit": "Verb egress rule rejected: DELETE on account scope is forbidden.",
     "measured": "egress scope: account (permitted scopes: charge, invoice, customer)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
+    "remedy": "prove a scoped-down verb, or request an explicit egress grant for account-scope operations",
+    "span": {
+      "source": "capcli api prove stripe.delete_account --env sim",
+      "highlight": "stripe.delete_account"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.forbidden",
-            "indent": 2
-          },
-          {
-            "text": "capcli api prove stripe.delete_account --env sim",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^^^^^^^^^^^^^^^^",
-            "indent": 25
-          },
-          {
-            "text": "Verb egress rule rejected.",
-            "indent": 8
-          },
-          {
-            "field": "egress",
-            "value": "DELETE https://api.stripe.com/v1/account (account scope)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "egress scope: account (permitted scopes: charge, invoice, customer)"
-          },
-          {
-            "field": "remedy",
-            "value": "prove a scoped-down verb, or request an explicit egress grant for account-scope operations"
-          }
-        ]
-      }
+    "egress": "DELETE https://api.stripe.com/v1/account (account scope)",
+    "lines": [
+      "Verb egress rule rejected."
     ]
   }
 }

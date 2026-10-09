@@ -1,143 +1,57 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.search.success.truncated",
+  "$schema": "wireframe/v2",
+  "id": "run.search.success.truncated",
   "target": "stripe",
   "command": "capcli search 'stripe'",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "truncated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "20 matches for 'stripe' (capped)"
+  "audit_op": "op_9f2t",
+  "archetype": "document",
+  "component": {
+    "header_badge": "20 matches for 'stripe' (capped)",
+    "pagination": {
+      "items": [
+        "api://stripe.refund_charge",
+        "vault://stripe_secret_key",
+        "quota://stripe"
+      ],
+      "next_cursor": "doc://refund-policy",
+      "has_more": true
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "api://stripe.payment_intents.create        api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.payment_intents.confirm       api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.payment_intents.cancel        api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.refund_charge                 api    active",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.charges.list                  api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.customers.create              api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.customers.retrieve            api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.invoices.create               api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.invoices.send                 api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.invoice_items.create          api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.payment_methods.attach        api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.payouts.list                  api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.balance.retrieve              api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.disputes.list                 api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.verification_sessions.create  api    dormant",
-            "indent": 2
-          },
-          {
-            "text": "vault://stripe_secret_key                  vault  missing",
-            "indent": 2
-          },
-          {
-            "text": "vault://stripe_webhook_secret              vault  missing",
-            "indent": 2
-          },
-          {
-            "text": "quota://stripe                             quota  tracked",
-            "indent": 2
-          },
-          {
-            "text": "bind://webhook/stripe/invoice_paid         bind   active",
-            "indent": 2
-          },
-          {
-            "text": "doc://refund-policy                        doc    readable",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "truncated",
-            "value": "true"
-          },
-          {
-            "field": "result_cap",
-            "value": "20 (search.max_results)"
-          },
-          {
-            "field": "total",
-            "value": "34"
-          },
-          {
-            "field": "next_cursor",
-            "value": "doc://refund-policy"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f2t"
-          }
-        ]
-      }
+    "meta": {
+      "next_cursor": "doc://refund-policy",
+      "has_more": true
+    },
+    "fields": {
+      "truncated": "true",
+      "result_cap": "20 (search.max_results)",
+      "total": "34"
+    },
+    "body": [
+      "api://stripe.payment_intents.create        api    dormant",
+      "api://stripe.payment_intents.confirm       api    dormant",
+      "api://stripe.payment_intents.cancel        api    dormant",
+      "api://stripe.refund_charge                 api    active",
+      "api://stripe.charges.list                  api    dormant",
+      "api://stripe.customers.create              api    dormant",
+      "api://stripe.customers.retrieve            api    dormant",
+      "api://stripe.invoices.create               api    dormant",
+      "api://stripe.invoices.send                 api    dormant",
+      "api://stripe.invoice_items.create          api    dormant",
+      "api://stripe.payment_methods.attach        api    dormant",
+      "api://stripe.payouts.list                  api    dormant",
+      "api://stripe.balance.retrieve              api    dormant",
+      "api://stripe.disputes.list                 api    dormant",
+      "api://stripe.verification_sessions.create  api    dormant",
+      "vault://stripe_secret_key                  vault  missing",
+      "vault://stripe_webhook_secret              vault  missing",
+      "quota://stripe                             quota  tracked",
+      "bind://webhook/stripe/invoice_paid         bind   active",
+      "doc://refund-policy                        doc    readable"
     ]
-  },
-  "pagination": {
-    "items": [
-      "api://stripe.refund_charge",
-      "vault://stripe_secret_key",
-      "quota://stripe"
-    ],
-    "next_cursor": "doc://refund-policy",
-    "has_more": true
   }
 }

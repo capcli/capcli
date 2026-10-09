@@ -1,65 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.keys.success.issued",
+  "$schema": "wireframe/v2",
+  "id": "bind.keys.success.issued",
   "target": "partner_hook",
   "command": "capcli bind keys issue partner_hook --principal partner:acme",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "issued"
-    },
-    "sections": [
+  "audit_op": "op_5j8u",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "key_id",
-            "value": "key_6v2q"
-          },
-          {
-            "field": "principal",
-            "value": "partner:acme"
-          },
-          {
-            "field": "endpoint",
-            "value": "partner_hook (report_summary@3)"
-          },
-          {
-            "field": "issued_at",
-            "value": "2026-10-04T00:00:00Z"
-          },
-          {
-            "field": "expires_at",
-            "value": "2027-01-02T00:00:00Z (90d rotation)"
-          }
-        ]
+        "fields": {
+          "key_id": "key_6v2q",
+          "principal": "partner:acme",
+          "endpoint": "partner_hook (report_summary@3)",
+          "issued_at": "2026-10-04T00:00:00Z",
+          "expires_at": "2027-01-02T00:00:00Z (90d rotation)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_5j8u"
-          },
-          {
-            "field": "note",
-            "value": "key material sealed in vault; no secret printed to stdout"
-          }
-        ]
+        "fields": {
+          "state_modified": "true",
+          "note": "key material sealed in vault; no secret printed to stdout"
+        }
       }
     ]
   }

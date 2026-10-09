@@ -1,79 +1,42 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.diff.success.empty",
+  "$schema": "wireframe/v2",
+  "id": "api.diff.success.empty",
   "target": "threads",
   "command": "capcli api diff threads",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "empty"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "provider",
-            "value": "threads"
-          },
-          {
-            "field": "local_hash",
-            "value": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a"
-          },
-          {
-            "field": "remote_hash",
-            "value": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a"
-          },
-          {
-            "field": "drift",
-            "value": "none (spec_hash match)"
-          }
+        "fields": {
+          "provider": "threads",
+          "local_hash": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a",
+          "remote_hash": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a",
+          "drift": "none (spec_hash match)"
+        }
+      },
+      {
+        "fields": {
+          "added_verbs": "0",
+          "changed_verbs": "0",
+          "removed_verbs": "0"
+        }
+      },
+      {
+        "lines": [
+          "Zero drift from active catalog."
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "added_verbs",
-            "value": "0"
-          },
-          {
-            "field": "changed_verbs",
-            "value": "0"
-          },
-          {
-            "field": "removed_verbs",
-            "value": "0"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Zero drift from active catalog.",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "fields": {
+          "state_modified": "false"
+        }
       }
     ]
   }

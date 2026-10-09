@@ -1,82 +1,30 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.serve.denial.port",
+  "$schema": "wireframe/v2",
+  "id": "sys.serve.denial.port",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",
-  "state": {
-    "exit_code": 2,
-    "domain": "db.engine",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "db.engine.port_denied",
     "domain": "db.engine",
-    "culprit": "bind(127.0.0.1:4040) rejected: EADDRINUSE (foreign pid 49012)",
-    "remedy": "stop the foreign listener on 4040, then retry 'capcli sys serve --start'",
     "layer": "engine",
+    "culprit": "bind(127.0.0.1:4040) rejected: EADDRINUSE (foreign pid 49012)",
     "measured": "port 4040 unavailable (required: 1 of 1)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  db.engine.port_denied",
-            "indent": 0
-          },
-          {
-            "text": "bind(127.0.0.1:4040) rejected: EADDRINUSE",
-            "indent": 6
-          },
-          {
-            "field": "holder",
-            "value": "pid 49012 (postgres) owns the socket"
-          },
-          {
-            "field": "daemon",
-            "value": "start aborted before first serve.request event"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Port 4040 is the kernel's contracted surface; binding denied, not retried.",
-            "indent": 6
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: false",
-            "indent": 0
-          },
-          {
-            "text": "layer:          engine",
-            "indent": 0
-          },
-          {
-            "text": "measured:       port 4040 unavailable (required: 1 of 1)",
-            "indent": 0
-          },
-          {
-            "text": "remedy:         stop the foreign listener on 4040, then retry 'capcli sys serve --start'",
-            "indent": 0
-          }
-        ]
-      }
+    "remedy": "stop the foreign listener on 4040, then retry 'capcli sys serve --start'",
+    "holder": "pid 49012 (postgres) owns the socket",
+    "daemon": "start aborted before first serve.request event",
+    "lines": [
+      "bind(127.0.0.1:4040) rejected: EADDRINUSE",
+      "Port 4040 is the kernel's contracted surface; binding denied, not retried.",
+      "state_modified: false",
+      "layer:          engine",
+      "measured:       port 4040 unavailable (required: 1 of 1)",
+      "remedy:         stop the foreign listener on 4040, then retry 'capcli sys serve --start'"
     ]
   }
 }

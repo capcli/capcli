@@ -1,77 +1,28 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.rollback.denial.depth",
+  "$schema": "wireframe/v2",
+  "id": "api.rollback.denial.depth",
   "target": "cap://threads.create_media_post",
   "command": "capcli api rollback threads.create_media_post 2",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.depth_limit",
     "domain": "policy.authorizer",
-    "culprit": "Exceeds max rollback limit of 5: version 8 to version 2 spans depth 6.",
-    "remedy": "roll back to version 3 or later, or re-sync the exact prior spec to pin it fresh",
     "layer": "authorizer",
+    "culprit": "Exceeds max rollback limit of 5: version 8 to version 2 spans depth 6.",
     "measured": "rollback depth 6 (cap: 5)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
+    "remedy": "roll back to version 3 or later, or re-sync the exact prior spec to pin it fresh",
+    "span": {
+      "source": "capcli api rollback threads.create_media_post 2",
+      "highlight": "threads.create_media_post"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.depth_limit",
-            "indent": 2
-          },
-          {
-            "text": "capcli api rollback threads.create_media_post 2",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^^^^^^^^^^^^^^^^^^^^",
-            "indent": 28
-          },
-          {
-            "text": "Exceeds max rollback limit of 5.",
-            "indent": 8
-          },
-          {
-            "text": "Current spec version 8; rollback to version 2 spans depth 6.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "rollback depth 6 (cap: 5)"
-          },
-          {
-            "field": "remedy",
-            "value": "roll back to version 3 or later, or re-sync the exact prior spec to pin it fresh"
-          }
-        ]
-      }
+    "lines": [
+      "Exceeds max rollback limit of 5.",
+      "Current spec version 8; rollback to version 2 spans depth 6."
     ]
   }
 }

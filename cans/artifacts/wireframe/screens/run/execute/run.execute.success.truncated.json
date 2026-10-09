@@ -1,71 +1,46 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.success.truncated",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.success.truncated",
   "target": "cap://report_orders@2",
   "command": "capcli run cap://report_orders@2 -p quarter=2026Q3",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "truncated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "truncated"
+  "audit_op": "op_9f32b",
+  "archetype": "document",
+  "component": {
+    "header_badge": "truncated",
+    "pagination": {
+      "items": [
+        {
+          "step": 1,
+          "op": "db.query",
+          "target": "orders (read)",
+          "ms": 14
+        },
+        {
+          "step": 2,
+          "op": "db.query",
+          "target": "order_items (read)",
+          "ms": 31
+        }
+      ],
+      "next_cursor": "cur_0192f",
+      "has_more": true
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "routine",
-            "value": "report_orders@2 (reviewed)"
-          },
-          {
-            "field": "frame",
-            "value": "frame_022"
-          },
-          {
-            "field": "result",
-            "value": "500 of 2384 tokens (cap: 500)"
-          },
-          {
-            "field": "truncated",
-            "value": "true"
-          },
-          {
-            "field": "next_cursor",
-            "value": "cur_0192f"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f32b"
-          }
-        ]
-      }
-    ]
-  },
-  "pagination": {
-    "items": [
-      {
-        "step": 1,
-        "op": "db.query",
-        "target": "orders (read)",
-        "ms": 14
-      },
-      {
-        "step": 2,
-        "op": "db.query",
-        "target": "order_items (read)",
-        "ms": 31
-      }
-    ],
-    "next_cursor": "cur_0192f",
-    "has_more": true
+    "meta": {
+      "next_cursor": "cur_0192f",
+      "has_more": true
+    },
+    "fields": {
+      "routine": "report_orders@2 (reviewed)",
+      "frame": "frame_022",
+      "result": "500 of 2384 tokens (cap: 500)",
+      "truncated": "true"
+    },
+    "body": []
   }
 }

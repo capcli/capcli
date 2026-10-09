@@ -1,58 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.query.success.empty",
+  "$schema": "wireframe/v2",
+  "id": "sys.query.success.empty",
   "target": "_audit",
   "command": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 5 LIMIT 20\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "queried"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "target",
-            "value": "_audit (read-only system table)"
-          },
-          {
-            "field": "rows",
-            "value": "0 returned"
-          },
-          {
-            "field": "duration",
-            "value": "1ms"
-          }
+        "fields": {
+          "target": "_audit (read-only system table)",
+          "rows": "0 returned",
+          "duration": "1ms"
+        }
+      },
+      {
+        "lines": [
+          "Zero matching audit rows. Predicate matched nothing in 412 committed events."
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "Zero matching audit rows. Predicate matched nothing in 412 committed events.",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "note",
-            "value": "exit_code 5 (kernel.panic) has never fired in this workspace"
-          }
-        ]
+        "fields": {
+          "note": "exit_code 5 (kernel.panic) has never fired in this workspace"
+        }
       }
     ]
   }

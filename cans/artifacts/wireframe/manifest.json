@@ -1,8 +1,10 @@
 {
-  "version": 2,
+  "version": 3,
   "policy_version": 5,
   "governance_version": 8,
-  "schema_version": 1,
+  "schema_version": 2,
+  "fixture_schema": "wireframe/v2",
+  "archetypes": ["diagnostic", "tree", "receipt", "document"],
   "lockfile": "capcli.lock",
   "compiled_at": "2026-10-04T00:00:00Z",
   "nouns": [
@@ -26,10 +28,9 @@
     "prefix": "[{env}:{tier}]",
     "human_format": "rustc-style diagnostic with atomic blocks, source spans, and indented key-values",
     "machine_format": "--json structured envelope",
-    "tree_characters_allowed": ["├──", "└──", "│"],
-    "banned_characters": ["|", "├─", "└─"],
+    "archetype_dispatch": "exits [2, 3, 4, 5, 6] → diagnostic; exit 0 → receipt|tree|document resolved by component",
     "divider_character": "─",
-    "denial_keys": ["domain", "culprit", "remedy", "state_modified", "layer"],
+    "denial_keys": ["domain", "culprit", "remedy", "layer"],
     "pagination": {
       "max_result_tokens": 500,
       "mandate": "keyset_schema",

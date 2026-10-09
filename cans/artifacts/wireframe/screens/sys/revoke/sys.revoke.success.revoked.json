@@ -1,65 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.revoke.success.revoked",
+  "$schema": "wireframe/v2",
+  "id": "sys.revoke.success.revoked",
   "target": "agt_7f3k",
   "command": "capcli sys agent revoke agt_7f3k",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "revoked"
-    },
-    "sections": [
+  "audit_op": "op_r703",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "agent_id",
-            "value": "agt_7f3k"
-          },
-          {
-            "field": "principal",
-            "value": "user:alice"
-          },
-          {
-            "field": "status",
-            "value": "revoked — credentials killed"
-          },
-          {
-            "field": "sessions",
-            "value": "1 active session terminated instantly (ses_a992f)"
-          },
-          {
-            "field": "tokens",
-            "value": "capability token invalidated; in-flight op halted at leaf boundary"
-          }
-        ]
+        "fields": {
+          "agent_id": "agt_7f3k",
+          "principal": "user:alice",
+          "status": "revoked — credentials killed",
+          "sessions": "1 active session terminated instantly (ses_a992f)",
+          "tokens": "capability token invalidated; in-flight op halted at leaf boundary"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_r703"
-          },
-          {
-            "field": "note",
-            "value": "revoked_agent: deny_all — no grace period, no further dispatch under this identity"
-          }
-        ]
+        "fields": {
+          "state_modified": "true",
+          "note": "revoked_agent: deny_all — no grace period, no further dispatch under this identity"
+        }
       }
     ]
   }

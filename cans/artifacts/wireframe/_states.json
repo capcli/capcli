@@ -1,6 +1,8 @@
 {
   "0": {
     "label": "success",
+    "archetype": "resolved_per_screen",
+    "archetype_candidates": ["receipt", "tree", "document"],
     "variants": {
       "committed": { "state_modified": true },
       "dry_run": { "state_modified": false },
@@ -12,6 +14,7 @@
   },
   "2": {
     "label": "denial",
+    "archetype": "diagnostic",
     "state_modified": false,
     "domains": [
       "policy.authorizer",
@@ -27,7 +30,7 @@
       "kernel.sandbox",
       "agent.thrashing"
     ],
-    "diagnostic_required": ["domain", "culprit", "remedy", "layer", "state_modified"],
+    "diagnostic_required": ["domain", "culprit", "remedy", "layer"],
     "denial_ux": {
       "cite_measured_value": true,
       "suggest_remediation": true,
@@ -38,6 +41,7 @@
   },
   "3": {
     "label": "refusal",
+    "archetype": "diagnostic",
     "state_modified": false,
     "domains": [
       "compile",
@@ -49,28 +53,31 @@
       "policy.template",
       "policy.secrets"
     ],
-    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
+    "diagnostic_required": ["domain", "culprit", "remedy"]
   },
   "4": {
     "label": "crash",
+    "archetype": "diagnostic",
     "state_modified": false,
     "domains": ["routine.runtime"],
     "rollback": "clean",
-    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
+    "diagnostic_required": ["domain", "culprit", "remedy"]
   },
   "5": {
     "label": "panic",
+    "archetype": "diagnostic",
     "state_modified": false,
     "domains": ["kernel.panic"],
     "boot_refusal": true,
-    "diagnostic_required": ["domain", "culprit", "remedy", "state_modified"]
+    "diagnostic_required": ["domain", "culprit", "remedy"]
   },
   "6": {
     "label": "yield",
+    "archetype": "diagnostic",
     "state_modified": false,
     "domains": ["api.quota", "ping.ask"],
     "suspension": true,
-    "diagnostic_required": ["domain", "culprit", "remedy", "suspended_frame", "state_modified"],
+    "diagnostic_required": ["domain", "culprit", "remedy", "suspended_frame"],
     "domain_fields": {
       "api.quota": ["tokens_left", "reset_at"],
       "ping.ask": ["ask_id", "pending_asks"]

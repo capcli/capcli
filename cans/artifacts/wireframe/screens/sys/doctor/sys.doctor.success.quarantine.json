@@ -1,65 +1,35 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.doctor.success.quarantine",
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.success.quarantine",
   "target": "sys://audit-chain",
   "command": "CAPCLI_RECOVERY=1 capcli sys doctor",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "quarantine"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "mode",
-            "value": "break-glass read-only (CAPCLI_RECOVERY=1; policy disabled)"
-          },
-          {
-            "text": "quarantine ledger:",
-            "indent": 2
-          },
-          {
-            "field": "block",
-            "value": "op_84c1 (_audit row 8,412)"
-          },
-          {
-            "field": "reason",
-            "value": "prev_hash mismatch (tamper isolation)"
-          },
-          {
-            "field": "isolated_at",
-            "value": "2026-10-06T09:14:02Z"
-          },
-          {
-            "field": "valid_history",
-            "value": "rows 1-8,411 verified against root ledger hash"
-          }
+        "fields": {
+          "mode": "break-glass read-only (CAPCLI_RECOVERY=1; policy disabled)",
+          "block": "op_84c1 (_audit row 8,412)",
+          "reason": "prev_hash mismatch (tamper isolation)",
+          "isolated_at": "2026-10-06T09:14:02Z",
+          "valid_history": "rows 1-8,411 verified against root ledger hash"
+        },
+        "lines": [
+          "quarantine ledger:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "reads stay operable per quarantine law; restore path requires proof bundle review before re-anchor"
-          }
-        ]
+        "fields": {
+          "state_modified": "false",
+          "note": "reads stay operable per quarantine law; restore path requires proof bundle review before re-anchor"
+        }
       }
     ]
   }

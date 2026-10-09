@@ -1,69 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "rule.apply.success.dry_run",
+  "$schema": "wireframe/v2",
+  "id": "rule.apply.success.dry_run",
   "target": "schema://orders",
   "command": "capcli rule apply schema --dry-run",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "dry_run"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "dry-run (schema apply)"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "statement",
-            "value": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0"
-          },
-          {
-            "field": "gate_1",
-            "value": "pass (syntax)"
-          },
-          {
-            "field": "gate_2",
-            "value": "pass (semantics; relational DAG acyclic)"
-          },
-          {
-            "field": "gate_5",
-            "value": "pass (test migration executed and rolled back on snapshot)"
-          },
-          {
-            "field": "schema_impact",
-            "value": "+1 column (priority)"
-          },
-          {
-            "field": "estimated_rows",
-            "value": "4281"
-          },
-          {
-            "field": "blast_radius",
-            "value": "schema-only (non-destructive)"
-          }
-        ]
+        "fields": {
+          "statement": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
+          "gate_1": "pass (syntax)",
+          "gate_2": "pass (semantics; relational DAG acyclic)",
+          "gate_5": "pass (test migration executed and rolled back on snapshot)",
+          "schema_impact": "+1 column (priority)",
+          "estimated_rows": "4281",
+          "blast_radius": "schema-only (non-destructive)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "no execution occurred; preview only"
-          }
-        ]
+        "fields": {
+          "state_modified": "false",
+          "note": "no execution occurred; preview only"
+        }
       }
     ]
   }

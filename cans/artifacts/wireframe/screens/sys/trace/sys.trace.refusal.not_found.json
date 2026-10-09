@@ -1,59 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.trace.refusal.not_found",
+  "$schema": "wireframe/v2",
+  "id": "sys.trace.refusal.not_found",
   "target": "op_9f99",
   "command": "capcli sys audit trace op_9f99 --explain",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "validation",
     "culprit": "No audit operation with id 'op_9f99' exists in _audit.",
     "remedy": "verify the operation id via capcli sys audit tail or sys audit query, then re-run sys audit trace <op-id> --explain",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  validation.not_found",
-            "indent": 2
-          },
-          {
-            "field": "target",
-            "value": "op_9f99"
-          },
-          {
-            "text": "No audit operation with id 'op_9f99' exists in _audit.",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "verify the operation id via capcli sys audit tail or sys audit query, then re-run sys audit trace <op-id> --explain"
-          }
-        ]
-      }
+    "target": "op_9f99",
+    "lines": [
+      "FATAL  validation.not_found"
     ]
   }
 }

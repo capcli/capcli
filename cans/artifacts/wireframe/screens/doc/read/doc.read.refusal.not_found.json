@@ -1,72 +1,23 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "doc.read.refusal.not_found",
+  "$schema": "wireframe/v2",
+  "id": "doc.read.refusal.not_found",
   "target": "doc://refund-policies",
   "command": "capcli doc read doc://refund-policies --max-tokens 100",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.doc.not_found",
     "domain": "validation",
     "culprit": "Document URP 'refund-policies' has no entry in the document catalog.",
     "remedy": "verify the URP; nearest catalog match is doc://refund-policy",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.doc.not_found",
-            "indent": 2
-          },
-          {
-            "field": "target",
-            "value": "doc://refund-policies"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Document URP 'refund-policies' has no entry in the document catalog.",
-            "indent": 8
-          },
-          {
-            "text": "Reading is refused before any content is fetched.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "catalog"
-          },
-          {
-            "field": "remedy",
-            "value": "verify the URP; nearest catalog match is doc://refund-policy"
-          }
-        ]
-      }
+    "target": "doc://refund-policies",
+    "layer": "catalog",
+    "lines": [
+      "Reading is refused before any content is fetched."
     ]
   }
 }

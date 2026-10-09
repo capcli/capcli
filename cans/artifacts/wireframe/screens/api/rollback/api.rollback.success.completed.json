@@ -1,57 +1,30 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.rollback.success.completed",
+  "$schema": "wireframe/v2",
+  "id": "api.rollback.success.completed",
   "target": "cap://threads.create_media_post",
   "command": "capcli api rollback threads.create_media_post 4",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "completed"
-    },
-    "sections": [
+  "audit_op": "op_7c4e9",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "verb",
-            "value": "cap://threads.create_media_post"
-          },
-          {
-            "field": "version",
-            "value": "8 → 4"
-          },
-          {
-            "field": "spec_hash",
-            "value": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa (restored)"
-          },
-          {
-            "field": "depth",
-            "value": "4 of 5 (max rollback depth)"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_7c4e9"
-          }
-        ]
+        "fields": {
+          "verb": "cap://threads.create_media_post",
+          "version": "8 → 4",
+          "spec_hash": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa (restored)",
+          "depth": "4 of 5 (max rollback depth)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

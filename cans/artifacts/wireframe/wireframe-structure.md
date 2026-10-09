@@ -444,18 +444,43 @@ the validator enforces closure, and in any conflict the fixture wins.
 
 ## 5. Canonical Screen Fixtures
 
-Every fixture JSON follows strict typographic rules rendered by the consuming engine:
-1. **Header Badge:** Standardized `[{env}:{tier}]` runtime context prefix.
-2. **Visual Spans:** Source SQL or parameters underlined with carets (`^^^^`) directly pinpointing violations.
-3. **Indented Blocks:** Two-space hierarchical indentation; clean label columns.
-4. **Dividers:** Horizontal character lines (`─`) for separation. No random vertical pipe borders.
-5. **Machine/Human Duality:** Clean human presentation by default; JSON structure strictly matches `--json`.
+Every fixture is a `wireframe/v2` root in `CliEnvelope` shape (envelope law: cans/physics.md#Diagnostic-output-law): `$schema`, `id`, `command`, `context {env, tier, trust}`, optional `audit_op`, `archetype`, `component`. Exactly one component per screen:
 
-The renderer (HTML canvas or Rust test harness) consumes the JSON shape and produces the terminal output. No separate `.txt` files exist in the repo.
+- `diagnostic` — states denial, refusal, crash, panic, yield (exits 2, 3, 4, 5, 6)
+- `tree` — hierarchies, causal DAGs, inspection envelopes
+- `receipt` — key-value summaries, reports, dry-run plans
+- `document` — prose slices, keyset envelopes, help
+
+Success screens classify by content: key-value summaries are `receipt`, hierarchies are `tree`, prose slices and help are `document`. The exit code derives from the `id` state segment; fixtures carry no `exit_code` and no `state_modified`. Carets, indents, branch glyphs, dividers, and key alignment are renderer output computed from component data; fixtures store none of them. The renderer (HTML canvas or Rust test harness) consumes the component and produces the terminal output. No separate `.txt` files exist in the repo. Each fixture below sits beside the terminal output its component renders; the harness asserts that output byte-for-byte (§6.2).
 
 ---
 
 ### 5.1 AST Blast-Radius Denial (`screens/run/sql/run.sql.denial.ast.json`)
+
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "run.sql.denial.ast",
+  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "audit_op": "op_9f2e",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.query.update_delete.require_limit",
+    "domain": "policy.ast",
+    "layer": "AST",
+    "span": {
+      "source": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
+      "highlight": "processing"
+    },
+    "culprit": "No LIMIT clause. Blast radius unbounded.",
+    "measured": "matches potentially 847 rows (cap: 100)",
+    "remedy": "add LIMIT, or target specific primary key"
+  }
+}
+```
 
 Rendered output (what the HTML canvas and Rust harness produce):
 
@@ -478,6 +503,41 @@ Rendered output (what the HTML canvas and Rust harness produce):
 
 ### 5.2 Causal DAG Tree Walk (`screens/sys/trace/sys.trace.success.populated.json`)
 
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.trace.success.populated",
+  "command": "capcli sys audit trace op_7c4f --explain",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "audit_op": "op_7c4f",
+  "archetype": "tree",
+  "component": {
+    "title": "Causal DAG Trace (op_7c4f)",
+    "root": { "id": "ses_a992f", "type": "session.start", "intent": "fulfill urgent pending orders" },
+    "nodes": [
+      {
+        "id": "op_9f2c",
+        "label": "routine.dispatch_order@4",
+        "children": [
+          { "id": "op_9f2d", "label": "db.query (orders)", "status": "allowed", "duration_ms": 12 },
+          { "id": "op_7c4f", "label": "api.call (fedex.ship)", "status": "allowed", "duration_ms": 340, "detail": "tracking 794644790133" },
+          { "id": "op_9f2f", "label": "db.execute (orders)", "status": "allowed", "duration_ms": 18, "detail": "status = 'shipped' (1 row)" }
+        ]
+      }
+    ],
+    "footer": {
+      "Root Intent": "\"fulfill urgent pending orders\"",
+      "Authority": "user:alice (via agt_7f3k)",
+      "Integrity": "valid hash link (chain verified)"
+    }
+  }
+}
+```
+
+Rendered output:
+
 ```text
 [dev:tier_1]  Causal DAG Trace (op_7c4f)
 
@@ -497,6 +557,42 @@ Rendered output (what the HTML canvas and Rust harness produce):
 ---
 
 ### 5.3 YAML Trust Receipt (`screens/sys/doctor/sys.doctor.success.report.json`)
+
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.success.report",
+  "command": "capcli sys doctor --report",
+  "context": { "env": "prod", "tier": "tier_1", "trust": "reviewed" },
+  "archetype": "receipt",
+  "component": {
+    "title": "trust_receipt",
+    "groups": [
+      {
+        "fields": {
+          "status": "nominal (witness anchoring pending)",
+          "host_tier": "tier_1 (hardened Linux namespaces)",
+          "workspace": "envs/prod/workspace.db",
+          "ledger_root_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
+          "witness_store": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)",
+          "worm_checkpoint": "pending — ledger root is local-only until the first object-store anchor; provision s3/r2, then 'capcli sys backup --push'",
+          "audited_events": "14290 committed to _audit",
+          "policy_denials": "18 (intercepted pre-execution; state untouched)",
+          "unaudited_writes": "0",
+          "secret_leaks": "0",
+          "pinned_routines": "32",
+          "active_triggers": "4 crons, 3 webhooks, 1 endpoint",
+          "sleep_score": "100%"
+        }
+      }
+    ]
+  }
+}
+```
+
+Rendered output:
 
 ```text
 [prod:tier_1]  capcli 0.4.2
@@ -520,6 +616,78 @@ trust_receipt:
 ---
 
 ### 5.4 Pre-Flight Routine Inspection Envelope (`screens/run/inspect/run.inspect.success.routine.json`)
+
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.routine",
+  "command": "capcli inspect cap://dispatch_order@4",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "pinned" },
+  "archetype": "tree",
+  "component": {
+    "title": "capcli inspect cap://dispatch_order@4",
+    "root": {
+      "id": "cap://dispatch_order@4",
+      "type": "routine",
+      "intent": "Dispatch paid order to carrier and update status",
+      "fields": {
+        "trust": "pinned",
+        "runtime": "typescript (bun)",
+        "params": "order_id: string, carrier: string",
+        "limits": "8 ops · 15s · 500 result tokens"
+      }
+    },
+    "nodes": [
+      {
+        "id": "manifest",
+        "label": "manifest",
+        "children": [
+          { "id": "step.1", "label": "db.query    orders (read)" },
+          { "id": "step.2", "label": "api.call    logistics.shipments.create" },
+          { "id": "step.3", "label": "db.execute  orders (write)" }
+        ]
+      },
+      {
+        "id": "budget_status",
+        "label": "budget_status",
+        "fields": {
+          "can_invoke_now": "true",
+          "session_ops_remaining": "488",
+          "session_duration_remaining": "555000ms",
+          "session_fuel_remaining": "80400",
+          "session_egress_remaining": "4181824 bytes",
+          "session_rate_remaining": "287",
+          "tightest_constraint": "null"
+        }
+      },
+      {
+        "id": "composition",
+        "label": "composition",
+        "fields": {
+          "max_nesting_depth": "5",
+          "budget_inheritance": "min",
+          "child_routines": "[]"
+        }
+      },
+      {
+        "id": "stats",
+        "label": "stats",
+        "fields": {
+          "total_runs": "214",
+          "success_rate": "99.1%",
+          "p50_duration": "340ms",
+          "p95_duration": "890ms",
+          "last_run_at": "2m ago"
+        }
+      }
+    ]
+  }
+}
+```
+
+Rendered output:
 
 ```text
 [dev:tier_1]  capcli inspect cap://dispatch_order@4
@@ -562,6 +730,41 @@ trust_receipt:
 
 ### 5.5 Dry-Run Schema Impact Plan (`screens/run/sql/run.sql.success.dry_run.json`)
 
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "run.sql.success.dry_run",
+  "command": "capcli sql \"ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0\" --dry-run -m \"add priority flag for rush shipping\"",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "archetype": "receipt",
+  "component": {
+    "title": "dry-run",
+    "groups": [
+      {
+        "fields": {
+          "statement": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
+          "ast_check": "pass",
+          "authorizer": "pass (alter on orders allowed in dev)",
+          "intent": "declared (\"add priority flag for rush shipping\")",
+          "schema_impact": "+1 column (priority)",
+          "estimated_rows": "4281",
+          "blast_radius": "schema-only (non-destructive)"
+        }
+      },
+      {
+        "fields": {
+          "note": "no execution occurred"
+        }
+      }
+    ]
+  }
+}
+```
+
+Rendered output:
+
 ```text
 [dev:tier_1]  dry-run  ✓
 
@@ -581,6 +784,34 @@ trust_receipt:
 
 ### 5.6 Agent Thrashing Denial (`screens/sys/doctor/sys.doctor.denial.thrashing.json`)
 
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.denial.thrashing",
+  "command": "capcli sys doctor",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "reviewed" },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "agent.thrashing",
+    "domain": "agent.thrashing",
+    "layer": "governance",
+    "culprit": "agent agt_7f3k stuck in repetitive denial loop (rule: policy.query.update_delete.require_limit, target: db://orders)",
+    "remedy": "harness execution throttled; escalate to human or inspect remedy payload",
+    "fields": {
+      "agent": "agt_7f3k",
+      "denials_last_5m": "22",
+      "rule_hit": "policy.query.update_delete.require_limit",
+      "target": "db://orders",
+      "harness_status": "stuck in repetitive denial loop"
+    }
+  }
+}
+```
+
+Rendered output:
+
 ```text
 [dev:tier_1]  ⚠  agent.thrashing
 
@@ -598,6 +829,35 @@ trust_receipt:
 ---
 
 ### 5.7 Missing Vault Secret with Cockpit URL (`screens/run/execute/run.execute.refusal.missing_secret.json`)
+
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "run.execute.refusal.missing_secret",
+  "command": "capcli run cap://stripe.refund_charge -p charge_id=ch_1F2a9b -p amount_cents=8400 -m \"refund duplicate charge\"",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.secrets.missing",
+    "domain": "policy.secrets",
+    "layer": "vault",
+    "span": {
+      "source": "vault://stripe_secret_key",
+      "detail": "Direct CLI parameter injection is banned to prevent prompt leakage."
+    },
+    "culprit": "Credential 'stripe_secret_key' not found in vault.",
+    "remedy": "prompt human supervisor to inject credential via Cockpit (http://127.0.0.1:4040/vault)",
+    "fields": {
+      "capability": "cap://stripe.refund_charge",
+      "secret_ref": "vault://stripe_secret_key"
+    }
+  }
+}
+```
+
+Rendered output:
 
 ```text
 [dev:tier_1]  ✗  exit 3
@@ -618,6 +878,35 @@ trust_receipt:
 
 ### 5.8 Network Jail Syscall 42 Trapping (`screens/run/execute/run.execute.denial.network_jail.json`)
 
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "run.execute.denial.network_jail",
+  "command": "capcli run cap://sneaky_exfil@1 -p db_host=10.0.0.5:5432 -m \"replicate orders to analytics host\"",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "kernel.network.jail",
+    "domain": "kernel.sandbox",
+    "layer": "sandbox",
+    "span": {
+      "source": "routines/sneaky_exfil.py",
+      "detail": "syscall 42 (connect) trapped by seccomp-bpf -> 10.0.0.5:5432"
+    },
+    "culprit": "Raw network egress prohibited from guest sandboxes.",
+    "remedy": "use ctx.api.call with an activated catalog verb",
+    "fields": {
+      "target": "10.0.0.5:5432",
+      "caller": "routines/sneaky_exfil.py"
+    }
+  }
+}
+```
+
+Rendered output:
+
 ```text
 [dev:tier_1]  ✗  exit 2
 
@@ -636,6 +925,38 @@ trust_receipt:
 ---
 
 ### 5.9 Quota Yield Frame Suspension (`screens/run/execute/run.execute.yield.quota.json`)
+
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "run.execute.yield.quota",
+  "command": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
+  "context": { "env": "prod", "tier": "tier_1", "trust": "pinned" },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.api.quota_exhausted",
+    "domain": "api.quota",
+    "layer": "quota",
+    "span": {
+      "source": "cap://broadcast_newsletter@2",
+      "detail": "routine broadcast_newsletter@2 (frame_018)"
+    },
+    "culprit": "Provider quota exhausted: threads has 0/50 tokens left in the 24h window.",
+    "remedy": "task safely yielded; daemon will auto-resume at reset_at",
+    "suspended_frame": "task_99a8b1",
+    "tokens_left": "0 / 50 (24h window)",
+    "reset_at": "18:00:00 UTC (in 4h 12m)",
+    "fields": {
+      "provider": "threads",
+      "verb": "threads.create_media_post"
+    }
+  }
+}
+```
+
+Rendered output:
 
 ```text
 [prod:tier_1]  ✗  exit 6
@@ -657,6 +978,39 @@ trust_receipt:
 
 ### 5.10 NTP Clock Drift Diagnostic Warning (`screens/sys/doctor/sys.doctor.success.clock_drift.json`)
 
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.success.clock_drift",
+  "command": "capcli sys doctor",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "reviewed" },
+  "archetype": "receipt",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "clock drift warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
+          "causal ordering unaffected": "CLOCK_MONOTONIC + SQLite sequence IDs"
+        },
+        "lines": [
+          "lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only"
+        ]
+      },
+      {
+        "fields": {
+          "host": "ws-07 (chronyd reachable, not yet synced)",
+          "remedy": "synchronize host system clock via 'chronyd' or 'ntpdate' when convenient; execution is not blocked"
+        }
+      }
+    ]
+  }
+}
+```
+
+Rendered output:
+
 ```text
 [dev:tier_1]  ✓  exit 0
 
@@ -673,6 +1027,36 @@ trust_receipt:
 
 ### 5.11 Progressive Disclosure Doc Reading (`screens/doc/read/doc.read.success.sliced.json`)
 
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "doc.read.success.sliced",
+  "command": "capcli doc read doc://refund-policy --max-tokens 100",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "pinned" },
+  "archetype": "document",
+  "component": {
+    "header_badge": "doc://refund-policy (sections 1-2 of 5)",
+    "meta": {
+      "tokens": "96 (cap: 100)",
+      "has_more": true,
+      "next_cursor": "doc://refund-policy#3"
+    },
+    "items": [
+      { "section": 1, "heading": "Scope", "tokens": 22 },
+      { "section": 2, "heading": "Refund windows", "tokens": 74 }
+    ],
+    "body": [
+      "1. Scope\nRefund routing and approval rules for the storefront.",
+      "2. Refund windows\nStandard window is 30 days. Extended window is 120 days and requires supervisor approval."
+    ]
+  }
+}
+```
+
+Rendered output:
+
 ```text
 [dev:tier_1]  doc://refund-policy (sections 1-2 of 5)
 
@@ -688,9 +1072,9 @@ trust_receipt:
   supervisor approval.
 ```
 
-The machine payload carries the full keyset envelope (§6.1.2):
-`pagination.items` (typed section items), `pagination.next_cursor`
-(doc-pointer resume at section 3), `pagination.has_more: true` — the
+The machine payload carries the full keyset envelope inside the
+document component (§6.1.2): `items` (typed section items), `meta.next_cursor`
+(doc-pointer resume at section 3), `meta.has_more: true` — the
 collection-law trio from `manifest.json` `output_contract.pagination`.
 
 ---
@@ -698,6 +1082,30 @@ collection-law trio from `manifest.json` `output_contract.pagination`.
 ### 5.12 Minimalist Root Help Stub (`screens/sys/help/sys.help.success.stub.json`)
 
 Host screen only; the trailer line renders after it as an additive final line. Line-cap accounting: `manifest.json` `output_contract.trailer.line_cap_law`.
+
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.help.success.stub",
+  "command": "capcli",
+  "context": { "env": "dev", "tier": "tier_1", "trust": "reviewed" },
+  "archetype": "document",
+  "component": {
+    "header_badge": "capcli 0.4.2 — compiled execution firewall for AI agents",
+    "body": [
+      "Usage: capcli <noun> <verb> [target] [flags]",
+      "Capabilities are discovered dynamically, not listed in static help.",
+      "  Find actions:    capcli search <query>",
+      "  Pre-flight:      capcli inspect <urp>",
+      "  System status:   capcli sys doctor"
+    ]
+  }
+}
+```
+
+Rendered output:
 
 ```text
 capcli 0.4.2 — compiled execution firewall for AI agents
@@ -716,76 +1124,58 @@ Capabilities are discovered dynamically, not listed in static help.
 
 ### 6.1 Screen Fixture Schema (`screens/run/sql/run.sql.denial.ast.json`)
 
-A fixture JSON is the shape of the screen and the single source the
-renderer consumes. Shape means envelope plus render skeleton:
-the invocation, the kernel state frame, the diagnostic frame, the
-sections and field labels the screen renders in order, and the trailer
-payload. The HTML canvas and the Rust test harness both render from
+A fixture JSON is the serialized `CliEnvelope` payload of the screen and the
+single source the renderer consumes (envelope law: cans/physics.md#Diagnostic-output-law).
+The root carries the invocation, the runtime context, the audit op, and exactly
+one layout component. The HTML canvas and the Rust test harness both render from
 this shape. No separate `.txt` file exists.
 
 ```json
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.denial.ast",
-  "target": "db://orders",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.denial.ast",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
-  "state": {
-    "exit_code": 2,
+  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
+  "audit_op": "op_9f2e",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.query.update_delete.require_limit",
     "domain": "policy.ast",
-    "trust": "draft",
-    "env": "dev",
-    "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
-  },
-  "diagnostic": {
-    "domain": "policy.ast",
-    "culprit": "No LIMIT clause. Blast radius unbounded.",
-    "remedy": "add LIMIT, or target specific primary key",
     "layer": "AST",
-    "state_modified": false,
-    "measured": "matches potentially 847 rows (cap: 100)"
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
+    "span": {
+      "source": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
+      "highlight": "processing"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          { "text": "FAIL  policy.query.update_delete.require_limit", "indent": 2 },
-          { "text": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'", "indent": 8 },
-          { "text": "^^^^^^", "indent": 67 },
-          { "text": "No LIMIT clause. Blast radius unbounded.", "indent": 8 }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          { "field": "audit_op", "value": "op_9f2e" },
-          { "field": "state_modified", "value": "false" },
-          { "field": "layer", "value": "AST" },
-          { "field": "measured", "value": "matches potentially 847 rows (cap: 100)" },
-          { "field": "remedy", "value": "add LIMIT, or target specific primary key" }
-        ]
-      }
-    ]
+    "culprit": "No LIMIT clause. Blast radius unbounded.",
+    "measured": "matches potentially 847 rows (cap: 100)",
+    "remedy": "add LIMIT, or target specific primary key"
   }
 }
 ```
 
-Field law:
+Root field law:
 
-- `$schema` is `wireframe/v1`. `screen_id` is the identity; noun and verb are its first two segments and appear nowhere else.
-- `target` and `command` state the invocation the screen answers.
-- `state` is the kernel state frame: exit code, domain, trust, env, tier, `state_modified`, data shape. Legality of states and domains lives in `_states.json`.
-- `diagnostic` is the structured diagnostic frame for non-success exits. It carries every key in `_states.json` `diagnostic_required` for that exit: exit 2 — `domain`, `culprit`, `remedy`, `layer`, `state_modified`; exit 3/4/5 — `domain`, `culprit`, `remedy`, `state_modified`; exit 6 — `domain`, `culprit`, `remedy`, `suspended_frame`, `state_modified`. Exit-6 diagnostics additionally carry the domain fields registered in `_states.json` (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`, `pending_asks`). Denials may also cite `measured` (denial UX: cite the measured value). Success screens carry `diagnostic` as `null` or omit it.
-- `render` is the screen's full content model. A renderer consuming the shape alone — header from `state` plus `render.header.label`, sections in order, trailer from the payload — produces the terminal output exactly. `header.style` is `badge` (`[{env}:{tier}]` first line, `✓` on exit 0, `✗` otherwise) or `plain` (the label is the whole first line, verbatim — plain fixtures carry their own prefix or banner); each section carries `title` (the block's leading `name:` line or `null`) and ordered `items`. An item is `{"field", "value"}` (rendered `  label: value`, values aligned per section) or `{"text", "indent"}` (a prose or code line at its indent).
-- **Tree-glyph law:** tree characters (`├──`, `└──`, `│`) appear only in `{"text", "indent"}` items, which render at exactly their own indent. `{"field", "value"}` items never carry tree glyphs — field items always render as `  field: value`, so a glyph in a field label would double-indent the row and misalign the tree.
+- `$schema` is `wireframe/v2`. `id` is the screen identity; noun and verb are its first two segments and appear nowhere else.
+- `command` states the invocation the screen answers; any target pointer lives inside the command string.
+- `context` is the `CliEnvelope` context frame: `env`, `tier`, `trust`. The renderer derives the `[{env}:{tier}]` badge from it.
+- `audit_op` names the audit operation the envelope reports. It appears when the screen reports one and is absent otherwise.
+- `archetype` is exactly one of `diagnostic`, `tree`, `receipt`, `document` (archetype law: cans/physics.md#Diagnostic-output-law). `component` carries that archetype's payload and nothing else.
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
-- `pagination` appears exactly on screens whose `state.data_shape` is `truncated` (§6.1.2).
+
+Derived-state law:
+
+- The exit code derives from the `id` state segment: `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6. Fixtures carry no `exit_code`; state and domain legality lives in `_states.json`.
+- Fixtures carry no `state_modified`. A non-zero exit carries `state_modified: false` as a kernel invariant (cans/physics.md#Exit-code-law). Success screens take `state_modified` from the exit-0 variants in `_states.json` (`committed`, `dry_run`, `suspended`, `resumed`). A renderer emits a `state_modified` row from the derived value only; the fixture never stores it.
+- A diagnostic component carries `domain` once, in the component. Success components carry no `domain`.
+- Archetype dispatch is deterministic: states `denial`, `refusal`, `crash`, `panic`, `yield` are `diagnostic`; `success` resolves to `receipt`, `tree`, or `document` by content (key-value summary, hierarchy, prose slice or help).
+- Visual typography is renderer output, never fixture data: caret strings and their column offsets, indentation, tree branch glyphs (`├──`, `└──`, `│`), divider lines (`─`), and key-column alignment are computed by the component renderers from component data.
+
+Component law:
+
+- **diagnostic** — `{ rule, domain, layer, span, culprit, measured?, remedy, fields?, suspended_frame?, tokens_left?, reset_at?, ask_id?, pending_asks? }`. `rule` is the violated rule id; `domain` is the `_states.json` domain, stored once here; `layer` names the enforcement layer. `span` is `{ source, highlight?, detail? }`: `source` is the offending source text, `highlight` is the exact substring the renderer underlines with carets at its computed offset, `detail` carries indented span context lines. `culprit` is the failure statement; `measured` cites the measured value on denials that carry one; `remedy` is the remediation line. `fields` is an optional ordered key-value block of screen-specific rows. Exit 6 components additionally carry `suspended_frame`, plus the domain fields registered in `_states.json` (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`, `pending_asks`). Required diagnostic fields per exit live in `_states.json` `diagnostic_required`; a fixture carries each value once, in this component.
+- **tree** — `{ title, root, nodes, footer? }`. `title` is the header line after the badge. `root` is `{ id, type, intent, fields? }`: the walk origin, its kind, its stated intent, and optional ordered key-value rows. `nodes` is an ordered array of `{ id, label, status?, duration_ms?, detail?, fields?, children? }`; `children` recurses with the same shape. The renderer computes indentation and branch glyphs from nesting; a node's `detail` renders as its indented leaf line. `footer` is an optional ordered key-value block rendered after the walk.
+- **receipt** — `{ title?, groups }`. `title` renders as the receipt heading (block heading line or badge suffix, per screen). `groups` is an ordered array of `{ name?, fields?, lines? }`: `name` renders as the group's `name:` heading line, `fields` is an ordered key-value map the renderer aligns into label columns, `lines` carries verbatim content lines the renderer indents under the group. Key order in `fields` is render order.
+- **document** — `{ header_badge, meta?, body, items? }`. `header_badge` is the document header line after the context badge. `meta` is `{ tokens?, has_more?, next_cursor? }`: the slice token accounting and the keyset pagination state. `body` is an ordered array of prose strings; the renderer emits divider lines and wraps body text. `items` carries the typed leading items of a truncated payload (§6.1.2).
 
 ### 6.1.1 Trailer Slot
 
@@ -803,159 +1193,209 @@ trailer and nothing else about the producer.
 - The slot leaves exit code and `state_modified` unchanged.
 - Line-cap accounting lives in `manifest.json` `output_contract.trailer.line_cap_law`; this section carries no cap number.
 
-The slot-naming bridge, stated once so it can never be confused: the fixture
-slot key is `trailer` — the `human_field`, producer-facing slot above. When a
+The slot-naming bridge, stated once so it can never be confused: on a
+`wireframe/v2` fixture the slot is the root key `trailer`, beside `component` —
+the `human_field`, producer-facing slot above. When a
 renderer emits the `--json` machine envelope, the key becomes `next_action`
 per `output_contract.trailer.machine_field` in `manifest.json`. Fixtures
 never serialize a `next_action` key.
 
 ### 6.1.2 Pagination Slot
 
-Screens whose `state.data_shape` is `truncated` carry a top-level
-`"pagination"` object mirroring `output_contract.pagination.required_envelope_keys`
-in `manifest.json`:
+Truncated screens carry the keyset envelope inside the component, mirroring
+`output_contract.pagination.required_envelope_keys` in `manifest.json`:
 
-- `items` — a small representative array consistent with the screen's data
-  (the leading rows of the truncated payload, not the full set).
-- `next_cursor` — the keyset cursor a follow-up invocation passes to resume.
-- `has_more` — always `true` on a truncated screen.
+- `document` components: `items` at component level (a small representative
+  array of typed leading items, not the full set), with `next_cursor` and
+  `has_more` in `meta`.
+- `receipt` components: `items`, `next_cursor`, and `has_more` at component
+  level, beside `groups`.
 
-Non-truncated screens carry no `pagination` key.
+`next_cursor` is the keyset cursor a follow-up invocation passes to resume;
+`has_more` is always `true` on a truncated screen. Non-truncated screens
+carry none of these keys.
 
 ### 6.2 Rust Integration Test Runner
 
-The runner renders every fixture from its JSON shape, dispatches the command, and asserts the rendered output matches actual CLI stdout. No golden `.txt` files; the shape IS the golden source.
+Status: spec contract. The repository carries no `crates/` tree; the Python
+validator enforces the checks in this section until the Rust harness exists.
+No golden `.txt` files; the fixture component IS the golden source.
+
+The runner deserializes every fixture as an `AtomicFixture`, renders the
+expected terminal output procedurally from its component, dispatches the
+command against the real binary, and asserts byte-identical stdout plus the
+exit code derived from the fixture `id`. Diagnostic spans render through the
+kernel's `miette` / `codespan` pipeline, so fixtures validate the real CLI
+formatting engine.
 
 ```rust
-// crates/capcli-cli/tests/e2e/test_wireframe_fixtures.rs
+// crates/capcli-cli/tests/e2e/test_wireframe_fixtures.rs — contract path; no crates/ tree exists in the repo today
 
 use std::fs;
 use std::path::Path;
 use glob::glob;
 use serde::Deserialize;
 
-/// Kernel state frame — mirrors the `state` block of every fixture (§6.1).
+/// Runtime context frame — mirrors `context` in every fixture (§6.1).
 #[derive(Deserialize)]
-struct StateFrame {
-    exit_code: i32,
-    domain: Option<String>,    // None on success (exit 0)
-    trust: String,
+struct Context {
     env: String,
     tier: String,
-    state_modified: bool,
-    data_shape: Option<String>, // populated | empty | truncated | redirected | dry_run
+    trust: String,
 }
 
-/// Structured diagnostic frame for non-success exits (§6.1 field law).
-/// Required keys per exit live in `_states.json` `diagnostic_required`.
+/// Semantic span. Caret runs and offsets are computed at render time
+/// from `source` + `highlight`; fixtures store neither.
 #[derive(Deserialize)]
-struct DiagnosticFrame {
+struct Span {
+    source: String,
+    highlight: Option<String>,
+    detail: Option<String>,
+}
+
+/// Archetype A payload (§6.1 component law).
+#[derive(Deserialize)]
+struct DiagnosticComponent {
+    rule: String,
     domain: String,
+    layer: String,
+    span: Option<Span>,
     culprit: String,
+    measured: Option<String>,
     remedy: String,
-    layer: Option<String>,            // required on exit 2; absent elsewhere
-    measured: Option<String>,         // denial UX: cite the measured value
-    suspended_frame: Option<String>,  // required on exit 6
-    state_modified: bool,
-    /// Flexible carrier: exit-6 diagnostics add their domain fields
-    /// (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`,
-    /// `pending_asks`) and values may be non-string, so they land here
-    /// instead of failing the harness. Any future additive key does too.
-    #[serde(flatten)]
-    extra: Option<serde_json::Value>,
+    fields: Option<serde_json::Map<String, serde_json::Value>>,
+    suspended_frame: Option<String>,
+    tokens_left: Option<String>,
+    reset_at: Option<String>,
+    ask_id: Option<String>,
+    pending_asks: Option<String>,
 }
 
-/// Pagination envelope — carried iff `state.data_shape == "truncated"` (§6.1.2),
-/// mirroring `output_contract.pagination.required_envelope_keys` in `manifest.json`.
+/// Archetype B node; `children` recurses. Branch glyphs and indentation
+/// are computed at render time from nesting.
 #[derive(Deserialize)]
-struct PaginationEnvelope {
-    items: Vec<serde_json::Value>,
-    next_cursor: String,
-    has_more: bool,
-}
-
-#[derive(Deserialize)]
-struct RenderItem {
-    text: Option<String>,
-    indent: Option<usize>,
-    field: Option<String>,
-    value: Option<String>,
+struct TreeNode {
+    id: String,
+    label: String,
+    status: Option<String>,
+    duration_ms: Option<u64>,
+    detail: Option<String>,
+    fields: Option<serde_json::Map<String, serde_json::Value>>,
+    #[serde(default)]
+    children: Vec<TreeNode>,
 }
 
 #[derive(Deserialize)]
-struct RenderSection { title: Option<String>, items: Vec<RenderItem> }
+struct TreeRoot {
+    id: String,
+    #[serde(rename = "type")]
+    kind: String,
+    intent: String,
+    fields: Option<serde_json::Map<String, serde_json::Value>>,
+}
 
+/// Archetype B payload (§6.1 component law).
 #[derive(Deserialize)]
-struct RenderBlock { header: RenderHeader, sections: Vec<RenderSection> }
+struct TreeComponent {
+    title: String,
+    root: TreeRoot,
+    nodes: Vec<TreeNode>,
+    footer: Option<serde_json::Map<String, serde_json::Value>>,
+}
 
+/// Archetype C group; key order in `fields` is render order.
 #[derive(Deserialize)]
-struct RenderHeader { style: String, label: String }
+struct ReceiptGroup {
+    name: Option<String>,
+    fields: Option<serde_json::Map<String, serde_json::Value>>,
+    lines: Option<Vec<String>>,
+}
 
+/// Archetype C payload (§6.1 component law). Truncated receipts carry
+/// the pagination keys at component level (§6.1.2).
 #[derive(Deserialize)]
-struct WireframeFixture {
-    screen_id: String,
-    target: Option<String>,
+struct ReceiptComponent {
+    title: Option<String>,
+    groups: Vec<ReceiptGroup>,
+    items: Option<Vec<serde_json::Value>>,
+    next_cursor: Option<String>,
+    has_more: Option<bool>,
+}
+
+/// Archetype D pagination/slice meta.
+#[derive(Deserialize)]
+struct DocumentMeta {
+    tokens: Option<String>,
+    has_more: Option<bool>,
+    next_cursor: Option<String>,
+}
+
+/// Archetype D payload (§6.1 component law). Truncated documents carry
+/// typed leading `items` at component level (§6.1.2).
+#[derive(Deserialize)]
+struct DocumentComponent {
+    header_badge: String,
+    meta: Option<DocumentMeta>,
+    body: Vec<String>,
+    items: Option<Vec<serde_json::Value>>,
+}
+
+/// The four layout components, dispatched on the `archetype` key.
+#[derive(Deserialize)]
+#[serde(tag = "archetype", content = "component")]
+enum ComponentPayload {
+    #[serde(rename = "diagnostic")]
+    Diagnostic(DiagnosticComponent),
+    #[serde(rename = "tree")]
+    Tree(TreeComponent),
+    #[serde(rename = "receipt")]
+    Receipt(ReceiptComponent),
+    #[serde(rename = "document")]
+    Document(DocumentComponent),
+}
+
+/// Root fixture: a serialized CliEnvelope payload (§6.1).
+/// Exit code and state_modified are derived, never stored.
+#[derive(Deserialize)]
+struct AtomicFixture {
+    id: String,
     command: String,
-    state: StateFrame,
-    diagnostic: Option<DiagnosticFrame>, // None on success screens
-    render: RenderBlock,
+    context: Context,
+    audit_op: Option<String>,
+    #[serde(flatten)]
+    payload: ComponentPayload,
     trailer: Option<serde_json::Value>,
-    pagination: Option<PaginationEnvelope>,
 }
 
-/// Canonical renderer: JSON shape → terminal text.
-/// This is the single source of truth for what a screen looks like.
-fn render_screen(fixture: &WireframeFixture) -> String {
-    let mut out = String::new();
-
-    // Header line. `render.header.style` decides the shape:
-    // - "plain": the label is emitted verbatim — plain fixtures carry their
-    //   own prefix (e.g. `[dev:tier_1]  ⚠  agent.thrashing`) or a bare banner
-    //   (`capcli 0.4.2 — …`), so prepending `[{env}:{tier}]` or an icon here
-    //   would duplicate the badge.
-    // - "badge" (or any other value): the renderer owns the prefix.
-    match fixture.render.header.style.as_str() {
-        "plain" => {
-            out.push_str(&format!("{}\n\n", fixture.render.header.label));
-        }
-        _ => {
-            let env = &fixture.state.env;
-            let tier = &fixture.state.tier;
-            let icon = if fixture.state.exit_code == 0 { "✓" } else { "✗" };
-            out.push_str(&format!("[{}:{}]  {}  {}\n\n", env, tier, icon, fixture.render.header.label));
+impl AtomicFixture {
+    /// Exit code law: derived from the `id` state segment (§6.1).
+    fn expected_exit_code(&self) -> i32 {
+        match self.id.split('.').nth(2) {
+            Some("success") => 0,
+            Some("denial") => 2,
+            Some("refusal") => 3,
+            Some("crash") => 4,
+            Some("panic") => 5,
+            Some("yield") => 6,
+            other => panic!("{}: illegal state segment {:?}", self.id, other),
         }
     }
+}
 
-    // Sections. Tree glyphs (├── └── │) are legal only in {"text", "indent"}
-    // items: a text line renders at exactly its own indent. {"field", "value"}
-    // items always render as `  field: value` and never carry tree glyphs —
-    // a glyph in a field label would double-indent the row and misalign the tree.
-    // Sections
-    for section in &fixture.render.sections {
-        if let Some(title) = &section.title {
-            out.push_str(&format!("  {}:\n", title));
-        }
-        for item in &section.items {
-            if let Some(text) = &item.text {
-                let indent = item.indent.unwrap_or(2);
-                out.push_str(&format!("{}{}\n", " ".repeat(indent), text));
-            } else if let (Some(field), Some(value)) = (&item.field, &item.value) {
-                out.push_str(&format!("  {}: {}\n", field, value));
-            }
-        }
-        out.push('\n');
+/// Procedural component renderers — the single source of terminal layout.
+/// Carets, indents, branch glyphs, dividers, and key alignment exist only here.
+fn render_diagnostic(context: &Context, c: &DiagnosticComponent) -> String;
+fn render_tree(context: &Context, c: &TreeComponent) -> String;
+fn render_receipt(context: &Context, c: &ReceiptComponent) -> String;
+fn render_document(context: &Context, c: &DocumentComponent) -> String;
+
+fn render_fixture(fixture: &AtomicFixture) -> String {
+    match &fixture.payload {
+        ComponentPayload::Diagnostic(c) => render_diagnostic(&fixture.context, c),
+        ComponentPayload::Tree(c) => render_tree(&fixture.context, c),
+        ComponentPayload::Receipt(c) => render_receipt(&fixture.context, c),
+        ComponentPayload::Document(c) => render_document(&fixture.context, c),
     }
-
-    // Trailer (if present)
-    if let Some(trailer) = &fixture.trailer {
-        if trailer.get("serve").and_then(|s| s.as_str()) != Some("blocked") {
-            let prompt = trailer["prompt"].as_str().unwrap_or("");
-            let reason = trailer["reason"].as_str().unwrap_or("");
-            out.push_str(&format!("trailer: {} - {}\n", prompt, reason));
-        }
-    }
-
-    out
 }
 
 #[test]
@@ -965,50 +1405,42 @@ fn execute_wireframe_golden_tests() {
     for entry in glob(&format!("{}/**/*.json", root.display())).unwrap() {
         let json_path = entry.unwrap();
         let content = fs::read_to_string(&json_path).unwrap();
-        let fixture: WireframeFixture = serde_json::from_str(&content).unwrap();
+        let fixture: AtomicFixture = serde_json::from_str(&content).unwrap();
 
-        // 1. Render expected output from shape
-        let expected = render_screen(&fixture);
+        // 1. Procedural render of the component = expected stdout
+        let expected = render_fixture(&fixture);
 
-        // 2. Dispatch the shape's command against the real binary
+        // 2. Dispatch the fixture's command against the real binary
         let output = capcli_test_exec(&fixture.command);
 
-        // 3. State frame assertions
-        assert_eq!(output.exit_code, fixture.state.exit_code,
-            "Exit mismatch at {}", fixture.screen_id);
-        assert_eq!(output.state_modified, fixture.state.state_modified,
-            "state_modified invariant failed at {}", fixture.screen_id);
-
-        // 3b. Fixture-schema contract (§6.1): non-success exits carry the
-        // diagnostic frame with their exit's required keys; truncated
-        // screens carry the pagination envelope (§6.1.2).
-        if fixture.state.exit_code != 0 {
-            assert!(fixture.diagnostic.is_some(),
-                "{}: exit {} without a diagnostic frame", fixture.screen_id, fixture.state.exit_code);
-        }
-        if fixture.state.data_shape.as_deref() == Some("truncated") {
-            assert!(fixture.pagination.is_some(),
-                "{}: truncated data_shape without a pagination envelope", fixture.screen_id);
+        // 3. Derived-state assertions (§6.1): exit code from the id,
+        //    state_modified from the kernel invariant.
+        assert_eq!(output.exit_code, fixture.expected_exit_code(),
+            "Exit mismatch at {}", fixture.id);
+        if fixture.expected_exit_code() != 0 {
+            assert_eq!(output.state_modified, false,
+                "state_modified invariant failed at {}", fixture.id);
         }
 
-        // 4. Golden rendering: stdout must match rendered shape
+        // 4. Golden rendering: stdout is byte-identical to the
+        //    procedural component render.
         assert_eq!(output.stdout, expected,
-            "Render mismatch at {}", fixture.screen_id);
+            "Render mismatch at {}", fixture.id);
 
-        // 5. Global negatives
+        // 5. Global negatives (asserted once here for all screens)
         for banned in ["--force", "--override-budget", "--force-prod", "--verbose"] {
             assert!(!output.stdout.contains(banned),
-                "{}: banned token '{}'", fixture.screen_id, banned);
+                "{}: banned token '{}'", fixture.id, banned);
         }
         assert!(!output.stdout.contains('|'),
-            "{}: pipe character forbidden", fixture.screen_id);
+            "{}: pipe character forbidden", fixture.id);
         if fixture.trailer.is_none() {
             assert!(!output.stdout.contains("trailer:"),
-                "{}: trailer on shape with no trailer", fixture.screen_id);
+                "{}: trailer on fixture with no trailer", fixture.id);
         }
 
         assert!(output.stderr.is_empty(),
-            "{}: unexpected stderr: {}", fixture.screen_id, output.stderr);
+            "{}: unexpected stderr: {}", fixture.id, output.stderr);
     }
 }
 ```
@@ -1020,7 +1452,7 @@ Trailer presence on a screen is decided solely by `cans/artifacts/prompt/_trigge
 a. **Schema.** A `trailer` payload validates against `machine_schema` in `manifest.json`.
 b. **Position.** The human trailer is the final rendered line; the machine trailer is an additive envelope key.
 c. **State neutrality.** For every trailer-carrying fixture, a twin assertion runs the same command with no trailer: output is identical except the trailer line/key is absent.
-d. **Correspondence.** Every `_triggers.json` entry resolves to a fixture shape on disk, and every `_flows.json` transition endpoint resolves to a fixture shape.
+d. **Correspondence.** Every `_triggers.json` entry resolves to a fixture on disk, and every `_flows.json` transition endpoint resolves to a fixture.
 e. **Negative space.** A fixture with no `trailer` renders no `trailer:` line and no `next_action` key.
 
 Cross-layer referential test:
@@ -1048,7 +1480,7 @@ fn assert_prompt_triggers_match_wireframe_screens() {
 
 ## 7. Edgeless Playable Canvas Implementation (`wireframe.html`)
 
-The HTML canvas renders all screens directly from `.json` fixture shapes. No `.txt` files are fetched. The `TerminalPanel` component parses the JSON `render` block and produces the styled terminal output client-side.
+The HTML canvas renders all screens directly from `.json` fixture shapes. No `.txt` files are fetched. `TerminalPanel` implements the four component renderers defined in §6.1 (`diagnostic`, `tree`, `receipt`, `document`); it consumes component payloads, and carets, branch glyphs, dividers, and alignment are its output.
 
 ```
 zoomable, node draggable, click inspect (renders from json shape), scenario select to highlight the flows in canvas

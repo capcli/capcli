@@ -1,76 +1,27 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.exec.crash.runtime",
+  "$schema": "wireframe/v2",
+  "id": "sys.exec.crash.runtime",
   "target": "sys://sandbox",
   "command": "capcli sys exec \"python3 etl.py\" --sandbox",
-  "state": {
-    "exit_code": 4,
-    "domain": "routine.runtime",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "routine.runtime.process_crash",
     "domain": "routine.runtime",
     "culprit": "SIGSEGV at 0x0 in native extension pandas/_libs/scanmap",
     "remedy": "reproduce via 'capcli sys exec \"python3 -X faulthandler etl.py\" --sandbox' and pin the failing native extension",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 4"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  routine.runtime.process_crash",
-            "indent": 0
-          },
-          {
-            "field": "command",
-            "value": "python3 etl.py"
-          },
-          {
-            "field": "signal",
-            "value": "SIGSEGV at 0x0 (native extension pandas/_libs/scanmap)"
-          },
-          {
-            "field": "jail",
-            "value": "torn down; tmpfs scratch wiped"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Guest process crashed before returning an audit outcome.",
-            "indent": 6
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: false",
-            "indent": 0
-          },
-          {
-            "text": "rollback:       clean",
-            "indent": 0
-          },
-          {
-            "text": "remedy:         reproduce via 'capcli sys exec \"python3 -X faulthandler etl.py\" --sandbox' and pin the failing native extension",
-            "indent": 0
-          }
-        ]
-      }
+    "command": "python3 etl.py",
+    "signal": "SIGSEGV at 0x0 (native extension pandas/_libs/scanmap)",
+    "jail": "torn down; tmpfs scratch wiped",
+    "lines": [
+      "Guest process crashed before returning an audit outcome.",
+      "state_modified: false",
+      "rollback:       clean",
+      "remedy:         reproduce via 'capcli sys exec \"python3 -X faulthandler etl.py\" --sandbox' and pin the failing native extension"
     ]
   }
 }

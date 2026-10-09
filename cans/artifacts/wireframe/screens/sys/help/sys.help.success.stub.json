@@ -1,54 +1,23 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.help.success.stub",
-  "target": null,
+  "$schema": "wireframe/v2",
+  "id": "sys.help.success.stub",
   "command": "capcli",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "plain",
-      "label": "capcli 0.4.2 — compiled execution firewall for AI agents"
+  "archetype": "document",
+  "component": {
+    "header_badge": "capcli 0.4.2 — compiled execution firewall for AI agents",
+    "fields": {
+      "Find actions": "capcli search <query>",
+      "Pre-flight": "capcli inspect <urp>",
+      "System status": "capcli sys doctor"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Usage: capcli <noun> <verb> [target] [flags]",
-            "indent": 0
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Capabilities are discovered dynamically, not listed in static help.",
-            "indent": 0
-          },
-          {
-            "field": "Find actions",
-            "value": "capcli search <query>"
-          },
-          {
-            "field": "Pre-flight",
-            "value": "capcli inspect <urp>"
-          },
-          {
-            "field": "System status",
-            "value": "capcli sys doctor"
-          }
-        ]
-      }
+    "body": [
+      "Usage: capcli <noun> <verb> [target] [flags]",
+      "Capabilities are discovered dynamically, not listed in static help."
     ]
   },
   "trailer": {

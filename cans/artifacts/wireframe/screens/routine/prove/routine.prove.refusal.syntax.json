@@ -1,85 +1,30 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.prove.refusal.syntax",
+  "$schema": "wireframe/v2",
+  "id": "routine.prove.refusal.syntax",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
-  "state": {
-    "exit_code": 3,
-    "domain": "compile",
-    "trust": "draft",
+  "context": {
     "env": "sim",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_prove_08",
+  "archetype": "diagnostic",
+  "component": {
     "domain": "compile",
+    "layer": "parser",
     "culprit": "py_compile refuses routines/sync_orders.py: IndentationError at line 23 (expected an indented block after the @routine decorator wrapper at line 19) — malformed guest code never enters the sandbox.",
     "remedy": "fix the indentation under the @routine decorator wrapper, then re-run prove; scaffolding verification re-checks import line counts and py_compile syntax",
-    "layer": "parser",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
+    "span": {
+      "source": "return ctx.db.query(\"SELECT status FROM orders WHERE id = :order_id\")",
+      "highlight": "return"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  compile.routine.bad_syntax",
-            "indent": 2
-          },
-          {
-            "text": "routines/sync_orders.py:23 in dispatch (wrapper at line 19)",
-            "indent": 8
-          },
-          {
-            "text": "return ctx.db.query(\"SELECT status FROM orders WHERE id = :order_id\")",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^",
-            "indent": 8
-          },
-          {
-            "field": "IndentationError",
-            "value": "expected an indented block after the @routine decorator wrapper at line 19; malformed guest code never enters the sandbox"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "gate",
-            "value": "py_compile syntax check (scaffolding verification; Gate 1)"
-          },
-          {
-            "field": "sandbox_entry",
-            "value": "refused — compile failure precedes jail entry"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_prove_08"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "fix the indentation under the @routine decorator wrapper, then re-run prove; scaffolding verification re-checks import line counts and py_compile syntax"
-          }
-        ]
-      }
+    "IndentationError": "expected an indented block after the @routine decorator wrapper at line 19; malformed guest code never enters the sandbox",
+    "gate": "py_compile syntax check (scaffolding verification; Gate 1)",
+    "sandbox_entry": "refused — compile failure precedes jail entry",
+    "lines": [
+      "FATAL  compile.routine.bad_syntax",
+      "routines/sync_orders.py:23 in dispatch (wrapper at line 19)"
     ]
   }
 }

@@ -1,164 +1,123 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "rule.show.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "rule.show.success.populated",
   "target": "schema://orders",
   "command": "capcli rule show schema --table orders",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "compiled rules (orders)"
-    },
-    "sections": [
+  "archetype": "tree",
+  "component": {
+    "title": "compiled rules (orders)",
+    "root": "orders (prov)",
+    "nodes": [
       {
-        "title": null,
-        "items": [
+        "label": "columns",
+        "children": []
+      },
+      {
+        "label": "id pk",
+        "children": []
+      },
+      {
+        "label": "ref text unique",
+        "children": []
+      },
+      {
+        "label": "customer_id int ref=customers.id",
+        "children": []
+      },
+      {
+        "label": "total_cents int default 0",
+        "children": []
+      },
+      {
+        "label": "discount_cents int default 0",
+        "children": []
+      },
+      {
+        "label": "status text default 'pending'",
+        "children": []
+      },
+      {
+        "label": "receipt blob ref=storage",
+        "children": []
+      },
+      {
+        "label": "created_by text (prov)",
+        "children": []
+      },
+      {
+        "label": "modified_by text (prov)",
+        "children": []
+      },
+      {
+        "label": "checks",
+        "children": []
+      },
+      {
+        "label": "discount_cents <= total_cents",
+        "children": []
+      },
+      {
+        "label": "status IN ('pending', 'processing', 'completed', 'cancelled')",
+        "children": []
+      },
+      {
+        "label": "indexes",
+        "children": []
+      },
+      {
+        "label": "[ref]",
+        "children": []
+      },
+      {
+        "label": "[[customer_id, status]]",
+        "children": []
+      },
+      {
+        "label": "triggers",
+        "children": [
           {
-            "field": "source",
-            "value": "schema.yaml v12 (compiled)"
-          },
-          {
-            "field": "engine",
-            "value": "sqlite (envs/dev/workspace.db)"
-          },
-          {
-            "field": "compiled_at",
-            "value": "2026-10-04T00:00:00Z"
-          },
-          {
-            "field": "gates",
-            "value": "Gate 1 pass · Gate 2 pass"
+            "label": "validate_total (BEFORE INSERT)",
+            "children": []
           }
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "orders (prov)",
-            "indent": 2
-          },
-          {
-            "text": "├── columns",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── id             pk",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── ref            text unique",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── customer_id    int ref=customers.id",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── total_cents    int default 0",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── discount_cents int default 0",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── status         text default 'pending'",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── receipt        blob ref=storage",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── created_by     text (prov)",
-            "indent": 2
-          },
-          {
-            "text": "│     └── modified_by    text (prov)",
-            "indent": 2
-          },
-          {
-            "text": "├── checks",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── discount_cents <= total_cents",
-            "indent": 2
-          },
-          {
-            "text": "│     └── status IN ('pending', 'processing', 'completed', 'cancelled')",
-            "indent": 2
-          },
-          {
-            "text": "├── indexes",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── [ref]",
-            "indent": 2
-          },
-          {
-            "text": "│     └── [[customer_id, status]]",
-            "indent": 2
-          },
-          {
-            "text": "└── triggers",
-            "indent": 2
-          },
-          {
-            "text": "└── validate_total (BEFORE INSERT)",
-            "indent": 8
-          }
-        ]
+        "label": "──────────────────────────────────────────────────────────────────────────",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "──────────────────────────────────────────────────────────────────────────",
-            "indent": 2
-          },
-          {
-            "text": "authorizer rules (compiled from policy.yaml v5)",
-            "indent": 2
-          },
-          {
-            "text": "├── alter:      require_trust reviewed",
-            "indent": 2
-          },
-          {
-            "text": "├── drop:       deny",
-            "indent": 2
-          },
-          {
-            "text": "├── vacuum:     require_trust pinned",
-            "indent": 2
-          },
-          {
-            "text": "└── triggers:   deny_agent (kernel-compiled exempt)",
-            "indent": 2
-          }
-        ]
+        "label": "authorizer rules (compiled from policy.yaml v5)",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "label": "alter: require_trust reviewed",
+        "children": []
+      },
+      {
+        "label": "drop: deny",
+        "children": []
+      },
+      {
+        "label": "vacuum: require_trust pinned",
+        "children": []
+      },
+      {
+        "label": "triggers: deny_agent (kernel-compiled exempt)",
+        "children": []
       }
-    ]
+    ],
+    "footer": {
+      "source": "schema.yaml v12 (compiled)",
+      "engine": "sqlite (envs/dev/workspace.db)",
+      "compiled_at": "2026-10-04T00:00:00Z",
+      "gates": "Gate 1 pass · Gate 2 pass",
+      "state_modified": "false"
+    }
   }
 }

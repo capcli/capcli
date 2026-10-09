@@ -1,72 +1,23 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.sync.refusal.missing_url",
+  "$schema": "wireframe/v2",
+  "id": "api.sync.refusal.missing_url",
   "target": "stripe",
   "command": "capcli api sync stripe",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "missing_param",
     "culprit": "Upstream spec URL omitted.",
     "remedy": "re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  missing_param.missing_arg",
-            "indent": 2
-          },
-          {
-            "field": "command",
-            "value": "capcli api sync stripe"
-          },
-          {
-            "field": "usage",
-            "value": "capcli api sync <provider> <url> [--interval 7d] [--dry-run]"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Upstream spec URL omitted.",
-            "indent": 9
-          },
-          {
-            "text": "The kernel alone parses OpenAPI specs; compilation requires a spec URL.",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'"
-          }
-        ]
-      }
+    "command": "capcli api sync stripe",
+    "usage": "capcli api sync <provider> <url> [--interval 7d] [--dry-run]",
+    "lines": [
+      "FATAL  missing_param.missing_arg",
+      "The kernel alone parses OpenAPI specs; compilation requires a spec URL."
     ]
   }
 }

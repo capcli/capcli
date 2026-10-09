@@ -1,72 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.rollback.refusal.not_found",
+  "$schema": "wireframe/v2",
+  "id": "routine.rollback.refusal.not_found",
   "target": "sync_orders",
   "command": "capcli routine rollback sync_orders 7",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.rollback.version_not_found",
     "domain": "validation",
     "culprit": "Target version v7 not found in the retained provenance graph (v1..v5).",
     "remedy": "list retained versions via capcli inspect cap://sync_orders, then target one that exists",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.rollback.version_not_found",
-            "indent": 2
-          },
-          {
-            "field": "routine",
-            "value": "sync_orders"
-          },
-          {
-            "field": "target",
-            "value": "v7"
-          },
-          {
-            "field": "history",
-            "value": "v1..v5 retained (cap: 25 versions)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Target version v7 not found in the retained provenance graph (v1..v5).",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "list retained versions via capcli inspect cap://sync_orders, then target one that exists"
-          }
-        ]
-      }
-    ]
+    "routine": "sync_orders",
+    "target": "v7",
+    "history": "v1..v5 retained (cap: 25 versions)"
   }
 }

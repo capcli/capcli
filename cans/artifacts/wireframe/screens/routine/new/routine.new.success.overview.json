@@ -1,73 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.new.success.overview",
+  "$schema": "wireframe/v2",
+  "id": "routine.new.success.overview",
   "target": "overview",
   "command": "capcli routine new overview",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "created"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "routine",
-            "value": "overview (routine://overview@1 draft)"
-          },
-          {
-            "field": "file",
-            "value": "routines/overview.py"
-          },
-          {
-            "field": "template",
-            "value": "tpl://routine/python_blank"
-          },
-          {
-            "field": "contract",
-            "value": "mandatory overview routine — grounds future agents in domain state (harness H6 codification)"
-          },
-          {
-            "field": "trust",
-            "value": "draft (unproven intake floor)"
-          },
-          {
-            "field": "version",
-            "value": "1"
-          },
-          {
-            "field": "shape",
-            "value": "44 LOC / 780 tokens / 1 param (ceilings: 150 / 2000 / 8)"
-          }
-        ]
+        "fields": {
+          "routine": "overview (routine://overview@1 draft)",
+          "file": "routines/overview.py",
+          "template": "tpl://routine/python_blank",
+          "contract": "mandatory overview routine — grounds future agents in domain state (harness H6 codification)",
+          "trust": "draft (unproven intake floor)",
+          "version": "1",
+          "shape": "44 LOC / 780 tokens / 1 param (ceilings: 150 / 2000 / 8)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit",
-            "value": "op_new_02 (routine.draft committed with template_hash)"
-          },
-          {
-            "field": "next",
-            "value": "capcli routine prove overview --env sim"
-          }
-        ]
+        "fields": {
+          "state_modified": "true",
+          "audit": "op_new_02 (routine.draft committed with template_hash)",
+          "next": "capcli routine prove overview --env sim"
+        }
       }
     ]
   }

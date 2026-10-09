@@ -1,74 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.endpoint.denial.cap",
+  "$schema": "wireframe/v2",
+  "id": "bind.endpoint.denial.cap",
   "target": "cap://dispatch_order@4",
   "command": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.endpoint_cap_exceeded",
     "domain": "policy.authorizer",
-    "culprit": "Max 10 active endpoints reached. Exposure surface stays small.",
-    "remedy": "retire an unused endpoint first (capcli bind remove)",
     "layer": "authorizer",
+    "culprit": "Max 10 active endpoints reached. Exposure surface stays small.",
     "measured": "10 active endpoints (cap: 10)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.endpoint_cap_exceeded",
-            "indent": 2
-          },
-          {
-            "field": "active endpoints",
-            "value": "10 of 10"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Max 10 active endpoints reached. Exposure surface stays small.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "10 active endpoints (cap: 10)"
-          },
-          {
-            "field": "remedy",
-            "value": "retire an unused endpoint first (capcli bind remove)"
-          }
-        ]
-      }
-    ]
+    "remedy": "retire an unused endpoint first (capcli bind remove)",
+    "active endpoints": "10 of 10"
   }
 }

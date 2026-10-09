@@ -1,90 +1,28 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.crash.poll_timeout",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.crash.poll_timeout",
   "target": "cap://media_digest@2",
   "command": "capcli run cap://media_digest@2 -p audience=followers -m \"morning media digest\"",
-  "state": {
-    "exit_code": 4,
-    "domain": "routine.runtime",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "routine.runtime.timeout",
     "domain": "routine.runtime",
-    "culprit": "ctx.api.poll_until exceeded the 30-second in-flight ceiling while polling threads.create_media_post.",
-    "remedy": "set timeout_s to 30 or less, or restructure into a scheduled watch",
     "layer": "runtime",
+    "culprit": "ctx.api.poll_until exceeded the 30-second in-flight ceiling while polling threads.create_media_post.",
     "measured": "poll duration 30.0s (ceiling 30s; requested 45s)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 4"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "CRASH  routine.runtime.timeout",
-            "indent": 2
-          },
-          {
-            "field": "routine",
-            "value": "media_digest@2 (frame_028)"
-          },
-          {
-            "field": "verb",
-            "value": "threads.create_media_post (container 1793881)"
-          },
-          {
-            "field": "waited",
-            "value": "30.0s of requested timeout_s=45 (ceiling: 30s)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "ctx.api.poll_until exceeded the 30-second in-flight ceiling;",
-            "indent": 9
-          },
-          {
-            "text": "the watchdog killed the poll and reverted the frame.",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "rollback",
-            "value": "clean (all ops reverted)"
-          },
-          {
-            "field": "layer",
-            "value": "runtime"
-          },
-          {
-            "field": "measured",
-            "value": "poll duration 30.0s (ceiling 30s; requested 45s)"
-          },
-          {
-            "field": "remedy",
-            "value": "set timeout_s to 30 or less, or restructure into a scheduled watch"
-          }
-        ]
-      }
+    "remedy": "set timeout_s to 30 or less, or restructure into a scheduled watch",
+    "routine": "media_digest@2 (frame_028)",
+    "verb": "threads.create_media_post (container 1793881)",
+    "waited": "30.0s of requested timeout_s=45 (ceiling: 30s)",
+    "rollback": "clean (all ops reverted)",
+    "lines": [
+      "ctx.api.poll_until exceeded the 30-second in-flight ceiling;",
+      "the watchdog killed the poll and reverted the frame."
     ]
   }
 }

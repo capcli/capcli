@@ -1,62 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.sweep.success.populated",
-  "target": null,
+  "$schema": "wireframe/v2",
+  "id": "routine.sweep.success.populated",
   "command": "capcli routine sweep",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "populated"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "sweep",
-            "value": "duplicate routine scan (14 routines fingerprinted)"
-          }
+        "fields": {
+          "sweep": "duplicate routine scan (14 routines fingerprinted)"
+        }
+      },
+      {
+        "lines": [
+          "proposals (2):",
+          "order_sync@3 ≈ order_sync_v2@1   fingerprint overlap 0.97 — merge candidate",
+          "nightly_report@2 ≈ report_job@5  fingerprint overlap 0.93 — merge candidate"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "proposals (2):",
-            "indent": 2
-          },
-          {
-            "text": "order_sync@3 ≈ order_sync_v2@1   fingerprint overlap 0.97 — merge candidate",
-            "indent": 4
-          },
-          {
-            "text": "nightly_report@2 ≈ report_job@5  fingerprint overlap 0.93 — merge candidate",
-            "indent": 4
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "proposals only; deduplication requires explicit ship-time review"
-          }
-        ]
+        "fields": {
+          "state_modified": "false",
+          "note": "proposals only; deduplication requires explicit ship-time review"
+        }
       }
     ]
   }

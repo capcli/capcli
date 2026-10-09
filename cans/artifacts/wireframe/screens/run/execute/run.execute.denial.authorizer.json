@@ -1,77 +1,28 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.denial.authorizer",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.denial.authorizer",
   "target": "cap://customer_migrate@2",
   "command": "capcli run cap://customer_migrate@2 -p customer_id=1 -p new_email=alice+corrected@acme.corp -m \"email correction\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.deny_columns_write",
     "domain": "policy.authorizer",
-    "culprit": "Prohibited column mutation: UPDATE on immutable column customers.email denied by the C authorizer.",
-    "remedy": "insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration",
     "layer": "authorizer",
+    "culprit": "Prohibited column mutation: UPDATE on immutable column customers.email denied by the C authorizer.",
     "measured": "1 column write denied (customers.email)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
+    "remedy": "insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration",
+    "span": {
+      "source": "UPDATE customers SET email = :new_email WHERE id = :id",
+      "highlight": "email"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.deny_columns_write",
-            "indent": 2
-          },
-          {
-            "text": "UPDATE customers SET email = :new_email WHERE id = :id",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^",
-            "indent": 29
-          },
-          {
-            "field": "column 'email' is immutable (imm_cols",
-            "value": "[email])"
-          },
-          {
-            "text": "The C authorizer denied the write at prepare time.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "1 column write denied (customers.email)"
-          },
-          {
-            "field": "remedy",
-            "value": "insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration"
-          }
-        ]
-      }
+    "column 'email' is immutable (imm_cols": "[email])",
+    "lines": [
+      "The C authorizer denied the write at prepare time."
     ]
   }
 }

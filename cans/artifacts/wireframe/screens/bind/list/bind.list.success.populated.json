@@ -1,79 +1,52 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.list.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "bind.list.success.populated",
   "target": "bind://",
   "command": "capcli bind list",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "pinned",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "populated"
-    },
-    "sections": [
+  "archetype": "tree",
+  "component": {
+    "title": "populated",
+    "root": "cron",
+    "nodes": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "bindings",
-            "value": "5 total (5 active, 0 paused)"
-          }
-        ]
+        "label": "bnd_5f8a nightly_sync cap://sync_orders 0 3 * * * active",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "├── cron",
-            "indent": 2
-          },
-          {
-            "text": "│   ├── bnd_5f8a  nightly_sync    cap://sync_orders       0 3 * * *          active",
-            "indent": 2
-          },
-          {
-            "text": "│   └── bnd_3k2f  weekly_digest   cap://report_summary    0 6 * * 1          active",
-            "indent": 2
-          },
-          {
-            "text": "├── webhook",
-            "indent": 2
-          },
-          {
-            "text": "│   └── bnd_8d3k  stripe_hook     cap://sync_orders       payment_succeeded  active",
-            "indent": 2
-          },
-          {
-            "text": "└── endpoint",
-            "indent": 2
-          },
-          {
-            "text": "├── bnd_2m7p  dispatch_order  cap://dispatch_order@4  127.0.0.1:4040     active",
-            "indent": 6
-          },
-          {
-            "text": "└── bnd_9x4e  partner_hook    cap://report_summary@3  127.0.0.1:4040     active",
-            "indent": 6
-          }
-        ]
+        "label": "bnd_3k2f weekly_digest cap://report_summary 0 6 * * 1 active",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
+        "label": "webhook",
+        "children": []
+      },
+      {
+        "label": "bnd_8d3k stripe_hook cap://sync_orders payment_succeeded active",
+        "children": []
+      },
+      {
+        "label": "endpoint",
+        "children": [
           {
-            "field": "state_modified",
-            "value": "false"
+            "label": "bnd_2m7p dispatch_order cap://dispatch_order@4 127.0.0.1:4040 active",
+            "children": []
+          },
+          {
+            "label": "bnd_9x4e partner_hook cap://report_summary@3 127.0.0.1:4040 active",
+            "children": []
           }
         ]
       }
-    ]
+    ],
+    "footer": {
+      "bindings": "5 total (5 active, 0 paused)",
+      "state_modified": "false"
+    }
   }
 }

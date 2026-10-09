@@ -1,68 +1,20 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.retire.refusal.not_found",
+  "$schema": "wireframe/v2",
+  "id": "routine.retire.refusal.not_found",
   "target": "legacy_etl_backup",
   "command": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.routine.not_found",
     "domain": "validation",
     "culprit": "Target routine 'legacy_etl_backup' does not exist in the registry.",
     "remedy": "verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.routine.not_found",
-            "indent": 2
-          },
-          {
-            "field": "routine",
-            "value": "legacy_etl_backup"
-          },
-          {
-            "field": "nearest",
-            "value": "legacy_etl"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Target routine 'legacy_etl_backup' does not exist in the registry.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl"
-          }
-        ]
-      }
-    ]
+    "routine": "legacy_etl_backup",
+    "nearest": "legacy_etl"
   }
 }

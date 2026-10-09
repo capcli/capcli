@@ -1,61 +1,31 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.resume.success.completed",
+  "$schema": "wireframe/v2",
+  "id": "bind.resume.success.completed",
   "target": "bnd_3k2f",
   "command": "capcli bind resume bnd_3k2f",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "completed"
-    },
-    "sections": [
+  "audit_op": "op_9k2w",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "binding_id",
-            "value": "bnd_3k2f"
-          },
-          {
-            "field": "kind",
-            "value": "cron"
-          },
-          {
-            "field": "name",
-            "value": "weekly_digest"
-          },
-          {
-            "field": "transition",
-            "value": "paused → active"
-          },
-          {
-            "field": "next_fire",
-            "value": "2026-10-05T06:00:00Z"
-          }
-        ]
+        "fields": {
+          "binding_id": "bnd_3k2f",
+          "kind": "cron",
+          "name": "weekly_digest",
+          "transition": "paused → active",
+          "next_fire": "2026-10-05T06:00:00Z"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9k2w"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

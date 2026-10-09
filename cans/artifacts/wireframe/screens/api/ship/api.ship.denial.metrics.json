@@ -1,77 +1,28 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.ship.denial.metrics",
+  "$schema": "wireframe/v2",
+  "id": "api.ship.denial.metrics",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.unproven",
     "domain": "policy.authorizer",
-    "culprit": "Fails synthetic contract replay: 2 of 3 replays passed.",
-    "remedy": "fix the failing invariant, re-run 'capcli api prove threads.create_media_post --env sim', then re-ship",
     "layer": "authorizer",
+    "culprit": "Fails synthetic contract replay: 2 of 3 replays passed.",
     "measured": "synthetic contract replay 2/3 passed (required: 3/3) · sim success rate 0.67 (floor: 0.90)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
+    "remedy": "fix the failing invariant, re-run 'capcli api prove threads.create_media_post --env sim', then re-ship",
+    "span": {
+      "source": "capcli api ship threads.create_media_post reviewed",
+      "highlight": "threads.create_media_post"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.unproven",
-            "indent": 2
-          },
-          {
-            "text": "capcli api ship threads.create_media_post reviewed",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^^^^^^^^^^^^^^^^^^^^",
-            "indent": 24
-          },
-          {
-            "text": "Fails synthetic contract replay.",
-            "indent": 8
-          },
-          {
-            "text": "Invariant 'response echoes media_post id' failed on replay 2 of 3.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "synthetic contract replay 2/3 passed (required: 3/3) · sim success rate 0.67 (floor: 0.90)"
-          },
-          {
-            "field": "remedy",
-            "value": "fix the failing invariant, re-run 'capcli api prove threads.create_media_post --env sim', then re-ship"
-          }
-        ]
-      }
+    "lines": [
+      "Fails synthetic contract replay.",
+      "Invariant 'response echoes media_post id' failed on replay 2 of 3."
     ]
   }
 }

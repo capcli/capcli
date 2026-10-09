@@ -1,60 +1,28 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.resolve.success.resolved",
+  "$schema": "wireframe/v2",
+  "id": "ping.resolve.success.resolved",
   "target": "ask_88a",
   "command": "capcli ping resolve ask_88a --choice approve",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "resolved"
-    },
-    "sections": [
+  "audit_op": "op_9f34a",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "ask_id",
-            "value": "ask_88a"
-          },
-          {
-            "field": "choice",
-            "value": "approve"
-          },
-          {
-            "field": "question",
-            "value": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\""
-          },
-          {
-            "field": "resolved_by",
-            "value": "user:alice"
-          },
-          {
-            "field": "resumed_task",
-            "value": "dispatch_order@4 (ORD-1042)"
-          },
-          {
-            "field": "resumed_frame",
-            "value": "frame_026"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f34a"
-          },
-          {
-            "field": "state_modified",
-            "value": "true"
-          }
-        ]
+        "fields": {
+          "ask_id": "ask_88a",
+          "choice": "approve",
+          "question": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
+          "resolved_by": "user:alice",
+          "resumed_task": "dispatch_order@4 (ORD-1042)",
+          "resumed_frame": "frame_026",
+          "state_modified": "true"
+        }
       }
     ]
   }

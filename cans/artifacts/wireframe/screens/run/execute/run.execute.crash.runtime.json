@@ -1,81 +1,26 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.crash.runtime",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.crash.runtime",
   "target": "cap://enrich_customers@2",
   "command": "capcli run cap://enrich_customers@2 -p cohort=enterprise -m \"enrich customer records\"",
-  "state": {
-    "exit_code": 4,
-    "domain": "routine.runtime",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "routine.runtime.exception",
     "domain": "routine.runtime",
+    "layer": "runtime",
     "culprit": "Uncaught guest exception: TypeError (unsupported operand for +: 'NoneType' and 'int') at routines/enrich_customers.py:42.",
     "remedy": "guard the None case at routines/enrich_customers.py:42, then prove in sim before re-running",
-    "layer": "runtime",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 4"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "CRASH  routine.runtime.exception",
-            "indent": 2
-          },
-          {
-            "field": "routine",
-            "value": "enrich_customers@2 (frame_027)"
-          },
-          {
-            "field": "error",
-            "value": "TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'"
-          },
-          {
-            "field": "at",
-            "value": "routines/enrich_customers.py:42 in compute_lifetime_value"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Guest language exception escaped the routine boundary.",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "rollback",
-            "value": "clean (all ops reverted)"
-          },
-          {
-            "field": "layer",
-            "value": "runtime"
-          },
-          {
-            "field": "remedy",
-            "value": "guard the None case at routines/enrich_customers.py:42, then prove in sim before re-running"
-          }
-        ]
-      }
+    "routine": "enrich_customers@2 (frame_027)",
+    "error": "TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'",
+    "at": "routines/enrich_customers.py:42 in compute_lifetime_value",
+    "rollback": "clean (all ops reverted)",
+    "lines": [
+      "Guest language exception escaped the routine boundary."
     ]
   }
 }

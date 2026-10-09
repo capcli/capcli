@@ -1,76 +1,35 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.backup.success.completed",
+  "$schema": "wireframe/v2",
+  "id": "sys.backup.success.completed",
   "target": "sys://workspace",
   "command": "capcli sys backup --push",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "completed"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": "backup",
+    "groups": [
       {
         "title": "backup",
-        "items": [
-          {
-            "field": "snapshot",
-            "value": "snap_auto_2026-10-04T0300Z"
-          },
-          {
-            "field": "mechanism",
-            "value": "VACUUM INTO (transactionally clean copy)"
-          },
-          {
-            "field": "git_commit",
-            "value": "4c89a0b1 (origin accepted)"
-          },
-          {
-            "field": "s3_object",
-            "value": "s3://capcli-worm/envs-dev/snap_auto_2026-10-04T0300Z.db"
-          },
-          {
-            "field": "s3_status",
-            "value": "uploaded (Object Lock WORM)"
-          },
-          {
-            "field": "bytes",
-            "value": "18,442,240"
-          },
-          {
-            "field": "ledger_anchored",
-            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
-          },
-          {
-            "field": "audit_mirror",
-            "value": "flushed (lag: 0m)"
-          },
-          {
-            "field": "drift",
-            "value": "0m (cadence: 15m, alarm at 30m)"
-          }
-        ]
+        "fields": {
+          "snapshot": "snap_auto_2026-10-04T0300Z",
+          "mechanism": "VACUUM INTO (transactionally clean copy)",
+          "git_commit": "4c89a0b1 (origin accepted)",
+          "s3_object": "s3://capcli-worm/envs-dev/snap_auto_2026-10-04T0300Z.db",
+          "s3_status": "uploaded (Object Lock WORM)",
+          "bytes": "18,442,240",
+          "ledger_anchored": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
+          "audit_mirror": "flushed (lag: 0m)",
+          "drift": "0m (cadence: 15m, alarm at 30m)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: true",
-            "indent": 0
-          },
-          {
-            "text": "note:           dual-storage guarantee satisfied (git + object store)",
-            "indent": 0
-          }
+        "lines": [
+          "state_modified: true",
+          "note:           dual-storage guarantee satisfied (git + object store)"
         ]
       }
     ]

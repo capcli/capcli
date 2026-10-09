@@ -1,75 +1,38 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.inbox.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "sys.inbox.success.populated",
   "target": "inbox://webhook",
   "command": "capcli sys inbox pop --channel webhook",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "popped"
-    },
-    "sections": [
+  "archetype": "tree",
+  "component": {
+    "title": "popped",
+    "root": "events:",
+    "nodes": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "channel",
-            "value": "webhook"
-          },
-          {
-            "field": "source_bindings",
-            "value": "bind://shopify_orders, bind://shopify_refunds (HMAC-verified intake)"
-          },
-          {
-            "field": "popped",
-            "value": "3 events"
-          },
-          {
-            "field": "remaining",
-            "value": "0 awaiting pickup on channel"
-          }
-        ]
+        "label": "evt_ord_901 2m ago bind://shopify_orders → cap://fulfill_order@4 (60x BEANS-LIGHT-1KG)",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "events:",
-            "indent": 2
-          },
-          {
-            "text": "├── evt_ord_901  2m ago  bind://shopify_orders → cap://fulfill_order@4 (60x BEANS-LIGHT-1KG)",
-            "indent": 2
-          },
-          {
-            "text": "├── evt_ord_902  5m ago  bind://shopify_orders → cap://fulfill_order@4 (12x ESPRESSO-DARK-250G)",
-            "indent": 2
-          },
-          {
-            "text": "└── evt_ord_903  9m ago  bind://shopify_refunds → cap://issue_refund@2 (charge ch_1N2x, ORD-1042)",
-            "indent": 2
-          }
-        ]
+        "label": "evt_ord_902 5m ago bind://shopify_orders → cap://fulfill_order@4 (12x ESPRESSO-DARK-250G)",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "note",
-            "value": "events delivered to caller exactly once; durable queue backing TBD — the intake queue is not among the 13 kernel-managed tables (world.md#managed-surfaces)"
-          }
-        ]
+        "label": "evt_ord_903 9m ago bind://shopify_refunds → cap://issue_refund@2 (charge ch_1N2x, ORD-1042)",
+        "children": []
       }
-    ]
+    ],
+    "footer": {
+      "channel": "webhook",
+      "source_bindings": "bind://shopify_orders, bind://shopify_refunds (HMAC-verified intake)",
+      "popped": "3 events",
+      "remaining": "0 awaiting pickup on channel",
+      "note": "events delivered to caller exactly once; durable queue backing TBD — the intake queue is not among the 13 kernel-managed tables (world.md#managed-surfaces)"
+    }
   }
 }

@@ -1,76 +1,37 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.success.populated",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "committed"
-    },
-    "sections": [
+  "audit_op": "op_9f2g",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "statement",
-            "value": "UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1"
-          },
-          {
-            "field": "bound_params",
-            "value": "{\"id\": \"4127\"}"
-          },
-          {
-            "field": "ast_check",
-            "value": "pass (WHERE + LIMIT present, blast radius 1)"
-          },
-          {
-            "field": "authorizer",
-            "value": "pass (update on orders allowed in dev)"
-          },
-          {
-            "field": "intent",
-            "value": "declared (\"mark order 4127 shipped after carrier pickup\")"
-          },
-          {
-            "field": "rows_affected",
-            "value": "1"
-          },
-          {
-            "field": "txn",
-            "value": "committed"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f2g"
-          }
-        ]
+        "fields": {
+          "statement": "UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1",
+          "bound_params": "{\"id\": \"4127\"}",
+          "ast_check": "pass (WHERE + LIMIT present, blast radius 1)",
+          "authorizer": "pass (update on orders allowed in dev)",
+          "intent": "declared (\"mark order 4127 shipped after carrier pickup\")",
+          "rows_affected": "1",
+          "txn": "committed"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "────────────────────────────────────────────────────────────────────────────",
-            "indent": 2
-          },
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "result_hash",
-            "value": "sha256:3d91c4e7a8b2f0c5d9e6a1b7f834c2ad"
-          }
+        "fields": {
+          "state_modified": "true",
+          "result_hash": "sha256:3d91c4e7a8b2f0c5d9e6a1b7f834c2ad"
+        },
+        "lines": [
+          "────────────────────────────────────────────────────────────────────────────"
         ]
       }
     ]

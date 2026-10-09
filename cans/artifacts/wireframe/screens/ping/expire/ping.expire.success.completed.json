@@ -1,52 +1,26 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.expire.success.completed",
+  "$schema": "wireframe/v2",
+  "id": "ping.expire.success.completed",
   "target": "ask_77c3",
   "command": "capcli ping expire ask_77c3",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "completed"
-    },
-    "sections": [
+  "audit_op": "op_9f35b",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "ask_id",
-            "value": "ask_77c3"
-          },
-          {
-            "field": "principal",
-            "value": "user:alice"
-          },
-          {
-            "field": "action",
-            "value": "explicit expiration"
-          },
-          {
-            "field": "outcome",
-            "value": "inquiry closed; fail-closed (expired asks never assume consent)"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f35b"
-          },
-          {
-            "field": "state_modified",
-            "value": "true"
-          }
-        ]
+        "fields": {
+          "ask_id": "ask_77c3",
+          "principal": "user:alice",
+          "action": "explicit expiration",
+          "outcome": "inquiry closed; fail-closed (expired asks never assume consent)",
+          "state_modified": "true"
+        }
       }
     ]
   }

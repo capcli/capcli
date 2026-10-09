@@ -1,72 +1,23 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.ship.refusal.missing_reason",
+  "$schema": "wireframe/v2",
+  "id": "api.ship.refusal.missing_reason",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "missing_param",
     "culprit": "Missing elevation justification.",
     "remedy": "re-run with --reason stating why the verb is ready for the target rung",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  missing_param.missing_arg",
-            "indent": 2
-          },
-          {
-            "field": "command",
-            "value": "capcli api ship threads.create_media_post reviewed"
-          },
-          {
-            "field": "usage",
-            "value": "capcli api ship <provider.verb> <rung> --reason \"<why>\""
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Missing elevation justification.",
-            "indent": 9
-          },
-          {
-            "text": "Trust elevation requires --reason for the audit trail.",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "re-run with --reason stating why the verb is ready for the target rung"
-          }
-        ]
-      }
+    "command": "capcli api ship threads.create_media_post reviewed",
+    "usage": "capcli api ship <provider.verb> <rung> --reason \"<why>\"",
+    "lines": [
+      "FATAL  missing_param.missing_arg",
+      "Trust elevation requires --reason for the audit trail."
     ]
   }
 }

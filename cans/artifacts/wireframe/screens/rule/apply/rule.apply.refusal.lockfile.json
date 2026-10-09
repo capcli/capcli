@@ -1,72 +1,23 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "rule.apply.refusal.lockfile",
+  "$schema": "wireframe/v2",
+  "id": "rule.apply.refusal.lockfile",
   "target": "schema://orders",
   "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
-  "state": {
-    "exit_code": 3,
-    "domain": "lockfile_mismatch",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "lockfile_mismatch",
     "culprit": "Working tree drifted from the locked manifest; DDL application refused.",
     "remedy": "restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  lockfile_mismatch.root_hash_drift",
-            "indent": 2
-          },
-          {
-            "field": "capcli.lock entry",
-            "value": "sha256:4a8f9c2d11e9a4c0"
-          },
-          {
-            "field": "compiled root hash",
-            "value": "sha256:7b31d05e88c2f4a9"
-          },
-          {
-            "field": "sources hashed",
-            "value": "schema.yaml, system-schema.yaml, policy.yaml, governance.yaml"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Working tree drifted from the locked manifest; DDL application refused.",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path"
-          }
-        ]
-      }
+    "capcli.lock entry": "sha256:4a8f9c2d11e9a4c0",
+    "compiled root hash": "sha256:7b31d05e88c2f4a9",
+    "sources hashed": "schema.yaml, system-schema.yaml, policy.yaml, governance.yaml",
+    "lines": [
+      "FATAL  lockfile_mismatch.root_hash_drift"
     ]
   }
 }

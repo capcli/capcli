@@ -1,74 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.cron.denial.cap",
+  "$schema": "wireframe/v2",
+  "id": "bind.cron.denial.cap",
   "target": "cap://sync_orders",
   "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.schedule_cap_exceeded",
     "domain": "policy.authorizer",
-    "culprit": "Max 20 active schedules reached. New schedule binding refused.",
-    "remedy": "pause or remove an idle schedule first (capcli bind list)",
     "layer": "authorizer",
+    "culprit": "Max 20 active schedules reached. New schedule binding refused.",
     "measured": "20 active schedules (cap: 20)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.schedule_cap_exceeded",
-            "indent": 2
-          },
-          {
-            "field": "active schedules",
-            "value": "20 of 20"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Max 20 active schedules reached. New schedule binding refused.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "20 active schedules (cap: 20)"
-          },
-          {
-            "field": "remedy",
-            "value": "pause or remove an idle schedule first (capcli bind list)"
-          }
-        ]
-      }
-    ]
+    "remedy": "pause or remove an idle schedule first (capcli bind list)",
+    "active schedules": "20 of 20"
   }
 }

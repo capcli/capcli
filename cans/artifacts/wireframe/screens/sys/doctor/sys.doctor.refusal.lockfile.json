@@ -1,76 +1,27 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.doctor.refusal.lockfile",
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.refusal.lockfile",
   "target": "sys://host",
   "command": "capcli sys doctor --boot-check",
-  "state": {
-    "exit_code": 3,
-    "domain": "lockfile_mismatch",
-    "trust": "reviewed",
+  "context": {
     "env": "sim",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "lockfile_mismatch",
     "culprit": "Compiled capcli.lock root hash does not match the locked declarations",
     "remedy": "recompile declarations via 'capcli rule validate' and re-lock; hand-editing capcli.lock is prohibited",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  kernel.boot.lockfile_mismatch",
-            "indent": 0
-          },
-          {
-            "text": "Compiled capcli.lock root hash does not match the locked declarations.",
-            "indent": 7
-          },
-          {
-            "field": "expected",
-            "value": "sha256:5b2e8c71d0a3f4e6b8c9d0a1f2e3b4c5d6e7f8a9"
-          },
-          {
-            "field": "found",
-            "value": "sha256:9f14ac02be7d4c18f0a3b5c6d7e8f9a0b1c2d3e4"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "Boot aborted in sim",
-            "value": "lockfile verification gate failed."
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: false",
-            "indent": 0
-          },
-          {
-            "text": "layer:          boot",
-            "indent": 0
-          },
-          {
-            "text": "remedy:         recompile declarations via 'capcli rule validate' and re-lock; hand-editing capcli.lock is prohibited",
-            "indent": 0
-          }
-        ]
-      }
+    "expected": "sha256:5b2e8c71d0a3f4e6b8c9d0a1f2e3b4c5d6e7f8a9",
+    "found": "sha256:9f14ac02be7d4c18f0a3b5c6d7e8f9a0b1c2d3e4",
+    "Boot aborted in sim": "lockfile verification gate failed.",
+    "lines": [
+      "FATAL  kernel.boot.lockfile_mismatch",
+      "Compiled capcli.lock root hash does not match the locked declarations.",
+      "state_modified: false",
+      "layer:          boot",
+      "remedy:         recompile declarations via 'capcli rule validate' and re-lock; hand-editing capcli.lock is prohibited"
     ]
   }
 }

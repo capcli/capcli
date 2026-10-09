@@ -1,73 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.denial.engine_busy",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.denial.engine_busy",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50\" -m \"batch ship processing orders\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "db.engine",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_9f2l",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "db.engine.txn_queue_timeout",
     "domain": "db.engine",
-    "culprit": "write lock on db://orders held by op_9f1c; wait exceeded the 5000ms ceiling",
-    "remedy": "retry after holder commits, or inspect the claim via capcli inspect db://orders",
     "layer": "engine",
+    "culprit": "write lock on db://orders held by op_9f1c; wait exceeded the 5000ms ceiling",
     "measured": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  db.engine.txn_queue_timeout",
-            "indent": 2
-          },
-          {
-            "text": "UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50",
-            "indent": 8
-          },
-          {
-            "text": "write lock on db://orders held by op_9f1c; wait exceeded the 5000ms ceiling",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_9f2l"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "engine"
-          },
-          {
-            "field": "measured",
-            "value": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active"
-          },
-          {
-            "field": "remedy",
-            "value": "retry after holder commits, or inspect the claim via capcli inspect db://orders"
-          }
-        ]
-      }
+    "remedy": "retry after holder commits, or inspect the claim via capcli inspect db://orders",
+    "lines": [
+      "UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50"
     ]
   }
 }

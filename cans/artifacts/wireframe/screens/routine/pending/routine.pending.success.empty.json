@@ -1,54 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.pending.success.empty",
-  "target": null,
+  "$schema": "wireframe/v2",
+  "id": "routine.pending.success.empty",
   "command": "capcli routine pending",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "empty"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "queue",
-            "value": "promotion candidates (0)"
-          }
+        "fields": {
+          "queue": "promotion candidates (0)"
+        }
+      },
+      {
+        "lines": [
+          "no routines pending promotion"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "no routines pending promotion",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "enqueue via capcli routine ship <name> reviewed --queue"
-          }
-        ]
+        "fields": {
+          "state_modified": "false",
+          "note": "enqueue via capcli routine ship <name> reviewed --queue"
+        }
       }
     ]
   }

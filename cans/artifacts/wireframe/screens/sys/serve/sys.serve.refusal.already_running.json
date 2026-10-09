@@ -1,76 +1,27 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.serve.refusal.already_running",
+  "$schema": "wireframe/v2",
+  "id": "sys.serve.refusal.already_running",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",
-  "state": {
-    "exit_code": 3,
-    "domain": "compile",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "compile.port_bound",
     "domain": "compile",
     "culprit": "127.0.0.1:4040 already bound by active capcli-daemon pid 50211",
     "remedy": "inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  compile.port_bound",
-            "indent": 0
-          },
-          {
-            "text": "127.0.0.1:4040 is already bound by an active capcli-daemon.",
-            "indent": 6
-          },
-          {
-            "field": "holder",
-            "value": "pid 50211 (uptime: 2h 14m, listening)"
-          },
-          {
-            "field": "candidate",
-            "value": "pid 51288 (start aborted)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "One daemon per workspace; duplicate start refused at port check.",
-            "indent": 6
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: false",
-            "indent": 0
-          },
-          {
-            "text": "layer:          daemon",
-            "indent": 0
-          },
-          {
-            "text": "remedy:         inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'",
-            "indent": 0
-          }
-        ]
-      }
+    "holder": "pid 50211 (uptime: 2h 14m, listening)",
+    "candidate": "pid 51288 (start aborted)",
+    "lines": [
+      "127.0.0.1:4040 is already bound by an active capcli-daemon.",
+      "One daemon per workspace; duplicate start refused at port check.",
+      "state_modified: false",
+      "layer:          daemon",
+      "remedy:         inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'"
     ]
   }
 }

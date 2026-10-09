@@ -1,82 +1,41 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.ship.success.rolled_back",
+  "$schema": "wireframe/v2",
+  "id": "routine.ship.success.rolled_back",
   "target": "order_sync",
   "command": "capcli routine ship order_sync reviewed",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "prod",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "rolled_back"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "routine",
-            "value": "order_sync@2"
-          },
-          {
-            "field": "promoted_to",
-            "value": "reviewed (auto-promotion conjunction met)"
-          },
-          {
-            "field": "canary",
-            "value": "1h veto window completed with anomalies"
-          }
+        "fields": {
+          "routine": "order_sync@2",
+          "promoted_to": "reviewed (auto-promotion conjunction met)",
+          "canary": "1h veto window completed with anomalies"
+        }
+      },
+      {
+        "fields": {
+          "p95_duration": "4120ms vs 890ms baseline (4.6x spike)",
+          "drift_events": "2 fingerprint drift events",
+          "action": "autonomous circuit-breaker rollback"
+        },
+        "lines": [
+          "canary_verdict:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "canary_verdict:",
-            "indent": 2
-          },
-          {
-            "field": "p95_duration",
-            "value": "4120ms vs 890ms baseline (4.6x spike)"
-          },
-          {
-            "field": "drift_events",
-            "value": "2 fingerprint drift events"
-          },
-          {
-            "field": "action",
-            "value": "autonomous circuit-breaker rollback"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "final_rung",
-            "value": "draft (promotion reverted)"
-          },
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit",
-            "value": "op_ship_07 (routine.canary_rollback committed)"
-          },
-          {
-            "field": "note",
-            "value": "re-prove in sim before re-promotion"
-          }
-        ]
+        "fields": {
+          "final_rung": "draft (promotion reverted)",
+          "state_modified": "true",
+          "audit": "op_ship_07 (routine.canary_rollback committed)",
+          "note": "re-prove in sim before re-promotion"
+        }
       }
     ]
   }

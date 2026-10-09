@@ -1,107 +1,50 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.ship.success.queued",
+  "$schema": "wireframe/v2",
+  "id": "routine.ship.success.queued",
   "target": "sync_orders",
   "command": "capcli routine ship sync_orders reviewed --queue --reason \"recurring fulfillment sync, human-reviewed\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "queued"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "routine",
-            "value": "sync_orders@1 (draft)"
-          },
-          {
-            "field": "requested_rung",
-            "value": "reviewed"
-          },
-          {
-            "field": "mode",
-            "value": "--queue (promotion batch)"
-          },
-          {
-            "field": "reason",
-            "value": "\"recurring fulfillment sync, human-reviewed\""
-          }
+        "fields": {
+          "routine": "sync_orders@1 (draft)",
+          "requested_rung": "reviewed",
+          "mode": "--queue (promotion batch)",
+          "reason": "\"recurring fulfillment sync, human-reviewed\""
+        }
+      },
+      {
+        "fields": {
+          "routine_changes": "0",
+          "deploys": "0",
+          "queue_row": "1 committed (promotion batch)"
+        },
+        "lines": [
+          "enqueued for human review; no code shipped, no changes committed to the routine"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "enqueued for human review; no code shipped, no changes committed to the routine",
-            "indent": 8
-          },
-          {
-            "field": "routine_changes",
-            "value": "0"
-          },
-          {
-            "field": "deploys",
-            "value": "0"
-          },
-          {
-            "field": "queue_row",
-            "value": "1 committed (promotion batch)"
-          }
-        ]
+        "fields": {
+          "queue": "promotion (position 2 of 2)",
+          "enqueued_at": "2026-10-09T14:22:07Z",
+          "sla": "48h to sign-off (promotion.sla_breached alert via sys doctor)",
+          "veto_window": "1h canary telemetry after sign-off (autonomous rollback on anomalies)",
+          "supervisor_inspection": "capcli routine pending"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "queue",
-            "value": "promotion (position 2 of 2)"
-          },
-          {
-            "field": "enqueued_at",
-            "value": "2026-10-09T14:22:07Z"
-          },
-          {
-            "field": "sla",
-            "value": "48h to sign-off (promotion.sla_breached alert via sys doctor)"
-          },
-          {
-            "field": "veto_window",
-            "value": "1h canary telemetry after sign-off (autonomous rollback on anomalies)"
-          },
-          {
-            "field": "supervisor_inspection",
-            "value": "capcli routine pending"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit",
-            "value": "op_ship_05 (promotion queue row committed; no routine version change)"
-          },
-          {
-            "field": "note",
-            "value": "batch approval commits a single audit event per queue"
-          }
-        ]
+        "fields": {
+          "state_modified": "true",
+          "audit": "op_ship_05 (promotion queue row committed; no routine version change)",
+          "note": "batch approval commits a single audit event per queue"
+        }
       }
     ]
   }

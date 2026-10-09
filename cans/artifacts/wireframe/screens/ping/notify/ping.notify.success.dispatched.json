@@ -1,56 +1,27 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.notify.success.dispatched",
+  "$schema": "wireframe/v2",
+  "id": "ping.notify.success.dispatched",
   "target": "user:alice",
   "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "dispatched"
-    },
-    "sections": [
+  "audit_op": "op_9f31c",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "channel",
-            "value": "email"
-          },
-          {
-            "field": "principal",
-            "value": "user:alice"
-          },
-          {
-            "field": "message",
-            "value": "\"Nightly sync finished\""
-          },
-          {
-            "field": "intent",
-            "value": "declared (\"morning briefing\")"
-          },
-          {
-            "field": "receipt",
-            "value": "ntf_4c1d9e"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f31c"
-          },
-          {
-            "field": "state_modified",
-            "value": "true"
-          }
-        ]
+        "fields": {
+          "channel": "email",
+          "principal": "user:alice",
+          "message": "\"Nightly sync finished\"",
+          "intent": "declared (\"morning briefing\")",
+          "receipt": "ntf_4c1d9e",
+          "state_modified": "true"
+        }
       }
     ]
   }

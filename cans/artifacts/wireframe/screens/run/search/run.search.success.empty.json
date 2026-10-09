@@ -1,66 +1,38 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.search.success.empty",
+  "$schema": "wireframe/v2",
+  "id": "run.search.success.empty",
   "target": "kombucha supplier sync",
   "command": "capcli search 'kombucha supplier sync'",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "0 matches for 'kombucha supplier sync'"
-    },
-    "sections": [
+  "audit_op": "op_9f2s",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "exact",
-            "value": "0 · prefix: 0 · fuzzy: 0 · semantic: below 0.60 floor"
-          }
+        "fields": {
+          "exact": "0 · prefix: 0 · fuzzy: 0 · semantic: below 0.60 floor"
+        }
+      },
+      {
+        "fields": {
+          "'supplier'": "cap://process_wholesale_order@2 (routine, pinned)",
+          "'sync'": "api sync for providers: stripe, fedex",
+          "'schedule'": "bind cron bindings (3 active)"
+        },
+        "lines": [
+          "did_you_mean:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "did_you_mean:",
-            "indent": 2
-          },
-          {
-            "field": "'supplier'",
-            "value": "cap://process_wholesale_order@2 (routine, pinned)"
-          },
-          {
-            "field": "'sync'",
-            "value": "api sync for providers: stripe, fedex"
-          },
-          {
-            "field": "'schedule'",
-            "value": "bind cron bindings (3 active)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "gap_signal",
-            "value": "1 of 3 zero-hit searches toward gap_threshold"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f2s"
-          }
-        ]
+        "fields": {
+          "gap_signal": "1 of 3 zero-hit searches toward gap_threshold"
+        }
       }
     ]
   },

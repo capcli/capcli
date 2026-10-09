@@ -1,101 +1,45 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.diff.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "api.diff.success.populated",
   "target": "stripe",
   "command": "capcli api diff stripe",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "populated"
-    },
-    "sections": [
+  "archetype": "tree",
+  "component": {
+    "title": "populated",
+    "root": "stripe.refund_charge",
+    "nodes": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "provider",
-            "value": "stripe"
-          },
-          {
-            "field": "local_hash",
-            "value": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa"
-          },
-          {
-            "field": "remote_hash",
-            "value": "sha256:2b7e8f1a4c6d9e3f5a7b1c8d2e4f6a9b3c5d7e1f"
-          },
-          {
-            "field": "drift",
-            "value": "spec divergence detected"
-          }
-        ]
+        "label": "stripe.issue_credit_note",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "added_verbs",
-            "value": "3"
-          },
-          {
-            "text": "├── stripe.refund_charge",
-            "indent": 4
-          },
-          {
-            "text": "├── stripe.issue_credit_note",
-            "indent": 4
-          },
-          {
-            "text": "└── stripe.void_invoice",
-            "indent": 4
-          }
-        ]
+        "label": "stripe.void_invoice",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "changed_verbs",
-            "value": "1"
-          },
-          {
-            "text": "└── stripe.create_payment_intent (amount: string → integer)",
-            "indent": 4
-          }
-        ]
+        "label": "stripe.create_payment_intent (amount: string → integer)",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "removed_verbs",
-            "value": "1"
-          },
-          {
-            "text": "└── stripe.capture_charge → flagged deprecated (auto_deprecate_removed)",
-            "indent": 4
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "label": "stripe.capture_charge → flagged deprecated (auto_deprecate_removed)",
+        "children": []
       }
-    ]
+    ],
+    "footer": {
+      "provider": "stripe",
+      "local_hash": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa",
+      "remote_hash": "sha256:2b7e8f1a4c6d9e3f5a7b1c8d2e4f6a9b3c5d7e1f",
+      "drift": "spec divergence detected",
+      "added_verbs": "3",
+      "changed_verbs": "1",
+      "removed_verbs": "1",
+      "state_modified": "false"
+    }
   }
 }

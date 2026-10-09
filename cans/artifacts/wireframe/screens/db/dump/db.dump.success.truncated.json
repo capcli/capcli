@@ -1,82 +1,46 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.dump.success.truncated",
+  "$schema": "wireframe/v2",
+  "id": "db.dump.success.truncated",
   "target": "db://orders",
   "command": "capcli db dump",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "truncated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "truncated"
+  "archetype": "document",
+  "component": {
+    "header_badge": "truncated",
+    "pagination": {
+      "items": [
+        {
+          "object": "table",
+          "name": "orders",
+          "ddl": "CREATE TABLE orders (...)"
+        },
+        {
+          "object": "table",
+          "name": "order_items",
+          "ddl": "CREATE TABLE order_items (...)"
+        }
+      ],
+      "next_cursor": "cur_5f2a",
+      "has_more": true
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "database",
-            "value": "envs/dev/workspace.db"
-          },
-          {
-            "field": "format",
-            "value": "world.sql (deterministic DDL + seed)"
-          },
-          {
-            "field": "tables",
-            "value": "41"
-          },
-          {
-            "field": "result_tokens",
-            "value": "500 of 31204 (cap: 500)"
-          },
-          {
-            "field": "truncated",
-            "value": "true"
-          },
-          {
-            "field": "next_cursor",
-            "value": "cur_5f2a"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "use --out <path> to write the full dump to disk"
-          }
-        ]
-      }
-    ]
-  },
-  "pagination": {
-    "items": [
-      {
-        "object": "table",
-        "name": "orders",
-        "ddl": "CREATE TABLE orders (...)"
-      },
-      {
-        "object": "table",
-        "name": "order_items",
-        "ddl": "CREATE TABLE order_items (...)"
-      }
-    ],
-    "next_cursor": "cur_5f2a",
-    "has_more": true
+    "meta": {
+      "next_cursor": "cur_5f2a",
+      "has_more": true
+    },
+    "fields": {
+      "database": "envs/dev/workspace.db",
+      "format": "world.sql (deterministic DDL + seed)",
+      "tables": "41",
+      "result_tokens": "500 of 31204 (cap: 500)",
+      "truncated": "true",
+      "state_modified": "false",
+      "note": "use --out <path> to write the full dump to disk"
+    },
+    "body": []
   }
 }

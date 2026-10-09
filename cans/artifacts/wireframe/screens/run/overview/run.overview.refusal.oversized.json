@@ -1,80 +1,26 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.overview.refusal.oversized",
+  "$schema": "wireframe/v2",
+  "id": "run.overview.refusal.oversized",
   "target": "cap://overview@2",
   "command": "capcli run overview",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.overview.oversized",
     "domain": "validation",
     "culprit": "Overview payload exceeded the 500-token aggregate ceiling: overview@2 renders 612 tokens (cap: 500). A single-shot KPI aggregate cannot paginate; clipping is banned.",
     "remedy": "tighten the routine's aggregate shape in a new version: drop or condense sections until the briefing lands under 500 tokens",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.overview.oversized",
-            "indent": 2
-          },
-          {
-            "field": "routine",
-            "value": "overview@2 (draft)"
-          },
-          {
-            "text": "result gate: aggregate payload measured at 612 tokens (cap: 500)",
-            "indent": 8
-          },
-          {
-            "field": "sections",
-            "value": "9 (v1 shipped 5)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "aggregate",
-            "value": "single-shot KPI briefing (not a collection)"
-          },
-          {
-            "field": "keyset_pagination",
-            "value": "inapplicable (no item stream to cursor)"
-          },
-          {
-            "field": "clipping",
-            "value": "banned (raw string slicing prohibited)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "tighten the routine's aggregate shape in a new version: drop or condense sections until the briefing lands under 500 tokens"
-          }
-        ]
-      }
+    "routine": "overview@2 (draft)",
+    "sections": "9 (v1 shipped 5)",
+    "aggregate": "single-shot KPI briefing (not a collection)",
+    "keyset_pagination": "inapplicable (no item stream to cursor)",
+    "clipping": "banned (raw string slicing prohibited)",
+    "lines": [
+      "result gate: aggregate payload measured at 612 tokens (cap: 500)"
     ]
   }
 }

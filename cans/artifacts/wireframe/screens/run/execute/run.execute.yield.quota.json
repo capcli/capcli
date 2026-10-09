@@ -1,82 +1,27 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.yield.quota",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.yield.quota",
   "target": "cap://broadcast_newsletter@2",
   "command": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
-  "state": {
-    "exit_code": 6,
-    "domain": "api.quota",
-    "trust": "pinned",
+  "context": {
     "env": "prod",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.api.quota_exhausted",
     "domain": "api.quota",
     "culprit": "Provider quota exhausted: threads has 0/50 tokens left in the 24h window.",
     "remedy": "task safely yielded; daemon will auto-resume at reset_at",
     "tokens_left": "0 / 50 (24h window)",
     "reset_at": "18:00:00 UTC (in 4h 12m)",
     "suspended_frame": "task_99a8b1",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 6"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "YIELD  policy.api.quota_exhausted",
-            "indent": 2
-          },
-          {
-            "text": "routine broadcast_newsletter@2 (frame_018)",
-            "indent": 9
-          },
-          {
-            "field": "provider",
-            "value": "threads"
-          },
-          {
-            "field": "verb",
-            "value": "threads.create_media_post"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "quota"
-          },
-          {
-            "field": "tokens_left",
-            "value": "0 / 50 (24h window)"
-          },
-          {
-            "field": "reset_at",
-            "value": "18:00:00 UTC (in 4h 12m)"
-          },
-          {
-            "field": "suspended_frame",
-            "value": "task_99a8b1"
-          },
-          {
-            "field": "remedy",
-            "value": "task safely yielded; daemon will auto-resume at reset_at"
-          }
-        ]
-      }
+    "provider": "threads",
+    "verb": "threads.create_media_post",
+    "layer": "quota",
+    "lines": [
+      "routine broadcast_newsletter@2 (frame_018)"
     ]
   }
 }

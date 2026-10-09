@@ -1,80 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.doctor.success.report",
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.success.report",
   "target": "sys://host",
   "command": "capcli sys doctor --report",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "prod",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "plain",
-      "label": "[prod:tier_1]  capcli 0.4.2"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": "trust_receipt",
+    "groups": [
       {
         "title": "trust_receipt",
-        "items": [
-          {
-            "field": "status",
-            "value": "nominal (witness anchoring pending)"
-          },
-          {
-            "field": "host_tier",
-            "value": "tier_1 (hardened Linux namespaces)"
-          },
-          {
-            "field": "workspace",
-            "value": "envs/prod/workspace.db"
-          },
-          {
-            "field": "ledger_root_hash",
-            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
-          },
-          {
-            "field": "witness_store",
-            "value": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)"
-          },
-          {
-            "field": "worm_checkpoint",
-            "value": "pending — ledger root is local-only until the first object-store anchor; provision s3/r2, then 'capcli sys backup --push'"
-          },
-          {
-            "field": "audited_events",
-            "value": "14290 committed to _audit"
-          },
-          {
-            "field": "policy_denials",
-            "value": "18 (intercepted pre-execution; state untouched)"
-          },
-          {
-            "field": "unaudited_writes",
-            "value": "0"
-          },
-          {
-            "field": "secret_leaks",
-            "value": "0"
-          },
-          {
-            "field": "pinned_routines",
-            "value": "32"
-          },
-          {
-            "field": "active_triggers",
-            "value": "4 crons, 3 webhooks, 1 endpoint"
-          },
-          {
-            "field": "sleep_score",
-            "value": "100%"
-          }
-        ]
+        "fields": {
+          "status": "nominal (witness anchoring pending)",
+          "host_tier": "tier_1 (hardened Linux namespaces)",
+          "workspace": "envs/prod/workspace.db",
+          "ledger_root_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
+          "witness_store": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)",
+          "worm_checkpoint": "pending — ledger root is local-only until the first object-store anchor; provision s3/r2, then 'capcli sys backup --push'",
+          "audited_events": "14290 committed to _audit",
+          "policy_denials": "18 (intercepted pre-execution; state untouched)",
+          "unaudited_writes": "0",
+          "secret_leaks": "0",
+          "pinned_routines": "32",
+          "active_triggers": "4 crons, 3 webhooks, 1 endpoint",
+          "sleep_score": "100%"
+        }
       }
     ]
   }

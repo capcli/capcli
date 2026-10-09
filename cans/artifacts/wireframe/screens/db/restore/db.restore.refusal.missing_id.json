@@ -1,68 +1,20 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.restore.refusal.missing_id",
+  "$schema": "wireframe/v2",
+  "id": "db.restore.refusal.missing_id",
   "target": "db://orders",
   "command": "capcli db restore",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "missing_param.restore.snapshot_id_required",
     "domain": "missing_param",
     "culprit": "Target snapshot ID missing; restore requires an explicit recovery point.",
     "remedy": "list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  missing_param.restore.snapshot_id_required",
-            "indent": 2
-          },
-          {
-            "field": "command",
-            "value": "capcli db restore"
-          },
-          {
-            "field": "target",
-            "value": "(absent)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Target snapshot ID missing; restore requires an explicit recovery point.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'"
-          }
-        ]
-      }
-    ]
+    "command": "capcli db restore",
+    "target": "(absent)"
   }
 }

@@ -1,79 +1,46 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.catalog.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "api.catalog.success.populated",
   "target": "stripe",
   "command": "capcli api catalog stripe --state active --json",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "populated"
-    },
-    "sections": [
+  "archetype": "tree",
+  "component": {
+    "title": "populated",
+    "root": "cap://stripe",
+    "nodes": [
       {
-        "title": null,
-        "items": [
+        "label": "refund_charge active draft 214 calls",
+        "children": []
+      },
+      {
+        "label": "create_payment_intent active draft 89 calls",
+        "children": [
           {
-            "field": "provider",
-            "value": "stripe"
-          },
-          {
-            "field": "state_filter",
-            "value": "active"
-          },
-          {
-            "field": "verbs",
-            "value": "4 active of 418 total (414 dormant)"
+            "label": "last_call op_5a72 (ok)",
+            "children": []
           }
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "cap://stripe",
-            "indent": 2
-          },
-          {
-            "text": "├── refund_charge          active   draft   214 calls",
-            "indent": 2
-          },
-          {
-            "text": "├── create_payment_intent  active   draft    89 calls",
-            "indent": 2
-          },
-          {
-            "text": "│     └── last_call  op_5a72 (ok)",
-            "indent": 8
-          },
-          {
-            "text": "├── issue_credit_note      active   draft    12 calls",
-            "indent": 2
-          },
-          {
-            "text": "└── void_invoice           active   draft     4 calls",
-            "indent": 2
-          }
-        ]
+        "label": "issue_credit_note active draft 12 calls",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "label": "void_invoice active draft 4 calls",
+        "children": []
       }
-    ]
+    ],
+    "footer": {
+      "provider": "stripe",
+      "state_filter": "active",
+      "verbs": "4 active of 418 total (414 dormant)",
+      "state_modified": "false"
+    }
   }
 }

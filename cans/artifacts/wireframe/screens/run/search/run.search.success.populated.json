@@ -1,99 +1,53 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.search.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "run.search.success.populated",
   "target": "order",
   "command": "capcli search 'order'",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "4 matches for 'order'"
-    },
-    "sections": [
+  "audit_op": "op_9f2r",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "text": "cap://dispatch_order@4              routine  pinned",
-            "indent": 2
-          },
-          {
-            "text": "Dispatch paid order to carrier and update status",
-            "indent": 4
-          },
-          {
-            "field": "next",
-            "value": "capcli inspect cap://dispatch_order@4"
-          }
+        "fields": {
+          "next": "capcli inspect cap://dispatch_order@4"
+        },
+        "lines": [
+          "cap://dispatch_order@4              routine  pinned",
+          "Dispatch paid order to carrier and update status"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "api://stripe.payment_intents.create api      dormant",
-            "indent": 2
-          },
-          {
-            "text": "Creates PaymentIntent for card/invoice capture",
-            "indent": 4
-          },
-          {
-            "field": "next",
-            "value": "capcli api activate stripe.payment_intents.create --intent \"...\""
-          }
+        "fields": {
+          "next": "capcli api activate stripe.payment_intents.create --intent \"...\""
+        },
+        "lines": [
+          "api://stripe.payment_intents.create api      dormant",
+          "Creates PaymentIntent for card/invoice capture"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "db://orders                         view     read",
-            "indent": 2
-          },
-          {
-            "text": "Order rows with customer and fulfillment status",
-            "indent": 4
-          },
-          {
-            "field": "next",
-            "value": "capcli sql \"SELECT id FROM orders LIMIT 5\""
-          }
+        "fields": {
+          "next": "capcli sql \"SELECT id FROM orders LIMIT 5\""
+        },
+        "lines": [
+          "db://orders                         view     read",
+          "Order rows with customer and fulfillment status"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "doc://refund-policy                 doc      readable",
-            "indent": 2
-          },
-          {
-            "text": "Refund routing rules and 120-day delegation boundary",
-            "indent": 4
-          },
-          {
-            "field": "next",
-            "value": "capcli doc read doc://refund-policy"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_9f2r"
-          }
+        "fields": {
+          "next": "capcli doc read doc://refund-policy"
+        },
+        "lines": [
+          "doc://refund-policy                 doc      readable",
+          "Refund routing rules and 120-day delegation boundary"
         ]
       }
     ]

@@ -114,10 +114,11 @@
     - Diagnostic output law
       - engine — native terminal diagnostics rendered procedurally via `miette` and `codespan`
       - data contract — all commands return `CliEnvelope<T>`: { context, exit_code, state_modified, data, diagnostic, audit_op }
-      - layout archetypes — human output maps to exactly 3 procedural formats:
-        - archetype A (Diagnostic) — exits 2, 3, 4, 5, 6; renders header, failing span with carets (`^^^^`), and indented metadata block
-        - archetype B (Tree) — hierarchical DAGs (`sys trace`, `inspect`); renders unicode branches (`├──`, `└──`, `│`)
-        - archetype C (Receipt) — exit 0 key-value records; renders aligned pairs separated by `─` dividers
+      - layout archetypes — human output maps to exactly 4 procedural formats:
+        - archetype A (diagnostic) — exits 2, 3, 4, 5, 6; renders header, failing span with carets (`^^^^`), and indented metadata block
+        - archetype B (tree) — hierarchical DAGs (`sys trace`, `inspect`); renders unicode branches (`├──`, `└──`, `│`)
+        - archetype C (receipt) — exit 0 key-value records; renders aligned pairs separated by `─` dividers
+        - archetype D (document) — sliced outputs, keyset envelopes, help; renders divider-separated body slices with pagination cursor state
       - machine envelope — `--json` returns raw serialized `CliEnvelope<T>`
       - payload redirection — `--out <path>` writes payload to disk; stdout returns <30 token receipt
       - shell escaping defense — all arguments accept `@<path>` or `@-` (stdin)

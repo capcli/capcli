@@ -1,94 +1,29 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.denial.budget",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.denial.budget",
   "target": "cap://archive_old_orders@3",
   "command": "capcli run cap://archive_old_orders@3 -p cutoff=90d -m \"archive stale orders\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.budget",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.budget.exhausted",
     "domain": "policy.budget",
-    "culprit": "Frame ops ceiling exhausted: archive_old_orders@3 (frame_005) hit 20/20 ops at attempted_op db.exec.",
-    "remedy": "split the work into chunked routines, or raise declared max_ops in a new routine version",
     "layer": "budget",
+    "culprit": "Frame ops ceiling exhausted: archive_old_orders@3 (frame_005) hit 20/20 ops at attempted_op db.exec.",
     "measured": "frame ops 20/20 · session remaining 488 ops",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.budget.exhausted",
-            "indent": 2
-          },
-          {
-            "text": "archive_old_orders@3 (frame_005) exhausted ops: 20/20",
-            "indent": 8
-          },
-          {
-            "field": "attempted_op",
-            "value": "db.exec (op #21 crossed the frame ceiling)"
-          },
-          {
-            "field": "blocking_level",
-            "value": "frame"
-          },
-          {
-            "field": "remaining",
-            "value": "0 ops at frame level"
-          },
-          {
-            "field": "ancestors",
-            "value": "session remaining 488 ops (frame was the tightest constraint)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "No partial execution past budget",
-            "value": "the routine failed cleanly"
-          },
-          {
-            "text": "with zero half-executed side effects.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "budget"
-          },
-          {
-            "field": "measured",
-            "value": "frame ops 20/20 · session remaining 488 ops"
-          },
-          {
-            "field": "remedy",
-            "value": "split the work into chunked routines, or raise declared max_ops in a new routine version"
-          }
-        ]
-      }
+    "remedy": "split the work into chunked routines, or raise declared max_ops in a new routine version",
+    "attempted_op": "db.exec (op #21 crossed the frame ceiling)",
+    "blocking_level": "frame",
+    "remaining": "0 ops at frame level",
+    "ancestors": "session remaining 488 ops (frame was the tightest constraint)",
+    "No partial execution past budget": "the routine failed cleanly",
+    "lines": [
+      "archive_old_orders@3 (frame_005) exhausted ops: 20/20",
+      "with zero half-executed side effects."
     ]
   }
 }

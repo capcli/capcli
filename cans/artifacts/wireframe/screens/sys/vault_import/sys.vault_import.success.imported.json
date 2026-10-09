@@ -1,67 +1,29 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.vault_import.success.imported",
+  "$schema": "wireframe/v2",
+  "id": "sys.vault_import.success.imported",
   "target": "CAPCLI_SECRET_*",
   "command": "capcli sys vault import-env",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "imported"
-    },
-    "sections": [
+  "audit_op": "op_r705",
+  "archetype": "tree",
+  "component": {
+    "title": "imported",
+    "root": "CAPCLI_SECRET_STRIPE_KEY → vault://stripe_secret_key aes-256-gcm",
+    "nodes": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "scanned",
-            "value": "process environment for CAPCLI_SECRET_*"
-          },
-          {
-            "field": "bound",
-            "value": "2 secrets (values masked in all outputs)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "├── CAPCLI_SECRET_STRIPE_KEY      → vault://stripe_secret_key  aes-256-gcm",
-            "indent": 2
-          },
-          {
-            "text": "└── CAPCLI_SECRET_RESEND_API_KEY  → vault://resend_api_key  aes-256-gcm",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_r705"
-          },
-          {
-            "field": "note",
-            "value": "vault.set events committed with SHA-256 fingerprints; plaintext zeroized after ingest"
-          }
-        ]
+        "label": "CAPCLI_SECRET_RESEND_API_KEY → vault://resend_api_key aes-256-gcm",
+        "children": []
       }
-    ]
+    ],
+    "footer": {
+      "scanned": "process environment for CAPCLI_SECRET_*",
+      "bound": "2 secrets (values masked in all outputs)",
+      "state_modified": "true",
+      "note": "vault.set events committed with SHA-256 fingerprints; plaintext zeroized after ingest"
+    }
   }
 }

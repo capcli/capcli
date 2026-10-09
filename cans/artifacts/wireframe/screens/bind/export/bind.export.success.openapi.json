@@ -1,61 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.export.success.openapi",
+  "$schema": "wireframe/v2",
+  "id": "bind.export.success.openapi",
   "target": "bind://",
   "command": "capcli bind export openapi --out openapi.json",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
+    "trust": "pinned",
     "data_shape": "redirected"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exported"
-    },
-    "sections": [
+  "audit_op": "op_8m3v",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "artifact",
-            "value": "openapi.json"
-          },
-          {
-            "field": "format",
-            "value": "openapi 3.1"
-          },
-          {
-            "field": "endpoints",
-            "value": "2 (dispatch_order@4, report_summary@3)"
-          },
-          {
-            "field": "bytes",
-            "value": "2418"
-          },
-          {
-            "field": "sha256",
-            "value": "4f9a1b2c7d3e5f60"
-          }
-        ]
+        "fields": {
+          "artifact": "openapi.json",
+          "format": "openapi 3.1",
+          "endpoints": "2 (dispatch_order@4, report_summary@3)",
+          "bytes": "2418",
+          "sha256": "4f9a1b2c7d3e5f60"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_8m3v"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

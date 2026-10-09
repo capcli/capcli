@@ -1,65 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.register.denial.cap",
+  "$schema": "wireframe/v2",
+  "id": "sys.register.denial.cap",
   "target": "agents",
   "command": "capcli sys agent register",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.registry.agent_cap",
     "domain": "policy.authorizer",
-    "culprit": "registration refused: agent registry at capacity",
-    "remedy": "revoke a dormant agent via capcli sys agent revoke <agent-id>, then re-register",
     "layer": "authorizer",
+    "culprit": "registration refused: agent registry at capacity",
     "measured": "8 registered agents (cap: 8)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.registry.agent_cap",
-            "indent": 2
-          },
-          {
-            "field": "registration refused",
-            "value": "agent registry at capacity"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "measured",
-            "value": "8 registered agents (cap: 8)"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "remedy",
-            "value": "revoke a dormant agent via capcli sys agent revoke <agent-id>, then re-register"
-          }
-        ]
-      }
-    ]
+    "remedy": "revoke a dormant agent via capcli sys agent revoke <agent-id>, then re-register",
+    "registration refused": "agent registry at capacity"
   }
 }

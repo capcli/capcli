@@ -1,76 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.rollback.refusal.not_found",
+  "$schema": "wireframe/v2",
+  "id": "api.rollback.refusal.not_found",
   "target": "cap://threads.create_media_post",
   "command": "capcli api rollback threads.create_media_post 12",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "validation",
     "culprit": "Target version not found: version 12 (kept versions 1–8).",
     "remedy": "choose a version within the kept window, or re-sync the provider spec to rebuild history",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  validation.not_found",
-            "indent": 2
-          },
-          {
-            "field": "command",
-            "value": "capcli api rollback threads.create_media_post 12"
-          },
-          {
-            "field": "verb",
-            "value": "cap://threads.create_media_post"
-          },
-          {
-            "field": "version",
-            "value": "12"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Target version not found.",
-            "indent": 9
-          },
-          {
-            "field": "Kept versions for this verb",
-            "value": "1–8 (max_versions_kept: 10)."
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "choose a version within the kept window, or re-sync the provider spec to rebuild history"
-          }
-        ]
-      }
+    "command": "capcli api rollback threads.create_media_post 12",
+    "verb": "cap://threads.create_media_post",
+    "version": "12",
+    "Kept versions for this verb": "1–8 (max_versions_kept: 10).",
+    "lines": [
+      "FATAL  validation.not_found",
+      "Target version not found."
     ]
   }
 }

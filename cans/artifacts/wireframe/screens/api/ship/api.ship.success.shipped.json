@@ -1,65 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.ship.success.shipped",
+  "$schema": "wireframe/v2",
+  "id": "api.ship.success.shipped",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "shipped"
-    },
-    "sections": [
+  "audit_op": "op_6f3b",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "verb",
-            "value": "cap://threads.create_media_post"
-          },
-          {
-            "field": "rung",
-            "value": "draft → reviewed"
-          },
-          {
-            "field": "evidence",
-            "value": "synthetic contract replay 3/3 passed"
-          },
-          {
-            "field": "sim success rate 1.00 (floor",
-            "value": "0.90)"
-          },
-          {
-            "field": "policy_denials",
-            "value": "0"
-          },
-          {
-            "field": "promoted_by",
-            "value": "agt_7f3k"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_6f3b"
-          }
-        ]
+        "fields": {
+          "verb": "cap://threads.create_media_post",
+          "rung": "draft → reviewed",
+          "evidence": "synthetic contract replay 3/3 passed",
+          "sim success rate 1.00 (floor": "0.90)",
+          "policy_denials": "0",
+          "promoted_by": "agt_7f3k"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

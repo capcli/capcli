@@ -1,61 +1,31 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.lock.success.acquired",
+  "$schema": "wireframe/v2",
+  "id": "db.lock.success.acquired",
   "target": "orders:ORD-10",
   "command": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "acquired"
-    },
-    "sections": [
+  "audit_op": "op_44c1",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "target",
-            "value": "orders:ORD-10"
-          },
-          {
-            "field": "ttl",
-            "value": "300s"
-          },
-          {
-            "field": "lease_id",
-            "value": "claim_9d21"
-          },
-          {
-            "field": "holder",
-            "value": "agt_7f3k"
-          },
-          {
-            "field": "reason",
-            "value": "batch fulfillment"
-          }
-        ]
+        "fields": {
+          "target": "orders:ORD-10",
+          "ttl": "300s",
+          "lease_id": "claim_9d21",
+          "holder": "agt_7f3k",
+          "reason": "batch fulfillment"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_44c1"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

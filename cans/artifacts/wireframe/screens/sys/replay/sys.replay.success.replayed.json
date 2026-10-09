@@ -1,65 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.replay.success.replayed",
+  "$schema": "wireframe/v2",
+  "id": "sys.replay.success.replayed",
   "target": "_audit",
   "command": "capcli sys audit replay --from 2026-10-03T23:52:31Z",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "replayed"
-    },
-    "sections": [
+  "audit_op": "op_r701",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "from",
-            "value": "2026-10-03T23:52:31Z"
-          },
-          {
-            "field": "window",
-            "value": "16 ops (all local)"
-          },
-          {
-            "field": "re-executed",
-            "value": "16 ops under current policy (v5)"
-          },
-          {
-            "field": "divergences",
-            "value": "0 — 16/16 result_hash identical to original ledger entries"
-          },
-          {
-            "field": "external",
-            "value": "0 HTTP calls in window"
-          }
-        ]
+        "fields": {
+          "from": "2026-10-03T23:52:31Z",
+          "window": "16 ops (all local)",
+          "re-executed": "16 ops under current policy (v5)",
+          "divergences": "0 — 16/16 result_hash identical to original ledger entries",
+          "external": "0 HTTP calls in window"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_r701"
-          },
-          {
-            "field": "note",
-            "value": "idempotency keys suppressed duplicate side-effects; replay committed to _audit as new causal branch"
-          }
-        ]
+        "fields": {
+          "state_modified": "true",
+          "note": "idempotency keys suppressed duplicate side-effects; replay committed to _audit as new causal branch"
+        }
       }
     ]
   }

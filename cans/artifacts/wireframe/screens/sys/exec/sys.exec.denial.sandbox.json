@@ -1,82 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.exec.denial.sandbox",
+  "$schema": "wireframe/v2",
+  "id": "sys.exec.denial.sandbox",
   "target": "sys://sandbox",
   "command": "capcli sys exec \"python3 etl.py\" --sandbox",
-  "state": {
-    "exit_code": 2,
-    "domain": "kernel.sandbox",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "kernel.sandbox.escape_attempt",
     "domain": "kernel.sandbox",
-    "culprit": "Attempted unconfined escape: bwrap pivot_root remount plus ptrace (syscall 101) outside profile_python",
-    "remedy": "strip escape attempts from the command; raw host access is never granted inside the jail",
     "layer": "sandbox",
+    "culprit": "Attempted unconfined escape: bwrap pivot_root remount plus ptrace (syscall 101) outside profile_python",
     "measured": "2 containment violations (tolerated: 0)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  kernel.sandbox.escape_attempt",
-            "indent": 0
-          },
-          {
-            "field": "command",
-            "value": "python3 etl.py"
-          },
-          {
-            "field": "violation",
-            "value": "bwrap pivot_root remount from inside the jail"
-          },
-          {
-            "field": "violation",
-            "value": "ptrace (syscall 101) outside profile_python allowlist"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Attempted unconfined escape; jail torn down mid-execution.",
-            "indent": 6
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: false",
-            "indent": 0
-          },
-          {
-            "text": "layer:          sandbox",
-            "indent": 0
-          },
-          {
-            "text": "measured:       2 containment violations (tolerated: 0)",
-            "indent": 0
-          },
-          {
-            "text": "remedy:         strip escape attempts from the command; raw host access is never granted inside the jail",
-            "indent": 0
-          }
-        ]
-      }
+    "remedy": "strip escape attempts from the command; raw host access is never granted inside the jail",
+    "command": "python3 etl.py",
+    "violation": [
+      "bwrap pivot_root remount from inside the jail",
+      "ptrace (syscall 101) outside profile_python allowlist"
+    ],
+    "lines": [
+      "Attempted unconfined escape; jail torn down mid-execution.",
+      "state_modified: false",
+      "layer:          sandbox",
+      "measured:       2 containment violations (tolerated: 0)",
+      "remedy:         strip escape attempts from the command; raw host access is never granted inside the jail"
     ]
   }
 }

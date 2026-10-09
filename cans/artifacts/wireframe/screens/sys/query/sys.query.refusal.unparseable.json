@@ -1,63 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.query.refusal.unparseable",
+  "$schema": "wireframe/v2",
+  "id": "sys.query.refusal.unparseable",
   "target": "_audit",
   "command": "capcli sys audit query \"SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20\"",
-  "state": {
-    "exit_code": 3,
-    "domain": "compile",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "compile",
     "culprit": "Expected FROM; found identifier 'FORM' at column 22.",
     "remedy": "correct the SQL and re-run capcli sys audit query against _audit",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
+    "span": {
+      "source": "SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20",
+      "highlight": "FORM"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  compile.bad_syntax",
-            "indent": 2
-          },
-          {
-            "text": "SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20",
-            "indent": 9
-          },
-          {
-            "text": "^^^^",
-            "indent": 30
-          },
-          {
-            "text": "Expected FROM; found identifier 'FORM' at column 22.",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "correct the SQL and re-run capcli sys audit query against _audit"
-          }
-        ]
-      }
+    "lines": [
+      "FATAL  compile.bad_syntax"
     ]
   }
 }

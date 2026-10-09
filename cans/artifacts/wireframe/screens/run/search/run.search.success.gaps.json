@@ -1,70 +1,36 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.search.success.gaps",
+  "$schema": "wireframe/v2",
+  "id": "run.search.success.gaps",
   "target": "gaps",
   "command": "capcli search gaps --since 7d",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "4 gaps since 7d"
-    },
-    "sections": [
+  "audit_op": "op_9f2u",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "text": "zero_result (ranked first):",
-            "indent": 2
-          },
-          {
-            "text": "\"kombucha supplier sync\"    4 searches · 0 hits · last 2h ago",
-            "indent": 4
-          },
-          {
-            "text": "\"batch invoice csv export\"  3 searches · 0 hits · last 1d ago",
-            "indent": 4
-          }
+        "lines": [
+          "zero_result (ranked first):",
+          "\"kombucha supplier sync\"    4 searches · 0 hits · last 2h ago",
+          "\"batch invoice csv export\"  3 searches · 0 hits · last 1d ago"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "low_conversion (searched, never invoked):",
-            "indent": 2
-          },
-          {
-            "text": "api://stripe.payouts.list   5 views · 0 invokes · last seen 3d ago",
-            "indent": 4
-          },
-          {
-            "text": "api://stripe.disputes.list  3 views · 0 invokes · last seen 5d ago",
-            "indent": 4
-          }
+        "lines": [
+          "low_conversion (searched, never invoked):",
+          "api://stripe.payouts.list   5 views · 0 invokes · last seen 3d ago",
+          "api://stripe.disputes.list  3 views · 0 invokes · last seen 5d ago"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "next_step",
-            "value": "author a draft routine or expand catalog via capcli api sync"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f2u"
-          }
-        ]
+        "fields": {
+          "next_step": "author a draft routine or expand catalog via capcli api sync"
+        }
       }
     ]
   },

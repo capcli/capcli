@@ -1,86 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.snapshot.denial.prod_draft",
+  "$schema": "wireframe/v2",
+  "id": "db.snapshot.denial.prod_draft",
   "target": "db://orders",
   "command": "capcli db snapshot --env prod -m \"nightly safety point\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.trust",
-    "trust": "draft",
+  "context": {
     "env": "prod",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_71b2",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.trust.forbidden",
     "domain": "policy.trust",
-    "culprit": "Draft identity cannot snapshot prod; unproven code cannot touch prod.",
-    "remedy": "prove the acting identity in sim and promote to reviewed, then retry the snapshot",
     "layer": "trust",
+    "culprit": "Draft identity cannot snapshot prod; unproven code cannot touch prod.",
     "measured": "caller trust rung is draft; prod floor is reviewed",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.trust.forbidden",
-            "indent": 2
-          },
-          {
-            "field": "env",
-            "value": "prod"
-          },
-          {
-            "field": "trust",
-            "value": "draft"
-          },
-          {
-            "field": "caller",
-            "value": "agt_7f3k"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Draft identity cannot snapshot prod; unproven code cannot touch prod.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_71b2"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "trust"
-          },
-          {
-            "field": "measured",
-            "value": "caller trust rung is draft; prod floor is reviewed"
-          },
-          {
-            "field": "remedy",
-            "value": "prove the acting identity in sim and promote to reviewed, then retry the snapshot"
-          }
-        ]
-      }
-    ]
+    "remedy": "prove the acting identity in sim and promote to reviewed, then retry the snapshot",
+    "env": "prod",
+    "trust": "draft",
+    "caller": "agt_7f3k"
   }
 }

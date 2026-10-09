@@ -1,72 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.inspect.refusal.missing_ptr",
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.refusal.missing_ptr",
   "target": "dispatch_order@4",
   "command": "capcli inspect dispatch_order@4",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "missing_param",
     "culprit": "Unrecognized pointer format: missing scheme prefix.",
     "remedy": "restate as a typed URP, e.g. cap://dispatch_order@4",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  missing_param.unrecognized_ptr",
-            "indent": 2
-          },
-          {
-            "field": "target",
-            "value": "'dispatch_order@4'"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "Unrecognized pointer format",
-            "value": "missing scheme prefix."
-          },
-          {
-            "field": "Expected a typed URP",
-            "value": "cap://, db://, quota://, doc://, ..."
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "cli"
-          },
-          {
-            "field": "remedy",
-            "value": "restate as a typed URP, e.g. cap://dispatch_order@4"
-          }
-        ]
-      }
+    "target": "'dispatch_order@4'",
+    "Unrecognized pointer format": "missing scheme prefix.",
+    "Expected a typed URP": "cap://, db://, quota://, doc://, ...",
+    "layer": "cli",
+    "lines": [
+      "FATAL  missing_param.unrecognized_ptr"
     ]
   }
 }

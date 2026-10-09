@@ -1,160 +1,73 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.inspect.success.routine",
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.routine",
   "target": "cap://dispatch_order@4",
   "command": "capcli inspect cap://dispatch_order@4",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "pinned",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "plain",
-      "label": "[dev:tier_1]  capcli inspect cap://dispatch_order@4"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "trust",
-            "value": "pinned"
-          },
-          {
-            "field": "runtime",
-            "value": "typescript (bun)"
-          },
-          {
-            "field": "params",
-            "value": "order_id: string, carrier: string"
-          },
-          {
-            "field": "description",
-            "value": "\"Dispatch paid order to carrier and update status\""
-          }
+        "fields": {
+          "trust": "pinned",
+          "runtime": "typescript (bun)",
+          "params": "order_id: string, carrier: string",
+          "description": "\"Dispatch paid order to carrier and update status\""
+        }
+      },
+      {
+        "fields": {
+          "limits": "8 ops · 15s · 500 result tokens"
+        }
+      },
+      {
+        "lines": [
+          "manifest:",
+          "1. db.query    orders (read)",
+          "2. api.call    logistics.shipments.create",
+          "3. db.execute  orders (write)"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "limits",
-            "value": "8 ops · 15s · 500 result tokens"
-          }
+        "fields": {
+          "can_invoke_now": "true",
+          "session_ops_remaining": "488",
+          "session_duration_remaining": "555000ms",
+          "session_fuel_remaining": "80400",
+          "session_egress_remaining": "4181824 bytes",
+          "session_rate_remaining": "287",
+          "tightest_constraint": "null"
+        },
+        "lines": [
+          "budget_status:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "manifest:",
-            "indent": 2
-          },
-          {
-            "text": "1. db.query    orders (read)",
-            "indent": 4
-          },
-          {
-            "text": "2. api.call    logistics.shipments.create",
-            "indent": 4
-          },
-          {
-            "text": "3. db.execute  orders (write)",
-            "indent": 4
-          }
+        "fields": {
+          "max_nesting_depth": "5",
+          "budget_inheritance": "min",
+          "child_routines": "[]"
+        },
+        "lines": [
+          "composition:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "budget_status:",
-            "indent": 2
-          },
-          {
-            "field": "can_invoke_now",
-            "value": "true"
-          },
-          {
-            "field": "session_ops_remaining",
-            "value": "488"
-          },
-          {
-            "field": "session_duration_remaining",
-            "value": "555000ms"
-          },
-          {
-            "field": "session_fuel_remaining",
-            "value": "80400"
-          },
-          {
-            "field": "session_egress_remaining",
-            "value": "4181824 bytes"
-          },
-          {
-            "field": "session_rate_remaining",
-            "value": "287"
-          },
-          {
-            "field": "tightest_constraint",
-            "value": "null"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "composition:",
-            "indent": 2
-          },
-          {
-            "field": "max_nesting_depth",
-            "value": "5"
-          },
-          {
-            "field": "budget_inheritance",
-            "value": "min"
-          },
-          {
-            "field": "child_routines",
-            "value": "[]"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "stats:",
-            "indent": 2
-          },
-          {
-            "field": "total_runs",
-            "value": "214"
-          },
-          {
-            "field": "success_rate",
-            "value": "99.1%"
-          },
-          {
-            "field": "p50_duration",
-            "value": "340ms"
-          },
-          {
-            "field": "p95_duration",
-            "value": "890ms"
-          },
-          {
-            "field": "last_run_at",
-            "value": "2m ago"
-          }
+        "fields": {
+          "total_runs": "214",
+          "success_rate": "99.1%",
+          "p50_duration": "340ms",
+          "p95_duration": "890ms",
+          "last_run_at": "2m ago"
+        },
+        "lines": [
+          "stats:"
         ]
       }
     ]

@@ -1,73 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.webhook.denial.unsigned",
+  "$schema": "wireframe/v2",
+  "id": "bind.webhook.denial.unsigned",
   "target": "cap://sync_orders",
   "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.webhook_signature_required",
     "domain": "policy.authorizer",
+    "layer": "authorizer",
     "culprit": "Unsigned hooks rejected. HMAC-SHA256 verification must be armed at bind time.",
     "remedy": "store the provider signing secret via sys vault set, then re-run bind webhook",
-    "layer": "authorizer",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.webhook_signature_required",
-            "indent": 2
-          },
-          {
-            "field": "provider",
-            "value": "stripe"
-          },
-          {
-            "field": "signing",
-            "value": "none armed (vault://stripe_webhook_secret absent)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Unsigned hooks rejected. HMAC-SHA256 verification must be armed at bind time.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "remedy",
-            "value": "store the provider signing secret via sys vault set, then re-run bind webhook"
-          }
-        ]
-      }
-    ]
+    "provider": "stripe",
+    "signing": "none armed (vault://stripe_webhook_secret absent)"
   }
 }

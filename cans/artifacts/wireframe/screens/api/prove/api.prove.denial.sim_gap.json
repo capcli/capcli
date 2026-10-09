@@ -1,77 +1,27 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.prove.denial.sim_gap",
+  "$schema": "wireframe/v2",
+  "id": "api.prove.denial.sim_gap",
   "target": "cap://threads.create_media_post",
   "command": "capcli api prove threads.create_media_post --env sim",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "draft",
+  "context": {
     "env": "sim",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.sim_gap",
     "domain": "policy.authorizer",
-    "culprit": "Missing mock fixture in sim for prod-only verb.",
-    "remedy": "add a schema-validated mock fixture for 'threads.create_media_post' to apis/threads.mock.yaml, then re-run the prove",
     "layer": "authorizer",
+    "culprit": "Missing mock fixture in sim for prod-only verb.",
     "measured": "mock fixtures for provider 'threads': 0 (contract replay requires 1)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
+    "remedy": "add a schema-validated mock fixture for 'threads.create_media_post' to apis/threads.mock.yaml, then re-run the prove",
+    "span": {
+      "source": "capcli api prove threads.create_media_post --env sim",
+      "highlight": "threads.create_media_post"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.sim_gap",
-            "indent": 2
-          },
-          {
-            "text": "capcli api prove threads.create_media_post --env sim",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^^^^^^^^^^^^^^^^^^^^",
-            "indent": 25
-          },
-          {
-            "text": "Missing mock fixture in sim for prod-only verb.",
-            "indent": 8
-          },
-          {
-            "text": "No entry 'create_media_post' in apis/threads.mock.yaml.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "mock fixtures for provider 'threads': 0 (contract replay requires 1)"
-          },
-          {
-            "field": "remedy",
-            "value": "add a schema-validated mock fixture for 'threads.create_media_post' to apis/threads.mock.yaml, then re-run the prove"
-          }
-        ]
-      }
+    "lines": [
+      "No entry 'create_media_post' in apis/threads.mock.yaml."
     ]
   }
 }

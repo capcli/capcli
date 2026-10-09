@@ -1,57 +1,30 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.retire.success.completed",
+  "$schema": "wireframe/v2",
+  "id": "api.retire.success.completed",
   "target": "cap://stripe.refund_charge",
   "command": "capcli api retire stripe.refund_charge --reason \"deprecated upstream\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "completed"
-    },
-    "sections": [
+  "audit_op": "op_3d8a2",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "verb",
-            "value": "cap://stripe.refund_charge"
-          },
-          {
-            "field": "transition",
-            "value": "active → dormant"
-          },
-          {
-            "field": "reason",
-            "value": "deprecated upstream"
-          },
-          {
-            "field": "callable",
-            "value": "false (dormant verbs are discoverable, inspectable, uncallable)"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_3d8a2"
-          }
-        ]
+        "fields": {
+          "verb": "cap://stripe.refund_charge",
+          "transition": "active → dormant",
+          "reason": "deprecated upstream",
+          "callable": "false (dormant verbs are discoverable, inspectable, uncallable)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

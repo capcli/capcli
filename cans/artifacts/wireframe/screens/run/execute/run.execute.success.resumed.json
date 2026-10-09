@@ -1,74 +1,37 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.success.resumed",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.success.resumed",
   "target": "cap://broadcast_newsletter@2",
   "command": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "prod",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "resumed"
-    },
-    "sections": [
+  "audit_op": "op_9f44e",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "task",
-            "value": "task_99a8b1 (background)"
-          },
-          {
-            "field": "routine",
-            "value": "broadcast_newsletter@2 (frame_018 re-dispatched)"
-          },
-          {
-            "field": "trigger",
-            "value": "token refill epoch — threads pool restored to 50/50"
-          },
-          {
-            "field": "yielded_for",
-            "value": "4h 12m (yield_until elapsed at 18:00:00 UTC)"
-          }
-        ]
+        "fields": {
+          "task": "task_99a8b1 (background)",
+          "routine": "broadcast_newsletter@2 (frame_018 re-dispatched)",
+          "trigger": "token refill epoch — threads pool restored to 50/50",
+          "yielded_for": "4h 12m (yield_until elapsed at 18:00:00 UTC)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "queue",
-            "value": "daemon re-queued from _suspended_tasks"
-          },
-          {
-            "field": "retry",
-            "value": "threads.create_media_post replayed under idempotent key"
-          },
-          {
-            "field": "result",
-            "value": "posted (media_id 1793882)"
-          }
-        ]
+        "fields": {
+          "queue": "daemon re-queued from _suspended_tasks",
+          "retry": "threads.create_media_post replayed under idempotent key",
+          "result": "posted (media_id 1793882)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f44e"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

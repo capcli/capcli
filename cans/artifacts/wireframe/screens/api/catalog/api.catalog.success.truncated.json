@@ -1,132 +1,57 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.catalog.success.truncated",
+  "$schema": "wireframe/v2",
+  "id": "api.catalog.success.truncated",
   "target": "api://catalog",
   "command": "capcli api catalog",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "truncated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "truncated"
+  "archetype": "document",
+  "component": {
+    "header_badge": "truncated",
+    "pagination": {
+      "items": [
+        {
+          "verb": "stripe.refund_charge",
+          "state": "active",
+          "trust": "draft"
+        },
+        {
+          "verb": "threads.create_media_post",
+          "state": "active",
+          "trust": "draft"
+        }
+      ],
+      "next_cursor": "api://shipstation.create_order",
+      "has_more": true
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "providers",
-            "value": "10"
-          },
-          {
-            "field": "verbs_total",
-            "value": "1204"
-          },
-          {
-            "field": "verbs_listed",
-            "value": "500 (listing cap)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "catalog",
-            "indent": 2
-          },
-          {
-            "text": "├── api://stripe",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── refund_charge           active    draft",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── create_payment_intent   active    draft",
-            "indent": 2
-          },
-          {
-            "text": "│     └── issue_credit_note       active    draft",
-            "indent": 2
-          },
-          {
-            "text": "├── api://threads",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── create_media_post       active    draft",
-            "indent": 2
-          },
-          {
-            "text": "│     └── get_media_post          dormant   —",
-            "indent": 2
-          },
-          {
-            "text": "└── api://fedex",
-            "indent": 2
-          },
-          {
-            "text": "├── ship                    active    reviewed",
-            "indent": 8
-          },
-          {
-            "text": "└── track                   active    reviewed",
-            "indent": 8
-          },
-          {
-            "text": "... 493 further verbs elided (listing capped at 500) ...",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "truncated",
-            "value": "true"
-          },
-          {
-            "field": "next_cursor",
-            "value": "api://shipstation.create_order"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
-      }
+    "meta": {
+      "next_cursor": "api://shipstation.create_order",
+      "has_more": true
+    },
+    "fields": {
+      "providers": "10",
+      "verbs_total": "1204",
+      "verbs_listed": "500 (listing cap)",
+      "truncated": "true",
+      "state_modified": "false"
+    },
+    "body": [
+      "catalog",
+      "├── api://stripe",
+      "│     ├── refund_charge           active    draft",
+      "│     ├── create_payment_intent   active    draft",
+      "│     └── issue_credit_note       active    draft",
+      "├── api://threads",
+      "│     ├── create_media_post       active    draft",
+      "│     └── get_media_post          dormant   —",
+      "└── api://fedex",
+      "├── ship                    active    reviewed",
+      "└── track                   active    reviewed",
+      "... 493 further verbs elided (listing capped at 500) ..."
     ]
-  },
-  "pagination": {
-    "items": [
-      {
-        "verb": "stripe.refund_charge",
-        "state": "active",
-        "trust": "draft"
-      },
-      {
-        "verb": "threads.create_media_post",
-        "state": "active",
-        "trust": "draft"
-      }
-    ],
-    "next_cursor": "api://shipstation.create_order",
-    "has_more": true
   }
 }

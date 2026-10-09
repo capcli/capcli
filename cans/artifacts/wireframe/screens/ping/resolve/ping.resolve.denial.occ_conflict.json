@@ -1,78 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.resolve.denial.occ_conflict",
+  "$schema": "wireframe/v2",
+  "id": "ping.resolve.denial.occ_conflict",
   "target": "ask_77c3",
   "command": "capcli ping resolve ask_77c3 --choice approve",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.notify",
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.notify.occ_fence",
     "domain": "policy.notify",
-    "culprit": "occ_fence_gate verified dependency state_fences on resume and caught entity drift while ask_77c3 awaited human choice (orders row ORD-10 version 41 → 43)",
-    "remedy": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame",
     "layer": "notify",
+    "culprit": "occ_fence_gate verified dependency state_fences on resume and caught entity drift while ask_77c3 awaited human choice (orders row ORD-10 version 41 → 43)",
     "measured": "orders row ORD-10 version 41 → 43 during suspension (fence recorded 41)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.notify.occ_fence",
-            "indent": 2
-          },
-          {
-            "field": "ask",
-            "value": "ask_77c3"
-          },
-          {
-            "field": "fence",
-            "value": "orders row ORD-10 version 41 → 43 during suspension"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Kernel OCC fence gate caught entity drift during suspension; resumption denied.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "notify"
-          },
-          {
-            "field": "measured",
-            "value": "orders row ORD-10 version 41 → 43 during suspension (fence recorded 41)"
-          },
-          {
-            "field": "remedy",
-            "value": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame"
-          }
-        ]
-      }
+    "remedy": "re-inspect the drifted rows and re-issue the ask against current state before resuming the frame",
+    "ask": "ask_77c3",
+    "fence": "orders row ORD-10 version 41 → 43 during suspension",
+    "lines": [
+      "Kernel OCC fence gate caught entity drift during suspension; resumption denied."
     ]
   }
 }

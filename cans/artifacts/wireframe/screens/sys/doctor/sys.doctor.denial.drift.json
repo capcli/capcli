@@ -1,82 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.doctor.denial.drift",
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.denial.drift",
   "target": "sys://host",
   "command": "capcli sys doctor",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.declaration_drift",
     "domain": "policy.authorizer",
-    "culprit": "Live DB schema diverges from the compiled declaration (orders.idx_orders_status, customers.region)",
-    "remedy": "reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'",
     "layer": "authorizer",
+    "culprit": "Live DB schema diverges from the compiled declaration (orders.idx_orders_status, customers.region)",
     "measured": "2 drift items (declaration v3 vs envs/dev/workspace.db)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.declaration_drift",
-            "indent": 0
-          },
-          {
-            "text": "Live DB schema diverges from the compiled declaration.",
-            "indent": 6
-          },
-          {
-            "field": "drift",
-            "value": "orders.idx_orders_status present in live DB, absent from schema.yaml"
-          },
-          {
-            "field": "drift",
-            "value": "customers.region declared, missing from live table"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Doctor refuses to certify a drifted workspace.",
-            "indent": 6
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: false",
-            "indent": 0
-          },
-          {
-            "text": "layer:          authorizer",
-            "indent": 0
-          },
-          {
-            "text": "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)",
-            "indent": 0
-          },
-          {
-            "text": "remedy:         reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'",
-            "indent": 0
-          }
-        ]
-      }
+    "remedy": "reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'",
+    "drift": [
+      "orders.idx_orders_status present in live DB, absent from schema.yaml",
+      "customers.region declared, missing from live table"
+    ],
+    "lines": [
+      "Live DB schema diverges from the compiled declaration.",
+      "Doctor refuses to certify a drifted workspace.",
+      "state_modified: false",
+      "layer:          authorizer",
+      "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)",
+      "remedy:         reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'"
     ]
   }
 }

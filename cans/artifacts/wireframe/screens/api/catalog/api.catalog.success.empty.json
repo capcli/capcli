@@ -1,62 +1,35 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.catalog.success.empty",
+  "$schema": "wireframe/v2",
+  "id": "api.catalog.success.empty",
   "target": "api://catalog",
   "command": "capcli api catalog",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "empty"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "providers",
-            "value": "0"
-          },
-          {
-            "field": "verbs",
-            "value": "0"
-          }
+        "fields": {
+          "providers": "0",
+          "verbs": "0"
+        }
+      },
+      {
+        "lines": [
+          "Zero APIs configured.",
+          "Sync a provider spec to populate the catalog, e.g.",
+          "'capcli api sync stripe https://api.stripe.com/openapi.json'"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "Zero APIs configured.",
-            "indent": 2
-          },
-          {
-            "text": "Sync a provider spec to populate the catalog, e.g.",
-            "indent": 2
-          },
-          {
-            "text": "'capcli api sync stripe https://api.stripe.com/openapi.json'",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "fields": {
+          "state_modified": "false"
+        }
       }
     ]
   },

@@ -1,107 +1,51 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.success.populated",
   "target": "cap://dispatch_order@4",
   "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
+    "trust": "pinned",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "executed"
-    },
-    "sections": [
+  "audit_op": "op_9f2c",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "routine",
-            "value": "dispatch_order@4 (pinned)"
-          },
-          {
-            "field": "session",
-            "value": "ses_a992f"
-          },
-          {
-            "field": "intent",
-            "value": "\"fulfill urgent pending orders\""
-          },
-          {
-            "field": "frame",
-            "value": "frame_021 (3/8 ops · 358ms)"
-          }
+        "fields": {
+          "routine": "dispatch_order@4 (pinned)",
+          "session": "ses_a992f",
+          "intent": "\"fulfill urgent pending orders\"",
+          "frame": "frame_021 (3/8 ops · 358ms)"
+        }
+      },
+      {
+        "lines": [
+          "leaves:",
+          "1. db.query    orders (read)               12ms",
+          "2. api.call    logistics.shipments.create  340ms",
+          "3. db.execute  orders (write)              18ms"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "leaves:",
-            "indent": 2
-          },
-          {
-            "text": "1. db.query    orders (read)               12ms",
-            "indent": 4
-          },
-          {
-            "text": "2. api.call    logistics.shipments.create  340ms",
-            "indent": 4
-          },
-          {
-            "text": "3. db.execute  orders (write)              18ms",
-            "indent": 4
-          }
+        "fields": {
+          "order_id": "ORD-1042",
+          "carrier": "fedex",
+          "tracking": "794644790133",
+          "status": "shipped (1 row committed)"
+        },
+        "lines": [
+          "result:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "result:",
-            "indent": 2
-          },
-          {
-            "field": "order_id",
-            "value": "ORD-1042"
-          },
-          {
-            "field": "carrier",
-            "value": "fedex"
-          },
-          {
-            "field": "tracking",
-            "value": "794644790133"
-          },
-          {
-            "field": "status",
-            "value": "shipped (1 row committed)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_9f2c"
-          },
-          {
-            "field": "result_hash",
-            "value": "sha256:9c41e7b0d2a8f513c6ee"
-          },
-          {
-            "field": "state_modified",
-            "value": "true"
-          }
-        ]
+        "fields": {
+          "result_hash": "sha256:9c41e7b0d2a8f513c6ee",
+          "state_modified": "true"
+        }
       }
     ]
   }

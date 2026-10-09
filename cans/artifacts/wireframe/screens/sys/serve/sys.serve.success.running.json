@@ -1,72 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.serve.success.running",
+  "$schema": "wireframe/v2",
+  "id": "sys.serve.success.running",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "running"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": "daemon",
+    "groups": [
       {
         "title": "daemon",
-        "items": [
-          {
-            "field": "pid",
-            "value": "50211"
-          },
-          {
-            "field": "status",
-            "value": "listening on 127.0.0.1:4040"
-          },
-          {
-            "field": "ipc",
-            "value": "/run/capcli/kernel.sock (JSON-Lines streaming)"
-          },
-          {
-            "field": "rpc",
-            "value": "http://127.0.0.1:4040/rpc (HTTP POST)"
-          },
-          {
-            "field": "ws",
-            "value": "ws://127.0.0.1:4040/ws/audit (live tail)"
-          },
-          {
-            "field": "tx_queue",
-            "value": "kernel.tx_queue active (fifo write serialization)"
-          },
-          {
-            "field": "policy",
-            "value": "inbound requests pass identical authorizer, AST, and budget gates"
-          },
-          {
-            "field": "audit",
-            "value": "serve.request events streaming to _audit"
-          }
-        ]
+        "fields": {
+          "pid": "50211",
+          "status": "listening on 127.0.0.1:4040",
+          "ipc": "/run/capcli/kernel.sock (JSON-Lines streaming)",
+          "rpc": "http://127.0.0.1:4040/rpc (HTTP POST)",
+          "ws": "ws://127.0.0.1:4040/ws/audit (live tail)",
+          "tx_queue": "kernel.tx_queue active (fifo write serialization)",
+          "policy": "inbound requests pass identical authorizer, AST, and budget gates",
+          "audit": "serve.request events streaming to _audit"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: true",
-            "indent": 0
-          },
-          {
-            "text": "note:           bind address locked to 127.0.0.1 per governance",
-            "indent": 0
-          }
+        "lines": [
+          "state_modified: true",
+          "note:           bind address locked to 127.0.0.1 per governance"
         ]
       }
     ]

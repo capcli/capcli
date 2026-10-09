@@ -1,78 +1,38 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.prove.success.passed",
+  "$schema": "wireframe/v2",
+  "id": "api.prove.success.passed",
   "target": "cap://stripe.refund_charge",
   "command": "capcli api prove stripe.refund_charge --env sim",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "sim",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "passed"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "verb",
-            "value": "cap://stripe.refund_charge"
-          },
-          {
-            "field": "mode",
-            "value": "sim (sandbox — apis/stripe.sim.yaml)"
-          },
-          {
-            "field": "fixture",
-            "value": "apis/stripe.mock.yaml:refund_charge"
-          },
-          {
-            "field": "params",
-            "value": "charge_id: ch_1032ZX · amount: 1500"
-          }
-        ]
+        "fields": {
+          "verb": "cap://stripe.refund_charge",
+          "mode": "sim (sandbox — apis/stripe.sim.yaml)",
+          "fixture": "apis/stripe.mock.yaml:refund_charge",
+          "params": "charge_id: ch_1032ZX · amount: 1500"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "contract_replay",
-            "value": "6/6 invariants passed"
-          },
-          {
-            "field": "success_rate",
-            "value": "1.00 (floor: 0.90)"
-          },
-          {
-            "field": "policy_denials",
-            "value": "0"
-          },
-          {
-            "field": "p50_duration",
-            "value": "118ms"
-          },
-          {
-            "field": "p95_duration",
-            "value": "240ms"
-          }
-        ]
+        "fields": {
+          "contract_replay": "6/6 invariants passed",
+          "success_rate": "1.00 (floor: 0.90)",
+          "policy_denials": "0",
+          "p50_duration": "118ms",
+          "p95_duration": "240ms"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "fields": {
+          "state_modified": "false"
+        }
       }
     ]
   }

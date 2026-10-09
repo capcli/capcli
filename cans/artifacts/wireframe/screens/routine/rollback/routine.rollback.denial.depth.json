@@ -1,81 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.rollback.denial.depth",
+  "$schema": "wireframe/v2",
+  "id": "routine.rollback.denial.depth",
   "target": "order_sync",
   "command": "capcli routine rollback order_sync 3",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.governance",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "audit_op": "op_roll_02",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.governance.rollback.depth_limit",
     "domain": "policy.governance",
-    "culprit": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5 (versioning cap on the retained history).",
-    "remedy": "roll back incrementally to a version within 5 of the pointer, or ship a new version reverting the change",
     "layer": "governance",
+    "culprit": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5 (versioning cap on the retained history).",
     "measured": "rollback depth 6 (max: 5)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
+    "remedy": "roll back incrementally to a version within 5 of the pointer, or ship a new version reverting the change",
+    "span": {
+      "source": "capcli routine rollback order_sync 3"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.governance.rollback.depth_limit",
-            "indent": 2
-          },
-          {
-            "text": "capcli routine rollback order_sync 3",
-            "indent": 8
-          },
-          {
-            "text": "^",
-            "indent": 44
-          },
-          {
-            "text": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5 (versioning cap on the retained history).",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_roll_02"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "governance"
-          },
-          {
-            "field": "measured",
-            "value": "rollback depth 6 (max: 5)"
-          },
-          {
-            "field": "version_history",
-            "value": "v1..v9 retained (cap 25 versions) in routines/ files and Git manifests"
-          },
-          {
-            "field": "remedy",
-            "value": "roll back incrementally to a version within 5 of the pointer, or ship a new version reverting the change"
-          }
-        ]
-      }
-    ]
+    "version_history": "v1..v9 retained (cap 25 versions) in routines/ files and Git manifests"
   }
 }

@@ -1,68 +1,20 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.new.refusal.name_taken",
+  "$schema": "wireframe/v2",
+  "id": "routine.new.refusal.name_taken",
   "target": "sync_orders",
   "command": "capcli routine new sync_orders",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.routine.name_taken",
     "domain": "validation",
     "culprit": "Routine name 'sync_orders' already registered; a scaffold would shadow it.",
     "remedy": "pick a different name, or edit routines/sync_orders.py directly (the routines/ filesystem is the draft SSOT)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.routine.name_taken",
-            "indent": 2
-          },
-          {
-            "field": "routine",
-            "value": "sync_orders"
-          },
-          {
-            "field": "existing",
-            "value": "routines/sync_orders.py (v3, draft, registered by agt_7f3k)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Routine name 'sync_orders' already registered; a scaffold would shadow it.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "pick a different name, or edit routines/sync_orders.py directly (the routines/ filesystem is the draft SSOT)"
-          }
-        ]
-      }
-    ]
+    "routine": "sync_orders",
+    "existing": "routines/sync_orders.py (v3, draft, registered by agt_7f3k)"
   }
 }

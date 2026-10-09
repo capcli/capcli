@@ -1,50 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.list.success.empty",
+  "$schema": "wireframe/v2",
+  "id": "bind.list.success.empty",
   "target": "bind://",
   "command": "capcli bind list",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "empty"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "bindings",
-            "value": "0 active"
-          }
+        "fields": {
+          "bindings": "0 active"
+        }
+      },
+      {
+        "lines": [
+          "No triggers bound. Schedules, hooks, and endpoints will appear here."
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "No triggers bound. Schedules, hooks, and endpoints will appear here.",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "fields": {
+          "state_modified": "false"
+        }
       }
     ]
   }

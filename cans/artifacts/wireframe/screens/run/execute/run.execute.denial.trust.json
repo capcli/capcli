@@ -1,77 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.denial.trust",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.denial.trust",
   "target": "cap://sync_inventory@3",
   "command": "capcli run cap://sync_inventory@3 -p warehouse=west --env prod -m \"nightly inventory sync\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.trust",
-    "trust": "draft",
+  "context": {
     "env": "prod",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.trust.unproven",
     "domain": "policy.trust",
+    "layer": "trust",
     "culprit": "Draft routine sync_inventory@3 invoked in prod; the production floor requires the reviewed rung.",
     "remedy": "prove in sim ('capcli routine prove sync_inventory --env sim'), then ship to reviewed",
-    "layer": "trust",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.trust.unproven",
-            "indent": 2
-          },
-          {
-            "text": "routine sync_inventory@3 holds draft trust",
-            "indent": 8
-          },
-          {
-            "field": "target env",
-            "value": "prod (floor: reviewed)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Draft routines cannot execute in production.",
-            "indent": 8
-          },
-          {
-            "text": "Prove in sim first, then ship to reviewed.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "trust"
-          },
-          {
-            "field": "remedy",
-            "value": "prove in sim ('capcli routine prove sync_inventory --env sim'), then ship to reviewed"
-          }
-        ]
-      }
+    "target env": "prod (floor: reviewed)",
+    "lines": [
+      "routine sync_inventory@3 holds draft trust",
+      "Draft routines cannot execute in production.",
+      "Prove in sim first, then ship to reviewed."
     ]
   }
 }

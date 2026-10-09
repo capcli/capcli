@@ -1,57 +1,33 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.doctor.success.clock_drift",
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.success.clock_drift",
   "target": "sys://host",
   "command": "capcli sys doctor",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 0"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "⚠  clock drift warning",
-            "value": "host delta vs NTP is 840ms (warning threshold: 500ms)"
-          },
-          {
-            "field": "causal ordering unaffected",
-            "value": "CLOCK_MONOTONIC + SQLite sequence IDs"
-          },
-          {
-            "text": "lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only",
-            "indent": 9
-          }
+        "fields": {
+          "⚠  clock drift warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
+          "causal ordering unaffected": "CLOCK_MONOTONIC + SQLite sequence IDs"
+        },
+        "lines": [
+          "lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "host",
-            "value": "ws-07 (chronyd reachable, not yet synced)"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "synchronize host system clock via 'chronyd' or 'ntpdate' when convenient; execution is not blocked"
-          }
-        ]
+        "fields": {
+          "host": "ws-07 (chronyd reachable, not yet synced)",
+          "state_modified": "false",
+          "remedy": "synchronize host system clock via 'chronyd' or 'ntpdate' when convenient; execution is not blocked"
+        }
       }
     ]
   }

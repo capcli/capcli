@@ -1,81 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "rule.apply.refusal.validation",
+  "$schema": "wireframe/v2",
+  "id": "rule.apply.refusal.validation",
   "target": "schema://orders",
   "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.gate_2_semantics",
     "domain": "validation",
     "culprit": "Indexed column 'prio' does not exist in parent table 'orders'.",
     "remedy": "fix the index target to a declared column, then re-run capcli rule validate",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.gate_2_semantics",
-            "indent": 2
-          },
-          {
-            "text": "--> schema.yaml:60:12",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "idx:",
-            "indent": 8
-          },
-          {
-            "text": "- [[prio, status]]",
-            "indent": 10
-          },
-          {
-            "text": "^^^^ index_target_missing",
-            "indent": 14
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Indexed column 'prio' does not exist in parent table 'orders'.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "fix the index target to a declared column, then re-run capcli rule validate"
-          }
-        ]
-      }
+    "lines": [
+      "--> schema.yaml:60:12",
+      "idx:",
+      "- [[prio, status]]",
+      "^^^^ index_target_missing"
     ]
   }
 }

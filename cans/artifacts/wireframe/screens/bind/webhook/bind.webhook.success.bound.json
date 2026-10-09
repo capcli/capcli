@@ -1,73 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.webhook.success.bound",
+  "$schema": "wireframe/v2",
+  "id": "bind.webhook.success.bound",
   "target": "cap://sync_orders",
   "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "bound"
-    },
-    "sections": [
+  "audit_op": "op_2b9f",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "binding_id",
-            "value": "bnd_8d3k"
-          },
-          {
-            "field": "name",
-            "value": "stripe_hook"
-          },
-          {
-            "field": "route",
-            "value": "https://ops.example.com/hook"
-          },
-          {
-            "field": "provider",
-            "value": "stripe"
-          },
-          {
-            "field": "event",
-            "value": "payment_succeeded"
-          },
-          {
-            "field": "target",
-            "value": "cap://sync_orders"
-          },
-          {
-            "field": "signing",
-            "value": "vault://stripe_webhook_secret (hmac-sha256)"
-          },
-          {
-            "field": "ingress",
-            "value": "verified (public https)"
-          }
-        ]
+        "fields": {
+          "binding_id": "bnd_8d3k",
+          "name": "stripe_hook",
+          "route": "https://ops.example.com/hook",
+          "provider": "stripe",
+          "event": "payment_succeeded",
+          "target": "cap://sync_orders",
+          "signing": "vault://stripe_webhook_secret (hmac-sha256)",
+          "ingress": "verified (public https)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_2b9f"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

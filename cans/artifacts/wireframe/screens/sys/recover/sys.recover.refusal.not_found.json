@@ -1,59 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.recover.refusal.not_found",
+  "$schema": "wireframe/v2",
+  "id": "sys.recover.refusal.not_found",
   "target": "git:1a2b3c4",
   "command": "capcli sys recover 1a2b3c4",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.recovery_point_not_found",
     "domain": "validation",
     "culprit": "commit 1a2b3c4 not found in local catalog or object store",
     "remedy": "list recovery points with 'capcli sys recover --list', then target an existing commit",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.recovery_point_not_found",
-            "indent": 0
-          },
-          {
-            "text": "commit 1a2b3c4 not found in local catalog or object store.",
-            "indent": 6
-          },
-          {
-            "field": "catalog",
-            "value": "7 recovery points indexed (newest: snap_auto_2026-10-04T0300Z)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: false",
-            "indent": 0
-          },
-          {
-            "text": "remedy:         list recovery points with 'capcli sys recover --list', then target an existing commit",
-            "indent": 0
-          }
-        ]
-      }
+    "catalog": "7 recovery points indexed (newest: snap_auto_2026-10-04T0300Z)",
+    "lines": [
+      "commit 1a2b3c4 not found in local catalog or object store.",
+      "state_modified: false",
+      "remedy:         list recovery points with 'capcli sys recover --list', then target an existing commit"
     ]
   }
 }

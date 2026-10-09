@@ -1,59 +1,19 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.notify.refusal.unknown_principal",
+  "$schema": "wireframe/v2",
+  "id": "ping.notify.refusal.unknown_principal",
   "target": "user:bob",
   "command": "capcli ping notify user:bob \"Nightly sync finished\" --channel slack --intent \"morning briefing\"",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.unknown_principal",
     "domain": "validation",
     "culprit": "Principal 'user:bob' not found in the agents registry.",
     "remedy": "register the recipient first (capcli sys agent register), or notify an existing principal such as user:alice",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.unknown_principal",
-            "indent": 2
-          },
-          {
-            "field": "principal",
-            "value": "user:bob"
-          },
-          {
-            "text": "Principal 'user:bob' not found in the agents registry.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "register the recipient first (capcli sys agent register), or notify an existing principal such as user:alice"
-          }
-        ]
-      }
-    ]
+    "principal": "user:bob"
   }
 }

@@ -1,72 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "rule.validate.success.valid",
+  "$schema": "wireframe/v2",
+  "id": "rule.validate.success.valid",
   "target": "schema://orders",
   "command": "capcli rule validate",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "valid"
-    },
-    "sections": [
+  "archetype": "tree",
+  "component": {
+    "title": "valid",
+    "root": "gates:",
+    "nodes": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "source",
-            "value": "schema.yaml v13"
-          },
-          {
-            "field": "scope",
-            "value": "4 tables · 23 columns · 8 indexes · 2 triggers"
-          }
-        ]
+        "label": "Gate 1 syntax pass (YAML parsed; shorthands expanded; roots present)",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "gates:",
-            "indent": 2
-          },
-          {
-            "text": "├── Gate 1  syntax     pass (YAML parsed; shorthands expanded; roots present)",
-            "indent": 2
-          },
-          {
-            "text": "└── Gate 2  semantics  pass (relational DAG verified: orders.customer_id -> customers.id)",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "compiled",
-            "value": "17 DDL statements (deterministic; byte-reproducible)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "label": "Gate 2 semantics pass (relational DAG verified: orders.customer_id -> customers.id)",
+        "children": []
       }
-    ]
+    ],
+    "footer": {
+      "source": "schema.yaml v13",
+      "scope": "4 tables · 23 columns · 8 indexes · 2 triggers",
+      "compiled": "17 DDL statements (deterministic; byte-reproducible)",
+      "state_modified": "false"
+    }
   }
 }

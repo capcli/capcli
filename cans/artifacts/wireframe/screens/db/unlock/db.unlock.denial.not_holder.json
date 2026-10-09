@@ -1,77 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.unlock.denial.not_holder",
+  "$schema": "wireframe/v2",
+  "id": "db.unlock.denial.not_holder",
   "target": "orders:ORD-10",
   "command": "capcli db unlock orders:ORD-10",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.claim_not_holder",
     "domain": "policy.authorizer",
+    "layer": "authorizer",
     "culprit": "Caller does not own the claim; lease held by agt_9k2w.",
     "remedy": "ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry",
-    "layer": "authorizer",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.claim_not_holder",
-            "indent": 2
-          },
-          {
-            "field": "target",
-            "value": "orders:ORD-10"
-          },
-          {
-            "field": "lease",
-            "value": "claim_c3d4 (holder: agt_9k2w)"
-          },
-          {
-            "field": "caller",
-            "value": "agt_7f3k"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Caller does not own the claim; only the holder may release a lease.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "remedy",
-            "value": "ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry"
-          }
-        ]
-      }
+    "target": "orders:ORD-10",
+    "lease": "claim_c3d4 (holder: agt_9k2w)",
+    "caller": "agt_7f3k",
+    "lines": [
+      "Caller does not own the claim; only the holder may release a lease."
     ]
   }
 }

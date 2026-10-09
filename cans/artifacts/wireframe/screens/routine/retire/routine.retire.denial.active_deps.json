@@ -1,94 +1,28 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.retire.denial.active_deps",
+  "$schema": "wireframe/v2",
+  "id": "routine.retire.denial.active_deps",
   "target": "dispatch_order",
   "command": "capcli routine retire dispatch_order --reason \"replaced by unified fulfillment path\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.governance",
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": {
+  "audit_op": "op_retire_02",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.governance.retire.deps_exist",
     "domain": "policy.governance",
-    "culprit": "routine dispatch_order@4 is imported by active routines order_sync@2 and sync_orders@1 (dependency DAG edges order_sync@2 -> cap://dispatch_order and sync_orders@1 -> cap://dispatch_order); retirement of an active dependency is blocked",
-    "remedy": "retire order_sync@2 and sync_orders@1 first, or remove the import edges from the dependents and re-prove them, then retry routine retire dispatch_order",
     "layer": "governance",
+    "culprit": "routine dispatch_order@4 is imported by active routines order_sync@2 and sync_orders@1 (dependency DAG edges order_sync@2 -> cap://dispatch_order and sync_orders@1 -> cap://dispatch_order); retirement of an active dependency is blocked",
     "measured": "2 active dependents (0 permitted for retirement)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.governance.retire.deps_exist",
-            "indent": 2
-          },
-          {
-            "field": "routine",
-            "value": "dispatch_order@4"
-          },
-          {
-            "field": "graph",
-            "value": "in-memory routine dependency DAG (petgraph)"
-          },
-          {
-            "text": "callers (dependency graph):",
-            "indent": 8
-          },
-          {
-            "text": "├── order_sync@2   imports dispatch_order (reviewed)",
-            "indent": 10
-          },
-          {
-            "text": "└── sync_orders@1  imports dispatch_order (draft)",
-            "indent": 10
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "routine dispatch_order@4 is imported by active routines order_sync@2 and sync_orders@1 (dependency DAG edges order_sync@2 -> cap://dispatch_order and sync_orders@1 -> cap://dispatch_order); retirement of an active dependency is blocked",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_retire_02"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "governance"
-          },
-          {
-            "field": "measured",
-            "value": "2 active dependents (0 permitted for retirement)"
-          },
-          {
-            "field": "remedy",
-            "value": "retire order_sync@2 and sync_orders@1 first, or remove the import edges from the dependents and re-prove them, then retry routine retire dispatch_order"
-          }
-        ]
-      }
+    "remedy": "retire order_sync@2 and sync_orders@1 first, or remove the import edges from the dependents and re-prove them, then retry routine retire dispatch_order",
+    "routine": "dispatch_order@4",
+    "graph": "in-memory routine dependency DAG (petgraph)",
+    "lines": [
+      "callers (dependency graph):",
+      "├── order_sync@2   imports dispatch_order (reviewed)",
+      "└── sync_orders@1  imports dispatch_order (draft)"
     ]
   }
 }

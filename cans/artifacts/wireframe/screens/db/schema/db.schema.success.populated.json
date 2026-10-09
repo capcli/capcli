@@ -1,131 +1,89 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.schema.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "db.schema.success.populated",
   "target": "db://orders",
   "command": "capcli db schema --table orders",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "populated"
-    },
-    "sections": [
+  "archetype": "tree",
+  "component": {
+    "title": "populated",
+    "root": "orders",
+    "nodes": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "database",
-            "value": "envs/dev/workspace.db"
-          },
-          {
-            "field": "table",
-            "value": "orders"
-          },
-          {
-            "field": "columns",
-            "value": "9"
-          },
-          {
-            "field": "indexes",
-            "value": "2"
-          },
-          {
-            "field": "checks",
-            "value": "2"
-          },
-          {
-            "field": "triggers",
-            "value": "1 (validate_total, BEFORE INSERT)"
-          }
-        ]
+        "label": "id pk",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "orders",
-            "indent": 2
-          },
-          {
-            "text": "├── id              pk",
-            "indent": 2
-          },
-          {
-            "text": "├── ref             text!",
-            "indent": 2
-          },
-          {
-            "text": "├── customer_id     int ref=customers.id",
-            "indent": 2
-          },
-          {
-            "text": "├── total_cents     int=0",
-            "indent": 2
-          },
-          {
-            "text": "├── discount_cents  int=0",
-            "indent": 2
-          },
-          {
-            "text": "├── status          text=pending",
-            "indent": 2
-          },
-          {
-            "text": "├── receipt         blob ref=storage",
-            "indent": 2
-          },
-          {
-            "text": "├── created_by      text (prov)",
-            "indent": 2
-          },
-          {
-            "text": "├── modified_by     text (prov)",
-            "indent": 2
-          },
-          {
-            "text": "├── indexes",
-            "indent": 2
-          },
-          {
-            "text": "│     ├── idx_orders_ref (ref)",
-            "indent": 2
-          },
-          {
-            "text": "│     └── idx_orders_customer_id_status (customer_id, status)",
-            "indent": 2
-          },
-          {
-            "text": "└── checks",
-            "indent": 2
-          },
-          {
-            "text": "├── discount_cents <= total_cents",
-            "indent": 8
-          },
-          {
-            "text": "└── status IN ('pending', 'processing', 'completed', 'cancelled')",
-            "indent": 8
-          }
-        ]
+        "label": "ref text!",
+        "children": []
       },
       {
-        "title": null,
-        "items": [
+        "label": "customer_id int ref=customers.id",
+        "children": []
+      },
+      {
+        "label": "total_cents int=0",
+        "children": []
+      },
+      {
+        "label": "discount_cents int=0",
+        "children": []
+      },
+      {
+        "label": "status text=pending",
+        "children": []
+      },
+      {
+        "label": "receipt blob ref=storage",
+        "children": []
+      },
+      {
+        "label": "created_by text (prov)",
+        "children": []
+      },
+      {
+        "label": "modified_by text (prov)",
+        "children": []
+      },
+      {
+        "label": "indexes",
+        "children": []
+      },
+      {
+        "label": "idx_orders_ref (ref)",
+        "children": []
+      },
+      {
+        "label": "idx_orders_customer_id_status (customer_id, status)",
+        "children": []
+      },
+      {
+        "label": "checks",
+        "children": [
           {
-            "field": "state_modified",
-            "value": "false"
+            "label": "discount_cents <= total_cents",
+            "children": []
+          },
+          {
+            "label": "status IN ('pending', 'processing', 'completed', 'cancelled')",
+            "children": []
           }
         ]
       }
-    ]
+    ],
+    "footer": {
+      "database": "envs/dev/workspace.db",
+      "table": "orders",
+      "columns": "9",
+      "indexes": "2",
+      "checks": "2",
+      "triggers": "1 (validate_total, BEFORE INSERT)",
+      "state_modified": "false"
+    }
   }
 }

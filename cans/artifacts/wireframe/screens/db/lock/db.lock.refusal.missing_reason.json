@@ -1,72 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.lock.refusal.missing_reason",
+  "$schema": "wireframe/v2",
+  "id": "db.lock.refusal.missing_reason",
   "target": "orders:ORD-10",
   "command": "capcli db lock orders:ORD-10 --ttl 300s",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "missing_param.lock.reason_required",
     "domain": "missing_param",
     "culprit": "--reason is required for locking; no causal justification supplied.",
     "remedy": "re-run with --reason \"why this lease is needed\"",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  missing_param.lock.reason_required",
-            "indent": 2
-          },
-          {
-            "field": "target",
-            "value": "orders:ORD-10"
-          },
-          {
-            "field": "ttl",
-            "value": "300s"
-          },
-          {
-            "field": "reason",
-            "value": "(absent)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "--reason is required for locking; unjustified leases are refused.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "re-run with --reason \"why this lease is needed\""
-          }
-        ]
-      }
+    "target": "orders:ORD-10",
+    "ttl": "300s",
+    "reason": "(absent)",
+    "lines": [
+      "--reason is required for locking; unjustified leases are refused."
     ]
   }
 }

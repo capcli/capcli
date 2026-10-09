@@ -1,69 +1,31 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "doc.inspect.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "doc.inspect.success.populated",
   "target": "doc://refund-policy",
   "command": "capcli doc inspect doc://refund-policy",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "pinned",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "inspect doc://refund-policy"
+  "archetype": "document",
+  "component": {
+    "header_badge": "inspect doc://refund-policy",
+    "meta": {
+      "document": "doc://refund-policy",
+      "tokens": "312 (cap: 500)",
+      "has_more": "false"
     },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "document",
-            "value": "doc://refund-policy"
-          },
-          {
-            "field": "title",
-            "value": "Refund Policy"
-          },
-          {
-            "field": "trust",
-            "value": "pinned"
-          },
-          {
-            "field": "source",
-            "value": "git:docs/policies/refund-policy.md@2f6110a"
-          },
-          {
-            "field": "sha256",
-            "value": "9c1f04ab37e6d2f5c8a01b74e93d6f2a5b8c0d17e4f92a6b3c5d8e0f1a2b4c69"
-          },
-          {
-            "field": "mtime",
-            "value": "2026-10-02T14:18:33Z"
-          },
-          {
-            "field": "nodes",
-            "value": "8"
-          },
-          {
-            "field": "sections",
-            "value": "5"
-          },
-          {
-            "field": "tokens",
-            "value": "312 (cap: 500)"
-          },
-          {
-            "field": "has_more",
-            "value": "false"
-          }
-        ]
-      }
-    ]
+    "fields": {
+      "title": "Refund Policy",
+      "trust": "pinned",
+      "source": "git:docs/policies/refund-policy.md@2f6110a",
+      "sha256": "9c1f04ab37e6d2f5c8a01b74e93d6f2a5b8c0d17e4f92a6b3c5d8e0f1a2b4c69",
+      "mtime": "2026-10-02T14:18:33Z",
+      "nodes": "8",
+      "sections": "5"
+    },
+    "body": []
   }
 }

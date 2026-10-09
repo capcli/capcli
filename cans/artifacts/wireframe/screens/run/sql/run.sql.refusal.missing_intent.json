@@ -1,72 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.refusal.missing_intent",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.refusal.missing_intent",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100\"",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "missing_param",
     "culprit": "Mutating write rejected: -m/--intent is required for writes.",
     "remedy": "restate with -m \"<why>\", e.g. -m \"batch ship processing orders\"",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  missing_param.missing_intent",
-            "indent": 2
-          },
-          {
-            "text": "UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "Mutating write rejected",
-            "value": "-m/--intent is required for writes."
-          },
-          {
-            "field": "policy.query.writes_require_intent",
-            "value": "no intent, no execution."
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "missing_param"
-          },
-          {
-            "field": "remedy",
-            "value": "restate with -m \"<why>\", e.g. -m \"batch ship processing orders\""
-          }
-        ]
-      }
+    "Mutating write rejected": "-m/--intent is required for writes.",
+    "policy.query.writes_require_intent": "no intent, no execution.",
+    "layer": "missing_param",
+    "lines": [
+      "FATAL  missing_param.missing_intent",
+      "UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100"
     ]
   }
 }

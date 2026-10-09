@@ -1,86 +1,27 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.denial.claim_held",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.denial.claim_held",
   "target": "cap://dispatch_order@4",
   "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-10 -p carrier=fedex --lock orders:ORD-10 -m \"fulfill urgent pending orders\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "db.claims",
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "db.claims.locked",
     "domain": "db.claims",
-    "culprit": "Exclusive --lock ref 'orders:ORD-10' already held by session ses_b4410 (14m 22s remaining).",
-    "remedy": "wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'",
     "layer": "claims",
+    "culprit": "Exclusive --lock ref 'orders:ORD-10' already held by session ses_b4410 (14m 22s remaining).",
     "measured": "1 active lease on orders:ORD-10 (expires in 14m 22s)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  db.claims.locked",
-            "indent": 2
-          },
-          {
-            "text": "exclusive claim 'orders:ORD-10' already held",
-            "indent": 8
-          },
-          {
-            "field": "holder",
-            "value": "ses_b4410 (nightly reorder batch)"
-          },
-          {
-            "field": "lease",
-            "value": "14m 22s remaining (ttl 30m)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Exclusive --lock refs serialize mutations per target;",
-            "indent": 8
-          },
-          {
-            "text": "concurrent dispatch refused to prevent lost updates.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "claims"
-          },
-          {
-            "field": "measured",
-            "value": "1 active lease on orders:ORD-10 (expires in 14m 22s)"
-          },
-          {
-            "field": "remedy",
-            "value": "wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'"
-          }
-        ]
-      }
+    "remedy": "wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'",
+    "holder": "ses_b4410 (nightly reorder batch)",
+    "lease": "14m 22s remaining (ttl 30m)",
+    "lines": [
+      "exclusive claim 'orders:ORD-10' already held",
+      "Exclusive --lock refs serialize mutations per target;",
+      "concurrent dispatch refused to prevent lost updates."
     ]
   }
 }

@@ -1,69 +1,23 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.notify.denial.quiet_hours",
+  "$schema": "wireframe/v2",
+  "id": "ping.notify.denial.quiet_hours",
   "target": "user:alice",
   "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.notify",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.notify.quiet_hours",
     "domain": "policy.notify",
-    "culprit": "Notifications blocked between 22:00 and 07:00.",
-    "remedy": "re-dispatch after 07:00, or use ping ask (urgent asks bypass quiet hours)",
     "layer": "notify",
+    "culprit": "Notifications blocked between 22:00 and 07:00.",
     "measured": "current time 23:12 inside quiet window (22:00-07:00)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.notify.quiet_hours",
-            "indent": 2
-          },
-          {
-            "text": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
-            "indent": 8
-          },
-          {
-            "text": "Notifications blocked between 22:00 and 07:00.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "notify"
-          },
-          {
-            "field": "measured",
-            "value": "current time 23:12 inside quiet window (22:00-07:00)"
-          },
-          {
-            "field": "remedy",
-            "value": "re-dispatch after 07:00, or use ping ask (urgent asks bypass quiet hours)"
-          }
-        ]
-      }
+    "remedy": "re-dispatch after 07:00, or use ping ask (urgent asks bypass quiet hours)",
+    "lines": [
+      "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\""
     ]
   }
 }

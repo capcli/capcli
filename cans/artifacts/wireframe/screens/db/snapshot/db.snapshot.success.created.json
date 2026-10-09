@@ -1,65 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.snapshot.success.created",
+  "$schema": "wireframe/v2",
+  "id": "db.snapshot.success.created",
   "target": "db://orders",
   "command": "capcli db snapshot -m \"pre-migration safety point\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "created"
-    },
-    "sections": [
+  "audit_op": "op_51d8",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "snapshot_id",
-            "value": "snap_onboarding_01"
-          },
-          {
-            "field": "database",
-            "value": "envs/dev/workspace.db"
-          },
-          {
-            "field": "tables",
-            "value": "6"
-          },
-          {
-            "field": "rows",
-            "value": "6"
-          },
-          {
-            "field": "ledger_hash",
-            "value": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
-          },
-          {
-            "field": "method",
-            "value": "VACUUM INTO (clean copy under traffic)"
-          }
-        ]
+        "fields": {
+          "snapshot_id": "snap_onboarding_01",
+          "database": "envs/dev/workspace.db",
+          "tables": "6",
+          "rows": "6",
+          "ledger_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
+          "method": "VACUUM INTO (clean copy under traffic)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_51d8"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

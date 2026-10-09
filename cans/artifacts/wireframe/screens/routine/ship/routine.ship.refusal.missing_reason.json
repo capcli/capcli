@@ -1,68 +1,20 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.ship.refusal.missing_reason",
+  "$schema": "wireframe/v2",
+  "id": "routine.ship.refusal.missing_reason",
   "target": "order_sync",
   "command": "capcli routine ship order_sync pinned",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "missing_param.promotion.reason_required",
     "domain": "missing_param",
     "culprit": "Elevation to pinned requires a --reason justification; threshold crossings need evidence.",
     "remedy": "re-run with --reason, e.g. capcli routine ship order_sync pinned --reason \"30d clean canary\"",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  missing_param.promotion.reason_required",
-            "indent": 2
-          },
-          {
-            "field": "command",
-            "value": "capcli routine ship order_sync pinned"
-          },
-          {
-            "field": "rung",
-            "value": "pinned"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Elevation to pinned requires a --reason justification; threshold crossings need evidence.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "re-run with --reason, e.g. capcli routine ship order_sync pinned --reason \"30d clean canary\""
-          }
-        ]
-      }
-    ]
+    "command": "capcli routine ship order_sync pinned",
+    "rung": "pinned"
   }
 }

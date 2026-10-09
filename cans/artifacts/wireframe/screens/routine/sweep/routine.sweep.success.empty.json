@@ -1,50 +1,31 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.sweep.success.empty",
-  "target": null,
+  "$schema": "wireframe/v2",
+  "id": "routine.sweep.success.empty",
   "command": "capcli routine sweep",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "empty"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "sweep",
-            "value": "duplicate routine scan (14 routines fingerprinted)"
-          }
+        "fields": {
+          "sweep": "duplicate routine scan (14 routines fingerprinted)"
+        }
+      },
+      {
+        "lines": [
+          "no duplicate routines detected"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "no duplicate routines detected",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "fields": {
+          "state_modified": "false"
+        }
       }
     ]
   }

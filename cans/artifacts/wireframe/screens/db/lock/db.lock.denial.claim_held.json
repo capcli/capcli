@@ -1,82 +1,23 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.lock.denial.claim_held",
+  "$schema": "wireframe/v2",
+  "id": "db.lock.denial.claim_held",
   "target": "orders:ORD-10",
   "command": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "db.claims",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_5c18",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "db.claims.held",
     "domain": "db.claims",
-    "culprit": "Target resource currently claimed; exclusive lease is active.",
-    "remedy": "wait for lease expiry or holder release, then retry; inspect via 'capcli inspect db://orders'",
     "layer": "claims",
-    "state_modified": false,
-    "measured": "TTL remaining 187s of 300s; holder agt_9k2w"
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  db.claims.held",
-            "indent": 2
-          },
-          {
-            "field": "target",
-            "value": "orders:ORD-10"
-          },
-          {
-            "field": "lease",
-            "value": "claim_c3d4 (holder: agt_9k2w, op_8e07)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Target resource currently claimed; exclusive lease is active.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_5c18"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "claims"
-          },
-          {
-            "field": "measured",
-            "value": "TTL remaining 187s of 300s; holder agt_9k2w"
-          },
-          {
-            "field": "remedy",
-            "value": "wait for lease expiry or holder release, then retry; inspect via 'capcli inspect db://orders'"
-          }
-        ]
-      }
-    ]
+    "culprit": "Target resource currently claimed; exclusive lease is active.",
+    "measured": "TTL remaining 187s of 300s; holder agt_9k2w",
+    "remedy": "wait for lease expiry or holder release, then retry; inspect via 'capcli inspect db://orders'",
+    "target": "orders:ORD-10",
+    "lease": "claim_c3d4 (holder: agt_9k2w, op_8e07)"
   }
 }

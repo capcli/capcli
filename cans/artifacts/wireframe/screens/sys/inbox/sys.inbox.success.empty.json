@@ -1,54 +1,33 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.inbox.success.empty",
+  "$schema": "wireframe/v2",
+  "id": "sys.inbox.success.empty",
   "target": "inbox://*",
   "command": "capcli sys inbox pop",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "popped"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "channels_scanned",
-            "value": "2 intake channels (cron, webhook)"
-          },
-          {
-            "field": "popped",
-            "value": "0 events"
-          }
+        "fields": {
+          "channels_scanned": "2 intake channels (cron, webhook)",
+          "popped": "0 events"
+        }
+      },
+      {
+        "lines": [
+          "Sensory inbox completely drained. Nothing to hand to the caller."
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "Sensory inbox completely drained. Nothing to hand to the caller.",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "note",
-            "value": "subshell exits clean; the daemon wakes bound routines on the next cron dispatch or verified webhook intake"
-          }
-        ]
+        "fields": {
+          "note": "subshell exits clean; the daemon wakes bound routines on the next cron dispatch or verified webhook intake"
+        }
       }
     ]
   }

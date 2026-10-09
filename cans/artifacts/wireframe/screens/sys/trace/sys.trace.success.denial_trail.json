@@ -1,70 +1,46 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.trace.success.denial_trail",
+  "$schema": "wireframe/v2",
+  "id": "sys.trace.success.denial_trail",
   "target": "op_9f2e",
   "command": "capcli sys audit trace op_9f2e --explain",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "plain",
-      "label": "[dev:tier_1]  Causal DAG Trace (op_9f2e)"
-    },
-    "sections": [
+  "archetype": "tree",
+  "component": {
+    "title": "Causal DAG Trace (op_9f2e)",
+    "root": "ses_a992f session.start \"fulfill urgent pending orders\"",
+    "nodes": [
       {
-        "title": null,
-        "items": [
+        "label": "op_9f2e db.execute (orders) ✗ [denied] exit 2",
+        "children": [
           {
-            "text": "ses_a992f  session.start        \"fulfill urgent pending orders\"",
-            "indent": 2
+            "label": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
+            "children": []
           },
           {
-            "text": "└── op_9f2e  db.execute (orders)       ✗ [denied]  exit 2",
-            "indent": 2
+            "label": "✗ policy.ast policy.query.update_delete.require_limit",
+            "children": [
+              {
+                "label": "effect: none (0 rows touched)",
+                "children": []
+              }
+            ]
           },
           {
-            "text": "├── UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
-            "indent": 8
-          },
-          {
-            "text": "├── ✗ policy.ast  policy.query.update_delete.require_limit",
-            "indent": 8
-          },
-          {
-            "text": "│     └── effect: none (0 rows touched)",
-            "indent": 14
-          },
-          {
-            "text": "└── remedy  add LIMIT, or target specific primary key",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "Root Intent",
-            "value": "\"fulfill urgent pending orders\""
-          },
-          {
-            "field": "Authority",
-            "value": "user:alice (via agt_7f3k)"
-          },
-          {
-            "field": "Integrity",
-            "value": "valid hash link (chain verified)"
+            "label": "remedy add LIMIT, or target specific primary key",
+            "children": []
           }
         ]
       }
-    ]
+    ],
+    "footer": {
+      "Root Intent": "\"fulfill urgent pending orders\"",
+      "Authority": "user:alice (via agt_7f3k)",
+      "Integrity": "valid hash link (chain verified)"
+    }
   }
 }

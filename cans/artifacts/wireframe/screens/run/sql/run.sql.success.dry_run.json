@@ -1,69 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.success.dry_run",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.success.dry_run",
   "target": "db://orders",
   "command": "capcli sql \"ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0\" --dry-run -m \"add priority flag for rush shipping\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "dry_run"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "plain",
-      "label": "[dev:tier_1]  dry-run  ✓"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "statement",
-            "value": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0"
-          },
-          {
-            "field": "ast_check",
-            "value": "pass"
-          },
-          {
-            "field": "authorizer",
-            "value": "pass (alter on orders allowed in dev)"
-          },
-          {
-            "field": "intent",
-            "value": "declared (\"add priority flag for rush shipping\")"
-          },
-          {
-            "field": "schema_impact",
-            "value": "+1 column (priority)"
-          },
-          {
-            "field": "estimated_rows",
-            "value": "4281"
-          },
-          {
-            "field": "blast_radius",
-            "value": "schema-only (non-destructive)"
-          }
-        ]
+        "fields": {
+          "statement": "ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0",
+          "ast_check": "pass",
+          "authorizer": "pass (alter on orders allowed in dev)",
+          "intent": "declared (\"add priority flag for rush shipping\")",
+          "schema_impact": "+1 column (priority)",
+          "estimated_rows": "4281",
+          "blast_radius": "schema-only (non-destructive)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "no execution occurred"
-          }
-        ]
+        "fields": {
+          "state_modified": "false",
+          "note": "no execution occurred"
+        }
       }
     ]
   }

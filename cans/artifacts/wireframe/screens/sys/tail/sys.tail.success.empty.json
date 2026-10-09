@@ -1,62 +1,35 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.tail.success.empty",
+  "$schema": "wireframe/v2",
+  "id": "sys.tail.success.empty",
   "target": "_audit",
   "command": "capcli sys audit tail --follow --since 1h",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "empty"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "tailing"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "mirror",
-            "value": "audit/2026-10-03.jsonl (synced, lag 0s)"
-          },
-          {
-            "field": "since",
-            "value": "1h window (from 23:04:11Z)"
-          },
-          {
-            "field": "follow",
-            "value": "live stream active — Ctrl-C to detach"
-          },
-          {
-            "field": "events",
-            "value": "0 in window"
-          }
+        "fields": {
+          "mirror": "audit/2026-10-03.jsonl (synced, lag 0s)",
+          "since": "1h window (from 23:04:11Z)",
+          "follow": "live stream active — Ctrl-C to detach",
+          "events": "0 in window"
+        }
+      },
+      {
+        "lines": [
+          "No audit events within window. Ledger quiet — last commit before window opened."
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "No audit events within window. Ledger quiet — last commit before window opened.",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "integrity",
-            "value": "hash chain valid (root sha256:7f9a1b2c...)"
-          }
-        ]
+        "fields": {
+          "integrity": "hash chain valid (root sha256:7f9a1b2c...)"
+        }
       }
     ]
   }

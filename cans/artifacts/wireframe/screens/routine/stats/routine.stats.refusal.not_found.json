@@ -1,68 +1,20 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.stats.refusal.not_found",
+  "$schema": "wireframe/v2",
+  "id": "routine.stats.refusal.not_found",
   "target": "sync_inventory",
   "command": "capcli routine stats sync_inventory",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.routine.not_found",
     "domain": "validation",
     "culprit": "Routine name 'sync_inventory' does not exist in the registry.",
     "remedy": "check the spelling, or discover candidates via capcli search 'sync' --trust draft",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  validation.routine.not_found",
-            "indent": 2
-          },
-          {
-            "field": "routine",
-            "value": "sync_inventory"
-          },
-          {
-            "field": "nearest",
-            "value": "sync_orders, dispatch_order"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Routine name 'sync_inventory' does not exist in the registry.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "check the spelling, or discover candidates via capcli search 'sync' --trust draft"
-          }
-        ]
-      }
-    ]
+    "routine": "sync_inventory",
+    "nearest": "sync_orders, dispatch_order"
   }
 }

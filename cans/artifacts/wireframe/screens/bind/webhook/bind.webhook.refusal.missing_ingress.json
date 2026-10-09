@@ -1,68 +1,20 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.webhook.refusal.missing_ingress",
+  "$schema": "wireframe/v2",
+  "id": "bind.webhook.refusal.missing_ingress",
   "target": "cap://sync_orders",
   "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders -m \"process fulfillment on stripe async payment success\"",
-  "state": {
-    "exit_code": 3,
-    "domain": "missing_param",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "missing_param.ingress_missing",
     "domain": "missing_param",
     "culprit": "External webhooks require a public --ingress URL or an active tunnel. Raw 127.0.0.1 is denied.",
     "remedy": "re-run with --ingress https://<public-host>/<path> or --tunnel",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  missing_param.ingress_missing",
-            "indent": 2
-          },
-          {
-            "field": "provider",
-            "value": "stripe (external)"
-          },
-          {
-            "field": "route",
-            "value": "none declared"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "External webhooks require a public --ingress URL or an active tunnel. Raw 127.0.0.1 is denied.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "re-run with --ingress https://<public-host>/<path> or --tunnel"
-          }
-        ]
-      }
-    ]
+    "provider": "stripe (external)",
+    "route": "none declared"
   }
 }

@@ -1,66 +1,35 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.pending.success.populated",
-  "target": null,
+  "$schema": "wireframe/v2",
+  "id": "routine.pending.success.populated",
   "command": "capcli routine pending",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "populated"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "queue",
-            "value": "promotion candidates (3)"
-          }
+        "fields": {
+          "queue": "promotion candidates (3)"
+        }
+      },
+      {
+        "lines": [
+          "order_sync@2   reviewed -> pinned  queued 2h ago    success 0.98",
+          "sync_orders@1  draft -> reviewed   queued 31m ago   success 1.00",
+          "label_print@1  draft -> reviewed   queued 5m ago    success 0.97"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "order_sync@2   reviewed -> pinned  queued 2h ago    success 0.98",
-            "indent": 2
-          },
-          {
-            "text": "sync_orders@1  draft -> reviewed   queued 31m ago   success 1.00",
-            "indent": 2
-          },
-          {
-            "text": "label_print@1  draft -> reviewed   queued 5m ago    success 0.97",
-            "indent": 2
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "sla",
-            "value": "oldest entry 2h old (promotion.sla_breached alert at 48h)"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "batch approval commits a single audit event per queue"
-          }
-        ]
+        "fields": {
+          "sla": "oldest entry 2h old (promotion.sla_breached alert at 48h)",
+          "state_modified": "false",
+          "note": "batch approval commits a single audit event per queue"
+        }
       }
     ]
   }

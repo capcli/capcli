@@ -1,61 +1,32 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.export.success.mcp",
+  "$schema": "wireframe/v2",
+  "id": "bind.export.success.mcp",
   "target": "bind://",
   "command": "capcli bind export mcp --out tools.json",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
+    "trust": "pinned",
     "data_shape": "redirected"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exported"
-    },
-    "sections": [
+  "audit_op": "op_1k6w",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "artifact",
-            "value": "tools.json"
-          },
-          {
-            "field": "format",
-            "value": "mcp tool manifest"
-          },
-          {
-            "field": "tools",
-            "value": "2 (dispatch_order@4, report_summary@3)"
-          },
-          {
-            "field": "bytes",
-            "value": "1286"
-          },
-          {
-            "field": "sha256",
-            "value": "8c3e5d7012a4b6c8"
-          }
-        ]
+        "fields": {
+          "artifact": "tools.json",
+          "format": "mcp tool manifest",
+          "tools": "2 (dispatch_order@4, report_summary@3)",
+          "bytes": "1286",
+          "sha256": "8c3e5d7012a4b6c8"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_1k6w"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

@@ -1,86 +1,26 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.prove.denial.sandbox",
+  "$schema": "wireframe/v2",
+  "id": "routine.prove.denial.sandbox",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
-  "state": {
-    "exit_code": 2,
-    "domain": "kernel.sandbox",
-    "trust": "draft",
+  "context": {
     "env": "sim",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_prove_06",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "kernel.sandbox.breach",
     "domain": "kernel.sandbox",
-    "culprit": "Jail containment boundary violated; raw network egress prohibited from guest sandboxes.",
-    "remedy": "use ctx.api.call with an activated catalog verb",
     "layer": "sandbox",
+    "culprit": "Jail containment boundary violated; raw network egress prohibited from guest sandboxes.",
     "measured": "1 containment violation (connect trapped at 0 bytes egress)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  kernel.sandbox.breach",
-            "indent": 2
-          },
-          {
-            "text": "syscall 42 (connect) trapped by seccomp-bpf",
-            "indent": 8
-          },
-          {
-            "field": "target",
-            "value": "10.0.0.5:5432"
-          },
-          {
-            "field": "caller",
-            "value": "routines/sync_orders.py:47 (raw socket in sim test pass)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Jail containment boundary violated; raw network egress prohibited from guest sandboxes.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_prove_06"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "sandbox"
-          },
-          {
-            "field": "measured",
-            "value": "1 containment violation (connect trapped at 0 bytes egress)"
-          },
-          {
-            "field": "remedy",
-            "value": "use ctx.api.call with an activated catalog verb"
-          }
-        ]
-      }
+    "remedy": "use ctx.api.call with an activated catalog verb",
+    "target": "10.0.0.5:5432",
+    "caller": "routines/sync_orders.py:47 (raw socket in sim test pass)",
+    "lines": [
+      "syscall 42 (connect) trapped by seccomp-bpf"
     ]
   }
 }

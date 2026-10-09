@@ -1,74 +1,51 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.trace.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "sys.trace.success.populated",
   "target": "op_7c4f",
   "command": "capcli sys audit trace op_7c4f --explain",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "plain",
-      "label": "[dev:tier_1]  Causal DAG Trace (op_7c4f)"
-    },
-    "sections": [
+  "archetype": "tree",
+  "component": {
+    "title": "Causal DAG Trace (op_7c4f)",
+    "root": "ses_a992f session.start \"fulfill urgent pending orders\"",
+    "nodes": [
       {
-        "title": null,
-        "items": [
+        "label": "op_9f2c routine.dispatch_order@4",
+        "children": [
           {
-            "text": "ses_a992f  session.start        \"fulfill urgent pending orders\"",
-            "indent": 2
+            "label": "op_9f2d db.query (orders) ✓ [allowed] 12ms",
+            "children": []
           },
           {
-            "text": "└── op_9f2c  routine.dispatch_order@4",
-            "indent": 2
+            "label": "op_7c4f api.call (fedex.ship) ✓ [allowed] 340ms",
+            "children": [
+              {
+                "label": "tracking 794644790133",
+                "children": []
+              }
+            ]
           },
           {
-            "text": "├── op_9f2d  db.query (orders)         ✓ [allowed]  12ms",
-            "indent": 8
-          },
-          {
-            "text": "├── op_7c4f  api.call (fedex.ship)     ✓ [allowed]  340ms",
-            "indent": 8
-          },
-          {
-            "text": "│     └── tracking  794644790133",
-            "indent": 14
-          },
-          {
-            "text": "└── op_9f2f  db.execute (orders)       ✓ [allowed]  18ms",
-            "indent": 8
-          },
-          {
-            "text": "└── status = 'shipped' (1 row)",
-            "indent": 14
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "Root Intent",
-            "value": "\"fulfill urgent pending orders\""
-          },
-          {
-            "field": "Authority",
-            "value": "user:alice (via agt_7f3k)"
-          },
-          {
-            "field": "Integrity",
-            "value": "valid hash link (chain verified)"
+            "label": "op_9f2f db.execute (orders) ✓ [allowed] 18ms",
+            "children": [
+              {
+                "label": "status = 'shipped' (1 row)",
+                "children": []
+              }
+            ]
           }
         ]
       }
-    ]
+    ],
+    "footer": {
+      "Root Intent": "\"fulfill urgent pending orders\"",
+      "Authority": "user:alice (via agt_7f3k)",
+      "Integrity": "valid hash link (chain verified)"
+    }
   }
 }

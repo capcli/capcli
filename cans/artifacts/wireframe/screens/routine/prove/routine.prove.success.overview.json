@@ -1,90 +1,43 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.prove.success.overview",
+  "$schema": "wireframe/v2",
+  "id": "routine.prove.success.overview",
   "target": "overview",
   "command": "capcli routine prove overview --env sim",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "sim",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "passed"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "routine",
-            "value": "overview@1 (routine://overview@1 draft)"
-          },
-          {
-            "field": "fingerprint",
-            "value": "sha256:c5d2e8f1... (dynamic leaf sequence from _audit mirror)"
-          },
-          {
-            "field": "manifest",
-            "value": "sha256:8a1b4e77... (declared call sequence via @routine over kernel.sock)"
-          },
-          {
-            "field": "match",
-            "value": "4 executed / 4 declared (subset; 0 undeclared leaves)"
-          }
+        "fields": {
+          "routine": "overview@1 (routine://overview@1 draft)",
+          "fingerprint": "sha256:c5d2e8f1... (dynamic leaf sequence from _audit mirror)",
+          "manifest": "sha256:8a1b4e77... (declared call sequence via @routine over kernel.sock)",
+          "match": "4 executed / 4 declared (subset; 0 undeclared leaves)"
+        }
+      },
+      {
+        "fields": {
+          "sandbox_rules": "pass (subprocess, os, raw socket trapped by jail)",
+          "param_typing": "pass (domain: string)",
+          "policy_reachability": "pass (orders read; domain KPI aggregation only)",
+          "shape_limits": "pass (44 LOC, 780 tokens, 1 param)",
+          "invariant_suite": "pass (grounding + determinism assertions)"
+        },
+        "lines": [
+          "checks:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "checks:",
-            "indent": 2
-          },
-          {
-            "field": "sandbox_rules",
-            "value": "pass (subprocess, os, raw socket trapped by jail)"
-          },
-          {
-            "field": "param_typing",
-            "value": "pass (domain: string)"
-          },
-          {
-            "field": "policy_reachability",
-            "value": "pass (orders read; domain KPI aggregation only)"
-          },
-          {
-            "field": "shape_limits",
-            "value": "pass (44 LOC, 780 tokens, 1 param)"
-          },
-          {
-            "field": "invariant_suite",
-            "value": "pass (grounding + determinism assertions)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "verification only; no sim world state committed"
-          },
-          {
-            "field": "audit",
-            "value": "op_prove_02"
-          }
-        ]
+        "fields": {
+          "state_modified": "false",
+          "note": "verification only; no sim world state committed",
+          "audit": "op_prove_02"
+        }
       }
     ]
   }

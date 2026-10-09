@@ -1,57 +1,30 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.unlock.success.released",
+  "$schema": "wireframe/v2",
+  "id": "db.unlock.success.released",
   "target": "orders:ORD-10",
   "command": "capcli db unlock orders:ORD-10",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "released"
-    },
-    "sections": [
+  "audit_op": "op_6a33",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "target",
-            "value": "orders:ORD-10"
-          },
-          {
-            "field": "lease_id",
-            "value": "claim_9d21"
-          },
-          {
-            "field": "holder",
-            "value": "agt_7f3k"
-          },
-          {
-            "field": "ttl_remaining",
-            "value": "187s (released ahead of TTL)"
-          }
-        ]
+        "fields": {
+          "target": "orders:ORD-10",
+          "lease_id": "claim_9d21",
+          "holder": "agt_7f3k",
+          "ttl_remaining": "187s (released ahead of TTL)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_6a33"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }

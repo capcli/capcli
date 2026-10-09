@@ -1,77 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.denial.ast",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.denial.ast",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.ast",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_9f2e",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.query.update_delete.require_limit",
     "domain": "policy.ast",
-    "culprit": "No LIMIT clause. Blast radius unbounded.",
-    "remedy": "add LIMIT, or target specific primary key",
     "layer": "AST",
-    "state_modified": false,
-    "measured": "matches potentially 847 rows (cap: 100)"
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.query.update_delete.require_limit",
-            "indent": 2
-          },
-          {
-            "text": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
-            "indent": 8
-          },
-          {
-            "text": "^^^^^^",
-            "indent": 67
-          },
-          {
-            "text": "No LIMIT clause. Blast radius unbounded.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_9f2e"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "AST"
-          },
-          {
-            "field": "measured",
-            "value": "matches potentially 847 rows (cap: 100)"
-          },
-          {
-            "field": "remedy",
-            "value": "add LIMIT, or target specific primary key"
-          }
-        ]
-      }
-    ]
+    "culprit": "No LIMIT clause. Blast radius unbounded.",
+    "measured": "matches potentially 847 rows (cap: 100)",
+    "remedy": "add LIMIT, or target specific primary key",
+    "span": {
+      "source": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
+      "highlight": "sing'"
+    }
   }
 }

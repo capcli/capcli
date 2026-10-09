@@ -40,10 +40,252 @@ async function loadJSON(path){
   return r.json();
 }
 
+// ─── wireframe/v2 component renderers (pure fns, no JSX) ───────
+// v2 fixtures are serialized CliEnvelope payloads plus a layout
+// archetype. Each renderer maps (context, component) to the shared
+// {header, sections} view the panel DOM consumes, computing layout
+// procedurally — caret columns, tree glyphs, divider runs — so no
+// fixture ever stores ASCII art, indents, or repeated state fields.
+// context is the envelope context {env, tier, trust} enriched by the
+// dispatcher with {id, audit_op, exit}. Exit derives from the screen
+// id's state segment (denial 2, refusal 3, crash 4, panic 5, yield 6,
+// success 0); non-zero exit implies state_modified false by law, so
+// neither is ever restated in fixture data.
+const EXIT_CODE_BY_STATE={success:0,denial:2,refusal:3,crash:4,panic:5,yield:6};
+const VERB_BY_EXIT_CODE={2:'FAIL',3:'FATAL',4:'CRASH',5:'PANIC',6:'YIELD'};
+const TREE_INDENT_STEP=6;
+const DIVIDER_LINE='─'.repeat(76);
+
+function exitCodeFromScreenId(id){
+  const segment=String(id||'').split('.')[2];
+  return Object.prototype.hasOwnProperty.call(EXIT_CODE_BY_STATE,segment)?EXIT_CODE_BY_STATE[segment]:0;
+}
+
+function fixtureExitCode(fixture){
+  if(!fixture)return 0;
+  if(fixture.$schema==='wireframe/v2')return exitCodeFromScreenId(fixture.id||fixture.screen_id);
+  return fixture.state?.exit_code??0;
+}
+
+function kvValue(v){
+  if(v===null||v===undefined)return '';
+  return typeof v==='string'?v:String(v);
+}
+
+function appendKvEntries(kv,fields){
+  if(!fields)return;
+  if(Array.isArray(fields)){
+    fields.forEach(e=>{
+      if(Array.isArray(e))kv.push({field:String(e[0]),value:kvValue(e[1])});
+      else if(e&&typeof e==='object'&&e.field!==undefined)kv.push({field:String(e.field),value:kvValue(e.value)});
+    });
+  }else if(typeof fields==='object'){
+    Object.keys(fields).forEach(k=>kv.push({field:k,value:kvValue(fields[k])}));
+  }
+}
+
+// The one span highlighter: carets are positioned from the highlight's
+// offset/length inside the source — never stored in fixture data.
+function spanCaretLine(span){
+  if(!span||typeof span!=='object')return null;
+  const source=span.source??span.text??span.code;
+  if(typeof source!=='string')return null;
+  let start=-1,length=0;
+  if(typeof span.highlight==='string'&&span.highlight.length>0){
+    start=source.indexOf(span.highlight);
+    length=span.highlight.length;
+  }else if(Number.isFinite(span.start)){
+    start=span.start;
+    length=Number.isFinite(span.length)?span.length:Math.max(1,(Number.isFinite(span.end)?span.end:span.start+1)-span.start);
+  }else if(Number.isFinite(span.column)){
+    start=span.column;
+    length=Number.isFinite(span.length)?span.length:1;
+  }
+  if(start<0)return null;
+  return ' '.repeat(start)+'^'.repeat(Math.max(1,length));
+}
+
+function renderDiagnostic(context,component){
+  const c=component||{};
+  const exit=context.exit??0;
+  const bodyItems=[];
+  if(c.rule!==null&&c.rule!==undefined&&c.rule!=='')bodyItems.push({text:`${VERB_BY_EXIT_CODE[exit]||'FAIL'}  ${c.rule}`,indent:2});
+  const span=(c.span&&typeof c.span==='object')?c.span:null;
+  const sourceText=c.source??span?.source??span?.text??span?.code??null;
+  if(typeof sourceText==='string'){
+    bodyItems.push({text:sourceText,indent:8});
+    const caret=spanCaretLine(span);
+    if(caret)bodyItems.push({text:caret,indent:8});
+    const detail=span?.detail??c.detail;
+    if(detail!==null&&detail!==undefined&&detail!=='')bodyItems.push({text:kvValue(detail),indent:8});
+  }else if(span?.detail!==null&&span?.detail!==undefined){
+    bodyItems.push({text:kvValue(span.detail),indent:8});
+  }
+  if(c.culprit!==null&&c.culprit!==undefined&&c.culprit!=='')bodyItems.push({text:kvValue(c.culprit),indent:8});
+  if(Array.isArray(c.lines))c.lines.forEach(line=>bodyItems.push({text:kvValue(line),indent:8}));
+  const kv=[];
+  if(context.audit_op!==null&&context.audit_op!==undefined)kv.push({field:'audit_op',value:kvValue(context.audit_op)});
+  kv.push({field:'state_modified',value:'false'});
+  if(c.layer!==null&&c.layer!==undefined)kv.push({field:'layer',value:kvValue(c.layer)});
+  if(c.measured!==null&&c.measured!==undefined)kv.push({field:'measured',value:kvValue(c.measured)});
+  const consumed=new Set(['rule','span','source','detail','culprit','lines','layer','measured','remedy','domain','fields','extra_fields']);
+  Object.keys(c).forEach(key=>{
+    if(consumed.has(key))return;
+    const v=c[key];
+    if(v===null||v===undefined||typeof v==='object')return;
+    kv.push({field:key,value:kvValue(v)});
+  });
+  appendKvEntries(kv,c.extra_fields);
+  appendKvEntries(kv,c.fields);
+  if(c.remedy!==null&&c.remedy!==undefined)kv.push({field:'remedy',value:kvValue(c.remedy)});
+  if(c.domain!==null&&c.domain!==undefined)kv.push({field:'domain',value:kvValue(c.domain)});
+  const sections=[];
+  if(bodyItems.length)sections.push({title:null,items:bodyItems});
+  if(kv.length)sections.push({title:null,items:kv});
+  return{header:{style:'badge',label:`exit ${exit}`},sections};
+}
+
+function renderTree(context,component){
+  const c=component||{};
+  const rawNodes=Array.isArray(c.nodes)?c.nodes:(Array.isArray(c.children)?c.children:[]);
+  const nodes=rawNodes.map(n=>typeof n==='string'?{label:n}:n);
+  let labelWidth=0;
+  const measure=n=>{
+    if(!n||typeof n!=='object')return;
+    if(n.label!==null&&n.label!==undefined)labelWidth=Math.max(labelWidth,String(n.label).length);
+    const kids=Array.isArray(n.children)?n.children:[];
+    kids.forEach(k=>measure(typeof k==='string'?{label:k}:k));
+  };
+  nodes.forEach(measure);
+  const items=[];
+  const statusMark=s=>{
+    const v=String(s).toLowerCase();
+    return(v==='denied'||v==='deny'||v==='error'||v==='failed'||v==='failure'||v==='refused')?'✗':'✓';
+  };
+  const formatNode=n=>{
+    if(typeof n==='string')return n;
+    let out='';
+    if(n.id!==null&&n.id!==undefined&&n.id!=='')out+=`${n.id}  `;
+    if(n.label!==null&&n.label!==undefined)out+=String(n.label).padEnd(labelWidth);
+    const tail=[];
+    if(n.status!==null&&n.status!==undefined)tail.push(`${n.marker??statusMark(n.status)} [${n.status}]`);
+    if(n.duration_ms!==null&&n.duration_ms!==undefined)tail.push(`${n.duration_ms}ms`);
+    else if(n.duration!==null&&n.duration!==undefined)tail.push(kvValue(n.duration));
+    if(n.exit_code!==null&&n.exit_code!==undefined)tail.push(`exit ${n.exit_code}`);
+    else if(n.exit!==null&&n.exit!==undefined)tail.push(`exit ${n.exit}`);
+    if(tail.length)out+=(n.label!==null&&n.label!==undefined?'  ':'')+tail.join('  ');
+    return out.replace(/\s+$/,'');
+  };
+  const emit=(node,depth,cells,isLast)=>{
+    items.push({text:(isLast?'└── ':'├── ')+formatNode(node),indent:2+TREE_INDENT_STEP*depth});
+    const kids=[];
+    if(node.detail!==null&&node.detail!==undefined&&node.detail!=='')kids.push({__detail:kvValue(node.detail)});
+    if(Array.isArray(node.children))node.children.forEach(k=>kids.push(typeof k==='string'?{label:k}:k));
+    // Continuation cells: ancestors at depth >= 1 contribute a cell;
+    // the top-level column is already carried by the item indent.
+    const childCells=depth===0?cells:[...cells,(isLast?'      ':'│     ')];
+    kids.forEach((kid,i)=>{
+      const last=i===kids.length-1;
+      if(kid.__detail!==null&&kid.__detail!==undefined){
+        const prefix=[...cells,(isLast?'':'│     ')].join('');
+        items.push({text:prefix+(last?'└── ':'├── ')+kid.__detail,indent:2+TREE_INDENT_STEP*(depth+1)});
+      }else{
+        emit(kid,depth+1,childCells,last);
+      }
+    });
+  };
+  if(c.root&&typeof c.root==='object'){
+    const r=c.root;
+    let head='';
+    if(r.id!==null&&r.id!==undefined&&r.id!=='')head+=`${r.id}  `;
+    const typeText=r.type??r.label;
+    if(typeText!==null&&typeText!==undefined)head+=String(typeText).padEnd(labelWidth);
+    if(r.intent!==null&&r.intent!==undefined&&r.intent!==''){
+      const intent=String(r.intent);
+      head+=(head?'  ':'')+(intent.startsWith('"')?intent:`"${intent}"`);
+    }
+    items.push({text:head.replace(/\s+$/,''),indent:2});
+  }
+  nodes.forEach((n,i)=>emit(n,0,[],i===nodes.length-1));
+  const sections=[];
+  if(items.length)sections.push({title:c.section_title??null,items});
+  const footerItems=[];
+  appendKvEntries(footerItems,c.footer);
+  if(footerItems.length)sections.push({title:null,items:footerItems});
+  const label=c.title??(context.audit_op?`Causal DAG Trace (${context.audit_op})`:'exit 0');
+  return{header:{style:'plain',label},sections};
+}
+
+function renderReceipt(context,component){
+  const c=component||{};
+  let groups=Array.isArray(c.groups)?c.groups.filter(g=>g&&typeof g==='object'):[];
+  if(!groups.length&&(c.fields||c.title))groups=[{fields:c.fields||{}}];
+  const sections=[];
+  groups.forEach((g,gi)=>{
+    const items=[];
+    if(gi>0)items.push({text:DIVIDER_LINE,indent:2});
+    appendKvEntries(items,g.fields);
+    if(Array.isArray(g.lines))g.lines.forEach(line=>items.push({text:kvValue(line),indent:2}));
+    sections.push({title:g.title??null,items});
+  });
+  if(Array.isArray(c.lines)&&c.lines.length){
+    sections.push({title:null,items:c.lines.map(line=>({text:kvValue(line),indent:2}))});
+  }
+  const label=c.header_label??c.title??`exit ${context.exit??0}`;
+  return{header:{style:'badge',label},sections};
+}
+
+function renderDocument(context,component){
+  const c=component||{};
+  const sections=[];
+  const metaItems=[];
+  appendKvEntries(metaItems,c.meta??c.fields);
+  if(metaItems.length)sections.push({title:null,items:metaItems});
+  const rawBody=Array.isArray(c.body)?c.body:(typeof c.body==='string'?[c.body]:(Array.isArray(c.lines)?c.lines:[]));
+  const bodyLines=[];
+  rawBody.forEach(entry=>String(entry).split('\n').forEach(line=>bodyLines.push(line)));
+  if(bodyLines.length){
+    // Lines consisting solely of ─ are divider runs and pass through
+    // verbatim; every other line is body text at the document indent.
+    sections.push({title:null,items:bodyLines.map(line=>({text:line,indent:2}))});
+  }
+  if(Array.isArray(c.footer_lines)&&c.footer_lines.length){
+    sections.push({title:null,items:c.footer_lines.map(line=>({text:kvValue(line),indent:2}))});
+  }
+  const label=c.header_badge??c.title??`exit ${context.exit??0}`;
+  return{header:{style:'badge',label},sections};
+}
+
+const WIREFRAME_V2_RENDERERS={diagnostic:renderDiagnostic,tree:renderTree,receipt:renderReceipt,document:renderDocument};
+
+// Normalize a wireframe/v2 fixture into the shared view shape. v1
+// fixtures pass through untouched, so the canvas stays playable at
+// every intermediate migration state.
+function normalizeV2Fixture(fixture){
+  const id=fixture.id||fixture.screen_id||'';
+  const exit=exitCodeFromScreenId(id);
+  const context={env:'dev',tier:'tier_1',trust:'draft',...(fixture.context&&typeof fixture.context==='object'?fixture.context:{}),id,audit_op:fixture.audit_op??null,exit};
+  const renderer=WIREFRAME_V2_RENDERERS[fixture.archetype];
+  const built=renderer?renderer(context,fixture.component||{}):null;
+  const header=built?.header||{style:'badge',label:`exit ${exit}`};
+  const sections=built?.sections||[];
+  const rawTrailer=fixture.trailer||fixture.next_action;
+  const trailer=(rawTrailer&&typeof rawTrailer==='object')
+    ?{prompt:rawTrailer.prompt??rawTrailer.next_prompt,reason:rawTrailer.reason,serve:rawTrailer.serve}
+    :undefined;
+  return{
+    ...fixture,
+    state:{exit_code:exit,env:context.env,tier:context.tier,trust:context.trust,state_modified:exit!==0?false:!!fixture.state_modified,domain:(fixture.component&&fixture.component.domain)||null,data_shape:null},
+    render:{header,sections},
+    trailer,
+  };
+}
+
 // ─── Screen Renderer (JSON shape → styled output) ──────────────
 function RenderScreen({fixture}){
   if(!fixture)return null;
-  const{state,render,diagnostic,trailer}=fixture;
+  const view=fixture.$schema==='wireframe/v2'?normalizeV2Fixture(fixture):fixture;
+  const{state,render,diagnostic,trailer}=view;
   const env=state?.env||'dev';
   const tier=state?.tier||'tier_1';
   const exit=state?.exit_code??0;
@@ -182,7 +424,7 @@ function TerminalPanel({screenId,visible,onClose}){
 
   if(!visible)return null;
 
-  const exit=fixture?.state?.exit_code??0;
+  const exit=fixtureExitCode(fixture);
   const exitColors={0:'text-success',2:'text-denial',3:'text-refusal',4:'text-crash',5:'text-panic',6:'text-yield'};
 
   return(
@@ -283,7 +525,7 @@ function App(){
     if(!fixtures)return null;
     const idx=new Map();
     fixtures.forEach((f,id)=>{
-      idx.set(id,[id,f.command||'',JSON.stringify(f.render||{})].join(' ').toLowerCase());
+      idx.set(id,[id,f.command||'',JSON.stringify(f.render||f.component||{})].join(' ').toLowerCase());
     });
     return idx;
   },[fixtures]);

@@ -1,103 +1,54 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.overview.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "run.overview.success.populated",
   "target": "cap://overview@1",
   "command": "capcli run overview",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "overview (487 tokens)"
-    },
-    "sections": [
+  "audit_op": "op_9f2p",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "text": "domain_kpis:",
-            "indent": 2
-          },
-          {
-            "field": "pending_orders",
-            "value": "14 (3 rush)"
-          },
-          {
-            "field": "shipped_today",
-            "value": "87"
-          },
-          {
-            "field": "low_stock_alerts",
-            "value": "2 (ethiopia_yirgacheffe, colombia_huila)"
-          },
-          {
-            "field": "inbox_backlog",
-            "value": "6 events queued"
-          }
+        "fields": {
+          "pending_orders": "14 (3 rush)",
+          "shipped_today": "87",
+          "low_stock_alerts": "2 (ethiopia_yirgacheffe, colombia_huila)",
+          "inbox_backlog": "6 events queued"
+        },
+        "lines": [
+          "domain_kpis:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "blockers:",
-            "indent": 2
-          },
-          {
-            "field": "pending_asks",
-            "value": "1 (ask_8812 awaiting user:alice)"
-          },
-          {
-            "field": "unresolved_vault",
-            "value": "1 (stripe_secret_key)"
-          },
-          {
-            "field": "active_locks",
-            "value": "1 (db://orders held by op_9f1c, ttl 4m)"
-          }
+        "fields": {
+          "pending_asks": "1 (ask_8812 awaiting user:alice)",
+          "unresolved_vault": "1 (stripe_secret_key)",
+          "active_locks": "1 (db://orders held by op_9f1c, ttl 4m)"
+        },
+        "lines": [
+          "blockers:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "budget_headroom:",
-            "indent": 2
-          },
-          {
-            "field": "session_ops",
-            "value": "488 remaining"
-          },
-          {
-            "field": "session_fuel",
-            "value": "80400 remaining"
-          },
-          {
-            "field": "threads_quota",
-            "value": "287 remaining (24h window)"
-          }
+        "fields": {
+          "session_ops": "488 remaining",
+          "session_fuel": "80400 remaining",
+          "threads_quota": "287 remaining (24h window)"
+        },
+        "lines": [
+          "budget_headroom:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "system_health",
-            "value": "nominal"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f2p"
-          }
-        ]
+        "fields": {
+          "system_health": "nominal"
+        }
       }
     ]
   }

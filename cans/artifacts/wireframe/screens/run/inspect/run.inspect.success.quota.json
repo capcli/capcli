@@ -1,116 +1,58 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.inspect.success.quota",
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.quota",
   "target": "quota://threads",
   "command": "capcli inspect quota://threads",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "quota://threads headroom"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "provider",
-            "value": "threads"
-          },
-          {
-            "field": "window",
-            "value": "24h rolling"
-          },
-          {
-            "field": "status",
-            "value": "tracked"
-          }
+        "fields": {
+          "provider": "threads",
+          "window": "24h rolling",
+          "status": "tracked"
+        }
+      },
+      {
+        "fields": {
+          "total": "50",
+          "available": "28",
+          "earmarked": "7",
+          "unreserved": "21"
+        },
+        "lines": [
+          "headroom:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "headroom:",
-            "indent": 2
-          },
-          {
-            "field": "total",
-            "value": "50"
-          },
-          {
-            "field": "available",
-            "value": "28"
-          },
-          {
-            "field": "earmarked",
-            "value": "7"
-          },
-          {
-            "field": "unreserved",
-            "value": "21"
-          }
+        "lines": [
+          "reservations:",
+          "earmark_01c3 5 tokens   ttl 3h    \"newsletter batch send\"",
+          "earmark_01d8 2 tokens   ttl 45m   \"story reply sweep\""
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "reservations:",
-            "indent": 2
-          },
-          {
-            "text": "earmark_01c3 5 tokens   ttl 3h    \"newsletter batch send\"",
-            "indent": 4
-          },
-          {
-            "text": "earmark_01d8 2 tokens   ttl 45m   \"story reply sweep\"",
-            "indent": 4
-          }
+        "fields": {
+          "burst_bucket": "10 (refill 1.0/s)",
+          "writes_per_minute": "12 of 60 remaining"
+        },
+        "lines": [
+          "rate:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "rate:",
-            "indent": 2
-          },
-          {
-            "field": "burst_bucket",
-            "value": "10 (refill 1.0/s)"
-          },
-          {
-            "field": "writes_per_minute",
-            "value": "12 of 60 remaining"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "can_invoke_now",
-            "value": "true"
-          },
-          {
-            "field": "deny_at",
-            "value": "5 tokens (pre-call deny floor)"
-          },
-          {
-            "field": "reset_at",
-            "value": "18:00:00 UTC (in 4h 12m)"
-          }
-        ]
+        "fields": {
+          "can_invoke_now": "true",
+          "deny_at": "5 tokens (pre-call deny floor)",
+          "reset_at": "18:00:00 UTC (in 4h 12m)"
+        }
       }
     ]
   }

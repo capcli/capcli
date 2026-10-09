@@ -1,69 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "db.dump.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "db.dump.success.populated",
   "target": "db://orders",
   "command": "capcli db dump",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "populated"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "database",
-            "value": "envs/dev/workspace.db"
-          },
-          {
-            "field": "format",
-            "value": "world.sql (deterministic DDL + seed)"
-          },
-          {
-            "field": "tables",
-            "value": "6"
-          },
-          {
-            "field": "views",
-            "value": "3"
-          },
-          {
-            "field": "seed_rows",
-            "value": "6"
-          },
-          {
-            "field": "bytes",
-            "value": "18432"
-          },
-          {
-            "field": "sha256",
-            "value": "sha256:1c8b0e3d5a7f294c6e0b8d2a4f6c1e3b5d7a9f0c"
-          }
-        ]
+        "fields": {
+          "database": "envs/dev/workspace.db",
+          "format": "world.sql (deterministic DDL + seed)",
+          "tables": "6",
+          "views": "3",
+          "seed_rows": "6",
+          "bytes": "18432",
+          "sha256": "sha256:1c8b0e3d5a7f294c6e0b8d2a4f6c1e3b5d7a9f0c"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "deterministic; identical world yields identical bytes"
-          }
-        ]
+        "fields": {
+          "state_modified": "false",
+          "note": "deterministic; identical world yields identical bytes"
+        }
       }
     ]
   }

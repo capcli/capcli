@@ -1,69 +1,33 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.new.success.created",
+  "$schema": "wireframe/v2",
+  "id": "routine.new.success.created",
   "target": "sync_orders",
   "command": "capcli routine new sync_orders",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "created"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "routine",
-            "value": "sync_orders"
-          },
-          {
-            "field": "file",
-            "value": "routines/sync_orders.py"
-          },
-          {
-            "field": "template",
-            "value": "tpl://routine/python_blank"
-          },
-          {
-            "field": "trust",
-            "value": "draft (unproven intake floor)"
-          },
-          {
-            "field": "version",
-            "value": "1"
-          },
-          {
-            "field": "shape",
-            "value": "38 LOC / 640 tokens / 2 params (ceilings: 150 / 2000 / 8)"
-          }
-        ]
+        "fields": {
+          "routine": "sync_orders",
+          "file": "routines/sync_orders.py",
+          "template": "tpl://routine/python_blank",
+          "trust": "draft (unproven intake floor)",
+          "version": "1",
+          "shape": "38 LOC / 640 tokens / 2 params (ceilings: 150 / 2000 / 8)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit",
-            "value": "op_new_01 (routine.draft committed with template_hash)"
-          },
-          {
-            "field": "next",
-            "value": "capcli routine prove sync_orders --env sim"
-          }
-        ]
+        "fields": {
+          "state_modified": "true",
+          "audit": "op_new_01 (routine.draft committed with template_hash)",
+          "next": "capcli routine prove sync_orders --env sim"
+        }
       }
     ]
   }

@@ -1,69 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "ping.notify.denial.delivery_failed",
+  "$schema": "wireframe/v2",
+  "id": "ping.notify.denial.delivery_failed",
   "target": "user:alice",
   "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel slack --intent \"morning briefing\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.notify",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.notify.delivery_failed",
     "domain": "policy.notify",
-    "culprit": "Channel transport failed; delivery is fail-closed (no silent drops).",
-    "remedy": "re-dispatch when the endpoint recovers or switch to a configured channel; delivery status is auditable via the notification receipt",
     "layer": "notify",
+    "culprit": "Channel transport failed; delivery is fail-closed (no silent drops).",
     "measured": "slack webhook returned HTTP 503 after 3 attempts (last attempt 4.8s)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.notify.delivery_failed",
-            "indent": 2
-          },
-          {
-            "field": "channel",
-            "value": "slack"
-          },
-          {
-            "text": "Channel transport failed; delivery is fail-closed (no silent drops).",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "notify"
-          },
-          {
-            "field": "measured",
-            "value": "slack webhook returned HTTP 503 after 3 attempts (last attempt 4.8s)"
-          },
-          {
-            "field": "remedy",
-            "value": "re-dispatch when the endpoint recovers or switch to a configured channel; delivery status is auditable via the notification receipt"
-          }
-        ]
-      }
-    ]
+    "remedy": "re-dispatch when the endpoint recovers or switch to a configured channel; delivery status is auditable via the notification receipt",
+    "channel": "slack"
   }
 }

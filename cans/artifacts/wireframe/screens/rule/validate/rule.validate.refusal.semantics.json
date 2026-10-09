@@ -1,89 +1,27 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "rule.validate.refusal.semantics",
+  "$schema": "wireframe/v2",
+  "id": "rule.validate.refusal.semantics",
   "target": "schema://orders",
   "command": "capcli rule validate",
-  "state": {
-    "exit_code": 3,
-    "domain": "compile",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "compile.gate_2_circular_ref",
     "domain": "compile",
     "culprit": "Dependency cycle detected: orders -> order_items -> orders.",
     "remedy": "break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  compile.gate_2_circular_ref",
-            "indent": 2
-          },
-          {
-            "text": "--> schema.yaml:47:41",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "orders:",
-            "indent": 8
-          },
-          {
-            "text": "columns:",
-            "indent": 10
-          },
-          {
-            "field": "first_item",
-            "value": "int ref=order_items.id"
-          },
-          {
-            "text": "^^^^^^^^^^^^^^^^^^ cyclic_edge",
-            "indent": 28
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "Dependency cycle detected",
-            "value": "orders -> order_items -> orders."
-          },
-          {
-            "text": "Topological table compile order cannot be established.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate"
-          }
-        ]
-      }
+    "first_item": "int ref=order_items.id",
+    "Dependency cycle detected": "orders -> order_items -> orders.",
+    "lines": [
+      "--> schema.yaml:47:41",
+      "orders:",
+      "columns:",
+      "^^^^^^^^^^^^^^^^^^ cyclic_edge",
+      "Topological table compile order cannot be established."
     ]
   }
 }

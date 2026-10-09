@@ -1,103 +1,51 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.ship.success.shipped",
+  "$schema": "wireframe/v2",
+  "id": "routine.ship.success.shipped",
   "target": "order_sync",
   "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "prod",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "shipped"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "routine",
-            "value": "order_sync@2"
-          },
-          {
-            "field": "rung",
-            "value": "reviewed -> pinned"
-          },
-          {
-            "field": "reason",
-            "value": "\"30d clean canary\""
-          }
+        "fields": {
+          "routine": "order_sync@2",
+          "rung": "reviewed -> pinned",
+          "reason": "\"30d clean canary\""
+        }
+      },
+      {
+        "fields": {
+          "git_status": "prod worktree clean (branch merged, commit 4c89a0b)",
+          "invariant_suite": "passed (boundary + idempotency assertions)",
+          "mutation_tests": "passed (12/12)",
+          "success_rate": "0.99 over 30d canary (floor: 0.95)",
+          "policy_denials": "0",
+          "fingerprint_drift": "0"
+        },
+        "lines": [
+          "evidence:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "evidence:",
-            "indent": 2
-          },
-          {
-            "field": "git_status",
-            "value": "prod worktree clean (branch merged, commit 4c89a0b)"
-          },
-          {
-            "field": "invariant_suite",
-            "value": "passed (boundary + idempotency assertions)"
-          },
-          {
-            "field": "mutation_tests",
-            "value": "passed (12/12)"
-          },
-          {
-            "field": "success_rate",
-            "value": "0.99 over 30d canary (floor: 0.95)"
-          },
-          {
-            "field": "policy_denials",
-            "value": "0"
-          },
-          {
-            "field": "fingerprint_drift",
-            "value": "0"
-          }
+        "fields": {
+          "may_run_unattended": "true",
+          "audit_mode": "summary"
+        },
+        "lines": [
+          "unlocked:"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "text": "unlocked:",
-            "indent": 2
-          },
-          {
-            "field": "may_run_unattended",
-            "value": "true"
-          },
-          {
-            "field": "audit_mode",
-            "value": "summary"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit",
-            "value": "op_ship_04 (routine.ship committed; promoted_through recorded)"
-          }
-        ]
+        "fields": {
+          "state_modified": "true",
+          "audit": "op_ship_04 (routine.ship committed; promoted_through recorded)"
+        }
       }
     ]
   }

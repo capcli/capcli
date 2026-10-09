@@ -1,57 +1,31 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.inspect.success.template",
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.template",
   "target": "tpl://order_sync@2",
   "command": "capcli inspect tpl://order_sync@2",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "populated"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "inspect",
-            "value": "tpl://order_sync@2"
-          },
-          {
-            "field": "kind",
-            "value": "template blueprint"
-          },
-          {
-            "field": "policy_version",
-            "value": "5"
-          },
-          {
-            "field": "leaves",
-            "value": "3 (sql, sql, ping ask)"
-          },
-          {
-            "field": "can_invoke_now",
-            "value": "false (scaffold via 'capcli routine new <name> --from tpl://order_sync@2' first)"
-          }
-        ]
+        "fields": {
+          "inspect": "tpl://order_sync@2",
+          "kind": "template blueprint",
+          "policy_version": "5",
+          "leaves": "3 (sql, sql, ping ask)",
+          "can_invoke_now": "false (scaffold via 'capcli routine new <name> --from tpl://order_sync@2' first)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          }
-        ]
+        "fields": {
+          "state_modified": "false"
+        }
       }
     ]
   }

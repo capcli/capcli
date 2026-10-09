@@ -1,99 +1,47 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "routine.stats.success.populated",
+  "$schema": "wireframe/v2",
+  "id": "routine.stats.success.populated",
   "target": "dispatch_order",
   "command": "capcli routine stats dispatch_order --deep",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "pinned",
     "data_shape": "populated"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "populated"
-    },
-    "sections": [
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "routine",
-            "value": "dispatch_order@4"
-          },
-          {
-            "field": "window",
-            "value": "214 runs (last 30d)"
-          }
+        "fields": {
+          "routine": "dispatch_order@4",
+          "window": "214 runs (last 30d)"
+        }
+      },
+      {
+        "fields": {
+          "runs": "214",
+          "success_rate": "99.1%",
+          "p50_duration": "340ms",
+          "p95_duration": "890ms",
+          "last_run_at": "2m ago (op_9b54, ses_a992f)",
+          "drift_events": "0"
+        }
+      },
+      {
+        "lines": [
+          "leaves (--deep):",
+          "db.query    orders                     p50 12ms  p95 41ms  fuel 40",
+          "api.call    logistics.shipments.create p50 340ms p95 812ms fuel 610",
+          "db.execute  orders                     p50 18ms  p95 52ms  fuel 46"
         ]
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "runs",
-            "value": "214"
-          },
-          {
-            "field": "success_rate",
-            "value": "99.1%"
-          },
-          {
-            "field": "p50_duration",
-            "value": "340ms"
-          },
-          {
-            "field": "p95_duration",
-            "value": "890ms"
-          },
-          {
-            "field": "last_run_at",
-            "value": "2m ago (op_9b54, ses_a992f)"
-          },
-          {
-            "field": "drift_events",
-            "value": "0"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "leaves (--deep):",
-            "indent": 2
-          },
-          {
-            "text": "db.query    orders                     p50 12ms  p95 41ms  fuel 40",
-            "indent": 4
-          },
-          {
-            "text": "api.call    logistics.shipments.create p50 340ms p95 812ms fuel 610",
-            "indent": 4
-          },
-          {
-            "text": "db.execute  orders                     p50 18ms  p95 52ms  fuel 46",
-            "indent": 4
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "note",
-            "value": "read-only profiling from routine_stats and the audit mirror"
-          }
-        ]
+        "fields": {
+          "state_modified": "false",
+          "note": "read-only profiling from routine_stats and the audit mirror"
+        }
       }
     ]
   }

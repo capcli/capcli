@@ -1,44 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.success.redirected",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.success.redirected",
   "target": "cap://report_orders@2",
   "command": "capcli run cap://report_orders@2 -p quarter=2026Q3 --out report.json",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "reviewed",
     "data_shape": "redirected"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "redirected"
-    },
-    "sections": [
+  "audit_op": "op_9f31a",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "payload",
-            "value": "1.2MB written to report.json"
-          },
-          {
-            "field": "sha256",
-            "value": "9f3a71c0b8e2d455"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f31a"
-          }
-        ]
+        "fields": {
+          "payload": "1.2MB written to report.json",
+          "sha256": "9f3a71c0b8e2d455",
+          "state_modified": "false"
+        }
       }
     ]
   }

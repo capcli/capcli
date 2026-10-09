@@ -1,69 +1,33 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.register.success.registered",
+  "$schema": "wireframe/v2",
+  "id": "sys.register.success.registered",
   "target": "agents",
   "command": "capcli sys agent register",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "registered"
-    },
-    "sections": [
+  "audit_op": "op_r702",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "agent_id",
-            "value": "agt_5k2p"
-          },
-          {
-            "field": "name",
-            "value": "refund-processor"
-          },
-          {
-            "field": "principal",
-            "value": "user:alice"
-          },
-          {
-            "field": "harness",
-            "value": "claude-code"
-          },
-          {
-            "field": "token",
-            "value": "kernel-minted HMAC capability token (bound to active _budget_frames)"
-          },
-          {
-            "field": "status",
-            "value": "active"
-          }
-        ]
+        "fields": {
+          "agent_id": "agt_5k2p",
+          "name": "refund-processor",
+          "principal": "user:alice",
+          "harness": "claude-code",
+          "token": "kernel-minted HMAC capability token (bound to active _budget_frames)",
+          "status": "active"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_r702"
-          },
-          {
-            "field": "note",
-            "value": "ids and tokens are kernel-issued; self-declared identities are denied"
-          }
-        ]
+        "fields": {
+          "state_modified": "true",
+          "note": "ids and tokens are kernel-issued; self-declared identities are denied"
+        }
       }
     ]
   }

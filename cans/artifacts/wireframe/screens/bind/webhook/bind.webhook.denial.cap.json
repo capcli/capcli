@@ -1,74 +1,21 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.webhook.denial.cap",
+  "$schema": "wireframe/v2",
+  "id": "bind.webhook.denial.cap",
   "target": "cap://sync_orders",
   "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.authorizer",
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.authorizer.webhook_cap_exceeded",
     "domain": "policy.authorizer",
-    "culprit": "Max 50 active hooks reached. New webhook binding refused.",
-    "remedy": "remove a dormant hook first (capcli bind list)",
     "layer": "authorizer",
+    "culprit": "Max 50 active hooks reached. New webhook binding refused.",
     "measured": "50 active hooks (cap: 50)",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.authorizer.webhook_cap_exceeded",
-            "indent": 2
-          },
-          {
-            "field": "active hooks",
-            "value": "50 of 50"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Max 50 active hooks reached. New webhook binding refused.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "authorizer"
-          },
-          {
-            "field": "measured",
-            "value": "50 active hooks (cap: 50)"
-          },
-          {
-            "field": "remedy",
-            "value": "remove a dormant hook first (capcli bind list)"
-          }
-        ]
-      }
-    ]
+    "remedy": "remove a dormant hook first (capcli bind list)",
+    "active hooks": "50 of 50"
   }
 }

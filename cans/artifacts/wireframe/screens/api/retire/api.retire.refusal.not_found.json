@@ -1,72 +1,24 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "api.retire.refusal.not_found",
+  "$schema": "wireframe/v2",
+  "id": "api.retire.refusal.not_found",
   "target": "cap://stripe.refund_charges",
   "command": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\"",
-  "state": {
-    "exit_code": 3,
-    "domain": "validation",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
     "domain": "validation",
     "culprit": "Target verb not found: 'stripe.refund_charges'.",
     "remedy": "list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 3"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FATAL  validation.not_found",
-            "indent": 2
-          },
-          {
-            "field": "command",
-            "value": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\""
-          },
-          {
-            "field": "verb",
-            "value": "cap://stripe.refund_charges"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Target verb not found.",
-            "indent": 9
-          },
-          {
-            "text": "No verb 'stripe.refund_charges' in provider catalog 'stripe' (verbs: 418).",
-            "indent": 9
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "remedy",
-            "value": "list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id"
-          }
-        ]
-      }
+    "command": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\"",
+    "verb": "cap://stripe.refund_charges",
+    "lines": [
+      "FATAL  validation.not_found",
+      "Target verb not found.",
+      "No verb 'stripe.refund_charges' in provider catalog 'stripe' (verbs: 418)."
     ]
   }
 }

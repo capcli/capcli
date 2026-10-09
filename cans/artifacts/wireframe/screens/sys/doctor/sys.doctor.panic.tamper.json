@@ -1,79 +1,29 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "sys.doctor.panic.tamper",
+  "$schema": "wireframe/v2",
+  "id": "sys.doctor.panic.tamper",
   "target": "sys://audit-chain",
   "command": "capcli sys doctor",
-  "state": {
-    "exit_code": 5,
-    "domain": "kernel.panic",
-    "trust": "reviewed",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "reviewed"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "kernel.panic.audit_chain_media_loss",
     "domain": "kernel.panic",
     "culprit": "Total media loss: audit.db ledger root unreadable AND S3 WORM checkpoint missing — both hash anchors gone, chain unverifiable end-to-end",
     "remedy": "restore from the last verified object-store checkpoint via 'capcli sys recover <snapshot-id>', or re-enter read-only with CAPCLI_RECOVERY=1",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 5"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "PANIC  kernel.panic.audit_chain_media_loss",
-            "indent": 0
-          },
-          {
-            "text": "Ledger root unreadable and S3 WORM checkpoint missing.",
-            "indent": 7
-          },
-          {
-            "field": "ledger_root",
-            "value": "envs/dev/audit.db unreadable (I/O error)"
-          },
-          {
-            "field": "worm_checkpoint",
-            "value": "s3://capcli-worm/audit/root.jsonl missing (404)"
-          },
-          {
-            "field": "chain verdict",
-            "value": "unverifiable end-to-end — no hash anchor survives"
-          },
-          {
-            "field": "kill_and_alert executed",
-            "value": "process tree terminated, supervisor alerted."
-          },
-          {
-            "field": "Boot refused",
-            "value": "no execution until a verified checkpoint is restored."
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "state_modified: false",
-            "indent": 0
-          },
-          {
-            "text": "layer:          kernel",
-            "indent": 0
-          },
-          {
-            "text": "remedy:         restore from the last verified object-store checkpoint via 'capcli sys recover <snapshot-id>', or re-enter read-only with CAPCLI_RECOVERY=1",
-            "indent": 0
-          }
-        ]
-      }
+    "ledger_root": "envs/dev/audit.db unreadable (I/O error)",
+    "worm_checkpoint": "s3://capcli-worm/audit/root.jsonl missing (404)",
+    "chain verdict": "unverifiable end-to-end — no hash anchor survives",
+    "kill_and_alert executed": "process tree terminated, supervisor alerted.",
+    "Boot refused": "no execution until a verified checkpoint is restored.",
+    "lines": [
+      "Ledger root unreadable and S3 WORM checkpoint missing.",
+      "state_modified: false",
+      "layer:          kernel",
+      "remedy:         restore from the last verified object-store checkpoint via 'capcli sys recover <snapshot-id>', or re-enter read-only with CAPCLI_RECOVERY=1"
     ]
   }
 }

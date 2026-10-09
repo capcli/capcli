@@ -1,102 +1,31 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.execute.denial.quota",
+  "$schema": "wireframe/v2",
+  "id": "run.execute.denial.quota",
   "target": "cap://announce_service_incident@1",
   "command": "capcli run cap://announce_service_incident@1 -p severity=critical -m \"post the incident notice to the status channel\"",
-  "state": {
-    "exit_code": 2,
-    "domain": "api.quota",
-    "trust": "pinned",
+  "context": {
     "env": "prod",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": {
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.api.quota_hard_denied",
     "domain": "api.quota",
-    "culprit": "Provider quota hard-exhausted: announce_service_incident@1 (Critical) drained the threads pool to 0/50 tokens in the 24h window; Critical tasks drain to 0 and are denied, never yielded.",
-    "remedy": "wait for the 24h window reset at 18:00:00 UTC and re-run, or route the notice through a provider with headroom (api catalog --state active)",
     "layer": "quota",
+    "culprit": "Provider quota hard-exhausted: announce_service_incident@1 (Critical) drained the threads pool to 0/50 tokens in the 24h window; Critical tasks drain to 0 and are denied, never yielded.",
     "measured": "threads pool 0/50 tokens (24h window); pre-call deny at deny_at_remaining",
-    "state_modified": false
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.api.quota_hard_denied",
-            "indent": 2
-          },
-          {
-            "text": "announce_service_incident@1 (frame_031) hard-denied: threads 0/50 tokens",
-            "indent": 8
-          },
-          {
-            "field": "provider",
-            "value": "threads"
-          },
-          {
-            "field": "verb",
-            "value": "threads.create_media_post"
-          },
-          {
-            "field": "priority_class",
-            "value": "Critical (drains pool to 0; no yield)"
-          },
-          {
-            "field": "attempted_call",
-            "value": "threads.create_media_post (denied before egress, not 429 after)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "blocking_level",
-            "value": "provider pool (threads 24h window)"
-          },
-          {
-            "field": "remaining",
-            "value": "0 tokens"
-          },
-          {
-            "field": "ancestors",
-            "value": "session fuel 80400 remaining (quota was the tightest constraint)"
-          },
-          {
-            "field": "reset_at",
-            "value": "18:00:00 UTC (in 4h 12m)"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "quota"
-          },
-          {
-            "field": "measured",
-            "value": "threads pool 0/50 tokens (24h window); pre-call deny at deny_at_remaining"
-          },
-          {
-            "field": "remedy",
-            "value": "wait for the 24h window reset at 18:00:00 UTC and re-run, or route the notice through a provider with headroom (api catalog --state active)"
-          }
-        ]
-      }
+    "remedy": "wait for the 24h window reset at 18:00:00 UTC and re-run, or route the notice through a provider with headroom (api catalog --state active)",
+    "provider": "threads",
+    "verb": "threads.create_media_post",
+    "priority_class": "Critical (drains pool to 0; no yield)",
+    "attempted_call": "threads.create_media_post (denied before egress, not 429 after)",
+    "blocking_level": "provider pool (threads 24h window)",
+    "remaining": "0 tokens",
+    "ancestors": "session fuel 80400 remaining (quota was the tightest constraint)",
+    "reset_at": "18:00:00 UTC (in 4h 12m)",
+    "lines": [
+      "announce_service_incident@1 (frame_031) hard-denied: threads 0/50 tokens"
     ]
   }
 }

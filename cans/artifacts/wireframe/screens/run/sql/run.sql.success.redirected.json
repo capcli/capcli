@@ -1,44 +1,25 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.sql.success.redirected",
+  "$schema": "wireframe/v2",
+  "id": "run.sql.success.redirected",
   "target": "db://orders",
   "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\" --out out/orders_export.json",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
+    "trust": "draft",
     "data_shape": "redirected"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "redirected"
-    },
-    "sections": [
+  "audit_op": "op_9f2h",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "rows",
-            "value": "14290"
-          },
-          {
-            "field": "out",
-            "value": "out/orders_export.json (412 KB)"
-          },
-          {
-            "field": "sha256",
-            "value": "9c1f77ab02d4e8f1"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_9f2h"
-          }
-        ]
+        "fields": {
+          "rows": "14290",
+          "out": "out/orders_export.json (412 KB)",
+          "sha256": "9c1f77ab02d4e8f1"
+        }
       }
     ]
   }

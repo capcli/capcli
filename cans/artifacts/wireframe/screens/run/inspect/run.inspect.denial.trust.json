@@ -1,90 +1,27 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "run.inspect.denial.trust",
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.denial.trust",
   "target": "cap://refund_and_archive@1",
   "command": "capcli inspect cap://refund_and_archive@1",
-  "state": {
-    "exit_code": 2,
-    "domain": "policy.trust",
-    "trust": "draft",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": false,
-    "data_shape": null
+    "trust": "draft"
   },
-  "diagnostic": {
+  "audit_op": "op_9f2x",
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.trust.secrets_unreadable",
     "domain": "policy.trust",
-    "culprit": "Draft routines cannot read secrets (trust.draft.can_read.secrets: false).",
-    "remedy": "promote via capcli routine ship refund_and_archive reviewed, then re-inspect",
     "layer": "trust",
-    "state_modified": false,
-    "measured": "1 envelope section masked (cost_envelope.secret_refs)"
-  },
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "exit 2"
-    },
-    "sections": [
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "FAIL  policy.trust.secrets_unreadable",
-            "indent": 2
-          },
-          {
-            "field": "target",
-            "value": "cap://refund_and_archive@1"
-          },
-          {
-            "field": "trust",
-            "value": "draft"
-          },
-          {
-            "field": "secret_ref",
-            "value": "vault://stripe_secret_key"
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "text": "Draft routines cannot read secrets (trust.draft.can_read.secrets: false).",
-            "indent": 8
-          },
-          {
-            "text": "Secret resolution withheld from the inspect envelope.",
-            "indent": 8
-          }
-        ]
-      },
-      {
-        "title": null,
-        "items": [
-          {
-            "field": "audit_op",
-            "value": "op_9f2x"
-          },
-          {
-            "field": "state_modified",
-            "value": "false"
-          },
-          {
-            "field": "layer",
-            "value": "trust"
-          },
-          {
-            "field": "measured",
-            "value": "1 envelope section masked (cost_envelope.secret_refs)"
-          },
-          {
-            "field": "remedy",
-            "value": "promote via capcli routine ship refund_and_archive reviewed, then re-inspect"
-          }
-        ]
-      }
+    "culprit": "Draft routines cannot read secrets (trust.draft.can_read.secrets: false).",
+    "measured": "1 envelope section masked (cost_envelope.secret_refs)",
+    "remedy": "promote via capcli routine ship refund_and_archive reviewed, then re-inspect",
+    "target": "cap://refund_and_archive@1",
+    "trust": "draft",
+    "secret_ref": "vault://stripe_secret_key",
+    "lines": [
+      "Secret resolution withheld from the inspect envelope."
     ]
   }
 }

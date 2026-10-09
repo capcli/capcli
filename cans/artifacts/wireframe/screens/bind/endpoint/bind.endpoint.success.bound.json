@@ -1,73 +1,34 @@
 {
-  "$schema": "wireframe/v1",
-  "screen_id": "bind.endpoint.success.bound",
+  "$schema": "wireframe/v2",
+  "id": "bind.endpoint.success.bound",
   "target": "cap://dispatch_order@4",
   "command": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
-  "state": {
-    "exit_code": 0,
-    "domain": null,
-    "trust": "pinned",
+  "context": {
     "env": "dev",
     "tier": "tier_1",
-    "state_modified": true,
-    "data_shape": null
+    "trust": "pinned"
   },
-  "diagnostic": null,
-  "render": {
-    "header": {
-      "style": "badge",
-      "label": "bound"
-    },
-    "sections": [
+  "audit_op": "op_3f7k",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
       {
-        "title": null,
-        "items": [
-          {
-            "field": "binding_id",
-            "value": "bnd_2m7p"
-          },
-          {
-            "field": "endpoint",
-            "value": "dispatch_order@4"
-          },
-          {
-            "field": "url",
-            "value": "http://127.0.0.1:4040/endpoints/dispatch_order"
-          },
-          {
-            "field": "auth",
-            "value": "api-key"
-          },
-          {
-            "field": "rate",
-            "value": "60 req/min"
-          },
-          {
-            "field": "channel",
-            "value": "all (rest + mcp)"
-          },
-          {
-            "field": "writes",
-            "value": "denied by default"
-          },
-          {
-            "field": "trust",
-            "value": "pinned (serve floor)"
-          }
-        ]
+        "fields": {
+          "binding_id": "bnd_2m7p",
+          "endpoint": "dispatch_order@4",
+          "url": "http://127.0.0.1:4040/endpoints/dispatch_order",
+          "auth": "api-key",
+          "rate": "60 req/min",
+          "channel": "all (rest + mcp)",
+          "writes": "denied by default",
+          "trust": "pinned (serve floor)"
+        }
       },
       {
-        "title": null,
-        "items": [
-          {
-            "field": "state_modified",
-            "value": "true"
-          },
-          {
-            "field": "audit_op",
-            "value": "op_3f7k"
-          }
-        ]
+        "fields": {
+          "state_modified": "true"
+        }
       }
     ]
   }
