@@ -182,10 +182,10 @@ $ capcli inspect doc://refund-policy
     4. Edge cases
 ```
 
-You don't read the whole thing. You see the outline. If you need section 3, you fetch it:
+You don't read the whole thing. You see the outline. If you need node 3, you fetch it:
 
 ```bash
-$ capcli doc read doc://refund-policy --section 3 --max-tokens 100
+$ capcli doc read doc://refund-policy#3 --max-tokens 100
 ```
 
 Progressive disclosure. You pull what you need, not the whole blob.

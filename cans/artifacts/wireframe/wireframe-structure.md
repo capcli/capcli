@@ -229,7 +229,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.new.success.created` | success | 0 | — | created | Routine scaffold committed |
 | `routine.new.success.overview` | success | 0 | — | created | Mandatory overview routine scaffolded (harness H6) |
 | `routine.new.refusal.name_taken` | refusal | 3 | validation | collision | Routine name already registered |
-| `routine.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates LOC or param limits |
+| `routine.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates param or complexity limits |
 | `routine.new.refusal.near_duplicate` | refusal | 3 | validation | near_duplicate | Similarity >= 0.85 without a justifying `--reason` |
 | `routine.new.denial.file_locked` | denial | 2 | policy.authoring | file_locked | Concurrent edit blocked by the authoring mutex |
 | `routine.prove.success.passed` | success | 0 | — | passed | Dynamic fingerprint verified |
@@ -643,7 +643,7 @@ Fixture (`wireframe/v2`):
           "workspace": "envs/prod/workspace.db",
           "ledger_root_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
           "witness_store": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)",
-          "worm_checkpoint": "pending — ledger root is local-only until the first object-store anchor; provision s3/r2, then 'capcli sys backup --push'",
+          "worm_checkpoint": "pending — ledger root is local-only until the first object-store anchor",
           "audited_events": "14290 committed to _audit",
           "policy_denials": "18 (intercepted pre-execution; state untouched)",
           "unaudited_writes": "0",
@@ -669,7 +669,7 @@ trust_receipt:
   workspace:         envs/prod/workspace.db
   ledger_root_hash:  sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c
   witness_store:     not configured — S3/R2 WORM probe unreachable (credentials absent from vault)
-  worm_checkpoint:   pending — ledger root is local-only until the first object-store anchor; provision s3/r2, then 'capcli sys backup --push'
+  worm_checkpoint:   pending — ledger root is local-only until the first object-store anchor
   audited_events:    14290 committed to _audit
   policy_denials:    18 (intercepted pre-execution; state untouched)
   unaudited_writes:  0
@@ -954,10 +954,7 @@ Fixture (`wireframe/v2`):
     "culprit": "Credential 'stripe_secret_key' not found in vault.",
     "remedy": "prompt human supervisor to inject credential via Cockpit (http://127.0.0.1:4040/vault)",
     "capability": "cap://stripe.refund_charge",
-    "secret_ref": "vault://stripe_secret_key",
-    "lines": [
-      "Direct CLI parameter injection is banned to prevent prompt leakage."
-    ]
+    "secret_ref": "vault://stripe_secret_key"
   },
   "trailer": {
     "prompt": "prompt://budget/execution_starved@1",
@@ -977,7 +974,6 @@ Rendered output:
         secret_ref: vault://stripe_secret_key
 
         Credential 'stripe_secret_key' not found in vault.
-        Direct CLI parameter injection is banned to prevent prompt leakage.
 
   state_modified: false
   layer: vault
@@ -1011,8 +1007,7 @@ Fixture (`wireframe/v2`):
     "target": "10.0.0.5:5432",
     "caller": "routines/sneaky_exfil.py",
     "lines": [
-      "syscall 42 (connect) trapped by seccomp-bpf",
-      "Raw network egress prohibited from guest sandboxes."
+      "syscall 42 (connect) trapped by seccomp-bpf"
     ]
   },
   "trailer": {
@@ -1032,8 +1027,6 @@ Rendered output:
         syscall 42 (connect) trapped by seccomp-bpf
         target: 10.0.0.5:5432
         caller: routines/sneaky_exfil.py
-
-        Raw network egress prohibited from guest sandboxes.
 
   state_modified: false
   layer: sandbox
@@ -1119,11 +1112,8 @@ Fixture (`wireframe/v2`):
       {
         "fields": {
           "⚠  clock drift warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
-          "causal ordering unaffected": "CLOCK_MONOTONIC + SQLite sequence IDs"
-        },
-        "lines": [
-          "lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only"
-        ]
+          "causal ordering unaffected": "intact"
+        }
       },
       {
         "fields": {
@@ -1142,8 +1132,7 @@ Rendered output:
 [dev:tier_1]  ✓  exit 0
 
   ⚠  clock drift warning: host delta vs NTP is 840ms (warning threshold: 500ms)
-         causal ordering unaffected: CLOCK_MONOTONIC + SQLite sequence IDs
-         lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only
+         causal ordering unaffected: intact
 
   host:            ws-07 (chronyd reachable, not yet synced)
   state_modified: false

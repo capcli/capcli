@@ -35,6 +35,7 @@
       {
         "fields": {
           "note": "verification only; no sim world state committed",
+          "overview_exists": "true",
           "audit": "op_prove_01"
         }
       }

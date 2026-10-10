@@ -18,8 +18,7 @@
     "target": "10.0.0.5:5432",
     "caller": "routines/sneaky_exfil.py",
     "lines": [
-      "syscall 42 (connect) trapped by seccomp-bpf",
-      "Raw network egress prohibited from guest sandboxes."
+      "syscall 42 (connect) trapped by seccomp-bpf"
     ]
   },
   "trailer": {

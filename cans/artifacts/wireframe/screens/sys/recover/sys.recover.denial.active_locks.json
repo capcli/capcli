@@ -24,8 +24,7 @@
       "Active claim leases prevent state reversal to commit 3f9c2ab.",
       "Restoring under live claims would orphan lease holders.",
       "layer:          claims",
-      "measured:       2 active locks (tolerated for reversal: 0)",
-      "remedy:         wait for TTL expiry or release via 'capcli db unlock', then retry 'capcli sys recover 3f9c2ab'"
+      "measured:       2 active locks (tolerated for reversal: 0)"
     ]
   }
 }

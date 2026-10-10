@@ -24,7 +24,7 @@ Your workspace lacks a situational overview routine. Autonomous agents will burn
 blindly querying tables unless grounded by a unified briefing.
 
 ## section:stage_1_scaffold
-Scaffold `routines/overview.py` aggregating core domain counts:
+Scaffold `routines/overview.py`:
 ```python
 from capcli import routine, ctx
 
@@ -40,8 +40,7 @@ def overview():
 ```
 
 ## section:stage_2_bound
-Ensure the overview output envelope stays strictly below 500 result tokens.
-Never return unbounded lists or raw JSON blobs inside overview payloads.
+Return count summaries only. No unbounded lists, no raw JSON blobs in overview payloads.
 
 ## section:stage_3_pin
 Rehearse in simulation and enqueue for reviewed trust:

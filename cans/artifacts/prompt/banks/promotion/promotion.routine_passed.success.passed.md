@@ -38,7 +38,7 @@ capcli routine stats <routine_name>
 If errors spike, the autonomous circuit breaker rolls back active pointers to the previous version.
 
 ## section:stage_3_pin
-If canary metrics meet the trust gates in cans/trust.md (success_rate >= 0.95, invariant suite passed, zero policy denials, zero fingerprint drift) across the 1-hour canary window, promote to pinned:
+On canary pass against the trust gates (`doc://automate/promotion`), promote to pinned:
 ```bash
 capcli routine ship <routine_name> pinned --reason "Canary passed: trust gates met"
 ```

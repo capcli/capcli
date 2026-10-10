@@ -21,8 +21,7 @@
     "boot_refusal": "no execution on a forged history until the chain is restored and re-anchored.",
     "lines": [
       "SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch.",
-      "layer:          kernel",
-      "remedy:         restore via 'capcli sys recover <snapshot-id>', re-anchor against the S3 WORM checkpoint, re-run 'capcli sys doctor --boot-check' (CAPCLI_RECOVERY=1 for read-only forensics)"
+      "layer:          kernel"
     ]
   }
 }

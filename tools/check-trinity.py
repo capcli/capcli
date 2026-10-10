@@ -68,19 +68,30 @@ def check_triggers_and_fixtures():
 
 def check_prompt_to_docs():
     doc_ref_pattern = re.compile(r"doc://([a-zA-Z0-9_\-\/]+)(?:#([a-zA-Z0-9_\-]+))?")
-    
+
     for prompt_file in PROMPT_DIR.glob("**/*.md"):
         content = prompt_file.read_text()
-        tokens = approx_tokens(content)
-        if tokens > 500:
-            err(f"Prompt leaf {prompt_file.relative_to(ROOT)} exceeds 500 tokens ({tokens} tokens)")
-            
+        # Token cage is per leaf (prompt-structure.md §3/§4): a leaf is one
+        # rendered section of a bank campaign, cap 500. Bank files hold many
+        # sections; prompt-structure.md is the spec, not a leaf.
+        if "banks" in prompt_file.parts:
+            sections = re.split(r"^## section:", content, flags=re.MULTILINE)
+            for section in sections[1:]:
+                tokens = approx_tokens(section)
+                if tokens > 500:
+                    name = section.split("\n", 1)[0].strip()
+                    err(f"Prompt leaf {prompt_file.relative_to(ROOT)}#section:{name} exceeds 500 tokens ({tokens} tokens)")
+
         for match in doc_ref_pattern.finditer(content):
             doc_path, anchor = match.group(1), match.group(2)
+            # doc:// resolution (index semantics): doc://x/y -> docs/x/y.md,
+            # section roots resolve to docs/x/index.md.
             target_md = DOCS_DIR / f"{doc_path}.md"
-            
             if not target_md.exists():
-                err(f"Broken doc link in {prompt_file.name}: 'doc://{doc_path}' -> {target_md.relative_to(ROOT)} not found")
+                target_md = DOCS_DIR / doc_path / "index.md"
+
+            if not target_md.exists():
+                err(f"Broken doc link in {prompt_file.name}: 'doc://{doc_path}' -> docs/{doc_path}.md not found")
                 continue
                 
             if anchor:

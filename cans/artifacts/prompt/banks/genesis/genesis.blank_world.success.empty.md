@@ -34,7 +34,7 @@ You are operating in a void. Do not write ad-hoc bash scripts.
 Execute the 5-stage Genesis protocol. Slices must be executed in order.
 
 ## section:stage_1_intent
-Establish what exists and what the mission is, from governed surfaces only:
+Establish what exists and the mission, from governed surfaces only:
 ```bash
 capcli sys doctor
 capcli db schema
@@ -46,44 +46,19 @@ No raw filesystem or foreign harness stores. Output of this stage must be an ent
 3. External Wires (e.g., Stripe, Logistics, SendGrid)
 
 ## section:stage_2_schema
-Declare the physical world in `schema.yaml` using Capcli AST shorthands. Never execute raw `CREATE TABLE`:
+Declare the physical world in `schema.yaml`. Never execute raw `CREATE TABLE`:
 ```yaml
 version: 1
 engine: sqlite
 db: workspace.db
 
 tables:
-  customers:
+  <entity>:
     prov: true
     columns:
       id: pk
-      email: text!
-      name: text
-      stripe_customer_id: text
-      billing_status: text=active
-      data: json mask=true
-
-  orders:
-    prov: true
-    imm_rows: false
-    columns:
-      id: pk
-      customer_id: int ref=customers.id
-      total_cents: int~
-      status: text=pending
-      tracking_num: text
-    chk:
-      - "status IN ('pending', 'paid', 'shipped', 'cancelled', 'refunded')"
-      - "total_cents >= 0"
-    idx:
-      - [customer_id]
-      - [status]
-
-views:
-  orders_summary:
-    exposes: [orders]
-    query: "SELECT status, count(*) as count, sum(total_cents) as volume FROM orders GROUP BY status;"
 ```
+Schema shorthand, views, and masking: `doc://understand/world`.
 
 ## section:stage_3_compile
 Validate syntax, semantics, and compile the physical DDL:
@@ -94,21 +69,11 @@ capcli apply -m "Genesis: Initialize business world schema"
 If errors occur, read the remedy diagnostic, fix `schema.yaml`, and re-run.
 
 ## section:stage_4_overview
-Author the Ground Zero primer (`routines/overview.py`).
-Situational KPIs must remain strictly under 500 result tokens:
-```python
-from capcli import routine, ctx
-
-@routine(name="overview", idempotent=True, limits={"max_ops": 5, "max_duration_seconds": 10})
-def overview():
-    kpis = ctx.db.query("SELECT * FROM orders_summary")
-    pending = ctx.db.query("SELECT count(*) as count FROM orders WHERE status = 'pending'")
-    return {
-        "status": "nominal",
-        "pending_orders": pending[0]["count"] if pending else 0,
-        "kpis": kpis
-    }
+Author the Ground Zero primer (`routines/overview.py`) with bounded KPI queries only:
+```bash
+capcli routine new overview
 ```
+Fill its return with count summaries from declared views. No raw row dumps.
 Prove it and enqueue it for reviewed trust:
 ```bash
 capcli routine prove overview --env sim

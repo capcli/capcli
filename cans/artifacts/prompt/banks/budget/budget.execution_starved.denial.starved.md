@@ -26,18 +26,17 @@ Follow this 4-stage resolution pipeline:
 
 ## section:stage_1_budget
 Resolve call-tree budget starvation:
-1. Run pre-flight inspection to locate the tightest child constraint:
+1. Locate the tightest child constraint:
    ```bash
    capcli inspect cap://<routine_name>
    ```
-2. Child routines inherit bounds via `min()`. Adjust the parent routine's `@routine` declaration:
+2. Adjust the parent routine's `@routine` declaration:
    `limits={"max_ops": parent_ops + sum(child_ops)}`
 
 ## section:stage_2_jail
-Remediate sandbox network traps (Syscall 42):
-Raw socket egress (`connect`) is blocked by seccomp-bpf.
+Remediate sandbox network traps:
 Never import `requests`, `urllib`, or raw `fetch`.
-Route traffic exclusively via imported catalog verbs:
+Route traffic via imported catalog verbs:
 ```bash
 capcli api catalog <provider>
 ```

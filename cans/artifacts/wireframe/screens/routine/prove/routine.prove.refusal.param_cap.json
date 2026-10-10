@@ -13,7 +13,7 @@
   "component": {
     "rule": "validation.routine.param_cap",
     "domain": "validation",
-    "culprit": "Signature bloat: 9 typed Param declarations vs ceiling 8 (interface bloat guard, governance.yaml#routine_shape params max 8; action.md signatures law — max 8 typed Param declarations).",
+    "culprit": "Signature bloat: 9 typed Param declarations vs ceiling 8",
     "remedy": "drop or fold the ninth parameter (order notes can ride the request payload), then re-run prove in sim",
     "span": {
       "source": "    dry_run: Param[bool]) -> dict:",
@@ -21,7 +21,6 @@
     },
     "routine": "sync_orders@1 (draft)",
     "params_declared": "9 (ceiling: 8)",
-    "law": "governance.yaml#routine_shape params max 8 — interface bloat guard; action.md signatures",
     "lines": [
       "routines/sync_orders.py:25 — signature:",
       "def dispatch(order_id: Param[str], carrier: Param[str], warehouse: Param[str],",

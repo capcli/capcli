@@ -32,7 +32,7 @@
       "source_bindings": "bind://shopify_orders, bind://shopify_refunds (HMAC-verified intake)",
       "popped": "3 events",
       "remaining": "0 awaiting pickup on channel",
-      "note": "events delivered to caller exactly once; durable queue backing TBD — the intake queue is not among the 13 kernel-managed tables (world.md#managed-surfaces)"
+      "note": "events delivered to caller exactly once"
     }
   }
 }

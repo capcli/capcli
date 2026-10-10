@@ -13,10 +13,9 @@
   "component": {
     "rule": "validation.routine.missing_docstring",
     "domain": "validation",
-    "culprit": "Description required: routines/sync_orders.py declares no module docstring and the @routine wrapper carries description=\"\" — unsearchable code does not ship (action.md decorator fields: description required; governance.yaml#routine_shape description min_words 5).",
+    "culprit": "Description required: routines/sync_orders.py declares no module docstring and the @routine wrapper carries description=\"\"",
     "remedy": "write a summary description of at least 5 words into the @routine decorator plus a module docstring, then re-run prove in sim",
     "module_docstring": "absent",
-    "law": "action.md decorator fields — description required; governance.yaml#routine_shape description min_words 5 (searchable or it doesn't ship)",
     "lines": [
       "routines/sync_orders.py:19 — decorator wrapper:",
       "@routine(name=\"sync_orders\", trust=\"draft\", description=\"\")",

@@ -20,7 +20,7 @@ curl -fsSL https://capcli.dev/install.sh | bash
 | **Handle incoming webhooks, crons, or export an MCP server.** | [Inbox & Triggers →](use/inbox-and-triggers.md) |
 | **Pause execution and ask a human a structured question.** | [Ask Human →](use/ask-human.md) |
 | **Understand the token-bucket floors & multi-day limits.** | [Budgets & Priority Floors →](understand/budgets.md) |
-| **Open the local web cockpit.** | [Administrative Cockpit →](concepts/cockpit.md) |
+| **Open the local web cockpit.** | [Administrative Cockpit →](http://127.0.0.1:4040) |
 | **Hit an exit code or denial? Check the ceilings.** | [Hard Limits & Ceilings →](reference/limits.md) |
 | **Look up exact CLI command contracts (11 surface nouns).** | [Command Reference →](reference/index.md) |
 
@@ -93,7 +93,7 @@ Machines communicate via exit codes, not conversational apologies:
 
 * **`exit 0`** $\rightarrow$ **Success.** Committed to relational state, hashed into the causal ledger.
 * **`exit 2`** $\rightarrow$ **Policy Denial.** Blocked by C authorizer, AST, trust rung, or budget. **State untouched.**
-* **`exit 3`** $\rightarrow$ **Refusal / Drift.** Missing intent (`-m`), lockfile mismatch, or NTP clock drift >500ms. **State untouched.**
+* **`exit 3`** $\rightarrow$ **Refusal / Drift.** Missing intent (`-m`) or lockfile mismatch. **State untouched.** NTP clock drift >500ms emits a diagnostic warning; causal ordering binds to `CLOCK_MONOTONIC` and SQLite sequence IDs.
 * **`exit 4`** $\rightarrow$ **Crash.** Sandbox runtime exception. Transaction cleanly rolled back.
 * **`exit 5`** $\rightarrow$ **Kernel Panic.** Audit sink unreachable. Hard halt. Kernel refuses to run unaudited.
 * **`exit 6`** $\rightarrow$ **Yield.** Provider quota dry. Task safely parked in `_suspended_tasks` until token refill epoch.

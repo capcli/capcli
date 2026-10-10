@@ -20,6 +20,6 @@
       "source": "capcli api sync stripe https://api.stripe.com/openapi.json",
       "highlight": "stripe"
     },
-    "min_interval_hours": "24 (governance.yaml api.sync)"
+    "min_interval_hours": "24"
   }
 }

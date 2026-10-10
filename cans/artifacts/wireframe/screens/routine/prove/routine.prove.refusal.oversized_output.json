@@ -13,15 +13,12 @@
   "component": {
     "rule": "validation.routine.oversized_output",
     "domain": "validation",
-    "culprit": "Output envelope violation: the sim test pass returned an unpaginated dump of 612 result tokens (cap: 500); outputs exceeding 500 tokens must return a valid keyset pagination schema, and raw string slicing is banned.",
+    "culprit": "Output envelope violation: the sim test pass returned an unpaginated dump of 612 result tokens (cap: 500)",
     "remedy": "return {items, pagination: {has_more, next_cursor}} from a new version — encapsulate the iteration internally — or condense the summary under 500 tokens",
     "routine": "sync_orders@1 (draft)",
     "emitted": "raw dump of 847 order rows (unpaginated)",
     "keyset_pagination": "absent (no {items, next_cursor, has_more} envelope)",
-    "raw_string_slicing": "banned (action.md output envelope law)",
-    "measured": "612 result tokens vs 500 cap (governance.yaml#execution max_result_tokens)",
-    "lines": [
-      "result gate: sim test pass measured at 612 tokens (cap: 500)"
-    ]
+    "raw_string_slicing": "detected",
+    "measured": "612 result tokens vs 500 cap"
   }
 }

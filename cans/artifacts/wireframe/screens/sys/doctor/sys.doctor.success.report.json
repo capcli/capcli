@@ -20,7 +20,7 @@
           "workspace": "envs/prod/workspace.db",
           "ledger_root_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
           "witness_store": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)",
-          "worm_checkpoint": "pending — ledger root is local-only until the first object-store anchor; provision s3/r2, then 'capcli sys backup --push'",
+          "worm_checkpoint": "pending — ledger root is local-only until the first object-store anchor",
           "audited_events": "14290 committed to _audit",
           "policy_denials": "18 (intercepted pre-execution; state untouched)",
           "unaudited_writes": "0",

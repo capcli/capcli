@@ -12,8 +12,9 @@ Your code must fit these exact dimensions before the kernel writes or runs it:
 
 | Dimension | Hard Limit | Breach Result |
 |---|---|---|
-| **Lines of Code (LOC)** | Max 150 lines | `exit 2` at intake / prove |
-| **Token Size** | Max 2,000 tokens | `exit 2` at intake / prove |
+| **Lines of Code (LOC)** | Unrestricted (whitespace, comments, docstrings unpenalized) | No breach state |
+| **Token Size** | Max 2,000 tokens | `exit 3` at intake / prove |
+| **Cyclomatic Complexity** | Max 10 branch paths | `exit 3` at intake / prove |
 | **Parameters** | Max 8 typed `Param`s | `exit 3` on register |
 | **Module Imports** | Max 3 internal routine imports | `exit 2` (composition hygiene) |
 | **Description** | Min 5 words, max 60 tokens | `exit 3` (unsearchable = refused) |
@@ -51,7 +52,7 @@ Enforced by AST parsing and native SQLite `sqlite3_set_authorizer`:
 | **Reviewed Rows Affected** | 100 max | 100 max | 100 max | `exit 2` |
 | **Pinned Rows Affected** | 500 max | 500 max | 500 max | `exit 2` |
 | **SELECT LIMIT Ceiling** | 10,000 rows | 10,000 rows | 10,000 rows | Capped by authorizer |
-| **INSERT Statement Cap** | 200 rows | 500 rows | 500 rows | `exit 2` (must chunk) |
+| **INSERT Statement Cap** | 500 rows | 500 rows | 500 rows | `exit 2` (must chunk) |
 | **UPDATE / DELETE LIMIT** | Max 1,000 | Max 1,000 | Max 1,000 | `exit 2` without LIMIT |
 | **Bulk Confirm Gate** | > 50,000 rows | > 50,000 rows | > 10 rows | Demands confirmation |
 | **Writes per Minute** | 1,000 | 1,000 | 60 | `exit 2` (rate throttle) |
@@ -153,7 +154,7 @@ To stop runaway agent loops from burning resources:
 
 | Rule | Parameter | What happens on breach |
 |---|---|---|
-| **NTP Clock Drift** | Delta > 500ms vs NTP | Kernel refuses to boot (`exit 3`) |
+| **NTP Clock Drift** | Delta > 500ms vs NTP | Diagnostic warning emitted; causal DAG and lease claims bind to `CLOCK_MONOTONIC` and SQLite sequence IDs, execution continues |
 | **Audit Mirror Lag** | JSONL lag > 5 minutes | `sys doctor` alerts SLA breach |
 | **Universal CLI Flags** | Exactly 12 flags | No custom per-noun flag bloat |
 | **Headless Prompts** | Unattended confirm gate | Fails closed instantly (`exit 2`) |

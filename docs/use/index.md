@@ -25,8 +25,8 @@ That's it. That's the whole working rhythm. Everything else is depth on one of t
 | Actually do the thing | [run.md](run.md) |
 | Work with your real data | [work-with-your-data.md](work-with-your-data.md) |
 | Hit a wall and understand why | [boundaries.md](boundaries.md) |
-| Figure out what actually happened | [audit.md](audit.md) |
-| Undo something or recover | [recover.md](recover.md) |
+| Figure out what actually happened | [audit.md](../understand/audit.md) |
+| Undo something or recover | [recovery.md](../understand/recovery.md) |
 
 ---
 

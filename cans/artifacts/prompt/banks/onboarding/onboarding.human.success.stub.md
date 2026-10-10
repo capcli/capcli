@@ -59,7 +59,7 @@ Remediate the write using explicit WHERE bounds, LIMIT, and causal intent:
 ```bash
 capcli sql "UPDATE orders SET status = 'shipped' WHERE id = 1 LIMIT 1" -m "Manual order dispatch"
 ```
-The mutation commits and appends an immutable record to `_audit`.
+Verify the commit in `_audit`.
 
 ## section:stage_5_recovery
 Practice snapshot reversal and verify integrity:

@@ -19,8 +19,7 @@
     "lines": [
       "FATAL  kernel.boot.lockfile_mismatch",
       "Compiled capcli.lock root hash does not match the locked declarations.",
-      "layer:          boot",
-      "remedy:         recompile declarations via 'capcli rule validate' and re-lock; hand-editing capcli.lock is prohibited"
+      "layer:          boot"
     ]
   }
 }

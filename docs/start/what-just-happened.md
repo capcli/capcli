@@ -14,7 +14,7 @@ But five distinct pieces of machinery fired under the hood. You don't need to ma
 | `capcli sql "SELECT …"` | **Gated read** — AST + authorizer said "fine, go ahead" | [use/run.md](../use/run.md) |
 | `exit 2` on sloppy UPDATE | **A denial** — physics said "absolutely not" | [use/boundaries.md](../use/boundaries.md) |
 | `capcli sql "UPDATE … WHERE id=…"` | **Bounded write** — intent declared, limits respected | [use/run.md](../use/run.md) |
-| `capcli sys audit tail` | **The memory spine** — append-only hash-chained log | [use/audit.md](../use/audit.md) |
+| `capcli sys audit tail` | **The memory spine** — append-only hash-chained log | [understand/audit.md](../understand/audit.md) |
 
 That's the whole mental model. Five pieces. Everything else is depth on one of these five.
 
@@ -116,7 +116,7 @@ Each row is **hash-chained**. Row N contains the SHA-256 of row N-1. Tamper with
 
 You didn't configure logging. You didn't write middleware. You didn't remember to audit. The spine is *structural*. Unaudited writes are physically impossible (`exit 5`).
 
-→ Deeper: [use/audit.md](../use/audit.md)
+→ Deeper: [understand/audit.md](../understand/audit.md)
 
 ---
 

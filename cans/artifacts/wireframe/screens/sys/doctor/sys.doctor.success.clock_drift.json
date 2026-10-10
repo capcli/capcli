@@ -16,11 +16,8 @@
       {
         "fields": {
           "⚠  clock drift warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
-          "causal ordering unaffected": "CLOCK_MONOTONIC + SQLite sequence IDs"
-        },
-        "lines": [
-          "lease claims and causal DAG bind to monotonic time; wall-clock drift degrades audit timestamps only"
-        ]
+          "causal ordering unaffected": "intact"
+        }
       },
       {
         "fields": {

@@ -16,8 +16,7 @@
     "remedy": "list recovery points with 'capcli sys recover --list', then target an existing commit",
     "catalog": "7 recovery points indexed (newest: snap_auto_2026-10-04T0300Z)",
     "lines": [
-      "commit 1a2b3c4 not found in local catalog or object store.",
-      "remedy:         list recovery points with 'capcli sys recover --list', then target an existing commit"
+      "commit 1a2b3c4 not found in local catalog or object store."
     ]
   }
 }

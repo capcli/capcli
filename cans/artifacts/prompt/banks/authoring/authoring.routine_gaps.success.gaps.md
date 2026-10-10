@@ -35,10 +35,7 @@ Scaffold a typed routine wrapping the operational sequence:
 ```bash
 capcli routine new <routine_name>
 ```
-Enforce strict boundaries:
-- Maximum 2,000-token envelope (LOC unrestricted)
-- Maximum 8 typed `Param` variables
-- Explicit `limits={"max_ops": N, "max_duration_seconds": S}`
+Declare typed `Param` inputs and explicit `limits={"max_ops": N, "max_duration_seconds": S}` on the scaffold.
 
 ## section:stage_3_prove
 Rehearse the scaffolded routine against masked simulation data:

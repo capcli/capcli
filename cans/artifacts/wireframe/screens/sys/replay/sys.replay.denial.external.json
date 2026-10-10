@@ -13,12 +13,9 @@
     "rule": "policy.api.replay",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "window contains external api.call effect: op_2c8d (fedex.ship) is flagged replay: manual in _audit; auto-replay of external calls is strictly forbidden (policy.yaml api.replay: manual)",
+    "culprit": "window contains external api.call effect: op_2c8d (fedex.ship) is flagged replay: manual in _audit",
     "measured": "1 external op in window (17 ops total: 16 local, 1 external)",
-    "remedy": "narrow --from to a local-only window (external ops are excluded from replay), or re-dispatch the external verb as a fresh governed call via 'capcli run' under current policy — the twelve universal flags include no egress override",
-    "external_api_effect": "op_2c8d (fedex.ship) at 23:41:08Z — flagged replay: manual",
-    "lines": [
-      "auto-replay of external calls is strictly forbidden; side-effects are not idempotent — no CLI flag authorizes replayed egress (flag ceiling: 12 universal flags)"
-    ]
+    "remedy": "narrow --from to a local-only window (external ops are excluded from replay), or re-dispatch the external verb as a fresh governed call via 'capcli run' under current policy",
+    "external_api_effect": "op_2c8d (fedex.ship) at 23:41:08Z — flagged replay: manual"
   }
 }

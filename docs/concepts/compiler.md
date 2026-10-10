@@ -151,34 +151,20 @@ When compiled, this generates deterministic, byte-reproducible SQL DDL, mounts a
 
 ---
 
-## 4. The 500ms NTP Clock Drift Law
+## 4. The 500ms NTP Clock Drift Warning
 
-In distributed systems and autonomous agent loops, time is not an aesthetic preference. 
+In distributed systems and autonomous agent loops, time is not an aesthetic preference.
 
 Time is an enforcement mechanism:
 * Distributed locks in `claims` rely on TTL epochs.
 * Quota windows in `_api_quota` rely on reset timestamps.
 * Human inquiry expirations in `_pending_asks` rely on wall-clock deadlines.
 
-If a developer runs Capcli inside a virtual machine with a frozen clock, or an attacker manipulates the local system time backwards by 4 hours to bypass an API rate-limit window:
+Wall-clock drift degrades none of these mechanisms. The internal causal DAG and lease claims bind to `CLOCK_MONOTONIC` and SQLite sequence IDs, so causal ordering survives a skewed host clock.
 
-**The kernel refuses to boot (`exit 3`).**
+When the host clock delta against NTP exceeds **500 milliseconds**, `sys doctor` emits a diagnostic warning and execution continues. The drift degrades audit wall-clock timestamps only; the recorded remedy is clock synchronization via `chronyd` or `ntpdate` at the operator's convenience.
 
-At startup, `capcli-core` probes the host clock against an authoritative NTP delta. If the clock skew exceeds **500 milliseconds**:
-
-```text
-[dev:tier_1]  ✗  exit 3
-
-  FATAL  kernel.boot.clock_drift_exceeded
-         Host clock delta vs NTP is 840ms (maximum allowable: 500ms).
-         Execution refused to prevent lease corruption and quota bypass.
-
-  state_modified: false
-  layer: boot
-  remedy: synchronize host system clock via 'chronyd' or 'ntpdate'
-```
-
-No corrupted distributed locks. No manipulated token windows. Physics requires monotonic time.
+Physics requires monotonic time — and monotonic time is exactly what the kernel binds to.
 
 ---
 
@@ -186,7 +172,7 @@ No corrupted distributed locks. No manipulated token windows. Physics requires m
 
 **Configuration is code. Blueprints are compiled, not interpreted.**
 
-You cannot hack your own leash with a shell script. If the YAML syntax is ambiguous, the graph is circular, or the clock is drifting, Capcli fails closed before a single process can spawn.
+You cannot hack your own leash with a shell script. If the YAML syntax is ambiguous or the graph is circular, Capcli fails closed before a single process can spawn. A drifting clock earns a warning and a remedy, never a boot refusal.
 
 ---
 

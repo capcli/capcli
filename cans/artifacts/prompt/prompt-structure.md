@@ -12,7 +12,7 @@ It is not a spec of capcli, and it is not user documentation.
 
 | Layer | Home | Audience | Job | Never does |
 |---|---|---|---|---|
-| Truth (SSOT) | `cans/*.md` (13 canonical files, `cans/AGENTS.md`) | kernel / spec builders | legality: nouns, verbs, flags, exits, gates, thresholds | get injected wholesale into an agent context |
+| Truth (SSOT) | `cans/*.md` (14 canonical files, `cans/AGENTS.md`) | kernel / spec builders | legality: nouns, verbs, flags, exits, gates, thresholds | get injected wholesale into an agent context |
 | Completeness | `docs/` | humans | explain everything, end to end, in reading order | redefine a command, state, or threshold |
 | Action | `cans/artifacts/prompt/banks/` | agents, mid-task | one triggered slice: state → next action → bound → exit condition | restate the spec, teach the whole system, duplicate reference tables |
 

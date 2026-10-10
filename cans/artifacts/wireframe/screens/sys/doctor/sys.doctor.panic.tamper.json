@@ -21,8 +21,7 @@
     "boot_refusal": "no execution until a verified checkpoint is restored.",
     "lines": [
       "Ledger root unreadable and S3 WORM checkpoint missing.",
-      "layer:          kernel",
-      "remedy:         restore from the last verified object-store checkpoint via 'capcli sys recover <snapshot-id>', or re-enter read-only with CAPCLI_RECOVERY=1"
+      "layer:          kernel"
     ]
   }
 }

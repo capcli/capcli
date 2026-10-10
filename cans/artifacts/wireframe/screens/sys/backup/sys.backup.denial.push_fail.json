@@ -22,8 +22,7 @@
     "lines": [
       "Dual-storage push rejected; snapshot remains local and unbacked.",
       "layer:          authorizer",
-      "measured:       0 of 2 remotes accepted (git: non-fast-forward, s3: HTTP 403)",
-      "remedy:         refresh vault credentials and reconcile remotes, then retry 'capcli sys backup --push'"
+      "measured:       0 of 2 remotes accepted (git: non-fast-forward, s3: HTTP 403)"
     ]
   }
 }

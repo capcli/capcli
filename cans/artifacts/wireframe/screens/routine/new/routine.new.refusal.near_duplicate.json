@@ -12,7 +12,7 @@
   "component": {
     "rule": "validation.routine.near_duplicate",
     "domain": "validation",
-    "culprit": "Near-duplicate scaffold: normalized similarity 0.87 vs routines/sync_orders.py (v3, draft) crosses the 0.85 threshold and --reason \"cleanup copy\" does not justify keeping a near-copy (governance.yaml maintenance.duplicate_similarity: 0.85).",
+    "culprit": "Near-duplicate scaffold: normalized similarity 0.87 vs routines/sync_orders.py (v3, draft) crosses the 0.85 threshold and --reason \"cleanup copy\" does not justify keeping a near-copy",
     "remedy": "re-run with a --reason that justifies the fork, merge the changes into routines/sync_orders.py instead, or diverge the scaffold below the threshold — near-duplicates force merge or fork",
     "span": {
       "source": "near-duplicate scan (strsim normalized Levenshtein):",

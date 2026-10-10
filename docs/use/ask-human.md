@@ -213,5 +213,5 @@ No hanging interactive prompts. No prompt-injected free text. If you don't answe
 
 ---
 
-**See where audit logs track human approvals:** → [audit.md](audit.md)  
+**See where audit logs track human approvals:** → [audit.md](../understand/audit.md)  
 **Inspect pending questions anytime:** → `capcli ping list --pending`

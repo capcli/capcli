@@ -149,7 +149,7 @@ $ capcli sys exec "cat /etc/shadow" --sandbox
 ```
 
 ```text
-[dev:tier_1]  ✗  exit 1
+[dev:tier_1]  ✗  exit 2
 
   cat: /etc/shadow: No such file or directory
 ```
