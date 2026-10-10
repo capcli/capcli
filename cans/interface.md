@@ -77,7 +77,7 @@
       - Notifications — ping notify <principal> <msg> --channel <c> --intent "..."
       - Inquiries — ping ask <principal> <q> --options <opts> [--timeout <t>] --intent "..."
       - Listing — ping list [--pending]
-      - Resolution — ping resolve <ask-id> --choice <opt> — verifies OCC state_fences before re-dispatching frame
+      - Resolution — ping resolve <ask-id> --choice <opt>: see physics.md#Exit-code-law
       - Expiry — ping expire <ask-id>
     - Governance path: rule noun
       - Inspection — rule show [target=schema]
@@ -110,18 +110,18 @@
     - Document path: doc noun
       - Reading — doc read <ptr> [--max-tokens 100] serves doc:// documents and prompt:// campaign leaves
       - Leaf selection — the pointer fragment #<node> selects exactly one outline node
-      - Token caps — --max-tokens defaults to 100 with a 500 ceiling
-      - Prompt leaf — a prompt:// leaf requests up to 500 and returns one rendered section
+      - token cage ceilings: see cicd.md#Token-cage-ceilings
+      - Prompt leaf — a prompt:// leaf returns one rendered section
       - Outline — doc outline <ptr> accepts doc:// and prompt://
-      - Prompt outline — on prompt://, doc outline returns the campaign section index; node ids are the L3 leaf addresses
+      - Prompt outline — on prompt://, doc outline returns the campaign section index
       - Pointer scope — doc:// addresses human docs; prompt:// addresses agent campaign banks; schemes never substitute
       - Reading surface — the doc noun is the single reading surface for both schemes; no prompt noun exists
-      - Prompt envelope — inspect prompt://{bank}/{slug}@{version} returns the campaign envelope (L2, ≤150 tokens)
+      - Prompt envelope — inspect prompt://{bank}/{slug}@{version} returns the campaign envelope
     - Template path: template noun
       - New — template new <name> --type routine|world scaffolds blueprint (capcli-template.yaml + starter code) under templates/
-      - Pack — template pack <dir> [--out bundle.cap] freezes blueprint into immutable SHA-256-signed bundle: see world.md#World-templates
+      - Pack — template pack <dir> [--out bundle.cap] freezes blueprint into bundle: see world.md#World-templates
       - Sync — template sync refreshes local index of official registry repo (index.json)
-      - Import — template import <urp|url|file> [--sha256 <hash>] fetches .cap bundle to /scratch, validates hash, and registers to local _templates
+      - Import — template import <urp|url|file> [--sha256 <hash>]: see world.md#World-templates
       - Scaffold — template scaffold <urp> <target-name> [-p k=v] hydrates draft files into routines/ or world envs/
     - Refusals and banned operations
       - ssot enforcement — config mutations require git commits; direct `config set` or manual SQL DDL denied (exit 3)

@@ -11,7 +11,7 @@
       - git binary — host git >= 2.30 for read-only declarative repo tracking
       - python runtime — host python >= 3.11 for sandboxed routines: see action.md#Routines
       - javascript runtime — host bun >= 1.1 or node >= 20 for polyglot execution
-      - sandbox backends — bwrap >= 0.8.0, crun >= 1.5, or podman rootless on Tier 1; microvm/wasm on Tier 2: see physics.md#Platform-tier-taxonomy
+      - sandbox backends: see physics.md#Platform-tier-taxonomy
       - target toolchains — musl (Linux Tier 1), apple-darwin (macOS Tier 2), android (Termux Tier 2), msvc (Windows Tier 2)
     - Root management commands
       - compile development — cargo build --workspace: see physics.md#Exit-code-law
@@ -53,12 +53,12 @@
       - audit/ — append-only historical JSONL export files: see effect.md#Audit-spine
         - audit/audit.YYYY-MM-DD.jsonl — daily audit mirror holding hashed rows
         - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
-        - audit/witness.log — remote KMS witness attestation logs: see recovery.md#Hash-chains
+        - audit/witness.log — remote KMS witness attestation logs: see effect.md#Event-integrity
       - migrations/ — compiled migration bundles: see world.md#Schema-evolution
         - migrations/NNNN_<name>/plan.json — compiled expand/contract DDL phases
         - migrations/NNNN_<name>/backfill.py — sandboxed chunked data backfill routine
       - routines/ — agent-authored procedural guest scripts (.ts, .js, .py): see action.md#Routines
-        - routines/overview.ts — dense system situational health routine
+        - routines/overview.ts: see action.md#Session-Overview-Primer
         - routines/order_refund.ts — sandboxed multi-step refund script
         - routines/inventory_sync.py — legacy or data-heavy Python script
       - apis/ — imported OpenAPI catalogs and simulation mocks: see action.md#External-APIs
@@ -142,7 +142,7 @@
       - Subsystem modules
         - connection.rs — rusqlite connection pool in WAL mode: see world.md#SQLite-as-SSOT
         - authorizer.rs — sqlite3_set_authorizer C callback: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - migrate.rs — trigger-replicated online shadow table engine with atomic <20ms cutover: see world.md#Schema-evolution
+        - migrate.rs — migration engine: see world.md#Schema-evolution
         - bytecode.rs — EXPLAIN opcode parser checking OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
         - snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
         - claims.rs — distributed lease locks via _claims: see agent.md#Coordination
@@ -154,7 +154,7 @@
     - Domain 2: Routine engine & sandboxing (routine/)
       - Subsystem modules
         - runner.rs — multi-runtime process supervisor (bun, python3, native)
-        - jail.rs — multi-backend sandbox manager (bwrap, crun, gVisor) applying runtime seccomp profiles
+        - jail.rs — sandbox manager: see physics.md#Platform-tier-taxonomy
         - shape_gate.rs — enforces <= 2,000 tokens envelope, cyclomatic complexity <= 10, max 8 params
         - saga.rs — dual-write coordinator; handles compensation rollbacks on DB commit failure
         - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
@@ -241,7 +241,7 @@
       - Subsystem modules
         - audit.rs — append-only transactional writes to _audit: see effect.md#Storage-hierarchy
         - mirror.rs — streams rows to daily JSONL export files: see effect.md#Storage-hierarchy
-        - hashchain.rs — calculates sha256 links with sha2 crate: see recovery.md#Hash-chains
+        - hashchain.rs — calculates sha256 links with sha2 crate: see effect.md#Event-integrity
         - witness.rs — checkpoints root hash to KMS or S3 WORM: see effect.md#Event-integrity
         - doctor.rs — probes host runtimes, tier status, and receipts: see physics.md#Platform-tier-taxonomy
         - recover.rs — coordinates snapshot or commit rollbacks: see recovery.md#Restore-path
@@ -293,7 +293,7 @@
       - test_routine_shape.rs — enforces LOC, token, and param bounds: see artifacts/governance.yaml#routine_shape
       - test_api_quota.rs — validates token bucket calculations: see budget.md#Quotas
       - test_petgraph.rs — checks relational cycle rejection: see world.md#Gate-2:-Semantics
-      - test_hashchain.rs — verifies sha256 link calculations: see recovery.md#Hash-chains
+      - test_hashchain.rs — verifies sha256 link calculations: see effect.md#Event-integrity
       - test_vault.rs — tests zeroize and AES-256-GCM decryption: see agent.md#Secrets
       - test_trinity.rs — pointer validation runner: see cicd.md#Checker-tool-architecture
     - Integration test tier (crates/capcli-core/tests/integration/)

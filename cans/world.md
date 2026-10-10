@@ -9,13 +9,13 @@
         - hub mode — persistent daemon node; holds live workspace.db, audit.db, and executes incoming spoke RPCs
         - spoke-thin mode — stateless client node; delegates both guest compute and database execution to Hub
         - spoke-fat mode — compute-local worker; runs guest routines in local sandbox, proxies ctx.db calls to Hub via RPC
-        - spoke-ephemeral mode — stateless disposable node; in-memory buffer only, zero local disk footprint, heartbeats to Hub
+        - spoke-ephemeral mode — stateless disposable node; in-memory buffer only, zero local disk footprint: see agent.md#Ephemeral-swarm-identity
         - replica mode — distributed embedded replica; local reads via LibSQL cache, writes forwarded upstream to primary
       - Distributed consensus and swarm coordination
         - writer serialization — Hub serializes physical writes via SQLite BEGIN IMMEDIATE; spokes queue via busy_timeout
         - lease arbitration — cross-spoke resource locks mediated through claims table: see artifacts/system-schema.yaml#claims
         - network drop cleanup — socket disconnect immediately rolls back active spoke transactions and drops holder claims
-        - ephemeral node reap — Hub background tick expires agent records when heartbeat delta > lease_ttl: see artifacts/governance.yaml#topology
+        - ephemeral identity and reaper mechanics: see agent.md#Ephemeral-swarm-identity
       - audit.db
         - ssot role — isolated, append-only SQLite database for _audit ledger to eliminate WAL lock contention
         - process — capcli kernel-managed
@@ -113,11 +113,10 @@
         - uniqueness — text! expands to text unique
         - defaults — text=val expands to text default 'val'
         - immutability — int~ expands to integer immutable write-once
-        - tenant key — tenant: true tags table as multi-tenant; compiles Layer 1 authorizer rule blocking raw queries; mandates :principal-bound views
+        - tenant key — tenant: true tags table as multi-tenant; mandates :principal-bound views; enforcement: see physics.md#Two-layer-enforcement
         - foreign relations — int ref=table.col expands to foreign key
           - blob reference — blob ref=storage expands to object metadata json
-        - redaction — mask=true marks column for format-preserving anonymization (FPA)
-          - fpa behavior — synthetic typed valid values in sim data layer; UI free to render glyphs (including ████)
+        - redaction — mask=true marks column; masking mechanics: see space.md#Data-masking
       - table shorthands
         - provenance
           - tag — prov: true
@@ -132,8 +131,11 @@
           - tag — imm_rows: true
           - authorizer effect — UPDATE and DELETE denied physically
       - concurrency & outbox
-        - claims lease lifecycle — all rows leased in claims table auto-delete when holder exits with code 6; prevents yield deadlocks
-        - outbox atomic claim — _outbox_events claims use UPDATE ... SET status = 'in_flight', locked_by = :worker WHERE id = (...) RETURNING *; guarantees single-worker dispatch across CLI and daemon
+        - claims lease lifecycle: see physics.md#Exit-code-law
+        - outbox atomic claim
+          - claim statement — UPDATE _outbox_events SET status = 'in_flight', locked_by = :worker WHERE id = (...) RETURNING *
+          - lease semantics — locked_by records claiming worker; atomic RETURNING claim guarantees single-worker dispatch
+          - draining — daemon drains _outbox_events asynchronously; headless subshell CLI drains pending calls synchronously prior to exit 0
         - column locking
           - tag — imm_cols: [...]
           - authorizer effect — UPDATE denied on targeted columns
@@ -243,7 +245,8 @@
         - reference targets — ref= targets must exist with matching types: see world.md#Shorthand-expansion
         - traversal targets — rel: targets must resolve to real tables: see world.md#Shorthand-expansion
         - index targets — indexed columns must exist in parent table: see world.md#Shorthand-expansion
-        - cycle check — petgraph is_cyclic_directed rejects circular references: see cans/assembly.md#Core-domain-subsystems
+        - cycle check — petgraph is_cyclic_directed rejects circular references
+        - call-tree cycles — petgraph cycle in ctx.call graph (A -> B -> A) aborts compilation with exit 3
         - graph validation — topological sort establishes table compile order: see world.md#Gate-2:-Semantics
       - SQL syntax
         - check constraints — chk: expressions parse as valid SQL WHERE

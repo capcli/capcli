@@ -60,11 +60,11 @@
         - format law — structured trailer: prompt://... - <reason> syntax required
         - breach penalty — excess tokens trigger immediate verification abort with exit 1
       - L2 envelope boundary
-        - token limit — prompt campaign envelopes capped at 150 tokens maximum: see interface.md#Document-path:-doc-noun
+        - token limit — prompt campaign envelopes capped at 150 tokens maximum
         - inspection contract — inspect prompt://{bank}/{slug}@{version} returns envelope: see interface.md#Document-path:-doc-noun
         - content scope — metadata and section index only; deep instructions denied
       - L3 leaf boundary
-        - token limit — prompt leaf sections capped at 500 tokens maximum: see action.md#Search-surface
+        - token limit — prompt leaf sections capped at 500 tokens maximum
         - doc read contract — doc read prompt://...#node fetches single leaf slice: see interface.md#Document-path:-doc-noun
         - overflow denial — leaves exceeding 500 tokens fail Trinity validation check
     - Checker tool architecture
@@ -195,8 +195,8 @@
         - security dependencies — installs bubblewrap and libseccomp-dev packages on Ubuntu runner
       - Isolation verification
         - bwrap integration test — executes test_bwrap asserting tmpfs wipe: see action.md#Provider-backends
-        - raw socket trapping — seccomp filter traps raw socket connect attempts: see physics.md#Platform-tier-taxonomy
-        - syscall enforcement — verifies engine-specific seccomp profiles: see physics.md#Platform-tier-taxonomy
+        - raw socket trapping: see physics.md#Platform-tier-taxonomy
+        - syscall enforcement: see physics.md#Platform-tier-taxonomy
       - Cockpit PWA dependency preparation
         - bun toolchain — uses setup-bun action to install runtime on runner
         - asset building — bun run build compiles Cockpit static SPA before Rust integration test

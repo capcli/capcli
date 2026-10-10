@@ -7,7 +7,7 @@ target_crate: "crates/capcli-core"
 
 invariant:
   law_reference: "cans/physics.md#Platform-tier-taxonomy"
-  statement: "On Tier 1 the network jail is a seccomp-bpf filter trapping raw socket connect (syscall 42) across all engines (physics.md#Platform-tier-taxonomy; action.md#Jail-architecture tier 1 execution blocks raw network via seccomp-bpf under bwrap): a guest Python routine executing socket.create_connection() is trapped and killed with exit 2 before any packet leaves the namespace — the only egress path is ctx.api.call through the kernel proxy."
+  statement: "On Tier 1 the network jail is a seccomp-bpf filter trapping raw socket connect (syscall 42) across all engines (physics.md#Platform-tier-taxonomy; physics.md#Platform-tier-taxonomy tier 1 execution blocks raw network via seccomp-bpf under bwrap): a guest Python routine executing socket.create_connection() is trapped and killed with exit 2 before any packet leaves the namespace — the only egress path is ctx.api.call through the kernel proxy."
   blast_radius_if_breached: "Guest code bypasses the egress perimeter entirely: unlogged and unquota'd traffic to arbitrary hosts (data exfiltration straight from the sandbox), vaulted-secret boundaries become decorative, and the api catalog allowlist (outbound restricted to apis/ verbs) no longer constrains anything."
 
 confusion_matrix:
@@ -67,6 +67,6 @@ anti_slop_assertions:
   - rule: "AS-02"
     verification: "SELECT count(*) FROM world tables, _budget_frames, and routine_stats before and after the killed run; assert strict equality — zero committed effects from the trapped routine; only the denial audit row (effect: none) is new."
   - rule: "AS-08"
-    verification: "Assert the tmpfs /scratch directory for this execution is physically wiped after the kill: the scratch UUID mount must not exist on the host post-execution (bwrap tmpfs cleanup, action.md#Jail-architecture)."
+    verification: "Assert the tmpfs /scratch directory for this execution is physically wiped after the kill: the scratch UUID mount must not exist on the host post-execution (bwrap tmpfs cleanup, physics.md#Platform-tier-taxonomy)."
   - rule: "AS-07"
     verification: "Platform boundary check: the syscall-42 trap is asserted on a Tier 1 harness; on the Tier 2 companion run the same raw connect must be blocked by the broker's unshared proxy env vars + ctx mediation with the host.degraded_isolation warning — permissiveness on either tier is a failure."

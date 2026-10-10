@@ -24,8 +24,8 @@
       - Scoped views
         - principal required via --as
         - kernel binds :principal
-        - multi-tenant isolation — raw SELECT on tables tagged scoped: principal blocked at authorizer; access forced through declared views
-        - mutation guard — mutating multi-tenant tables requires ctx.db.mutate with ownership predicate validation
+        - tenant schema scope: see world.md#Dual-schema
+        - tenant authorizer enforcement: see physics.md#Two-layer-enforcement
         - unscoped views carry no principal requirement
       - Registry boundary
         - search targets — routines, api verbs, views, template blueprints (tpl:// pre-flight via capcli inspect)
@@ -62,7 +62,7 @@
         - doc inspection — inspect on doc:// returns outline nodes; doc read fetches one leaf via fragment
         - prompt inspection — inspect on prompt:// returns the campaign envelope
         - prompt outline — doc outline on prompt:// returns its section index
-        - prompt leaf — doc read on prompt://#<node> fetches one leaf (≤500 tokens)
+        - prompt leaf — doc read on prompt://#<node> fetches one leaf; leaf ceiling: see cicd.md#Token-cage-ceilings
         - surface law — one surface, two schemes, no substitution
         - relevance floor — semantic matches below 0.60 rejected
       - Hybrid discovery engine
@@ -90,9 +90,9 @@
         - event — immutable audit log record
         - routine — learned composition with version and code_hash
     - Anatomy and decorator
-      - Python 1st-class contract example: routines/refund.py
+      - Python contract example: routines/refund.py
         - @routine(name="refund", trust="pinned", limits={"max_ops": 8})
-        - alternative SDK substrates: JavaScript (.js, 2nd) and TypeScript (.ts, 3rd)
+        - alternative SDK substrates: JavaScript (.js) and TypeScript (.ts)
       - Structure — @routine(name, trust, idempotent, description, limits)
       - Decorator fields
         - name — registry id, validated at registration
@@ -113,17 +113,16 @@
       - signatures — max 8 typed Param declarations; description required
       - execution caps — max 50 ops per run; max 300s duration; max 10 txn statements
       - pagination posture — routines must encapsulate iteration and filtering loops internally; multi-turn LLM subshell pagination loops banned
-      - output envelope — max 500 result tokens; raw string slicing banned; outputs exceeding 500 tokens must return a valid keyset pagination schema ({ items, pagination: { has_more, next_cursor } })
+      - output envelope — max 500 result tokens; raw string slicing banned; oversized output returns keyset pagination schema ({ items, pagination: { has_more, next_cursor } }); breach exits 3
   - Routine templates
     - Invariant authoring laws
       - typed expansion — scaffolds expand through typed template parameters; blind regex and sed substitutions banned
-      - unproven intake — templated routines register strictly at draft trust, version 1
-      - shape compliance — intake parses through shape_gate.rs; non-compliant stubs rejected before disk write
+      - template intake law: see world.md#World-templates
       - scaffold taxonomy — tpl://routine/* provides micro-patterns (webhook_receiver, idempotent_action, chunked_batch)
     - Scaffolding pipeline
-      - blueprint lifecycle — blueprints authored via capcli template new, validated via capcli rule validate, packaged via capcli template pack
-      - instantiation — capcli template scaffold tpl://routine/<name> <target> [-p k=v] stamps draft routine in routines/; direct filesystem write in routines/ stays draft SSOT for hand-authored routines
-      - intake verification — capcli rule validate runs before disk write: see world.md#World-templates
+      - blueprint lifecycle — capcli template new authors blueprint; capcli template pack creates bundle
+      - instantiation — capcli template scaffold tpl://routine/<name> <target> [-p k=v] instantiates routine in routines/
+      - intake verification: see world.md#World-templates
       - audit payload — capcli template scaffold records routine.draft with template_source and template_hash
     - Sandbox execution
       - Runtime resolution ladder
@@ -132,25 +131,18 @@
         - 3. Environment overlay — env.<name>.allowed_runtimes in policy.yaml
         - 4. Workspace default — routine_shape.runtime.default in governance.yaml
         - Mismatch resolution — breach at any level halts immediately with exit 2 (E050_RUNTIME_DISALLOWED)
-      - Jail architecture
-        - provider resolution — Tier 1 probes bwrap and userns; falls back to rootless crun/podman or gVisor if userns is disabled; Tier 2 requires microvm or wasm
-        - tier 1 execution — bwrap namespaces, tmpfs /scratch wiped at exit, seccomp-bpf blocking raw network and fork
-        - tier 2 execution — isolated microVM (Colima/Lima/WSL2) or Wasmtime runtime; raw host subprocess execution denied
-        - latency floor — warm runner recycling ensures execution overhead < 50ms
-      - Yield handling
-        - Signal capture — runner catches exit 6 from kernel
-        - Reschedule — runner reads `yield_until` payload and re-queues via daemon cron (see time.md#Schedule)
-        - Lock release — kernel drops all held claims leases on exit 6 dispatch
-        - State preservation — writes OCC state_fence checkpoint to _suspended_tasks; denies resumption if target state drifted
+      - platform tier taxonomy: see physics.md#Platform-tier-taxonomy
+      - yield and preemption lifecycle: see physics.md#Exit-code-law
+      - latency floor — warm runner recycling ensures execution overhead < 50ms
       - Provider backends
-        - bwrap — Linux/WSL2 unprivileged namespace sandbox with host userns doctor check: see physics.md#Platform-tier-taxonomy
-        - microvm — lightweight virtualization provider for macOS/Windows enforcing hardware-level network isolation
-        - podman — rootless container runner for unprivileged container environments
-        - wasm — Wasmtime runtime with unmapped socket capabilities for pure in-process isolation
+        - bwrap: see physics.md#Platform-tier-taxonomy
+        - microvm: see physics.md#Platform-tier-taxonomy
+        - podman: see physics.md#Platform-tier-taxonomy
+        - wasm: see physics.md#Platform-tier-taxonomy
       - Jail defenses
         - execution engine — sandboxed runner embedding native C/Rust FFI bindings (capcli_native) for local DB/Authorizer calls via shared memory ring buffer
         - daemon transport — Unix domain socket / Named Pipe reserved strictly for asynchronous out-of-band events (cron dispatch, webhook intake, outbox draining)
-        - path restriction — Tier 1 blocks via pivot_root mount table; Tier 2 blocks via process cwd jail
+        - path restriction: see physics.md#Platform-tier-taxonomy
       - Execution limits
         - ops ceiling — see artifacts/governance.yaml#routine_shape
         - timeout — watchdog kill: see artifacts/governance.yaml#routine_shape
@@ -176,7 +168,7 @@
     - Composition and cascade
       - Mechanism — strictly executed via ctx.call(routine, params); direct cross-routine module imports banned
       - Static call-tree preflight — root invocation verifies that worst-case call-graph branch depth can be fully funded before execution begins
-      - Dependency graph — petgraph preflights call graph; cycles (A -> B -> A) abort at compile-time with exit 3
+      - dependency cycle validation: see world.md#Gate-2:-Semantics
       - Trust floor — callee must have equal or higher trust: pinned routines call pinned only; reviewed calls reviewed or pinned; draft callees strictly banned
       - Context inheritance — child frames consume parent pools; starvation aborts before root dispatch rather than decapitating child frames mid-flight
       - Rules and caps
@@ -191,7 +183,7 @@
       - Pipeline stages — direct invocation via capcli run; search/inspect used only on cache miss or signature ambiguity
       - Mapping contract — skill frontmatter maps 1:1 to Param declarations
         - validation failure — signature mismatch exits with code 3
-      - Result constraint — computed summaries only (<= 500 tokens)
+      - result constraint — computed summaries only: see #Shape-constraints
       - Provenance pass — skill name recorded in triggered_by_skill
       - Protocol bans
         - unproven shipping — shipping unproven routines forbidden within skills: see trust.md#The-ladder
@@ -222,7 +214,7 @@
       - Standard contract
         - file substrate — routines/overview.py registered under name overview
         - decorator bounds — @routine(name="overview", idempotent=true, limits=...)
-        - output envelope — dense situational summary capped at 500 result tokens
+        - output envelope — dense situational summary: see #Shape-constraints
       - Prompt cache economics
         - transcript placement — overview outputs mount at volatile turn leaves; system prompt mounting banned to preserve KV cache
       - Assembly pattern
@@ -232,17 +224,17 @@
         - active locks — reads active lease locks from claims and db locks
         - budget headroom — reads consumed fuel and remaining session quota
         - system health — returns nominal status, drift alarms, or thrash warnings
-        - result constraint — dense stdout summary strictly under 500 tokens; transcript mounting left to harness
+        - result constraint — dense stdout summary; transcript mounting left to harness: see #Shape-constraints
         - invocation trigger — standard zero-step executed at session boot
   - The ctx contract
     - Surface methods
       - Database methods
         - ctx.db.view(name, params) — execute verified named AST view from schema.yaml (primary read mechanism)
-        - ctx.db.get(table, id=val, require={...}) — structured key-value lookup; asserts owner == :principal on multi-tenant tables
+        - ctx.db.get(table, id=val, require={...}) — structured key-value lookup
         - ctx.db.query(sql, params) — dynamic parameterized SQL; raw string interpolation/concatenation fails with exit 3
-        - ctx.db.mutate(table, id=val, set={...}, intent="...") — structured single-row mutation; asserts tenant ownership at kernel boundary
+        - ctx.db.mutate(table, id=val, set={...}, intent="...") — structured single-row mutation
         - ctx.txn(egress=..., write=...) — kernel-mediated saga context; wraps compensating HTTP rollback and DB mutation
-        - ctx.db.lock(target, ttl) — application-level lease claim in claims; auto-released unconditionally on exit 6 yield
+        - ctx.db.lock(target, ttl) — application-level lease claim in claims
       - Deterministic inputs
         - ctx.now() — monotonic logical timestamp locked to causal frame start
         - ctx.uuid() — deterministic pseudo-random token minted via HMAC-SHA256(session_token, op_sequence)
@@ -259,7 +251,7 @@
         - ctx.storage.url(key, ttl) — mints signed temporary access url
       - Cursor & batch processing
         - ctx.cursor.load(name, default=0) — loads persistent cursor position from _watch_cursors
-        - ctx.cursor.save_and_yield(name, next_cursor) — commits chunk state, yields routine via exit 6; daemon auto-reenqueues
+        - ctx.cursor.save_and_yield(name, next_cursor) — commits chunk state and yields routine
         - ctx.cursor.reset(name) — clears completed cursor sequence
       - Hand triggers
         - ctx.bind.cron — time declaration
@@ -277,24 +269,21 @@
         - auth engines — kernel resolves Bearer, Basic, OAuth2 refresh tokens, AWS SigV4 signing, and mTLS client certs from vault
         - wire projection — select JSONPath filters large upstream responses at kernel socket edge before passing payload to guest sandbox
         - dual-write safety — mutating API calls staged to _outbox_events require upstream idempotency headers; routes lacking support mandate synchronous execution
-        - outbox atomic lease — workers claim pending rows via UPDATE _outbox_events SET status = 'in_flight', locked_by = :worker_id WHERE id = (...) RETURNING *; prevents CLI/daemon duplicate dispatches
-        - outbox draining — daemon drains _outbox_events asynchronously; headless subshell CLI executions drain pending outbox calls synchronously prior to exit 0
-        - secret injection — boundary insertion in Rust egress proxy; guest language runtime address space never handles plaintext credential bytes
-        - token refresh — daemon auto-refreshes bearer tokens; stateless CLI refreshes on demand and persists updated token to encrypted vault
-        - missing secret fallback — missing secret_ref auto-binds from CAPCLI_SECRET_* before triggering headless exit 3 or ask prompt
+        - outbox claim and draining: see world.md#Dual-schema
+        - secret handling: see agent.md#Secrets
         - pre-call quota — deny before network dispatch: see budget.md#Quotas
         - idempotency — kernel-minted key persisted before egress
         - in-flight wait — poll_until executes sleep in Rust runtime; Python interpreter never busy-waits
       - Sandbox boundaries
-        - runtime isolation — network namespace unshared (Tier 1) or virtual network interface dropped (Tier 2): see physics.md#Platform-tier-taxonomy
+        - runtime isolation: see physics.md#Platform-tier-taxonomy
         - transport bridge — local IPC permitted exclusively to kernel endpoint
-        - suspension contract — ctx.ping.ask snapshots step checkpoint and OCC state_fences to _pending_asks, releases active locks, and exits 6; resume verifies entity hashes and aborts with exit 2 if data drifted
+        - suspension lifecycle: see physics.md#Exit-code-law
         - interface definition — Param typing enforces input validation
     - Data protection
       - Context confinement — raw records stay inside sandbox
       - Egress truncation — token cap: see artifacts/governance.yaml#routine_shape
-      - Data masking — format-preserving anonymization (FPA) on mask=true columns before terminal output
-      - Leak defense — output scanned for high-entropy secrets and plaintext vault tokens; matches trigger kill_and_alert (exit 5)
+      - Data masking — mask=true flags column for anonymization: see space.md#Data-masking
+      - leak defense: see agent.md#Secrets
       - System columns — created_by and modified_by populated by kernel
     - System introspection
       - Discovery tables — _audit, _api_quota, _budget_frames
@@ -340,8 +329,8 @@
       - Full sync — capcli api sync <provider> <spec_url> refreshes the whole provider catalog under the sync cadence limits
       - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, and idempotency header mapping
       - Live contract capture — capcli api record <verb> generates strict JSON Schema assertions from live responses; offline fixtures capped at reviewed
-      - Promotion prerequisite — promotion to pinned requires live contract proof or shadow canary verification; static cassettes alone rejected
-      - Drift invalidation — upstream spec_hash change auto-demotes dependent pinned capabilities to draft
+      - promotion prerequisite: see trust.md#The-ladder
+      - drift invalidation: see trust.md#Ladder-laws
       - Sync cadence limits — see artifacts/governance.yaml#api.sync
       - Diff inspection — api diff <provider> compares spec_hash
     - State machine

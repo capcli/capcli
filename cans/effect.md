@@ -50,7 +50,10 @@
       - write continuity — sink failure triggers out-of-band spooling and alerts; hard kernel panic (exit 5) is reserved for total media loss
       - denial logging — denied operations emit audit events with effect: none
       - tamper detection — per-row sha256 chain verified against root ledger hash
+      - line linking — each _audit row carries prev_hash: sha256:<previous_row_hash>; chain mirrored to JSONL
+      - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata
       - external attestation — ledger root hash checkpointed to S3 Object Lock (WORM) storage with KMS signatures
+      - notary witness — periodic KMS signature stamped to witness.log
       - verification — scheduled chain walk: see artifacts/governance.yaml#maintenance
     - Query surfaces
       - tail — sys audit tail [--follow] [--capability X] [--since 1h]
@@ -107,7 +110,7 @@
       - merge lineage — consolidated_from preserves origins of merged routines
       - retention bounds — versions kept: see artifacts/governance.yaml#routine_shape
     - Replay invariants
-      - integrity anchoring — ledger roots checkpointed offsite: see recovery.md#Hash-chains
+      - integrity anchoring — ledger roots checkpointed offsite: see #Event-integrity
       - deterministic inputs — replay recreates identical state; ctx.now() bound to frame start; ctx.uuid() uses PRNG seeded by HMAC-SHA256(session_token, op_sequence)
       - policy enforcement — replay executes under current policy, not historical
       - external effects — external API calls flagged replay: manual; auto-replay strictly forbidden

@@ -53,7 +53,7 @@
         - Background tasks yield at 15 tokens remaining (reserving quota for scheduled posts)
         - Standard tasks yield at 5 tokens remaining
         - Critical tasks drain pool to 0
-      - Safe Yield — Frames suspended at floor return exit 6 and land cleanly in `_suspended_tasks`; batch cursor routines yield via exit 6 saving state to `_watch_cursors`
+      - Safe yield mechanics: see physics.md#Exit-code-law
 
     - min() law
       - Static call-graph evaluation — kernel inspects declared child dependency trees prior to root frame execution
@@ -101,7 +101,7 @@
       - fuel_scope: session, rate_scope: session, rows_scope: trust_session
       - result_tokens_scope: routine
       - max_nesting_depth: 5 caps composition depth; nesting > 5 aborts execution with exit 2
-      - call_preflight: static call-tree validated with petgraph; cycles (A -> B -> A) fail compile with exit 3
+      - call_preflight — parent/session headroom evaluated pre-invocation; call-tree cycle validation: see world.md#Gate-2:-Semantics
       - budget_exhaustion: deny — exhausted budget = exit 2, never silent truncation
     - Cascade view in `inspect`
       - pre-flight check
@@ -122,7 +122,7 @@
       - Multi-window tracking — supports dual-rate partitions (burst bucket + rolling window ceilings e.g. 24h / 86400s)
       - Gate decision — local bucket empty pauses dispatch up to timeout; hard limit exhaustion throws exit 2
       - Dynamic header calibration — reconciles RFC headers and structured JSON payloads; unexpected 429 instantly forces local bucket tokens to 0
-      - Remote 429 handling — active frames immediately yield to _suspended_tasks (exit 6) locked until upstream Retry-After epoch
+      - Remote 429 handling — local bucket locked until upstream Retry-After epoch: see physics.md#Exit-code-law
       - Storage
         - State lands in `_api_quota` rows — kernel-written, agent-readable
         - Rows scoped per env: sim and prod quotas independent — rehearsal never burns prod limits
@@ -141,7 +141,7 @@
     - Output caps
       - Routine results
         - max_result_tokens 500 — summary ceiling crossing to the model
-        - pagination contract — raw JSON truncation is prohibited; collections exceeding 500 tokens must emit typed pagination envelopes ({ items, next_cursor, has_more }); unbounded unpaginated dumps fail prove with exit 3
+        - result envelope contract: see action.md#Shape-constraints
         - serve response max_result_tokens 500 — inherited routine cap
       - Ping surfaces
         - notify message_max_tokens 300 — notifications are summaries, not essays
@@ -168,14 +168,13 @@
       - Session had 488 ops left — the routine frame was the tightest constraint
     - Policy
       - budget_exhaustion: yield_or_deny — governed by priority class (artifacts/governance.yaml)
-      - Yield signal — dry pool + Background/Standard task marks frame 'yielded', persists to _suspended_tasks, and returns exit 6
-      - Task resumption — daemon monitors resume_at timestamps and automatically re-queues execution on token refill
+      - Yield and resumption mechanics: see physics.md#Exit-code-law
       - Hard deny — dry pool + Critical task throws exit 2 (see physics.md#Exit-code-law)
       - No partial execution past budget — routine fails cleanly, no half-executed side effects
-      - Runtime: op #51 aborts (limit_exceeded), watchdog kills past 300s, unbounded result dumps fail prove with exit 3
+      - Runtime: op #51 aborts (limit_exceeded), watchdog kills past 300s
     - Pre-flight
       - budget_status.can_invoke_now is the pre-flight verdict; false + blocking_reasons → don't call
       - Warnings are non-blocking — remaining below warn_at_remaining
       - sim_gaps ride along in budget_status — prod-only verbs, unapproved first calls
-    - No `budget` noun, no `--override-budget`: see interface.md#Refusals
+    - No `budget` noun, no `--override-budget`: see interface.md#Refusals-and-banned-operations
     - Fuel-cap forensics localize to the leaf op; fix the policy, not the routine: see effect.md#Failure-forensics

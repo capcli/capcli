@@ -20,27 +20,16 @@
     - Snapshot persistence — transactionally clean VACUUM INTO snapshots and JSONL audit mirrors stream directly to append-only S3/R2 object storage
     - Retention — immutable point-in-time snapshots and audit logs retain on object storage with WORM locking; local disk retains rolling 30-day cache
   - Hash chains
-    - Line linking
-      - source — generated in DB _audit table rows and mirrored to JSONL
-      - calculation — prev_hash: sha256:<previous_row_hash>
-      - engine — sha2::Sha256 in crates/capcli-core/src/sys/hashchain.rs
-      - tamper evidence — modifying any row splits the causal chain into a quarantine branch (audit.quarantine.jsonl) without bricking active read operations
-    - Integrity checks
-      - ledger verification — local hash chain validated against S3 WORM immutable ledger root, independent of git squashes
-      - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata
-      - boot gate — require_hash_verify verifies system-schema hash at boot
-      - replay gate — replay re-verifies code_hash before execution
-      - Attestation checkpoints
-        - notary witness — periodic KMS signature stamped to witness.log: see effect.md#Event-integrity
-        - boot validation — kernel halts on chain divergence: see physics.md#Boot-refusals
-        - verification walks — scheduled integrity scans walk chain: see artifacts/governance.yaml#maintenance
+    - ledger tamper-evidence and attestation mechanics: see effect.md#Event-integrity
+    - boot gate — require_hash_verify verifies system-schema hash at boot
+    - replay gate — replay re-verifies code_hash before execution
   - Restore path
     - Recovery tiers
       - local snapshot — instant rollback via db restore <id>
       - git revision — workspace reconstruction via sys recover <commit>
       - offsite archive — disaster recovery pull from object storage
     - Emergency recovery mode
-      - activation — CAPCLI_RECOVERY=1 environment variable: see physics.md#Break-glass-paths
+      - activation — CAPCLI_RECOVERY=1 environment variable enables emergency recovery mode
       - handler — native recover command in crates/capcli-cli/src/commands/
       - components — loads schema and audit sink only; policy disabled
       - allowlist — sql (read-only), db dump, sys audit tail, sys backup, sys recover
@@ -48,9 +37,7 @@
     - Re-entry context
       - context reinstatement
         - ground zero — execute capcli run overview for instant situational state
-        - position — active environment, schema version, policy version
-        - last action — last recorded intent and successful effect
-        - drift log — audit events and retirements since prior session
+        - overview contract: see action.md#Session-Overview-Primer
         - safe next step — proposed dry-run or audit verification command
   - Destruction as transition
     - Lifecycle stance
@@ -65,4 +52,4 @@
     - Teardown invariants
       - identity revocation — sys agent revoke invalidates all tokens: see agent.md#System-agent-registry
       - backup verification — push dry-run required before deletion: see #Commit-automation
-      - cryptographic authorization — teardown requires out-of-band challenge signature verification; terminal flag overrides are prohibited
+      - cryptographic authorization: see space.md#World-governance
