@@ -21,7 +21,7 @@
   - Stage details
     - draft stage
       - authoring claim — file lock on routines/<name>.py; concurrent edits exit 2
-      - scaffolding — direct creation in routines/<name>.py or optional routine new <name>
+      - scaffolding — direct creation in routines/<name>.py or `capcli template scaffold tpl://routine/<name>`
       - authoring — direct filesystem writes in routines/
       - near-duplicate scan
         - similarity engine — strsim crate calculates normalized Levenshtein distance: see time.md#draft-stage

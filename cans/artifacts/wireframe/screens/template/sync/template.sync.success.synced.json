@@ -1,0 +1,39 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.sync.success.synced",
+  "target": "capcli/registry",
+  "command": "capcli template sync",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "registry": "capcli/registry",
+          "index": "index.json (cached)",
+          "entries": "4 (routine: 3, world: 1)",
+          "index_sha256": "sha256:c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2"
+        }
+      },
+      {
+        "fields": {
+          "audit": "op_template_sync_01 (registry index refreshed)"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli template import tpl://registry/routine/webhook_receiver@1",
+      "intent": "Register the pinned registry bundle locally",
+      "risk": "mutating",
+      "requires_intent": true
+    }
+  ]
+}

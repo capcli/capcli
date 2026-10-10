@@ -39,7 +39,7 @@
       - serve.request — endpoint, channel (rest|mcp), trace_id, routine@version, api_key_id, status
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
-      - template instantiation — capcli template apply emits exactly one event: routine.draft (routine kind) or env.init_from_template (world kind)
+      - template instantiation — capcli template scaffold emits exactly one event: routine.draft (routine kind) or env.init_from_template (world kind)
       - failure buffer — audit sink failure streams uncommitted events to audit/audit.quarantine.jsonl without halting execution
       - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok
       - no synthetic types — onboarding.* and fake lifecycle events denied

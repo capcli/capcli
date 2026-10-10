@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "template.apply.success.applied",
+  "id": "template.scaffold.success.applied",
   "target": "sync_orders",
-  "command": "capcli template apply tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+  "command": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -23,7 +23,7 @@
       },
       {
         "fields": {
-          "audit": "op_template_apply_01 (routine draft instantiated from tpl://routine/webhook_receiver)"
+          "audit": "op_template_scaffold_01 (routine draft instantiated from tpl://routine/webhook_receiver)"
         }
       }
     ]

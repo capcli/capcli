@@ -13,7 +13,7 @@
     "rule": "validation.template.name_taken",
     "domain": "validation",
     "culprit": "Template name 'webhook_receiver' already registered at tpl://routine/webhook_receiver.",
-    "remedy": "pick a distinct name or inspect the existing blueprint via capcli template inspect tpl://routine/webhook_receiver",
+    "remedy": "pick a distinct name or inspect the existing blueprint via capcli inspect tpl://routine/webhook_receiver",
     "template": "tpl://routine/webhook_receiver",
     "existing": "templates/webhook_receiver (routine, policy_version 5)",
     "lines": [

@@ -11,7 +11,7 @@
         - audit:// — causal DAG events, failures, and sequence patterns
         - bind:// — cron schedules, webhooks, and endpoint ingress routes
         - vault:// — secret references and in-memory injection status
-        - tpl:// — world and routine blueprints; pre-flight and resolution via capcli template inspect
+        - tpl:// — world and routine blueprints; local (tpl://routine/*), registry (tpl://registry/*), or remote; pre-flight via capcli inspect
         - ask:// — pending human inquiries and suspensions
         - snap:// — VACUUM recovery snapshots and migration restore points
         - quota:// — provider rate-bucket balances and spend ceilings
@@ -27,7 +27,7 @@
         - mutation guard — mutating multi-tenant tables requires ctx.db.mutate with ownership predicate validation
         - unscoped views carry no principal requirement
       - Registry boundary
-        - search targets — routines, api verbs, views, template blueprints (tpl:// pre-flight via capcli template inspect)
+        - search targets — routines, api verbs, views, template blueprints (tpl:// pre-flight via capcli inspect)
         - db ops bypass search — inline gated
         - trust ladder spans entire registry — see trust.md#The-ladder
     - Capability record
@@ -120,10 +120,10 @@
       - shape compliance — intake parses through shape_gate.rs; non-compliant stubs rejected before disk write
       - scaffold taxonomy — tpl://routine/* provides micro-patterns (webhook_receiver, idempotent_action, chunked_batch)
     - Scaffolding pipeline
-      - blueprint lifecycle — blueprints authored via capcli template new, validated via capcli template validate, packaged via capcli template pack
-      - instantiation — capcli template apply tpl://routine/<name> <target> [-p k=v] stamps draft routine in routines/; direct filesystem write in routines/ stays draft SSOT for hand-authored routines
-      - intake verification — capcli template validate runs before disk write: see world.md#World-templates
-      - audit payload — capcli template apply records routine.draft with template_source and template_hash
+      - blueprint lifecycle — blueprints authored via capcli template new, validated via capcli rule validate, packaged via capcli template pack
+      - instantiation — capcli template scaffold tpl://routine/<name> <target> [-p k=v] stamps draft routine in routines/; direct filesystem write in routines/ stays draft SSOT for hand-authored routines
+      - intake verification — capcli rule validate runs before disk write: see world.md#World-templates
+      - audit payload — capcli template scaffold records routine.draft with template_source and template_hash
     - Sandbox execution
       - Runtime resolution ladder
         - 1. Routine tag — explicit runtime parameter declared in @routine wrapper

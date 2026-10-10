@@ -46,7 +46,7 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli routine new overview",
+      "command": "capcli template scaffold tpl://routine/overview overview",
       "intent": "Mandatory overview routine scaffolded (harness H6)",
       "risk": "mutating",
       "requires_intent": true

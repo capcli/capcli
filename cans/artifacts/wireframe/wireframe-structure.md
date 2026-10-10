@@ -158,7 +158,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (6 verbs → 40 screens)
+### 4.1 `run/` (6 verbs → 42 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -198,6 +198,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.success.routine` | success | 0 | — | populated | Pre-flight envelope with `can_invoke_now` |
 | `run.inspect.success.quota` | success | 0 | — | populated | Headroom breakdown on `quota://` URP |
 | `run.inspect.success.prompt` | success | 0 | — | populated | Prompt L2 envelope only; no body content |
+| `run.inspect.success.template` | success | 0 | — | populated | tpl:// blueprint pre-flight envelope via capcli inspect |
+| `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Template URP does not resolve |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
 | `run.abort.success.aborted` | success | 0 | — | aborted | Suspended frame purged; OCC fence released |
@@ -222,16 +224,10 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `db.dump.success.populated` | success | 0 | — | populated | Unified SQL schema and seed dump |
 | `db.dump.success.truncated` | success | 0 | — | truncated | Dump output payload truncated |
 
-### 4.3 `routine/` (8 verbs → 35 screens)
+### 4.3 `routine/` (7 verbs → 29 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
-| `routine.new.success.created` | success | 0 | — | created | Routine scaffold committed |
-| `routine.new.success.overview` | success | 0 | — | created | Mandatory overview routine scaffolded (harness H6) |
-| `routine.new.refusal.name_taken` | refusal | 3 | validation | collision | Routine name already registered |
-| `routine.new.refusal.shape_violation` | refusal | 3 | validation | bad_shape | Scaffold violates param or complexity limits |
-| `routine.new.refusal.near_duplicate` | refusal | 3 | validation | near_duplicate | Similarity >= 0.85 without a justifying `--reason` |
-| `routine.new.denial.file_locked` | denial | 2 | policy.authoring | file_locked | Concurrent edit blocked by the authoring mutex |
 | `routine.prove.success.passed` | success | 0 | — | passed | Dynamic fingerprint verified |
 | `routine.prove.success.overview` | success | 0 | — | passed | Overview routine sim rehearsal passes (harness H7) |
 | `routine.prove.refusal.syntax` | refusal | 3 | compile | bad_syntax | py_compile rejects malformed guest code |
@@ -346,7 +342,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `ping.expire.success.completed` | success | 0 | — | completed | Explicit expiration executed |
 | `ping.expire.refusal.not_found` | refusal | 3 | validation | not_found | Target inquiry not found |
 
-### 4.7 `rule/` (6 verbs → 14 screens)
+### 4.7 `rule/` (6 verbs → 16 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -360,6 +356,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `rule.apply.refusal.validation` | refusal | 3 | validation | rejected | Gate 2 semantic check fails |
 | `rule.apply.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
 | `rule.validate.success.valid` | success | 0 | — | valid | Declarations pass Gates 1 & 2 |
+| `rule.validate.refusal.bundle_syntax` | refusal | 3 | compile | syntax | Malformed template bundle YAML or Python syntax |
+| `rule.validate.refusal.compat` | refusal | 3 | policy.template | compat | min_kernel_version or policy version mismatch |
 | `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Gate 1 YAML syntax failure |
 | `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Gate 2 circular dependency detected |
 | `rule.plan.success.planned` | success | 0 | — | planned | Migration bundle generated (plan.json, backfill stub) |
@@ -452,25 +450,24 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `doc.outline.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
 | `doc.inspect.success.populated` | success | 0 | — | populated | Document metadata, tokens, and node count |
 
-### 4.11 `template/` (6 verbs → 15 screens)
+### 4.11 `template/` (5 verbs → 14 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `template.new.success.created` | success | 0 | — | created | Blueprint scaffold committed to templates/ |
 | `template.new.refusal.name_taken` | refusal | 3 | validation | name_taken | Template name already registered |
 | `template.new.refusal.shape_violation` | refusal | 3 | validation | shape_violation | Scaffold violates complexity or parameter bounds |
-| `template.list.success.populated` | success | 0 | — | populated | Catalog of routine and world templates |
-| `template.list.success.empty` | success | 0 | — | empty | Zero templates registered |
-| `template.inspect.success.populated` | success | 0 | — | populated | Typed inputs, capabilities, and seed counts pre-flight |
-| `template.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Template URP does not resolve |
-| `template.validate.success.valid` | success | 0 | — | valid | Passes Gate 1 (syntax) and Gate 2 (semantics) |
-| `template.validate.refusal.syntax` | refusal | 3 | compile | syntax | Malformed YAML or Python syntax |
-| `template.validate.refusal.compat` | refusal | 3 | policy.template | compat | min_kernel_version or policy version mismatch |
 | `template.pack.success.packed` | success | 0 | — | packed | Bundle compiled to SHA-256 .cap archive |
 | `template.pack.denial.size_limit` | denial | 2 | policy.template | size_limit | World template bundle exceeds 5MB ceiling |
-| `template.apply.success.applied` | success | 0 | — | applied | Draft routine or dev environment scaffolded |
-| `template.apply.refusal.missing_param` | refusal | 3 | missing_param | missing_param | Required template parameter -p omitted |
-| `template.apply.denial.target_exists` | denial | 2 | policy.authoring | target_exists | Target file or environment already exists |
+| `template.sync.success.synced` | success | 0 | — | synced | Registry index refreshed from capcli/registry |
+| `template.import.success.imported` | success | 0 | — | imported | Pinned bundle registered in local _templates at draft trust |
+| `template.import.refusal.checksum` | refusal | 3 | policy.template | checksum | Bundle SHA-256 mismatch against pinned hash (wire gate) |
+| `template.scaffold.success.applied` | success | 0 | — | applied | Draft routine scaffolded from tpl:// blueprint |
+| `template.scaffold.success.world` | success | 0 | — | applied | Dev environment scaffolded from tpl:// world blueprint |
+| `template.scaffold.success.overview` | success | 0 | — | applied | Mandatory overview routine scaffolded (harness H6) |
+| `template.scaffold.refusal.missing_param` | refusal | 3 | missing_param | missing_param | Required template parameter -p omitted |
+| `template.scaffold.refusal.checksum` | refusal | 3 | policy.template | checksum | Bundle SHA-256 mismatch against registry index |
+| `template.scaffold.denial.target_exists` | denial | 2 | policy.authoring | target_exists | Target file or environment already exists |
 
 ---
 
@@ -763,7 +760,7 @@ Fixture (`wireframe/v2`):
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli routine new sync_orders",
+      "command": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "intent": "Routine scaffold committed",
       "risk": "mutating",
       "requires_intent": true
@@ -1324,8 +1321,8 @@ Root field law:
 
 - `$schema` is `wireframe/v2`. `id` is the screen identity; noun and verb are its first two segments and appear nowhere else.
 - `command` states the invocation the screen answers; any target pointer lives inside the command string.
-- `target` names the single invocation target when the command carries one (248/259 fixtures on disk) and is absent on targetless commands.
-- `context` is the `CliEnvelope` context frame: `env`, `tier`, `trust`, plus optional `data_shape` (63/259 fixtures on disk). The renderer derives the `[{env}:{tier}]` badge from it.
+- `target` names the single invocation target when the command carries one (247/256 fixtures on disk) and is absent on targetless commands.
+- `context` is the `CliEnvelope` context frame: `env`, `tier`, `trust`, plus optional `data_shape` (61/256 fixtures on disk). The renderer derives the `[{env}:{tier}]` badge from it.
 - `audit_op` names the audit operation the envelope reports. It appears when the screen reports one and is absent otherwise.
 - `archetype` is exactly one of `diagnostic`, `tree`, `receipt`, `document` (archetype law: cans/physics.md#Diagnostic-output-law). `component` carries that archetype's payload and nothing else.
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
@@ -1342,7 +1339,7 @@ Derived-state law:
 
 Component law:
 
-- **diagnostic** — `{ rule?, domain, layer?, span?, culprit, measured?, remedy, lines?, suspended_frame?, tokens_left?, reset_at?, ask_id?, pending_asks?, ...fields }`. `domain`, `culprit`, and `remedy` are present on every diagnostic fixture (137/137 on disk); `remedy` is a single string. `rule` (116/137 on disk) is the violated rule id, stored once here; `layer` (73/137 on disk) names the enforcement layer. Required fields per exit live in `_states.json` `diagnostic_required` and every fixture carries its exit's required set. `span` is `{ source, highlight?, detail? }`: `source` is the offending source text, `highlight` is the exact substring the renderer underlines with carets at its computed offset, `detail` carries indented span context lines. `measured` cites the measured value on denials that carry one. `lines` is an optional array of verbatim content strings (96/137 on disk). Every other key at component root is a screen-specific field row captured by the flattened fields map; no diagnostic fixture carries a nested `fields` key (0/137 on disk), and field values are strings or list values. A flattened key is the rendered field label: one complete label, never a truncated sentence fragment; the value carries the data. Exit 6 components additionally carry `suspended_frame`, plus the domain fields registered in `_states.json` (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`, `pending_asks`).
+- **diagnostic** — `{ rule?, domain, layer?, span?, culprit, measured?, remedy, lines?, suspended_frame?, tokens_left?, reset_at?, ask_id?, pending_asks?, ...fields }`. `domain`, `culprit`, and `remedy` are present on every diagnostic fixture (135/135 on disk); `remedy` is a single string. `rule` (114/135 on disk) is the violated rule id, stored once here; `layer` (72/135 on disk) names the enforcement layer. Required fields per exit live in `_states.json` `diagnostic_required` and every fixture carries its exit's required set. `span` is `{ source, highlight?, detail? }`: `source` is the offending source text, `highlight` is the exact substring the renderer underlines with carets at its computed offset, `detail` carries indented span context lines. `measured` cites the measured value on denials that carry one. `lines` is an optional array of verbatim content strings (89/135 on disk). Every other key at component root is a screen-specific field row captured by the flattened fields map; no diagnostic fixture carries a nested `fields` key (0/135 on disk), and field values are strings or list values. A flattened key is the rendered field label: one complete label, never a truncated sentence fragment; the value carries the data. Exit 6 components additionally carry `suspended_frame`, plus the domain fields registered in `_states.json` (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`, `pending_asks`).
 - **tree** — `{ title, root, nodes, footer? }`. `title` is the header line after the badge. `root` is a string (19/19 on disk): the rendered root line. `nodes` is an ordered array of `{ label, children }` (121 nodes on disk); `children` recurses with the same shape and is present on every node, empty at leaves. The renderer computes indentation and branch glyphs from nesting; the node label carries the full line text. `footer` is an optional ordered key-value block rendered after the walk.
 - **receipt** — `{ title, groups }`. `title` renders as the receipt heading and is `null` on fixtures that carry no heading (87/93 null, 6/93 string on disk). `groups` is an ordered array of `{ title?, fields?, lines? }` (190 groups on disk): `title` renders as the group's heading line (8/190 on disk; a `name` key appears on 0/190), `fields` is an ordered key-value map the renderer aligns into label columns (160/190), `lines` carries verbatim content lines the renderer indents under the group (55/190). Key order in `fields` is render order.
 - **document** — `{ header_badge, pagination?, meta?, fields?, body }`. `header_badge` is the document header line after the context badge. `pagination` is the keyset envelope of a truncated or sliced payload (§6.1.2). `meta` is an ordered key-value map (9/10 on disk) carrying slice accounting and the pagination cursor mirror. `fields` is an ordered key-value map (9/10 on disk) carrying the screen's rows. `body` is an ordered array of prose strings (10/10 on disk); the renderer emits divider lines and wraps body text.

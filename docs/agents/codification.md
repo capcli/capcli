@@ -32,11 +32,11 @@ Gap detection works from the same ledger: repeated multi-step command chains wit
 ### 2. Scaffold the routine
 
 ```bash
-capcli routine new <routine_name>
-capcli template apply tpl://routine/<name> <target> [-p k=v]
+capcli inspect tpl://routine/<name>
+capcli template scaffold tpl://routine/<name> <target> [-p k=v]
 ```
 
-Direct authoring writes `routines/<name>.py`; blueprint instantiation stamps a draft routine from a `tpl://routine/*` micro-pattern. Either route registers the result at draft trust, version 1, with zero promotional credit.
+Direct authoring writes `routines/<name>.py`; blueprint instantiation stamps a draft routine from a `tpl://routine/*` micro-pattern. Pre-flight runs through `capcli inspect`, bundle lint through `capcli rule validate [target]`. Registry-sourced blueprints arrive through the sync and import flow in [World](../understand/world.md#templates-and-the-registry). Either route registers the result at draft trust, version 1, with zero promotional credit.
 
 ### 3. Fit the shape envelope
 

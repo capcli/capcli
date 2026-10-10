@@ -1,0 +1,23 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.import.refusal.checksum",
+  "target": "https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap",
+  "command": "capcli template import https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap --sha256 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.template.checksum_mismatch",
+    "domain": "policy.template",
+    "culprit": "Bundle SHA-256 mismatch: pinned hash sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08, stream hashes to sha256:1111111111111111111111111111111111111111111111111111111111111111.",
+    "remedy": "discard the /scratch stream and retry with a release-pinned URL and matching --sha256",
+    "source": "/scratch (tmpfs wire sandbox)",
+    "lines": [
+      "FATAL  policy.template.checksum_mismatch",
+      "Bundle SHA-256 does not match the pinned hash."
+    ]
+  }
+}

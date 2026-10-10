@@ -31,11 +31,8 @@ capcli sys audit query "SELECT command, count(*) FROM _audit GROUP BY command HA
 Identify operations that must run atomically.
 
 ## section:stage_2_scaffold
-Scaffold a typed routine wrapping the operational sequence:
-```bash
-capcli routine new <routine_name>
-```
-Declare typed `Param` inputs and explicit `limits={"max_ops": N, "max_duration_seconds": S}` on the scaffold.
+Write the typed routine wrapping the operational sequence directly at `routines/<routine_name>.py`.
+Declare typed `Param` inputs and explicit `limits={"max_ops": N, "max_duration_seconds": S}` in the file header.
 
 ## section:stage_3_prove
 Rehearse the scaffolded routine against masked simulation data:

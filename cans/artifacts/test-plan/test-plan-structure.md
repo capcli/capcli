@@ -491,7 +491,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `se_13_git_push_dry_run_merge_gate.yaml` | Integration | Production merge pipeline runs `git push --dry-run` to verify remote credentials before committing physical DDL changes. | TP | Applying DDL changes locally when remote git repository is unreachable. |
 | `se_14_template_bundle_cap_breach.yaml` | Integration | World template bundle exceeding 5MB denied at `capcli template pack` with `exit 2` (`policy.template` size limit). | TN | Extracting unverified large archives to `/tmp` before validating file size. |
 | `se_15_template_kernel_compat_refusal.yaml` | Unit | Template declaring `min_kernel_version: 0.5.0` on a 0.4.2 kernel refused intake with `exit 3`. | TN | Ignoring template manifest compatibility constraints during unpack. |
-| `se_16_template_ast_rewrite_draft_floor.yaml` | Integration | Routine instantiated via `capcli template apply` rewrites routine name via AST, locks trust rung to `draft` (v1), and logs `routine.draft`. | TP | Allowing imported templates to inherit `pinned` trust or running bash sed replacement. |
+| `se_16_template_ast_rewrite_draft_floor.yaml` | Integration | Routine instantiated via `capcli template scaffold` rewrites routine name via AST, locks trust rung to `draft` (v1), and logs `routine.draft`. | TP | Allowing imported templates to inherit `pinned` trust or running bash sed replacement. |
 
 ### 6.8 Coordination & Claims (`cases/coordination_claims/`)
 

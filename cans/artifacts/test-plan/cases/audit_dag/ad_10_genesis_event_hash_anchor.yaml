@@ -34,7 +34,7 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli template apply tpl://world/shop shop"
+  command: "capcli template scaffold tpl://world/shop shop"
   input_params:
     template: "tpl://world/shop (valid schema.yaml + starter configuration; passes Gate 1 and Gate 2 before disk write)"
     expected_genesis_order: ["rule.apply", "sql query", "sql write deny", "sql write ok"]

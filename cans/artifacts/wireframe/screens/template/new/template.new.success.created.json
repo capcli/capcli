@@ -27,7 +27,7 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli template validate templates/webhook_receiver",
+      "command": "capcli rule validate",
       "intent": "Lint blueprint syntax and semantics",
       "risk": "safe",
       "requires_intent": false

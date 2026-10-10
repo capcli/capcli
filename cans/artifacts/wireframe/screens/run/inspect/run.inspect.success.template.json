@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "template.inspect.success.populated",
+  "id": "run.inspect.success.template",
   "target": "tpl://routine/webhook_receiver",
-  "command": "capcli template inspect tpl://routine/webhook_receiver",
+  "command": "capcli inspect tpl://routine/webhook_receiver",
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -19,7 +19,7 @@
           "kind": "routine",
           "policy_version": "5",
           "min_kernel_version": "2.1",
-          "can_apply": "true"
+          "can_scaffold": "true"
         }
       },
       {
@@ -34,7 +34,7 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli template apply tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+      "command": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "intent": "Instantiate draft routine sync_orders",
       "risk": "mutating",
       "requires_intent": true

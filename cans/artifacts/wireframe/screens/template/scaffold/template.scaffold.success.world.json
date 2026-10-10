@@ -1,0 +1,40 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.scaffold.success.world",
+  "target": "lab2",
+  "command": "capcli template scaffold tpl://world/atlas_world lab2",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "env": "envs/lab2",
+          "trust": "draft",
+          "version": "1",
+          "template_source": "tpl://world/atlas_world",
+          "template_hash": "sha256:b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1"
+        }
+      },
+      {
+        "fields": {
+          "audit": "op_template_scaffold_02 (env.init_from_template from tpl://world/atlas_world)"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli env list",
+      "intent": "Verify the scaffolded environment is registered",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
+}

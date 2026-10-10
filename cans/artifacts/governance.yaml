@@ -26,6 +26,9 @@ registry:
 template:
   max_templates: 100                  # registry capacity ceiling for blueprints
   max_bundle_size_mb: 5               # bundle transfer ceiling
+  registry_repo: "capcli/registry"    # PR-driven marketplace SSOT repo
+  registry_index_url: "https://raw.githubusercontent.com/capcli/registry/main/index.json"
+  allow_unpinned_urls: false          # bans raw branch URLs (@main); requires releases + sha256
   require_kernel_compat: true         # refuses outdated templates at boot
   require_policy_match: true          # template policy_version == runtime policy_version
   world:

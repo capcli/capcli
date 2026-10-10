@@ -45,7 +45,7 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli routine new sync_orders",
+      "command": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "intent": "Routine scaffold committed",
       "risk": "mutating",
       "requires_intent": true

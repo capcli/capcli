@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "template.apply.refusal.missing_param",
+  "id": "template.scaffold.refusal.missing_param",
   "target": "sync_orders",
-  "command": "capcli template apply tpl://routine/webhook_receiver sync_orders",
+  "command": "capcli template scaffold tpl://routine/webhook_receiver sync_orders",
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,7 +13,7 @@
     "rule": "missing_param.template.required_param",
     "domain": "missing_param",
     "culprit": "Required template parameter 'endpoint_url' omitted.",
-    "remedy": "supply -p endpoint_url=<value>, e.g. capcli template apply tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://example.com/hook",
+    "remedy": "supply -p endpoint_url=<value>, e.g. capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://example.com/hook",
     "template": "tpl://routine/webhook_receiver",
     "missing_param": "endpoint_url",
     "required_params": "endpoint_url: string",

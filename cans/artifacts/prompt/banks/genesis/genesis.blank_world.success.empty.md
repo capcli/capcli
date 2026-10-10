@@ -69,10 +69,7 @@ capcli apply -m "Genesis: Initialize business world schema"
 If errors occur, read the remedy diagnostic, fix `schema.yaml`, and re-run.
 
 ## section:stage_4_overview
-Author the Ground Zero primer (`routines/overview.py`) with bounded KPI queries only:
-```bash
-capcli routine new overview
-```
+Author the Ground Zero primer (`routines/overview.py`) by direct write, with bounded KPI queries only.
 Fill its return with count summaries from declared views. No raw row dumps.
 Prove it and enqueue it for reviewed trust:
 ```bash

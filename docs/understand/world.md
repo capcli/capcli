@@ -48,10 +48,46 @@ Environments — dev, sim, prod — isolate the state substrate while sharing th
 An environment arrives empty from `capcli env new`, or populated from a blueprint:
 
 ```bash
-capcli template apply tpl://world/<name> <target> [-p k=v]
+capcli template scaffold tpl://world/<name> <target> [-p k=v]
 ```
 
 World templates bundle schema and seed data under a signed manifest. Imported routines, views, and verbs register at draft trust with zero promotional credit, and Gate 5 rehearses a dry-run migration on a temporary snapshot before any template content lands on disk.
+
+---
+
+## Templates and the registry
+
+This page carries the template lifecycle end to end. Authoring a blueprint, packing it, publishing it, and hydrating a workspace from it are separate acts with separate commands.
+
+### Author and freeze a blueprint
+
+```bash
+capcli template new <name> --type routine|world
+capcli rule validate [target]
+capcli template pack <dir> [--out bundle.cap]
+```
+
+`template new` scaffolds the blueprint (`capcli-template.yaml` plus starter code) under `templates/`. `rule validate [target]` lints the bundle before any workspace contact: syntax, the petgraph acyclic check, and the template manifest. `template pack` freezes the blueprint into an immutable SHA-256-signed `.cap` bundle. World bundles carry a 5MB ceiling.
+
+### Publish to the registry
+
+The registry is a dedicated PR-driven repository. An author PR merges only on a fully green gate: `rule validate` on `capcli-template.yaml`, the shape caps (cyclomatic complexity at most 10, at most 2,000 tokens, at most 8 parameters), a headless sandbox simulation, and a frozen bundle build with its SHA-256 computed. A merged PR triggers a release that publishes the immutable `bundle.cap` asset and appends an entry — pointer, version, SHA-256, bundle URL, minimum kernel version, policy version — to the registry `index.json`.
+
+### Sync, import, scaffold
+
+```bash
+capcli template sync
+capcli inspect tpl://registry/<kind>/<name>@<ver>
+capcli template import <urp|url|file> [--sha256 <hash>]
+capcli template scaffold tpl://registry/<kind>/<name>@<ver> <target-name> [-p k=v]
+```
+
+1. **`template sync`** refreshes the local cache of the registry `index.json`.
+2. **`capcli inspect`** resolves the `tpl://registry/*` pointer against the cached index and returns the pre-flight envelope: required typed inputs, declared capabilities, seed row count. The same `inspect` surface pre-flights local `tpl://routine/*` and `tpl://world/*` blueprints.
+3. **`template import`** fetches the `.cap` bundle into the isolated `/scratch` wire sandbox. Streams exceeding 5MB abort on arrival. The kernel verifies the stream SHA-256 against the index entry or the `--sha256` flag before any archive extraction; a mismatch refuses intake at exit 3. Direct URLs enter only in pinned form — a release asset URL carrying `#sha256=<hex>`; mutable branch pulls are denied. The bundle unpacks as declarative text and AST-analysed code only: post-install scripts and shell hooks never run. Import registers the bundle into local `_templates`.
+4. **`template scaffold`** hydrates the registered blueprint into draft files under `routines/` or into a world environment, validates `-p` values against the manifest inputs at stamping, and emits exactly one audit event: `routine.draft` for a routine, `env.init_from_template` for a world.
+
+Remote templates register strictly at draft trust, version 1, in dev. Prod intake is denied, and templates never bundle or alter host governance: `policy.yaml` and `governance.yaml` stay outside every bundle.
 
 ---
 

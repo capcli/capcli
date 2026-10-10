@@ -64,7 +64,7 @@ Every single refusal, denial, yield, and crash condition across all 11 CLI nouns
 
 | ID | Screen ID | Exit | Domain | Condition | Line 1 ACTION | Diagnostic Needle / Remedy Text |
 |---|---|---|---|---|---|---|
-| R17 | `routine.new.refusal.shape_violation` | 3 | `validation` | `bad_shape` | `ACTION: capcli routine new <name>` | `remedy: routine exceeds limits: 2,000-token envelope (LOC unrestricted), cyclomatic complexity 10, 8 params; split the scaffold into composed routines` |
+| R17 | `template.new.refusal.shape_violation` | 3 | `validation` | `bad_shape` | `ACTION: capcli template new <name> --type routine` | `remedy: routine exceeds limits: 2,000-token envelope (LOC unrestricted), cyclomatic complexity 10, 8 params; split the scaffold into composed routines` |
 | R18 | `routine.prove.denial.policy` | 2 | `policy.authorizer` | `illegal_leaf` | `ACTION: capcli inspect cap://<name>` | `remedy: forbidden leaf: external API calls banned in db.txn` |
 | R19 | `routine.ship.denial.trust` | 2 | `policy.trust` | `tier2_refusal` | `ACTION: capcli run <cap> --env sim` | `remedy: E045 pinned trust forbidden on Tier 2 macOS/Win` |
 | R20 | `routine.ship.success.rolled_back` | 0 | `policy.authorizer` | `rolled_back` | `ACTION: capcli routine prove <name> --env sim` | `remedy: canary telemetry spike triggered auto-rollback` |

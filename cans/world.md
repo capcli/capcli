@@ -184,21 +184,37 @@
       - snapshot pairing — cold VACUUM snapshot created prior to Expand phase for disaster-only recovery
       - lockfile check — capcli.lock verification at boot: see physics.md#Fail-closed-stance
   - World templates
+    - Registry marketplace architecture
+      - substrate — dedicated central GitHub repository (governance.yaml#template.registry_repo) serving as PR-driven marketplace
+      - intake PR gate — author PRs require 100% green CI before merge:
+        - runs rule validate on capcli-template.yaml
+        - asserts shape caps (cyclomatic complexity <= 10, tokens <= 2000, max 8 params)
+        - executes headless sandbox test simulation
+        - builds frozen .cap bundle via template pack and computes SHA-256
+      - distribution index — merged PRs trigger release workflow publishing immutable bundle.cap asset and appending entry to index.json:
+        - entry schema — { urp, version, sha256, bundle_url, min_kernel_version, policy_version }
+    - Remote ingestion & wire physics
+      - pointer resolution — tpl://registry/<kind>/<name>@<ver> resolves URL and SHA-256 against local cached index.json
+      - direct URL imports — raw GitHub URLs permitted strictly if pinned: https://github.com/<org>/<repo>/releases/download/<tag>/<file>.cap#sha256=<hex>; mutable branch pulls (@main) denied
+      - wire sandbox — downloads stream into isolated tmpfs /scratch; streams exceeding 5MB aborted immediately
+      - cryptographic gate — kernel verifies stream SHA-256 against index or --sha256 flag before archive extraction; mismatch exits with code 3 (refuse intake)
+      - zero execution — bundle unpacks purely as declarative text and AST-analyzed code; post-install scripts and shell hooks banned
+      - trust containment — all remote templates register strictly at draft trust (v1) in dev; prod intake denied
     - Invariant bundle laws
       - manifest mandate — bundles must include capcli-template.yaml declaring typed inputs, provides map, and min_kernel_version
       - governance exclusion — templates cannot bundle or alter policy.yaml or governance.yaml; host governance compiler overrides all
       - zero trust inheritance — all imported routines, views, and verbs register strictly at draft trust (v1) with zero promotional credit
       - no lifecycle hooks — post-install scripts and dynamic execution during unpack strictly banned; static AST expansion only
     - Intake pipeline
-      - provisioning — environments are provisioned empty via capcli env new, or populated via capcli template apply tpl://world/<name> <target> [-p k=v]
+      - provisioning — environments are provisioned empty via capcli env new, or populated via capcli template scaffold tpl://world/<name> <target> [-p k=v]
       - packaging — capcli template pack <dir> [--out bundle.cap] freezes blueprint into immutable SHA-256-signed bundle; world template bundles enforce 5MB ceiling
       - destination isolation — template unpacks strictly into dev worktree; prod direct-init denied
-      - validation sequence — capcli template validate checks min_kernel_version, policy_version, py_compile, AST complexity (≤10), and schema.yaml syntax (Gate 1) with bundle semantics (Gate 2) before disk write
-      - parameter validation — capcli template apply validates -p against manifest inputs at stamping
+      - validation sequence — capcli rule validate checks min_kernel_version, policy_version, py_compile, AST complexity (≤10), and schema.yaml syntax (Gate 1) with bundle semantics (Gate 2) before disk write
+      - parameter validation — capcli template scaffold validates -p against manifest inputs at stamping
       - dry-run migration — Gate 5 test migration executes on temporary snapshot
       - seed constraints — table seed arrays capped at 50 rows per table
     - Audit and provenance
-      - event type — env.init_from_template: see effect.md#Kernel-event-payloads
+      - event type — env.init_from_template (world) or routine.draft (routine)
   - Validation gates
     - Gate 1: Syntax
       - timing — parse-time on file load

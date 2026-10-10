@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "template.pack.success.packed",
-  "target": "templates/webhook_receiver",
-  "command": "capcli template pack templates/webhook_receiver",
+  "id": "template.import.success.imported",
+  "target": "tpl://registry/routine/webhook_receiver@1",
+  "command": "capcli template import tpl://registry/routine/webhook_receiver@1",
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,12 +14,15 @@
     "groups": [
       {
         "fields": {
-          "template": "tpl://routine/webhook_receiver",
+          "template": "tpl://registry/routine/webhook_receiver@1",
           "bundle": "webhook_receiver.cap",
           "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-          "size": "1.8MB",
-          "signature": "sha256 signed (kernel keyring)",
-          "files": "4"
+          "registered": "_templates/webhook_receiver (draft)"
+        }
+      },
+      {
+        "fields": {
+          "audit": "op_template_import_01 (bundle registered at draft trust)"
         }
       }
     ]

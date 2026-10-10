@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "template.validate.refusal.compat",
+  "id": "rule.validate.refusal.compat",
   "target": "templates/order_sync",
-  "command": "capcli template validate templates/order_sync",
+  "command": "capcli rule validate templates/order_sync",
   "context": {
     "env": "dev",
     "tier": "tier_1",

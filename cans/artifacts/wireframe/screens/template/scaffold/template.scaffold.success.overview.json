@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "routine.new.success.overview",
+  "id": "template.scaffold.success.overview",
   "target": "overview",
-  "command": "capcli routine new overview",
+  "command": "capcli template scaffold tpl://routine/overview overview",
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -16,16 +16,17 @@
         "fields": {
           "routine": "overview (routine://overview@1 draft)",
           "file": "routines/overview.py",
-          "scaffold": "direct write (routines/overview.py)",
-          "contract": "mandatory overview routine — grounds future agents in domain state (harness H6 codification)",
+          "scaffold": "template scaffold (tpl://routine/overview)",
+          "contract": "mandatory overview routine \u2014 grounds future agents in domain state (harness H6 codification)",
           "trust": "draft (unproven intake floor)",
           "version": "1",
-          "shape": "780 tokens / 1 param (ceilings: 2000 tokens / 8 params)"
+          "shape": "780 tokens / 1 param (ceilings: 2000 tokens / 8 params)",
+          "template_source": "tpl://routine/overview"
         }
       },
       {
         "fields": {
-          "audit": "op_new_02 (routine.draft committed)",
+          "audit": "op_template_scaffold_03 (routine.draft committed)",
           "next": "capcli routine prove overview --env sim"
         }
       }

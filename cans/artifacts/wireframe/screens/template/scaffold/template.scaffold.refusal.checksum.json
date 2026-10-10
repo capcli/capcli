@@ -1,0 +1,23 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "template.scaffold.refusal.checksum",
+  "target": "tpl://registry/routine/webhook_receiver@1",
+  "command": "capcli template scaffold tpl://registry/routine/webhook_receiver@1 sync_orders",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.template.checksum_mismatch",
+    "domain": "policy.template",
+    "culprit": "Bundle SHA-256 mismatch: index records sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08, stream hashes to sha256:0000000000000000000000000000000000000000000000000000000000000000.",
+    "remedy": "discard the /scratch stream and re-run capcli template sync, then retry the scaffold",
+    "template": "tpl://registry/routine/webhook_receiver@1",
+    "lines": [
+      "FATAL  policy.template.checksum_mismatch",
+      "Bundle SHA-256 does not match the registry index."
+    ]
+  }
+}

@@ -45,7 +45,7 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli template apply tpl://routine/payout_bundle payout_v2"
+  command: "capcli template scaffold tpl://routine/payout_bundle payout_v2"
   input_params:
     name: "payout_v2"
     template_ptr: "tpl://routine/payout_bundle"

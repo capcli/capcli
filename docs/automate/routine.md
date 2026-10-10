@@ -14,14 +14,23 @@ capcli routine <verb> [args] [--flags]
 
 | Verb | Syntax | Description |
 |---|---|---|
-| **`new`** | `capcli routine new <name>` | Scaffolds a compliant starter script in `routines/<name>.py`. Blueprint intake: `capcli template apply tpl://routine/<name> <target>`. |
 | **`prove`** | `capcli routine prove <name> [-p k=v] [--env sim]` | Runs synthetic replay tests against masked simulation data. |
-| **`ship`** | `capcli routine ship <name> <reviewed\|pinned> [--reason "..."]` | Submits candidate for promotion up the trust ladder. |
+| **`ship`** | `capcli routine ship <name> <reviewed\|pinned> [--env X] [--reason "..."] [--queue]` | Submits candidate for promotion up the trust ladder. |
+| **`sweep`** | `capcli routine sweep [--since 30d]` | Maintenance pass over the routine registry. |
 | **`stats`** | `capcli routine stats <name> [--deep]` | Displays p50/p95 latency, run counts, and historical success rates. |
 | **`rollback`**| `capcli routine rollback <name> [--to-version <v>]` | Rewinds capability pointer to a prior verified version hash. |
 | **`retire`** | `capcli routine retire <name> [--reason "..."]` | Decommissions a routine without destroying historical provenance. |
 
 ---
+
+## Authoring a routine
+
+A routine enters the registry by one of two routes:
+
+- **Direct write.** Author the file straight into `routines/<name>.py`. The intake shape gate measures it before registration.
+- **Blueprint scaffold.** Pre-flight the blueprint with `capcli inspect tpl://routine/<name>`, then stamp a draft routine with `capcli template scaffold tpl://routine/<name> <target> [-p k=v]`.
+
+Either route registers the result at draft trust, version 1, with zero promotional credit. The full template lifecycle, including registry-sourced blueprints, lives in [World](../understand/world.md#templates-and-the-registry).
 
 ## The Shape Police (Governance Bounds)
 
@@ -29,7 +38,7 @@ Your LLM loves writing 600-line monolithic scripts full of custom utility classe
 
 **Capcli hates that.** 
 
-Before a routine can be registered, proved, or shipped, the Rust kernel measures its physical dimensions. If it violates any of these, it dies at the intake gate (`exit 2`):
+Before a routine can be registered, proved, or shipped, the Rust kernel measures its physical dimensions. If it violates any of these, intake refuses it (`exit 3`):
 
 * **Max 2,000 Tokens:** Keeps file sizes small so inspecting them doesn't bankrupt your LLM context window. Lines of code are unrestricted — whitespace and comments don't count.
 * **Max 8 Parameters (`Param`):** If a routine needs 14 arguments, your design is bad and you should feel bad. Use an object or break up the task.
@@ -146,6 +155,7 @@ $ capcli routine rollback dispatch_order --to-version 3 \
 
 ## Banned Operations
 
+* **There is no `routine new` verb, and no `template list`, `template inspect`, `template validate`, or `template apply` verb.** The parser rejects each at intake. Authoring runs through direct write or `capcli template scaffold`; blueprint pre-flight runs through `capcli inspect tpl://`; bundle lint runs through `capcli rule validate [target]`.
 * **`--force` is banned:** Passing `--force` to `routine ship` is an immediate syntax error.
 * **Direct filesystem tampering:** Editing a versioned file directly in `routines/` without bumping the version or running through intake triggers an instant lockfile mismatch (`exit 3`).
 * **Self-Promotion:** A running routine cannot invoke `routine ship` on itself. Trust escalation requires human or CI principal authority.

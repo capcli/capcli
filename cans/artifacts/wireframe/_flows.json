@@ -3,14 +3,14 @@
   "version": 1,
   "journeys": {
     "journey_human_onboarding": {
-      "name": "S0–S10 Human Onboarding & First Write",
+      "name": "S0\u2013S10 Human Onboarding & First Write",
       "color": "#58a6ff",
       "entry": "sys.help.success.stub",
       "terminal": "sys.doctor.success.report",
       "description": "S0 help stub -> doctor verify -> S1 natural-language goal capture (zero-hit search, did_you_mean) -> S2 dev schema proposal via sql --dry-run -> S3 first safe select clips at the result cap -> S4 deliberate unbounded-write denial diagnosed via audit trace --explain -> S5 bounded keyed write commits with causal intent -> S6 snapshot, post-snapshot schema drift caught by env doctor (2 undeclared columns on live orders), restore reverses it and the ledger hash verifies -> S7 search & inspect loop -> S8 routine scaffolded from repeated operations -> S9 sim prove, promotion queue, evidence-based pinned ship -> S10 sys doctor --report trust receipt"
     },
     "journey_harness_onboarding": {
-      "name": "H0–H7 Autonomous Harness Machine Onboarding",
+      "name": "H0\u2013H7 Autonomous Harness Machine Onboarding",
       "color": "#79c0ff",
       "entry": "sys.doctor.success.nominal",
       "terminal": "run.overview.success.populated",
@@ -159,9 +159,9 @@
     "journey_routine_lifecycle": {
       "name": "Routine Lifecycle: Author, Prove, Ship, Queue",
       "color": "#6366f1",
-      "entry": "routine.new.refusal.name_taken",
+      "entry": "template.scaffold.success.applied",
       "terminal": "routine.pending.success.empty",
-      "description": "Authoring gauntlet (name taken, shape violation, template validate compat refusal, unjustified near-duplicate, concurrent-edit mutex) -> sync_orders scaffolded -> prove gauntlet (exit-3 compiler refusals: syntax, param cap, missing docstring, oversized output; then exit-2 gates: shape, sandbox escape, forbidden leaf op) -> sim prove passes -> two promotion routes: the review path (enqueue via ship --queue, supervisor pending inspection, human batch sign-off ships) beside the direct ship ladder (reason required, trust floor, replay metrics) -> order_sync pinned ship -> canary rolled back -> promotion queue drained empty"
+      "description": "Draft instantiated via template scaffold -> prove gauntlet (exit-3 compiler refusals: syntax, param cap, missing docstring, oversized output; then exit-2 gates: shape, sandbox escape, forbidden leaf op) -> sim prove passes -> two promotion routes: the review path (enqueue via ship --queue, supervisor pending inspection, human batch sign-off ships) beside the direct ship ladder (reason required, trust floor, replay metrics) -> order_sync pinned ship -> canary rolled back -> promotion queue drained empty"
     },
     "journey_routine_maintenance": {
       "name": "Routine Fleet Maintenance: Sweep, Stats, Rollback, Retire",
@@ -266,7 +266,7 @@
       "color": "#86efac",
       "entry": "run.inspect.refusal.missing_ptr",
       "terminal": "run.inspect.success.routine",
-      "description": "Bare pointer refuses to resolve -> draft cap://refund_and_archive@1 denied by the trust gate -> tpl://routine/webhook_receiver blueprint via template inspect -> quota://threads budget envelope -> pinned cap://dispatch_order@4 routine envelope"
+      "description": "Bare pointer refuses to resolve -> draft cap://refund_and_archive@1 denied by the trust gate -> tpl://routine/webhook_receiver blueprint via capcli inspect -> quota://threads budget envelope -> pinned cap://dispatch_order@4 routine envelope"
     },
     "journey_large_result_delivery": {
       "name": "Large Result Delivery: Clip or Redirect",
@@ -276,11 +276,11 @@
       "description": "Big payloads: the orders export SELECT clips at the result cap -> same query lands clean via --out -> the quarterly report run clips -> same run redirects to disk with a token-lean summary"
     },
     "journey_template_lifecycle": {
-      "name": "Template Lifecycle: Author, Validate, Pack, Apply",
+      "name": "Template Lifecycle: Author, Validate, Pack, Sync, Import, Scaffold, Prove",
       "color": "#f59e0b",
       "entry": "template.new.success.created",
       "terminal": "routine.prove.success.passed",
-      "description": "Blueprint authored via template new -> lint and AST check via template validate -> bundle compiled via template pack -> draft routine instantiated via template apply -> sim prove via routine prove"
+      "description": "Blueprint authored via template new -> bundle lint via rule validate -> bundle compiled via template pack -> registry index refreshed via template sync -> bundle registered via template import -> draft routine instantiated via template scaffold -> sim prove via routine prove"
     }
   },
   "transitions": [
@@ -634,10 +634,10 @@
         "api.catalog.success.populated"
       ],
       "to": [
-        "routine.new.success.created"
+        "template.scaffold.success.applied"
       ],
       "trigger": "h4_scaffold",
-      "label": "capcli routine new sync_orders",
+      "label": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "arrow_type": "progress"
     },
     {
@@ -646,7 +646,7 @@
         "journey_harness_onboarding"
       ],
       "from": [
-        "routine.new.success.created"
+        "template.scaffold.success.applied"
       ],
       "to": [
         "routine.prove.success.passed"
@@ -664,10 +664,10 @@
         "sys.trace.success.denial_trail"
       ],
       "to": [
-        "routine.new.success.overview"
+        "template.scaffold.success.overview"
       ],
       "trigger": "h6_codify",
-      "label": "capcli routine new overview",
+      "label": "capcli template scaffold tpl://routine/overview overview",
       "arrow_type": "progress"
     },
     {
@@ -676,7 +676,7 @@
         "journey_harness_onboarding"
       ],
       "from": [
-        "routine.new.success.overview"
+        "template.scaffold.success.overview"
       ],
       "to": [
         "routine.prove.success.overview"
@@ -2546,87 +2546,12 @@
       "arrow_type": "success"
     },
     {
-      "id": "t_routine_name_taken_to_shape",
-      "journeys": [
-        "journey_routine_lifecycle"
-      ],
-      "from": [
-        "routine.new.refusal.name_taken"
-      ],
-      "to": [
-        "routine.new.refusal.shape_violation"
-      ],
-      "trigger": "scaffold_direct",
-      "label": "capcli routine new sync_orders",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_routine_shape_to_template_validate",
-      "journeys": [
-        "journey_routine_lifecycle"
-      ],
-      "from": [
-        "routine.new.refusal.shape_violation"
-      ],
-      "to": [
-        "template.validate.refusal.compat"
-      ],
-      "trigger": "validate_blueprint_compat",
-      "label": "capcli template validate templates/order_sync",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_template_validate_to_near_duplicate",
-      "journeys": [
-        "journey_routine_lifecycle"
-      ],
-      "from": [
-        "template.validate.refusal.compat"
-      ],
-      "to": [
-        "routine.new.refusal.near_duplicate"
-      ],
-      "trigger": "apply_blueprint_retry",
-      "label": "capcli routine new sync_orders_v2 --reason \"cleanup copy\"",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_routine_near_duplicate_to_file_locked",
-      "journeys": [
-        "journey_routine_lifecycle"
-      ],
-      "from": [
-        "routine.new.refusal.near_duplicate"
-      ],
-      "to": [
-        "routine.new.denial.file_locked"
-      ],
-      "trigger": "retry_concurrent_draft",
-      "label": "capcli routine new sync_orders_v2",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_routine_file_locked_to_created",
-      "journeys": [
-        "journey_routine_lifecycle"
-      ],
-      "from": [
-        "routine.new.denial.file_locked"
-      ],
-      "to": [
-        "routine.new.success.created"
-      ],
-      "trigger": "handoff_then_scaffold",
-      "label": "capcli routine new sync_orders",
-      "arrow_type": "success"
-    },
-    {
       "id": "t_routine_created_to_prove_syntax",
       "journeys": [
         "journey_routine_lifecycle"
       ],
       "from": [
-        "routine.new.success.created"
+        "template.scaffold.success.applied"
       ],
       "to": [
         "routine.prove.refusal.syntax"
@@ -3651,10 +3576,10 @@
         "run.inspect.denial.trust"
       ],
       "to": [
-        "template.inspect.success.populated"
+        "run.inspect.success.template"
       ],
       "trigger": "inspect_template_blueprint",
-      "label": "capcli template inspect tpl://routine/webhook_receiver",
+      "label": "capcli inspect tpl://routine/webhook_receiver",
       "arrow_type": "progress"
     },
     {
@@ -3663,7 +3588,7 @@
         "journey_inspect_preflight"
       ],
       "from": [
-        "template.inspect.success.populated"
+        "run.inspect.success.template"
       ],
       "to": [
         "run.inspect.success.quota"
@@ -3816,10 +3741,10 @@
         "run.inspect.success.routine"
       ],
       "to": [
-        "routine.new.success.created"
+        "template.scaffold.success.applied"
       ],
       "trigger": "scaffold_routine",
-      "label": "capcli routine new sync_orders",
+      "label": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "arrow_type": "progress"
     },
     {
@@ -3828,7 +3753,7 @@
         "journey_human_onboarding"
       ],
       "from": [
-        "routine.new.success.created"
+        "template.scaffold.success.applied"
       ],
       "to": [
         "routine.prove.success.passed"
@@ -3981,10 +3906,10 @@
         "template.new.success.created"
       ],
       "to": [
-        "template.validate.success.valid"
+        "rule.validate.success.valid"
       ],
       "trigger": "validate_blueprint",
-      "label": "capcli template validate templates/webhook_receiver",
+      "label": "capcli rule validate templates/webhook_receiver",
       "arrow_type": "progress"
     },
     {
@@ -3993,7 +3918,7 @@
         "journey_template_lifecycle"
       ],
       "from": [
-        "template.validate.success.valid"
+        "rule.validate.success.valid"
       ],
       "to": [
         "template.pack.success.packed"
@@ -4003,7 +3928,7 @@
       "arrow_type": "progress"
     },
     {
-      "id": "t_template_pack_to_apply",
+      "id": "t_template_pack_to_sync",
       "journeys": [
         "journey_template_lifecycle"
       ],
@@ -4011,19 +3936,19 @@
         "template.pack.success.packed"
       ],
       "to": [
-        "template.apply.success.applied"
+        "template.sync.success.synced"
       ],
-      "trigger": "apply_blueprint",
-      "label": "capcli template apply tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+      "trigger": "sync_registry",
+      "label": "capcli template sync",
       "arrow_type": "success"
     },
     {
-      "id": "t_template_apply_to_prove",
+      "id": "t_template_scaffold_to_prove",
       "journeys": [
         "journey_template_lifecycle"
       ],
       "from": [
-        "template.apply.success.applied"
+        "template.scaffold.success.applied"
       ],
       "to": [
         "routine.prove.success.passed"
@@ -4048,7 +3973,7 @@
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_name_taken_to_list",
+      "id": "t_template_name_taken_to_inspect",
       "journeys": [
         "journey_template_lifecycle"
       ],
@@ -4056,40 +3981,26 @@
         "template.new.refusal.name_taken"
       ],
       "to": [
-        "template.list.success.populated"
-      ],
-      "trigger": "list_blueprints",
-      "label": "capcli template list",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_template_list_to_inspect",
-      "journeys": [
-        "journey_template_lifecycle"
-      ],
-      "from": [
-        "template.list.success.populated"
-      ],
-      "to": [
-        "template.inspect.success.populated"
+        "run.inspect.success.template"
       ],
       "trigger": "inspect_blueprint",
-      "label": "capcli template inspect tpl://routine/webhook_receiver",
+      "label": "capcli inspect tpl://routine/webhook_receiver",
       "arrow_type": "progress"
     },
     {
       "id": "t_template_inspect_to_not_found",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_template_lifecycle",
+        "journey_inspect_preflight"
       ],
       "from": [
-        "template.inspect.success.populated"
+        "run.inspect.success.template"
       ],
       "to": [
-        "template.inspect.refusal.not_found"
+        "run.inspect.refusal.not_found"
       ],
       "trigger": "inspect_unknown_blueprint",
-      "label": "capcli template inspect tpl://routine/ghost_hook",
+      "label": "capcli inspect tpl://routine/ghost_hook",
       "arrow_type": "denial"
     },
     {
@@ -4108,63 +4019,48 @@
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_shape_to_list_empty",
-      "journeys": [
-        "journey_template_lifecycle"
-      ],
-      "from": [
-        "template.new.refusal.shape_violation"
-      ],
-      "to": [
-        "template.list.success.empty"
-      ],
-      "trigger": "list_empty_catalog",
-      "label": "capcli template list",
-      "arrow_type": "progress"
-    },
-    {
       "id": "t_template_validate_to_syntax",
       "journeys": [
         "journey_template_lifecycle"
       ],
       "from": [
-        "template.validate.success.valid"
+        "rule.validate.success.valid"
       ],
       "to": [
-        "template.validate.refusal.syntax"
+        "rule.validate.refusal.bundle_syntax"
       ],
       "trigger": "validate_broken_blueprint",
-      "label": "capcli template validate templates/broken_hook",
+      "label": "capcli rule validate templates/broken_hook",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_apply_to_missing_param",
+      "id": "t_template_scaffold_to_missing_param",
       "journeys": [
         "journey_template_lifecycle"
       ],
       "from": [
-        "template.apply.success.applied"
+        "template.scaffold.success.applied"
       ],
       "to": [
-        "template.apply.refusal.missing_param"
+        "template.scaffold.refusal.missing_param"
       ],
       "trigger": "apply_without_params",
-      "label": "capcli template apply tpl://routine/webhook_receiver sync_orders",
+      "label": "capcli template scaffold tpl://routine/webhook_receiver sync_orders",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_missing_to_target_exists",
+      "id": "t_template_missing_to_target_exists_scaffold",
       "journeys": [
         "journey_template_lifecycle"
       ],
       "from": [
-        "template.apply.refusal.missing_param"
+        "template.scaffold.refusal.missing_param"
       ],
       "to": [
-        "template.apply.denial.target_exists"
+        "template.scaffold.denial.target_exists"
       ],
-      "trigger": "apply_world_target_taken",
-      "label": "capcli template apply tpl://world/atlas_world lab",
+      "trigger": "scaffold_world_target_taken",
+      "label": "capcli template scaffold tpl://world/atlas_world lab",
       "arrow_type": "denial"
     },
     {
@@ -4173,13 +4069,13 @@
         "journey_template_lifecycle"
       ],
       "from": [
-        "template.validate.success.valid"
+        "rule.validate.success.valid"
       ],
       "to": [
-        "template.validate.refusal.compat"
+        "rule.validate.refusal.compat"
       ],
       "trigger": "validate_incompatible_blueprint",
-      "label": "capcli template validate templates/order_sync",
+      "label": "capcli rule validate templates/order_sync",
       "arrow_type": "denial"
     },
     {
@@ -4316,6 +4212,81 @@
       "trigger": "inspect_prompt_envelope",
       "label": "capcli inspect prompt://authoring/overview_absent@1",
       "arrow_type": "progress"
+    },
+    {
+      "id": "t_template_sync_to_import",
+      "journeys": [
+        "journey_template_lifecycle"
+      ],
+      "from": [
+        "template.sync.success.synced"
+      ],
+      "to": [
+        "template.import.success.imported"
+      ],
+      "trigger": "import_registry_bundle",
+      "label": "capcli template import tpl://registry/routine/webhook_receiver@1",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_template_import_to_scaffold",
+      "journeys": [
+        "journey_template_lifecycle"
+      ],
+      "from": [
+        "template.import.success.imported"
+      ],
+      "to": [
+        "template.scaffold.success.applied"
+      ],
+      "trigger": "scaffold_blueprint",
+      "label": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_template_import_to_scaffold_world",
+      "journeys": [
+        "journey_template_lifecycle"
+      ],
+      "from": [
+        "template.import.success.imported"
+      ],
+      "to": [
+        "template.scaffold.success.world"
+      ],
+      "trigger": "scaffold_world_blueprint",
+      "label": "capcli template scaffold tpl://world/atlas_world lab2",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_template_import_to_checksum",
+      "journeys": [
+        "journey_template_lifecycle"
+      ],
+      "from": [
+        "template.import.success.imported"
+      ],
+      "to": [
+        "template.import.refusal.checksum"
+      ],
+      "trigger": "import_checksum_mismatch",
+      "label": "capcli template import https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap --sha256 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_template_scaffold_to_checksum",
+      "journeys": [
+        "journey_template_lifecycle"
+      ],
+      "from": [
+        "template.scaffold.success.applied"
+      ],
+      "to": [
+        "template.scaffold.refusal.checksum"
+      ],
+      "trigger": "scaffold_checksum_mismatch",
+      "label": "capcli template scaffold tpl://registry/routine/webhook_receiver@1 sync_orders",
+      "arrow_type": "denial"
     }
   ]
 }
