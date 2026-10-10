@@ -29,6 +29,9 @@
       - routine.run — routine, version, hashes, triggered_by, outcome: see action.md#Routines
       - saga.execute — egress_verb, compensate_verb, db_mutation, outcome
       - saga.compensate — parent_op, compensate_verb, reason: db_abort, status
+      - swarm.node_join — agent, topology_mode, endpoint, ephemeral_flag: see artifacts/governance.yaml#topology
+      - swarm.node_reap — agent, reason (ttl_expired|sigterm|evicted), claims_released_count
+      - swarm.preemption_yield — agent, frame_id, checkpoint_cursor: see physics.md#Distributed-concurrency-laws
       - routine.draft — template_source, template_hash, trust, version: see action.md#Routine-templates
       - env.init_from_template — source_uri, bundle_sha256, schema_version, seed_tables_count: see world.md#World-templates
       - api.sync — provider, added, removed, changed, unchanged: see action.md#Catalog-synchronization

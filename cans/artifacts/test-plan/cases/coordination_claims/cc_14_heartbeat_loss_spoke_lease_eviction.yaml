@@ -1,0 +1,81 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_14_heartbeat_loss_spoke_lease_eviction"
+title: "Hub reaper expires the dead spoke past lease_ttl, purges its leases, and emits swarm.node_reap"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/agent.md#Ephemeral-swarm-identity"
+  statement: "Reaper eviction: 'Hub reaps nodes exceeding lease_ttl; marks status: expired and purges active leases' (heartbeat loop: 'spokes ping Hub every 5s; updates heartbeat_at in agents table'). Agents rows carry topology, ephemeral, heartbeat_at, and lease_ttl (artifacts/system-schema.yaml#agents); the Hub background tick expires the record when heartbeat delta > lease_ttl (world.md#Distributed-consensus-and-swarm-coordination: ephemeral node reap) and agent.md#remote-spoke-leasing: 'dead spoke leases dropped instantly'. The reap lands on the ledger as swarm.node_reap (effect.md kernel payloads: agent, reason (ttl_expired|sigterm|evicted), claims_released_count)."
+  blast_radius_if_breached: "Dead ephemeral nodes linger as 'active' agents holding live leases: capacity accounting counts ghosts, claims stay locked behind identities that no longer exist, and swarm scheduling routes work to workers that died minutes ago."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent expires the node by hand (UPDATE agents SET status or manual claim delete) and credits the reaper, or lets real wall-clock time pass and hopes 3 heartbeat intervals elapse — faking the lease_ttl eviction or making the test flaky."
+  anti_slop_mitigation: "AS-04 steps heartbeat ticks deterministically via MockClock: heartbeats land at 5s intervals, then stop; the reaper tick fires at the first epoch where heartbeat delta > lease_ttl. AS-05 requires the swarm.node_reap payload to chain; AS-02 proves agents.status and claims state directly; the test path contains no manual status update and no manual unlock."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "capcli-cron"
+    agent_id: "capcli-daemon" # daemon-owned reaper tick; hub background maintenance owns agent expiry
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 exists
+      - name: "agents"
+        row_count: 1 # agt_tmp_cc14, topology: spoke_ephemeral, ephemeral: 1, status: active, heartbeat_at: t0, lease_ttl: 300
+      - name: "claims"
+        row_count: 2 # orders:ORD-10 and orders:ORD-11 held by agt_tmp_cc14
+      - name: "_audit"
+        row_count: 7 # genesis + swarm.node_join + claim acquisitions
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "spoke heartbeats land at t0+5s and t0+10s (MockClock), then stop; Hub reaper tick evaluates at t0+311s where heartbeat delta (301s) exceeds lease_ttl (300s): expire agt_tmp_cc14 and purge its leases"
+  input_params:
+    agent: "agt_tmp_cc14 (agents.lease_ttl: 300, last heartbeat_at: t0+10s)"
+    reaper_clock: "MockClock epoch ticks injected via engine API"
+    manual_expiry_used: false # banned from the test path
+    manual_unlock_used: false # banned from the test path
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — reaper tick expired agt_tmp_cc14 past lease_ttl and purged both held claims"
+    remedy: "n/a — success; eviction verified by the assertions below"
+  database:
+    row_count_delta: -2 # claims 2 -> 0; agents row mutates in place (status active -> expired); _audit gains swarm.node_reap
+    tables_mutated: ["agents", "claims", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "swarm.node_reap (agent: agt_tmp_cc14, reason: ttl_expired, claims_released_count: 2)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Post-tick direct substrate queries: SELECT status FROM agents WHERE id = 'agt_tmp_cc14' == 'expired' and SELECT count(*) FROM claims WHERE holder = 'agt_tmp_cc14' == 0 — expiry and lease purge both proven on the physical rows, never inferred from the tick's return value."
+  - rule: "AS-04"
+    verification: "Heartbeat cadence and reaper evaluation are MockClock-driven: heartbeats at t0+5s, t0+10s, silence after, reaper tick at t0+311s; zero sleeps, zero wall-clock waits; a tick at t0+300s (delta 290s <= lease_ttl) asserts a negative control: agent still active, claims still held."
+  - rule: "AS-05"
+    verification: "The reap chains: _audit grows by exactly 1 with event swarm.node_reap, payload reason == 'ttl_expired' and claims_released_count == 2, prev_hash == SHA-256 of the prior row; run capcli-core::audit::verify_chain() — a silent expiry that skips the ledger is a ghost action."
+  - rule: "AS-06"
+    verification: "Immutable literals: lease_ttl 300, last heartbeat t0+10s, reaper tick t0+311s, delta 301s > 300s; claims_released_count reads exactly 2 and claims for the holder read exactly 0 — expected values are hardcoded literals, never derived from the reaper's own output."

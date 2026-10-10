@@ -203,6 +203,47 @@ These principals operate with immutable, hardcoded boundaries:
 
 ---
 
+## 7. Swarm Topology: Hubs, Spokes, and Disposable Workers
+
+A single agent on a single machine is the smallest shape Capcli runs. The topology modes scale that shape without changing the identity chain:
+
+| Mode | Role |
+|---|---|
+| `local` | One process, one host: engine and sandbox live together over embedded SQLite. |
+| `hub` | The persistent daemon node. The hub holds the live `workspace.db` and `audit.db`, serializes every physical write, and executes database work for its spokes. |
+| `spoke_thin` | A stateless client. Guest compute and database execution both delegate to the hub. |
+| `spoke_fat` | A compute-local worker. Guest routines run in the local sandbox; every `ctx.db` call proxies to the hub, where the C authorizer evaluates the request before any byte moves. |
+| `spoke_ephemeral` | A disposable worker. State sits in an in-memory buffer; the node creates no `workspace.db` and leaves zero disk footprint. |
+| `replica` | An embedded replica. Reads serve from the local LibSQL cache; writes forward upstream to the primary. |
+
+Spokes connect over a unix socket, a WireGuard mesh, or mTLS. A CLI session points at a remote hub directly through the workspace anchor:
+
+```bash
+$ capcli sys swarm list --workspace hub://100.64.0.1:4040
+```
+
+The `hub://` endpoint in `--workspace` overrides `CAPCLI_WORKSPACE` for that invocation. State stays on the hub; the spoke carries identity and intent, never the database file.
+
+### Ephemeral identity
+
+Disposable containers mint transient agent IDs under the `agt_tmp_` prefix (for example `agt_tmp_9c41be07`). The identity is real while it lasts, and brief by construction:
+
+* **Heartbeat.** Every spoke pings the hub every 5 seconds. Each ping stamps `heartbeat_at` on the agent record.
+* **Reaping.** A node silent past its lease window is reaped: the record flips to `expired`, and every claims lease it held is purged. A severed socket drops the holder's leases immediately and rolls back its active transactions.
+* **Preemption.** A host `SIGTERM` traps inside the worker. The frame commits its cursor checkpoint, releases its claims, and yields with `exit 6`, parked in `_suspended_tasks` on the hub — preemption parks the work, it never drops it.
+* **Credentials in memory only.** The spoke negotiates its HMAC capability token in memory via `CAPCLI_AGENT_TOKEN`. No key material touches the spoke's filesystem.
+
+### The human control surface
+
+```bash
+$ capcli sys swarm list [--active]
+$ capcli sys swarm reap
+```
+
+`sys swarm list` shows the nodes the hub knows, filtered to live nodes with `--active`. `sys swarm reap` runs the eviction pass on demand. Every transition lands on the audit spine as a typed event — `swarm.node_join`, `swarm.node_reap`, `swarm.preemption_yield` — so node churn carries the same causal receipts as any mutation. Join and reap history reads through the standard audit surfaces in [audit.md](audit.md).
+
+---
+
 ## The One Rule
 
 **Identity is validated by the machine. Credentials stay in the vault.**

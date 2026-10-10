@@ -1,4 +1,4 @@
-# capcli canonical test plan manifest — machine-readable index of all 140 cases
+# capcli canonical test plan manifest — machine-readable index of all 146 cases
 # Derived from test-plan-structure.md §1 (directory tree) and §6 (master catalog).
 # Quadrant and target_tier values MUST match the §6 catalog tables exactly.
 $schema: "test-plan/manifest/v1"
@@ -6,7 +6,7 @@ plan:
   name: "capcli canonical test plan"
   structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
   matrix_doc: "cans/artifacts/test-plan/matrix.yaml"
-  total_cases: 140
+  total_cases: 146
   domains: 11
   crate_tier_convention:
     unit: "crates/capcli-core"
@@ -16,7 +16,7 @@ plan:
 domains:
   kernel_physics:
     prefix: "kp"
-    case_count: 14
+    case_count: 16
     description: "Kernel physics — dual-engine enforcement, platform tier taxonomy, seccomp-bpf jails, tmpfs scratch isolation, NTP drift halt, audit-sink fail-closed host integrity probes."
     spec_sources: ["cans/physics.md", "cans/world.md", "cans/effect.md"]
   database_authorizer:
@@ -31,7 +31,7 @@ domains:
     spec_sources: ["cans/physics.md", "cans/action.md", "cans/budget.md", "cans/space.md"]
   budget_cascade:
     prefix: "bc"
-    case_count: 13
+    case_count: 15
     description: "Budget cage & frame cascade — downward min inheritance, session ops ceilings, fuel pools, earmark ringfence and TTL sweep, watchdogs, suspended-task refill."
     spec_sources: ["cans/budget.md", "artifacts/governance.yaml", "artifacts/policy.yaml", "cans/time.md"]
   audit_dag:
@@ -51,7 +51,7 @@ domains:
     spec_sources: ["cans/world.md", "cans/recovery.md", "cans/space.md"]
   coordination_claims:
     prefix: "cc"
-    case_count: 12
+    case_count: 14
     description: "Coordination & claims — exclusive leases with TTL, contested claim rejection, WAL BEGIN IMMEDIATE serialization, authoring mutex, orphan cleanup, cross-agent event tailing."
     spec_sources: ["cans/agent.md"]
   bindings_triggers:
@@ -70,7 +70,7 @@ domains:
     description: "SDK & guest harness contract — frame token traps, ctx.api/ctx.db rules, manifest reflection over IPC, poll_until aggregate accounting, storage HMAC URLs, claims locks."
     spec_sources: ["cans/action.md", "cans/agent.md"]
 cases:
-  # ── kernel_physics (kp) — 14 cases ────────────────────────────────────────
+  # ── kernel_physics (kp) — 16 cases ────────────────────────────────────────
   - case_id: "kp_01_syscall_seccomp_trap"
     file: "cases/kernel_physics/kp_01_syscall_seccomp_trap.yaml"
     domain: "kernel_physics"
@@ -169,6 +169,20 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_positive"
     title: "jail runner applies distinct dynamic seccomp profiles per runtime (profile_python vs profile_bun_node vs profile_binary)"
+  - case_id: "kp_15_sigterm_preemption_exit6_checkpoint"
+    file: "cases/kernel_physics/kp_15_sigterm_preemption_exit6_checkpoint.yaml"
+    domain: "kernel_physics"
+    target_tier: "integration"
+    target_crate: "crates/capcli-daemon"
+    quadrant: "true_negative"
+    title: "SIGTERM on a disposable worker traps to exit 6, parks the frame in _suspended_tasks, and emits swarm.preemption_yield"
+  - case_id: "kp_16_network_partition_sync_audit_exit5"
+    file: "cases/kernel_physics/kp_16_network_partition_sync_audit_exit5.yaml"
+    domain: "kernel_physics"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "lost Hub connection during sync audit delivery aborts the command immediately with exit 5, fail-closed"
   # ── database_authorizer (da) — 13 cases ───────────────────────────────────
   - case_id: "da_01_unbounded_update_ast_kill"
     file: "cases/database_authorizer/da_01_unbounded_update_ast_kill.yaml"
@@ -353,7 +367,7 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_positive"
     title: "high-volume replay in sim burns sim quota bucket while prod bucket balance remains 100% untouched"
-  # ── budget_cascade (bc) — 13 cases ────────────────────────────────────────
+  # ── budget_cascade (bc) — 15 cases ────────────────────────────────────────
   - case_id: "bc_01_downward_min_inheritance"
     file: "cases/budget_cascade/bc_01_downward_min_inheritance.yaml"
     domain: "budget_cascade"
@@ -445,6 +459,20 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
     title: "inspect evaluates routine against depleted session ops and returns can_invoke_now false listing the tightest constraint"
+  - case_id: "bc_14_hub_atomic_fuel_arbitration"
+    file: "cases/budget_cascade/bc_14_hub_atomic_fuel_arbitration.yaml"
+    domain: "budget_cascade"
+    target_tier: "integration"
+    target_crate: "crates/capcli-daemon"
+    quadrant: "true_negative"
+    title: "concurrent spokes cannot overspend the session pool: Hub-side atomic deduction halts the starved worker with exit 2"
+  - case_id: "bc_15_spoke_prereserve_preemption_floor"
+    file: "cases/budget_cascade/bc_15_spoke_prereserve_preemption_floor.yaml"
+    domain: "budget_cascade"
+    target_tier: "integration"
+    target_crate: "crates/capcli-daemon"
+    quadrant: "true_negative"
+    title: "spokes burn pre-reserved 1000-fuel blocks locally; the low-token floor yields all non-critical spokes with exit 6"
   # ── audit_dag (ad) — 13 cases ─────────────────────────────────────────────
   - case_id: "ad_01_sha256_prev_hash_linking"
     file: "cases/audit_dag/ad_01_sha256_prev_hash_linking.yaml"
@@ -721,7 +749,7 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_positive"
     title: "production merge pipeline runs git push --dry-run to verify remote credentials before committing physical DDL changes"
-  # ── coordination_claims (cc) — 12 cases ───────────────────────────────────
+  # ── coordination_claims (cc) — 14 cases ───────────────────────────────────
   - case_id: "cc_01_exclusive_lease_acquisition"
     file: "cases/coordination_claims/cc_01_exclusive_lease_acquisition.yaml"
     domain: "coordination_claims"
@@ -806,6 +834,20 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_positive"
     title: "Agent A executes mutation and Agent B monitoring via sys audit tail receives live event envelope via Unix domain socket"
+  - case_id: "cc_13_disconnect_claims_auto_drop"
+    file: "cases/coordination_claims/cc_13_disconnect_claims_auto_drop.yaml"
+    domain: "coordination_claims"
+    target_tier: "integration"
+    target_crate: "crates/capcli-daemon"
+    quadrant: "true_positive"
+    title: "severed spoke socket drops holder claims instantly under disconnect_policy auto_drop and rolls back the open transaction"
+  - case_id: "cc_14_heartbeat_loss_spoke_lease_eviction"
+    file: "cases/coordination_claims/cc_14_heartbeat_loss_spoke_lease_eviction.yaml"
+    domain: "coordination_claims"
+    target_tier: "integration"
+    target_crate: "crates/capcli-daemon"
+    quadrant: "true_positive"
+    title: "Hub reaper expires the dead spoke past lease_ttl, purges its leases, and emits swarm.node_reap"
   # ── bindings_triggers (bt) — 12 cases ─────────────────────────────────────
   - case_id: "bt_01_cron_min_interval_enforcement"
     file: "cases/bindings_triggers/bt_01_cron_min_interval_enforcement.yaml"

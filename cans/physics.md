@@ -16,10 +16,19 @@
         - trust bounds — draft and reviewed in dev/sim only; pinned execution denied: see trust.md#Ladder-laws
   - Deployment topology
     - dedicated server — headless Linux host running capcli-daemon under systemd; required for 24/7 background crons, webhooks, and S3 WORM attestations
+    - swarm hub — central daemon instance coordinating remote spokes; hosts primary SQLite writer and system tables
+    - swarm spokes — worker nodes communicating with hub over WireGuard mesh (Tailscale), mTLS, or local IPC
+    - ephemeral sandbox node — disposable microVM or container worker; zero-disk state, auto-reaping identity, and sync audit ack
     - local workstation — ephemeral developer environment; prohibited from serving production endpoints or hosting unattended pinned schedules
     - parity principle — local state mutations and external API egress share equal gate severity
     - local engine — C authorizer and AST parse intercept SQLite commands at prepare time
     - egress engine — optimistic token-bucket quotas slaved to remote headers, secret boundaries, and sim routing intercept network calls
+  - Distributed concurrency laws
+    - remote authorizer proxy — Hub executes Layer 1 sqlite3_set_authorizer on behalf of spoke ctx.db requests before execution
+    - state fencing — OCC state_fence (sha256 hash of read row state) verified at Hub before physical commit; drift aborts with exit 2
+    - preemption trap — SIGTERM on disposable worker traps execution, drops claims, flushes cursor checkpoint, and yields with exit 6
+    - network partition fail-closed — lost connection to Hub during sync audit delivery aborts command immediately with exit 5
+    - claims auto-eviction — Hub monitors spoke socket heartbeats; severed connection triggers immediate cleanup of held leases
   - Two-layer enforcement
     - Layer 1: sqlite3_set_authorizer
       - engine — native C callback inside sqlite3_prepare_v2 via rusqlite crate
@@ -110,6 +119,7 @@
       - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
       - exit 5 — domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
       - exit 6 — proactive yield; releases all held claims locks, records OCC state_fence, persists resume target to _suspended_tasks
+      - preemption yield — worker spot/container SIGTERM maps directly to exit 6; parks frame to Hub _suspended_tasks without task drop
       - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence, writes an audit event; the frame never resumes
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law

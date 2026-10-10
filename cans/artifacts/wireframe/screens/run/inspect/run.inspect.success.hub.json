@@ -1,0 +1,43 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.hub",
+  "target": "hub://100.64.0.1:4040",
+  "command": "capcli inspect hub://100.64.0.1:4040",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "endpoint": "hub://100.64.0.1:4040",
+          "status": "reachable",
+          "topology_mode": "hub",
+          "transport": "wireguard_mesh"
+        }
+      },
+      {
+        "fields": {
+          "authorizer": "Layer 1 sqlite3_set_authorizer evaluated at the Hub on inbound spoke RPC",
+          "can_invoke_now": "true",
+          "max_concurrent_spokes": "256",
+          "spokes_connected": "4"
+        }
+      }
+    ],
+    "title": null
+  },
+  "affordances": [
+    {
+      "command": "capcli sys swarm list",
+      "intent": "List swarm nodes connected to the inspected Hub endpoint",
+      "rel": "next",
+      "requires_intent": false,
+      "risk": "safe"
+    }
+  ]
+}

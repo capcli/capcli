@@ -100,6 +100,7 @@
       - Mirror queries — sys audit query <sql> [-p k=v]
       - Log replay — sys audit replay --from <point> [--dry-run]
       - Identity control — sys agent register, list, revoke
+      - Swarm control — sys swarm list [--active], sys swarm reap
       - Vault provisioning — sys vault set <key> <val>, sys vault import-env
       - Diagnostics — sys doctor [--boot-check] [--json]
         - platform probe — reports host OS, platform tier, and sandbox: see physics.md#Platform-tier-taxonomy
@@ -141,7 +142,7 @@
       - --as <principal> — target execution principal for scoped access
       - --env <name> — target environment override (defaults to sticky context set by `env use`)
       - -m, --intent "<why>|@<path>" — causal motivation for mutating actions (short flag supported)
-      - --workspace <path> — project root anchor (overrides CAPCLI_WORKSPACE env var)
+      - --workspace <path|urp> — project root anchor or remote hub endpoint (e.g. hub://100.64.0.1:4040, overrides CAPCLI_WORKSPACE)
       - --session <token> — cryptographic session handle binding principal and frame
       - --in <path> — file or stdin (@-) source for primary command payload
       - --out <path> — writes execution payload to disk; returns token-lean summary to stdout

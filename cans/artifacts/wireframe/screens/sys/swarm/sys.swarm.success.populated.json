@@ -1,0 +1,44 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.swarm.success.populated",
+  "target": "swarm",
+  "command": "capcli sys swarm list",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "populated"
+  },
+  "archetype": "tree",
+  "component": {
+    "footer": {
+      "active": "4 · expired: 0",
+      "nodes": "4 nodes (cap: 256 spokes)"
+    },
+    "nodes": [
+      {
+        "children": [],
+        "label": "agt_7f3k order-filler spoke_fat user:alice active heartbeat 2s ago"
+      },
+      {
+        "children": [],
+        "label": "agt_tmp_9f3k22ab sandbox-worker spoke_ephemeral kernel active heartbeat 1s ago ephemeral"
+      },
+      {
+        "children": [],
+        "label": "agt_2m8p inventory-sync spoke_thin user:alice active heartbeat 4s ago"
+      }
+    ],
+    "root": "hub 100.64.0.1:4040 hub active",
+    "title": "listed"
+  },
+  "affordances": [
+    {
+      "command": "capcli sys swarm reap",
+      "intent": "Reap swarm nodes past lease_ttl and release held claims",
+      "rel": "next",
+      "requires_intent": true,
+      "risk": "mutating"
+    }
+  ]
+}

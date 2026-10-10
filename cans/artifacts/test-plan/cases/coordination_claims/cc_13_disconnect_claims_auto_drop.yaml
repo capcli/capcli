@@ -1,0 +1,82 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_13_disconnect_claims_auto_drop"
+title: "Severed spoke socket drops holder claims instantly under disconnect_policy auto_drop and rolls back the open transaction"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/world.md#Distributed-consensus-and-swarm-coordination"
+  statement: "Network drop cleanup: 'socket disconnect immediately rolls back active spoke transactions and drops holder claims' (physics.md#Distributed-concurrency-laws: 'claims auto-eviction — Hub monitors spoke socket heartbeats; severed connection triggers immediate cleanup of held leases'). Claims rows carry disconnect_policy (artifacts/system-schema.yaml#claims: disconnect_policy: text=auto_drop, chk 'auto_drop | retain_until_ttl'): on socket sever the Hub drops every held lease of the disconnected holder in the same cleanup pass — no TTL wait, no manual db unlock."
+  blast_radius_if_breached: "A crashed or disconnected spoke keeps fleet-wide locks on resources it no longer exists to use: every other agent blocks behind a dead holder, multi-step ops stall permanently, and manual claims-table edits (the surface agents never touch) become the only recovery path."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent waits out the claim TTL and credits the disconnect cleanup, or deletes the claims row directly in the test fixture and asserts 'it is gone' — faking the Hub-side sever cleanup entirely; mocking the socket layer leaves the real disconnect path untested."
+  anti_slop_mitigation: "AS-01 bans mocking the socket/transport layer: the spoke connection is a real Hub socket severed at the transport. AS-04 fires the sever deterministically before TTL expiry via MockClock ticks; AS-02 proves claims rows dropped and the open transaction rolled back; AS-06 proves a second agent re-acquires the resource immediately."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:alice"
+    agent_id: "agt_tmp_cc13" # ephemeral spoke node (agents.topology: spoke_ephemeral, ephemeral: 1)
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 1 # ORD-10 exists; spoke holds an open, uncommitted transaction against it
+      - name: "claims"
+        row_count: 2 # orders:ORD-10 and orders:ORD-11 both held by agt_tmp_cc13, disconnect_policy: auto_drop, ttl 300s from t0
+      - name: "agents"
+        row_count: 1 # agt_tmp_cc13, topology: spoke_ephemeral, heartbeat_at: t0
+      - name: "_audit"
+        row_count: 6 # genesis + join + two claim acquisitions
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "sever the spoke transport socket to the Hub at t0+10s (MockClock; claim TTL 300s unexpired) while the spoke holds an open transaction; Hub disconnect cleanup runs on the sever event"
+  input_params:
+    resource: "orders:ORD-10, orders:ORD-11"
+    holder: "agt_tmp_cc13 (disconnect_policy: auto_drop)"
+    sever_clock: "MockClock epoch ticks injected via engine API"
+    manual_unlock_used: false # banned from the test path
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none (nominal)"
+    culprit: "none — Hub disconnect cleanup dropped both held claims and rolled back the open spoke transaction on the sever event"
+    remedy: "n/a — success; instant cleanup verified by the assertions below"
+  database:
+    row_count_delta: -2 # claims 2 -> 0; _audit gains the chained cleanup event; orders untouched (transaction rolled back)
+    tables_mutated: ["claims", "_audit"]
+  wire:
+    packets_transmitted: 0 # sever is transport-level; no egress packet is part of the cleanup path
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "claims disconnect cleanup — Hub daemon action on socket sever; CLI verbs, bindings, and environment transitions advance the hash chain (zero ghost actions)"
+    # NOTE: not located in cans/ specs — no dedicated disconnect-cleanup event name exists in the effect.md kernel payload list (swarm.node_reap covers reaped nodes, not transient disconnect cleanup); the drop duty comes from world.md#Distributed-consensus-and-swarm-coordination
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "The disconnect is real: a live spoke socket connected to the Hub is severed at the transport layer; mocked socket traits or mocked Hub cleanup handlers anywhere in the test path fail this case."
+  - rule: "AS-02"
+    verification: "Post-sever direct substrate queries: SELECT count(*) FROM claims WHERE holder = 'agt_tmp_cc13' == 0 and SELECT count(*) FROM orders == 1 with status unchanged — the open transaction rolled back (row_count_delta on claims only, never partial business writes)."
+  - rule: "AS-04"
+    verification: "The sever fires at t0+10s via MockClock ticks with claim TTL (300s) far from expiry; no sleeps and no TTL wait anywhere in the test path — instant means the sever event itself, never the TTL sweeper."
+  - rule: "AS-06"
+    verification: "Immutable literals: claims held by agt_tmp_cc13 go 2 -> 0; then a second agent re-acquires via capcli db lock orders:ORD-10 --ttl 30 --reason \"re-acquire after disconnect drop\" and the test asserts exit 0 with a fresh claims row — the resource freed with zero manual intervention."

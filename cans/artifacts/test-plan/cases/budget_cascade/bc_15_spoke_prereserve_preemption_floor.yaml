@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_15_spoke_prereserve_preemption_floor"
+title: "Spokes burn pre-reserved 1000-fuel blocks locally; the low-token floor yields all non-critical spokes with exit 6"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/budget.md#Distributed-Swarm-Fuel-Arbitration"
+  statement: "Optimistic spoke allocation: 'spokes pre-reserve fuel blocks (default 1000) via RPC to avoid per-op latency'; preemption floor: 'low tokens trigger exit 6 across all non-critical spokes simultaneously'. A spoke debits its local reserved block per primitive without a Hub round-trip per op; when Hub tokens cross the low floor, every non-critical spoke yields its frame with exit 6 (frames park in _suspended_tasks; physics.md#Exit-code-law exit 6) while critical work keeps the pool."
+  blast_radius_if_breached: "Per-op Hub round-trips make swarm execution latency-bound and unscalable; a low-token floor that yields only the unlucky spoke lets the rest drain the pool mid-flight, killing critical work on an empty bucket and scattering half-finished frames with no resume target."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts the spokes 'have fuel' by reading each spoke's local block total (never reconciling against the Hub), or yields one spoke at a time and calls it the simultaneous floor; mocking the reservation RPC makes the 1000-block accounting fictional."
+  anti_slop_mitigation: "AS-01 bans mocked reservation: blocks issue through the real Hub RPC and debit the real Hub pool row. AS-02 reads Hub-side state directly: pool debited exactly 1000 per reservation, _suspended_tasks gains every yielded non-critical frame; AS-04 crosses the floor on deterministic MockClock ticks; AS-06 pins literals (block 1000, floor crossing, exact yielded frame count)."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:alice"
+    agent_id: "agt_tmp_bc15_a, agt_tmp_bc15_b, agt_tmp_bc15_c" # three non-critical ephemeral spokes; one critical spoke agt_tmp_bc15_crit on the same pool
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1 # Hub session pool: ceiling 10000, consumed 6000 (4000 remaining)
+      - name: "_budget_frames"
+        row_count: 4 # three non-critical spoke frames plus one critical frame, all on the Hub pool
+      - name: "_suspended_tasks"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: "each non-critical spoke pre-reserves a 1000-fuel block via Hub RPC and burns primitives against its local block; Hub tokens then cross the low floor (MockClock quota drain by the critical spoke) and the floor signal fires at all non-critical spokes"
+  input_params:
+    prereserve_block: 1000
+    spoke_count: 3
+    critical_spoke: "agt_tmp_bc15_crit (exempt from the preemption floor)"
+    floor_trigger: "Hub pool tokens cross the low-token floor on a MockClock tick"
+
+expected_observations:
+  exit_code: 6
+  state_modified: false # business state untouched; yielded frames park in the kernel suspension ledger
+  diagnostic:
+    domain: "none (proactive yield — exit 6 is a suspension, not a denial; physics.md#Exit-code-law assigns no denial domain to exit 6)"
+    culprit: "distributed preemption floor: Hub pool tokens crossed the low floor; all non-critical spokes yield simultaneously while critical work keeps the pool"
+    remedy: "frames parked in _suspended_tasks, not killed: the Hub re-dispatches each frame on quota refill; the critical spoke continues uninterrupted"
+  database:
+    row_count_delta: 0 # business tables untouched; _suspended_tasks 0 -> 3 and the Hub pool counter are the only moves
+    tables_mutated: ["_suspended_tasks", "_budget_frames"] # kernel-managed ledgers only; world tables untouched
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "swarm.preemption_yield per yielded spoke frame (agent, frame_id, checkpoint_cursor — effect.md kernel payloads)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mocked allocation: each 1000-block issues through the real Hub RPC against the real pool row on workspace.db; local-only fuel stubs or per-op Hub calls in the test path fail this case (per-op latency is the exact cost the reservation law removes)."
+  - rule: "AS-02"
+    verification: "Direct Hub substrate queries: after three reservations the pool counter moves by exactly 3000 (1000 per block, debited at reservation time on the Hub); after the floor fires, SELECT count(*) FROM _suspended_tasks == 3 (every non-critical frame parked) and the critical frame's row shows outcome still active with zero suspension rows."
+  - rule: "AS-03"
+    verification: "Each non-critical spoke asserts integer exit_code == 6 exactly (a hard kill 2 or a crash 5 fails this test) with the parsed CliEnvelope: culprit cites the Hub preemption floor, remedy names re-dispatch on refill, state_modified == false; the critical spoke asserts no yield envelope at all."
+  - rule: "AS-04"
+    verification: "The floor crossing is clocked deterministically: the critical spoke's drain and the floor evaluation land on MockClock ticks injected via the engine API; simultaneity is asserted on the same tick for all three spokes — no sleeps, no wall-clock races."
+  - rule: "AS-05"
+    verification: "Every yield chains: _audit gains exactly 3 swarm.preemption_yield events, each naming its agent and frame_id, prev_hash == SHA-256 of the prior row; run capcli-core::audit::verify_chain() — a parked frame that skips the ledger is a ghost suspension."
+  - rule: "AS-06"
+    verification: "Immutable literals: block 1000, reservations 3, Hub pool debit 3000, yielded frames 3, critical frames yielded 0 — expected values are hardcoded literals, never tallied from the spokes' own reports."

@@ -2983,6 +2983,51 @@
       "arrow_type": "progress"
     },
     {
+      "id": "t_identity_list_to_swarm_list",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.agents.success.populated"
+      ],
+      "to": [
+        "sys.swarm.success.populated"
+      ],
+      "trigger": "list_swarm_nodes",
+      "label": "capcli sys swarm list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_identity_swarm_list_to_reap",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.swarm.success.populated"
+      ],
+      "to": [
+        "sys.swarm.success.reaped"
+      ],
+      "trigger": "reap_swarm_nodes",
+      "label": "capcli sys swarm reap",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_identity_swarm_reap_to_empty",
+      "journeys": [
+        "journey_identity_control"
+      ],
+      "from": [
+        "sys.swarm.success.reaped"
+      ],
+      "to": [
+        "sys.swarm.success.empty"
+      ],
+      "trigger": "list_swarm_nodes",
+      "label": "capcli sys swarm list",
+      "arrow_type": "progress"
+    },
+    {
       "id": "t_identity_list_to_register_cap",
       "journeys": [
         "journey_identity_control"
@@ -3595,6 +3640,36 @@
       ],
       "trigger": "inspect_quota",
       "label": "capcli inspect quota://threads",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_quota_to_hub",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.quota"
+      ],
+      "to": [
+        "run.inspect.success.hub"
+      ],
+      "trigger": "inspect_hub_endpoint",
+      "label": "capcli inspect hub://100.64.0.1:4040",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_hub_to_routine",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.hub"
+      ],
+      "to": [
+        "run.inspect.success.routine"
+      ],
+      "trigger": "inspect_routine",
+      "label": "capcli inspect cap://dispatch_order@4",
       "arrow_type": "progress"
     },
     {

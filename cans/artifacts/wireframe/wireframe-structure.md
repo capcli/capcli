@@ -93,6 +93,7 @@ cans/artifacts/wireframe/
       recover/
       exec/
       serve/
+      swarm/
     doc/
       read/
       outline/
@@ -110,7 +111,7 @@ cans/artifacts/wireframe/
 * **Active Nouns:** Exactly 11 CLI nouns (`run`, `db`, `routine`, `api`, `bind`, `ping`, `rule`, `env`, `sys`, `doc`, `template`).
 * **Single-Source Law:** Every screen has exactly one `.json` fixture. No `.txt` files are committed. The JSON shape IS the screen; renderers (HTML canvas, Rust test harness) consume it directly.
 * **Depth Ceiling:** File paths relative to `screens/` must remain exactly 3 path components: `{noun}/{verb}/{filename}.json`.
-* **Sibling Invariants:** Min 3, max 16 verb directories per noun branch node.
+* **Sibling Invariants:** Min 3, max 17 verb directories per noun branch node.
 * **Naming Law:** Strict 4-segment token syntax:
   ```
   {noun}.{verb}.{state}.{condition}.json
@@ -158,7 +159,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (6 verbs → 42 screens)
+### 4.1 `run/` (6 verbs → 43 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -199,6 +200,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.success.quota` | success | 0 | — | populated | Headroom breakdown on `quota://` URP |
 | `run.inspect.success.prompt` | success | 0 | — | populated | Prompt L2 envelope only; no body content |
 | `run.inspect.success.template` | success | 0 | — | populated | tpl:// blueprint pre-flight envelope via capcli inspect |
+| `run.inspect.success.hub` | success | 0 | — | populated | hub:// remote Hub endpoint pre-flight envelope via capcli inspect |
 | `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Template URP does not resolve |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
@@ -387,7 +389,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (16 verbs → 47 screens)
+### 4.9 `sys/` (17 verbs → 50 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -410,6 +412,9 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.register.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max agents exceeded |
 | `sys.agents.success.populated` | success | 0 | — | populated | Registered agents listed |
 | `sys.agents.success.empty` | success | 0 | — | empty | Zero registered agents |
+| `sys.swarm.success.populated` | success | 0 | — | populated | Swarm nodes listed with topology mode, heartbeat, and ephemeral flag |
+| `sys.swarm.success.empty` | success | 0 | — | empty | Zero swarm nodes registered at the Hub |
+| `sys.swarm.success.reaped` | success | 0 | — | reaped | Expired swarm nodes reaped; agents expired and claims released per swarm.node_reap |
 | `sys.revoke.success.revoked` | success | 0 | — | revoked | Agent credentials killed |
 | `sys.revoke.refusal.not_found` | refusal | 3 | validation | not_found | Target agent ID not found |
 | `sys.vault_set.success.vaulted` | success | 0 | — | vaulted | AES-256-GCM secret encrypted |
@@ -1321,8 +1326,8 @@ Root field law:
 
 - `$schema` is `wireframe/v2`. `id` is the screen identity; noun and verb are its first two segments and appear nowhere else.
 - `command` states the invocation the screen answers; any target pointer lives inside the command string.
-- `target` names the single invocation target when the command carries one (247/256 fixtures on disk) and is absent on targetless commands.
-- `context` is the `CliEnvelope` context frame: `env`, `tier`, `trust`, plus optional `data_shape` (61/256 fixtures on disk). The renderer derives the `[{env}:{tier}]` badge from it.
+- `target` names the single invocation target when the command carries one (251/260 fixtures on disk) and is absent on targetless commands.
+- `context` is the `CliEnvelope` context frame: `env`, `tier`, `trust`, plus optional `data_shape` (65/260 fixtures on disk). The renderer derives the `[{env}:{tier}]` badge from it.
 - `audit_op` names the audit operation the envelope reports. It appears when the screen reports one and is absent otherwise.
 - `archetype` is exactly one of `diagnostic`, `tree`, `receipt`, `document` (archetype law: cans/physics.md#Diagnostic-output-law). `component` carries that archetype's payload and nothing else.
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).

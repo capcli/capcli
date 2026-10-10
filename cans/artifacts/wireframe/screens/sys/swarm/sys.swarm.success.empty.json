@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.swarm.success.empty",
+  "target": "swarm",
+  "command": "capcli sys swarm list",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "empty"
+  },
+  "archetype": "receipt",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "nodes": "0 nodes (cap: 256 spokes)"
+        }
+      },
+      {
+        "lines": [
+          "Zero swarm nodes registered. Hub roster empty."
+        ]
+      },
+      {
+        "fields": {
+          "note": "spokes join via heartbeat to the Hub; roster populates on first swarm.node_join"
+        }
+      }
+    ],
+    "title": null
+  }
+}

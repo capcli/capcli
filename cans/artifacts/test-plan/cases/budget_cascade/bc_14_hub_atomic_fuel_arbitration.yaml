@@ -1,0 +1,70 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_14_hub_atomic_fuel_arbitration"
+title: "Concurrent spokes cannot overspend the session pool: Hub-side atomic deduction halts the starved worker with exit 2"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/budget.md#Distributed-Swarm-Fuel-Arbitration"
+  statement: "Central atomicity: 'all fuel and rate deductions execute atomically on Hub workspace.db'; fuel starvation: 'exhausted session pool at Hub immediately halts distributed spoke workers with exit 2'. Fifty spokes burning against one session pool serialize every deduction through the Hub — the pool is debited once per primitive, never per-spoke-copied — and the first deduction past exhaustion denies with exit 2 (budget.md#Fuel-&-Wire-Egress: one pool per session; physics.md#Exit-code-law exit 2: policy.budget, session fuel ceilings exhausted)."
+  blast_radius_if_breached: "Non-atomic per-spoke accounting lets 50 workers each read the same remaining balance and overspend external API quotas concurrently: provider rate ceilings breached fleet-wide, throttling or billing overruns discovered only on the provider invoice."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the spokes sequentially (no real concurrency) and asserts the pool never overspends, or mocks each spoke's local counter so the race never exists in the test — the atomicity invariant is faked by construction."
+  anti_slop_mitigation: "AS-01 bans mocked budget counters: deductions execute against the real Hub workspace.db through the real RPC path. AS-02 reads the Hub-side pool row directly after the burst; AS-06 pins hardcoded literals (pool ceiling, per-op cost, exact final balance 0, never negative); AS-03 forces the typed exit 2 denial with the policy.budget diagnostic on the starved worker."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:alice"
+    agent_id: "agt_tmp_bc14_00..agt_tmp_bc14_49" # 50 ephemeral spokes on one session pool at the Hub
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 50 # one active spoke frame per worker, all drawing the single Hub session fuel pool
+      - name: "_api_quota"
+        row_count: 1 # session pool row on Hub workspace.db: fuel ceiling 10000, consumed 9900 (100 remaining)
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: "50 ephemeral spokes concurrently issue fuel-burning primitives against the Hub (ctx.db / ctx.api via hub_rpc); each primitive costs 10 fuel debited atomically on the Hub; workers keep issuing until the Hub denies"
+  input_params:
+    spoke_count: 50
+    session_fuel_ceiling: 10000
+    fuel_consumed_at_start: 9900
+    fuel_per_primitive: 10
+    concurrency: "all 50 spokes in flight simultaneously; no sequential batching in the test path"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "distributed fuel starvation: Hub session pool hit 10000/10000 under concurrent spoke deductions; the primitive past exhaustion denied atomically at the Hub (dimension: fuel)"
+    remedy: "pool exhausted at the Hub — start a new session or wait for quota refill; no spoke-side retry drains the pool further, and no partial result is returned"
+  database:
+    row_count_delta: 0
+    tables_mutated: [] # business tables untouched; only the Hub pool counter moves, 9900 -> 10000 exactly
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted (dimension: fuel) on the starved worker frame"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mocked counters: all 50 spokes deduct through the real Hub atomic path on workspace.db via live RPC; per-spoke local balance stubs or a serialized single-threaded run anywhere in the test path fail this case."
+  - rule: "AS-02"
+    verification: "Post-burst direct Hub substrate query: the session pool row reads consumed == 10000 exactly — never 10010, never negative headroom; every business table row count is strictly unchanged before/after the burst."
+  - rule: "AS-03"
+    verification: "Exactly the primitives past exhaustion assert integer exit_code == 2 with the parsed CliEnvelope diagnostic: domain == 'policy.budget', culprit cites the Hub pool at 10000/10000 and dimension fuel; a guest runtime crash (exit 4) or a silent success past the ceiling fails this test."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: ceiling 10000, start 9900, cost 10 per primitive, successful deductions after t0 == exactly 10 across all 50 spokes combined, final consumed == 10000 — counts are immutable literals tallied by the test, never summed from the spokes' own reports."

@@ -16,6 +16,7 @@
         - snap:// — VACUUM recovery snapshots and migration restore points
         - quota:// — provider rate-bucket balances and spend ceilings
         - policy:// — authorizer AST constraints and governance limits
+        - hub:// — remote central daemon endpoints for spoke routing (e.g. hub://100.64.0.1:4040)
       - Surface uniformity
         - commands — search, inspect, run, doc
         - flattening — search returns typed URN pointers with action hints

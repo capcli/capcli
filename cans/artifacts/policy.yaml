@@ -9,6 +9,28 @@ lockfile: capcli.lock                 # compiled root hash SSOT
 default: deny                         # THE anchor. everything below carves exceptions
 
 # ───────────────────────────────────────────────────────────────
+# 0. TOPOLOGY & TRANSPORT BEHAVIOR
+# ───────────────────────────────────────────────────────────────
+topology:
+  hub:
+    enforce_remote_authorizer: true    # Hub evaluates Layer 1 authorizer on inbound RPC
+    client_auth: mandatory             # anonymous spokes rejected at TLS handshake
+  spoke_thin:
+    local_compute: deny                # thin spoke sends execution AST to Hub
+    direct_db_access: deny             # all DB ops forward over RPC
+  spoke_fat:
+    local_compute: allow               # runs sandboxed Python/TS locally
+    direct_db_access: deny             # ctx.db calls proxy to Hub C-authorizer
+  spoke_ephemeral:
+    stateless_disk: enforce            # local disk persistence strictly denied
+    quarantine_spool_local: deny       # dropped RPC halts worker (exit 5); no local write
+    on_disconnect: auto_reap           # instantly reap agent identity and leases
+  preemption:
+    trap_sigterm: true                 # intercepts container preemption signals
+    yield_on_sigterm: true             # writes exit 6 checkpoint to Hub _suspended_tasks
+    max_evacuation_ms: 2000            # flush window before hard abort
+
+# ───────────────────────────────────────────────────────────────
 # 1. LAYER 1 — compiled to sqlite3_set_authorizer
 #    granularity: action × table × column. engine-enforced.
 # ───────────────────────────────────────────────────────────────

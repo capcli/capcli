@@ -21,6 +21,29 @@ registry:
     require_description: true         # unsearchable = unregistrable
 
 # ───────────────────────────────────────────────────────────────
+# 1.2 TOPOLOGY & SWARM — distributed state & compute geometry
+# ───────────────────────────────────────────────────────────────
+topology:
+  default_mode: local                 # local | hub | spoke_thin | spoke_fat | spoke_ephemeral | replica
+  allowed_modes: [local, hub, spoke_thin, spoke_fat, spoke_ephemeral, replica]
+  transports: [unix_socket, wireguard_mesh, mtls]
+  hub:
+    max_concurrent_spokes: 256
+    idle_timeout_seconds: 60
+    busy_timeout_ms: 5000             # SQLite BEGIN IMMEDIATE wait floor
+  spoke:
+    rpc_pool_size: 16
+    connect_timeout_ms: 2000
+    keepalive_interval_seconds: 10
+  ephemeral:
+    max_concurrent_nodes: 1000        # auto-scaling dynamic container ceiling
+    default_ttl_seconds: 300          # dead worker reap window
+    heartbeat_interval_seconds: 5
+    missed_heartbeats_to_reap: 3
+    force_sync_audit_ack: true        # no exit 0 without central audit receipt
+    memory_buffer_mb: 16              # RAM audit buffer before network flush
+
+# ───────────────────────────────────────────────────────────────
 # 1.5 TEMPLATES — blueprints are unproven proposals
 # ───────────────────────────────────────────────────────────────
 template:

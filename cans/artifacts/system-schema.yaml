@@ -144,12 +144,18 @@ tables:
       name: text!                      # human or system label
       harness: text!                   # claude-code, codex, hermes, custom
       principal: text!                 # authority holder (user:alice, partner:stripe)
-      status: text=active              # active or revoked
+      status: text=active              # active, revoked, expired
+      topology: text=local             # local, hub, spoke_thin, spoke_fat, spoke_ephemeral, replica
+      ephemeral: int=0                 # 1 = temporary disposable sandbox node
+      heartbeat_at: int=0              # unix timestamp of last alive ping
+      lease_ttl: int=0                 # auto-reap window in epoch seconds
     chk:
-      - "status IN ('active', 'revoked')"
+      - "status IN ('active', 'revoked', 'expired')"
+      - "topology IN ('local', 'hub', 'spoke_thin', 'spoke_fat', 'spoke_ephemeral', 'replica')"
     idx:
       - [principal]
       - [status]
+      - [[ephemeral, heartbeat_at]]
 
   claims:
     description: "Distributed lease-based concurrency locks with mandatory TTL"
@@ -159,6 +165,9 @@ tables:
       holder: text!                    # agent id holding the lease
       ttl: int!                        # duration in seconds
       created_at: int!                 # lease acquisition timestamp
+      disconnect_policy: text=auto_drop # auto_drop | retain_until_ttl
+    chk:
+      - "disconnect_policy IN ('auto_drop', 'retain_until_ttl')"
     idx:
       - [target]
       - [[holder, created_at]]

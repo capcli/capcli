@@ -4,6 +4,18 @@
     - Storage trinity
       - workspace.db
         - ssot role — dedicated source of truth for domain tables, claims, and local state
+      - Topology modes
+        - local mode — embedded single-process SQLite; host holds both engine and sandbox
+        - hub mode — persistent daemon node; holds live workspace.db, audit.db, and executes incoming spoke RPCs
+        - spoke-thin mode — stateless client node; delegates both guest compute and database execution to Hub
+        - spoke-fat mode — compute-local worker; runs guest routines in local sandbox, proxies ctx.db calls to Hub via RPC
+        - spoke-ephemeral mode — stateless disposable node; in-memory buffer only, zero local disk footprint, heartbeats to Hub
+        - replica mode — distributed embedded replica; local reads via LibSQL cache, writes forwarded upstream to primary
+      - Distributed consensus and swarm coordination
+        - writer serialization — Hub serializes physical writes via SQLite BEGIN IMMEDIATE; spokes queue via busy_timeout
+        - lease arbitration — cross-spoke resource locks mediated through claims table: see artifacts/system-schema.yaml#claims
+        - network drop cleanup — socket disconnect immediately rolls back active spoke transactions and drops holder claims
+        - ephemeral node reap — Hub background tick expires agent records when heartbeat delta > lease_ttl: see artifacts/governance.yaml#topology
       - audit.db
         - ssot role — isolated, append-only SQLite database for _audit ledger to eliminate WAL lock contention
         - process — capcli kernel-managed
@@ -24,6 +36,8 @@
         - access perimeter
           - direct sockets — agent connection denied
           - direct db file — workspace.db isolated behind daemon IPC socket; raw subshell access denied
+          - spoke transport — spokes connect via unix socket, WireGuard mesh (Tailscale), or mTLS: see cans/artifacts/governance.yaml#topology
+          - zero-disk ephemeral rule — spoke-ephemeral nodes prohibited from creating workspace.db; state resides strictly in Hub RAM/SSD
           - workspace files — open read and write for schemas, routines, and scripts
           - sole gateway — kernel daemon mediation mandatory
       - world.sql

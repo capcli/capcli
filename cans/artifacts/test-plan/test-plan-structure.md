@@ -34,6 +34,8 @@ cans/artifacts/test-plan/
       kp_13_unprivileged_userns_docker_check.yaml
       kp_14_dynamic_seccomp_profile_switch.yaml
       kp_15_root_help_stub_ceiling.yaml
+      kp_15_sigterm_preemption_exit6_checkpoint.yaml
+      kp_16_network_partition_sync_audit_exit5.yaml
     database_authorizer/
       da_01_unbounded_update_ast_kill.yaml
       da_02_where_tautology_bypass_kill.yaml
@@ -76,6 +78,8 @@ cans/artifacts/test-plan/
       bc_11_parent_frame_reconciliation_audit.yaml
       bc_12_suspended_task_max_deferments_abort.yaml
       bc_13_inspect_preflight_can_invoke_verdict.yaml
+      bc_14_hub_atomic_fuel_arbitration.yaml
+      bc_15_spoke_prereserve_preemption_floor.yaml
     audit_dag/
       ad_01_sha256_prev_hash_linking.yaml
       ad_02_sink_failure_kernel_panic.yaml
@@ -134,6 +138,8 @@ cans/artifacts/test-plan/
       cc_10_claims_lease_extension_holder_only.yaml
       cc_11_orphan_claim_process_crash_cleanup.yaml
       cc_12_cross_agent_event_tailing.yaml
+      cc_13_disconnect_claims_auto_drop.yaml
+      cc_14_heartbeat_loss_spoke_lease_eviction.yaml
     bindings_triggers/
       bt_01_cron_min_interval_enforcement.yaml
       bt_02_cron_catchup_fire_limit.yaml
@@ -360,7 +366,7 @@ anti_slop_assertions:
 
 ## 6. Master Test Plan Bible & Case Catalog
 
-This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–16 cases per domain, 144 cases total).
+This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–16 cases per domain, 146 cases total).
 
 ### 6.1 Kernel Physics (`cases/kernel_physics/`)
 
@@ -381,6 +387,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `kp_13_unprivileged_userns_docker_check.yaml` | Integration | Host running inside Docker without unprivileged user namespaces automatically falls over to gVisor or microVM isolation without security degradation. | TP | Refusing boot inside containers instead of routing to supported containerized isolation providers. |
 | `kp_14_dynamic_seccomp_profile_switch.yaml` | Unit | Jail runner applies distinct dynamic seccomp profiles per runtime (`profile_python` vs `profile_bun_node` vs `profile_binary`). | TP | Applying universal permissive seccomp profile across all language runtimes. |
 | `kp_15_root_help_stub_ceiling.yaml` | E2E | `capcli --help` outputs strictly <= 6 lines and exits 0; references `search` and forbids dumping full command tree. | TP | Allowing standard bloated CLI help output that blows LLM context windows. |
+| `kp_15_sigterm_preemption_exit6_checkpoint.yaml` | Integration | Host SIGTERM hits a disposable worker mid-frame; trap flushes cursor checkpoint, drops claims, parks frame in `_suspended_tasks` with `exit 6`, emits `swarm.preemption_yield`. | TN | Asserting exit 6 without proving the parked frame, checkpoint cursor, and released claims. |
+| `kp_16_network_partition_sync_audit_exit5.yaml` | Integration | Spoke-Hub connection lost during sync audit delivery; ephemeral spoke aborts immediately with `exit 5`, no local spool, no exit 0 without central audit receipt. | TN | Buffering the audit event to local disk and completing locally — the fail-open ghost path. |
 
 ### 6.2 Database Floor & C-Authorizer (`cases/database_authorizer/`)
 
@@ -435,6 +443,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `bc_11_parent_frame_reconciliation_audit.yaml` | Integration | Child routine pops; kernel emits `budget.frame_pop` event returning unburned ops and fuel to parent frame pool. | TP | Dropping parent frame state or failing to reconcile balances upon child exit. |
 | `bc_12_suspended_task_max_deferments_abort.yaml` | Integration | Suspended task deferred 5 times hits yield_max_deferments ceiling; daemon aborts task with exit 2 to prevent starvation loops. | TN | Indefinitely deferring suspended tasks across infinite quota refills. |
 | `bc_13_inspect_preflight_can_invoke_verdict.yaml` | Unit | `inspect` evaluates routine against depleted session ops; returns `can_invoke_now: false` and lists tightest constraint. | TN | Returning `can_invoke_now: true` when ops headroom is 0. |
+| `bc_14_hub_atomic_fuel_arbitration.yaml` | Integration | 50 spokes burn against one session pool; every deduction executes atomically on Hub workspace.db; the primitive past exhaustion halts with `exit 2`, final consumed exactly 10000. | TN | Running spokes sequentially or mocking per-spoke counters so the overspend race never exists. |
+| `bc_15_spoke_prereserve_preemption_floor.yaml` | Integration | Spokes pre-reserve 1000-fuel blocks via RPC and burn locally; Hub low-token floor yields all non-critical spokes with `exit 6` on one tick, critical spoke exempt. | TN | Reading local block totals without Hub reconciliation, or yielding one spoke at a time. |
 
 ### 6.5 Memory Spine & Causal DAG (`cases/audit_dag/`)
 
@@ -509,6 +519,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `cc_10_claims_lease_extension_holder_only.yaml` | Unit | Non-owner agent attempts to extend TTL on existing claim; kernel authorizer rejects update with `exit 2`. | TN | Permitting any caller to extend arbitrary resource locks. |
 | `cc_11_orphan_claim_process_crash_cleanup.yaml` | Integration | Process dies abruptly while holding database claim; daemon cleanup worker successfully dissolves lease after TTL elapses. | TP | Requiring manual database intervention to recover from process crashes. |
 | `cc_12_cross_agent_event_tailing.yaml` | Integration | Agent A executes mutation; Agent B actively monitoring via `sys audit tail` receives live event envelope via Unix domain socket. | TP | Agent B polling SQLite with high-frequency busy-wait queries. |
+| `cc_13_disconnect_claims_auto_drop.yaml` | Integration | Spoke socket severed at t0+10s with TTL 300s unexpired; Hub drops both held claims under `disconnect_policy: auto_drop` and rolls back the open transaction; second agent re-acquires instantly. | TP | Waiting out the TTL or deleting claims rows by hand and crediting the disconnect cleanup. |
+| `cc_14_heartbeat_loss_spoke_lease_eviction.yaml` | Integration | Spoke heartbeats stop; reaper tick at heartbeat delta 301s > lease_ttl 300s marks agent `expired`, purges both leases, emits `swarm.node_reap` (reason: ttl_expired, claims_released_count: 2). | TP | Expiring the agent by hand or letting real wall-clock time lapse. |
 
 ### 6.9 Bindings & Inbound Triggers (`cases/bindings_triggers/`)
 

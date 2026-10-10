@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_16_network_partition_sync_audit_exit5"
+title: "Lost Hub connection during sync audit delivery aborts the command immediately with exit 5, fail-closed"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Distributed-concurrency-laws"
+  statement: "Network partition fail-closed: 'lost connection to Hub during sync audit delivery aborts command immediately with exit 5' (governance.yaml#topology.ephemeral: force_sync_audit_ack: true, 'no exit 0 without central audit receipt'; policy.yaml#topology.spoke_ephemeral: quarantine_spool_local: deny, 'dropped RPC halts worker (exit 5); no local write'). An ephemeral spoke that cannot deliver its audit event to the Hub halts at once — the command never completes locally, never spools to local disk, and never reports success."
+  blast_radius_if_breached: "A partitioned spoke that completes work locally creates ghost actions: mutations with no central audit receipt, invisible to the hash chain, unreconcilable on reconnect — the exact untracked side-effect channel the audit spine exists to eliminate, at fleet scale."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent mocks the Hub transport to return a synthetic error and asserts exit 5, never severing a real connection mid-delivery; or the spoke quietly buffers the audit event to local disk and completes with exit 0 — the fail-open path this law bans, asserted as success."
+  anti_slop_mitigation: "AS-01 bans mocking the transport: a real spoke-to-Hub connection is severed during live audit delivery. AS-02 proves the command's target table is untouched and no local spool file exists on the spoke; AS-03 forces exit_code == 5 with the parsed kernel.panic diagnostic (exit 0 or exit 2 both fail); AS-08 proves the spoke scratch is wiped with zero local artifacts left."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:alice"
+    agent_id: "agt_tmp_kp16" # ephemeral spoke, zero-disk node (agents.topology: spoke_ephemeral, ephemeral: 1)
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 5 # Hub-side table; the spoke command targets ORD-3 on the Hub workspace.db
+      - name: "_audit"
+        row_count: 8 # Hub-side ledger; no receipt for the partitioned command exists
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: "ephemeral spoke runs `capcli run ship_order -p order=ORD-3 -m \"partition probe\"` against the Hub workspace (hub:// endpoint); the spoke-Hub connection is severed after the Hub executes the ctx.db request and before the sync audit receipt returns to the spoke"
+  input_params:
+    endpoint: "hub://100.64.0.1:4040 (--workspace <path|urp> remote hub endpoint)"
+    sever_point: "after Hub-side execution, before sync audit ack delivery to the spoke"
+    local_spool_permitted: false # policy.yaml#topology.spoke_ephemeral quarantine_spool_local: deny
+
+expected_observations:
+  exit_code: 5
+  state_modified: false
+  diagnostic:
+    domain: "kernel.panic"
+    culprit: "Hub connection lost during sync audit delivery: no central audit receipt for the command; ephemeral spoke halts fail-closed instead of completing locally (force_sync_audit_ack)"
+    remedy: "command aborted with no local completion and no local spool; restore Hub connectivity and re-run — the aborted command leaves no ghost action to reconcile"
+  database:
+    row_count_delta: 0 # orders 5 -> 5 on the Hub; the partitioned command commits nothing observable as success
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # post-sever: zero packets reach the wire; the ack never arrives
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "none on the spoke (no receipt, no local event); the Hub ledger gains no success event for the aborted command — zero ghost actions"
+    # NOTE: worker-side halt with no receipt is the absence of an event by law: force_sync_audit_ack denies exit 0 without a central receipt, so asserting a spoke-side success event here would invent one
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "The partition is real: a live spoke-to-Hub connection (json_rpc transport) is severed mid-delivery at the socket; mocked transports, synthetic RPC errors, or stubbed ack handlers anywhere in the test path fail this case."
+  - rule: "AS-02"
+    verification: "Post-abort direct substrate queries on the Hub: SELECT count(*) FROM orders == 5 and status of ORD-3 unchanged, SELECT count(*) FROM _audit == 8 (no success event appended for the aborted command); on the spoke, assert no quarantine or spool file exists anywhere in its scratch or working tree — fail-closed means halted, never locally buffered to completion."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 5 exactly (exit 0 is the fail-open ghost path; exit 2 is a governance block — both fail this test) and parse the CliEnvelope diagnostic: domain == 'kernel.panic', culprit names the lost Hub connection during sync audit delivery, remedy names re-run after connectivity, state_modified == false."
+  - rule: "AS-08"
+    verification: "The ephemeral spoke ran zero-disk: assert its /scratch/<run-uuid> tmpfs directory does not exist post-abort and no workspace.db file exists on the spoke — the partition leaves zero local state footprint of any kind."

@@ -70,6 +70,11 @@
         - Unit: primitive executions per frame
         - Scope: per-frame (max_ops_per_run) plus session (session_ops_ceiling)
         - Cascade: child consumes from the parent's pool
+      - Distributed Swarm Fuel Arbitration
+        - central atomicity — all fuel and rate deductions execute atomically on Hub workspace.db
+        - optimistic spoke allocation — spokes pre-reserve fuel blocks (default 1000) via RPC to avoid per-op latency
+        - fuel starvation — exhausted session pool at Hub immediately halts distributed spoke workers with exit 2
+        - preemption floor — low tokens trigger exit 6 across all non-critical spokes simultaneously
       - Duration
         - Unit: wall-clock milliseconds
         - Scope: per-routine plus session

@@ -6,6 +6,12 @@
       - agent — registered harness instance (agt_7f3k)
       - session — temporary engagement scope (ses_a9)
       - op — single leaf execution in causal DAG
+    - Ephemeral swarm identity
+      - node prefix — disposable containers mint transient IDs: agt_tmp_<uuid8>
+      - heartbeat loop — spokes ping Hub every 5s; updates heartbeat_at in agents table: see artifacts/system-schema.yaml#agents
+      - reaper eviction — Hub reaps nodes exceeding lease_ttl; marks status: expired and purges active leases: see artifacts/governance.yaml#topology
+      - preemption trap — SIGTERM traps host kill signal; auto-commits cursor, releases held claims, and yields frame via exit 6
+      - zero-disk credential — spokes negotiate HMAC capability token in memory via CAPCLI_AGENT_TOKEN; zero filesystem key storage
     - Credential binding
       - capability token — kernel-minted HMAC session token bound to active _budget_frames
       - workspace pinning — active session and principal pinned to envs/<name>/workspace.db
@@ -38,6 +44,7 @@
       - authoring mutex — filesystem lock on routines/<name>.py during edits; concurrent edits exit 2
       - collision handling — writers queue up to busy_timeout (default 5000ms); timeout exhaustion fails closed with exit 2
       - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
+      - remote spoke leasing — distributed claims leases validate holder heartbeat; dead spoke leases dropped instantly
       - callee floor — cross-agent routine calls demand trust >= reviewed
   - Intent chain
     - Chain hierarchy

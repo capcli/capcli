@@ -1,0 +1,46 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.swarm.success.reaped",
+  "target": "swarm",
+  "command": "capcli sys swarm reap",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "agents_expired": "2",
+          "claims_released_count": "3",
+          "reason": "ttl_expired"
+        }
+      },
+      {
+        "lines": [
+          "agt_tmp_9f3k22ab expired — reason: ttl_expired — claims released: 2",
+          "agt_4t6r expired — reason: sigterm — claims released: 1"
+        ]
+      },
+      {
+        "fields": {
+          "audit": "swarm.node_reap committed to _audit with claims_released_count per agent",
+          "status": "expired nodes purged from the agents table; held leases dropped"
+        }
+      }
+    ],
+    "title": null
+  },
+  "affordances": [
+    {
+      "command": "capcli sys swarm list",
+      "intent": "Verify the swarm roster after reaping expired nodes",
+      "rel": "next",
+      "requires_intent": false,
+      "risk": "safe"
+    }
+  ]
+}

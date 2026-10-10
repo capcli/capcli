@@ -1,0 +1,82 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_15_sigterm_preemption_exit6_checkpoint"
+title: "SIGTERM on a disposable worker traps to exit 6, parks the frame in _suspended_tasks, and emits swarm.preemption_yield"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/physics.md#Distributed-concurrency-laws"
+  statement: "Preemption trap: 'SIGTERM on disposable worker traps execution, drops claims, flushes cursor checkpoint, and yields with exit 6' (physics.md#Exit-code-law: 'preemption yield — worker spot/container SIGTERM maps directly to exit 6; parks frame to Hub _suspended_tasks without task drop'; agent.md#Ephemeral-swarm-identity: 'SIGTERM traps host kill signal; auto-commits cursor, releases held claims, and yields frame via exit 6'). The yield lands on the ledger as swarm.preemption_yield (effect.md kernel payloads: agent, frame_id, checkpoint_cursor)."
+  blast_radius_if_breached: "Spot and container preemption kills workers mid-frame: in-flight work vanishes without a resume target, claims stay locked behind a dead holder, and the batch restarts from zero — or, worse, double-executes from a stale cursor on retry."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent sends SIGKILL or asserts a generic non-zero exit, or asserts exit 6 without proving the frame actually parked: no _suspended_tasks row, no checkpoint cursor, claims still held — a hard kill dressed as a graceful yield."
+  anti_slop_mitigation: "AS-03 forces the typed assertion exit_code == 6 (SIGKILL-class failure would surface 5, a governance block 2 — both fail this test) with the parsed diagnostic. AS-02 physically queries _suspended_tasks (0 -> 1, checkpoint_cursor set), claims (held -> 0), and business tables (strict equality). AS-05 requires the swarm.preemption_yield payload to chain with the exact frame_id."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:alice"
+    agent_id: "agt_tmp_kp15" # ephemeral disposable worker (agents.topology: spoke_ephemeral, ephemeral: 1)
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 20 # batch cursor routine mid-scan at cursor orders:ORD-10
+      - name: "claims"
+        row_count: 1 # orders batch claim held by agt_tmp_kp15 (exit 6 releases held claims locks)
+      - name: "_suspended_tasks"
+        row_count: 0
+      - name: "_budget_frames"
+        row_count: 1 # active frame frame_kp15 for the batch routine
+      - name: "_audit"
+        row_count: 9 # genesis + join + frame push + batch progress
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "host delivers SIGTERM (signal 15) to the disposable worker mid-batch; the worker trap handler flushes the cursor checkpoint to the Hub, releases held claims, parks frame_kp15 in _suspended_tasks, and yields"
+  input_params:
+    signal: 15
+    frame: "frame_kp15"
+    checkpoint_cursor: "orders:ORD-10 (last committed batch position at signal time)"
+
+expected_observations:
+  exit_code: 6
+  state_modified: false # business/world state untouched; only the kernel suspension ledger gains the parked frame
+  diagnostic:
+    domain: "none (proactive yield — exit 6 is a suspension, not a denial; physics.md#Exit-code-law assigns no denial domain to exit 6)"
+    culprit: "worker preempted by host SIGTERM mid-frame; trap handler flushed cursor checkpoint orders:ORD-10, released held claims, and yielded frame_kp15 to _suspended_tasks"
+    remedy: "frame parked, not dropped: the Hub re-dispatches frame_kp15 from checkpoint_cursor orders:ORD-10 on quota refill; no manual restart and no re-run from the batch head"
+  database:
+    row_count_delta: 0 # orders 20 -> 20; _suspended_tasks 0 -> 1 and claims 1 -> 0 are kernel ledger moves, zero business mutation
+    tables_mutated: ["_suspended_tasks", "claims", "_audit"] # kernel-managed ledgers only; world tables untouched
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "swarm.preemption_yield (agent: agt_tmp_kp15, frame_id: frame_kp15, checkpoint_cursor: orders:ORD-10)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Post-yield direct substrate queries: SELECT count(*) FROM orders == 20 (strict before/after equality — zero business rows mutated); SELECT count(*) FROM _suspended_tasks == 1 with frame_id == 'frame_kp15' and checkpoint_cursor == 'orders:ORD-10'; SELECT count(*) FROM claims WHERE holder = 'agt_tmp_kp15' == 0 (claims released, never left dangling)."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 6 exactly (a SIGKILL-class death surfaces 5 and a governance block 2 — both fail this test) and parse the CliEnvelope diagnostic: culprit names the SIGTERM preemption and the flushed checkpoint, remedy names Hub re-dispatch from the checkpoint, state_modified == false; the yield carries no denial domain (exit 6 is a suspension, never a denial)."
+  - rule: "AS-05"
+    verification: "The yield chains: _audit grows by exactly 1 with event swarm.preemption_yield, payload frame_id == 'frame_kp15' and checkpoint_cursor == 'orders:ORD-10', prev_hash == SHA-256 of the prior row; run capcli-core::audit::verify_chain() — a yield that skips the ledger is a ghost action."
+  - rule: "AS-06"
+    verification: "Immutable literals: signal 15, frame frame_kp15, checkpoint orders:ORD-10, _suspended_tasks count 1, holder claims 0 — expected values are hardcoded literals in the test, never read back from the trap handler's own report."

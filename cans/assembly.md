@@ -97,6 +97,7 @@
       - configuration — Cargo.toml linking clap derive, tokio, capcli-core, capcli-types
       - command surface (crates/capcli-cli/src/)
         - main.rs — entrypoint routing subcommands and exit codes: see interface.md#CLI-surface
+        - transport/ — spoke RPC client dispatcher (unix_socket, wireguard_mesh, mtls) for remote Hub routing
         - commands/ — clap subcommand handlers for the CLI nouns: see interface.md#CLI-surface
         - terminal/ — procedural renderers for the 3 visual archetypes (Diagnostic, Tree, Receipt) over CliEnvelope<T>: see physics.md#Diagnostic-output-law
     - Persistent daemon crate
@@ -104,6 +105,8 @@
       - configuration — Cargo.toml linking axum, tower, croner, rust-embed, capcli-core, capcli-types
       - daemon surface (crates/capcli-daemon/src/)
         - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#Administrative-cockpit-pwa
+        - hub_rpc.rs — JSON-RPC 2.0 handler evaluating spoke ctx.db requests through local Layer 1 C-Authorizer
+        - reaper.rs — background timer evaluating spoke heartbeats; purges dead claims leases and expires agents
         - yield_queue.rs — evaluates _suspended_tasks and re-dispatches tasks on quota refill
         - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
         - cron.rs — croner schedule evaluator daemon: see time.md#Schedule-&-maintenance

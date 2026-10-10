@@ -37,6 +37,7 @@ Every result is a **Universal Resource Pointer** (URP). Typed. Addressable. Runn
 | `vault://` | Secret references | `vault://stripe_secret` |
 | `snap://` | Recovery snapshots | `snap://snap_migration_004` |
 | `ask://` | Pending human questions | `ask://ask_7f2c` |
+| `hub://` | Remote hub daemon endpoints | `hub://100.64.0.1:4040` |
 
 You don't need to know all of these yet. You'll meet them as you need them.
 
