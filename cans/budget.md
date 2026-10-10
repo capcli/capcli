@@ -96,7 +96,7 @@
         - Scope: per-routine only
         - Cascade: none — each routine caps its own output independently
     - Composition flags (artifacts/governance.yaml)
-      - budget_inheritance: min — child effective = min(declared, parent_remaining)
+      - budget_inheritance: min — see artifacts/governance.yaml#budget_inheritance
       - ops_cascade: true, duration_cascade: true
       - fuel_scope: session, rate_scope: session, rows_scope: trust_session
       - result_tokens_scope: routine

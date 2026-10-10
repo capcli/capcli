@@ -40,10 +40,11 @@
       - api.first_prod_call — call_number, calls_remaining, contract_proof_hash: see trust.md#Simulation-gaps
       - budget.frame_push/pop — declared, consumed, remaining: see budget.md#Frames
       - serve.request — endpoint, channel (rest|mcp), trace_id, routine@version, api_key_id, status
+      - promotion.sla_breached — queue age beyond SLA threshold; see time.md#decay-and-subtraction
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
       - template instantiation — capcli template scaffold emits exactly one event: routine.draft (routine kind) or env.init_from_template (world kind)
-      - failure buffer — audit sink failure streams uncommitted events to audit/audit.quarantine.jsonl without halting execution
+      - failure buffer — business writes denied while audit sink is down; failed audit writes held in in-memory 5-minute buffer, exit 5 when undrainable
       - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok
       - no synthetic types — onboarding.* and fake lifecycle events denied
       - tamper quarantine — broken sha256 links isolate corrupted leaves to a quarantine branch; valid historical blocks remain operable
@@ -79,7 +80,7 @@
       - domain classification — routine.runtime, db.engine, policy.*, api.upstream, kernel.*
       - violation — rule id (e.g. policy.query.update_delete.require_where)
       - layer — authorizer, AST, governance, or budget
-      - measured value — observed count vs ceiling (e.g. 342 LOC vs 150 cap)
+      - measured value — observed count vs ceiling (e.g. token envelope over the 2,000-token cap)
       - remediation — explicit fix instructions printed
       - state_modified — strictly boolean false on non-zero exit
       - canonical error payload

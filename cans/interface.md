@@ -147,7 +147,7 @@
       - --in <path> — file or stdin (@-) source for primary command payload
       - --out <path> — writes execution payload to disk; returns token-lean summary to stdout
       - at-symbol expansion — all string arguments (-p, --intent, --reason, query) accept @<path> or @- (stdin)
-      - flag ceiling — universal flags frozen at exactly twelve; no per-noun growth
+      - flag ceiling — the twelve universal flags above are frozen; per-verb command parameters grow independently
     - Mutating flags
       - --dry-run — plan execution without applying state changes
       - --reason "<why>|@<path>" — threshold crossing justification, accepts inline text or file

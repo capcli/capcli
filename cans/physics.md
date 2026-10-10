@@ -11,7 +11,7 @@
           - profile_binary: allow clone3, futex, rseq, rt_sigreturn
         - trust bounds — all rungs permitted (draft, reviewed, pinned): see trust.md#The-ladder
       - tier 2 (virtualized / wasm) — macOS (Darwin), Android (Termux), Windows native
-        - sandbox — mandatory microVM (Colima / Lima) or WASM sandbox (Wasmtime) with unmapped socket capabilities
+        - sandbox — mandatory microVM (Darwin/Windows: Colima / Lima) or WASM sandbox (Wasmtime; Termux and any tier 2 host) with unmapped socket capabilities
         - network jail — kernel-enforced socket null-routing; cooperative host process execution is Tier 0 (DENIED)
         - trust bounds — draft and reviewed in dev/sim only; pinned execution denied (E045_TIER2_PINNED_DENIED): see trust.md#Ladder-laws
   - Deployment topology
@@ -37,6 +37,7 @@
       - granularity — 3D action × table × column tuple evaluated per statement
       - intercepted actions
         - tenant isolation — direct SELECT/UPDATE/DELETE on tenant: true tables blocked; access forced through scoped :principal views; ctx.db.mutate asserts row owner == :principal
+        - kernel-mediated writes — claims lease insert/delete issued by ctx.db.lock are kernel-internal, not agent SQL; Layer 2 deny_write applies to raw agent statements
         - tenant schema definitions: see world.md#Dual-schema
         - table mutations — read, insert, update, delete allowlists
         - column writes — deny_columns_write protection on immutable keys
@@ -48,7 +49,7 @@
       - compilation — authorizer table compiled from artifacts/policy.yaml
       - ddl trust floors
         - alter table — requires reviewed trust; draft attempts exit with 2
-        - vacuum — requires pinned trust; denied unconditionally in prod
+        - vacuum — requires pinned trust; denied unconditionally in prod; executable in dev/sim by pinned callers
     - Layer 1.2: VDBE execution progress & mutation hook
       - engine — sqlite3_update_hook + sqlite3_progress_handler
       - hook checks — counts physical B-Tree row mutations and VDBE byte-code steps during execution
@@ -106,9 +107,10 @@
       - ambiguity — unclassified read/write treated as write
       - standalone bypass — routine invocation outside kernel runner exits 3
       - principal missing — scoped view invoked without --as rejected
-      - audit sink error — local disk/media write failures spool to audit.quarantine.jsonl; exit 5 reserved for total I/O deadlock
+      - audit sink error — sink write failures deny business writes; failed audit writes held in in-memory 5-minute buffer, exit 5 when undrainable
       - quota exhaustion — remaining <= deny_at_remaining throws exit 6 (Background) or exit 2 (Critical)
     - Exit code law
+      - scope — exit contract binds capcli commands returning CliEnvelope; external tooling defines its own exit contract
       - exit 0 — success with audit event recorded; upstream HTTP failures handled gracefully in envelope
       - exit 2 — invariant or governance block; state untouched (state_modified: false)
         - domain db.engine — SQLite check constraints, foreign key violations, busy timeout
@@ -116,7 +118,8 @@
         - domain policy.budget — frame limits, session op/fuel ceilings exhausted, or call nesting > 5
         - domain policy.migration — Gate 5 rehearsal broke pinned routine contract
         - domain policy.trust — action forbidden by caller trust rung (e.g. draft touching prod)
-      - exit 3 — compile-time refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, unpaginated payload > 500 tokens
+      - exit 3 — compile-time refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, statically-declared unpaginated payload shape
+        - runtime result size — oversized output returns the keyset pagination schema instead of exiting; see action.md#Shape-constraints
       - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
       - exit 5 — domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
       - exit 6 — proactive yield; releases all held claims locks, records OCC state_fence, persists resume target to _suspended_tasks

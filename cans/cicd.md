@@ -60,11 +60,11 @@
         - format law — structured trailer: prompt://... - <reason> syntax required
         - breach penalty — excess tokens trigger immediate verification abort with exit 1
       - L2 envelope boundary
-        - token limit — prompt campaign envelopes capped at 150 tokens maximum
+        - token limit — prompt campaign envelopes capped at 150 tokens maximum: see artifacts/cicd.yaml#trinity
         - inspection contract — inspect prompt://{bank}/{slug}@{version} returns envelope: see interface.md#Document-path:-doc-noun
         - content scope — metadata and section index only; deep instructions denied
       - L3 leaf boundary
-        - token limit — prompt leaf sections capped at 500 tokens maximum
+        - token limit — prompt leaf sections capped at 500 tokens maximum: see artifacts/cicd.yaml#trinity
         - doc read contract — doc read prompt://...#node fetches single leaf slice: see interface.md#Document-path:-doc-noun
         - overflow denial — leaves exceeding 500 tokens fail Trinity validation check
     - Checker tool architecture

@@ -6,7 +6,7 @@ target_tier: "integration"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/physics.md#audit-sink-error--unaudited-writes-denied-outright-(exit-5)"
+  law_reference: "cans/physics.md#audit-sink-error"
   statement: "When the _audit sink cannot commit (local disk full / read-only filesystem), unaudited writes are denied outright: the kernel queues the failed audit write in its in-memory failure buffer for 5 minutes (effect.md#Event-integrity failure buffer) and, still undrainable, triggers the emergency halt with exit 5 (domain kernel.panic) — the business mutation never executes."
   blast_radius_if_breached: "Mutations silently land with no audit record (ghost actions): denials and writes become unprovable, replay and forensics diverge from physical state, offsite WORM attestation no longer matches the local ledger, and compliance evidence is permanently incomplete while operators believe the ledger is whole."
 

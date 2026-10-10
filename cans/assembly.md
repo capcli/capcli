@@ -31,7 +31,7 @@
       - system-schema.yaml — kernel-managed system surfaces: see world.md#Dual-schema
       - world.sql — deterministic DDL export for fresh instances: see world.md#SQLite-as-SSOT
     - Governance specifications
-      - governance.yaml — structural limits, LOC, and fuel caps: see artifacts/governance.yaml
+      - governance.yaml — structural limits, token caps, and fuel caps: see artifacts/governance.yaml
       - policy.yaml — behavioral authorizer and AST rules: see physics.md#Two-layer-enforcement
       - sealing.rules — cross-domain boundaries and sealing laws: see cans/_rules.yaml
   - Instance workspace substrate
@@ -58,7 +58,7 @@
         - migrations/NNNN_<name>/plan.json — compiled expand/contract DDL phases
         - migrations/NNNN_<name>/backfill.py — sandboxed chunked data backfill routine
       - routines/ — agent-authored procedural guest scripts (.ts, .js, .py): see action.md#Routines
-        - routines/overview.ts: see action.md#Session-Overview-Primer
+        - routines/overview.py: see action.md#Session-Overview-Primer
         - routines/order_refund.ts — sandboxed multi-step refund script
         - routines/inventory_sync.py — legacy or data-heavy Python script
       - apis/ — imported OpenAPI catalogs and simulation mocks: see action.md#External-APIs
@@ -162,7 +162,7 @@
         - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
         - ipc_socket.rs — cross-platform IPC (UDS on POSIX/Termux, Named Pipes on Windows): see action.md#Sandbox-execution
       - Execution gates
-        - shape_gate.rs — checks LOC, tokens, and param limits: see artifacts/governance.yaml#routine_shape
+        - shape_gate.rs — checks token, complexity, and param limits: see artifacts/governance.yaml#routine_shape
         - trust_gate.rs — denies draft writes in prod worktree: see trust.md#The-ladder
         - drift_gate.rs — catches manifest and fingerprint divergence: see space.md#Manifest-drift
       - Domain telemetry — tracks runner spin-up latencies and memory high-water marks
@@ -290,7 +290,7 @@
       - test_template.rs — validates template bundle intake, AST rewrites, and size ceilings: see world.md#World-templates
       - test_bytecode.rs — verifies EXPLAIN OpenWrite detection: see physics.md#Layer-1.5:-prepare-time-cross-check
       - test_authorizer.rs — validates SQLite C authorizer callbacks: see physics.md#Layer-1:-sqlite3_set_authorizer
-      - test_routine_shape.rs — enforces LOC, token, and param bounds: see artifacts/governance.yaml#routine_shape
+      - test_routine_shape.rs — enforces token, complexity, and param bounds: see artifacts/governance.yaml#routine_shape
       - test_api_quota.rs — validates token bucket calculations: see budget.md#Quotas
       - test_petgraph.rs — checks relational cycle rejection: see world.md#Gate-2:-Semantics
       - test_hashchain.rs — verifies sha256 link calculations: see effect.md#Event-integrity
@@ -324,7 +324,7 @@
       - target architecture — static compilation for x86_64 and aarch64 musl: see #Host-system-dependencies
       - static linkage — links libc, bundled SQLite C engine, and axum: see world.md#SQLite-as-SSOT
       - zero template bundling — wireframe screens excluded from binary; CLI renders output procedurally
-      - runtime dependencies — zero host npm, zero Bun, zero node_modules: see overview.md#Zero-trust-agent
+      - runtime dependencies — kernel binary ships zero host npm, Bun, or node_modules; guest routine engines: see #Host-system-dependencies
     - Inter-crate dependency flow
       - types package — capcli-types imported across core, cli, and daemon: see #Shared-contracts-crate
       - core engine — capcli-core imported exclusively by cli and daemon: see #Core-domain-engine-crate

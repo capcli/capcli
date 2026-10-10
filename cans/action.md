@@ -173,7 +173,7 @@
       - Context inheritance — child frames consume parent pools; starvation aborts before root dispatch rather than decapitating child frames mid-flight
       - Rules and caps
         - nesting ceiling — max 5 nested frames; breach fails closed with exit 2
-        - import ceiling — see artifacts/governance.yaml#routine_shape
+        - import ceiling — counts distinct ctx.call callee targets per routine; see artifacts/governance.yaml#routine_shape
         - cross-agent deduplication — near-duplicate across agents forces merge or fork
         - counter scopes — fuel, wire bytes, rate, rows session-scoped
         - constraint direction — cages tighten downward

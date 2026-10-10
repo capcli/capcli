@@ -18,6 +18,20 @@ DOCS_DIR = ROOT / "docs"
 
 ERRORS = []
 
+TRINITY_CAGES = {}
+try:
+    _m = re.search(
+        r"token_ceilings:\s*\n((?:\s+\w+:\s*\d+\s*\n)+)",
+        (ROOT / "cans/artifacts/cicd.yaml").read_text(),
+    )
+    if _m:
+        TRINITY_CAGES = {k: int(v) for k, v in re.findall(r"(\w+):\s*(\d+)", _m.group(1))}
+except OSError:
+    pass
+
+def token_ceiling(key: str, default: int) -> int:
+    return TRINITY_CAGES.get(key, default)
+
 def err(msg: str):
     ERRORS.append(msg)
     print(f"  [FAIL] {msg}", file=sys.stderr)
@@ -76,9 +90,10 @@ def check_prompt_to_docs():
         # sections; prompt-structure.md is the spec, not a leaf.
         if "banks" in prompt_file.parts:
             sections = re.split(r"^## section:", content, flags=re.MULTILINE)
+            l3 = token_ceiling("l3_leaf", 500)
             for section in sections[1:]:
                 tokens = approx_tokens(section)
-                if tokens > 500:
+                if tokens > l3:
                     name = section.split("\n", 1)[0].strip()
                     err(f"Prompt leaf {prompt_file.relative_to(ROOT)}#section:{name} exceeds 500 tokens ({tokens} tokens)")
 

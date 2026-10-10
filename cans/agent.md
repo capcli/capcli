@@ -18,6 +18,7 @@
       - session fork — child agents inherit scoped parent token via session fork
       - acting identity — --by declares machine agent identity for audit trails and token validation
       - beneficiary identity — --as declares target principal; bound directly to SQLite :principal for row-level security
+      - principal typing — :principal resolves to the domain row key (e.g. numeric customer id); kernel maps the --as identity string to the domain key before view binding
       - identity generation — tokens and ids kernel-issued; self-declaration denied
       - tenant scope definition: see world.md#Dual-schema
       - tenant authorizer enforcement: see physics.md#Two-layer-enforcement

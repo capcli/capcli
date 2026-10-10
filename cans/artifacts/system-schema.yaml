@@ -25,8 +25,14 @@ tables:
       capability: text                 # target capability or SQL table
       intent: text                     # causal intent declaration
       caused_by: text                  # parent event ID in causal DAG
+      intent_chain: json               # full causal intent chain
       decision: text!                  # allow or denied
+      version: text                    # routine/api config version
       rules_matched: json              # array of policy rules evaluated
+      idempotency_key: text            # kernel-minted idempotency key
+      sim_mode: text                   # sandbox | mock | dry-run | skip | prod-only | real
+      fixture_used: text               # mock fixture served, if any
+      http_called: text                # true | false (false for dry-run and mock)
       payload: json mask=true          # parameters or SQL text; redacted on secret match
       rows_affected: int=0             # rows modified by this operation
       result_hash: text                # sha256 of execution result
@@ -266,8 +272,9 @@ tables:
       verb: text!                      # target API verb
       payload: json! mask=true         # egress parameters
       idempotency_header: text!        # verified upstream header (e.g. Idempotency-Key)
-      status: text=pending             # pending, dispatched, failed
+      status: text=pending             # pending, in_flight, dispatched, failed
+      locked_by: text                  # claiming worker id; set atomically by claim UPDATE
       created_at: int!
     chk:
-      - "status IN ('pending', 'dispatched', 'failed')"
+      - "status IN ('pending', 'in_flight', 'dispatched', 'failed')"
 
