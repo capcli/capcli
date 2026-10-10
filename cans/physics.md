@@ -181,6 +181,7 @@
       - invocation — skills call capabilities via capcli run; raw SQL banned
       - returns — output summaries constrained: see artifacts/governance.yaml#routine_shape
       - provenance — skill name captured in triggered_by_skill audit field
+      - L0 offload — harness skill carries client-side grammar directive; kernel boot mounts 0 prompt tokens
     - Boundary isolation
       - perimeter layers
         - credentials isolation — token injection, redaction, and zeroization mechanics: see agent.md#Secrets

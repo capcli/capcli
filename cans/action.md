@@ -181,7 +181,8 @@
         - sim mode propagation — child gaps propagate up: see space.md#Rehearsal-&-sim
     - Skill invocation protocol
       - Pipeline stages — direct invocation via capcli run; search/inspect used only on cache miss or signature ambiguity
-      - Mapping contract — skill frontmatter maps 1:1 to Param declarations
+      - Bootstrap skill — teaches harness CLI grammar and discovery; maps to no routine, carries no Param declarations
+      - Capability skill — generated wrapper for one routine; frontmatter maps 1:1 to its Param declarations
         - validation failure — signature mismatch exits with code 3
       - result constraint — computed summaries only: see #Shape-constraints
       - Provenance pass — skill name recorded in triggered_by_skill

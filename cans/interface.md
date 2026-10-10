@@ -221,7 +221,7 @@
       - S9 promotion — sim prove followed by evidence-based promotion
       - S10 receipt — sys doctor --report verification receipt
     - Harness journey stages
-      - H0 contract — parse 6-line root help or sys doctor --json
+      - H0 contract — bootstrap via installed capcli skill; parse sys doctor --json or 6-line root help
       - H1 discovery — inspect catalog verbs and existing schema views via run search
       - H2 rehearsal — execute plan with run --dry-run
       - H3 dual probe — query local state via sql and inspect remote verbs via api catalog

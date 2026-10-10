@@ -53,6 +53,8 @@ Rules that follow from the table:
 | L2 | `capcli inspect prompt://{bank}/{slug}@{version}` | ≤150 tokens | envelope only: vars, section index, caps, blocked status; no body |
 | L3 | `capcli doc outline prompt://{bank}/{slug}@{version}` → `capcli doc read prompt://{bank}/{slug}@{version}#<node> --max-tokens <n>` | 1 leaf/turn, leaf ≤500 tokens | exactly one rendered section, kernel-substituted vars; the `#<node>` fragment selects the outline node, with no new flag, noun, or verb |
 
+- L0 grammar awareness is delegated exclusively to the harness skill (`SKILL.md`); kernel boot state is zero-token pure.
+
 Caps, stated once:
 
 - Ordinary `doc read` defaults to `--max-tokens 100`

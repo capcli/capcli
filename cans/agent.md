@@ -37,6 +37,7 @@
       - field mapping — triggering skill recorded in triggered_by_skill
       - validation — format constraints: see artifacts/policy.yaml#identity
       - authority limit — skill origin acts as metadata, never grants power
+      - transport — harness exports CAPCLI_SKILL carrying the skill name; unset records null, malformed values drop with a warning: see artifacts/policy.yaml#skill_origin
     - Concurrency scope
       - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE; writer transactions bounded to <50ms
       - writer priority — interactive agent and webhook mutations preempt bulk migration backfills

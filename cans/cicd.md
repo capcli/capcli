@@ -254,6 +254,10 @@
         - release creation — softprops/action-gh-release attaches binary files and checksums
         - release notes — auto-generates semantic release notes from committed git pull requests
         - immutability stance — releases marked public and permanent without draft status
+      - Skill asset publishing
+        - frontmatter lint — validates skills/*/SKILL.md name, description, triggers, and allowed_tools schema
+        - provenance note — published skill instructs the harness to export CAPCLI_SKILL: see agent.md#Harness-skill-origin
+        - registry dispatch — ships the validated skill to ClawHub alongside SDK releases
   - Verification checklist and gates
     - Pre-build and compile gates
       - Gate 0 Workspace Diff
