@@ -19,7 +19,7 @@ setup:
   env: "dev"
   platform_tier: "tier_1"
   caller_identity:
-    principal: "user:alice"
+    principal: "user:root"
     agent_id: "agt_tmp_bc14_00..agt_tmp_bc14_49" # 50 ephemeral spokes on one session pool at the Hub
     trust: "reviewed"
   initial_state:

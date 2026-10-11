@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
   "id": "ping.ask.refusal.missing_intent",
-  "target": "user:alice",
-  "command": "capcli ping ask user:alice \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
+  "target": "user:root",
+  "command": "capcli ping ask user:root \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
   "elapsed_ms": 106,
   "context": {
     "env": "dev",
@@ -17,7 +17,7 @@
     "remedy": "re-run with --intent \"<why this question is asked>\"",
     "intent_policy": "notify.require_intent",
     "lines": [
-      "capcli ping ask user:alice \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h"
+      "capcli ping ask user:root \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h"
     ]
   }
 }

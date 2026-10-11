@@ -17,7 +17,7 @@
       {
         "fields": {
           "ask_id": "ask_77c3",
-          "principal": "user:alice",
+          "principal": "user:root",
           "action": "explicit expiration",
           "outcome": "inquiry closed; fail-closed (expired asks never assume consent)"
         }

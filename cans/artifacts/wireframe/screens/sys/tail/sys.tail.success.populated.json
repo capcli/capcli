@@ -42,7 +42,7 @@
         ]
       },
       {
-        "label": "23:58:44Z op_a11c7 ping.ask user:alice allowed 2ms",
+        "label": "23:58:44Z op_a11c7 ping.ask user:root allowed 2ms",
         "children": []
       }
     ],

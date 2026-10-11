@@ -1747,7 +1747,7 @@
         "ping.notify.refusal.missing_intent"
       ],
       "trigger": "notify_attempt",
-      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel email",
+      "label": "capcli ping notify user:root \"Nightly sync finished\" --channel email",
       "arrow_type": "denial"
     },
     {
@@ -1762,7 +1762,7 @@
         "ping.notify.refusal.unconfigured_channel"
       ],
       "trigger": "notify_with_intent",
-      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel slack --intent \"morning briefing\"",
+      "label": "capcli ping notify user:root \"Nightly sync finished\" --channel slack --intent \"morning briefing\"",
       "arrow_type": "denial"
     },
     {
@@ -1777,7 +1777,7 @@
         "ping.notify.denial.delivery_failed"
       ],
       "trigger": "webhook_injected_retry",
-      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel slack --intent \"morning briefing\"",
+      "label": "capcli ping notify user:root \"Nightly sync finished\" --channel slack --intent \"morning briefing\"",
       "arrow_type": "denial"
     },
     {
@@ -1807,7 +1807,7 @@
         "ping.notify.denial.quiet_hours"
       ],
       "trigger": "notify_valid_principal",
-      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+      "label": "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
       "arrow_type": "denial"
     },
     {
@@ -1822,7 +1822,7 @@
         "ping.notify.success.dispatched"
       ],
       "trigger": "notify_in_window",
-      "label": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+      "label": "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
       "arrow_type": "success"
     },
     {
@@ -1837,7 +1837,7 @@
         "ping.ask.refusal.missing_intent"
       ],
       "trigger": "ask_attempt",
-      "label": "capcli ping ask user:alice \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
+      "label": "capcli ping ask user:root \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
       "arrow_type": "denial"
     },
     {
@@ -1852,7 +1852,7 @@
         "ping.ask.denial.options_cap"
       ],
       "trigger": "ask_six_options",
-      "label": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
+      "label": "capcli ping ask user:root \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
       "arrow_type": "denial"
     },
     {
@@ -1867,7 +1867,7 @@
         "ping.ask.yield.suspended"
       ],
       "trigger": "ask_fraud_gate",
-      "label": "capcli ping ask user:alice \"Fraud score 0.83 on ORD-1042. Approve dispatch?\" --options approve,deny --timeout 60m --intent \"fraud gate above dispatch threshold requires human sign-off\"",
+      "label": "capcli ping ask user:root \"Fraud score 0.83 on ORD-1042. Approve dispatch?\" --options approve,deny --timeout 60m --intent \"fraud gate above dispatch threshold requires human sign-off\"",
       "arrow_type": "yield"
     },
     {

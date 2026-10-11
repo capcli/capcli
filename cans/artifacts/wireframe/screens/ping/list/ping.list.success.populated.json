@@ -16,7 +16,7 @@
     "root": "ask_88a awaiting_input \"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
     "nodes": [
       {
-        "label": "principal: user:alice",
+        "label": "principal: user:root",
         "children": []
       },
       {
@@ -39,7 +39,7 @@
         "label": "ask_77c3 awaiting_input \"Approve refund for order ORD-10?\"",
         "children": [
           {
-            "label": "principal: user:alice",
+            "label": "principal: user:root",
             "children": []
           },
           {

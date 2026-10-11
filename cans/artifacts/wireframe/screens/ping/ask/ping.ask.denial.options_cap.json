@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
   "id": "ping.ask.denial.options_cap",
-  "target": "user:alice",
-  "command": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
+  "target": "user:root",
+  "command": "capcli ping ask user:root \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
   "elapsed_ms": 168,
   "context": {
     "env": "dev",
@@ -18,7 +18,7 @@
     "measured": "options count 6 vs cap 5",
     "remedy": "reduce to 5 or fewer structured options, or split into sequential asks",
     "span": {
-      "source": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex",
+      "source": "capcli ping ask user:root \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex",
       "highlight": "fedex,ups,usps,dhl,royal,aramex"
     }
   }

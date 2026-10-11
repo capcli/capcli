@@ -19,7 +19,7 @@ setup:
   env: "dev"
   platform_tier: "tier_1"
   caller_identity:
-    principal: "user:alice"
+    principal: "user:root"
     agent_id: "agt_tmp_cc13" # ephemeral spoke node (agents.topology: spoke_ephemeral, ephemeral: 1)
     trust: "reviewed"
   initial_state:

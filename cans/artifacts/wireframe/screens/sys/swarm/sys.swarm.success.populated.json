@@ -19,7 +19,7 @@
     "nodes": [
       {
         "children": [],
-        "label": "agt_7f3k order-filler spoke_fat user:alice active heartbeat 2s ago"
+        "label": "agt_7f3k order-filler spoke_fat user:root active heartbeat 2s ago"
       },
       {
         "children": [],
@@ -27,7 +27,7 @@
       },
       {
         "children": [],
-        "label": "agt_2m8p inventory-sync spoke_thin user:alice active heartbeat 4s ago"
+        "label": "agt_2m8p inventory-sync spoke_thin user:root active heartbeat 4s ago"
       }
     ],
     "root": "hub 100.64.0.1:4040 hub active",

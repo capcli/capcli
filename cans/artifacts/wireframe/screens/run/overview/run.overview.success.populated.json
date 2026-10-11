@@ -28,7 +28,7 @@
       },
       {
         "fields": {
-          "pending_asks": "1 (ask_8812 awaiting user:alice)",
+          "pending_asks": "1 (ask_8812 awaiting user:root)",
           "unresolved_vault": "1 (stripe_secret_key)",
           "active_locks": "1 (db://orders held by op_9f1c, ttl 4m)"
         },

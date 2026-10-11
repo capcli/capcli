@@ -194,12 +194,9 @@ api:
     header_calibration:                          # reactive headers used ONLY to recalibrate bucket
       reconcile_on_response: true                # sync local bucket down if provider reports lower
       on_unexpected_429: zero_bucket_and_yield   # remote 429 instantly drains local bucket to 0 and parks frames (exit 6)
-      parser_engine: dynamic                     # standard_rfc or json_path
-      reset_header: "X-RateLimit-Reset"
-      remaining_header: "X-RateLimit-Remaining"
-      json_usage_header: "X-Business-Use-Case-Usage" # structured JSON header support
-      utilization_jsonpath: "$.*.call_count"
-      wait_seconds_jsonpath: "$.*.estimated_time_to_regain_access"
+      parser_engine: dynamic                     # dynamic resolution slaved to apis://<provider>#rate_limit
+      default_reset_header: "RateLimit-Reset"     # IETF RFC standard fallback
+      default_remaining_header: "RateLimit-Remaining"
   in_flight_polling:
     allow_transient: true                        # permits short-interval status polling in routines
     max_poll_duration_seconds: 30                # hard ceiling for async container/job verification
@@ -213,7 +210,7 @@ api:
     require_intent: true
     require_trust: reviewed
     idempotency_key: kernel_minted
-    require_upstream_idempotency_header: true  # outbox staging denied if upstream lacks idempotency header mapping
+    upstream_idempotency_header_ref: "apis://<provider>#idempotency_header" # dynamic URP lookup
   replay: manual                               # never auto-replayed
   search:
     log_all_queries: true                        # every search is an audit event
@@ -234,7 +231,8 @@ watch:
   require_intent: true
   webhook:
     require_signature: true                    # unsigned events rejected at the door
-    allowed_providers: from_apis               # only imported providers may push
+    allowed_providers: "apis://*"              # strictly resolve against imported URP catalog
+    verifier: "apis://<provider>#webhook"      # HMAC scheme, headers & tolerance defined in provider URP
   dispatch:
     timeout_seconds: 30
     retry: { max: 3, backoff: exponential }
@@ -299,7 +297,7 @@ env:
       base_url_overrides_from: apis/*.sim.yaml
       mock_fixtures_from: apis/*.mock.yaml
       deny_sim_mode: [prod-only]           # prod-only verbs physically denied in sim
-    notify: { route_to: "#sim-notifications" }
+    notify: { route_to: "sink://sim/notifications" } # pointerized mock sink
     allowed_runtimes: [python, javascript, typescript]
   dev:
     bulk: { require_pre_count: false }

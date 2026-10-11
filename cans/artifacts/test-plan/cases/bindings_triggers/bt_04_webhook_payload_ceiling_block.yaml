@@ -19,7 +19,7 @@ setup:
   env: "dev"
   platform_tier: "tier_1"
   caller_identity:
-    principal: "partner:stripe"
+    principal: "partner:idp"
     agent_id: "capcli-watch" # kernel principal owning asynchronous provider dispatches
     trust: "reviewed" # watch binding floor (artifacts/policy.yaml#watch require_trust)
   initial_state:

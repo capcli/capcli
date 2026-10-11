@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
   "id": "ping.notify.denial.quiet_hours",
-  "target": "user:alice",
-  "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+  "target": "user:root",
+  "command": "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
   "elapsed_ms": 114,
   "context": {
     "env": "dev",
@@ -18,7 +18,7 @@
     "measured": "current time 23:12 inside quiet window (22:00-07:00)",
     "remedy": "re-dispatch after 07:00, or use ping ask (urgent asks bypass quiet hours)",
     "lines": [
-      "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\""
+      "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\""
     ]
   }
 }

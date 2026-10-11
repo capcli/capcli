@@ -19,7 +19,7 @@ setup:
   env: "dev"
   platform_tier: "tier_1"
   caller_identity:
-    principal: "user:alice"
+    principal: "user:root"
     agent_id: "agt_tmp_bc15_a, agt_tmp_bc15_b, agt_tmp_bc15_c" # three non-critical ephemeral spokes; one critical spoke agt_tmp_bc15_crit on the same pool
     trust: "reviewed"
   initial_state:

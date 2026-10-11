@@ -299,3 +299,17 @@
         - target tested — validates npm packages and native Python wheels with embedded FFI
         - verification mechanism — maturin and npm publish deploy artifacts through OIDC tokens
         - failure consequence — compilation failure or missing symbols halts PyPI/npm deployment
+  - PR verification pipeline
+    - pointer — pipeline://ci/pr_gate
+    - invariant gate sequence
+      - Gate 1 Syntax & expansion — parse all YAML files; verify shorthand macros expand cleanly
+      - Gate 2 Semantic acyclic check — petgraph cycle scan over domain tables and routine ctx.call trees; cycles exit 3
+      - Gate 3 AST complexity scan — cyclomatic complexity <= 10 branches on all guest Python/JS/TS files
+      - Gate 4 Token cage verification — strict file size envelopes: routine files <= 2000 tokens, search descriptions <= 60 tokens, payload summaries <= 500 tokens
+      - Gate 5 Schema evolution rehearsal — rehearse forward revisions on transient snapshots; execute dry-run test suite
+      - Gate 6 Cryptographic lockfile sync — compute SHA-256 root hash; assert exact match against capcli.lock
+    - token cage ceilings — pointer: policy://cages/token_limits
+      - routine file — 2000 tokens max
+      - output payload — 500 tokens max (oversized payloads must return keyset pagination schema)
+      - leaf prompt slice — 300 tokens max
+      - search description — 60 tokens max

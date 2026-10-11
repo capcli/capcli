@@ -13,10 +13,10 @@
   "archetype": "tree",
   "component": {
     "title": "listed",
-    "root": "agt_7f3k order-filler claude-code user:alice active",
+    "root": "agt_7f3k order-filler claude-code user:root active",
     "nodes": [
       {
-        "label": "agt_2m8p inventory-sync claude-code user:alice active",
+        "label": "agt_2m8p inventory-sync claude-code user:root active",
         "children": []
       },
       {
@@ -24,7 +24,7 @@
         "children": []
       },
       {
-        "label": "agt_4t6r capcli-watch kernel partner:stripe revoked",
+        "label": "agt_4t6r capcli-watch kernel partner:idp revoked",
         "children": []
       }
     ],

@@ -2,7 +2,7 @@
 <!-- ref-by: assembly.md, budget.md, effect.md, interface.md, overview.md, recovery.md, space.md, world.md -->
   - Identity hierarchy
     - Identity chain
-      - principal — human or root authority holder (user:alice, partner:stripe)
+      - principal — human or root authority holder (e.g. user:root, partner:idp)
       - agent — registered harness instance (agt_7f3k)
       - subagent — thread/event-loop worker sharing parent PID; tracked via harness markers: see #Harness-environment-markers
       - session — temporary engagement scope (ses_a9)

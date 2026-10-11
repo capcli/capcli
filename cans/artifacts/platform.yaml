@@ -1,0 +1,93 @@
+# ═══════════════════════════════════════════════════════════════
+# platform.yaml — runtime security, transport, harness & error SSOT
+# Pointers: policy://platform/*, policy://errors/*
+# ═══════════════════════════════════════════════════════════════
+version: 1
+lockfile_target: capcli.lock
+
+# ───────────────────────────────────────────────────────────────
+# 1. SECCOMP SYSCALL PROFILES (Item 2)
+# ───────────────────────────────────────────────────────────────
+syscalls:
+  trap_syscall: 42                       # sys_connect trapped to enforce kernel egress proxy
+  profiles:
+    python:
+      pointer: "policy://platform/syscalls/python"
+      allow: [clone, futex, rt_sigreturn, rt_sigaction, mprotect, brk, read, write, close, fstat]
+      deny: [socket, connect, bind, listen, accept]
+    javascript:
+      pointer: "policy://platform/syscalls/javascript"
+      allow: [epoll_create1, epoll_ctl, epoll_wait, eventfd2, io_uring_setup, clone, futex]
+      deny: [socket, connect, bind, listen]
+    binary:
+      pointer: "policy://platform/syscalls/binary"
+      allow: [clone3, futex, rseq, rt_sigreturn, read, write, exit_group]
+      deny: [socket, connect, bind]
+
+# ───────────────────────────────────────────────────────────────
+# 2. ERROR & EXIT TAXONOMY (Item 4)
+# ───────────────────────────────────────────────────────────────
+errors:
+  exit_2:                                # Governance & invariant blocks
+    E041_FEDERATION_CYCLE: { urp: "policy://errors/E041", desc: "Detected cycle in ws:// call chain" }
+    E042_FEDERATION_DENIED: { urp: "policy://errors/E042", desc: "Caller ws identity not on active allowlist" }
+    E045_TIER2_PINNED_DENIED: { urp: "policy://errors/E045", desc: "Pinned routine execution refused on Tier 2 host" }
+    E050_RUNTIME_DISALLOWED: { urp: "policy://errors/E050", desc: "Runtime engine disallowed by governance/policy" }
+    E060_REVISION_REJECTED: { urp: "policy://errors/E060", desc: "State revision invariant violated" }
+  exit_3:                                # Compile-time refusals
+    E033_TOKEN_OVERFLOW: { urp: "policy://errors/E033", desc: "Token envelope exceeded 2000 tokens" }
+    E031_COMPLEXITY_HIGH: { urp: "policy://errors/E031", desc: "Cyclomatic complexity exceeds 10 branches" }
+    E032_STRING_INTERPOLATION: { urp: "policy://errors/E032", desc: "Raw SQL string interpolation detected" }
+  exit_4:                                # Runtime faults
+    E055_FEDERATION_UNREACHABLE: { urp: "policy://errors/E055", desc: "Peer workspace socket timed out (1500ms)" }
+  exit_5:                                # Kernel panics
+    E001_SECRET_LEAK_PANIC: { urp: "policy://errors/E001", desc: "Plaintext credential escape in output" }
+    E002_SINK_CORRUPTION: { urp: "policy://errors/E002", desc: "Audit trail pipeline undrainable" }
+
+# ───────────────────────────────────────────────────────────────
+# 3. HARNESS MARKER DETECTION (Item 9)
+# ───────────────────────────────────────────────────────────────
+harness:
+  pointer: "policy://platform/harness"
+  sniff_environ: ["/proc/$PPID/environ", "env"]
+  markers:
+    session_keys:
+      - { var: "CLAUDE_CODE_SESSION_ID", harness: "claude-code" }
+      - { var: "CODEX_THREAD_ID", harness: "codex" }
+      - { var: "CODEX_SESSION_ID", harness: "codex" }
+      - { var: "CODEX_CONVERSATION_ID", harness: "codex" }
+      - { var: "ANTIGRAVITY_CONVERSATION_ID", harness: "antigravity" }
+      - { var: "HERMES_SESSION_KEY", harness: "hermes" }
+    presence_keys:
+      - { var: "CLAUDECODE", harness: "claude-code" }
+      - { var: "GEMINI_CLI", harness: "gemini-cli" }
+      - { var: "CURSOR_AGENT", harness: "cursor" }
+      - { var: "OPENCLAW_SHELL", harness: "openclaw" }
+  fallback:
+    anonymous_pattern: "agt_anon_{session}"
+    allow_mutating_writes: false
+
+# ───────────────────────────────────────────────────────────────
+# 4. TRANSPORT & IPC MESH (Items 8, 19)
+# ───────────────────────────────────────────────────────────────
+transport:
+  ipc:
+    socket_dir: "/run/capcli"
+    socket_mask: "0660"
+    peer_cred_auth: true                # Linux SO_PEERCRED enforcement
+  mtls:
+    listen_port: 4040
+    cert_file: "vault://tls/cert"
+    key_file: "vault://tls/key"
+    ca_bundle: "vault://tls/ca"
+    min_tls_version: "1.3"
+  mesh:
+    interface: "wg0"
+    port: 51820
+    endpoint_pointer: "mesh://peers"
+    rekey_after_seconds: 3600
+  federation_roster:
+    pointer: "ws://roster"
+    default_trust_floor: "pinned"
+    max_hops: 2
+    peer_socket_template: "/run/capcli/{target_ws}.sock"

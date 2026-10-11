@@ -57,7 +57,7 @@ cans/artifacts/test-plan/
       da_13_row_ceiling_transaction_overflow.yaml
     wire_egress/
       we_01_proactive_bucket_exhaustion.yaml
-      we_02_dynamic_jsonpath_header_sync.yaml
+      we_02_dynamic_header_calibration_sync.yaml
       we_03_background_priority_yield_exit6.yaml
       we_04_vault_bearer_egress_injection.yaml
       we_05_unregistered_ip_outbound_block.yaml
@@ -431,7 +431,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | Case ID | Target Tier | Invariant & Scenario Narrative | Matrix | Banned Slop Pattern |
 |---|---|---|---|---|
 | `we_01_proactive_bucket_exhaustion.yaml` | Unit | Proactive token bucket has 0 tokens remaining; client-side pre-call check aborts before packet reaches wire. | TN | Asserting network timeout instead of local client-side rate refusal. |
-| `we_02_dynamic_jsonpath_header_sync.yaml` | Integration | Provider returns `X-Business-Use-Case-Usage` JSON header; kernel dynamic parser updates local quota bucket via JSONPath. | TP | Using fixed RFC headers only and ignoring nested JSON header paths. |
+| `we_02_dynamic_header_calibration_sync.yaml` | Integration | Provider declares custom rate-limit headers in `apis://<provider>#rate_limit`; kernel resolves them dynamically and recalibrates the local quota bucket. | TP | Hardcoding RFC header names and skipping the `apis://` dynamic resolution. |
 | `we_03_background_priority_yield_exit6.yaml` | E2E | Background task hits quota floor (<15 tokens); frame is suspended, committed to `_suspended_tasks`, returns `exit 6`. | TN | Killing task as hard failure (`exit 2`) instead of graceful yield (`exit 6`). |
 | `we_04_vault_bearer_egress_injection.yaml` | Integration | Routine calls `ctx.api.call("stripe.charges")`; kernel proxy injects vaulted Authorization header; secret never enters guest memory. | TP | Inspecting guest runtime memory and finding the secret in plaintext. |
 | `we_05_unregistered_ip_outbound_block.yaml` | Integration | Outbound HTTP request targets raw IP address (`192.168.1.50`); kernel egress proxy rejects call (domain allowlist only). | TN | Permitting raw IP connection in test harness environment. |

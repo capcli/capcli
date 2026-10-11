@@ -56,8 +56,8 @@
         - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
         - audit/witness.log — remote KMS witness attestation logs: see effect.md#Event-integrity
       - migrations/ — compiled migration bundles: see world.md#Schema-evolution
-        - migrations/NNNN_<name>/plan.json — compiled expand/contract DDL phases
-        - migrations/NNNN_<name>/backfill.py — sandboxed chunked data backfill routine
+        - revisions/NNNN_<name>/plan.json — compiled expand/contract DDL phases
+        - revisions/NNNN_<name>/align.py — sandboxed chunked data alignment routine
       - routines/ — agent-authored procedural guest scripts (.ts, .js, .py): see action.md#Routines
         - routines/overview.py: see action.md#Session-Overview-Primer
         - routines/order_refund.ts — sandboxed multi-step refund script
@@ -145,7 +145,7 @@
       - Subsystem modules
         - connection.rs — rusqlite connection pool in WAL mode: see world.md#SQLite-as-SSOT
         - authorizer.rs — sqlite3_set_authorizer C callback: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - migrate.rs — migration engine: see world.md#Schema-evolution
+        - revision.rs — revision engine: see world.md#Schema-evolution
         - bytecode.rs — EXPLAIN opcode parser checking OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
         - snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
         - claims.rs — distributed lease locks via _claims: see agent.md#Coordination
@@ -188,7 +188,7 @@
         - contract_validator.rs — live response JSON Schema validator and shadow canary engine for external APIs
         - outbox.rs — stages mutating API calls alongside DB transactions; verifies upstream idempotency header mapping and rejects unmapped routes with exit 3
         - quota.rs — dual-window token bucket and rolling window accounting in _api_quota: see budget.md#Quotas
-        - header_parser.rs — extracts RFC headers and parses nested JSON usage payloads: see artifacts/policy.yaml#api
+        - header_parser.rs — dynamically resolves rate-limit header names from apis://<provider>#rate_limit (IETF RFC fallback): see artifacts/policy.yaml#api.rate_limit
         - egress.rs — reqwest HTTP proxy with secret injection: see agent.md#Egress-injection
         - sim_mock.rs — serves canned fixtures from apis/*.mock.yaml: see space.md#Sim-mode-taxonomy
         - refresh.rs — auto-rotates ephemeral bearer tokens: see artifacts/governance.yaml#api

@@ -25,7 +25,7 @@
             - libsql replica — embedded replica with Turso cloud sync
             - remote refusal — pure HTTP databases without C authorizer denied
         - tracking
-          - git status — world.sql and schema migrations tracked in git; workspace.db strictly gitignored
+          - git status — world.sql and schema revisions tracked in git; workspace.db strictly gitignored
           - persistence — partitioned at envs/<name>/workspace.db; binary snapshots synced to object store
         - concurrency
           - journal mode — WAL mode enabled
@@ -47,7 +47,7 @@
         - version control
           - tracking — committed to git
           - diffs — readable schema change history
-        - snapshot automation — deterministic DDL and seed dump generated locally on migration; synced directly to object storage
+        - snapshot automation — deterministic DDL and seed dump generated locally on revision; synced directly to object storage
         - disaster recovery
           - restoration — sys recover: see recovery.md#Restore-path
       - object snapshots — binary VACUUM INTO backups in object store: see recovery.md#Snapshots
@@ -152,7 +152,7 @@
         - triggers — trig: expands to kernel-compiled trigger
     - Seed data
       - declaration — seed: [...] array in table definition
-      - execution — executed inside migration DDL transaction; audited with seed_rows count
+      - execution — executed inside revision DDL transaction; audited with seed_rows count
       - volume cap — max 50 rows per table to prevent draft bulk loading
       - row volume bounds — ceiling: see artifacts/governance.yaml#schema.world
     - Enforcement split
@@ -173,17 +173,17 @@
         - audit injection — created_by and modified_by populated by kernel on prov tables
         - system protection — sys: true denies agent writes
   - Schema evolution
-    - Four-phase industrial pipeline
+    - Four-phase state revision pipeline
       - 1. Expand phase — additive, non-breaking DDL (nullable columns, new tables); execution SLA < 10ms
-      - 2. Backfill phase — user-space pinned routine (migrations/NNNN/backfill.py); bounded chunks (max 500 rows/txn); yields cleanly on quota/fuel (exit 6)
-      - 3. Contract phase — destructive DDL executed by kernel migrate.rs via trigger-replicated online shadow table; background backfill runs in chunks (max 500 rows/txn)
+      - 2. Align phase — user-space pinned routine (revisions/NNNN/align.py); bounded chunks (max 500 rows/txn); yields cleanly on quota/fuel (exit 6)
+      - 3. Contract phase — destructive DDL executed by kernel revision.rs via trigger-replicated online shadow table; background alignment runs in chunks (max 500 rows/txn)
       - 4. Pin phase — verifies live PRAGMA matches schema.yaml; updates root hash in capcli.lock
-    - Online migration mechanics
+    - Online schema evolution mechanics
       - kernel responsibility — Rust kernel creates shadow table, attaches delta replication triggers, copies base data in chunks, and performs atomic swap (<20ms lock)
       - lock duration — exclusive write lock held only during final trigger detach and table rename
-    - Migration lifecycle commands
-      - planning — rule plan --name <slug> generates migrations/NNNN_<slug>/ bundle
-      - rehearsal — rule prove <id> --env sim validates FK integrity, lock timing, and backfill fuel
+    - Revision lifecycle commands
+      - planning — rule plan --name <slug> generates revisions/NNNN_<slug>/ bundle
+      - rehearsal — rule prove <id> --env sim validates FK integrity, lock timing, and alignment fuel
       - application — rule apply <id> [-m "<intent>"] executes phased cutover
     - Agent denial rules
       - raw DDL execution — raw ALTER TABLE or DROP TABLE queries denied unconditionally (exit 2)
@@ -194,12 +194,12 @@
       - system schema manipulation
         - target — system-schema.yaml
         - decision — denied: see artifacts/governance.yaml#schema.system
-      - unmerged production migrations
+      - unmerged production revisions
         - condition — cross-world DDL without git merge
         - decision — denied: see artifacts/policy.yaml#env.prod
-    - Migration invariants
-      - forward only — down-migrations strictly banned; rollback achieved via forward-roll revert bundle
-      - user vs kernel separation — backfills run in user space routines; structural rebuilds run in kernel
+    - Revision invariants
+      - forward only — rollbacks execute strictly via forward revert bundles
+      - user vs kernel separation — state population runs in user space routines; structural rebuilds run in kernel
       - snapshot pairing — cold VACUUM snapshot created prior to Expand phase for disaster-only recovery
       - lockfile check — capcli.lock verification at boot: see physics.md#Fail-closed-stance
   - World templates
@@ -230,7 +230,7 @@
       - destination isolation — template unpacks strictly into dev worktree; prod direct-init denied
       - validation sequence — capcli rule validate checks min_kernel_version, policy_version, py_compile, AST complexity (≤10), and schema.yaml syntax (Gate 1) with bundle semantics (Gate 2) before disk write
       - parameter validation — capcli template scaffold validates -p against manifest inputs at stamping
-      - dry-run migration — Gate 5 test migration executes on temporary snapshot
+      - dry-run revision — Gate 5 test revision executes on temporary snapshot
       - seed constraints — table seed arrays capped at 50 rows per table
     - Audit and provenance
       - event type — env.init_from_template (world) or routine.draft (routine)
@@ -269,12 +269,12 @@
       - detection — PRAGMA scans compare live tables against compiled YAML
       - condition — undeclared columns or tables trigger refusal
       - failure code — throws exit 3
-    - Gate 5: Migration safety
+    - Gate 5: Revision safety
       - timing — apply-time during rule apply
       - execution — rehearsal runs on masked sim snapshot; checks PRAGMA foreign_key_check
-      - pinned routine safety — kernel executes simulated rehearsal of ALL pinned routines against migrated schema; any query break or column drop aborts migration with exit 2
+      - pinned routine safety — kernel executes simulated rehearsal of ALL pinned routines against revised schema; any query break or column drop aborts cutover with exit 2
       - online cutover gate — verifies shadow table delta lag reaches zero before executing atomic <20ms table swap
-      - backfill safety — validates backfill routine terminates cleanly within session fuel bounds
+      - state alignment safety — validates alignment routine terminates cleanly within session fuel bounds
       - failure code — aborts cutover, discards rehearsal state, returns exit 2 or 3
   - Command surface db
     - Unified SQL execution

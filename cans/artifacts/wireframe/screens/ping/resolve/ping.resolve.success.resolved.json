@@ -19,7 +19,7 @@
           "ask_id": "ask_88a",
           "choice": "approve",
           "question": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
-          "resolved_by": "user:alice",
+          "resolved_by": "user:root",
           "resumed_task": "dispatch_order@4 (ORD-1042)",
           "resumed_frame": "frame_026"
         }

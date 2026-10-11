@@ -108,7 +108,7 @@
       - template syntax error — routine template failing py_compile validation aborts intake (exit 3)
       - missing configuration — policy.yaml or governance.yaml absent
       - lockfile mismatch in prod — compiled capcli.lock SHA256 mismatch aborts boot with exit 3 in prod; dev and sim auto-recompile if syntax and semantics pass
-      - schema drift — un-migrated schema drift or system_schema hash mismatch aborts boot with exit 3: see world.md#Schema-evolution
+      - schema drift — un-revised schema drift or system_schema hash mismatch aborts boot with exit 3: see world.md#Schema-evolution
       - schema integrity — system_schema hash verified at boot: see world.md#Dual-schema
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
@@ -131,7 +131,7 @@
         - domain db.engine — SQLite check constraints, foreign key violations, busy timeout
         - domain policy.authorizer — C-level table/column write denied
         - domain policy.budget — frame limits, session op/fuel ceilings exhausted, or call nesting > 5
-        - domain policy.migration — Gate 5 rehearsal broke pinned routine contract
+        - domain policy.revision — Gate 5 rehearsal broke pinned routine contract
         - domain policy.trust — action forbidden by caller trust rung (e.g. draft touching prod)
       - exit 3 — compile-time refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, statically-declared unpaginated payload shape
         - runtime result size — oversized output returns the keyset pagination schema instead of exiting; see action.md#Shape-constraints

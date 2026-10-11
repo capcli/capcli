@@ -17,7 +17,7 @@
       {
         "fields": {
           "agent_id": "agt_7f3k",
-          "principal": "user:alice",
+          "principal": "user:root",
           "status": "revoked — credentials killed",
           "sessions": "1 active session terminated instantly (ses_a992f)",
           "tokens": "capability token invalidated; in-flight op halted at leaf boundary"

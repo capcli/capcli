@@ -1,0 +1,45 @@
+# ═══════════════════════════════════════════════════════════════
+# provider-spec.yaml — canonical external provider archetype
+# Pointers: apis://<provider>, apis://<provider>#webhook
+# ═══════════════════════════════════════════════════════════════
+version: 1
+provider: upstream_service
+base_url: "https://api.upstream.domain/v1"
+auth:
+  scheme: bearer                        # bearer | basic | oauth2 | sigv4 | mtls
+  token_ref: "vault://providers/upstream_token"
+  refresh_window_seconds: 300
+
+# ───────────────────────────────────────────────────────────────
+# 1. RATE LIMIT & IDEMPOTENCY HEADERS (Item 1)
+# ───────────────────────────────────────────────────────────────
+rate_limit:
+  parser_model: optimistic_token_bucket
+  headers:
+    remaining: "RateLimit-Remaining"
+    reset: "RateLimit-Reset"
+    limit: "RateLimit-Limit"
+  reconcile_on_response: true
+idempotency:
+  header_name: "Idempotency-Key"
+  key_scheme: kernel_minted_uuid
+
+# ───────────────────────────────────────────────────────────────
+# 2. DECLARATIVE WEBHOOK VERIFICATION (Item 7)
+# ───────────────────────────────────────────────────────────────
+webhook:
+  signature_header: "X-Signature-SHA256"
+  scheme: hmac_sha256                    # hmac_sha256 | rfc_standard | ed25519
+  format: "t={timestamp},v1={hash}"     # parser template
+  timestamp_header: "X-Request-Timestamp"
+  tolerance_seconds: 300
+  secret_ref: "vault://webhooks/upstream_secret"
+
+# ───────────────────────────────────────────────────────────────
+# 3. SIMULATION & REPLAY CONTRACTS (Item 1)
+# ───────────────────────────────────────────────────────────────
+sim:
+  default_mode: sandbox                  # sandbox | mock | dry-run | skip | prod-only
+  sandbox_base_url: "https://sandbox.upstream.domain/v1"
+  cassette_path: "apis/cassettes/upstream_service.cassette.jsonl"
+  mock_fixtures: "apis/fixtures/upstream_service.mock.yaml"

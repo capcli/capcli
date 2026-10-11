@@ -66,7 +66,7 @@
     - Trigger path: bind noun
       - Bindings
         - bind cron <name> <capability> "<cron_expr>" [-m "<why>"]
-        - bind webhook <name> <provider> <event> <capability> [--ingress <url>|--tunnel] [-m "<why>"]
+        - bind webhook <name> <provider> <event> <capability> [--ingress <url>|--tunnel] [--verifier <urp>] [-m "<why>"]
         - bind federation <name> <source_ws> <event> <capability@version> [-m "<why>"] — asynchronous peer outbox siphon
         - bind endpoint <routine@version> --auth api-key [--rate <r>] [--channel all|rest|mcp]
         - export — export openapi [--out path], export mcp [--out path]

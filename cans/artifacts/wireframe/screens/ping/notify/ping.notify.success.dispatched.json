@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
   "id": "ping.notify.success.dispatched",
-  "target": "user:alice",
-  "command": "capcli ping notify user:alice \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+  "target": "user:root",
+  "command": "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
   "elapsed_ms": 2247,
   "context": {
     "env": "dev",
@@ -17,7 +17,7 @@
       {
         "fields": {
           "channel": "email",
-          "principal": "user:alice",
+          "principal": "user:root",
           "message": "\"Nightly sync finished\"",
           "intent": "declared (\"morning briefing\")",
           "receipt": "ntf_4c1d9e"

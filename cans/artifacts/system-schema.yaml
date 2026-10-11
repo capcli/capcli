@@ -50,7 +50,7 @@ tables:
     sys: true
     columns:
       id: pk
-      provider: text!                  # provider slug (e.g. stripe, github)
+      provider: text!                  # provider slug matching apis://<provider>
       scope_key: text=global           # per-key or per-endpoint quota partition
       env: text!                       # sim and prod track quotas independently
       bucket_capacity: int!            # max token burst size
@@ -77,8 +77,8 @@ tables:
     imm_cols: [provider, verb]         # provider and verb identity cannot be mutated
     columns:
       id: pk
-      provider: text!                  # provider namespace (e.g. stripe)
-      verb: text!                      # operation id or path slug (e.g. refund_charge)
+      provider: text!                  # provider namespace matching apis://<provider>
+      verb: text!                      # capability pointer (cap://<provider>/<verb>)
       method: text!                    # HTTP verb: GET, POST, PUT, DELETE, PATCH
       path: text!                      # URL path template
       params_schema: json              # JSON schema of accepted parameters
@@ -150,7 +150,7 @@ tables:
       id: text pk                      # kernel-minted id (e.g. agt_7f3k)
       name: text!                      # human or system label
       harness: text!                   # claude-code, codex, hermes, custom
-      principal: text!                 # authority holder (user:alice, partner:stripe)
+      principal: text!                 # authority holder (e.g. user:root, partner:idp)
       status: text=active              # active, revoked, expired
       topology: text=local             # local, hub, spoke_thin, spoke_fat, spoke_ephemeral, replica
       ephemeral: int=0                 # 1 = temporary disposable sandbox node
@@ -168,7 +168,7 @@ tables:
     description: "Distributed lease-based concurrency locks with mandatory TTL"
     columns:
       id: pk
-      target: text!                    # resource lock URI (e.g. orders:ORD-8842)
+      target: text!                    # resource lock URI (db://<table>/<ref>)
       holder: text!                    # agent id holding the lease
       session_id: text!                # owning session id
       harness_marker: text!            # harness env marker; PID-keyed leases banned

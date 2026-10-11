@@ -13,11 +13,13 @@
         - vault:// — secret references and in-memory injection status
         - tpl:// — world and routine blueprints; local (tpl://routine/*), registry (tpl://registry/*), or remote; pre-flight via capcli inspect
         - ask:// — pending human inquiries and suspensions
-        - snap:// — VACUUM recovery snapshots and migration restore points
+        - snap:// — VACUUM recovery snapshots and revision cutover points
         - quota:// — provider rate-bucket balances and spend ceilings
         - policy:// — authorizer AST constraints and governance limits
         - hub:// — remote central daemon endpoints for spoke routing (e.g. hub://100.64.0.1:4040)
         - mesh:// — private WireGuard mesh peer endpoints for federated transport
+        - apis:// — provider contract specs, webhook verifiers, and egress profiles
+        - sink:// — notification, audit, and telemetry egress sinks
         - ws:// — sovereign federated workspace capability routines (e.g. ws://tasks/create_todo@v1); shape-disjoint from WebSocket transport URLs (ws://host:port/...)
       - Surface uniformity
         - commands — search, inspect, run, doc
@@ -337,7 +339,7 @@
     - Catalog synchronization
       - Targeted import — capcli api import <provider> <path> <method> [--spec <url|file>] imports isolated endpoints on demand
       - Full sync — capcli api sync <provider> <spec_url> refreshes the whole provider catalog under the sync cadence limits
-      - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, and idempotency header mapping
+      - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, idempotency mapping, and webhook verification spec (apis://<provider>#webhook)
       - Live contract capture — capcli api record <verb> generates strict JSON Schema assertions from live responses; offline fixtures capped at reviewed
       - promotion prerequisite: see trust.md#The-ladder
       - drift invalidation: see trust.md#Ladder-laws
@@ -357,9 +359,9 @@
   - Bindings
     - Trigger types
       - cron — bind cron <name> <capability> "<cron_expr>" [-m "intent"]
-      - webhook — bind webhook <name> <provider> <event> <capability> [--driver stripe|github|slack|shopify|twilio|rfc] [-m "intent"]
+      - webhook — bind webhook <name> <provider> <event> <capability> [--verifier apis://<provider>#webhook] [-m "intent"]
       - endpoint — bind endpoint <routine@version> --auth api-key [--rate <r>]
-    - Signature verification — vendor-specific adapters verify timestamped headers, HMAC digests, and URL parameters before dispatch
+    - Signature verification — engine dynamically verifies timestamped headers, HMAC digests, and payloads against declarative specs in apis://<provider>#webhook
     - Binding management
       - Lifecycle commands — bind list, inspect, pause, resume, remove
       - Key management — bind keys issue <name> --principal partner:<id>

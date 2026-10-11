@@ -1,0 +1,23 @@
+# ═══════════════════════════════════════════════════════════════
+# campaigns.yaml — prompt banks & campaign envelopes SSOT
+# Pointers: prompt://{bank}/{slug}@{version}
+# ═══════════════════════════════════════════════════════════════
+version: 1
+
+banks:
+  ops_briefing:
+    urp: "prompt://system/ops_briefing@v1"
+    description: "Domain situation awareness campaign bank"
+    envelope:
+      max_tokens: 800
+      format: markdown_slices
+    sections:
+      - node: "#context"
+        max_tokens: 250
+        source: "doc://specs/system_state"
+      - node: "#kpis"
+        max_tokens: 300
+        source: "db://views/system_vitals"
+      - node: "#instructions"
+        max_tokens: 250
+        body: "Operate within declared AST limits. Mutating writes require valid --intent."

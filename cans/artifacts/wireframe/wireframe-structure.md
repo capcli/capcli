@@ -600,7 +600,7 @@ Fixture (`wireframe/v2`):
     ],
     "footer": {
       "Root Intent": "\"fulfill urgent pending orders\"",
-      "Authority": "user:alice (via agt_7f3k)",
+      "Authority": "user:root (via agt_7f3k)",
       "Integrity": "valid hash link (chain verified)"
     }
   }
@@ -621,7 +621,7 @@ Rendered output:
               └── status = 'shipped' (1 row)
 
   Root Intent: "fulfill urgent pending orders"
-  Authority:   user:alice (via agt_7f3k)
+  Authority:   user:root (via agt_7f3k)
   Integrity:   valid hash link (chain verified)
 ```
 

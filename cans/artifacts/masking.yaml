@@ -1,0 +1,26 @@
+# ═══════════════════════════════════════════════════════════════
+# masking.yaml — Format-Preserving Anonymization (FPA) SSOT
+# Pointers: policy://masking/*
+# ═══════════════════════════════════════════════════════════════
+version: 1
+enforcement: strict
+
+rules:
+  email:
+    pointer: "policy://masking/email"
+    matcher: "^[^@]+@[^@]+\\.[^@]+$"
+    generator: "fpa_email"
+    template: "anon_{hash8}@sim.local"
+  phone:
+    pointer: "policy://masking/phone"
+    matcher: "^\\+?[1-9]\\d{1,14}$"
+    generator: "fpa_phone"
+    template: "+1555{hash4}"
+  json_secret:
+    pointer: "policy://masking/json_secret"
+    keys: ["*token*", "*secret*", "*password*", "*key*"]
+    replacement: "[REDACTED_VAULT_TOKEN]"
+  generic_text:
+    pointer: "policy://masking/generic_text"
+    generator: "fpa_lorem_hash"
+    preserve_length: true

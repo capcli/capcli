@@ -14,7 +14,7 @@
     "rule": "validation.unknown_principal",
     "domain": "validation",
     "culprit": "Principal 'user:bob' not found in the agents registry.",
-    "remedy": "register the recipient first (capcli sys agent register), or notify an existing principal such as user:alice",
+    "remedy": "register the recipient first (capcli sys agent register), or notify an existing principal such as user:root",
     "principal": "user:bob"
   }
 }

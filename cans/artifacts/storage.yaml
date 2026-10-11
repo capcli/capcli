@@ -1,0 +1,48 @@
+# ═══════════════════════════════════════════════════════════════
+# storage.yaml — blob storage, WORM retention & egress sinks SSOT
+# Pointers: storage://*, sink://*
+# ═══════════════════════════════════════════════════════════════
+version: 1
+
+# ───────────────────────────────────────────────────────────────
+# 1. BLOB STORAGE & WORM BACKUP (Item 14)
+# ───────────────────────────────────────────────────────────────
+storage:
+  primary:
+    urp: "storage://blobs"
+    backend: object_storage              # local | s3 | r2
+    endpoint: "https://storage.endpoint.local"
+    bucket: "capcli-data-blobs"
+    region: "us-east-1"
+    credentials: "vault://storage/primary"
+    max_payload_bytes: 10485760          # 10MB
+  backup:
+    urp: "storage://backup"
+    backend: object_storage
+    bucket: "capcli-cold-ledger"
+    worm_lock:
+      enabled: true
+      retention_days: 90
+      compliance_mode: strict
+    kms_attestation:
+      key_ref: "vault://kms/attestation_key"
+      witness_log: "witness.log"
+      signature_interval_minutes: 60
+
+# ───────────────────────────────────────────────────────────────
+# 2. EGRESS SINKS (Item 12)
+# ───────────────────────────────────────────────────────────────
+sinks:
+  notifications:
+    prod:
+      urp: "sink://notifications/primary"
+      channel: webhook
+      target_url: "vault://sinks/prod_webhook_url"
+    sim:
+      urp: "sink://sim/notifications"
+      channel: null_sink                 # discards payloads with receipt hash
+  audit_export:
+    urp: "sink://audit/jsonl"
+    format: jsonl
+    path: "audit/daily.jsonl"
+    flush_interval_seconds: 300

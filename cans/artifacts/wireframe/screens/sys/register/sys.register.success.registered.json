@@ -18,7 +18,7 @@
         "fields": {
           "agent_id": "agt_5k2p",
           "name": "refund-processor",
-          "principal": "user:alice",
+          "principal": "user:root",
           "harness": "claude-code",
           "token": "kernel-minted HMAC capability token (bound to active _budget_frames)",
           "status": "active"
