@@ -3,6 +3,7 @@
   "id": "bind.endpoint.success.bound",
   "target": "cap://dispatch_order@4",
   "command": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
+  "elapsed_ms": 1316,
   "context": {
     "env": "dev",
     "tier": "tier_1",

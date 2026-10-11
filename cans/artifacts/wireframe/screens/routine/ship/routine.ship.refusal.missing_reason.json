@@ -3,6 +3,7 @@
   "id": "routine.ship.refusal.missing_reason",
   "target": "order_sync",
   "command": "capcli routine ship order_sync pinned",
+  "elapsed_ms": 31,
   "context": {
     "env": "dev",
     "tier": "tier_1",

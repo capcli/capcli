@@ -3,6 +3,7 @@
   "id": "run.search.success.populated",
   "target": "order",
   "command": "capcli search 'order'",
+  "elapsed_ms": 2044,
   "context": {
     "env": "dev",
     "tier": "tier_1",

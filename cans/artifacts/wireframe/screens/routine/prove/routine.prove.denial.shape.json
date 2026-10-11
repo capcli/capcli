@@ -3,6 +3,7 @@
   "id": "routine.prove.denial.shape",
   "target": "sync_orders",
   "command": "capcli routine prove sync_orders --env sim",
+  "elapsed_ms": 58,
   "context": {
     "env": "sim",
     "tier": "tier_1",

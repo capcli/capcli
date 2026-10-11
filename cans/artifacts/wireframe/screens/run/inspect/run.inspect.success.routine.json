@@ -3,6 +3,7 @@
   "id": "run.inspect.success.routine",
   "target": "cap://dispatch_order@4",
   "command": "capcli inspect cap://dispatch_order@4",
+  "elapsed_ms": 2270,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "routine.stats.success.populated",
   "target": "dispatch_order",
   "command": "capcli routine stats dispatch_order --deep",
+  "elapsed_ms": 985,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "routine.ship.success.rolled_back",
   "target": "order_sync",
   "command": "capcli routine ship order_sync reviewed",
+  "elapsed_ms": 964,
   "context": {
     "env": "prod",
     "tier": "tier_1",

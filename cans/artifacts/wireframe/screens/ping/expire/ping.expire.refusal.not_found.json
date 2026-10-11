@@ -3,6 +3,7 @@
   "id": "ping.expire.refusal.not_found",
   "target": "ask_51c7",
   "command": "capcli ping expire ask_51c7",
+  "elapsed_ms": 134,
   "context": {
     "env": "dev",
     "tier": "tier_1",

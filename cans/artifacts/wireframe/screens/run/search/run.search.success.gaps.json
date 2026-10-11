@@ -3,6 +3,7 @@
   "id": "run.search.success.gaps",
   "target": "gaps",
   "command": "capcli search gaps --since 7d",
+  "elapsed_ms": 2376,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "sys.doctor.refusal.lockfile",
   "target": "sys://host",
   "command": "capcli sys doctor --boot-check",
+  "elapsed_ms": 127,
   "context": {
     "env": "sim",
     "tier": "tier_1",

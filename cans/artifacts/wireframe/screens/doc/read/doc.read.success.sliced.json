@@ -3,6 +3,7 @@
   "id": "doc.read.success.sliced",
   "target": "doc://refund-policy",
   "command": "capcli doc read doc://refund-policy --max-tokens 100",
+  "elapsed_ms": 1292,
   "context": {
     "env": "dev",
     "tier": "tier_1",

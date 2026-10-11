@@ -3,6 +3,7 @@
   "id": "run.search.success.truncated",
   "target": "stripe",
   "command": "capcli search 'stripe'",
+  "elapsed_ms": 790,
   "context": {
     "env": "dev",
     "tier": "tier_1",

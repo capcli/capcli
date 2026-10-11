@@ -8,7 +8,7 @@ target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/action.md#Interior-rules"
   statement: "Interior rules ban raw time.sleep loops: transient polling must use the atomic kernel-managed ctx.api.poll_until (action.md#Interior-rules transient polling node). The SDK linter/shape gate flags a routine body calling time.sleep() at validation time with exit 3 — blocking sleep loops in sandboxed agent routines are structurally rejected before registration, and the remediation always points at ctx.api.poll_until (the interpreter never busy-waits; the sleep executes in the Rust runtime, action.md#Execution-guards)."
-  blast_radius_if_breached: "Blocking sleeps burn the max 300s duration budget doing nothing: watchdog kills fire on healthy routines, ops ceilings are consumed by wall-clock rather than work, and Python-side busy-waiting pins the sandbox runner thread — degrading warm runner recycling (execution overhead < 50ms floor, action.md#Jail-architecture) for every other routine on the host."
+  blast_radius_if_breached: "Blocking sleeps burn the max 300s duration budget doing nothing: watchdog kills fire on healthy routines, ops ceilings are consumed by wall-clock rather than work, and Python-side busy-waiting pins the sandbox runner thread — degrading warm runner recycling (execution overhead < 50ms floor, physics.md#Platform-tier-taxonomy) for every other routine on the host."
 
 confusion_matrix:
   quadrant: "true_negative"

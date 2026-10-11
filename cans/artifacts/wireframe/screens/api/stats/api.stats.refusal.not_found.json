@@ -3,6 +3,7 @@
   "id": "api.stats.refusal.not_found",
   "target": "shopify",
   "command": "capcli api stats shopify",
+  "elapsed_ms": 143,
   "context": {
     "env": "dev",
     "tier": "tier_1",

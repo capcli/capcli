@@ -60,6 +60,13 @@ function exitCodeFromScreenId(id){
   const segment=String(id||'').split('.')[2];
   return Object.prototype.hasOwnProperty.call(EXIT_CODE_BY_STATE,segment)?EXIT_CODE_BY_STATE[segment]:0;
 }
+function stateWordFromScreenId(id){
+  return String(id||'').split('.')[2]||'';
+}
+function fmtElapsed(ms){
+  const s=ms/1000;
+  return parseFloat(s.toFixed(s>=10?1:2))+'s';
+}
 
 function fixtureExitCode(fixture){
   if(!fixture)return 0;
@@ -429,12 +436,21 @@ function TerminalPanel({screenId,visible,onClose}){
 
   return(
     <div className="w-[380px] max-w-[35vw] h-full bg-panel border-l border-border flex flex-col flex-shrink-0 animate-in">
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold break-all">{screenId||'—'}</span>
-        <div className="flex items-center gap-2">
-          {fixture&&<span className={`text-[10px] px-2 py-0.5 rounded-full border ${exitColors[exit]} border-current`}>exit {exit}</span>}
-          <button onClick={onClose} className="text-muted hover:text-white text-sm">✕</button>
+      <div className="px-4 py-3 border-b border-border flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-semibold break-all">{screenId||'—'}</span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {fixture&&fixture.elapsed_ms!=null&&<span className={`text-[10px] ${fixture.elapsed_ms>=10000?'text-yield':'text-muted'}`}>{fmtElapsed(fixture.elapsed_ms)}</span>}
+            {fixture&&<span className={`text-[10px] px-2 py-0.5 rounded-full border ${exitColors[exit]} border-current`}>{stateWordFromScreenId(screenId)} · exit {exit}</span>}
+            <button onClick={onClose} className="text-muted hover:text-white text-sm">✕</button>
+          </div>
         </div>
+        {fixture&&fixture.command&&<div className="text-xs text-accent truncate">$ {fixture.command}</div>}
+        {fixture&&fixture.context&&<div className="flex gap-1.5 flex-wrap">
+          {['env','tier','trust'].map(k=>(
+            <span key={k} className={`text-[10px] px-2 py-0.5 rounded-full border border-border ${k==='trust'&&fixture.context[k]==='draft'?'text-refusal':'text-muted'}`}>{fixture.context[k]}</span>
+          ))}
+        </div>}
       </div>
       {loading&&<div className="flex-1 flex items-center justify-center text-muted text-[11px] animate-pulse">Loading fixture…</div>}
       {error&&<div className="flex-1 flex items-center justify-center text-denial text-[11px] p-4">{error}</div>}

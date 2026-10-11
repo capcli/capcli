@@ -3,6 +3,7 @@
   "id": "api.ship.success.graduated",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\"",
+  "elapsed_ms": 2468,
   "context": {
     "env": "dev",
     "tier": "tier_1",

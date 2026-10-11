@@ -3,6 +3,7 @@
   "id": "db.restore.refusal.missing_id",
   "target": "db://",
   "command": "capcli db restore",
+  "elapsed_ms": 38,
   "context": {
     "env": "dev",
     "tier": "tier_1",

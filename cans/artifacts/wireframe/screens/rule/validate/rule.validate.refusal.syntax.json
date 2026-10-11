@@ -3,6 +3,7 @@
   "id": "rule.validate.refusal.syntax",
   "target": "schema://orders",
   "command": "capcli rule validate",
+  "elapsed_ms": 248,
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -20,8 +21,12 @@
     ],
     "lines": [
       "--> schema.yaml:54:7",
-      "columns:",
-      "^^^^^^ duplicate_key"
-    ]
+      "columns:"
+    ],
+    "span": {
+      "source": "columns:",
+      "highlight": "column",
+      "detail": "schema.yaml:54:7 duplicate_key"
+    }
   }
 }

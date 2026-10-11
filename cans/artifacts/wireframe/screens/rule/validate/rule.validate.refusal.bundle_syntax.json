@@ -3,6 +3,7 @@
   "id": "rule.validate.refusal.bundle_syntax",
   "target": "templates/broken_hook",
   "command": "capcli rule validate templates/broken_hook",
+  "elapsed_ms": 257,
   "context": {
     "env": "dev",
     "tier": "tier_1",

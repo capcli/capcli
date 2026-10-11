@@ -3,6 +3,7 @@
   "id": "sys.doctor.panic.quarantine",
   "target": "sys://audit-chain",
   "command": "capcli sys doctor --boot-check",
+  "elapsed_ms": 1589,
   "context": {
     "env": "dev",
     "tier": "tier_1",

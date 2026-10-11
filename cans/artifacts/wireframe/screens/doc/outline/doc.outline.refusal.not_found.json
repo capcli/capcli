@@ -3,6 +3,7 @@
   "id": "doc.outline.refusal.not_found",
   "target": "doc://return-policy",
   "command": "capcli doc outline doc://return-policy",
+  "elapsed_ms": 229,
   "context": {
     "env": "dev",
     "tier": "tier_1",

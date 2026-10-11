@@ -3,6 +3,7 @@
   "id": "ping.resolve.denial.expired",
   "target": "ask_77c3",
   "command": "capcli ping resolve ask_77c3 --choice approve",
+  "elapsed_ms": 275,
   "context": {
     "env": "dev",
     "tier": "tier_1",

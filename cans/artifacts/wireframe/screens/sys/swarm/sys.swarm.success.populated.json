@@ -3,6 +3,7 @@
   "id": "sys.swarm.success.populated",
   "target": "swarm",
   "command": "capcli sys swarm list",
+  "elapsed_ms": 2339,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "sys.doctor.success.nominal",
   "target": "sys://host",
   "command": "capcli sys doctor --boot-check",
+  "elapsed_ms": 2319,
   "context": {
     "env": "dev",
     "tier": "tier_1",

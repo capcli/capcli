@@ -3,6 +3,7 @@
   "id": "template.scaffold.refusal.checksum",
   "target": "tpl://registry/routine/webhook_receiver@1",
   "command": "capcli template scaffold tpl://registry/routine/webhook_receiver@1 sync_orders",
+  "elapsed_ms": 112,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "routine.rollback.success.completed",
   "target": "sync_orders",
   "command": "capcli routine rollback sync_orders 3",
+  "elapsed_ms": 366,
   "context": {
     "env": "dev",
     "tier": "tier_1",

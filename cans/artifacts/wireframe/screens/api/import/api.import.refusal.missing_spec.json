@@ -2,6 +2,7 @@
   "$schema": "wireframe/v2",
   "archetype": "diagnostic",
   "command": "capcli api import stripe /v1/charges POST",
+  "elapsed_ms": 82,
   "component": {
     "culprit": "No spec source supplied for endpoint 'POST /v1/charges'.",
     "domain": "missing_param",

@@ -3,6 +3,7 @@
   "id": "run.execute.denial.budget",
   "target": "cap://archive_old_orders@3",
   "command": "capcli run cap://archive_old_orders@3 -p cutoff=90d -m \"archive stale orders\"",
+  "elapsed_ms": 397,
   "context": {
     "env": "dev",
     "tier": "tier_1",

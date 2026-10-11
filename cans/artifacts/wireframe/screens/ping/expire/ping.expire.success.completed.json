@@ -3,6 +3,7 @@
   "id": "ping.expire.success.completed",
   "target": "ask_77c3",
   "command": "capcli ping expire ask_77c3",
+  "elapsed_ms": 2056,
   "context": {
     "env": "dev",
     "tier": "tier_1",

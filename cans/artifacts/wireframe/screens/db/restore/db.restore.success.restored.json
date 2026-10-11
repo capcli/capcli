@@ -3,6 +3,7 @@
   "id": "db.restore.success.restored",
   "target": "db://",
   "command": "capcli db restore snap_onboarding_01",
+  "elapsed_ms": 1346,
   "context": {
     "env": "dev",
     "tier": "tier_1",

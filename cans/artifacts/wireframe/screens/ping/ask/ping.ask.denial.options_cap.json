@@ -3,6 +3,7 @@
   "id": "ping.ask.denial.options_cap",
   "target": "user:alice",
   "command": "capcli ping ask user:alice \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
+  "elapsed_ms": 168,
   "context": {
     "env": "dev",
     "tier": "tier_1",

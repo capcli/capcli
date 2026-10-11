@@ -2,6 +2,7 @@
   "$schema": "wireframe/v2",
   "id": "routine.sweep.success.empty",
   "command": "capcli routine sweep",
+  "elapsed_ms": 1229,
   "context": {
     "env": "dev",
     "tier": "tier_1",

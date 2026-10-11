@@ -3,6 +3,7 @@
   "id": "run.inspect.success.template",
   "target": "tpl://routine/webhook_receiver",
   "command": "capcli inspect tpl://routine/webhook_receiver",
+  "elapsed_ms": 1630,
   "context": {
     "env": "dev",
     "tier": "tier_1",

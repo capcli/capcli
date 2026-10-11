@@ -3,6 +3,7 @@
   "id": "bind.export.success.mcp",
   "target": "bind://",
   "command": "capcli bind export mcp --out tools.json",
+  "elapsed_ms": 1697,
   "context": {
     "env": "dev",
     "tier": "tier_1",

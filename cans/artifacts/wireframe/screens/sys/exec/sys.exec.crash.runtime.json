@@ -3,6 +3,7 @@
   "id": "sys.exec.crash.runtime",
   "target": "sys://sandbox",
   "command": "capcli sys exec \"python3 etl.py\" --sandbox",
+  "elapsed_ms": 17298,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "run.execute.denial.tier2_pinned",
   "target": "cap://dispatch_order@4",
   "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+  "elapsed_ms": 268,
   "context": {
     "env": "dev",
     "tier": "tier_2",

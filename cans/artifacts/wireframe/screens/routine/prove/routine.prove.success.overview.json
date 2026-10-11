@@ -3,6 +3,7 @@
   "id": "routine.prove.success.overview",
   "target": "overview",
   "command": "capcli routine prove overview --env sim",
+  "elapsed_ms": 1361,
   "context": {
     "env": "sim",
     "tier": "tier_1",

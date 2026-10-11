@@ -3,6 +3,7 @@
   "id": "bind.resume.success.completed",
   "target": "bnd_3k2f",
   "command": "capcli bind resume bnd_3k2f",
+  "elapsed_ms": 701,
   "context": {
     "env": "dev",
     "tier": "tier_1",

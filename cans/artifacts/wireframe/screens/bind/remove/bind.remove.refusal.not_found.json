@@ -3,6 +3,7 @@
   "id": "bind.remove.refusal.not_found",
   "target": "bnd_3k2f",
   "command": "capcli bind remove bnd_3k2f",
+  "elapsed_ms": 50,
   "context": {
     "env": "dev",
     "tier": "tier_1",

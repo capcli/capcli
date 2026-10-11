@@ -3,6 +3,7 @@
   "id": "sys.doctor.refusal.boot",
   "target": "sys://host",
   "command": "capcli sys doctor --boot-check",
+  "elapsed_ms": 54,
   "context": {
     "env": "dev",
     "tier": "tier_1",

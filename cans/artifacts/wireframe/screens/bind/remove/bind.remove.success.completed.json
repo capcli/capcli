@@ -3,6 +3,7 @@
   "id": "bind.remove.success.completed",
   "target": "bnd_3k2f",
   "command": "capcli bind remove bnd_3k2f",
+  "elapsed_ms": 2438,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "bind.pause.refusal.not_found",
   "target": "bnd_3k2f",
   "command": "capcli bind pause bnd_3k2f",
+  "elapsed_ms": 272,
   "context": {
     "env": "dev",
     "tier": "tier_1",

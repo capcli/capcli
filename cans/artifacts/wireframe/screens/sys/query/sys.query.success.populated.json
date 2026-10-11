@@ -3,6 +3,7 @@
   "id": "sys.query.success.populated",
   "target": "_audit",
   "command": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 2 LIMIT 20\"",
+  "elapsed_ms": 1735,
   "context": {
     "env": "dev",
     "tier": "tier_1",

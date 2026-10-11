@@ -3,6 +3,7 @@
   "id": "api.diff.success.empty",
   "target": "threads",
   "command": "capcli api diff threads",
+  "elapsed_ms": 1032,
   "context": {
     "env": "dev",
     "tier": "tier_1",

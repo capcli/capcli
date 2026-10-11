@@ -3,6 +3,7 @@
   "id": "sys.doctor.denial.drift",
   "target": "sys://host",
   "command": "capcli sys doctor",
+  "elapsed_ms": 267,
   "context": {
     "env": "dev",
     "tier": "tier_1",

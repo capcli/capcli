@@ -29,7 +29,7 @@
       - substrate isolation — envs/<name>/workspace.db and envs/<name>/audit.db are uncommitted, locally managed SQLite instances
       - filesystem mandate — POSIX locking compliance required: see physics.md#Platform-tier-taxonomy
       - prod promotion gate — Tier 1 host required for prod merge: see trust.md#Ladder-laws
-      - prod protection — destructive operations require out-of-band cryptographic challenge signatures (WebAuthn/Passkey or GPG/SSH key)
+      - prod protection — destructive operations require out-of-band cryptographic challenge signatures (WebAuthn/Passkey or GPG/SSH key) via Cockpit challenge or local key; CLI flag bypasses rejected
       - backup mandate — git and object push required on mutation
   - Primitive scoping
     - Event identity
@@ -55,8 +55,8 @@
       - production switch — capcli env use prod
     - Data masking
       - fork rule — sim_seed_masking: enforce (artifacts/governance.yaml)
-      - redaction — sensitive columns populated via Format-Preserving Anonymization (FPA)
-      - type validity — emails become anon_*@sim.local; unicode blocks (████) banned
+      - redaction — mask=true columns populated with valid typed synthetic values via Format-Preserving Anonymization (FPA)
+      - type validity — emails become anon_*@sim.local; raw unicode blocks (████) banned in data files
     - Sim mode taxonomy
       - sandbox — HTTP routes to provider test endpoint via overlay
       - mock — kernel replays verified HTTP exchange from apis/<provider>.cassette.jsonl; unrecorded endpoints fail closed
@@ -76,7 +76,7 @@
       - detection — env doctor checks unmerged production routines
       - inspection — env inspect flags schema drift and data staleness
       - staleness threshold — sim data older than 14 days triggers re-seed nag
-      - deprovisioning — prod removal requires signed cryptographic challenge token; CLI flag bypasses are rejected
+      - deprovisioning — prod removal auth: see #World-governance
   - env command
     - Management commands
       - provisioning — env new <name> [--seed prod]
@@ -85,7 +85,7 @@
       - merge — env merge <name> [target=prod]
       - deletion — env remove <name>
     - Safety controls
-      - prod destructive auth — operations halting prod require out-of-band cryptographic signature via Cockpit challenge or local key
+      - prod destructive auth: see #World-governance
       - git push gate — prod merge requires verified remote push credentials via git push --dry-run
       - merge scope — declarative schemas, routines, and migration scripts only; binary database files remain strictly partition-local
       - merge pipeline — env merge verifies schema forward-compatibility in sim, snapshots target DB, and applies forward migration plan

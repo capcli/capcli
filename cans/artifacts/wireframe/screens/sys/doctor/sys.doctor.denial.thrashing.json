@@ -3,6 +3,7 @@
   "id": "sys.doctor.denial.thrashing",
   "target": "sys://host",
   "command": "capcli sys doctor",
+  "elapsed_ms": 115,
   "context": {
     "env": "dev",
     "tier": "tier_1",

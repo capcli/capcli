@@ -3,6 +3,7 @@
   "id": "ping.resolve.denial.occ_conflict",
   "target": "ask_77c3",
   "command": "capcli ping resolve ask_77c3 --choice approve",
+  "elapsed_ms": 39,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "run.search.success.empty",
   "target": "kombucha supplier sync",
   "command": "capcli search 'kombucha supplier sync'",
+  "elapsed_ms": 986,
   "context": {
     "env": "dev",
     "tier": "tier_1",

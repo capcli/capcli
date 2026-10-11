@@ -3,6 +3,7 @@
   "id": "sys.register.success.registered",
   "target": "agents",
   "command": "capcli sys agent register",
+  "elapsed_ms": 293,
   "context": {
     "env": "dev",
     "tier": "tier_1",

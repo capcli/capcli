@@ -3,6 +3,7 @@
   "id": "sys.revoke.success.revoked",
   "target": "agt_7f3k",
   "command": "capcli sys agent revoke agt_7f3k",
+  "elapsed_ms": 673,
   "context": {
     "env": "dev",
     "tier": "tier_1",

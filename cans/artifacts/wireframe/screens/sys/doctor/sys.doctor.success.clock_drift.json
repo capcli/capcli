@@ -3,6 +3,7 @@
   "id": "sys.doctor.success.clock_drift",
   "target": "sys://host",
   "command": "capcli sys doctor",
+  "elapsed_ms": 2195,
   "context": {
     "env": "dev",
     "tier": "tier_1",

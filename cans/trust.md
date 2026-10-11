@@ -27,8 +27,8 @@
       - pinned
         - status — hardened operational production baseline
         - host prerequisite — execution requires Tier 1 host: see physics.md#Platform-tier-taxonomy
-        - mock disqualification — offline mock tests alone cannot grant pinned trust
-        - contract proof mandate — external API verbs require live contract proof (validated JSON Schema against live responses) or shadow canary execution before pinning
+        - mock disqualification — offline mock tests (apis/*.mock.yaml) alone cannot grant pinned trust
+        - contract proof mandate — external API verbs require live contract proof (validated JSON Schema against live responses) or shadow canary execution before pinning; call-count graduation banned
         - bounds
           - row ceiling — see artifacts/policy.yaml#trust.pinned
         - operational autonomy
@@ -55,7 +55,7 @@
         - bulk modifications — autonomous up to declared routine row ceilings
         - external egress — HTTP calls leaving perimeter require explicit grant
       - composition trust floor — callees must match or exceed caller trust: pinned can call pinned only; reviewed can call reviewed or pinned; drafts cannot be dependencies
-      - contract proof promotion — external verbs promote only via validated JSON Schema contract proofs and shadow canary runs; arbitrary call-count graduation is banned
+      - contract proof promotion: see #The-ladder
       - monotonic ascent — ladder climbed sequentially; elevation skips denied
       - verified promotion — promotion automated upon passing synthetic sim replay and invariant suite
       - dependency floor — cross-agent callee routines must hold trust >= reviewed
@@ -92,7 +92,7 @@
         - alarm — sys doctor emits promotion.sla_breached
       - veto window
         - duration — 1-hour automated canary telemetry window
-        - action — anomaly spikes or policy denials trigger autonomous circuit-breaker rollback draft
+        - action — autonomous rollback to draft on veto-window failure: see time.md#decay-and-subtraction
   - Evidence
     - Manifest evidence
       - delta review
@@ -111,7 +111,7 @@
       - contract verification
         - target verbs — all external HTTP egress capabilities
         - live contract proof — responses validated against upstream OpenAPI JSON Schemas; safe idempotent routes verified via read-only shadow canarying
-        - promotion floor — unvalidated verbs remain locked to draft
+        - promotion floor: see #The-ladder
     - Cost evidence
       - profiling metrics
         - latency — p50 and p95 duration per leaf primitive
@@ -127,10 +127,7 @@
       - min cascade rule — cage tightens downward: see budget.md#Cascade
       - physical immutability — configuration cannot loosen SQLite authorizer or jail walls
       - inheritance ceiling — child frames inherit parent pool bounds: see budget.md#Cascade
-    - Banned override flags
-      - --force — banned unconditionally: see interface.md#Refusals
-      - --override-budget — banned; budgets governed structurally: see budget.md#Exhaustion
-      - --force-prod — banned; sim rehearsals isolate via mocks: see space.md#Sim-mode-taxonomy
+    - banned override flags — no override path past gates or budgets; parser refusal law: see interface.md#Refusals-and-banned-operations
     - Invariant enforcement
       - authorizer immutability — rules cannot loosen SQLite C authorizer: see physics.md#Layer-1:-sqlite3_set_authorizer
       - jail perimeter — execution containment enforced at OS level: see action.md#Sandbox-execution

@@ -3,6 +3,7 @@
   "id": "ping.resolve.refusal.not_found",
   "target": "ask_51c7",
   "command": "capcli ping resolve ask_51c7 --choice approve",
+  "elapsed_ms": 194,
   "context": {
     "env": "dev",
     "tier": "tier_1",

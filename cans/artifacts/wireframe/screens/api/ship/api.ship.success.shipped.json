@@ -3,6 +3,7 @@
   "id": "api.ship.success.shipped",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
+  "elapsed_ms": 2193,
   "context": {
     "env": "dev",
     "tier": "tier_1",

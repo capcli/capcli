@@ -3,6 +3,7 @@
   "id": "routine.ship.denial.metrics",
   "target": "order_sync",
   "command": "capcli routine ship order_sync reviewed",
+  "elapsed_ms": 139,
   "context": {
     "env": "dev",
     "tier": "tier_1",

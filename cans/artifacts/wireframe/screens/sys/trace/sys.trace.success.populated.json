@@ -3,6 +3,7 @@
   "id": "sys.trace.success.populated",
   "target": "op_7c4f",
   "command": "capcli sys audit trace op_7c4f --explain",
+  "elapsed_ms": 1268,
   "context": {
     "env": "dev",
     "tier": "tier_1",

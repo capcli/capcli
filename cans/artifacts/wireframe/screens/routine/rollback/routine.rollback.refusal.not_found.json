@@ -3,6 +3,7 @@
   "id": "routine.rollback.refusal.not_found",
   "target": "sync_orders",
   "command": "capcli routine rollback sync_orders 7",
+  "elapsed_ms": 36,
   "context": {
     "env": "dev",
     "tier": "tier_1",

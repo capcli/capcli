@@ -3,6 +3,7 @@
   "id": "sys.serve.success.running",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",
+  "elapsed_ms": 387,
   "context": {
     "env": "dev",
     "tier": "tier_1",

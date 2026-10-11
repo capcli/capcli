@@ -3,6 +3,7 @@
   "id": "routine.stats.refusal.not_found",
   "target": "sync_inventory",
   "command": "capcli routine stats sync_inventory",
+  "elapsed_ms": 261,
   "context": {
     "env": "dev",
     "tier": "tier_1",

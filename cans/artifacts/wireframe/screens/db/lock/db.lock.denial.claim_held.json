@@ -3,6 +3,7 @@
   "id": "db.lock.denial.claim_held",
   "target": "orders:ORD-10",
   "command": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
+  "elapsed_ms": 360,
   "context": {
     "env": "dev",
     "tier": "tier_1",

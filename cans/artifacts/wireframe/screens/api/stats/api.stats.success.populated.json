@@ -3,6 +3,7 @@
   "id": "api.stats.success.populated",
   "target": "stripe",
   "command": "capcli api stats stripe --deep",
+  "elapsed_ms": 1188,
   "context": {
     "env": "dev",
     "tier": "tier_1",

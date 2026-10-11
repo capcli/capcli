@@ -3,6 +3,7 @@
   "id": "api.catalog.success.empty",
   "target": "api://catalog",
   "command": "capcli api catalog",
+  "elapsed_ms": 1843,
   "context": {
     "env": "dev",
     "tier": "tier_1",

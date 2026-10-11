@@ -36,7 +36,7 @@ topology:
 # ───────────────────────────────────────────────────────────────
 authorizer:
   tables:
-    # System tables (11 kernel-managed surfaces)
+    # System tables (13 kernel-managed surfaces)
     _audit:
       allow: [read]
     _api_quota:
@@ -111,7 +111,7 @@ query:
   bulk:
     require_pre_count: true                    # capcli sql --count before mass ops
     require_trust: reviewed
-    confirm_above: { rows: 50000 }             # raised: human gate only on massive blast radius
+    confirm_above: { rows: 50000 }             # raised: human gate only on massive blast radius; measures aggregate pre-count across chunks, not per-statement rows
 
   system_tables:
     deny_write: [_audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, routine_stats, _suspended_tasks, _templates, _outbox_events]
@@ -328,7 +328,7 @@ audit:
     - intent_chain
     - capability
     - version                                # routine/api config version
-    - policy_decision
+    - decision                                  # allow | denied (matches system-schema _audit.decision)
     - rules_matched
     - rows_affected
     - result_hash

@@ -3,6 +3,7 @@
   "id": "routine.retire.success.completed",
   "target": "legacy_etl",
   "command": "capcli routine retire legacy_etl --reason \"replaced by unified pipeline\"",
+  "elapsed_ms": 1627,
   "context": {
     "env": "prod",
     "tier": "tier_1",

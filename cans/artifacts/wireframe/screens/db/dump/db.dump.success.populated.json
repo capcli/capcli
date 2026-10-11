@@ -3,6 +3,7 @@
   "id": "db.dump.success.populated",
   "target": "db://",
   "command": "capcli db dump",
+  "elapsed_ms": 577,
   "context": {
     "env": "dev",
     "tier": "tier_1",

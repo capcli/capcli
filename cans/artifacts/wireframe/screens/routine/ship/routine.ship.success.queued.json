@@ -3,6 +3,7 @@
   "id": "routine.ship.success.queued",
   "target": "sync_orders",
   "command": "capcli routine ship sync_orders reviewed --queue --reason \"recurring fulfillment sync, human-reviewed\"",
+  "elapsed_ms": 989,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "ping.ask.refusal.missing_intent",
   "target": "user:alice",
   "command": "capcli ping ask user:alice \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
+  "elapsed_ms": 106,
   "context": {
     "env": "dev",
     "tier": "tier_1",

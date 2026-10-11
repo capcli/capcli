@@ -3,6 +3,7 @@
   "id": "template.pack.success.packed",
   "target": "templates/webhook_receiver",
   "command": "capcli template pack templates/webhook_receiver",
+  "elapsed_ms": 188,
   "context": {
     "env": "dev",
     "tier": "tier_1",

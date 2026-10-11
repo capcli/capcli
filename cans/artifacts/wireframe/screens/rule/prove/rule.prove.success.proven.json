@@ -3,6 +3,7 @@
   "archetype": "receipt",
   "audit_op": "op_8d52",
   "command": "capcli rule prove add_order_priority --env sim",
+  "elapsed_ms": 267,
   "component": {
     "groups": [
       {

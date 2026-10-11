@@ -3,6 +3,7 @@
   "id": "rule.show.success.populated",
   "target": "schema://orders",
   "command": "capcli rule show schema --table orders",
+  "elapsed_ms": 2023,
   "context": {
     "env": "dev",
     "tier": "tier_1",

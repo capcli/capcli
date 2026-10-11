@@ -3,6 +3,7 @@
   "id": "run.sql.refusal.unparseable",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHER status = 'processing'\" -m \"batch ship\"",
+  "elapsed_ms": 167,
   "context": {
     "env": "dev",
     "tier": "tier_1",

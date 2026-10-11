@@ -3,6 +3,7 @@
   "id": "api.sync.success.synced",
   "target": "stripe",
   "command": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
+  "elapsed_ms": 1778,
   "context": {
     "env": "dev",
     "tier": "tier_1",

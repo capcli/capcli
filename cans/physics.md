@@ -11,14 +11,14 @@
           - profile_binary: allow clone3, futex, rseq, rt_sigreturn
         - trust bounds — all rungs permitted (draft, reviewed, pinned): see trust.md#The-ladder
       - tier 2 (virtualized / wasm) — macOS (Darwin), Android (Termux), Windows native
-        - sandbox — mandatory microVM (Colima / Lima) or WASM sandbox (Wasmtime) with unmapped socket capabilities
+        - sandbox — mandatory microVM (Darwin/Windows: Colima / Lima) or WASM sandbox (Wasmtime; Termux and any tier 2 host) with unmapped socket capabilities
         - network jail — kernel-enforced socket null-routing; cooperative host process execution is Tier 0 (DENIED)
-        - trust bounds — draft and reviewed in dev/sim only; pinned execution denied: see trust.md#Ladder-laws
+        - trust bounds — draft and reviewed in dev/sim only; pinned execution denied (E045_TIER2_PINNED_DENIED): see trust.md#Ladder-laws
   - Deployment topology
     - dedicated server — headless Linux host running capcli-daemon under systemd; required for 24/7 background crons, webhooks, and S3 WORM attestations
     - swarm hub — central daemon instance coordinating remote spokes; hosts primary SQLite writer and system tables
     - swarm spokes — worker nodes communicating with hub over WireGuard mesh (Tailscale), mTLS, or local IPC
-    - ephemeral sandbox node — disposable microVM or container worker; zero-disk state, auto-reaping identity, and sync audit ack
+    - ephemeral sandbox node — disposable microVM or container worker; zero-disk state and sync audit ack; identity: see agent.md#Ephemeral-swarm-identity
     - local workstation — ephemeral developer environment; prohibited from serving production endpoints or hosting unattended pinned schedules
     - parity principle — local state mutations and external API egress share equal gate severity
     - local engine — C authorizer and AST parse intercept SQLite commands at prepare time
@@ -26,9 +26,9 @@
   - Distributed concurrency laws
     - remote authorizer proxy — Hub executes Layer 1 sqlite3_set_authorizer on behalf of spoke ctx.db requests before execution
     - state fencing — OCC state_fence (sha256 hash of read row state) verified at Hub before physical commit; drift aborts with exit 2
-    - preemption trap — SIGTERM on disposable worker traps execution, drops claims, flushes cursor checkpoint, and yields with exit 6
     - network partition fail-closed — lost connection to Hub during sync audit delivery aborts command immediately with exit 5
-    - claims auto-eviction — Hub monitors spoke socket heartbeats; severed connection triggers immediate cleanup of held leases
+    - swarm identity and reaper mechanics: see agent.md#Ephemeral-swarm-identity
+    - yield and preemption lifecycle: see #Exit-code-law
   - Two-layer enforcement
     - Layer 1: sqlite3_set_authorizer
       - engine — native C callback inside sqlite3_prepare_v2 via rusqlite crate
@@ -36,7 +36,9 @@
       - scope — access control only (SQLITE_OK, SQLITE_DENY, SQLITE_IGNORE)
       - granularity — 3D action × table × column tuple evaluated per statement
       - intercepted actions
-        - tenant isolation — direct SELECT/UPDATE/DELETE on tables flagged tenant: true blocked; access forced through views compiled with :principal
+        - tenant isolation — direct SELECT/UPDATE/DELETE on tenant: true tables blocked; access forced through scoped :principal views; ctx.db.mutate asserts row owner == :principal
+        - kernel-mediated writes — claims lease insert/delete issued by ctx.db.lock are kernel-internal, not agent SQL; Layer 2 deny_write applies to raw agent statements
+        - tenant schema definitions: see world.md#Dual-schema
         - table mutations — read, insert, update, delete allowlists
         - column writes — deny_columns_write protection on immutable keys
         - schema operations — drop, alter, vacuum restrictions
@@ -47,7 +49,7 @@
       - compilation — authorizer table compiled from artifacts/policy.yaml
       - ddl trust floors
         - alter table — requires reviewed trust; draft attempts exit with 2
-        - vacuum — requires pinned trust; denied unconditionally in prod
+        - vacuum — requires pinned trust; denied unconditionally in prod; executable in dev/sim by pinned callers
     - Layer 1.2: VDBE execution progress & mutation hook
       - engine — sqlite3_update_hook + sqlite3_progress_handler
       - hook checks — counts physical B-Tree row mutations and VDBE byte-code steps during execution
@@ -62,7 +64,7 @@
         - structure — unparseable SQL and schema bypass sequences denied
         - update/delete — require_where and require_limit mandatory up to 1000
         - row bounds — select max 10000, insert max 500, update/delete max 100
-        - pagination bounds — OFFSET > 50 denied at prepare-time (exit 2); deep pagination mandates indexed keyset cursors
+        - pagination bounds — OFFSET > 50 denied at prepare-time (exit 2); result envelope contract: see action.md#Shape-constraints
         - deny patterns
           - boolean injections — UPDATE * SET * WHERE * OR 1=1 denied
           - unconditional deletions — DELETE FROM * WHERE NOT EXISTS * denied
@@ -94,20 +96,21 @@
       - template syntax error — routine template failing py_compile validation aborts intake (exit 3)
       - missing configuration — policy.yaml or governance.yaml absent
       - lockfile mismatch in prod — compiled capcli.lock SHA256 mismatch aborts boot with exit 3 in prod; dev and sim auto-recompile if syntax and semantics pass
-      - migration execution — structural changes use trigger-replicated shadow tables with asynchronous backfills; exclusive cutover lock is atomic and held for <20ms
-      - schema integrity — system_schema hash mismatch aborts boot
+      - schema drift — un-migrated schema drift or system_schema hash mismatch aborts boot with exit 3: see world.md#Schema-evolution
+      - schema integrity — system_schema hash verified at boot: see world.md#Dual-schema
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
-      - leak prevention — upstream API error/response bodies scanned at wire proxy; echoed secrets redacted to [REDACTED_VAULT_TOKEN]; unredacted vault token escape triggers kill_and_alert (exit 5)
+      - secret leak — plaintext vault token escape in output payload triggers kill_and_alert (exit 5): see agent.md#Secrets
       - sql errors — unparseable SQL or authorizer errors fail closed
       - session errors — missing, forged, or expired session token aborts execution (exit 3)
       - latency SLA breach — rehearsal P95 exceeding 70% of timeout ceiling denies promotion
       - ambiguity — unclassified read/write treated as write
       - standalone bypass — routine invocation outside kernel runner exits 3
       - principal missing — scoped view invoked without --as rejected
-      - audit sink error — local disk/media write failures spool to audit.quarantine.jsonl; exit 5 reserved for total I/O deadlock
+      - audit sink error — sink write failures deny business writes; failed audit writes held in in-memory 5-minute buffer, exit 5 when undrainable
       - quota exhaustion — remaining <= deny_at_remaining throws exit 6 (Background) or exit 2 (Critical)
     - Exit code law
+      - scope — exit contract binds capcli commands returning CliEnvelope; external tooling defines its own exit contract
       - exit 0 — success with audit event recorded; upstream HTTP failures handled gracefully in envelope
       - exit 2 — invariant or governance block; state untouched (state_modified: false)
         - domain db.engine — SQLite check constraints, foreign key violations, busy timeout
@@ -115,11 +118,13 @@
         - domain policy.budget — frame limits, session op/fuel ceilings exhausted, or call nesting > 5
         - domain policy.migration — Gate 5 rehearsal broke pinned routine contract
         - domain policy.trust — action forbidden by caller trust rung (e.g. draft touching prod)
-      - exit 3 — compile-time refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, unpaginated payload > 500 tokens
+      - exit 3 — compile-time refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, statically-declared unpaginated payload shape
+        - runtime result size — oversized output returns the keyset pagination schema instead of exiting; see action.md#Shape-constraints
       - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
       - exit 5 — domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
       - exit 6 — proactive yield; releases all held claims locks, records OCC state_fence, persists resume target to _suspended_tasks
-      - preemption yield — worker spot/container SIGTERM maps directly to exit 6; parks frame to Hub _suspended_tasks without task drop
+      - preemption yield — worker spot/container SIGTERM maps directly to exit 6; traps execution, drops claims, flushes cursor checkpoint, parks frame to Hub _suspended_tasks
+      - resume verification — resume verifies OCC state_fence against live row state; drift aborts with exit 2
       - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence, writes an audit event; the frame never resumes
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
@@ -137,7 +142,7 @@
       - typography rules — table pipes (`|`) banned; tree characters locked to `├──`, `└──`, `│`; divider locked to `─`
       - buffer isolation — stdout/stderr unlogged; effect engine hashes canonical JSON exclusively
     - Break-glass paths
-      - recovery shell — CAPCLI_RECOVERY=1 loads schema and audit sink only
+      - recovery shell: see recovery.md#Emergency-recovery-mode
       - diagnostic check — sys doctor --boot-check verifies boot without daemon
       - validation check — rule validate runs in CI prior to commits: see cicd.md#Pull-request-gate-pipeline
   - Raw SQL rules
@@ -176,9 +181,10 @@
       - invocation — skills call capabilities via capcli run; raw SQL banned
       - returns — output summaries constrained: see artifacts/governance.yaml#routine_shape
       - provenance — skill name captured in triggered_by_skill audit field
+      - L0 offload — harness skill carries client-side grammar directive; kernel boot mounts 0 prompt tokens
     - Boundary isolation
       - perimeter layers
-        - credentials isolation — tokens injected at egress boundary; in-memory secret buffers zeroized on subshell CLI exit
+        - credentials isolation — token injection, redaction, and zeroization mechanics: see agent.md#Secrets
         - egress allowlist — outbound calls restricted to apis/ catalog
         - shell egress trap — open bash blocked from raw socket connect via seccomp-bpf
         - network jail — unshared network namespace for routines

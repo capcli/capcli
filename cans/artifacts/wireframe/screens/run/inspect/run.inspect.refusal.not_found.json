@@ -3,6 +3,7 @@
   "id": "run.inspect.refusal.not_found",
   "target": "tpl://routine/ghost_hook",
   "command": "capcli inspect tpl://routine/ghost_hook",
+  "elapsed_ms": 118,
   "context": {
     "env": "dev",
     "tier": "tier_1",

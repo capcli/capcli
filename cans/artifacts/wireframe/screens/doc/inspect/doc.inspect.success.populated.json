@@ -3,6 +3,7 @@
   "id": "doc.inspect.success.populated",
   "target": "doc://refund-policy",
   "command": "capcli doc inspect doc://refund-policy",
+  "elapsed_ms": 882,
   "context": {
     "env": "dev",
     "tier": "tier_1",

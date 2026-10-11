@@ -3,6 +3,7 @@
   "id": "run.execute.success.truncated",
   "target": "cap://report_orders@2",
   "command": "capcli run cap://report_orders@2 -p quarter=2026Q3",
+  "elapsed_ms": 1334,
   "context": {
     "env": "dev",
     "tier": "tier_1",

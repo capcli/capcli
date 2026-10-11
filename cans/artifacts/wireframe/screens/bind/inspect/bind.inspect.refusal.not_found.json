@@ -3,6 +3,7 @@
   "id": "bind.inspect.refusal.not_found",
   "target": "bnd_3k2f",
   "command": "capcli bind inspect bnd_3k2f",
+  "elapsed_ms": 46,
   "context": {
     "env": "dev",
     "tier": "tier_1",

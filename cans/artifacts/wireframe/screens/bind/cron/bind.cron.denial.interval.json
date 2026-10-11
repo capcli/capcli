@@ -3,6 +3,7 @@
   "id": "bind.cron.denial.interval",
   "target": "cap://sync_orders",
   "command": "capcli bind cron poll_orders cap://sync_orders \"* * * * *\" -m \"poll order queue every minute\"",
+  "elapsed_ms": 46,
   "context": {
     "env": "dev",
     "tier": "tier_1",

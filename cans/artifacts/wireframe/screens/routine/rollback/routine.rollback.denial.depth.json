@@ -3,6 +3,7 @@
   "id": "routine.rollback.denial.depth",
   "target": "order_sync",
   "command": "capcli routine rollback order_sync 3",
+  "elapsed_ms": 260,
   "context": {
     "env": "dev",
     "tier": "tier_1",

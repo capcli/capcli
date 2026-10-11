@@ -3,6 +3,7 @@
   "id": "run.execute.denial.budget_cascade",
   "target": "cap://sync_inventory@3",
   "command": "capcli run cap://sync_inventory@3 -p warehouse=west -m \"nightly inventory sync\"",
+  "elapsed_ms": 212,
   "context": {
     "env": "dev",
     "tier": "tier_1",

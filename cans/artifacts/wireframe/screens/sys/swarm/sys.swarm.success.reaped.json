@@ -3,6 +3,7 @@
   "id": "sys.swarm.success.reaped",
   "target": "swarm",
   "command": "capcli sys swarm reap",
+  "elapsed_ms": 1111,
   "context": {
     "env": "dev",
     "tier": "tier_1",

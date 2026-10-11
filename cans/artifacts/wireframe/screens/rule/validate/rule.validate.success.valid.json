@@ -3,6 +3,7 @@
   "id": "rule.validate.success.valid",
   "target": "schema://orders",
   "command": "capcli rule validate",
+  "elapsed_ms": 158,
   "context": {
     "env": "dev",
     "tier": "tier_1",

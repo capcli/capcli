@@ -3,6 +3,7 @@
   "id": "db.dump.success.truncated",
   "target": "db://",
   "command": "capcli db dump",
+  "elapsed_ms": 2211,
   "context": {
     "env": "dev",
     "tier": "tier_1",

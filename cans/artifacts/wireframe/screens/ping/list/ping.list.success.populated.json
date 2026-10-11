@@ -3,6 +3,7 @@
   "id": "ping.list.success.populated",
   "target": "_pending_asks",
   "command": "capcli ping list --pending",
+  "elapsed_ms": 2075,
   "context": {
     "env": "dev",
     "tier": "tier_1",

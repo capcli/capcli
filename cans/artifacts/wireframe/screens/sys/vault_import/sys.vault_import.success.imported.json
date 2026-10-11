@@ -3,6 +3,7 @@
   "id": "sys.vault_import.success.imported",
   "target": "CAPCLI_SECRET_*",
   "command": "capcli sys vault import-env",
+  "elapsed_ms": 877,
   "context": {
     "env": "dev",
     "tier": "tier_1",

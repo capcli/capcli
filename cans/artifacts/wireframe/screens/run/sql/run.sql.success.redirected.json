@@ -3,6 +3,7 @@
   "id": "run.sql.success.redirected",
   "target": "db://orders",
   "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\" --out out/orders_export.json",
+  "elapsed_ms": 2316,
   "context": {
     "env": "dev",
     "tier": "tier_1",

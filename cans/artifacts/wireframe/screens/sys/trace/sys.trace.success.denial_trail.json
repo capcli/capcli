@@ -3,6 +3,7 @@
   "id": "sys.trace.success.denial_trail",
   "target": "op_9f2e",
   "command": "capcli sys audit trace op_9f2e --explain",
+  "elapsed_ms": 1404,
   "context": {
     "env": "dev",
     "tier": "tier_1",

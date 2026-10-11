@@ -3,6 +3,7 @@
   "id": "doc.outline.success.populated",
   "target": "doc://refund-policy",
   "command": "capcli doc outline doc://refund-policy",
+  "elapsed_ms": 2127,
   "context": {
     "env": "dev",
     "tier": "tier_1",

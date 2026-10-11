@@ -3,6 +3,7 @@
   "id": "db.unlock.denial.not_holder",
   "target": "orders:ORD-10",
   "command": "capcli db unlock orders:ORD-10",
+  "elapsed_ms": 118,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "sys.register.denial.cap",
   "target": "agents",
   "command": "capcli sys agent register",
+  "elapsed_ms": 228,
   "context": {
     "env": "dev",
     "tier": "tier_1",

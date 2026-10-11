@@ -3,6 +3,7 @@
   "id": "run.inspect.success.quota",
   "target": "quota://threads",
   "command": "capcli inspect quota://threads",
+  "elapsed_ms": 1901,
   "context": {
     "env": "dev",
     "tier": "tier_1",

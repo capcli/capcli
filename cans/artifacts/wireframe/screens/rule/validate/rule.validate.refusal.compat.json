@@ -3,6 +3,7 @@
   "id": "rule.validate.refusal.compat",
   "target": "templates/order_sync",
   "command": "capcli rule validate templates/order_sync",
+  "elapsed_ms": 242,
   "context": {
     "env": "dev",
     "tier": "tier_1",

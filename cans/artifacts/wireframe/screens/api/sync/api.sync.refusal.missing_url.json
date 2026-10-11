@@ -3,6 +3,7 @@
   "id": "api.sync.refusal.missing_url",
   "target": "stripe",
   "command": "capcli api sync stripe",
+  "elapsed_ms": 40,
   "context": {
     "env": "dev",
     "tier": "tier_1",

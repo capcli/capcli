@@ -3,6 +3,7 @@
   "id": "template.import.success.imported",
   "target": "tpl://registry/routine/webhook_receiver@1",
   "command": "capcli template import tpl://registry/routine/webhook_receiver@1",
+  "elapsed_ms": 169,
   "context": {
     "env": "dev",
     "tier": "tier_1",

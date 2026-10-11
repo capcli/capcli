@@ -3,6 +3,7 @@
   "id": "bind.pause.success.completed",
   "target": "bnd_3k2f",
   "command": "capcli bind pause bnd_3k2f",
+  "elapsed_ms": 760,
   "context": {
     "env": "dev",
     "tier": "tier_1",

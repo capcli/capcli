@@ -3,6 +3,7 @@
   "id": "rule.show.refusal.not_found",
   "target": "schema://invoices",
   "command": "capcli rule show schema --table invoices",
+  "elapsed_ms": 74,
   "context": {
     "env": "dev",
     "tier": "tier_1",

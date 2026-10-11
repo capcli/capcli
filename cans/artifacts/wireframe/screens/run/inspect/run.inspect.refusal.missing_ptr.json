@@ -3,6 +3,7 @@
   "id": "run.inspect.refusal.missing_ptr",
   "target": "dispatch_order@4",
   "command": "capcli inspect dispatch_order@4",
+  "elapsed_ms": 265,
   "context": {
     "env": "dev",
     "tier": "tier_1",

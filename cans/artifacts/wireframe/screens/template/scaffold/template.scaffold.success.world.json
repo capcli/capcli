@@ -3,6 +3,7 @@
   "id": "template.scaffold.success.world",
   "target": "lab2",
   "command": "capcli template scaffold tpl://world/atlas_world lab2",
+  "elapsed_ms": 357,
   "context": {
     "env": "dev",
     "tier": "tier_1",

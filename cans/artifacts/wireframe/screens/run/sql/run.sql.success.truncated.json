@@ -3,6 +3,7 @@
   "id": "run.sql.success.truncated",
   "target": "db://orders",
   "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\"",
+  "elapsed_ms": 1752,
   "context": {
     "env": "dev",
     "tier": "tier_1",

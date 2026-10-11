@@ -3,6 +3,7 @@
   "id": "rule.apply.success.dry_run",
   "target": "schema://orders",
   "command": "capcli rule apply schema --dry-run",
+  "elapsed_ms": 2058,
   "context": {
     "env": "dev",
     "tier": "tier_1",

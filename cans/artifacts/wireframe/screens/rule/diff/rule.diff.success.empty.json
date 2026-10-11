@@ -3,6 +3,7 @@
   "id": "rule.diff.success.empty",
   "target": "schema://orders",
   "command": "capcli rule diff schema --git",
+  "elapsed_ms": 305,
   "context": {
     "env": "dev",
     "tier": "tier_1",

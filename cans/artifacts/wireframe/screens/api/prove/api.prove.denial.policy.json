@@ -3,6 +3,7 @@
   "id": "api.prove.denial.policy",
   "target": "cap://stripe.delete_account",
   "command": "capcli api prove stripe.delete_account --env sim",
+  "elapsed_ms": 113,
   "context": {
     "env": "sim",
     "tier": "tier_1",

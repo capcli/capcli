@@ -3,6 +3,7 @@
   "id": "run.sql.refusal.missing_intent",
   "target": "db://orders",
   "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100\"",
+  "elapsed_ms": 169,
   "context": {
     "env": "dev",
     "tier": "tier_1",

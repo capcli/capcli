@@ -3,6 +3,7 @@
   "id": "sys.serve.refusal.already_running",
   "target": "sys://daemon",
   "command": "capcli sys serve --start",
+  "elapsed_ms": 287,
   "context": {
     "env": "dev",
     "tier": "tier_1",

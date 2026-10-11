@@ -3,6 +3,7 @@
   "id": "routine.ship.success.shipped",
   "target": "order_sync",
   "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+  "elapsed_ms": 2398,
   "context": {
     "env": "prod",
     "tier": "tier_1",

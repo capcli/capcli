@@ -3,6 +3,7 @@
   "id": "api.prove.crash.runtime",
   "target": "cap://stripe.issue_credit_note",
   "command": "capcli api prove stripe.issue_credit_note --env sim",
+  "elapsed_ms": 6295,
   "context": {
     "env": "sim",
     "tier": "tier_1",

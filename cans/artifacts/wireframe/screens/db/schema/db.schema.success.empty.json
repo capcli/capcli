@@ -3,6 +3,7 @@
   "id": "db.schema.success.empty",
   "target": "db://",
   "command": "capcli db schema",
+  "elapsed_ms": 1156,
   "context": {
     "env": "dev",
     "tier": "tier_1",

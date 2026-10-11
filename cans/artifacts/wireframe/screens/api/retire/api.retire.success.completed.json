@@ -3,6 +3,7 @@
   "id": "api.retire.success.completed",
   "target": "cap://stripe.refund_charge",
   "command": "capcli api retire stripe.refund_charge --reason \"deprecated upstream\"",
+  "elapsed_ms": 2354,
   "context": {
     "env": "dev",
     "tier": "tier_1",

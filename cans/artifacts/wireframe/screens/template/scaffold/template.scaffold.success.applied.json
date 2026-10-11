@@ -3,6 +3,7 @@
   "id": "template.scaffold.success.applied",
   "target": "sync_orders",
   "command": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+  "elapsed_ms": 2161,
   "context": {
     "env": "dev",
     "tier": "tier_1",

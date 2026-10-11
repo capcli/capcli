@@ -3,6 +3,7 @@
   "id": "routine.retire.refusal.not_found",
   "target": "legacy_etl_backup",
   "command": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",
+  "elapsed_ms": 47,
   "context": {
     "env": "dev",
     "tier": "tier_1",

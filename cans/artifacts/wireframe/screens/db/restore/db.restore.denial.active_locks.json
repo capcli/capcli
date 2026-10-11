@@ -3,6 +3,7 @@
   "id": "db.restore.denial.active_locks",
   "target": "db://",
   "command": "capcli db restore snap_migration_004",
+  "elapsed_ms": 51,
   "context": {
     "env": "dev",
     "tier": "tier_1",

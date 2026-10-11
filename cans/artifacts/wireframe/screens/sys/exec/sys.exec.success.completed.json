@@ -3,6 +3,7 @@
   "id": "sys.exec.success.completed",
   "target": "sys://sandbox",
   "command": "capcli sys exec \"python3 etl.py\" --sandbox",
+  "elapsed_ms": 1455,
   "context": {
     "env": "dev",
     "tier": "tier_1",

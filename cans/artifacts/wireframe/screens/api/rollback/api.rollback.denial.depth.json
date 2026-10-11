@@ -3,6 +3,7 @@
   "id": "api.rollback.denial.depth",
   "target": "cap://threads.create_media_post",
   "command": "capcli api rollback threads.create_media_post 2",
+  "elapsed_ms": 62,
   "context": {
     "env": "dev",
     "tier": "tier_1",

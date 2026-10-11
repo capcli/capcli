@@ -3,6 +3,7 @@
   "id": "sys.inbox.success.populated",
   "target": "inbox://webhook",
   "command": "capcli sys inbox pop --channel webhook",
+  "elapsed_ms": 1004,
   "context": {
     "env": "dev",
     "tier": "tier_1",

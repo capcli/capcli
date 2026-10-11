@@ -3,6 +3,7 @@
   "id": "template.sync.success.synced",
   "target": "capcli/registry",
   "command": "capcli template sync",
+  "elapsed_ms": 774,
   "context": {
     "env": "dev",
     "tier": "tier_1",

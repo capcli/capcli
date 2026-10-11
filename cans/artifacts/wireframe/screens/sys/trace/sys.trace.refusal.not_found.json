@@ -3,6 +3,7 @@
   "id": "sys.trace.refusal.not_found",
   "target": "op_9f99",
   "command": "capcli sys audit trace op_9f99 --explain",
+  "elapsed_ms": 81,
   "context": {
     "env": "dev",
     "tier": "tier_1",

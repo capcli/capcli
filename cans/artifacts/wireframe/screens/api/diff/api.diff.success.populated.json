@@ -3,6 +3,7 @@
   "id": "api.diff.success.populated",
   "target": "stripe",
   "command": "capcli api diff stripe",
+  "elapsed_ms": 606,
   "context": {
     "env": "dev",
     "tier": "tier_1",

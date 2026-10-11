@@ -3,6 +3,7 @@
   "id": "sys.doctor.success.quarantine",
   "target": "sys://audit-chain",
   "command": "CAPCLI_RECOVERY=1 capcli sys doctor",
+  "elapsed_ms": 1156,
   "context": {
     "env": "dev",
     "tier": "tier_1",

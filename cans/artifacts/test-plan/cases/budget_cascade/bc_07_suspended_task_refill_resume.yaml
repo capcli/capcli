@@ -7,7 +7,7 @@ target_crate: "crates/capcli-daemon"
 
 invariant:
   law_reference: "cans/budget.md#Task-resumption"
-  statement: "'Task resumption — daemon monitors resume_at timestamps and automatically re-queues execution on token refill' (assembly.md#Daemon-surface yield_queue.rs 'evaluates _suspended_tasks and re-dispatches tasks on quota refill'; action.md#Yield-handling: runner reads yield_until payload and re-queues via daemon cron): the resumed frame completes with exit 0 and no manual resume command is ever issued."
+  statement: "'Task resumption — daemon monitors resume_at timestamps and automatically re-queues execution on token refill' (assembly.md#Daemon-surface yield_queue.rs 'evaluates _suspended_tasks and re-dispatches tasks on quota refill'; physics.md#Exit-code-law: runner reads yield_until payload and re-queues via daemon cron): the resumed frame completes with exit 0 and no manual resume command is ever issued."
   blast_radius_if_breached: "If suspended background work required manual resurrection, every quota-window blip would strand enterprise batch jobs (nightly digests, payouts) in _suspended_tasks forever — silent data pipeline stalls discovered days later."
 
 confusion_matrix:

@@ -3,6 +3,7 @@
   "id": "bind.resume.refusal.not_found",
   "target": "bnd_3k2f",
   "command": "capcli bind resume bnd_3k2f",
+  "elapsed_ms": 84,
   "context": {
     "env": "dev",
     "tier": "tier_1",

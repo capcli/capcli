@@ -3,6 +3,7 @@
   "id": "sys.replay.success.replayed",
   "target": "_audit",
   "command": "capcli sys audit replay --from 2026-10-03T23:52:31Z",
+  "elapsed_ms": 1923,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "archetype": "receipt",
   "audit_op": "op_5a21",
   "command": "capcli api import stripe /v1/charges POST --spec https://api.stripe.com/openapi.json",
+  "elapsed_ms": 1014,
   "component": {
     "groups": [
       {

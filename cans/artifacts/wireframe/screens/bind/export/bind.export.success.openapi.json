@@ -3,6 +3,7 @@
   "id": "bind.export.success.openapi",
   "target": "bind://",
   "command": "capcli bind export openapi --out openapi.json",
+  "elapsed_ms": 2304,
   "context": {
     "env": "dev",
     "tier": "tier_1",

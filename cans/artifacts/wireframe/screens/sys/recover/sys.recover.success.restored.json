@@ -3,6 +3,7 @@
   "id": "sys.recover.success.restored",
   "target": "git:3f9c2ab",
   "command": "capcli sys recover 3f9c2ab",
+  "elapsed_ms": 1205,
   "context": {
     "env": "dev",
     "tier": "tier_1",

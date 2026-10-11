@@ -65,7 +65,6 @@ template:
 # 2. ROUTINE SHAPE — defaults every file must satisfy
 # ───────────────────────────────────────────────────────────────
 routine_shape:
-  loc:        { max: 150 }               # split big routines
   tokens:     { max: 2000 }              # file size ceiling (context cost)
   params:     { max: 8 }                  # interface bloat guard
   description:{ min_words: 5 }            # searchable or it doesn't ship
@@ -155,6 +154,7 @@ maintenance:
   audits:
     mirror_lag_max_minutes: 5         # JSONL → _audit mirror freshness SLA
     hash_chain_verify: "0 4 * * *"    # daily integrity check
+    queue_age_max_hours: 48           # promotion queue SLA; breach emits promotion.sla_breached
 
 # ───────────────────────────────────────────────────────────────
 # 4. SCHEDULE — time is governed like everything else
@@ -267,7 +267,7 @@ backup:
 # 12. DENIAL UX — limits teach, not just block
 # ───────────────────────────────────────────────────────────────
 denials:
-  cite_measured_value: true           # "file has 342 LOC, max is 150"
+  cite_measured_value: true           # cites measured value, e.g. token envelope over the 2,000-token cap
   suggest_remediation: true           # "split it, or adjust governance config"
   log_all: true                       # every governance.deny is an audit event
   scope_mismatch_deny: true           # denies intent when AST targets undeclared tables

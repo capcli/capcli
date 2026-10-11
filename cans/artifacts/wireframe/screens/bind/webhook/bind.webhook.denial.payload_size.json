@@ -3,6 +3,7 @@
   "id": "bind.webhook.denial.payload_size",
   "target": "cap://sync_orders",
   "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
+  "elapsed_ms": 188,
   "context": {
     "env": "dev",
     "tier": "tier_1",

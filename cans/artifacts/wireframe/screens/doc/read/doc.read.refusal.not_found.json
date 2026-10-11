@@ -3,6 +3,7 @@
   "id": "doc.read.refusal.not_found",
   "target": "doc://refund-policies",
   "command": "capcli doc read doc://refund-policies --max-tokens 100",
+  "elapsed_ms": 91,
   "context": {
     "env": "dev",
     "tier": "tier_1",

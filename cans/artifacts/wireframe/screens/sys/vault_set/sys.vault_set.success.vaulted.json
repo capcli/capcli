@@ -3,6 +3,7 @@
   "id": "sys.vault_set.success.vaulted",
   "target": "stripe_secret_key",
   "command": "capcli sys vault set stripe_secret_key --in @-",
+  "elapsed_ms": 2291,
   "context": {
     "env": "dev",
     "tier": "tier_1",

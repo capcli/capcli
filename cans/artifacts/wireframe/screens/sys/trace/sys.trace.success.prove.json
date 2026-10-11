@@ -3,6 +3,7 @@
   "id": "sys.trace.success.prove",
   "target": "op_prove_01",
   "command": "capcli sys audit trace op_prove_01 --explain",
+  "elapsed_ms": 1548,
   "context": {
     "env": "dev",
     "tier": "tier_1",

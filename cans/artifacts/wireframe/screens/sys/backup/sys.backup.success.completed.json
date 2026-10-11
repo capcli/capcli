@@ -3,6 +3,7 @@
   "id": "sys.backup.success.completed",
   "target": "sys://workspace",
   "command": "capcli sys backup --push",
+  "elapsed_ms": 2365,
   "context": {
     "env": "dev",
     "tier": "tier_1",

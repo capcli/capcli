@@ -3,6 +3,7 @@
   "archetype": "receipt",
   "audit_op": "op_9e63",
   "command": "capcli run abort frame_026",
+  "elapsed_ms": 1360,
   "component": {
     "groups": [
       {

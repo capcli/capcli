@@ -3,6 +3,7 @@
   "id": "api.prove.success.passed",
   "target": "cap://stripe.refund_charge",
   "command": "capcli api prove stripe.refund_charge --env sim",
+  "elapsed_ms": 1682,
   "context": {
     "env": "sim",
     "tier": "tier_1",

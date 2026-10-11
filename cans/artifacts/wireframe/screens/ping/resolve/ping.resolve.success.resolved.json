@@ -3,6 +3,7 @@
   "id": "ping.resolve.success.resolved",
   "target": "ask_88a",
   "command": "capcli ping resolve ask_88a --choice approve",
+  "elapsed_ms": 2318,
   "context": {
     "env": "dev",
     "tier": "tier_1",

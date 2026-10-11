@@ -3,6 +3,7 @@
   "id": "api.catalog.success.populated",
   "target": "stripe",
   "command": "capcli api catalog stripe --state active --json",
+  "elapsed_ms": 453,
   "context": {
     "env": "dev",
     "tier": "tier_1",

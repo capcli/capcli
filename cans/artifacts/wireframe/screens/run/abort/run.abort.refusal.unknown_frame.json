@@ -2,6 +2,7 @@
   "$schema": "wireframe/v2",
   "archetype": "diagnostic",
   "command": "capcli run abort frame_999",
+  "elapsed_ms": 281,
   "component": {
     "culprit": "No suspended frame 'frame_999' exists in _suspended_tasks.",
     "domain": "missing_param",

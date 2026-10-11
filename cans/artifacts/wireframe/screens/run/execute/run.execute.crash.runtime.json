@@ -3,6 +3,7 @@
   "id": "run.execute.crash.runtime",
   "target": "cap://enrich_customers@2",
   "command": "capcli run cap://enrich_customers@2 -p cohort=enterprise -m \"enrich customer records\"",
+  "elapsed_ms": 9652,
   "context": {
     "env": "dev",
     "tier": "tier_1",

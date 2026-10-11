@@ -3,6 +3,7 @@
   "id": "sys.replay.refusal.missing_from",
   "target": "_audit",
   "command": "capcli sys audit replay",
+  "elapsed_ms": 248,
   "context": {
     "env": "dev",
     "tier": "tier_1",

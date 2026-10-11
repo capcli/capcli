@@ -3,6 +3,7 @@
   "id": "bind.list.success.populated",
   "target": "bind://",
   "command": "capcli bind list",
+  "elapsed_ms": 590,
   "context": {
     "env": "dev",
     "tier": "tier_1",

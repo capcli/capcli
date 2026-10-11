@@ -3,6 +3,7 @@
   "id": "template.pack.denial.size_limit",
   "target": "templates/atlas_world",
   "command": "capcli template pack templates/atlas_world",
+  "elapsed_ms": 304,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "ping.ask.yield.suspended",
   "target": "user:alice",
   "command": "capcli ping ask user:alice \"Fraud score 0.83 on ORD-1042. Approve dispatch?\" --options approve,deny --timeout 60m --intent \"fraud gate above dispatch threshold requires human sign-off\"",
+  "elapsed_ms": 1203,
   "context": {
     "env": "dev",
     "tier": "tier_1",

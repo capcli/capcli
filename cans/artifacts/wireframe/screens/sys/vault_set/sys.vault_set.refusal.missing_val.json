@@ -3,6 +3,7 @@
   "id": "sys.vault_set.refusal.missing_val",
   "target": "stripe_secret_key",
   "command": "capcli sys vault set stripe_secret_key",
+  "elapsed_ms": 27,
   "context": {
     "env": "dev",
     "tier": "tier_1",

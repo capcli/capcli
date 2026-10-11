@@ -3,6 +3,7 @@
   "id": "sys.tail.success.populated",
   "target": "_audit",
   "command": "capcli sys audit tail --follow --since 1h",
+  "elapsed_ms": 2212,
   "context": {
     "env": "dev",
     "tier": "tier_1",

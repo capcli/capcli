@@ -3,6 +3,7 @@
   "id": "sys.inbox.success.empty",
   "target": "inbox://*",
   "command": "capcli sys inbox pop",
+  "elapsed_ms": 2287,
   "context": {
     "env": "dev",
     "tier": "tier_1",

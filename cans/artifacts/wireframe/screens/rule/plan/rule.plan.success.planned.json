@@ -3,6 +3,7 @@
   "archetype": "receipt",
   "audit_op": "op_7c48",
   "command": "capcli rule plan --name \"add_order_priority\" -m \"rush shipping priority flag\"",
+  "elapsed_ms": 521,
   "component": {
     "groups": [
       {

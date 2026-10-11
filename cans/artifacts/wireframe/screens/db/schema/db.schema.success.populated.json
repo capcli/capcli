@@ -3,6 +3,7 @@
   "id": "db.schema.success.populated",
   "target": "db://orders",
   "command": "capcli db schema --table orders",
+  "elapsed_ms": 2266,
   "context": {
     "env": "dev",
     "tier": "tier_1",

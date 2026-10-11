@@ -3,6 +3,7 @@
   "id": "db.unlock.success.released",
   "target": "orders:ORD-10",
   "command": "capcli db unlock orders:ORD-10",
+  "elapsed_ms": 1060,
   "context": {
     "env": "dev",
     "tier": "tier_1",

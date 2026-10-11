@@ -3,6 +3,7 @@
   "id": "template.new.refusal.shape_violation",
   "target": "chunked_batch",
   "command": "capcli template new chunked_batch --type routine",
+  "elapsed_ms": 136,
   "context": {
     "env": "dev",
     "tier": "tier_1",

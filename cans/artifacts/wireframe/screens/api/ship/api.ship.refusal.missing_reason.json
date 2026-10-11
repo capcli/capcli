@@ -3,6 +3,7 @@
   "id": "api.ship.refusal.missing_reason",
   "target": "cap://threads.create_media_post",
   "command": "capcli api ship threads.create_media_post reviewed",
+  "elapsed_ms": 179,
   "context": {
     "env": "dev",
     "tier": "tier_1",

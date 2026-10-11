@@ -3,6 +3,7 @@
   "id": "rule.validate.refusal.semantics",
   "target": "schema://orders",
   "command": "capcli rule validate",
+  "elapsed_ms": 178,
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -20,8 +21,12 @@
       "--> schema.yaml:47:41",
       "orders:",
       "columns:",
-      "^^^^^^^^^^^^^^^^^^ cyclic_edge",
       "Topological table compile order cannot be established."
-    ]
+    ],
+    "span": {
+      "source": "int ref=order_items.id",
+      "highlight": "ref=order_items.id",
+      "detail": "schema.yaml:47:41 cyclic_edge"
+    }
   }
 }

@@ -3,6 +3,7 @@
   "id": "sys.recover.refusal.not_found",
   "target": "git:1a2b3c4",
   "command": "capcli sys recover 1a2b3c4",
+  "elapsed_ms": 135,
   "context": {
     "env": "dev",
     "tier": "tier_1",

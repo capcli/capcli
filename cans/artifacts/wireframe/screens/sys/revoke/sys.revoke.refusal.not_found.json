@@ -3,6 +3,7 @@
   "id": "sys.revoke.refusal.not_found",
   "target": "agt_0000",
   "command": "capcli sys agent revoke agt_0000",
+  "elapsed_ms": 238,
   "context": {
     "env": "dev",
     "tier": "tier_1",

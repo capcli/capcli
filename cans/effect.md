@@ -40,17 +40,21 @@
       - api.first_prod_call — call_number, calls_remaining, contract_proof_hash: see trust.md#Simulation-gaps
       - budget.frame_push/pop — declared, consumed, remaining: see budget.md#Frames
       - serve.request — endpoint, channel (rest|mcp), trace_id, routine@version, api_key_id, status
+      - promotion.sla_breached — queue age beyond SLA threshold; see time.md#decay-and-subtraction
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
       - template instantiation — capcli template scaffold emits exactly one event: routine.draft (routine kind) or env.init_from_template (world kind)
-      - failure buffer — audit sink failure streams uncommitted events to audit/audit.quarantine.jsonl without halting execution
+      - failure buffer — business writes denied while audit sink is down; failed audit writes held in in-memory 5-minute buffer, exit 5 when undrainable
       - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok
       - no synthetic types — onboarding.* and fake lifecycle events denied
       - tamper quarantine — broken sha256 links isolate corrupted leaves to a quarantine branch; valid historical blocks remain operable
       - write continuity — sink failure triggers out-of-band spooling and alerts; hard kernel panic (exit 5) is reserved for total media loss
       - denial logging — denied operations emit audit events with effect: none
       - tamper detection — per-row sha256 chain verified against root ledger hash
+      - line linking — each _audit row carries prev_hash: sha256:<previous_row_hash>; chain mirrored to JSONL
+      - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata
       - external attestation — ledger root hash checkpointed to S3 Object Lock (WORM) storage with KMS signatures
+      - notary witness — periodic KMS signature stamped to witness.log
       - verification — scheduled chain walk: see artifacts/governance.yaml#maintenance
     - Query surfaces
       - tail — sys audit tail [--follow] [--capability X] [--since 1h]
@@ -76,7 +80,7 @@
       - domain classification — routine.runtime, db.engine, policy.*, api.upstream, kernel.*
       - violation — rule id (e.g. policy.query.update_delete.require_where)
       - layer — authorizer, AST, governance, or budget
-      - measured value — observed count vs ceiling (e.g. 342 LOC vs 150 cap)
+      - measured value — observed count vs ceiling (e.g. token envelope over the 2,000-token cap)
       - remediation — explicit fix instructions printed
       - state_modified — strictly boolean false on non-zero exit
       - canonical error payload
@@ -107,7 +111,7 @@
       - merge lineage — consolidated_from preserves origins of merged routines
       - retention bounds — versions kept: see artifacts/governance.yaml#routine_shape
     - Replay invariants
-      - integrity anchoring — ledger roots checkpointed offsite: see recovery.md#Hash-chains
+      - integrity anchoring — ledger roots checkpointed offsite: see #Event-integrity
       - deterministic inputs — replay recreates identical state; ctx.now() bound to frame start; ctx.uuid() uses PRNG seeded by HMAC-SHA256(session_token, op_sequence)
       - policy enforcement — replay executes under current policy, not historical
       - external effects — external API calls flagged replay: manual; auto-replay strictly forbidden

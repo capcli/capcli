@@ -3,6 +3,7 @@
   "id": "template.new.success.created",
   "target": "webhook_receiver",
   "command": "capcli template new webhook_receiver --type routine",
+  "elapsed_ms": 235,
   "context": {
     "env": "dev",
     "tier": "tier_1",

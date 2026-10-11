@@ -3,6 +3,7 @@
   "id": "db.lock.refusal.missing_reason",
   "target": "orders:ORD-10",
   "command": "capcli db lock orders:ORD-10 --ttl 300s",
+  "elapsed_ms": 21,
   "context": {
     "env": "dev",
     "tier": "tier_1",

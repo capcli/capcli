@@ -3,6 +3,7 @@
   "id": "run.execute.crash.poll_timeout",
   "target": "cap://media_digest@2",
   "command": "capcli run cap://media_digest@2 -p audience=followers -m \"morning media digest\"",
+  "elapsed_ms": 30000,
   "context": {
     "env": "dev",
     "tier": "tier_1",

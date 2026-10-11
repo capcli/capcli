@@ -3,6 +3,7 @@
   "id": "run.sql.denial.authorizer",
   "target": "db://orders",
   "command": "capcli sql \"DROP TABLE orders\" -m \"remove stale orders table\"",
+  "elapsed_ms": 134,
   "context": {
     "env": "dev",
     "tier": "tier_1",

@@ -3,6 +3,7 @@
   "id": "template.scaffold.denial.target_exists",
   "target": "lab",
   "command": "capcli template scaffold tpl://world/atlas_world lab",
+  "elapsed_ms": 280,
   "context": {
     "env": "dev",
     "tier": "tier_1",

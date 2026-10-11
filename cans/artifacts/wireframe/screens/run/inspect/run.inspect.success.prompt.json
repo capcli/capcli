@@ -3,6 +3,7 @@
   "id": "run.inspect.success.prompt",
   "target": "prompt://authoring/overview_absent@1",
   "command": "capcli inspect prompt://authoring/overview_absent@1",
+  "elapsed_ms": 1132,
   "context": {
     "env": "dev",
     "tier": "tier_1",

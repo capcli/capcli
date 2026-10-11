@@ -3,6 +3,7 @@
   "id": "sys.replay.denial.external",
   "target": "_audit",
   "command": "capcli sys audit replay --from 2026-10-03T22:41:07Z",
+  "elapsed_ms": 379,
   "context": {
     "env": "dev",
     "tier": "tier_1",

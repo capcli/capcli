@@ -2,6 +2,7 @@
   "$schema": "wireframe/v2",
   "id": "routine.pending.success.populated",
   "command": "capcli routine pending",
+  "elapsed_ms": 1718,
   "context": {
     "env": "dev",
     "tier": "tier_1",

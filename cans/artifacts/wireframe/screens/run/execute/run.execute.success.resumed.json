@@ -3,6 +3,7 @@
   "id": "run.execute.success.resumed",
   "target": "cap://broadcast_newsletter@2",
   "command": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
+  "elapsed_ms": 1890,
   "context": {
     "env": "prod",
     "tier": "tier_1",

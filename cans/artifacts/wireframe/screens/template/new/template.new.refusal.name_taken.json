@@ -3,6 +3,7 @@
   "id": "template.new.refusal.name_taken",
   "target": "webhook_receiver",
   "command": "capcli template new webhook_receiver --type routine",
+  "elapsed_ms": 77,
   "context": {
     "env": "dev",
     "tier": "tier_1",

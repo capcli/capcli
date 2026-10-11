@@ -3,6 +3,7 @@
   "id": "sys.vault_import.refusal.no_env_vars",
   "target": "CAPCLI_SECRET_*",
   "command": "capcli sys vault import-env",
+  "elapsed_ms": 133,
   "context": {
     "env": "dev",
     "tier": "tier_1",

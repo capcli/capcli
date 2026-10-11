@@ -3,6 +3,7 @@
   "id": "run.inspect.success.hub",
   "target": "hub://100.64.0.1:4040",
   "command": "capcli inspect hub://100.64.0.1:4040",
+  "elapsed_ms": 2065,
   "context": {
     "env": "dev",
     "tier": "tier_1",

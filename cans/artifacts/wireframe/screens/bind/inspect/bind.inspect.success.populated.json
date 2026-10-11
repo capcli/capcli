@@ -3,6 +3,7 @@
   "id": "bind.inspect.success.populated",
   "target": "bnd_3k2f",
   "command": "capcli bind inspect bnd_3k2f",
+  "elapsed_ms": 1708,
   "context": {
     "env": "dev",
     "tier": "tier_1",

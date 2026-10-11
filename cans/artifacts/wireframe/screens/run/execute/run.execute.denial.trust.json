@@ -3,6 +3,7 @@
   "id": "run.execute.denial.trust",
   "target": "cap://sync_inventory@3",
   "command": "capcli run cap://sync_inventory@3 -p warehouse=west --env prod -m \"nightly inventory sync\"",
+  "elapsed_ms": 278,
   "context": {
     "env": "prod",
     "tier": "tier_1",

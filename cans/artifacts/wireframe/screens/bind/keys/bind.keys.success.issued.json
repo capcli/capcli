@@ -3,6 +3,7 @@
   "id": "bind.keys.success.issued",
   "target": "partner_hook",
   "command": "capcli bind keys issue partner_hook --principal partner:acme",
+  "elapsed_ms": 203,
   "context": {
     "env": "dev",
     "tier": "tier_1",

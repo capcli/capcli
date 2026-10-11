@@ -3,6 +3,7 @@
   "id": "run.overview.refusal.oversized",
   "target": "cap://overview@2",
   "command": "capcli run overview",
+  "elapsed_ms": 270,
   "context": {
     "env": "dev",
     "tier": "tier_1",

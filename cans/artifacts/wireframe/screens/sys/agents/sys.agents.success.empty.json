@@ -3,6 +3,7 @@
   "id": "sys.agents.success.empty",
   "target": "agents",
   "command": "capcli sys agent list",
+  "elapsed_ms": 1198,
   "context": {
     "env": "dev",
     "tier": "tier_1",

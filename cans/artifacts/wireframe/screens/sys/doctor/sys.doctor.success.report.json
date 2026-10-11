@@ -3,6 +3,7 @@
   "id": "sys.doctor.success.report",
   "target": "sys://host",
   "command": "capcli sys doctor --report",
+  "elapsed_ms": 1647,
   "context": {
     "env": "prod",
     "tier": "tier_1",

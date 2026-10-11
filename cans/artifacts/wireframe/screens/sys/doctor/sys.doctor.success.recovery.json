@@ -3,6 +3,7 @@
   "id": "sys.doctor.success.recovery",
   "target": "sys://host",
   "command": "CAPCLI_RECOVERY=1 capcli sys doctor",
+  "elapsed_ms": 2043,
   "context": {
     "env": "dev",
     "tier": "tier_1",

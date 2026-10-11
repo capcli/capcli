@@ -3,6 +3,7 @@
   "id": "run.execute.denial.quota",
   "target": "cap://announce_service_incident@1",
   "command": "capcli run cap://announce_service_incident@1 -p severity=critical -m \"post the incident notice to the status channel\"",
+  "elapsed_ms": 226,
   "context": {
     "env": "prod",
     "tier": "tier_1",
