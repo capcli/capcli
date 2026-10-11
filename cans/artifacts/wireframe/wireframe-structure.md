@@ -159,7 +159,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (6 verbs → 43 screens)
+### 4.1 `run/` (6 verbs → 47 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -173,6 +173,9 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.execute.denial.authorizer` | denial | 2 | policy.authorizer | forbidden | Prohibited table or column mutation |
 | `run.execute.denial.network_jail` | denial | 2 | kernel.sandbox | syscall_42 | Trapped raw `connect()` via seccomp-bpf |
 | `run.execute.denial.claim_held` | denial | 2 | db.claims | locked | Exclusive `--lock` ref already held |
+| `run.execute.denial.federation_denied` | denial | 2 | policy.federation | unallowlisted | `E042_FEDERATION_DENIED`: peer not an active federated agent |
+| `run.execute.denial.federation_cycle` | denial | 2 | policy.federation | cycle | `E041_FEDERATION_CYCLE`: workspace already in call_chain |
+| `run.execute.denial.federation_unreachable` | denial | 4 | federation.transport | unreachable | `E055_FEDERATION_UNREACHABLE` after 1500ms poll |
 | `run.execute.refusal.missing_secret`| refusal| 3 | policy.secrets | missing_key | Missing credential redirects to Cockpit URL |
 | `run.execute.yield.ask` | yield | 6 | ping.ask | suspended | Routine hit `ctx.ping.ask`; frame checkpointed to `_pending_asks`, exits 6 until human resolves |
 | `run.execute.yield.quota` | yield | 6 | api.quota | rate_limit | Suspends task; sets `yield_until` timestamp |
@@ -201,6 +204,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.success.prompt` | success | 0 | — | populated | Prompt L2 envelope only; no body content |
 | `run.inspect.success.template` | success | 0 | — | populated | tpl:// blueprint pre-flight envelope via capcli inspect |
 | `run.inspect.success.hub` | success | 0 | — | populated | hub:// remote Hub endpoint pre-flight envelope via capcli inspect |
+| `run.inspect.success.ws` | success | 0 | — | populated | ws:// federated routine pre-flight envelope via capcli inspect |
 | `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Template URP does not resolve |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
@@ -291,7 +295,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `api.import.refusal.missing_spec` | refusal | 3 | missing_param | missing_spec | Import requires a spec source |
 | `api.record.success.recorded` | success | 0 | — | recorded | Live response captured as JSON Schema contract |
 
-### 4.5 `bind/` (10 verbs → 26 screens)
+### 4.5 `bind/` (11 verbs → 28 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -304,6 +308,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `bind.webhook.denial.unsigned` | denial | 2 | policy.authorizer | unsigned | Unsigned hooks rejected |
 | `bind.webhook.denial.payload_size` | denial | 2 | policy.authorizer | too_large | Hook payload exceeds 64KB |
 | `bind.webhook.refusal.missing_ingress`| refusal| 3 | missing_param | no_ingress | Missing public ingress URL/tunnel |
+| `bind.federation.success.bound` | success | 0 | — | bound | Peer outbox siphon bound |
+| `bind.federation.refusal.unversioned`| refusal| 3 | compile | no_version | Federated bind target must be versioned |
 | `bind.endpoint.success.bound` | success | 0 | — | bound | Routine exposed as HTTP/MCP |
 | `bind.endpoint.denial.trust` | denial | 2 | policy.trust | unpinned | Endpoint requires pinned trust |
 | `bind.endpoint.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 10 active endpoints reached |
@@ -389,7 +395,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (17 verbs → 50 screens)
+### 4.9 `sys/` (18 verbs → 53 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -440,6 +446,9 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.exec.success.completed` | success | 0 | — | completed | Isolated command executed in jail |
 | `sys.exec.denial.sandbox` | denial | 2 | kernel.sandbox | violation | Attempted unconfined escape |
 | `sys.exec.crash.runtime` | crash | 4 | routine.runtime | crash | Executable process crash |
+| `sys.shim.success.deployed` | success | 0 | — | deployed | Native wrapper deployed; caller markers captured, secrets scrubbed |
+| `sys.shim.denial.target_missing` | denial | 2 | kernel.shim | target_missing | Target binary missing or not executable |
+| `sys.shim.crash.wrapper_deploy` | crash | 4 | kernel.shim | deploy_crash | Wrapper deploy crashed; partial wrapper torn down |
 | `sys.serve.success.running` | success | 0 | — | running | IPC/WS/HTTP daemon active |
 | `sys.serve.refusal.already_running`| refusal| 3 | compile | port_bound | Daemon process already running |
 | `sys.serve.denial.port` | denial | 2 | db.engine | port_denied | Port 4040 binding rejected |

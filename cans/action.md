@@ -17,6 +17,8 @@
         - quota:// — provider rate-bucket balances and spend ceilings
         - policy:// — authorizer AST constraints and governance limits
         - hub:// — remote central daemon endpoints for spoke routing (e.g. hub://100.64.0.1:4040)
+        - mesh:// — private WireGuard mesh peer endpoints for federated transport
+        - ws:// — sovereign federated workspace capability routines (e.g. ws://tasks/create_todo@v1); shape-disjoint from WebSocket transport URLs (ws://host:port/...)
       - Surface uniformity
         - commands — search, inspect, run, doc
         - flattening — search returns typed URN pointers with action hints
@@ -161,12 +163,16 @@
       - Interior rules
         - execution model — strictly sequential
         - transaction integrity — ctx.api.call strictly forbidden inside ctx.db.txn blocks
+        - federation boundary — ctx.call to ws:// targets strictly forbidden inside ctx.db.txn blocks (exit 3)
         - transient polling — atomic ctx.api.poll_until permitted; raw time.sleep loops banned
         - banned patterns — ctx.on listeners, reactive streams, subscriptions
         - failure modes — callbacks break DAG linearity, txn boundaries, replay
         - architecture law — events start routines, routines never consume events
     - Composition and cascade
       - Mechanism — strictly executed via ctx.call(routine, params); direct cross-routine module imports banned
+      - Federated call contract — calls to ws://<target>/<routine>@<version> resolve over IPC; unversioned ws:// calls fail at AST compile (exit 3)
+      - Federated preflight — verifies target workspace socket and caller permissions before root execution; cycle detection: see physics.md#Federation-invariants
+      - Federated funding — static call-graph analysis stops at the workspace boundary; worst-case funding enforced via the delegated budget cascade: see budget.md#Cascade
       - Static call-tree preflight — root invocation verifies that worst-case call-graph branch depth can be fully funded before execution begins
       - dependency cycle validation: see world.md#Gate-2:-Semantics
       - Trust floor — callee must have equal or higher trust: pinned routines call pinned only; reviewed calls reviewed or pinned; draft callees strictly banned
@@ -235,6 +241,8 @@
         - ctx.db.query(sql, params) — dynamic parameterized SQL; raw string interpolation/concatenation fails with exit 3
         - ctx.db.mutate(table, id=val, set={...}, intent="...") — structured single-row mutation
         - ctx.txn(egress=..., write=...) — kernel-mediated saga context; wraps compensating HTTP rollback and DB mutation
+        - ctx.call(target, params, timeout_s=None, compensate=None) — local or federated (ws://) routine execution; compensate verb triggers on caller saga failure
+        - ctx.emit(event, payload) — atomic write to local _outbox_events for asynchronous federated consumption: see world.md#Outbox-atomic-claim
         - ctx.db.lock(target, ttl) — application-level lease claim in claims
       - Deterministic inputs
         - ctx.now() — monotonic logical timestamp locked to causal frame start
@@ -257,6 +265,7 @@
       - Hand triggers
         - ctx.bind.cron — time declaration
         - ctx.bind.webhook — async event subscription
+        - ctx.bind.federation — cross-workspace event siphon subscribing to peer _outbox_events
         - ctx.bind.endpoint — sync HTTP exposure
       - Human IO methods
         - ctx.ping.notify(principal, message, channel, intent) — notice

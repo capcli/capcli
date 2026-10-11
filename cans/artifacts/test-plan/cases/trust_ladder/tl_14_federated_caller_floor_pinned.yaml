@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_14_federated_caller_floor_pinned"
+title: "ws:// call targeting a draft routine fails closed with exit 2 (E042_FEDERATION_DENIED)"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/trust.md#federated-caller-floor"
+  statement: "Federated entry points mandate pinned trust: a ws:// call targeting a draft or reviewed routine in the callee workspace fails closed with exit 2 (E042_FEDERATION_DENIED) — cross-workspace callers never execute unproven code, even when the peer is allowlisted and socket-authenticated."
+  blast_radius_if_breached: "Unproven code execution across trust boundaries: a compromised or careless peer invokes draft routines in your workspace — routines that never passed contract rehearsal or promotion gates run with the caller's delegated budget and your workspace's data."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent targets a pinned routine and asserts denial (inverted), or lets the call execute and asserts on the result — missing the trust gate entirely."
+  anti_slop_mitigation: "AS-03 pins exit 2 exactly with the E042_FEDERATION_DENIED code; AS-06 hardcodes the draft target literal 'ws://billing/settle_invoice@v1' (trust: draft) and the pinned positive control; AS-02 proves zero callee-side state change."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "orders.ops@example.com"
+    agent_id: "agt_tl_14"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        invoices:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "invoices"
+        row_count: 8
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+    # federation pre-condition: peer daemon "billing" on /run/capcli/billing.sock, SO_PEERCRED authed,
+    # workspace "billing" allowlisted; target routine settle_invoice@v1 sits at DRAFT trust in the peer
+
+execution:
+  trigger: "routine_ctx_call"
+  command: "ctx.call('ws://billing/settle_invoice@v1', {'invoice_id': 12}) — target routine trust: draft"
+  input_params:
+    target_urp: "ws://billing/settle_invoice@v1"
+    target_trust: "draft"
+    caller_allowlisted: true
+    socket_authenticated: true
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.federation"
+    culprit: "E042_FEDERATION_DENIED — federated caller floor: ws:// entry points mandate pinned trust; target 'settle_invoice@v1' is draft"
+    remedy: "promote settle_invoice to pinned in the billing workspace (contract rehearsal + promotion gates), then retry the federated call"
+  database:
+    row_count_delta: 0 # callee never executes; caller frame unchanged
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # trust gate fires before any IPC payload is sent
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "federation.call_out (decision: denied, effect: none — E042_FEDERATION_DENIED, target trust draft < pinned)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 and the culprit contains 'E042_FEDERATION_DENIED' with the target trust rung named ('draft'); the allowlist and SO_PEERCRED checks must have passed first — the denial is purely the trust floor."
+  - rule: "AS-02"
+    verification: "Peer-side invoices table unchanged (8 == 8 via the harness peer-db tap); zero IPC payload bytes on /run/capcli/billing.sock; caller _audit delta is exactly 1 denial event."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: target 'ws://billing/settle_invoice@v1', target trust 'draft', expected code 'E042_FEDERATION_DENIED'; positive control: same call against a pinned routine must pass the floor — proving trust, not the call shape, is what gates."

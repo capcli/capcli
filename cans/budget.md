@@ -16,6 +16,8 @@
         - routine: text plus version: int — the exact pinned routine@version
         - parent_frame: text, null at the session root
         - session: text, env: text — a frame is scoped to one session in one world
+        - federated session — callee frames scope to a callee-minted session bound to the source workspace; caller session never crosses the boundary
+        - subagent_scope: text, null if single agent; set to harness marker: see agent.md#Harness-environment-markers
       - Declared limits
         - declared_max_ops: int — primitive-execution ceiling
         - declared_max_duration_ms: int — wall-clock ceiling
@@ -56,8 +58,13 @@
       - Safe yield mechanics: see physics.md#Exit-code-law
 
     - min() law
+      - Federated budget cascade — cross-workspace calls delegate remaining pool:
+        callee_effective_limit = min(caller_remaining, callee_policy_ceiling, callee_governance_ceiling)
+      - Callee exhaustion isolation — callee budget exhaustion aborts callee cleanly (exit 2) without consuming caller frame
       - Static call-graph evaluation — kernel inspects declared child dependency trees prior to root frame execution
       - Pre-flight rejection — if parent_remaining or session headroom cannot satisfy the worst-case leaf path, can_invoke_now returns false before invocation
+      - Subagent cage inheritance — in-process workers sharing PID inherit parent frame limits; thread spawning cannot escape session ceiling: see agent.md#Identity-chain
+      - Implicit fork — divergent harness thread marker under same PID forces a session fork: see agent.md#Harness-environment-markers
       - Child effective limit = min(declared need, governance ceiling, parent_remaining, session_ceiling)
       - Governance ceiling comes from routine_shape.execution limits (artifacts/governance.yaml)
       - The kernel enforces the tightest constraint at every frame — the cage tightens, never widens

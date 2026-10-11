@@ -16,6 +16,7 @@
         - trust bounds — draft and reviewed in dev/sim only; pinned execution denied (E045_TIER2_PINNED_DENIED): see trust.md#Ladder-laws
   - Deployment topology
     - dedicated server — headless Linux host running capcli-daemon under systemd; required for 24/7 background crons, webhooks, and S3 WORM attestations
+    - federated mesh — sovereign daemon peers on shared VPS (/run/capcli/<ws>.sock) or private WireGuard mesh (mesh://) communicating via authenticated IPC
     - swarm hub — central daemon instance coordinating remote spokes; hosts primary SQLite writer and system tables
     - swarm spokes — worker nodes communicating with hub over WireGuard mesh (Tailscale), mTLS, or local IPC
     - ephemeral sandbox node — disposable microVM or container worker; zero-disk state and sync audit ack; identity: see agent.md#Ephemeral-swarm-identity
@@ -26,6 +27,16 @@
   - Distributed concurrency laws
     - remote authorizer proxy — Hub executes Layer 1 sqlite3_set_authorizer on behalf of spoke ctx.db requests before execution
     - state fencing — OCC state_fence (sha256 hash of read row state) verified at Hub before physical commit; drift aborts with exit 2
+  - Federation invariants
+    - socket authentication — local peer verified via Linux SO_PEERCRED at accept; UID/GID mismatch drops connection instantly
+    - vector cycle check — call_chain array appended per hop; existing workspace in call_chain fails closed with exit 2 (E041_FEDERATION_CYCLE)
+    - chain transport — call_chain rides the IPC call envelope, appended per hop, recorded on federation.call_out: see effect.md#Kernel-event-payloads
+    - hop ceiling — federated nesting depth capped at 2 cross-workspace hops; breach exits 2
+    - lock fence rule — local ctx.db.lock leases held during outbound ws:// calls rejected by AST gate
+    - transport retry — missing peer socket polls max 1500ms (3 ticks @ 500ms); timeout exhaustion exits 4 (E055_FEDERATION_UNREACHABLE)
+    - secret transit — plaintext secret bytes in federated params scrubbed to [REDACTED_VAULT_TOKEN] at the socket edge; vault:// references pass opaque: see agent.md#Secrets
+    - hop/nesting interplay — federated hops count toward call nesting depth; both ceilings enforced, hop ceiling 2 binds first: see #Exit-code-law
+    - in-process concurrency — multi-threaded harness subagents (same PID) serialize via OCC state_fence and marker-scoped claims; collision yields via exit 6: see #Exit-code-law
     - network partition fail-closed — lost connection to Hub during sync audit delivery aborts command immediately with exit 5
     - swarm identity and reaper mechanics: see agent.md#Ephemeral-swarm-identity
     - yield and preemption lifecycle: see #Exit-code-law
@@ -59,6 +70,7 @@
       - checks
         - parameterization — bound parameters mandatory; raw SQL string interpolation and f-strings fail compilation with exit 3
         - transaction isolation — ctx.api.call in ctx.db.txn blocks rejected
+        - federation isolation — ctx.call("ws://...") in ctx.db.txn blocks rejected (exit 3)
         - execution mode — multi-statement raw query strings denied structurally
         - intent gate — mutating writes require valid non-empty causal intent
         - structure — unparseable SQL and schema bypass sequences denied
@@ -75,7 +87,7 @@
       - opcode trap — OpenWrite detected on statement classified as read denies run
       - discrepancy — unclassified writes (OpenWrite bytecode) trigger denial
     - Pipeline sequence
-      - Stage 0 — cryptographic session token verification and active frame lookup
+      - Stage 0 — harness marker extraction, session resolution / implicit fork check, and cryptographic session token verification: see agent.md#Harness-environment-markers
       - Stage 1 — intent target binding and AST blast-radius cross-check
       - Stage 2 — AST parse and structural pattern scan
       - Stage 3 — prepare-time cross-check and authorizer callback
@@ -102,6 +114,8 @@
     - Runtime refusals
       - secret leak — plaintext vault token escape in output payload triggers kill_and_alert (exit 5): see agent.md#Secrets
       - sql errors — unparseable SQL or authorizer errors fail closed
+      - anonymous swarm write — mutating action from presence-only or marker-less harness without explicit --session/--by rejected (exit 3): see agent.md#Harness-environment-markers
+      - federated caller auth — socket-authenticated ws:// callers use SO_PEERCRED + pinned trust floor, not harness markers: see #Federation-invariants
       - session errors — missing, forged, or expired session token aborts execution (exit 3)
       - latency SLA breach — rehearsal P95 exceeding 70% of timeout ceiling denies promotion
       - ambiguity — unclassified read/write treated as write
@@ -113,6 +127,7 @@
       - scope — exit contract binds capcli commands returning CliEnvelope; external tooling defines its own exit contract
       - exit 0 — success with audit event recorded; upstream HTTP failures handled gracefully in envelope
       - exit 2 — invariant or governance block; state untouched (state_modified: false)
+        - domain policy.federation — caller unallowlisted, routine trust < pinned, or cycle detected (E042_FEDERATION_DENIED, E041_FEDERATION_CYCLE)
         - domain db.engine — SQLite check constraints, foreign key violations, busy timeout
         - domain policy.authorizer — C-level table/column write denied
         - domain policy.budget — frame limits, session op/fuel ceilings exhausted, or call nesting > 5
@@ -121,6 +136,7 @@
       - exit 3 — compile-time refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, statically-declared unpaginated payload shape
         - runtime result size — oversized output returns the keyset pagination schema instead of exiting; see action.md#Shape-constraints
       - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
+        - domain federation.transport — peer unreachable after 1500ms timeout (E055_FEDERATION_UNREACHABLE)
       - exit 5 — domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
       - exit 6 — proactive yield; releases all held claims locks, records OCC state_fence, persists resume target to _suspended_tasks
       - preemption yield — worker spot/container SIGTERM maps directly to exit 6; traps execution, drops claims, flushes cursor checkpoint, parks frame to Hub _suspended_tasks

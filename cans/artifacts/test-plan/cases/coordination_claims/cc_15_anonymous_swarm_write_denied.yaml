@@ -1,0 +1,79 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_15_anonymous_swarm_write_denied"
+title: "Mutating action from presence-only harness without --session/--by is rejected with exit 3"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Runtime-refusals--anonymous-swarm-write--mutating-action-from-presence-only-or-marker-less-harness-rejected"
+  statement: "Stage 0 sniffs harness environment markers (process env and /proc/$PPID/environ); PID-only trust is banned (cans/agent.md#Harness-environment-markers). A mutating action from a presence-only or marker-less harness — no identity marker, only a presence flag — maps to agt_anon_<session> and is refused any mutating write; without explicit --session/--by the command is rejected with exit 3."
+  blast_radius_if_breached: "Any un-attributed harness process on the host mutates production state under an anonymous identity: claims keyed to (session_id, harness_marker, op_sequence) can never be attributed, audit trails gain orphaned agt_anon actors, and the trust ladder's anonymous swarm ceiling (draft cap) becomes decorative."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent confuses a presence marker (CLAUDECODE) with an identity marker and treats the call as attributed, or asserts the denial on a read-only query instead of a mutating write — both make the exit-3 refusal untestable."
+  anti_slop_mitigation: "AS-03 pins exit 3 exactly (not exit 2 policy denial) with the kernel.session diagnostic; AS-02 proves zero state change on orders and claims; AS-06 hardcodes the presence-only marker literal (CLAUDECODE) and the agt_anon attribution fallback."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:quinn@example.com"
+    agent_id: null # no identity marker present: only CLAUDECODE=1 in process env
+    trust: "draft" # anonymous swarm ceiling caps marker-less callers at draft
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 3
+      - name: "claims"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+    # harness pre-condition: caller process env carries CLAUDECODE=1 (presence marker) and none of the identity markers
+    # (CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID, CODEX_SESSION_ID, CODEX_CONVERSATION_ID, ANTIGRAVITY_CONVERSATION_ID, HERMES_SESSION_KEY)
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"UPDATE orders SET status='shipped' WHERE id=1\" --intent \"ship order 1\""
+  input_params:
+    identity_markers_present: [] # no identity markers sniffed at Stage 0
+    presence_markers_present: ["CLAUDECODE"] # presence-only harness
+    session_flag: null # no explicit --session
+    by_flag: null # no explicit --by
+    session_token: null # no cryptographic session token minted
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.session"
+    culprit: "no identity marker sniffed at Stage 0 (presence-only: CLAUDECODE); caller attributed to agt_anon_ses_x7 — mutating writes denied; explicit --session/--by required"
+    remedy: "run from a registered harness that exports an identity marker, or pass explicit --session and --by bound to a minted session token"
+  database:
+    row_count_delta: 0 # write never executes; _audit gains exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none — anonymous swarm write: presence-only harness, no explicit --session/--by)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) — NOT the generic exit 2 policy block — and parse the --json CliEnvelope: diagnostic.domain == 'kernel.session', culprit names the presence-only marker (CLAUDECODE) and the agt_anon attribution, remedy present; .is_err() conflation of exit 2/3 is a linter failure."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 3 and SELECT status FROM orders WHERE id=1 != 'shipped' before and after; SELECT count(*) FROM claims == 0 — the anonymous write never executes and no marker-less claim row is created; _audit delta is exactly 1 denial event."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: presence marker 'CLAUDECODE', identity marker set empty, expected exit 3, attributed identity pattern 'agt_anon_<session>'; the Stage 0 sniffing is realized against a real process environment — never by mocking the marker extractor."

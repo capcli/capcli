@@ -23,7 +23,7 @@
         - overview — run overview [--as <principal>] — single-shot domain situational briefing
         - search — search <query> [--type <domain>] [--trust X] [--env X]
         - gap detection — run search gaps --since 7d
-        - inspect — inspect <ptr> — resolves pre-flight envelopes across all URP types (cap://, tpl://, doc://, db://)
+        - inspect — inspect <ptr> — resolves pre-flight envelopes across all URP types (cap://, tpl://, doc://, db://, ws://)
       - Aliases — capcli sql, capcli search, capcli inspect
       - Inspect envelope
         - sla guarantee — single-response zero-roundtrip go/no-go verdict via can_invoke_now
@@ -67,6 +67,7 @@
       - Bindings
         - bind cron <name> <capability> "<cron_expr>" [-m "<why>"]
         - bind webhook <name> <provider> <event> <capability> [--ingress <url>|--tunnel] [-m "<why>"]
+        - bind federation <name> <source_ws> <event> <capability@version> [-m "<why>"] — asynchronous peer outbox siphon
         - bind endpoint <routine@version> --auth api-key [--rate <r>] [--channel all|rest|mcp]
         - export — export openapi [--out path], export mcp [--out path]
       - Webhook ingress
@@ -106,6 +107,7 @@
         - platform probe — reports host OS, platform tier, and sandbox: see physics.md#Platform-tier-taxonomy
       - Backups — sys backup [--push], recover <snapshot-id>
       - Sandboxing — sys exec <cmd> --sandbox
+      - Harness shim — sys shim <target-bin> [--wrap <path>] — deploys native zero-cost wrapper capturing caller marker hashes and scrubbing secrets: see agent.md#Harness-environment-markers
       - Daemon control — sys serve --start, --stop, --restart, --status
     - Document path: doc noun
       - Reading — doc read <ptr> [--max-tokens 100] serves doc:// documents and prompt:// campaign leaves
@@ -190,6 +192,11 @@
       - Layer 6: Promotion & Approvals — staged routine promotions, DDL forward migration previews, and canary veto timers
       - Layer 7: Human Interaction (Ask) — structured question resolution cards with fail-closed timeout indicators
       - Layer 8: Vault & Biometrics — out-of-band credential injection screen with mobile biometric/FaceID support
+      - Federation surfaces
+        - peer roster — federated workspaces with transport, socket health, and trust floors: see physics.md#Federation-invariants
+        - catalog entries — ws:// routines with version pins and federated preflight checklist: see action.md#Pointer-taxonomy
+        - trace stitching — cross-workspace DAG via child_trace_id and parent_frame_id: see effect.md#Structural-invariants
+        - delegated budgets — caller remaining vs callee burn per federated call: see budget.md#Cascade
     - Transport streams
       - rpc endpoint — HTTP POST http://127.0.0.1:4040/rpc
       - websocket tail — WS ws://127.0.0.1:4040/ws/audit (streams live leaf events and frame transitions)

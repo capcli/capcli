@@ -1,0 +1,30 @@
+{
+  "$schema": "wireframe/v2",
+  "archetype": "diagnostic",
+  "command": "capcli run ws://tasks/create_todo@v1 -p title=\"restock\" --env prod",
+  "component": {
+    "culprit": "Workspace ws:crm is not an active federated peer (no agent row with status=active).",
+    "domain": "policy.federation",
+    "layer": "federation",
+    "lines": [
+      "Caller ws:crm failed the peer allowlist check",
+      "E042_FEDERATION_DENIED: register the peer first ('capcli sys agent register')",
+      "Unallowlisted callers are denied before any budget delegation."
+    ],
+    "remedy": "register the peer workspace, then retry",
+    "rule": "policy.federation.unallowlisted"
+  },
+  "context": {
+    "env": "prod",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "elapsed_ms": 96,
+  "id": "run.execute.denial.federation_denied",
+  "target": "ws://tasks/create_todo@v1",
+  "trailer": {
+    "prompt": "prompt://federation/remediation@1",
+    "reason": "federated call refused: allowlist, cycle, or transport",
+    "serve": "L1"
+  }
+}

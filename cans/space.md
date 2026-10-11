@@ -60,6 +60,7 @@
     - Sim mode taxonomy
       - sandbox — HTTP routes to provider test endpoint via overlay
       - mock — kernel replays verified HTTP exchange from apis/<provider>.cassette.jsonl; unrecorded endpoints fail closed
+      - federated mock — ws:// calls auto-replay recorded responses from federation/cassettes/<target_ws>.<routine>.jsonl when peer socket is absent or running in sim/CI
       - dry-run — parameter and policy check returning simulated: true
       - skip — excluded from execution; omitted from fingerprint
       - prod-only — execution routes to schema-validated mock fixtures in sim; physical egress strictly denied outside prod

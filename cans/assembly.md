@@ -66,6 +66,8 @@
         - apis/stripe.yaml — compiled OpenAPI provider verbs: see action.md#Catalog-synchronization
         - apis/stripe.sim.yaml — simulation base URL overlays: see space.md#Policy-overlays
         - apis/stripe.mock.yaml — offline canned simulation fixtures: see space.md#Sim-mode-taxonomy
+      - federation/ — federated ws:// call replay cassettes: see space.md#Sim-mode-taxonomy
+        - federation/cassettes/<target_ws>.<routine>.jsonl — recorded peer responses auto-replayed when peer socket is absent or running in sim/CI
       - envs/ — isolated directory namespaces and partition roots: see space.md#Environment-axis
         - envs/dev/ — local development world with isolated DB: see space.md#World-definitions
         - envs/sim/ — simulation replay world with masked see space.md#World-definitions

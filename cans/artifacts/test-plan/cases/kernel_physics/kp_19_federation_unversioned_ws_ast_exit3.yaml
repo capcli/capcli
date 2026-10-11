@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_19_federation_unversioned_ws_ast_exit3"
+title: "Unversioned ws:// call fails at AST compile with exit 3"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Federated-call-contract"
+  statement: "Calls to ws://<target>/<routine>@<version> resolve over IPC only when versioned: an unversioned ws:// call target fails at AST compile time with exit 3 — no socket is opened, no preflight runs, and no frame is pushed."
+  blast_radius_if_breached: "Version drift across sovereign workspaces: the caller binds to whatever the peer currently serves — a peer upgrade silently changes callee semantics, breaking the pinned-version contract that the entire trust ladder depends on."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent passes a versioned target and asserts failure (inverted), or lets the call reach the socket layer and asserts on the transport error — missing the compile-time gate entirely."
+  anti_slop_mitigation: "AS-03 pins exit 3 exactly (compile-time refusal, not exit 2 policy or exit 4 transport) with the AST diagnostic; AS-06 hardcodes the unversioned literal 'ws://billing/settle_invoice' (no @version); AS-02 proves zero socket activity."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "orders.ops@example.com"
+    agent_id: "agt_kp_19"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        _budget_frames:
+          columns:
+            frame_id: text pk
+            routine: text
+            session: text
+    tables:
+      - name: "_budget_frames"
+        row_count: 1
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+    # peer daemon for "billing" is up on /run/capcli/billing.sock — reachability is irrelevant: the AST gate fires first
+
+execution:
+  trigger: "routine_ctx_call"
+  command: "ctx.call('ws://billing/settle_invoice', {'invoice_id': 77}) — note: no @version pin"
+  input_params:
+    target_urp: "ws://billing/settle_invoice"
+    version_pinned: false
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "compile"
+    culprit: "unversioned ws:// call target 'ws://billing/settle_invoice' — federated call contract requires ws://<target>/<routine>@<version>; refused at AST compile"
+    remedy: "pin the version: ctx.call('ws://billing/settle_invoice@v2', {...})"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # compile gate fires before any socket open
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "federation.call_out (decision: denied, effect: none — unversioned target, AST compile)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 (integer) — NOT exit 2 and NOT exit 4 — and parse the diagnostic: domain == 'compile', culprit contains the exact unversioned literal 'ws://billing/settle_invoice'; a transport-layer failure here proves the AST gate was skipped."
+  - rule: "AS-02"
+    verification: "Zero bytes on /run/capcli/billing.sock (socket tap); SELECT count(*) FROM _budget_frames unchanged — no frame pushed; _audit delta is exactly 1 denial event."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: target 'ws://billing/settle_invoice' (no @version), expected exit 3; positive control with 'ws://billing/settle_invoice@v2' must pass the AST gate — proving versioning, not the call shape, is what gates."

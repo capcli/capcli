@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_21_federation_transport_retry_exit4"
+title: "Missing peer socket exhausts the 1500ms poll and exits 4 (E055_FEDERATION_UNREACHABLE)"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#transport-retry"
+  statement: "A missing peer socket is polled for at most 1500ms (3 ticks at 500ms); on timeout exhaustion the federated call fails with exit 4 (E055_FEDERATION_UNREACHABLE) — bounded retry, never an unbounded hang, and the caller frame survives to handle the failure."
+  blast_radius_if_breached: "Unbounded hangs on dead peers: a routine awaiting a decommissioned workspace blocks its frame forever — budget watchdogs eventually fire, but every intermediate frame in the chain burns wall-clock and fuel waiting on nothing."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent uses a real 1500ms sleep (slow, flaky) or kills the peer mid-poll and asserts on the wrong exit (exit 2 policy denial instead of the exit 4 transport failure)."
+  anti_slop_mitigation: "AS-04 steps the 3x500ms poll ticks deterministically via MockClock — zero real sleeping; AS-03 pins exit 4 exactly with the E055_FEDERATION_UNREACHABLE code; AS-06 hardcodes the missing socket path '/run/capcli/ghost.sock'."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "orders.ops@example.com"
+    agent_id: "agt_kp_21"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        _budget_frames:
+          columns:
+            frame_id: text pk
+            routine: text
+            session: text
+    tables:
+      - name: "_budget_frames"
+        row_count: 1
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+    # federation pre-condition: NO daemon listens on /run/capcli/ghost.sock (peer decommissioned);
+    # workspace "ghost" is allowlisted and the target routine is pinned — only transport fails
+
+execution:
+  trigger: "routine_ctx_call"
+  command: "ctx.call('ws://ghost/ping@v1', {}) with peer socket absent"
+  input_params:
+    target_urp: "ws://ghost/ping@v1"
+    peer_socket: "/run/capcli/ghost.sock"
+    socket_present: false
+    poll_schedule: "3 ticks @ 500ms = 1500ms max"
+
+expected_observations:
+  exit_code: 4
+  state_modified: false
+  diagnostic:
+    domain: "federation.transport"
+    culprit: "E055_FEDERATION_UNREACHABLE — peer socket '/run/capcli/ghost.sock' absent after 1500ms poll (3 ticks @ 500ms); workspace 'ghost' unreachable"
+    remedy: "verify the peer daemon is running (systemctl status capcli-daemon@ghost), the socket path exists, and WireGuard mesh membership is current; retry the call"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "federation.call_out (decision: denied, effect: none — E055_FEDERATION_UNREACHABLE after 1500ms poll)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 4 (integer) — NOT exit 2 and NOT exit 5 — and parse the diagnostic: domain == 'federation.transport', culprit contains 'E055_FEDERATION_UNREACHABLE' and the socket path; the caller frame must remain alive (no frame abort)."
+  - rule: "AS-04"
+    verification: "The 1500ms poll is stepped deterministically: MockClock::advance injects exactly 3 ticks of 500ms via the engine API — the test contains zero real sleeps and zero SystemTime::now() reads; wall-clock runtime of the test stays under 100ms."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: socket '/run/capcli/ghost.sock', poll schedule '3 ticks @ 500ms', expected code 'E055_FEDERATION_UNREACHABLE'; the absence is a real missing socket file — never a mocked transport error."

@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_14_federation_call_events_trace"
+title: "federation.call_out/call_in events stitch the cross-workspace DAG via child_trace_id and W3C traceparent"
+domain: "audit_dag"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#Kernel-event-payloads"
+  statement: "Every federated call emits a paired event: federation.call_out on the caller (target_ws, target_urp, params, params_hash, child_trace_id, call_chain, budget_delegated) and federation.call_in on the callee (source_ws, caller_principal, parent_frame_id, caused_by_op, outcome) — the child_trace_id and the incoming W3C traceparent stitch the peer's DAG to the root causal chain, and call_chain rides the envelope for cycle detection."
+  blast_radius_if_breached: "Unattributable cross-workspace execution: the callee's work detaches from the caller's audit trail — forensics cannot prove who invoked what, budget delegation has no receipt, and cycle detection loses the chain it checks."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts only the caller-side event and never verifies the peer-side call_in, or fabricates the child_trace_id linkage by string-matching instead of walking the hash chain across both ledgers."
+  anti_slop_mitigation: "AS-05 requires walking both ledgers: call_out.child_trace_id must equal call_in's trace linkage and the W3C traceparent must resolve to the root DAG; AS-06 hardcodes the traceparent literal format."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "orders.ops@example.com"
+    agent_id: "agt_ad_14"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        _audit:
+          columns:
+            id: text pk
+            event: text
+            trace_id: text
+            prev_hash: text
+    tables:
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+      - name: "_budget_frames"
+        row_count: 1
+    vault_secrets: []
+    # federation pre-condition: peer "billing" on /run/capcli/billing.sock, SO_PEERCRED authed, allowlisted;
+    # target settle_invoice@v2 pinned; caller frame frame_012 in session ses_ad14
+
+execution:
+  trigger: "routine_ctx_call"
+  command: "ctx.call('ws://billing/settle_invoice@v2', {'invoice_id': 21}) — full audit capture on both sides"
+  input_params:
+    target_urp: "ws://billing/settle_invoice@v2"
+    traceparent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 1 # federation.call_out on the caller ledger
+    tables_mutated: ["_audit"]
+  wire:
+    packets_transmitted: 1 # IPC envelope carrying child_trace_id + call_chain
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "federation.call_out (target_ws: billing, target_urp: ws://billing/settle_invoice@v2, params_hash set, child_trace_id: tr_9f2c, call_chain: ['orders'], budget_delegated: {ops: 40})"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-05"
+    verification: "Walk both ledgers: the caller's federation.call_out child_trace_id ('tr_9f2c') must equal the trace linkage on the peer's federation.call_in; the peer event's caused_by_op must resolve to the caller's op; the W3C traceparent '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01' must trace back to the root DAG — string equality of IDs alone is insufficient, the hash chain must validate on both sides."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: target_ws 'billing', child_trace_id 'tr_9f2c', call_chain ['orders'], parent_frame_id 'frame_012'; both events are read from real ledger tables via the harness peer-db tap — never from mocked event emitters."
+  - rule: "AS-02"
+    verification: "Caller _audit delta is exactly 1 (the call_out); peer _audit delta is exactly 1 (the call_in); no other rows in either ledger — the pair is complete and minimal."

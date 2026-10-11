@@ -13,7 +13,7 @@
         - format — daily append-only files
     - Event anatomy
       - identity — event, ts, env, stage, channel, trace_id
-      - actor — agent, session, principal
+      - actor — agent, session, principal, harness_marker_hash (sha256): see agent.md#Harness-environment-markers
       - causality — caused_by, intent, intent_chain
       - payload — capability, sql, params (recorded verbatim for replay)
       - policy — decision (allow/denied), rules_matched
@@ -27,6 +27,8 @@
       - capability.search — query, results_count, resolution_stage: see action.md#Search-surface
       - db.exec — sql, params, vdbe_inspect, rules_matched, rows_affected, result_hash
       - routine.run — routine, version, hashes, triggered_by, outcome: see action.md#Routines
+      - federation.call_out — target_ws, target_urp, params, params_hash, child_trace_id, call_chain, budget_delegated
+      - federation.call_in — source_ws, caller_principal, parent_frame_id, caused_by_op, outcome
       - saga.execute — egress_verb, compensate_verb, db_mutation, outcome
       - saga.compensate — parent_op, compensate_verb, reason: db_abort, status
       - swarm.node_join — agent, topology_mode, endpoint, ephemeral_flag: see artifacts/governance.yaml#topology
@@ -71,7 +73,7 @@
       - forensics — corruption traced to specific routine, world, agent, and version
       - explain — --explain flag prints exact policy rules and remediation
     - Structural invariants
-      - distributed tracing — incoming W3C traceparent captured in trace_id links external caller to root DAG
+      - distributed tracing — incoming W3C traceparent captured in trace_id links external caller and federated peer (ws://) to root DAG
       - linearity — sequential routine interiors guarantee acyclic DAG
       - frame integration — budget frames bind via parent_frame
       - http integration — inbound HTTP requests bind via serve.request

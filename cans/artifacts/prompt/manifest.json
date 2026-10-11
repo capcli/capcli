@@ -15,7 +15,8 @@
     "genesis",
     "onboarding",
     "promotion",
-    "api"
+    "api",
+    "federation"
   ],
   "campaigns": [
     {
@@ -70,6 +71,12 @@
       "stem": "api.catalog_empty.success.empty",
       "bank": "api",
       "file": "banks/api/api.catalog_empty.success.empty.md",
+      "status": "served"
+    },
+    {
+      "stem": "federation.remediation.denial.denied",
+      "bank": "federation",
+      "file": "banks/federation/federation.remediation.denial.denied.md",
       "status": "served"
     }
   ],

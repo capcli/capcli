@@ -1,13 +1,13 @@
 $schema: "test-plan/case/v1"
 case_id: "cc_05_process_uid_session_mismatch"
-title: "Caller passing --by agt_7f3k with mismatching OS process credentials is aborted with exit 3"
+title: "Caller passing --by agt_7f3k with mismatching harness markers is aborted with exit 3"
 domain: "coordination_claims"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/agent.md#uniform-actor-model--kernel-treats-all-callers-uniformly-by-PID,-principal,-agent-ID,-and-session"
-  statement: "The kernel treats all callers uniformly by PID, principal, agent ID, and session: --session and --by are validated against the active token registry using the caller's real OS process credentials (interface.md: --by <agent-id> acting identity verified via process credentials) — a CLI self-declaration whose process identity does not match the registered agent is aborted with exit 3 (session errors: missing, forged, or expired session token aborts execution)."
+  law_reference: "cans/agent.md#Harness-environment-markers--marker-sniffing--bans-PID-only-trust"
+  statement: "Identity is attributed via harness environment markers sniffed at Stage 0 (process env and /proc/$PPID/environ); PID-only trust is banned (cans/agent.md#Harness-environment-markers). --session and --by are resolved against the active token registry and the caller's sniffed markers — a CLI self-declaration whose markers do not match the registered agent's marker set is aborted with exit 3 (session errors: missing, forged, or expired session token aborts execution). OS process credentials (uid) remain a corroborating signal via the daemon IPC socket, but markers are the identity."
   blast_radius_if_breached: "Any process on the host impersonates any registered agent by passing --by: audit trails attribute actions to the wrong agent, per-agent trust rungs and quotas are stolen, and the entire identity chain (principal -> agent -> session -> op) becomes decorative."
 
 confusion_matrix:
@@ -40,22 +40,23 @@ setup:
       - name: "_audit"
         row_count: 4 # genesis sequence
     vault_secrets: []
-    # harness pre-condition: agt_7f3k is registered with harness process credentials (uid 1002); the CLI in this test runs as uid 1001 over the daemon IPC socket
+    # harness pre-condition: agt_7f3k is registered with harness identity markers (CLAUDE_CODE_SESSION_ID=cld_reg_7f3k); the CLI in this test runs from a different harness process whose sniffed markers diverge
 
 execution:
   trigger: "cli_subcommand"
   command: "capcli sql \"SELECT count(*) FROM orders\" --by agt_7f3k --session ses_a9"
   input_params:
-    claimed_agent: "agt_7f3k (registered harness uid 1002)"
-    actual_process_uid: 1001 # mismatched caller: peer credentials read from the IPC Unix domain socket
-    session_token: "ses_a9 (validly minted HMAC token for agt_7f3k's registered process)"
+    claimed_agent: "agt_7f3k (registered harness markers CLAUDE_CODE_SESSION_ID=cld_reg_7f3k)"
+    actual_caller_markers: "CODEX_THREAD_ID=cxt_other (divergent — sniffed from the caller's own process env / /proc/$PPID/environ)"
+    actual_process_uid: 1001 # corroborating signal: peer credentials read from the IPC Unix domain socket (registered process was uid 1002)
+    session_token: "ses_a9 (validly minted HMAC token for agt_7f3k's registered marker set)"
 expected_observations:
   exit_code: 3
   state_modified: false
   diagnostic:
     domain: "kernel.session"
-    culprit: "--by agt_7f3k resolves to registered harness credentials (uid 1002) but the caller's OS process credentials are uid 1001 (IPC socket peer); acting identity validation failed — session token ses_a9 rejected at Stage 0"
-    remedy: "run from the registered harness process, or re-register the agent binding via sys agent register from the owning principal"
+    culprit: "--by agt_7f3k resolves to registered harness markers (CLAUDE_CODE_SESSION_ID=cld_reg_7f3k) but Stage 0 sniffed divergent markers (CODEX_THREAD_ID=cxt_other) from the caller's process env — marker attribution failed, session token ses_a9 rejected; corroborating IPC socket peer uid 1001 != registered uid 1002"
+    remedy: "run from the registered harness process (matching identity markers), or re-register the agent binding via sys agent register from the owning principal"
   database:
     row_count_delta: 0 # read never executes; _audit gains exactly 1 denial event
     tables_mutated: []
@@ -73,4 +74,4 @@ anti_slop_assertions:
   - rule: "AS-02"
     verification: "SELECT count(*) FROM orders == 3 and SELECT count(*) FROM agents == 1 (status still active) before and after — the impersonated read never executes and the registry is untouched; _audit delta is exactly 1 denial event."
   - rule: "AS-06"
-    verification: "Hardcoded literals: registered harness uid 1002, calling process uid 1001, agent id 'agt_7f3k'; the mismatch is realized via real Unix domain socket peer credentials (SO_PEERCRED on the daemon IPC socket) — never by mocking the identity validator."
+    verification: "Hardcoded literals: registered harness markers 'CLAUDE_CODE_SESSION_ID=cld_reg_7f3k', calling process markers 'CODEX_THREAD_ID=cxt_other', agent id 'agt_7f3k' (corroborating uids 1002 vs 1001); the mismatch is realized via real process-environment marker sniffing plus real Unix domain socket peer credentials (SO_PEERCRED on the daemon IPC socket) — never by mocking the identity validator."

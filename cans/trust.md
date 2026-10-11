@@ -49,6 +49,7 @@
       - pinned execution refusal — invoking pinned routine on Tier 2 throws exit 2 (E045_TIER2_PINNED_DENIED)
       - template trust floor — imported routines and world templates enter strictly at draft trust
       - zero trust inheritance — blueprints confer zero promotional credit; pre-pinned imports banned
+      - anonymous swarm ceiling — marker-less caller capped at draft; reviewed/pinned runs and mutating writes require --by or --session, exit 3 on breach: see agent.md#Harness-environment-markers
       - rehearsal mandate — templated routines must pass contract invariant suite in sim before promotion
       - autonomous authority floor
         - production writes — fully autonomous; governed by pinned trust rungs and AST limits
@@ -59,6 +60,8 @@
       - monotonic ascent — ladder climbed sequentially; elevation skips denied
       - verified promotion — promotion automated upon passing synthetic sim replay and invariant suite
       - dependency floor — cross-agent callee routines must hold trust >= reviewed
+      - federated caller floor — ws:// external entry points mandate trust: pinned; calling draft or reviewed routines across federation fails closed with exit 2 (E042_FEDERATION_DENIED)
+      - federated initiation floor — routines initiating ws:// calls must hold trust >= reviewed
       - demotion priority — demotion commands execute without gate resistance
       - mock drift demotion — upstream provider OpenAPI spec_hash changes or breaking contract changes immediately demote pinned capabilities to draft
       - circuit demotion — sustained routine failure auto-demotes to draft: see time.md#decay-and-subtraction

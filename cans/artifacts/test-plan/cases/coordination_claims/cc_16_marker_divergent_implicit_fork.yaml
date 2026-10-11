@@ -1,0 +1,79 @@
+$schema: "test-plan/case/v1"
+case_id: "cc_16_marker_divergent_implicit_fork"
+title: "Divergent harness markers under one PID force session fork; claim collision yields exit 6"
+domain: "coordination_claims"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#Credential-binding--implicit-fork--divergent-harness-thread-marker-under-same-PID-forces-session-fork"
+  statement: "In-process harness workers (threads/event-loop workers) sharing one PID are distinct subagents tracked via harness markers (cans/agent.md#Harness-environment-markers). A divergent harness thread marker under the same PID forces an implicit session fork: see cans/budget.md#Cascade. Claims are keyed strictly to (session_id, harness_marker, op_sequence) and in-process concurrency serializes via OCC state_fence; a claim collision between the forked workers yields the loser with exit 6 (cans/physics.md#Distributed-concurrency-laws)."
+  blast_radius_if_breached: "Same-PID workers collapse into one identity: the forked worker spends the parent's budget frame without a cage, claims collide on PID-keyed rows, and concurrent mutations race without OCC fencing — silent double-spend of the claim and of the parent's fuel pool."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent runs the two workers as separate OS processes (different PIDs) — making the marker-divergence vacuous — or asserts the fork without exercising an actual claim collision, so the exit-6 yield path is never taken."
+  anti_slop_mitigation: "AS-06 hardcodes one shared PID (4217) for both workers with distinct marker literals; AS-03 pins exit 6 exactly for the colliding worker (not exit 2); AS-02 proves the winner's claim row is keyed to its marker tuple and the loser's fork session exists in _budget_frames with subagent_scope set."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:quinn@example.com"
+    agent_id: "agt_7f3k"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          columns:
+            id: int pk
+            status: text
+    tables:
+      - name: "orders"
+        row_count: 3
+      - name: "claims"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+    # harness pre-condition: one OS process (PID 4217) hosts two in-process workers;
+    # worker A sniffs CODEX_SESSION_ID=cxs_alpha; worker B sniffs CODEX_THREAD_ID=cxt_beta — divergent markers, shared PID
+
+execution:
+  trigger: "concurrent_cli_subcommands"
+  command: "capcli run payout --lock orders:ORD-10 --by agt_7f3k --session ses_a9 --reason \"worker claim race\""
+  input_params:
+    shared_pid: 4217 # both workers run in-process under one PID
+    worker_a_marker: "CODEX_SESSION_ID=cxs_alpha"
+    worker_b_marker: "CODEX_THREAD_ID=cxt_beta" # divergent marker -> implicit session fork for worker B
+    claim_target: "orders:ORD-10"
+    launch: "worker A starts claim acquisition; worker B issues the same claim 50ms later from the same PID"
+expected_observations:
+  exit_code: 6 # worker B: claim collision yields
+  state_modified: true # worker A acquires the claim; worker B yields without touching state
+  diagnostic:
+    domain: "kernel.concurrency"
+    culprit: "worker B marker CODEX_THREAD_ID=cxt_beta diverges from worker A marker CODEX_SESSION_ID=cxs_alpha under PID 4217 — implicit session fork ses_a9_fork_1; claim orders:ORD-10 already held by (ses_a9, cxs_alpha, op 001) — OCC state_fence collision, yielding exit 6"
+    remedy: "resume via the _suspended_tasks checkpoint once the claim releases, or run the workers under distinct registered sessions"
+  database:
+    row_count_delta: 1 # exactly one claim row: worker A's, keyed to its marker tuple
+    tables_mutated: ["claims"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "session.fork (parent ses_a9 -> ses_a9_fork_1, reason: marker_divergence, pid 4217); claim.acquire (holder ses_a9/cxs_alpha, target orders:ORD-10); concurrency.yield (exit 6, OCC state_fence recorded, resume target persisted to _suspended_tasks)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert worker B's exit_code == 6 (integer) — NOT exit 2 — and worker A's claim acquisition returns exit 0; parse the --json CliEnvelope: diagnostic.domain == 'kernel.concurrency', culprit names both marker literals and the shared PID 4217; .is_err() conflation of exit 6/2 is a linter failure."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM claims == 1 with key tuple (ses_a9, cxs_alpha, op 001); SELECT count(*) FROM _suspended_tasks == 1 holding worker B's resume checkpoint; SELECT count(*) FROM _budget_frames WHERE session='ses_a9_fork_1' AND subagent_scope='cxt_beta' == 1 — fork, claim, and yield each left exactly one row."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: shared PID 4217, markers 'cxs_alpha' / 'cxt_beta', claim target 'orders:ORD-10', forked session 'ses_a9_fork_1'; both workers execute in-process under one real PID — never as two separate OS processes and never with mocked marker sniffing."

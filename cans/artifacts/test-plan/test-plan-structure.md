@@ -36,6 +36,11 @@ cans/artifacts/test-plan/
       kp_15_root_help_stub_ceiling.yaml
       kp_15_sigterm_preemption_exit6_checkpoint.yaml
       kp_16_network_partition_sync_audit_exit5.yaml
+      kp_17_federation_cycle_call_chain_exit2.yaml
+      kp_18_federation_hop_ceiling_exit2.yaml
+      kp_19_federation_unversioned_ws_ast_exit3.yaml
+      kp_20_federation_txn_isolation_exit3.yaml
+      kp_21_federation_transport_retry_exit4.yaml
     database_authorizer/
       da_01_unbounded_update_ast_kill.yaml
       da_02_where_tautology_bypass_kill.yaml
@@ -80,6 +85,8 @@ cans/artifacts/test-plan/
       bc_13_inspect_preflight_can_invoke_verdict.yaml
       bc_14_hub_atomic_fuel_arbitration.yaml
       bc_15_spoke_prereserve_preemption_floor.yaml
+      bc_16_federated_min_cascade.yaml
+      bc_17_callee_exhaustion_isolation.yaml
     audit_dag/
       ad_01_sha256_prev_hash_linking.yaml
       ad_02_sink_failure_kernel_panic.yaml
@@ -94,6 +101,7 @@ cans/artifacts/test-plan/
       ad_11_trace_traversal_root_intent.yaml
       ad_12_audit_query_parameterization.yaml
       ad_13_kms_witness_signature_checkpoint.yaml
+      ad_14_federation_call_events_trace.yaml
     trust_ladder/
       tl_01_draft_write_to_prod_denial.yaml
       tl_02_tier2_pinned_execution_refusal.yaml
@@ -108,6 +116,8 @@ cans/artifacts/test-plan/
       tl_11_promotion_queue_sla_breach_alert.yaml
       tl_12_human_veto_rollback_trust.yaml
       tl_13_circuit_breaker_demotion_streak.yaml
+      tl_14_federated_caller_floor_pinned.yaml
+      tl_15_federated_initiation_floor.yaml
     schema_evolution/
       se_01_yaml_syntax_gate1_refusal.yaml
       se_02_circular_dependency_gate2_refusal.yaml
@@ -140,6 +150,8 @@ cans/artifacts/test-plan/
       cc_12_cross_agent_event_tailing.yaml
       cc_13_disconnect_claims_auto_drop.yaml
       cc_14_heartbeat_loss_spoke_lease_eviction.yaml
+      cc_15_anonymous_swarm_write_denied.yaml
+      cc_16_marker_divergent_implicit_fork.yaml
     bindings_triggers/
       bt_01_cron_min_interval_enforcement.yaml
       bt_02_cron_catchup_fire_limit.yaml
@@ -153,6 +165,7 @@ cans/artifacts/test-plan/
       bt_10_ask_question_token_cap_breach.yaml
       bt_11_ask_options_count_ceiling.yaml
       bt_12_webhook_ingress_public_url_mandate.yaml
+      bt_13_bind_federation_siphon.yaml
     vault_secrets/
       vs_01_missing_secret_cockpit_url_refusal.yaml
       vs_02_env_var_auto_binding.yaml
@@ -366,7 +379,7 @@ anti_slop_assertions:
 
 ## 6. Master Test Plan Bible & Case Catalog
 
-This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–16 cases per domain, 146 cases total).
+This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–16 cases per domain, 159 cases total).
 
 ### 6.1 Kernel Physics (`cases/kernel_physics/`)
 
@@ -389,6 +402,11 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `kp_15_root_help_stub_ceiling.yaml` | E2E | `capcli --help` outputs strictly <= 6 lines and exits 0; references `search` and forbids dumping full command tree. | TP | Allowing standard bloated CLI help output that blows LLM context windows. |
 | `kp_15_sigterm_preemption_exit6_checkpoint.yaml` | Integration | Host SIGTERM hits a disposable worker mid-frame; trap flushes cursor checkpoint, drops claims, parks frame in `_suspended_tasks` with `exit 6`, emits `swarm.preemption_yield`. | TN | Asserting exit 6 without proving the parked frame, checkpoint cursor, and released claims. |
 | `kp_16_network_partition_sync_audit_exit5.yaml` | Integration | Spoke-Hub connection lost during sync audit delivery; ephemeral spoke aborts immediately with `exit 5`, no local spool, no exit 0 without central audit receipt. | TN | Buffering the audit event to local disk and completing locally — the fail-open ghost path. |
+| `kp_17_federation_cycle_call_chain_exit2.yaml` | Integration | Federated call whose `call_chain` already contains the workspace fails closed with `exit 2` (E041_FEDERATION_CYCLE) before any socket write. | TN | Testing a direct self-call instead of a genuine 2-hop cycle, or asserting after the IPC write already happened. |
+| `kp_18_federation_hop_ceiling_exit2.yaml` | Integration | 3rd cross-workspace hop breaches the hop ceiling (inbound chain of 2) and exits 2; the hop ceiling binds before nesting > 5. | TN | Testing with a 1-hop chain (legal) and asserting denial, or conflating the hop ceiling with the nesting ceiling. |
+| `kp_19_federation_unversioned_ws_ast_exit3.yaml` | Integration | Unversioned `ws://` call target fails at AST compile with `exit 3` — no socket opened, no frame pushed. | TN | Letting the call reach the socket layer and asserting on the transport error instead of the compile gate. |
+| `kp_20_federation_txn_isolation_exit3.yaml` | Integration | `ctx.call` to a `ws://` target inside a `ctx.db.txn` block is rejected with `exit 3`; the enclosing txn rolls back atomically. | TN | Issuing the call outside the txn block, or testing `ctx.api.call` instead of the federation-specific gate. |
+| `kp_21_federation_transport_retry_exit4.yaml` | Integration | Missing peer socket exhausts the 1500ms poll (3 ticks @ 500ms, MockClock-stepped) and exits 4 (E055_FEDERATION_UNREACHABLE). | TN | Using a real 1500ms sleep, or asserting exit 2 instead of the exit 4 transport failure. |
 
 ### 6.2 Database Floor & C-Authorizer (`cases/database_authorizer/`)
 
@@ -445,6 +463,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `bc_13_inspect_preflight_can_invoke_verdict.yaml` | Unit | `inspect` evaluates routine against depleted session ops; returns `can_invoke_now: false` and lists tightest constraint. | TN | Returning `can_invoke_now: true` when ops headroom is 0. |
 | `bc_14_hub_atomic_fuel_arbitration.yaml` | Integration | 50 spokes burn against one session pool; every deduction executes atomically on Hub workspace.db; the primitive past exhaustion halts with `exit 2`, final consumed exactly 10000. | TN | Running spokes sequentially or mocking per-spoke counters so the overspend race never exists. |
 | `bc_15_spoke_prereserve_preemption_floor.yaml` | Integration | Spokes pre-reserve 1000-fuel blocks via RPC and burn locally; Hub low-token floor yields all non-critical spokes with `exit 6` on one tick, critical spoke exempt. | TN | Reading local block totals without Hub reconciliation, or yielding one spoke at a time. |
+| `bc_16_federated_min_cascade.yaml` | Integration | Federated callee effective limit = min(caller_remaining, callee_policy_ceiling, callee_governance_ceiling); rotated variants prove each term can bind. | TP | Asserting with caller_remaining as the only binding input, or using the local min() formula across workspaces. |
+| `bc_17_callee_exhaustion_isolation.yaml` | Integration | Callee exhausts its delegated budget and aborts with `exit 2`; caller `consumed_ops` is bit-identical before and after. | TN | Exhausting the caller frame instead, or inventing a failure penalty charged to the caller. |
 
 ### 6.5 Memory Spine & Causal DAG (`cases/audit_dag/`)
 
@@ -463,6 +483,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `ad_11_trace_traversal_root_intent.yaml` | Unit | `sys audit trace <op-id>` walks DAG upwards through multiple routine frames to output the initial user session intent. | TP | Returning partial trace or truncating at first subroutine boundary. |
 | `ad_12_audit_query_parameterization.yaml` | E2E | `sys audit query` command rejects raw string concatenation; requires `-p key=val` parameter bindings. | TN | Permitting raw unparameterized SQL against system audit mirror. |
 | `ad_13_kms_witness_signature_checkpoint.yaml` | Integration | Kernel witness worker periodically signs current ledger root hash with KMS key and appends to `witness.log`. | TP | Stamping checkpoints without cryptographic digital signature. |
+| `ad_14_federation_call_events_trace.yaml` | Integration | `federation.call_out`/`call_in` pair emitted with `child_trace_id` linkage; W3C traceparent stitches the peer DAG to the root chain; `call_chain` rides the envelope. | TP | Asserting only the caller-side event, or faking the trace linkage by string-matching instead of walking both hash chains. |
 
 ### 6.6 Trust Ladder & Promotion (`cases/trust_ladder/`)
 
@@ -481,6 +502,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `tl_11_promotion_queue_sla_breach_alert.yaml` | Integration | Routine resides in human review queue for 49 hours; `sys doctor` raises `promotion.sla_breached` alarm (threshold: 48h). | TN | Silently letting routines languish in pending review queues indefinitely. |
 | `tl_12_human_veto_rollback_trust.yaml` | Integration | Human inspector vetoes promoted routine during canary window; routine immediately rolled back to `draft` and unpinned. | TP | Requiring a code rebuild or new version bump to execute human veto rollback. |
 | `tl_13_circuit_breaker_demotion_streak.yaml` | Integration | Routine has 20 consecutive runs with success rate <0.70; autonomous circuit-breaker demotes routine to `draft`. | TN | Allowing a broken pinned routine to repeatedly fail in production without auto-demotion. |
+| `tl_14_federated_caller_floor_pinned.yaml` | Integration | `ws://` call targeting a draft routine fails closed with `exit 2` (E042_FEDERATION_DENIED) despite allowlist and SO_PEERCRED passing. | TN | Targeting a pinned routine and asserting denial, or letting the call execute past the trust gate. |
+| `tl_15_federated_initiation_floor.yaml` | Integration | Draft routine initiating a `ws://` call is denied (trust >= reviewed required); callee is pinned to isolate the caller-side floor. | TN | Conflating with the inbound caller floor (tl_14) by targeting a draft callee instead of a draft caller. |
 
 ### 6.7 Schema Evolution & Validation Gates (`cases/schema_evolution/`)
 
@@ -511,7 +534,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `cc_02_contested_claim_rejection.yaml` | Integration | Agent B attempts to claim `orders:ORD-10` while Agent A holds active lease; Agent B request denied with `exit 2`. | TN | Overwriting active claim or extending lease without holder credentials. |
 | `cc_03_daemon_ttl_lease_dissolution.yaml` | Integration | Claim TTL expires; daemon sweeper tick purges expired claim; resource unlocks without manual unlock call. | TP | Requiring manual intervention to clear expired leases. |
 | `cc_04_routine_dependency_retire_block.yaml` | Unit | Routine A is imported by Routine B; agent attempts `routine retire A`; rejected due to active DAG dependency. | TN | Retiring routine and leaving dependent callers with dangling references. |
-| `cc_05_process_uid_session_mismatch.yaml` | Integration | Caller passes `--by agt_7f3k` but host OS process UID does not match registration credentials; denied with `exit 3`. | TN | Trusting CLI `--by` argument without validating OS process credentials. |
+| `cc_05_process_uid_session_mismatch.yaml` | Integration | Caller passes `--by agt_7f3k` but Stage 0 sniffed harness markers diverge from the registered agent's marker set; denied with `exit 3`. | TN | Trusting CLI `--by` argument without sniffing harness markers at Stage 0. |
 | `cc_06_sqlite_wal_begin_immediate_serialized.yaml` | Integration | Multiple threads initiate write transactions concurrently; SQLite `BEGIN IMMEDIATE` serializes execution without deadlocks. | TP | Using `BEGIN DEFERRED` which leads to `SQLITE_BUSY` runtime transaction deadlocks. |
 | `cc_07_authoring_mutex_concurrent_edit.yaml` | Integration | Two agents attempt simultaneous write to `routines/payout.py`; second agent blocked by filesystem authoring mutex (exit 2). | TN | Allowing concurrent file overwrite without mutual exclusion lock. |
 | `cc_08_revoked_agent_token_abort.yaml` | Unit | Agent identity revoked in `agents` table; subsequent call using previously issued HMAC session token rejected with `exit 2`. | TN | Permitting revoked credentials to execute actions until session expiration. |
@@ -521,6 +544,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `cc_12_cross_agent_event_tailing.yaml` | Integration | Agent A executes mutation; Agent B actively monitoring via `sys audit tail` receives live event envelope via Unix domain socket. | TP | Agent B polling SQLite with high-frequency busy-wait queries. |
 | `cc_13_disconnect_claims_auto_drop.yaml` | Integration | Spoke socket severed at t0+10s with TTL 300s unexpired; Hub drops both held claims under `disconnect_policy: auto_drop` and rolls back the open transaction; second agent re-acquires instantly. | TP | Waiting out the TTL or deleting claims rows by hand and crediting the disconnect cleanup. |
 | `cc_14_heartbeat_loss_spoke_lease_eviction.yaml` | Integration | Spoke heartbeats stop; reaper tick at heartbeat delta 301s > lease_ttl 300s marks agent `expired`, purges both leases, emits `swarm.node_reap` (reason: ttl_expired, claims_released_count: 2). | TP | Expiring the agent by hand or letting real wall-clock time lapse. |
+| `cc_15_anonymous_swarm_write_denied.yaml` | Integration | Presence-only harness (CLAUDECODE, no identity marker) issues a mutating write without `--session`/`--by`; Stage 0 attributes `agt_anon_<session>` and rejects with `exit 3`. | TN | Confusing a presence marker with an identity marker, or asserting denial on a read-only query. |
+| `cc_16_marker_divergent_implicit_fork.yaml` | Integration | Two in-process workers share PID 4217 with divergent harness markers; divergent marker forces implicit session fork, claims keyed to (session_id, harness_marker, op_sequence) serialize, and the colliding worker yields with `exit 6`. | TP | Running the workers as separate OS processes, or forking without exercising a real claim collision. |
 
 ### 6.9 Bindings & Inbound Triggers (`cases/bindings_triggers/`)
 
@@ -538,6 +563,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `bt_10_ask_question_token_cap_breach.yaml` | Unit | `ctx.ping.ask` question string contains 101 tokens; option gate halts execution (limit: 100 tokens). | TN | Permitting unbounded long-form prompts in human interactive questions. |
 | `bt_11_ask_options_count_ceiling.yaml` | Unit | `ctx.ping.ask` supplied with 6 response options; gate rejects suspension request (maximum allowed options: 5). | TN | Permitting unbounded choice menus in structured human inquiries. |
 | `bt_12_webhook_ingress_public_url_mandate.yaml` | Unit | Registering external webhook binding with localhost or loopback IP (`127.0.0.1`) without tunnel rejected. | TN | Allowing loopback callback addresses for external webhook providers. |
+| `bt_13_bind_federation_siphon.yaml` | Integration | `bind federation` creates a peer outbox siphon with the cursor tracked in `_watch_cursors`; each dispatched event advances the cursor exactly once. | TP | Asserting the bind without checking the cursor row, or assuming advancement without reading the cursor before and after. |
 
 ### 6.10 Vault & Zero-Knowledge Secrets (`cases/vault_secrets/`)
 

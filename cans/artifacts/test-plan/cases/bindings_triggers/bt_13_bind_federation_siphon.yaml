@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_13_bind_federation_siphon"
+title: "bind federation creates a peer outbox siphon with cursor tracked in _watch_cursors"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/world.md#federated-siphoning"
+  statement: "Binding a federation siphon subscribes to a peer's _outbox_events: peer daemons poll or stream public events over the socket and track their position in _watch_cursors — the siphon is a durable binding row plus a cursor row, and each dispatched event advances the cursor exactly once."
+  blast_radius_if_breached: "Lost or duplicated peer events: without a durable cursor the siphon replays already-consumed events on every reconnect (duplicate side effects) or skips events after a restart (silent loss) — cross-workspace event delivery degrades to at-most-once or at-least-once instead of effectively-once."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts the bind succeeded without checking the _watch_cursors row, or dispatches one event and assumes cursor advancement without reading the cursor value before and after."
+  anti_slop_mitigation: "AS-02 proves the _watch_cursors row exists with the binding id and that the cursor value advances by exactly one per dispatched event; AS-06 hardcodes the binding name 'crm_todos' and the source workspace 'crm'."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "orders.ops@example.com"
+    agent_id: "agt_bt_13"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        _watch_cursors:
+          columns:
+            watch_id: text pk
+            provider: text
+            cursor: text
+    tables:
+      - name: "_watch_cursors"
+        row_count: 0
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+    # federation pre-condition: peer "crm" on /run/capcli/crm.sock, SO_PEERCRED authed, allowlisted;
+    # peer emits a public todo.created event with a known offset after the bind
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli bind federation crm_todos crm todo.created cap://sync_todos@v2 -m \"siphon peer outbox\""
+  input_params:
+    binding_name: "crm_todos"
+    source_ws: "crm"
+    event: "todo.created"
+    target: "cap://sync_todos@v2"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 2 # binding row + _watch_cursors row (watch_id 'crm_todos', provider 'crm', cursor '0')
+    tables_mutated: ["_watch_cursors"]
+  wire:
+    packets_transmitted: 0 # bind itself is local; siphon polls afterwards
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "bind.create (target_urp: cap://sync_todos@v2, trigger_type: federation, source_ws: crm, event: todo.created)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT watch_id, provider, cursor FROM _watch_cursors WHERE watch_id='crm_todos' returns exactly one row with provider='crm'; after the peer emits one todo.created event and the siphon dispatches it, the cursor value advances by exactly one — read before and after, no assumption."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: binding 'crm_todos', source_ws 'crm', event 'todo.created', target 'cap://sync_todos@v2'; the siphon poll runs against a real peer socket (/run/capcli/crm.sock) — never a stubbed event source."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 with a receipt envelope; a companion negative control binds with an unversioned target (cap://sync_todos, no @version) and must refuse with exit 3 — proving versioning is enforced at bind time."

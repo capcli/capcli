@@ -1,0 +1,79 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_17_federation_cycle_call_chain_exit2"
+title: "Federated call whose call_chain already contains the workspace fails closed with exit 2 (E041_FEDERATION_CYCLE)"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#vector-cycle-check"
+  statement: "Every federated hop appends the calling workspace to the call_chain array carried in the IPC call envelope; if the target workspace already appears in call_chain, the kernel fails closed with exit 2 (E041_FEDERATION_CYCLE) before any socket write — cyclic workspace topologies can never recurse."
+  blast_radius_if_breached: "Infinite cross-workspace recursion: workspace A calls B calls A, each hop spawning frames and burning delegated budget until both daemons exhaust session ceilings — a distributed fork bomb with audit events on both sides and no termination condition."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent tests a self-call (workspace calling itself directly, call_chain of length 1) instead of a genuine 2-hop cycle, or asserts the denial after the IPC socket write already happened — both miss the pre-write fail-closed requirement."
+  anti_slop_mitigation: "AS-03 pins exit 2 exactly with the E041_FEDERATION_CYCLE code parsed from the diagnostic; AS-06 hardcodes the two-workspace call_chain literals (orders -> billing -> orders); AS-02 proves zero frames pushed in either workspace and zero socket bytes written."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "orders.ops@example.com"
+    agent_id: "agt_kp_17"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        _budget_frames:
+          columns:
+            frame_id: text pk
+            routine: text
+            session: text
+    tables:
+      - name: "_budget_frames"
+        row_count: 1 # root frame frame_001 in session ses_kp17
+      - name: "_audit"
+        row_count: 4 # genesis sequence
+    vault_secrets: []
+    # federation pre-condition: peer daemon for workspace "billing" listens on /run/capcli/billing.sock,
+    # socket-authenticated via SO_PEERCRED; the inbound IPC envelope to this test carries
+    # call_chain: ["orders", "billing"] — i.e. billing is calling back into orders (cycle)
+
+execution:
+  trigger: "routine_ctx_call"
+  command: "ctx.call('ws://orders/recalc_totals@v3', {'region': 'EMEA'}) executed inside routine billing/settle_invoice@v2 with inbound call_chain ['orders', 'billing']"
+  input_params:
+    target_urp: "ws://orders/recalc_totals@v3"
+    inbound_call_chain: ["orders", "billing"]
+    local_workspace: "orders"
+    callee_trust: "pinned"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.federation"
+    culprit: "E041_FEDERATION_CYCLE — call_chain ['orders', 'billing'] already contains target workspace 'orders'; cyclic federated call refused before socket write"
+    remedy: "restructure the call graph to break the cycle (orders -> billing -> orders); federated topologies must be acyclic — see the vector cycle check"
+  database:
+    row_count_delta: 0 # no child frame pushed; _audit gains exactly 1 denial event
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0 # refused before any IPC socket write
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "federation.call_out (decision: denied, effect: none — E041_FEDERATION_CYCLE, call_chain ['orders', 'billing'])"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the diagnostic: domain == 'policy.federation', culprit contains the literal code 'E041_FEDERATION_CYCLE' and the full call_chain array; an exit 4 transport error or a generic exit 2 without the code is a failure."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _budget_frames == 1 before and after — no child frame was pushed in the local workspace; the peer socket received zero bytes (assert via the harness socket tap); _audit delta is exactly 1 denial event."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: call_chain ['orders', 'billing'], target workspace 'orders', expected code 'E041_FEDERATION_CYCLE'; the cycle is realized with two real daemon sockets (/run/capcli/orders.sock, /run/capcli/billing.sock) — never by mocking the cycle checker."

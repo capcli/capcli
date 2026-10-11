@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_18_federation_hop_ceiling_exit2"
+title: "Third cross-workspace hop breaches the hop ceiling and exits 2"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#hop-ceiling"
+  statement: "Federated nesting depth is capped at 2 cross-workspace hops: a ctx.call to ws:// whose inbound call_chain already holds 2 entries breaches the ceiling and exits 2 — the hop ceiling binds before the general call-nesting ceiling (nesting > 5), and federated hops count toward nesting depth."
+  blast_radius_if_breached: "Unbounded delegation chains across sovereign workspaces: each hop re-delegates budget and re-authenticates, so a deep chain multiplies trust assumptions — a compromised leaf workspace inherits the delegated authority of every ancestor with no depth bound."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent tests with a call_chain of length 1 (only 1 hop deep, legal) and asserts denial — vacuous; or conflates the hop ceiling with the nesting > 5 ceiling and asserts exit 2 for the wrong reason."
+  anti_slop_mitigation: "AS-06 hardcodes the 2-entry inbound call_chain (['crm', 'billing']) so the attempted 3rd hop is exact; AS-03 pins exit 2 with the hop-ceiling culprit (not the nesting culprit); a companion positive control with a 1-entry chain must succeed."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "billing.ops@example.com"
+    agent_id: "agt_kp_18"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        _budget_frames:
+          columns:
+            frame_id: text pk
+            routine: text
+            session: text
+    tables:
+      - name: "_budget_frames"
+        row_count: 1
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+    # federation pre-condition: peer daemons for "ledger" on /run/capcli/ledger.sock (SO_PEERCRED authed);
+    # inbound call_chain is ['crm', 'billing'] — this workspace (billing) attempting ws://ledger/* would be hop 3
+
+execution:
+  trigger: "routine_ctx_call"
+  command: "ctx.call('ws://ledger/post_entry@v1', {'debit': 1200, 'credit': 1200}) executed inside routine billing/settle_invoice@v2 with inbound call_chain ['crm', 'billing']"
+  input_params:
+    target_urp: "ws://ledger/post_entry@v1"
+    inbound_call_chain: ["crm", "billing"]
+    local_workspace: "billing"
+    callee_trust: "pinned"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.federation"
+    culprit: "hop ceiling breached — inbound call_chain ['crm', 'billing'] already at 2 cross-workspace hops; 3rd hop to 'ledger' refused"
+    remedy: "flatten the delegation chain: billing must complete its own work and return, rather than delegating a 3rd hop; federated nesting is capped at 2 hops"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "federation.call_out (decision: denied, effect: none — hop ceiling, inbound chain ['crm', 'billing'])"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 and the culprit names the hop ceiling with the exact inbound chain ['crm', 'billing']; the diagnostic must NOT cite nesting > 5 — the hop ceiling is the binding constraint and the test fails if the wrong ceiling fires."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _budget_frames unchanged; zero bytes written to /run/capcli/ledger.sock; _audit delta is exactly 1 denial event."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: inbound chain ['crm', 'billing'], target 'ws://ledger/post_entry@v1', ceiling constant 2; positive control: the same call with inbound chain ['crm'] (1 hop) must proceed to preflight — proving the ceiling, not the call itself, is what denies."

@@ -131,10 +131,13 @@
           - tag — imm_rows: true
           - authorizer effect — UPDATE and DELETE denied physically
       - concurrency & outbox
-        - claims lease lifecycle: see physics.md#Exit-code-law
+        - claims lease lifecycle — leases keyed strictly to (session_id, harness_marker, op_sequence): see agent.md#Concurrency-scope; exit 6 yield release: see physics.md#Exit-code-law
         - outbox atomic claim
           - claim statement — UPDATE _outbox_events SET status = 'in_flight', locked_by = :worker WHERE id = (...) RETURNING *
-          - lease semantics — locked_by records claiming worker; atomic RETURNING claim guarantees single-worker dispatch
+          - initial status — new events enter as 'pending'; the atomic claim flips status to 'in_flight'
+          - emit mapping — ctx.emit(event, payload) writes provider='federation', verb=event, kernel-minted idempotency_key mirrored to idempotency_header
+          - lease semantics — locked_by records claiming worker or federated subscriber daemon; atomic RETURNING claim guarantees single-worker dispatch
+          - federated siphoning — peer daemons poll or stream events with visibility='public' from _outbox_events via socket, tracking positions in _watch_cursors
           - draining — daemon drains _outbox_events asynchronously; headless subshell CLI drains pending calls synchronously prior to exit 0
         - column locking
           - tag — imm_cols: [...]

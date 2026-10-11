@@ -4,8 +4,10 @@
     - Identity chain
       - principal — human or root authority holder (user:alice, partner:stripe)
       - agent — registered harness instance (agt_7f3k)
+      - subagent — thread/event-loop worker sharing parent PID; tracked via harness markers: see #Harness-environment-markers
       - session — temporary engagement scope (ses_a9)
       - op — single leaf execution in causal DAG
+      - federated caller — external workspace identity formatted as ws:<name> (e.g. ws:crm); callee policy maps this to an internal :principal
     - Ephemeral swarm identity
       - node prefix — disposable containers mint transient IDs: agt_tmp_<uuid8>
       - heartbeat loop — spokes ping Hub every 5s; updates heartbeat_at in agents table: see artifacts/system-schema.yaml#agents
@@ -15,6 +17,7 @@
     - Credential binding
       - capability token — kernel-minted HMAC session token bound to active _budget_frames
       - workspace pinning — active session and principal pinned to envs/<name>/workspace.db
+      - implicit fork — divergent harness thread marker under same PID forces session fork: see budget.md#Cascade
       - session fork — child agents inherit scoped parent token via session fork
       - acting identity — --by declares machine agent identity for audit trails and token validation
       - beneficiary identity — --as declares target principal; bound directly to SQLite :principal for row-level security
@@ -32,16 +35,22 @@
         - webhooks — capcli-watch owns asynchronous provider dispatches
         - listener — capcli-serve owns synchronous endpoint requests
       - revocation — sys agent revoke ends execution instantly
-    - Harness skill origin
-      - provenance — identity.skill_origin (artifacts/policy.yaml)
+      - federated peers — ws:<name> identities registered as agents; principal column holds the mapped internal :principal
+      - peer allowlist — E042 caller allowlist is the set of ws:<name> agent rows with status=active; revoked or expired peers denied
+    - Harness environment markers
+      - marker sniffing — Stage 0 reads process env and /proc/$PPID/environ; bans PID-only trust: see physics.md#Pipeline-sequence
+      - identity markers — CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID, CODEX_SESSION_ID, CODEX_CONVERSATION_ID, ANTIGRAVITY_CONVERSATION_ID, HERMES_SESSION_KEY
+      - presence markers — CLAUDECODE, GEMINI_CLI, CURSOR_AGENT, OPENCLAW_SHELL
+      - attribution fallback — presence-only or missing markers map to agt_anon_<session>; mutating writes denied: see physics.md#Runtime-refusals
+      - provenance — identity.skill_origin and harness marker sha256 hash captured on leaf: see effect.md#Event-anatomy
       - field mapping — triggering skill recorded in triggered_by_skill
       - validation — format constraints: see artifacts/policy.yaml#identity
-      - authority limit — skill origin acts as metadata, never grants power
-      - transport — harness exports CAPCLI_SKILL carrying the skill name; unset records null, malformed values drop with a warning: see artifacts/policy.yaml#skill_origin
+      - authority limit — marker acts as metadata, never grants power
+      - transport — harness exports CAPCLI_SKILL; unset records null: see artifacts/policy.yaml#skill_origin
     - Concurrency scope
       - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE; writer transactions bounded to <50ms
       - writer priority — interactive agent and webhook mutations preempt bulk migration backfills
-      - application locks — business-level leases tracked in claims table with daemon TTL cleanup
+      - application locks — business-level leases in claims table keyed strictly to (session_id, harness_marker, op_sequence): see world.md#Claims-lease-lifecycle; PID-keyed leases banned
       - exit 6 yield and resume: see physics.md#Exit-code-law
       - authoring mutex — filesystem lock on routines/<name>.py during edits; concurrent edits exit 2
       - collision handling — writers queue up to busy_timeout (default 5000ms); timeout exhaustion fails closed with exit 2
@@ -100,5 +109,5 @@
       - physical arbiter — shared workspace.db with WAL-mode serialized commits
       - event tailing — agents observe sibling effects via sys audit tail
     - Harness neutrality
-      - uniform actor model — kernel treats all callers uniformly by PID, principal, agent ID, and session
+      - uniform actor model — kernel treats all callers uniformly by harness marker, principal, agent ID, and session; PID is process context, never a trust axis
       - kernel role — mechanical policy enforcement, dispatch, audit logging

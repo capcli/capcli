@@ -133,6 +133,14 @@
       "prompt": "prompt://api/catalog_empty@1",
       "serve": "L1",
       "reason": "no external API catalogs configured"
+    },
+    {
+      "id": "t_federation_denied",
+      "screen_id": "run.execute.denial.federation_denied",
+      "predicate": {},
+      "prompt": "prompt://federation/remediation@1",
+      "serve": "L1",
+      "reason": "federated call refused: allowlist, cycle, or transport"
     }
   ],
   "registry": "Sole trigger registry: screen, predicate, pointer, serve level, reason. Bank frontmatter carries no trigger facts."

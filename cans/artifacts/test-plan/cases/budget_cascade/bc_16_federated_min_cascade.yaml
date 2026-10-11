@@ -1,0 +1,80 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_16_federated_min_cascade"
+title: "Federated callee effective limit = min(caller_remaining, callee_policy_ceiling, callee_governance_ceiling)"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/budget.md#Federated-budget-cascade"
+  statement: "Cross-workspace calls delegate the remaining pool through the federated min() law: callee_effective_limit = min(caller_remaining, callee_policy_ceiling, callee_governance_ceiling) — the tightest of the three binds, so a federated callee can never outspend what the caller delegated or what its own policy and governance allow."
+  blast_radius_if_breached: "Budget escape across the federation: a callee burns more than the caller delegated — the caller's session ceiling becomes decorative and a malicious or buggy peer drains the caller's fuel, ops, and egress pools without bound."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts the formula with caller_remaining as the only binding input (ignoring the callee-side ceilings), or uses the local min() formula (declared need, session_ceiling) which does not apply across workspaces."
+  anti_slop_mitigation: "AS-06 hardcodes all three inputs (caller_remaining 40, callee_policy_ceiling 100, callee_governance_ceiling 50) so the expected 40 is over-determined — each ceiling must be the binding one in a rotated variant; AS-02 proves the callee frame's declared ceiling equals exactly 40."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "orders.ops@example.com"
+    agent_id: "agt_bc_16"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        _budget_frames:
+          columns:
+            frame_id: text pk
+            routine: text
+            session: text
+            declared_max_ops: int
+    tables:
+      - name: "_budget_frames"
+        row_count: 1 # root frame frame_010, session ses_bc16, 40 ops remaining
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+    # federation pre-condition: peer "billing" on /run/capcli/billing.sock, allowlisted;
+    # target settle_invoice@v2 pinned; callee policy ceiling 100 ops, governance ceiling 50 ops
+
+execution:
+  trigger: "routine_ctx_call"
+  command: "ctx.call('ws://billing/settle_invoice@v2', {'invoice_id': 9}) with caller frame holding 40 ops remaining"
+  input_params:
+    target_urp: "ws://billing/settle_invoice@v2"
+    caller_remaining_ops: 40
+    callee_policy_ceiling_ops: 100
+    callee_governance_ceiling_ops: 50
+    expected_callee_effective_ops: 40
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: null
+    culprit: null
+    remedy: null
+  database:
+    row_count_delta: 1 # federation.call_out audit event on the caller side
+    tables_mutated: ["_audit"]
+  wire:
+    packets_transmitted: 1 # one IPC call envelope carrying budget_delegated: {ops: 40}
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "federation.call_out (target_ws: billing, target_urp: ws://billing/settle_invoice@v2, budget_delegated: {ops: 40}, child_trace_id set)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Hardcoded literals: caller_remaining 40, callee_policy_ceiling 100, callee_governance_ceiling 50, expected effective 40; rotated variants must also pass: (100, 30, 50) -> 30 and (100, 100, 25) -> 25 — proving each of the three terms can bind, not just caller_remaining."
+  - rule: "AS-02"
+    verification: "The callee-side frame's declared_max_ops == 40 exactly (read via the harness peer-db tap on the billing workspace); the caller's remaining ops after the call == 40 - consumed (never negative, never replenished)."
+  - rule: "AS-05"
+    verification: "The federation.call_out event's budget_delegated field ({ops: 40}) matches the callee frame's declared ceiling; the child_trace_id links to a federation.call_in event in the peer ledger — causal linkage verified across both workspaces."

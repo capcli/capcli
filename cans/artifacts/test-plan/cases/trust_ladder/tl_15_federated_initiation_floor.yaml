@@ -1,0 +1,78 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_15_federated_initiation_floor"
+title: "Draft routine initiating a ws:// call is denied (trust >= reviewed required)"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/trust.md#federated-initiation-floor"
+  statement: "Initiating a federated call requires trust >= reviewed: a draft routine that issues ctx.call to a ws:// target is denied — unproven local code cannot open cross-workspace call paths, even to pinned remote routines."
+  blast_radius_if_breached: "Draft code reaching across the federation: unproven routines — which never passed contract rehearsal — initiate calls into peer workspaces, laundering untrusted logic through trusted remote execution and spending delegated budget."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the calling routine at reviewed trust and asserts denial (inverted), or confuses this with the inbound caller floor (tl_14) and targets a draft callee instead of a draft caller."
+  anti_slop_mitigation: "AS-03 pins the denial with the initiation-floor diagnostic naming the caller's draft trust; AS-06 hardcodes caller trust 'draft' vs the reviewed positive control; the callee in this test is pinned — isolating the caller-side floor."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "orders.ops@example.com"
+    agent_id: "agt_tl_15"
+    trust: "draft" # the initiating routine runs at draft trust
+  initial_state:
+    schema_yaml: |
+      version: 3
+      engine: sqlite
+      db: workspace.db
+      tables:
+        _budget_frames:
+          columns:
+            frame_id: text pk
+            routine: text
+            session: text
+    tables:
+      - name: "_budget_frames"
+        row_count: 1
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+    # federation pre-condition: peer "billing" on /run/capcli/billing.sock, allowlisted; target routine
+    # settle_invoice@v2 is PINNED — the denial here is purely the caller's draft trust, not the callee
+
+execution:
+  trigger: "routine_ctx_call"
+  command: "draft routine orders/draft_recon@v1 executes ctx.call('ws://billing/settle_invoice@v2', {'invoice_id': 5})"
+  input_params:
+    target_urp: "ws://billing/settle_invoice@v2"
+    caller_routine: "orders/draft_recon@v1"
+    caller_trust: "draft"
+    target_trust: "pinned"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "federated initiation floor — routine 'draft_recon@v1' at draft trust cannot initiate ws:// calls; initiating routines must hold trust >= reviewed"
+    remedy: "promote draft_recon to reviewed (contract rehearsal + auto-promotion gates), then retry the federated call"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "federation.call_out (decision: denied, effect: none — federated initiation floor, caller trust draft < reviewed)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert the denial names the initiation floor and the caller's 'draft' trust rung — NOT the callee's trust (pinned here by construction); conflating this with tl_14's inbound floor is a test-design failure."
+  - rule: "AS-02"
+    verification: "Zero bytes on /run/capcli/billing.sock; caller _budget_frames unchanged; _audit delta is exactly 1 denial event."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: caller 'orders/draft_recon@v1' at trust 'draft', target pinned 'ws://billing/settle_invoice@v2'; positive control: the identical call from a reviewed routine must pass the floor — proving caller trust is the gate."
