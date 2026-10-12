@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "ur_03_preflight_envelope_per_class_shape"
+title: "Inspect dispatches uniformly across the three UrpResolver traits while each class returns its own PreflightEnvelope payload shape"
+domain: "urp"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/interface.md#Hot-path:-run-noun"
+  statement: "`capcli inspect` dispatches every pointer through the same UrpResolver trait pair (inspect/resolve) and returns one PreflightEnvelope per resolver class — uniform dispatch, class-varying payload: executables carry costs, ops ceiling, budget cascade and the can_invoke_now verdict; db entities carry row schema, check constraints, mask flags, TTL; artifacts carry token size, node outlines, bundle metadata."
+  blast_radius_if_breached: "A single generic envelope for all classes would collapse the dispatch contract — db reads would surface can_invoke_now verdicts, artifact reads would surface costs — and every consumer branching on envelope shape (agents, Cockpit, the anti-slop linter) would misread the pointer kind."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by running the three inspects and asserting only that all exit 0 — the uniform-dispatch claim holds trivially while the class-varying payload shapes (the actual law) go unverified."
+  anti_slop_mitigation: "AS-03 asserts resolver_class differs per target AND the payload key sets are pairwise disjoint across classes: the executable envelope must contain budget_status.can_invoke_now while the db envelope must not, the db envelope must contain row_schema while the artifact envelope must not, and the artifact envelope must contain token_size while the executable envelope must not."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_ur_03"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "orders"
+        row_count: 3
+      - name: "_budget_frames"
+        row_count: 1
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli inspect cap://sync_orders@5 && capcli inspect db://orders && capcli inspect doc://prompts/billing#campaign_v1"
+  input_params:
+    pointers:
+      - "cap://sync_orders@5"
+      - "db://orders"
+      - "doc://prompts/billing#campaign_v1"
+
+expected_observations:
+  exit_code: 0
+  state_modified: false
+  diagnostic:
+    domain: "run.inspect"
+    culprit: "none — nominal path: all three pointers dispatched through the UrpResolver trait pair; ExecutableResolver, DbEntityResolver, and ArtifactResolver each returned their class envelope"
+    remedy: "none required"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "capability.inspect"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Parse all three CliEnvelope data blocks: resolver_class values are exactly 'executable', 'db_entity', 'artifact' in order; the executable block contains budget_status.can_invoke_now as a boolean; the db block contains row_schema and no budget_status key; the artifact block contains token_size and no row_schema key — any shared-shape envelope fails."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 3 and SELECT count(*) FROM _budget_frames == 1 before and after — three inspects, zero mutations, zero pushed frames."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: the three pointers verbatim, the three resolver_class strings verbatim — the class labels are asserted as constants, never inferred from payload contents."

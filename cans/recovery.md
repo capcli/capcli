@@ -46,9 +46,9 @@
       - DAG retention — retired pointers remain immutable in historical DAG: see effect.md#Causal-DAG
     - Offboarding sequence
       - strict ordering — backup first, revoke identities second, dump state third, remove envs last
-      - Stage 1: Survey — inspect prod state and remove active endpoint binds: see action.md#Serve-lifecycle-split
-      - Stage 2: Preserve — push backup, export dump, revoke identities: see agent.md#System-agent-registry
-      - Stage 3: Teardown — remove environments with dual confirmation flags: see space.md#Safety-controls
+      - Step 1: Survey — inspect prod state and remove active endpoint binds: see action.md#Serve-lifecycle-split
+      - Step 2: Preserve — push backup, export dump, revoke identities: see agent.md#System-agent-registry
+      - Step 3: Teardown — remove environments with dual confirmation flags: see space.md#Safety-controls
     - Teardown invariants
       - identity revocation — sys agent revoke invalidates all tokens: see agent.md#System-agent-registry
       - backup verification — push dry-run required before deletion: see #Commit-automation

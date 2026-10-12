@@ -38,7 +38,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://genesis/blank_world@1",
+    "prompt": "doc://prompts/genesis/blank_world#1",
     "reason": "no capabilities and no world to search",
     "serve": "L1"
   },

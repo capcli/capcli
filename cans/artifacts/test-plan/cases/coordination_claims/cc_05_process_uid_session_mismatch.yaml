@@ -7,7 +7,7 @@ target_crate: "crates/capcli-core"
 
 invariant:
   law_reference: "cans/agent.md#Harness-environment-markers--marker-sniffing--bans-PID-only-trust"
-  statement: "Identity is attributed via harness environment markers sniffed at Stage 0 (process env and /proc/$PPID/environ); PID-only trust is banned (cans/agent.md#Harness-environment-markers). --session and --by are resolved against the active token registry and the caller's sniffed markers — a CLI self-declaration whose markers do not match the registered agent's marker set is aborted with exit 3 (session errors: missing, forged, or expired session token aborts execution). OS process credentials (uid) remain a corroborating signal via the daemon IPC socket, but markers are the identity."
+  statement: "Identity is attributed via harness environment markers sniffed in Phase 1 (process env and /proc/$PPID/environ); PID-only trust is banned (cans/agent.md#Harness-environment-markers). --session and --by are resolved against the active token registry and the caller's sniffed markers — a CLI self-declaration whose markers do not match the registered agent's marker set is aborted with exit 3 (session errors: missing, forged, or expired session token aborts execution). OS process credentials (uid) remain a corroborating signal via the daemon IPC socket, but markers are the identity."
   blast_radius_if_breached: "Any process on the host impersonates any registered agent by passing --by: audit trails attribute actions to the wrong agent, per-agent trust rungs and quotas are stolen, and the entire identity chain (principal -> agent -> session -> op) becomes decorative."
 
 confusion_matrix:
@@ -55,7 +55,7 @@ expected_observations:
   state_modified: false
   diagnostic:
     domain: "kernel.session"
-    culprit: "--by agt_7f3k resolves to registered harness markers (CLAUDE_CODE_SESSION_ID=cld_reg_7f3k) but Stage 0 sniffed divergent markers (CODEX_THREAD_ID=cxt_other) from the caller's process env — marker attribution failed, session token ses_a9 rejected; corroborating IPC socket peer uid 1001 != registered uid 1002"
+    culprit: "--by agt_7f3k resolves to registered harness markers (CLAUDE_CODE_SESSION_ID=cld_reg_7f3k) but Phase 1 sniffed divergent markers (CODEX_THREAD_ID=cxt_other) from the caller's process env — marker attribution failed, session token ses_a9 rejected; corroborating IPC socket peer uid 1001 != registered uid 1002"
     remedy: "run from the registered harness process (matching identity markers), or re-register the agent binding via sys agent register from the owning principal"
   database:
     row_count_delta: 0 # read never executes; _audit gains exactly 1 denial event

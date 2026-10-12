@@ -1,0 +1,62 @@
+$schema: "test-plan/case/v1"
+case_id: "ur_02_inspect_tpl_envelope"
+title: "Inspect on tpl://registry/routine/sync_orders@5 returns the ArtifactResolver envelope with token size, node outlines, and bundle metadata"
+domain: "urp"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/action.md#Pointer-taxonomy"
+  statement: "ArtifactResolver.inspect on a tpl:// pointer returns the artifact envelope — token size, node outlines, bundle metadata — with zero gas semantics: no budget frame is pushed, no costs are computed, because static artifacts burn nothing."
+  blast_radius_if_breached: "A tpl:// inspect returning executable-shaped envelopes would attach costs and can_invoke_now verdicts to inert blueprints — agents would budget-gate template reads and the zero-gas artifact law would be unenforceable."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by asserting only exit 0 while the resolver returns a generic envelope — the class-specific payload (token size, node outlines, bundle metadata) is never verified."
+  anti_slop_mitigation: "AS-03 parses the envelope: resolver_class == 'artifact' exactly, token_size is a positive integer, node_outlines is a non-empty array, bundle_metadata carries version 5 and the registry repo; executable/db keys asserted absent. AS-02 proves no _budget_frames row was pushed."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_ur_02"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_budget_frames"
+        row_count: 1   # one live session frame; inspect must not push another
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli inspect tpl://registry/routine/sync_orders@5"
+  input_params:
+    pointer: "tpl://registry/routine/sync_orders@5"
+
+expected_observations:
+  exit_code: 0
+  state_modified: false
+  diagnostic:
+    domain: "run.inspect"
+    culprit: "none — nominal path: ArtifactResolver dispatched on the tpl:// scheme and returned the artifact envelope for blueprint sync_orders version 5"
+    remedy: "none required"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "capability.inspect"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _budget_frames == 1 exactly before and after — artifact inspect pushes no frame, burns no op, debits no token (zero-gas law)."
+  - rule: "AS-03"
+    verification: "Parse the CliEnvelope data block: resolver_class == 'artifact' exactly; token_size is a positive integer; node_outlines is a non-empty array; bundle_metadata.version == 5 and bundle_metadata.registry == 'capcli/registry'; row_schema/budget_status/can_invoke_now keys are ABSENT."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: pointer 'tpl://registry/routine/sync_orders@5', version 5, registry 'capcli/registry' (governance.yaml registry_repo) — never derived from the inspect output."

@@ -110,7 +110,7 @@
       - fuel_scope: session, rate_scope: session, rows_scope: trust_session
       - result_tokens_scope: routine
       - max_nesting_depth: 5 caps composition depth; nesting > 5 aborts execution with exit 2
-      - call_preflight — parent/session headroom evaluated pre-invocation; call-tree cycle validation: see world.md#Gate-2:-Semantics
+      - call_preflight — parent/session headroom evaluated pre-invocation; call-tree cycle validation: see world.md#Sub-check-2:-Semantics
       - budget_exhaustion: deny — exhausted budget = exit 2, never silent truncation
     - Cascade view in `inspect`
       - pre-flight check

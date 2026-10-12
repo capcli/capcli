@@ -1,5 +1,5 @@
 ---
-id: prompt://genesis/blank_world@1
+id: doc://prompts/genesis/blank_world#1
 stem: genesis.blank_world.success.empty
 bank: genesis
 slug: blank_world

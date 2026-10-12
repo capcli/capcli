@@ -36,7 +36,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://authoring/routine_gaps@1",
+    "prompt": "doc://prompts/authoring/routine_gaps#1",
     "reason": "telemetry shows uncodified operational sequence",
     "serve": "L1"
   }

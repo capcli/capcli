@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "bind.list.success.empty",
-  "target": "bind://",
+  "target": "bindings",
   "command": "capcli bind list",
   "elapsed_ms": 1455,
   "context": {

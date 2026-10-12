@@ -1,5 +1,5 @@
 ---
-id: prompt://api/catalog_empty@1
+id: doc://prompts/api/catalog_empty#1
 stem: api.catalog_empty.success.empty
 bank: api
 slug: catalog_empty

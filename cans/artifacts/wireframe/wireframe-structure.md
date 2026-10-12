@@ -202,12 +202,13 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.search.success.gaps` | success | 0 | — | gaps | Surfaces missing capabilities via `--since` |
 | `run.inspect.success.routine` | success | 0 | — | populated | Pre-flight envelope with `can_invoke_now` |
 | `run.inspect.success.quota` | success | 0 | — | populated | Headroom breakdown on `quota://` URP |
-| `run.inspect.success.prompt` | success | 0 | — | populated | Prompt L2 envelope only; no body content |
+| `run.inspect.success.prompt` | success | 0 | — | populated | Artifact preflight envelope: token size, node outlines, bundle metadata for doc://prompts/ inspect |
 | `run.inspect.success.template` | success | 0 | — | populated | tpl:// blueprint pre-flight envelope via capcli inspect |
-| `run.inspect.success.hub` | success | 0 | — | populated | hub:// remote Hub endpoint pre-flight envelope via capcli inspect |
+| `run.inspect.refusal.unregistered_scheme` | refusal | 3 | missing_param | unregistered_scheme | tcp:// transport endpoint refused: not a registered URP scheme; remedy capcli sys swarm list |
 | `run.inspect.success.ws` | success | 0 | — | populated | ws:// federated routine pre-flight envelope via capcli inspect |
 | `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Template URP does not resolve |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
+| `run.inspect.refusal.removed_scheme` | refusal | 3 | missing_param | removed_scheme | hub:// removed scheme refused at parse with exit 3 |
 | `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
 | `run.abort.success.aborted` | success | 0 | — | aborted | Suspended frame purged; OCC fence released |
 | `run.abort.refusal.unknown_frame` | refusal | 3 | missing_param | unknown_frame | Abort target frame not suspended |
@@ -362,13 +363,13 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `rule.apply.success.applied` | success | 0 | — | applied | DDL applied in transaction |
 | `rule.apply.success.dry_run` | success | 0 | — | dry_run | DDL impact preview on snapshot |
 | `rule.apply.denial.trust` | denial | 2 | policy.trust | unproven | `ALTER` requires reviewed trust |
-| `rule.apply.refusal.validation` | refusal | 3 | validation | rejected | Gate 2 semantic check fails |
+| `rule.apply.refusal.validation` | refusal | 3 | validation | rejected | Sub-check 2 semantic check fails |
 | `rule.apply.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
 | `rule.validate.success.valid` | success | 0 | — | valid | Declarations pass Gates 1 & 2 |
 | `rule.validate.refusal.bundle_syntax` | refusal | 3 | compile | syntax | Malformed template bundle YAML or Python syntax |
 | `rule.validate.refusal.compat` | refusal | 3 | policy.template | compat | min_kernel_version or policy version mismatch |
-| `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Gate 1 YAML syntax failure |
-| `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Gate 2 circular dependency detected |
+| `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Sub-check 1 YAML syntax failure |
+| `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Sub-check 2 circular dependency detected |
 | `rule.plan.success.planned` | success | 0 | — | planned | Migration bundle generated (plan.json, backfill stub) |
 | `rule.prove.success.proven` | success | 0 | — | proven | Migration rehearsed in sim (expand, backfill, SLA) |
 
@@ -969,7 +970,7 @@ Fixture (`wireframe/v2`):
     "secret_ref": "vault://stripe_secret_key"
   },
   "trailer": {
-    "prompt": "prompt://budget/execution_starved@1",
+    "prompt": "doc://prompts/budget/execution_starved#1",
     "reason": "missing secret refusal: vault credential absent",
     "serve": "L1"
   }
@@ -1023,7 +1024,7 @@ Fixture (`wireframe/v2`):
     ]
   },
   "trailer": {
-    "prompt": "prompt://budget/execution_starved@1",
+    "prompt": "doc://prompts/budget/execution_starved#1",
     "reason": "network jail denial: sandbox egress trapped",
     "serve": "L1"
   }
@@ -1268,7 +1269,7 @@ Fixture (`wireframe/v2`):
     ]
   },
   "trailer": {
-    "prompt": "prompt://onboarding/human@1",
+    "prompt": "doc://prompts/onboarding/human#1",
     "reason": "human operator requested onboarding tour",
     "serve": "L1"
   },

@@ -22,7 +22,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://onboarding/human@1",
+    "prompt": "doc://prompts/onboarding/human#1",
     "reason": "human operator requested onboarding tour",
     "serve": "L1"
   },

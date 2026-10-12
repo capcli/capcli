@@ -43,7 +43,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://promotion/routine_passed@1",
+    "prompt": "doc://prompts/promotion/routine_passed#1",
     "reason": "proof passed: routine eligible for promotion",
     "serve": "L1"
   },

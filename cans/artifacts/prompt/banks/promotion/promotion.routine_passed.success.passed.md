@@ -1,5 +1,5 @@
 ---
-id: prompt://promotion/routine_passed@1
+id: doc://prompts/promotion/routine_passed#1
 stem: promotion.routine_passed.success.passed
 bank: promotion
 slug: routine_passed

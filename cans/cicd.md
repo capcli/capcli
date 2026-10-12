@@ -9,7 +9,7 @@
       - Declarative artifact sync
         - lockfile parity — schema.yaml and policy.yaml verified against capcli.lock checksum
         - uncommitted drift refusal — uncommitted hash changes abort CI run with exit 3: see physics.md#Exit-code-law
-        - auto-recompile stance — non-prod auto-recompiles, CI enforces diff: see world.md#Gate-3:-Manifest-lock
+        - auto-recompile stance — non-prod auto-recompiles, CI enforces diff: see world.md#Sub-check-3:-Manifest-lock
       - Subsystem compilation order
         - types crate baseline — crates/capcli-types compiles prior to all crates: see assembly.md#Shared-contracts-crate
         - FFI bridge prerequisites — crates/capcli-core compiles prior to packages/py maturin build
@@ -47,7 +47,7 @@
         - strict exit mapping — golden screen JSON records exit codes 0 through 6: see physics.md#Exit-code-law
         - trailer presence — every screen with trailer must map to trigger rule: see artifacts/cicd.yaml#trinity
       - Prompt campaign bank
-        - progressive slices — prompt:// URP serves triggers and leaf sections: see action.md#Search-surface
+        - progressive slices — doc://prompts/ URP serves triggers and leaf sections: see action.md#Search-surface
         - trigger schema — cans/artifacts/prompt/_triggers.json coordinates screen associations
         - four-segment naming — screen_id must follow noun.verb.descriptor.state syntax law
       - Documentation root
@@ -57,15 +57,15 @@
     - Token cage ceilings
       - L1 trailer boundary
         - token limit — trailer string capped at 30 tokens maximum: see artifacts/cicd.yaml#trinity
-        - format law — structured trailer: prompt://... - <reason> syntax required
+        - format law — structured trailer: doc://prompts/... - <reason> syntax required
         - breach penalty — excess tokens trigger immediate verification abort with exit 1
       - L2 envelope boundary
         - token limit — prompt campaign envelopes capped at 150 tokens maximum: see artifacts/cicd.yaml#trinity
-        - inspection contract — inspect prompt://{bank}/{slug}@{version} returns envelope: see interface.md#Document-path:-doc-noun
+        - inspection contract — inspect doc://prompts/{bank}/{slug}#{version} returns envelope: see interface.md#Document-path:-doc-noun
         - content scope — metadata and section index only; deep instructions denied
       - L3 leaf boundary
         - token limit — prompt leaf sections capped at 500 tokens maximum: see artifacts/cicd.yaml#trinity
-        - doc read contract — doc read prompt://...#node fetches single leaf slice: see interface.md#Document-path:-doc-noun
+        - doc read contract — doc read doc://prompts/...#node fetches single leaf slice: see interface.md#Document-path:-doc-noun
         - overflow denial — leaves exceeding 500 tokens fail Trinity validation check
     - Checker tool architecture
       - Tool execution substrate
@@ -155,7 +155,7 @@
       - Static quality checks
         - cargo fmt — enforces workspace code formatting rules
         - clippy linter — treats all linter warnings as fatal compiler errors (-D warnings)
-        - AST validation — capcli rule validate enforces schema integrity: see world.md#Gate-1:-Syntax
+        - AST validation — capcli rule validate enforces schema integrity: see world.md#Sub-check-1:-Syntax
       - Schema lock assertion
         - git diff verification — git diff --exit-code capcli.lock artifacts/
         - mismatch consequence — uncommitted schema changes fail build with exit 3
@@ -170,10 +170,10 @@
         - package tooling — installs ruff, pytest, and maturin via pip
         - native build — maturin develop compiles native capcli_native.so FFI bridge
         - test execution — ruff checks code syntax; pytest executes test suite
-      - Job coordination and gates
+      - Job coordination and checks
         - dependency mapping — test-py and test-rust run only when dependencies build cleanly
         - fail-fast behavior — syntax errors in SDK code block root pull request approval
-        - gate progression — PR gate success unlocks manual merge and deep test execution
+        - check progression — PR gate success unlocks manual merge and deep test execution
   - Platform matrix and security pipeline
     - Trigger context and cadence
       - Pipeline execution policy
@@ -258,56 +258,56 @@
         - frontmatter lint — validates skills/*/SKILL.md name, description, triggers, and allowed_tools schema
         - provenance note — published skill instructs the harness to export CAPCLI_SKILL: see agent.md#Harness-environment-markers
         - registry dispatch — ships the validated skill to ClawHub alongside SDK releases
-  - Verification checklist and gates
-    - Pre-build and compile gates
-      - Gate 0 Workspace Diff
+  - Verification checklist and CI checks
+    - Pre-build and compile checks
+      - CI check 0: Workspace Diff
         - target tested — detects changed files across pull request diff boundaries
         - verification mechanism — dorny/paths-filter evaluates git commit tree against file globs
         - failure consequence — skips redundant jobs; prevents runner minute waste
-      - Gate 1 Schema & AST Syntax
+      - CI check 1: Schema & AST Syntax
         - target tested — validates YAML schema layout, constraints, and column expansions
-        - verification mechanism — capcli rule validate parses syntax: see world.md#Gate-1:-Syntax
+        - verification mechanism: see world.md#Sub-check-1:-Syntax
         - failure consequence — non-compliant syntax aborts PR build with exit code 3
-      - Gate 2 Relational Semantics
+      - CI check 2: Relational Semantics
         - target tested — checks foreign keys, index targets, view exposes, and cycles
-        - verification mechanism — petgraph acyclic validation in core: see world.md#Gate-2:-Semantics
+        - verification mechanism: see world.md#Sub-check-2:-Semantics
         - failure consequence — circular dependency or unmapped FK aborts compile with exit code 3
     - Integrity and containment gates
-      - Gate 3 Lockfile Integrity
+      - CI check 3: Lockfile Integrity
         - target tested — asserts capcli.lock matches compiled hash of schema, system, and policy
         - verification mechanism — git diff --exit-code capcli.lock detects uncommitted changes
-        - failure consequence — uncommitted drift fails PR build: see world.md#Gate-3:-Manifest-lock
-        - dev auto-recompilation — dev and sim auto-update lockfile: see world.md#Gate-3:-Manifest-lock
-      - Gate 4 Trinity Integrity
+        - failure consequence — uncommitted drift fails PR build: see world.md#Sub-check-3:-Manifest-lock
+        - dev auto-recompilation — dev and sim auto-update lockfile: see world.md#Sub-check-3:-Manifest-lock
+      - CI check 4: Trinity Integrity
         - target tested — validates pointer links and token cages across wireframe, prompt, and docs
         - verification mechanism — tools/check-trinity.py validates links: see #The-trinity-integrity-gate
         - failure consequence — dangling pointer, missing screen, or token overflow exits with code 1
-      - Gate 5 UI Asset Compilation
+      - CI check 5: UI Asset Compilation
         - target tested — verifies Cockpit PWA compiles into dist without bundling errors
         - verification mechanism — bun run build in packages/pwa verifies TypeScript and React build
         - failure consequence — missing PWA assets causes capcli-daemon compilation failure
-    - Runtime and deployment gates
-      - Gate 6 Platform Sandboxing
+    - Runtime and deployment checks
+      - CI check 6: Platform Sandboxing
         - target tested — verifies Linux unprivileged user namespaces and bwrap jail security
         - verification mechanism — integration test test_bwrap exercises jail: see action.md#Sandbox-execution
         - failure consequence — broken namespace isolation or socket leaks fails deep-test pipeline
-      - Release Gate Binary Distribution
+      - Release check: Binary Distribution
         - target tested — verifies cross-compilation produces functional standalone binaries
         - verification mechanism — cargo-zigbuild produces musl binaries without glibc links
         - failure consequence — missing target symbol blocks release asset publishing to GitHub
-      - Release Gate Polyglot Distribution
+      - Release check: Polyglot Distribution
         - target tested — validates npm packages and native Python wheels with embedded FFI
         - verification mechanism — maturin and npm publish deploy artifacts through OIDC tokens
         - failure consequence — compilation failure or missing symbols halts PyPI/npm deployment
   - PR verification pipeline
     - pointer — pipeline://ci/pr_gate
-    - invariant gate sequence
-      - Gate 1 Syntax & expansion — parse all YAML files; verify shorthand macros expand cleanly
-      - Gate 2 Semantic acyclic check — petgraph cycle scan over domain tables and routine ctx.call trees; cycles exit 3
-      - Gate 3 AST complexity scan — cyclomatic complexity <= 10 branches on all guest Python/JS/TS files
-      - Gate 4 Token cage verification — strict file size envelopes: routine files <= 2000 tokens, search descriptions <= 60 tokens, payload summaries <= 500 tokens
-      - Gate 5 Schema evolution rehearsal — rehearse forward revisions on transient snapshots; execute dry-run test suite
-      - Gate 6 Cryptographic lockfile sync — compute SHA-256 root hash; assert exact match against capcli.lock
+    - invariant check sequence
+      - PR check 1: Syntax & expansion — parse all YAML files; verify shorthand macros expand cleanly
+      - PR check 2: Semantic acyclic check — petgraph cycle scan over domain tables and routine ctx.call trees: see world.md#Sub-check-2:-Semantics; cycles exit 3
+      - PR check 3: AST complexity scan — cyclomatic complexity <= 10 branches on all guest Python/JS/TS files
+      - PR check 4: Token cage verification — strict file size envelopes: routine files <= 2000 tokens, search descriptions <= 60 tokens, payload summaries <= 500 tokens
+      - PR check 5: Schema evolution rehearsal — revision rehearsal on transient snapshots with dry-run test suite: see world.md#Revision-safety
+      - PR check 6: Cryptographic lockfile sync — SHA-256 root hash assertion against capcli.lock: see world.md#Sub-check-3:-Manifest-lock
     - token cage ceilings — pointer: policy://cages/token_limits
       - routine file — 2000 tokens max
       - output payload — 500 tokens max (oversized payloads must return keyset pagination schema)

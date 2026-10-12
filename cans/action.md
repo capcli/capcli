@@ -4,24 +4,28 @@
     - Unifying concept
       - Universal Resource Pointers (URP) — typed URN pointers across entire workspace
       - Pointer taxonomy
-        - cap:// — routines and imported API verbs
-        - db:// — tables, columns, check constraints, and read views
-        - doc:// — human-facing markdown docs, specs, error codes, and rules
-        - prompt:// — agent campaign banks, served in triggered slices only
-        - audit:// — causal DAG events, failures, and sequence patterns
-        - bind:// — cron schedules, webhooks, and endpoint ingress routes
-        - vault:// — secret references and in-memory injection status
-        - tpl:// — world and routine blueprints; local (tpl://routine/*), registry (tpl://registry/*), or remote; pre-flight via capcli inspect
-        - ask:// — pending human inquiries and suspensions
-        - snap:// — VACUUM recovery snapshots and revision cutover points
-        - quota:// — provider rate-bucket balances and spend ceilings
-        - policy:// — authorizer AST constraints and governance limits
-        - hub:// — remote central daemon endpoints for spoke routing (e.g. hub://100.64.0.1:4040)
-        - mesh:// — private WireGuard mesh peer endpoints for federated transport
-        - apis:// — provider contract specs, webhook verifiers, and egress profiles
-        - sink:// — notification, audit, and telemetry egress sinks
-        - ws:// — sovereign federated workspace capability routines (e.g. ws://tasks/create_todo@v1); shape-disjoint from WebSocket transport URLs (ws://host:port/...)
-        - Ad-hoc paths banned — every target is a URP from the taxonomy above; bare filesystem paths rejected at parse (exit 3)
+        - Universal grammar — scheme://[namespace/]resource[@version][#fragment]; bare filesystem paths and non-conforming URIs fail at parse (exit 3)
+        - Dispatch contract — the kernel resolves every pointer through the Rust UrpResolver trait: inspect(urp) returns a PreflightEnvelope; resolve(urp, ctx) returns a ResolvedPayload
+        - Executables — ExecutableResolver: code that executes, consumes fuel, and mutates world state
+          - cap://[provider/]routine[@version] — local routines and imported provider verbs
+          - ws://workspace/routine[@version] — federated cross-workspace capability routines; shape-disjoint from WebSocket transport URLs (ws://host:port/...)
+          - inspect — costs, ops ceiling, budget cascade, can_invoke_now
+          - resolve — pushes a frame to _budget_frames, runs the sandboxed runner, returns output
+        - DB entities — DbEntityResolver: data rows and state records stored inside SQLite
+          - db://table[#column] — physical tables, columns, check constraints, and read views
+          - vault://secret_name — ephemeral reference to an encrypted secret; kernel resolves at the socket boundary
+          - audit://op_id — historical leaf event in the causal DAG
+          - ask://ask_id — suspended human inquiry card
+          - quota://provider — live rate-bucket counter and reset epoch
+          - inspect — row schema, check constraints, mask flags, TTL
+          - resolve — passes through the SQLite engine and the Layer 1 C-Authorizer; binds :principal
+        - Static artifacts — ArtifactResolver: read-only declarative files, AST trees, and outline nodes; zero fuel burned
+          - doc://path/to/spec[#node] — human markdown specs and agent prompt campaigns; doc read fetches one leaf via fragment
+          - tpl://[registry/]blueprint[@version] — world and routine blueprints; local (tpl://routine/*), registry (tpl://registry/*); pre-flight via capcli inspect
+          - policy://rule_id — AST governance constraints and limits
+          - inspect — token size, node outlines, bundle metadata
+          - resolve — reads the file slice from disk or cache using #fragment
+        - Network transports — socket endpoints are not URPs: see artifacts/policy.yaml#network.transports
       - Surface uniformity
         - commands — search, inspect, run, doc
         - flattening — search returns typed URN pointers with action hints
@@ -64,11 +68,10 @@
       - Progressive disclosure
         - on-demand discovery — search and inspect optional; direct invocation permitted whenever signature is known
         - payload constraint — search returns pointers and summaries (<60 tokens), never raw blobs
-        - doc inspection — inspect on doc:// returns outline nodes; doc read fetches one leaf via fragment
-        - prompt inspection — inspect on prompt:// returns the campaign envelope
-        - prompt outline — doc outline on prompt:// returns its section index
-        - prompt leaf — doc read on prompt://#<node> fetches one leaf; leaf ceiling: see cicd.md#Token-cage-ceilings
-        - surface law — one surface, two schemes, no substitution
+        - doc inspection — capcli inspect on doc:// returns outline nodes; doc outline returns the section index
+        - unified reads — doc read doc://<path>#<fragment> fetches one leaf for any doc:// URP, including prompt campaigns (doc://prompts/<bank>/<slug>#<version>)
+        - campaign envelope — capcli inspect on a doc://prompts/ URP returns vars, section index, caps, blocked status; body withheld
+        - leaf ceiling: see cicd.md#Token-cage-ceilings
         - relevance floor — semantic matches below 0.60 rejected
       - Hybrid discovery engine
         - kernel search — exact, prefix, FTS5 BM25, and embedded local ONNX vector similarity; zero external API dependency
@@ -165,8 +168,9 @@
         - physical stimulus — worker agents consume real inbox queue items; ad-hoc telepathic order hallucinations banned
       - Interior rules
         - execution model — strictly sequential
-        - transaction integrity — ctx.api.call strictly forbidden inside ctx.db.txn blocks
-        - federation boundary — ctx.call to ws:// targets strictly forbidden inside ctx.db.txn blocks (exit 3)
+        - transaction integrity — ctx.api.call inside a ctx.db.txn block fails compilation with exit 3
+        - federation boundary — ctx.call to a ws:// target inside a ctx.db.txn block fails compilation with exit 3
+        - lock fence rule — ctx.call to a ws:// target while holding local Layer 1 claims is rejected at compile time with exit 3
         - transient polling — atomic ctx.api.poll_until permitted; raw time.sleep loops banned
         - banned patterns — ctx.on listeners, reactive streams, subscriptions
         - failure modes — callbacks break DAG linearity, txn boundaries, replay
@@ -177,7 +181,7 @@
       - Federated preflight — verifies target workspace socket and caller permissions before root execution; cycle detection: see physics.md#Federation-invariants
       - Federated funding — static call-graph analysis stops at the workspace boundary; worst-case funding enforced via the delegated budget cascade: see budget.md#Cascade
       - Static call-tree preflight — root invocation verifies that worst-case call-graph branch depth can be fully funded before execution begins
-      - dependency cycle validation: see world.md#Gate-2:-Semantics
+      - dependency cycle validation: see world.md#Sub-check-2:-Semantics
       - Trust floor — callee must have equal or higher trust: pinned routines call pinned only; reviewed calls reviewed or pinned; draft callees strictly banned
       - Context inheritance — child frames consume parent pools; starvation aborts before root dispatch rather than decapitating child frames mid-flight
       - Rules and caps
@@ -240,13 +244,13 @@
     - Surface methods
       - Database methods
         - ctx.db.view(name, params) — execute verified named AST view from schema.yaml (primary read mechanism)
-        - ctx.db.get(table, id=val, require={...}) — structured key-value lookup
+        - ctx.db.get(table, id=val, require={...}) — structured key-value lookup; the read hashes the row payload into the Layer 2 OCC state_fence: see physics.md#Distributed-concurrency-laws
         - ctx.db.query(sql, params) — dynamic parameterized SQL; raw string interpolation/concatenation fails with exit 3
         - ctx.db.mutate(table, id=val, set={...}, intent="...") — structured single-row mutation
         - ctx.txn(egress=..., write=...) — kernel-mediated saga context; wraps compensating HTTP rollback and DB mutation
         - ctx.call(target, params, timeout_s=None, compensate=None) — local or federated (ws://) routine execution; compensate verb triggers on caller saga failure
         - ctx.emit(event, payload) — atomic write to local _outbox_events for asynchronous federated consumption: see world.md#Outbox-atomic-claim
-        - ctx.db.lock(target, ttl) — application-level lease claim in claims
+        - ctx.db.lock(target, ttl) — Layer 1 lease claim in the claims table with active TTL; lease identity and lifecycle: see world.md#claims-lease-lifecycle
       - Deterministic inputs
         - ctx.now() — monotonic logical timestamp locked to causal frame start
         - ctx.uuid() — deterministic pseudo-random token minted via HMAC-SHA256(session_token, op_sequence)
@@ -340,7 +344,7 @@
     - Catalog synchronization
       - Targeted import — capcli api import <provider> <path> <method> [--spec <url|file>] imports isolated endpoints on demand
       - Full sync — capcli api sync <provider> <spec_url> refreshes the whole provider catalog under the sync cadence limits
-      - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, idempotency mapping, and webhook verification spec (apis://<provider>#webhook)
+      - Provider profiles — apis/<provider>.yaml declares base_url, auth_scheme, rate_limit headers, idempotency mapping, and webhook verification spec (doc://specs/<provider>#webhook)
       - Live contract capture — capcli api record <verb> generates strict JSON Schema assertions from live responses; offline fixtures capped at reviewed
       - promotion prerequisite: see trust.md#The-ladder
       - drift invalidation: see trust.md#Ladder-laws
@@ -360,11 +364,12 @@
   - Bindings
     - Trigger types
       - cron — bind cron <name> <capability> "<cron_expr>" [-m "intent"]
-      - webhook — bind webhook <name> <provider> <event> <capability> [--verifier apis://<provider>#webhook] [-m "intent"]
+      - webhook — bind webhook <name> <provider> <event> <capability> [--verifier doc://specs/<provider>#webhook] [-m "intent"]
       - endpoint — bind endpoint <routine@version> --auth api-key [--rate <r>]
-    - Signature verification — engine dynamically verifies timestamped headers, HMAC digests, and payloads against declarative specs in apis://<provider>#webhook
+    - Signature verification — engine dynamically verifies timestamped headers, HMAC digests, and payloads against declarative specs in doc://specs/<provider>#webhook
     - Binding management
       - Lifecycle commands — bind list, inspect, pause, resume, remove
+      - Address form — plain <name> on every verb; bindings are workspace.db records with no URP scheme
       - Key management — bind keys issue <name> --principal partner:<id>
       - Health checks — bind endpoint <name> --health
       - Schedule defenses

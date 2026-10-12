@@ -1,5 +1,5 @@
 ---
-id: prompt://onboarding/human@1
+id: doc://prompts/onboarding/human#1
 stem: onboarding.human.success.stub
 bank: onboarding
 slug: human

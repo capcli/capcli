@@ -1,18 +1,18 @@
 $schema: "test-plan/case/v1"
 case_id: "we_02_dynamic_header_calibration_sync"
-title: "Kernel dynamically resolves rate-limit header names from apis://<provider>#rate_limit and recalibrates the local quota bucket"
+title: "Kernel dynamically resolves rate-limit header names from doc://specs/<provider>#rate_limit and recalibrates the local quota bucket"
 domain: "wire_egress"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 
 invariant:
   law_reference: "cans/artifacts/policy.yaml#api.rate_limit.header_calibration"
-  statement: "Rate-limit header names are never hardcoded in the kernel: on every response the engine dynamically resolves the remaining/reset header names from apis://<provider>#rate_limit, falling back to the IETF RFC standard headers (RateLimit-Remaining / RateLimit-Reset) only when the provider URP declares no mapping; it then reconciles the local _api_quota bucket down to the provider-reported remaining (reconcile_on_response), never widening it."
+  statement: "Rate-limit header names are never hardcoded in the kernel: on every response the engine dynamically resolves the remaining/reset header names from doc://specs/<provider>#rate_limit, falling back to the IETF RFC standard headers (RateLimit-Remaining / RateLimit-Reset) only when the provider URP declares no mapping; it then reconciles the local _api_quota bucket down to the provider-reported remaining (reconcile_on_response), never widening it."
   blast_radius_if_breached: "If header names were hardcoded, any provider declaring custom rate-limit headers would silently skip recalibration; the local bucket would drift above the real limit and enterprise bursts would slam into provider-side 429s or key suspensions exactly when headroom was believed to remain."
 
 confusion_matrix:
   quadrant: "true_positive"
-  slop_risk: "An AI agent fakes this test by hardcoding the RFC fallback header names (RateLimit-Remaining) and asserting against a static string — the apis://<provider>#rate_limit dynamic resolution is never exercised, masking regressions when a provider declares custom header names."
+  slop_risk: "An AI agent fakes this test by hardcoding the RFC fallback header names (RateLimit-Remaining) and asserting against a static string — the doc://specs/<provider>#rate_limit dynamic resolution is never exercised, masking regressions when a provider declares custom header names."
   anti_slop_mitigation: "AS-01 bans mocking the header resolver: the response must come from a real wiremock HTTP reply carrying the URP-declared custom header name (X-Threads-Quota-Left), and the provider URP must declare the mapping — the kernel resolves the name at runtime, never matches a literal. AS-05 verifies the api.call audit row and hash-chain link. AS-06 forces hardcoded literals (header value 10, recalibrated remaining 10) so the expected value is not derived from engine output."
 
 setup:
@@ -28,16 +28,16 @@ setup:
       - name: "_api_quota"
         row_count: 1   # provider 'threads': local bucket believes remaining 28 of 50 (24h rolling window)
       - name: "_api_catalog"
-        row_count: 1   # apis://threads#rate_limit declares remaining_header X-Threads-Quota-Left, reset_header X-Threads-Quota-Reset
+        row_count: 1   # doc://specs/threads#rate_limit declares remaining_header X-Threads-Quota-Left, reset_header X-Threads-Quota-Reset
     vault_secrets: []
 
 execution:
   trigger: "json_rpc"
-  command: 'ctx.api.call("threads.posts", params={"text": "status digest"}, intent="ops status digest") against a wiremock provider returning HTTP 200 with header X-Threads-Quota-Left: 10 (the name declared in apis://threads#rate_limit; no RateLimit-Remaining header present)'
+  command: 'ctx.api.call("threads.posts", params={"text": "status digest"}, intent="ops status digest") against a wiremock provider returning HTTP 200 with header X-Threads-Quota-Left: 10 (the name declared in doc://specs/threads#rate_limit; no RateLimit-Remaining header present)'
   input_params:
     verb: "threads.posts"
     http_status: 200
-    provider_rate_limit_ref: "apis://threads#rate_limit"
+    provider_rate_limit_ref: "doc://specs/threads#rate_limit"
     declared_remaining_header: "X-Threads-Quota-Left"
     response_header_value: 10
     local_remaining_before: 28
@@ -47,7 +47,7 @@ expected_observations:
   state_modified: true
   diagnostic:
     domain: "wire.egress"
-    culprit: "none — nominal path: kernel resolved X-Threads-Quota-Left from apis://threads#rate_limit at runtime and reconciled the local bucket down from 28 to 10 remaining (min(28, 10))"
+    culprit: "none — nominal path: kernel resolved X-Threads-Quota-Left from doc://specs/threads#rate_limit at runtime and reconciled the local bucket down from 28 to 10 remaining (min(28, 10))"
     remedy: "none required — header calibration is automatic on every response (reconcile_on_response); provider numbers only recalibrate, never widen, the local bucket"
   database:
     row_count_delta: 0
@@ -62,7 +62,7 @@ expected_observations:
 
 anti_slop_assertions:
   - rule: "AS-01"
-    verification: "No mock of the header resolution path (assembly.md#Core-domain-subsystems header_parser.rs 'dynamically resolves rate-limit header names from apis://<provider>#rate_limit'): the X-Threads-Quota-Left header must arrive on a real wiremock HTTP response and be parsed by the production kernel path, not injected as a pre-parsed value."
+    verification: "No mock of the header resolution path (assembly.md#Core-domain-subsystems header_parser.rs 'dynamically resolves rate-limit header names from doc://specs/<provider>#rate_limit'): the X-Threads-Quota-Left header must arrive on a real wiremock HTTP response and be parsed by the production kernel path, not injected as a pre-parsed value."
   - rule: "AS-05"
     verification: "_audit sequence increments by exactly 1 (api.call event row); the new row's prev_hash equals the SHA-256 of the prior row; capcli-core::audit::verify_chain() passes; the api.call payload carries quota_before 28 and quota_after 10 (policy.yaml#api.in_flight_polling.audit.record_before_after)."
   - rule: "AS-06"

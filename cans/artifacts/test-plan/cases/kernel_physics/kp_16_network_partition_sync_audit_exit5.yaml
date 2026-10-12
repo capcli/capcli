@@ -41,9 +41,9 @@ setup:
 
 execution:
   trigger: "json_rpc"
-  command: "ephemeral spoke runs `capcli run ship_order -p order=ORD-3 -m \"partition probe\"` against the Hub workspace (hub:// endpoint); the spoke-Hub connection is severed after the Hub executes the ctx.db request and before the sync audit receipt returns to the spoke"
+  command: "ephemeral spoke runs `capcli run ship_order -p order=ORD-3 -m \"partition probe\"` against the Hub workspace (tcp:// endpoint); the spoke-Hub connection is severed after the Hub executes the ctx.db request and before the sync audit receipt returns to the spoke"
   input_params:
-    endpoint: "hub://100.64.0.1:4040 (--workspace <path|urp> remote hub endpoint)"
+    endpoint: "tcp://100.64.0.1:4040 (--workspace <path|urp> remote hub endpoint)"
     sever_point: "after Hub-side execution, before sync audit ack delivery to the spoke"
     local_spool_permitted: false # policy.yaml#topology.spoke_ephemeral quarantine_spool_local: deny
 

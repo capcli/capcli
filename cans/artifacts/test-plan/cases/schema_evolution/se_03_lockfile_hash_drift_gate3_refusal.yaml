@@ -1,12 +1,12 @@
 $schema: "test-plan/case/v1"
 case_id: "se_03_lockfile_hash_drift_gate3_refusal"
-title: "On-disk schema.yaml edited without updating capcli.lock refuses prod boot at Gate 3 with exit 3"
+title: "On-disk schema.yaml edited without updating capcli.lock refuses prod boot at Sub-check 3 with exit 3"
 domain: "schema_evolution"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 invariant:
-  law_reference: "cans/world.md#Gate-3:-Manifest-lock"
-  statement: "Gate 3 runs at boot-time startup in prod and sim: the compiled sha256 of schema, system-schema, policy, and governance must match the active capcli.lock entry exactly; an on-disk schema.yaml edit without a lock update refuses boot with exit 3 (lockfile mismatch aborts boot in prod and sim)."
+  law_reference: "cans/world.md#Sub-check-3:-Manifest-lock"
+  statement: "Sub-check 3 runs at boot-time startup in prod and sim: the compiled sha256 of schema, system-schema, policy, and governance must match the active capcli.lock entry exactly; an on-disk schema.yaml edit without a lock update refuses boot with exit 3 (lockfile mismatch aborts boot in prod and sim)."
   blast_radius_if_breached: "Uncompiled schema changes execute silently in production; every policy decision, authorizer table, and audit rule runs against artifacts that were never hash-pinned, making the entire governance stack unauditable."
 confusion_matrix:
   quadrant: "true_negative"
@@ -44,7 +44,7 @@ execution:
   trigger: "cli_subcommand"
   command: "capcli sys doctor --boot-check --json"
   input_params:
-    gate: "Gate 3: Manifest lock"
+    gate: "Sub-check 3: Manifest lock"
     lockfile_entry: "sha256 of schema.yaml v12 (stale)"
     on_disk_schema: "schema.yaml v13 (edited)"
 expected_observations:

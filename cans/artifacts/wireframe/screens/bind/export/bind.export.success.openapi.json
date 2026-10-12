@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "bind.export.success.openapi",
-  "target": "bind://",
+  "target": "bindings",
   "command": "capcli bind export openapi --out openapi.json",
   "elapsed_ms": 2304,
   "context": {

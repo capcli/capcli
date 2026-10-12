@@ -31,6 +31,22 @@ topology:
     max_evacuation_ms: 2000            # flush window before hard abort
 
 # ───────────────────────────────────────────────────────────────
+# 0.5 NETWORK TRANSPORTS — socket endpoints, never URPs
+# ───────────────────────────────────────────────────────────────
+# hub and mesh roles are network configuration, not resource pointers.
+# they never enter the URP taxonomy (see cans/action.md#Pointer-taxonomy).
+network:
+  transports:
+    hub:
+      rpc_listen: "tcp://100.64.0.1:4040"       # hub daemon RPC listen endpoint
+      ipc_socket: "unix:///run/capcli/hub.sock" # same-host spoke IPC
+      client_auth: mtls                          # client certificates mandatory at handshake
+    mesh:
+      mode: wireguard                           # mesh role rides an encrypted peer overlay
+      peer_template: "tcp://<peer>:51820"       # per-peer socket template
+    max_evacuation_ms: 2000            # flush window before hard abort
+
+# ───────────────────────────────────────────────────────────────
 # 1. LAYER 1 — compiled to sqlite3_set_authorizer
 #    granularity: action × table × column. engine-enforced.
 # ───────────────────────────────────────────────────────────────
@@ -194,7 +210,7 @@ api:
     header_calibration:                          # reactive headers used ONLY to recalibrate bucket
       reconcile_on_response: true                # sync local bucket down if provider reports lower
       on_unexpected_429: zero_bucket_and_yield   # remote 429 instantly drains local bucket to 0 and parks frames (exit 6)
-      parser_engine: dynamic                     # dynamic resolution slaved to apis://<provider>#rate_limit
+      parser_engine: dynamic                     # dynamic resolution slaved to doc://specs/<provider>#rate_limit
       default_reset_header: "RateLimit-Reset"     # IETF RFC standard fallback
       default_remaining_header: "RateLimit-Remaining"
   in_flight_polling:
@@ -210,7 +226,7 @@ api:
     require_intent: true
     require_trust: reviewed
     idempotency_key: kernel_minted
-    upstream_idempotency_header_ref: "apis://<provider>#idempotency_header" # dynamic URP lookup
+    upstream_idempotency_header_ref: "doc://specs/<provider>#idempotency" # dynamic URP lookup
   replay: manual                               # never auto-replayed
   search:
     log_all_queries: true                        # every search is an audit event
@@ -231,8 +247,8 @@ watch:
   require_intent: true
   webhook:
     require_signature: true                    # unsigned events rejected at the door
-    allowed_providers: "apis://*"              # strictly resolve against imported URP catalog
-    verifier: "apis://<provider>#webhook"      # HMAC scheme, headers & tolerance defined in provider URP
+    allowed_providers: "doc://specs/*"            # strictly resolve against imported URP catalog
+    verifier: "doc://specs/<provider>#webhook"    # HMAC scheme, headers & tolerance defined in provider URP
   dispatch:
     timeout_seconds: 30
     retry: { max: 3, backoff: exponential }
@@ -297,7 +313,7 @@ env:
       base_url_overrides_from: apis/*.sim.yaml
       mock_fixtures_from: apis/*.mock.yaml
       deny_sim_mode: [prod-only]           # prod-only verbs physically denied in sim
-    notify: { route_to: "sink://sim/notifications" } # pointerized mock sink
+    notify: { route_to: "file://envs/sim/telemetry/notifications.jsonl" } # mock file sink; sinks configured in artifacts/governance.yaml#telemetry
     allowed_runtimes: [python, javascript, typescript]
   dev:
     bulk: { require_pre_count: false }

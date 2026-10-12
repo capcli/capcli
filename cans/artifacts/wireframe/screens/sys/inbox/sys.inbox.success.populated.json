@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.inbox.success.populated",
-  "target": "inbox://webhook",
+  "target": "webhook",
   "command": "capcli sys inbox pop --channel webhook",
   "elapsed_ms": 1004,
   "context": {
@@ -16,21 +16,21 @@
     "root": "events:",
     "nodes": [
       {
-        "label": "evt_ord_901 2m ago bind://shopify_orders → cap://fulfill_order@4 (60x BEANS-LIGHT-1KG)",
+        "label": "evt_ord_901 2m ago shopify_orders → cap://fulfill_order@4 (60x BEANS-LIGHT-1KG)",
         "children": []
       },
       {
-        "label": "evt_ord_902 5m ago bind://shopify_orders → cap://fulfill_order@4 (12x ESPRESSO-DARK-250G)",
+        "label": "evt_ord_902 5m ago shopify_orders → cap://fulfill_order@4 (12x ESPRESSO-DARK-250G)",
         "children": []
       },
       {
-        "label": "evt_ord_903 9m ago bind://shopify_refunds → cap://issue_refund@2 (charge ch_1N2x, ORD-1042)",
+        "label": "evt_ord_903 9m ago shopify_refunds → cap://issue_refund@2 (charge ch_1N2x, ORD-1042)",
         "children": []
       }
     ],
     "footer": {
       "channel": "webhook",
-      "source_bindings": "bind://shopify_orders, bind://shopify_refunds (HMAC-verified intake)",
+      "source_bindings": "shopify_orders, shopify_refunds (HMAC-verified intake)",
       "popped": "3 events",
       "remaining": "0 awaiting pickup on channel",
       "note": "events delivered to caller exactly once"

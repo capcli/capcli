@@ -59,7 +59,7 @@ expected_observations:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "bind.delete" # NOTE: retire + auto-disable event names not located in cans/effect.md payload list; bind.delete is the nearest grounded lifecycle event (target_urp: bind://recon_5m, trigger_type: cron)
+    event_emitted: "bind.delete" # NOTE: retire + auto-disable event names not located in cans/effect.md payload list; bind.delete is the nearest grounded lifecycle event (target_name: recon_5m, trigger_type: cron)
     chain_valid: true
     state_modified_field: true
 

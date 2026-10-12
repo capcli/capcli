@@ -5,9 +5,11 @@
       - draft — filesystem authoring, ungated creation
       - prove — static validation and simulated execution
       - ship — trust rung elevation via human or CI gate
-      - live — registered production execution via capcli run
+      - live — rung-authorized production execution via capcli run
       - monitor — passive metrics and success rate observation
       - subtraction — sweep, rollback, or retire
+      - rung framing — draft, reviewed, pinned are Authoring Promotion Rungs governing trust and authorization to run, never runtime engine stages: see trust.md#The-ladder
+      - runtime engine — every invocation executes the Unified 3-Phase Execution Engine (Pre-flight → Sandbox → Commit): see physics.md#Unified-3-phase-execution-engine
     - Enforcement gates
       - register — namespace and creation rate validation
       - prove — shape, static manifest, and invariant verification
@@ -40,6 +42,7 @@
         - partial match — skipped verbs report fractional match (e.g. 3/4)
         - fingerprint comparison — dynamic leaf events compared against manifest
       - trust execution — prove runs at draft trust regardless of declaration
+      - authoring scope — prove validates at authoring time; its simulated execution never enters the runtime engine
       - data inputs — test parameters sampled via capcli sys audit sample
     - ship stage
       - command — see interface.md#Routine-path
@@ -58,7 +61,8 @@
         - breach notification — queue age > 48h triggers promotion.sla_breached
       - veto canary — 1-hour autonomous telemetry window triggers auto-rollback on error spikes
     - live stage
-      - invocation — execution via run, cron, webhook, or ask resume
+      - invocation — execution via run, cron, webhook, or ask resume; the rung authorizes the run, the engine governs how it executes
+      - engine — every live invocation runs Phase 1 → Phase 2 → Phase 3 without exception: see physics.md#Unified-3-phase-execution-engine
       - frame tracking — each call pushes frame to _budget_frames
       - drift monitoring — runtime fingerprint compared to manifest continuously
     - decay and subtraction

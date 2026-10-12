@@ -1,0 +1,62 @@
+$schema: "test-plan/case/v1"
+case_id: "ur_01_inspect_db_table_envelope"
+title: "Inspect on db://orders#status returns the DbEntityResolver envelope with row schema, check constraints, mask flags, and TTL"
+domain: "urp"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/action.md#Pointer-taxonomy"
+  statement: "DbEntityResolver.inspect on a db:// pointer returns the entity envelope — row schema, check constraints, mask flags, TTL — and never executable fields (costs, can_invoke_now) or artifact fields (token size, node outlines); the resolver class is selected by scheme, not by guessing."
+  blast_radius_if_breached: "A db:// inspect returning executable-shaped envelopes would let callers mistake a data row for invocable code — budget frames pushed for table reads, can_invoke_now verdicts on columns — corrupting the budget cascade and the pre-flight contract every agent relies on."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by asserting only exit 0 of the inspect command while ignoring the envelope payload — a resolver returning the wrong class envelope (or a single generic envelope for all schemes) would pass."
+  anti_slop_mitigation: "AS-03 parses the envelope data block: resolver_class == 'db_entity' exactly, row_schema.columns contains 'status', and executable/artifact keys are asserted ABSENT. AS-02 proves the inspect mutated nothing. AS-06 pins literals."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_ur_01"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "orders"
+        row_count: 3   # orders table with a status text column; 3 seeded rows
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli inspect db://orders#status"
+  input_params:
+    pointer: "db://orders#status"
+
+expected_observations:
+  exit_code: 0
+  state_modified: false
+  diagnostic:
+    domain: "run.inspect"
+    culprit: "none — nominal path: DbEntityResolver dispatched on the db:// scheme and returned the entity envelope for table orders, column status"
+    remedy: "none required"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "capability.inspect"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 3 exactly before and after — the inspect is read-only; no row inserted, updated, or deleted."
+  - rule: "AS-03"
+    verification: "Parse the CliEnvelope data block: resolver_class == 'db_entity' exactly; row_schema.columns contains 'status'; check_constraints is an array; mask_flags and ttl fields are present; budget_status/can_invoke_now/token_size/node_outlines keys are ABSENT — a generic or executable-shaped envelope fails the test."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: pointer 'db://orders#status', table 'orders', column 'status', row count 3 — expected values are immutable literals, never derived from the inspect output."

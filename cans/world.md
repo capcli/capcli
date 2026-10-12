@@ -33,6 +33,10 @@
           - reader bounds — persistent reader locks banned; daemon WebSocket tails use short-lived connection snapshots to prevent WAL checkpoint starvation
           - checkpointing — kernel runs PRAGMA wal_checkpoint(PASSIVE) after writes; maintenance ticks run TRUNCATE to bound WAL size < 100MB
           - writers — serialized atomic transactions via busy-timeout queue
+          - lifespan law — write locks held strictly during atomic commits, never across agent execution; transaction lifespan strictly <15ms
+          - checkpoint guarantee — no transaction outlives its commit, so write-lock starvation of WAL checkpoints is impossible by construction
+          - network isolation — network calls never execute inside transactions: see action.md#Interior-rules
+          - tier partition — concurrency splits into macro lease (claims), meso fence (state_fence), and micro lock (SQLite): see physics.md#Distributed-concurrency-laws
         - access perimeter
           - direct sockets — agent connection denied
           - direct db file — workspace.db isolated behind daemon IPC socket; raw subshell access denied
@@ -76,7 +80,7 @@
   - Configuration proposal lifecycle
     - authoring freedom — agents edit schema.yaml, policy.yaml, and governance.yaml directly on disk using standard tools
     - proposal isolation — raw disk edits do not affect running engine state; daemon enforces active compiled capcli.lock until cutover
-    - gate intake — saving edits triggers Gate 1 (syntax) and Gate 2 (semantics) validation:
+    - gate intake — saving edits triggers Sub-check 1 (syntax) and Sub-check 2 (semantics) validation:
       - invalid syntax — fails closed with exit 3 to the agent without notifying human
       - valid syntax — creates staged proposal, generates diff hash, and yields calling frame (exit 6)
       - file watch — daemon watches staged YAML paths; saving edits triggers gate intake and validation
@@ -106,7 +110,7 @@
         - principal scoping
           - declaration — scoped: principal
           - parameter — requires :principal bind variable
-          - compile check — Gate 2 fails if scoped view omits :principal
+          - compile check — Sub-check 2 fails if scoped view omits :principal
           - call check — authorizer denies scoped execution without --as
           - enforcement — authorizer denies execution without --as
     - system-schema.yaml
@@ -145,7 +149,11 @@
           - tag — imm_rows: true
           - authorizer effect — UPDATE and DELETE denied physically
       - concurrency & outbox
-        - claims lease lifecycle — leases keyed strictly to (session_id, harness_marker, op_sequence): see agent.md#Concurrency-scope; exit 6 yield release: see physics.md#Exit-code-law
+        - claims lease lifecycle — canonical home of lease identity and lifecycle
+          - lease identity — each lease keys strictly to the tuple (session_id, harness_marker, op_sequence)
+          - expiry reaping — background daemon reaps claims whose expires_at has passed
+          - claim binding — ctx.db.lock binds directly to this lifecycle: see action.md#Database-methods
+          - yield interplay — exit 6 interaction: see physics.md#Exit-code-law
         - outbox atomic claim
           - claim statement — UPDATE _outbox_events SET status = 'in_flight', locked_by = :worker WHERE id = (...) RETURNING *
           - initial status — new events enter as 'pending'; the atomic claim flips status to 'in_flight'
@@ -227,7 +235,7 @@
       - distribution index — merged PRs trigger release workflow publishing immutable bundle.cap asset and appending entry to index.json:
         - entry schema — { urp, version, sha256, bundle_url, min_kernel_version, policy_version }
     - Remote ingestion & wire physics
-      - pointer resolution — tpl://registry/<kind>/<name>@<ver> resolves URL and SHA-256 against local cached index.json
+      - pointer resolution — tpl://registry/world/<name>@<ver> and tpl://registry/routine/<name>@<ver> resolve URL and SHA-256 against local cached index.json
       - direct URL imports — raw GitHub URLs permitted strictly if pinned: https://github.com/<org>/<repo>/releases/download/<tag>/<file>.cap#sha256=<hex>; mutable branch pulls (@main) denied
       - wire sandbox — downloads stream into isolated tmpfs /scratch; streams exceeding 5MB aborted immediately
       - cryptographic gate — kernel verifies stream SHA-256 against index or --sha256 flag before archive extraction; mismatch exits with code 3 (refuse intake)
@@ -239,24 +247,25 @@
       - zero trust inheritance — all imported routines, views, and verbs register strictly at draft trust (v1) with zero promotional credit
       - no lifecycle hooks — post-install scripts and dynamic execution during unpack strictly banned; static AST expansion only
     - Intake pipeline
-      - provisioning — environments are provisioned empty via capcli env new, or populated via capcli template scaffold tpl://world/<name> <target> [-p k=v]
+      - provisioning — environments are provisioned empty via capcli env new, or populated via capcli template scaffold tpl://registry/world/<name>@<ver> <target> [-p k=v]
       - packaging — capcli template pack <dir> [--out bundle.cap] freezes blueprint into immutable SHA-256-signed bundle; world template bundles enforce 5MB ceiling
       - destination isolation — template unpacks strictly into dev worktree; prod direct-init denied
-      - validation sequence — capcli rule validate checks min_kernel_version, policy_version, py_compile, AST complexity (≤10), and schema.yaml syntax (Gate 1) with bundle semantics (Gate 2) before disk write
+      - validation sequence — rule validate checks min_kernel_version, policy_version, py_compile, AST complexity ≤10, schema.yaml syntax (Sub-check 1), bundle semantics (Sub-check 2) before disk write
       - parameter validation — capcli template scaffold validates -p against manifest inputs at stamping
-      - dry-run revision — Gate 5 test revision executes on temporary snapshot
+      - dry-run revision — revision-safety rehearsal executes on temporary snapshot: see world.md#Revision-safety
       - seed constraints — table seed arrays capped at 50 rows per table
     - Audit and provenance
       - event type — env.init_from_template (world) or routine.draft (routine)
-  - Validation gates
-    - Gate 1: Syntax
+  - Pre-flight Sub-checks
+    - scope — static compile-time checks of Phase 1 of the Unified 3-Phase Execution Engine: see physics.md#Unified-3-phase-execution-engine
+    - Sub-check 1: Syntax
       - timing — parse-time on file load
       - checks
         - YAML formatting — valid syntax without duplicate keys
         - shorthand expansion — all shorthands expand cleanly
         - required roots — version, engine, db present
       - failure code — throws exit 3
-    - Gate 2: Semantics
+    - Sub-check 2: Semantics
       - timing — compile-time before statement generation
       - relational integrity
         - reference targets — ref= targets must exist with matching types: see world.md#Shorthand-expansion
@@ -264,7 +273,7 @@
         - index targets — indexed columns must exist in parent table: see world.md#Shorthand-expansion
         - cycle check — petgraph is_cyclic_directed rejects circular references
         - call-tree cycles — petgraph cycle in ctx.call graph (A -> B -> A) aborts compilation with exit 3
-        - graph validation — topological sort establishes table compile order: see world.md#Gate-2:-Semantics
+        - graph validation — topological sort establishes table compile order: see world.md#Sub-check-2:-Semantics
       - SQL syntax
         - check constraints — chk: expressions parse as valid SQL WHERE
         - triggers — trig: bodies compile without syntax errors
@@ -274,22 +283,22 @@
         - masking targets — mask=true restricted to text and json
         - immutable targets — imm_cols exist in target table
       - failure code — throws exit 3
-    - Gate 3: Manifest lock
+    - Sub-check 3: Manifest lock
       - timing — boot-time check on engine initialization
       - prod enforcement — hash mismatch against capcli.lock aborts boot immediately with exit 3: see cicd.md#Integrity-and-containment-gates
-      - dev/sim reconciliation — if Gate 1 and Gate 2 pass, engine auto-recompiles capcli.lock and logs [WARN] lockfile.auto_recompiled
-    - Gate 4: Live drift
-      - timing — runtime inspection via sys doctor
-      - detection — PRAGMA scans compare live tables against compiled YAML
-      - condition — undeclared columns or tables trigger refusal
-      - failure code — throws exit 3
-    - Gate 5: Revision safety
-      - timing — apply-time during rule apply
-      - execution — rehearsal runs on masked sim snapshot; checks PRAGMA foreign_key_check
-      - pinned routine safety — kernel executes simulated rehearsal of ALL pinned routines against revised schema; any query break or column drop aborts cutover with exit 2
-      - online cutover gate — verifies shadow table delta lag reaches zero before executing atomic <20ms table swap
-      - state alignment safety — validates alignment routine terminates cleanly within session fuel bounds
-      - failure code — aborts cutover, discards rehearsal state, returns exit 2 or 3
+      - dev/sim reconciliation — if Sub-check 1 and Sub-check 2 pass, engine auto-recompiles capcli.lock and logs [WARN] lockfile.auto_recompiled
+  - Live drift
+    - status — diagnostic check, not a runtime gate: see interface.md#Diagnostics
+    - detection — PRAGMA scans compare live tables against compiled YAML
+    - condition — undeclared columns or tables trigger refusal
+    - failure code — throws exit 3
+  - Revision safety
+    - status — offline lifecycle step, not a runtime gate: see interface.md#Governance-path:-rule-noun
+    - execution — rehearsal runs on masked sim snapshot; checks PRAGMA foreign_key_check
+    - pinned routine safety — simulated rehearsal of ALL pinned routines against revised schema; any query break or column drop aborts cutover with exit 2
+    - online cutover check — verifies shadow table delta lag reaches zero before executing atomic <20ms table swap
+    - state alignment safety — validates alignment routine terminates cleanly within session fuel bounds
+    - failure code — aborts cutover, discards rehearsal state, returns exit 2 or 3
   - Command surface db
     - Unified SQL execution
       - syntax — capcli run sql "<statement>" (root alias: capcli sql "<statement>") [-p k=v] [-m "<intent>"] [--dry-run]

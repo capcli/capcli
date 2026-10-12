@@ -1,7 +1,7 @@
 {
   "$schema": "prompt/manifest/v1",
   "version": 1,
-  "pointer_type": "prompt://{bank}/{slug}@{version}",
+  "pointer_type": "doc://prompts/{bank}/{slug}#{version}",
   "ceilings": {
     "l1_trailer_tokens": 30,
     "search_pointer_tokens": 60,

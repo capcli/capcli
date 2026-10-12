@@ -1,6 +1,6 @@
 # ═══════════════════════════════════════════════════════════════
-# storage.yaml — blob storage, WORM retention & egress sinks SSOT
-# Pointers: storage://*, sink://*
+# storage.yaml — blob storage & WORM retention SSOT
+# Pointers: storage://*
 # ═══════════════════════════════════════════════════════════════
 version: 1
 
@@ -30,19 +30,10 @@ storage:
       signature_interval_minutes: 60
 
 # ───────────────────────────────────────────────────────────────
-# 2. EGRESS SINKS (Item 12)
+# 2. EGRESS SINKS
 # ───────────────────────────────────────────────────────────────
-sinks:
-  notifications:
-    prod:
-      urp: "sink://notifications/primary"
-      channel: webhook
-      target_url: "vault://sinks/prod_webhook_url"
-    sim:
-      urp: "sink://sim/notifications"
-      channel: null_sink                 # discards payloads with receipt hash
-  audit_export:
-    urp: "sink://audit/jsonl"
-    format: jsonl
-    path: "audit/daily.jsonl"
-    flush_interval_seconds: 300
+# Kernel event egress is declared only at artifacts/governance.yaml#telemetry,
+# as plain per-env endpoints with explicit drivers
+# (e.g. file://envs/<env>/telemetry/<name>.jsonl); resource-pointer URIs
+# are not sinks. This file declares no sinks.
+sinks: see artifacts/governance.yaml#telemetry

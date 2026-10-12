@@ -1,0 +1,62 @@
+$schema: "test-plan/case/v1"
+case_id: "ur_05_removed_scheme_hub_exit3"
+title: "Removed hub:// scheme fails CLI parse with exit 3; hub endpoints are network transports, not URPs"
+domain: "urp"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/interface.md#Refusals-and-banned-operations"
+  statement: "hub:// is not a registered scheme: the pointer fails CLI parse with exit 3. Hub endpoints are configured as network transports (tcp://, unix://) under policy.yaml#network.transports and are never resource pointers."
+  blast_radius_if_breached: "If hub:// still parsed, callers would address network sockets as capabilities — inspect would fabricate envelopes for endpoints, and the transport/resource boundary the 3-class engine depends on would dissolve."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by asserting exit 3 on a string match of the input — the real parser grammar (which must reject the scheme token) is never exercised."
+  anti_slop_mitigation: "The real capcli binary runs with the literal argv; AS-03 requires the diagnostic to name the removed scheme 'hub://' explicitly; AS-02 requires zero audit rows (parse precedes dispatch)."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_ur_05"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_audit"
+        row_count: 7
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli inspect hub://100.64.0.1:4040"
+  input_params:
+    raw_argv: "hub://100.64.0.1:4040"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "cli.parse"
+    culprit: "removed scheme 'hub://' — hub endpoints are network transports (tcp://100.64.0.1:4040), not resource pointers; see artifacts/policy.yaml#network.transports"
+    remedy: "use tcp://100.64.0.1:4040 as a transport endpoint; only the 10 registered schemes parse as URPs"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "none — parse failure precedes kernel dispatch"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _audit == 7 exactly after the run."
+  - rule: "AS-03"
+    verification: "exit_code == 3 exactly and the diagnostic names the literal removed scheme 'hub://' — a generic parse error without the scheme name fails."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: argv 'hub://100.64.0.1:4040', exit 3, audit row count 7."

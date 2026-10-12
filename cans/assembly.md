@@ -25,7 +25,7 @@
       - artifacts/ — repository declarative blueprints: see overview.md#Governance-line
       - artifacts/wireframe/ — offline golden test fixtures and edgeless canvas assets; excluded from runtime binary: see wireframe-structure.md
       - artifacts/test-plan/ — behavioral acceptance cases, schema test-plan/case/v1; each case binds one physical invariant to one cans law node, 1:1 with crate tests: see test-plan-structure.md
-      - lockfile compiler target — capcli.lock compiled SSOT: see world.md#Validation-gates
+      - lockfile compiler target — capcli.lock compiled SSOT: see world.md#Pre-flight-Sub-checks
       - static template immutability — uneditable at runtime: see overview.md#Governance-line
     - Schema specifications
       - schema.yaml — domain models, columns, constraints, and views: see world.md#Dual-schema
@@ -37,7 +37,7 @@
       - sealing.rules — cross-domain boundaries and sealing laws: see cans/_rules.yaml
   - Instance workspace substrate
     - Static configuration files
-      - capcli.lock — root hash SSOT of compiled configs: see world.md#Validation-gates
+      - capcli.lock — root hash SSOT of compiled configs: see world.md#Pre-flight-Sub-checks
       - world.sql — deterministic DDL schema snapshot: see world.md#SQLite-as-SSOT
       - schema.yaml — active workspace schema copy: see world.md#Dual-schema
       - system-schema.yaml — read-only system schema copy: see world.md#Dual-schema
@@ -91,7 +91,7 @@
       - engine module (crates/capcli-core/src/)
         - db/ — dual rusqlite WAL pool (workspace.db for state, audit.db for ledger) and VDBE mutation hooks
         - parse/ — VDBE explain bytecode and query validation: see physics.md#Layer-1.5:-prepare-time-cross-check
-        - compile/ — YAML AST compilation and petgraph acyclic check: see world.md#Gate-2:-Semantics
+        - compile/ — YAML AST compilation and petgraph acyclic check: see world.md#Sub-check-2:-Semantics
         - budget/ — budget frame push/pop and min() cascade: see budget.md#Cascade
         - audit/ — sha256 hash chains and JSONL mirror writer: see effect.md#Storage-hierarchy
         - vault/ — zeroize-protected in-memory secret decryption: see agent.md#Secrets
@@ -188,7 +188,7 @@
         - contract_validator.rs — live response JSON Schema validator and shadow canary engine for external APIs
         - outbox.rs — stages mutating API calls alongside DB transactions; verifies upstream idempotency header mapping and rejects unmapped routes with exit 3
         - quota.rs — dual-window token bucket and rolling window accounting in _api_quota: see budget.md#Quotas
-        - header_parser.rs — dynamically resolves rate-limit header names from apis://<provider>#rate_limit (IETF RFC fallback): see artifacts/policy.yaml#api.rate_limit
+        - header_parser.rs — dynamically resolves rate-limit header names from doc://specs/<provider>#rate_limit (IETF RFC fallback): see artifacts/policy.yaml#api.rate_limit
         - egress.rs — reqwest HTTP proxy with secret injection: see agent.md#Egress-injection
         - sim_mock.rs — serves canned fixtures from apis/*.mock.yaml: see space.md#Sim-mode-taxonomy
         - refresh.rs — auto-rotates ephemeral bearer tokens: see artifacts/governance.yaml#api
@@ -221,15 +221,15 @@
       - Domain telemetry — tracks ask response latencies, pending queues, and expiry counts
     - Domain 7: Governance & rule compilation (rule/)
       - Subsystem modules
-        - loader.rs — deserializes YAML configs with serde_yml: see world.md#Validation-gates
-        - petgraph_check.rs — checks relational cycles and targets: see world.md#Gate-2:-Semantics
+        - loader.rs — deserializes YAML configs with serde_yml: see world.md#Pre-flight-Sub-checks
+        - petgraph_check.rs — checks relational cycles and targets: see world.md#Sub-check-2:-Semantics
         - template_bundle.rs — validates manifest inputs, enforces governance exclusion, and unpacks bundles: see world.md#World-templates
         - shorthand.rs — expands schema shorthands into SQLite DDL: see world.md#Shorthand-expansion
-        - lockfile.rs — verifies compiled root sha256 checksum: see world.md#Validation-gates
+        - lockfile.rs — verifies compiled root sha256 checksum: see world.md#Pre-flight-Sub-checks
       - Execution gates
-        - syntax_gate.rs — validates YAML layout (Gate 1): see world.md#Gate-1:-Syntax
-        - semantic_gate.rs — petgraph verifies graph (Gate 2): see world.md#Gate-2:-Semantics
-        - migration_gate.rs — test transaction on snapshot (Gate 5): see world.md#Gate-5:-Migration-safety
+        - syntax_gate.rs — validates YAML layout (Sub-check 1): see world.md#Sub-check-1:-Syntax
+        - semantic_gate.rs — petgraph verifies graph (Sub-check 2): see world.md#Sub-check-2:-Semantics
+        - migration_gate.rs — test transaction on snapshot (Revision safety): see world.md#Revision-safety
       - Domain telemetry — tracks YAML AST compilation cycles and lockfile validation time
     - Domain 8: Environment & worktree management (env/)
       - Subsystem modules
@@ -295,7 +295,7 @@
       - test_authorizer.rs — validates SQLite C authorizer callbacks: see physics.md#Layer-1:-sqlite3_set_authorizer
       - test_routine_shape.rs — enforces token, complexity, and param bounds: see artifacts/governance.yaml#routine_shape
       - test_api_quota.rs — validates token bucket calculations: see budget.md#Quotas
-      - test_petgraph.rs — checks relational cycle rejection: see world.md#Gate-2:-Semantics
+      - test_petgraph.rs — checks relational cycle rejection: see world.md#Sub-check-2:-Semantics
       - test_hashchain.rs — verifies sha256 link calculations: see effect.md#Event-integrity
       - test_vault.rs — tests zeroize and AES-256-GCM decryption: see agent.md#Secrets
       - test_trinity.rs — pointer validation runner: see cicd.md#Checker-tool-architecture

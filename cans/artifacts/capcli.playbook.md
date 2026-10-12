@@ -110,14 +110,14 @@ sqlite3 envs/dev/workspace.db "CREATE TABLE products (id INTEGER PRIMARY KEY, sk
 **[Harness Turn 5]**
 ```text
 <thinking>
-Direct database file access blocked. The kernel mandates declarative models via schema.yaml so all migrations compile through Gate 1-5 validation checks.
+Direct database file access blocked. The kernel mandates declarative models via schema.yaml so all revisions compile through Sub-check 1-3 validation, live-drift diagnosis, and revision-safety rehearsal.
 </thinking>
 ```
 
 ---
 
 # capcli.playbook.md
-### Phase 2: Declarative Modeling, Gate 2 Compiler Smackdown & Lockfile Compilation
+### Phase 2: Declarative Modeling, Sub-check 2 Compiler Smackdown & Lockfile Compilation
 
 ---
 
@@ -182,7 +182,7 @@ capcli apply --dry-run
 **[Harness Turn 7]**
 ```text
 <thinking>
-Dry-run compilation rejected with Exit 3 at Gate 2.
+Dry-run compilation rejected with Exit 3 at Sub-check 2.
 Parsing root cause:
 - Shorthand syntax violation at line 16.
 - Kernel enforces '<type> ref=<table.column>', not SQL 'references table(col)'.
@@ -246,7 +246,7 @@ capcli apply --dry-run
 **[Harness Turn 8]**
 ```text
 <thinking>
-Compiler Gates 1 and 2 clean. Relational graph acyclic. Foreign keys resolved.
+Compiler Sub-checks 1 and 2 clean. Relational graph acyclic. Foreign keys resolved.
 Executing real transaction schema application.
 Intent required: "apply initial wholesale coffee erp tables".
 </thinking>
@@ -517,7 +517,7 @@ Target: payment intents.
 ```json
 [
   {
-    "ptr": "api://stripe.payment_intents.create",
+    "ptr": "cap://stripe/payment_intents.create",
     "status": "dormant",
     "summary": "Creates PaymentIntent for card/invoice capture"
   },
@@ -567,7 +567,7 @@ Verb is active at draft trust.
 Drilling into verb boundary contract via pointer inspect before writing integration routine.
 </thinking>
 ```
-**Tool Call:** `bash("capcli inspect api://stripe.payment_intents.create")`
+**Tool Call:** `bash("capcli inspect cap://stripe/payment_intents.create")`
 
 ---
 
@@ -650,7 +650,7 @@ Suspension lifted out-of-band.
 Re-running pointer inspect to verify vault credential resolution.
 </thinking>
 ```
-**Tool Call:** `bash("capcli inspect api://stripe.payment_intents.create")`
+**Tool Call:** `bash("capcli inspect cap://stripe/payment_intents.create")`
 
 ---
 

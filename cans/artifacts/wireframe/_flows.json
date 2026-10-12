@@ -3651,10 +3651,10 @@
         "run.inspect.success.quota"
       ],
       "to": [
-        "run.inspect.success.hub"
+        "run.inspect.refusal.unregistered_scheme"
       ],
       "trigger": "inspect_hub_endpoint",
-      "label": "capcli inspect hub://100.64.0.1:4040",
+      "label": "capcli inspect tcp://100.64.0.1:4040",
       "arrow_type": "progress"
     },
     {
@@ -3663,7 +3663,7 @@
         "journey_inspect_preflight"
       ],
       "from": [
-        "run.inspect.success.hub"
+        "run.inspect.refusal.unregistered_scheme"
       ],
       "to": [
         "run.inspect.success.routine"
@@ -4285,7 +4285,7 @@
         "run.inspect.success.prompt"
       ],
       "trigger": "inspect_prompt_envelope",
-      "label": "capcli inspect prompt://authoring/overview_absent@1",
+      "label": "capcli inspect doc://prompts/authoring/overview_absent#1",
       "arrow_type": "progress"
     },
     {

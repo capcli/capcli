@@ -23,7 +23,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://budget/execution_starved@1",
+    "prompt": "doc://prompts/budget/execution_starved#1",
     "reason": "network jail denial: sandbox egress trapped",
     "serve": "L1"
   }

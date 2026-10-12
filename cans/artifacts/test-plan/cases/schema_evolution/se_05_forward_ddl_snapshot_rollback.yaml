@@ -1,12 +1,12 @@
 $schema: "test-plan/case/v1"
 case_id: "se_05_forward_ddl_snapshot_rollback"
-title: "Failing Gate 5 migration auto-restores the snapshot and leaves the live DB untouched"
+title: "Failing revision-safety rehearsal auto-restores the snapshot and leaves the live DB untouched"
 domain: "schema_evolution"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 invariant:
-  law_reference: "cans/world.md#Gate-5:-Migration-safety"
-  statement: "Gate 5 dry-runs DDL in an isolated test transaction on a snapshot at apply-time; if the migration transaction fails, the snapshot is auto-restored and the kernel throws exit 3 - the live database is never the experiment substrate (snapshot pairing: snapshot taken before physical DDL execution)."
+  law_reference: "cans/world.md#Revision-safety"
+  statement: "Revision safety dry-runs DDL in an isolated test transaction on a snapshot at apply-time; if the migration transaction fails, the snapshot is auto-restored and the kernel throws exit 3 - the live database is never the experiment substrate (snapshot pairing: snapshot taken before physical DDL execution)."
   blast_radius_if_breached: "A half-applied migration corrupts the production SSOT mid-transaction with no restore path; every consumer reads a schema that matches neither v12 nor v13 and the rollback invariant is gone."
 confusion_matrix:
   quadrant: "true_negative"
@@ -52,14 +52,14 @@ execution:
   trigger: "cli_subcommand"
   command: "capcli rule apply --type schema --env dev -m \"apply v13 rush_tiers\""
   input_params:
-    gate: "Gate 5: Migration safety"
+    gate: "Revision safety"
     failure_cause: "seed row 2 duplicates unique key rush_tiers.code = 'express' (text!) - statement fails inside the DDL transaction on the snapshot"
     snapshot_taken: "snap_migration_013 (VACUUM INTO, before physical DDL)"
 expected_observations:
   exit_code: 3
   state_modified: false
   diagnostic:
-    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Gate 5 is the kernel's migration-safety gate
+    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Revision safety is the kernel's revision-safety gate
     culprit: "migration DDL transaction failed on the test snapshot: UNIQUE constraint violation on rush_tiers.code for seed rows ('express' duplicated); snapshot auto-restored, live DB untouched"
     remedy: "Fix the seed data (unique codes per row), re-run rule apply --dry-run to preview, then re-apply; the live database was already restored from snap_migration_013."
   database:
@@ -78,4 +78,4 @@ anti_slop_assertions:
   - rule: "AS-06"
     verification: "Assert the auto-restored snapshot id equals the literal 'snap_migration_013' taken before physical DDL execution (snapshot pairing invariant); the diagnostic must cite the literal failing seed key 'express'."
   - rule: "AS-03"
-    verification: "Assert exit_code == 3 (integer) and parse the diagnostic envelope: domain, culprit naming the UNIQUE violation and auto-restore, remedy present - never a bare db.engine exit 2 without the Gate 5 auto-restore semantics."
+    verification: "Assert exit_code == 3 (integer) and parse the diagnostic envelope: domain, culprit naming the UNIQUE violation and auto-restore, remedy present - never a bare db.engine exit 2 without the revision-safety auto-restore semantics."

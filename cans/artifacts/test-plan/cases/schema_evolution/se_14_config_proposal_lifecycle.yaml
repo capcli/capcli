@@ -7,7 +7,7 @@ target_crate: "crates/capcli-daemon"
 
 invariant:
   law_reference: "cans/world.md#Configuration-proposal-lifecycle"
-  statement: "'Raw disk edits do not affect running engine state; daemon enforces active compiled capcli.lock until cutover' (world.md#Configuration-proposal-lifecycle: 'proposal isolation'): valid Gate 1+2 syntax creates a staged proposal and yields the calling frame (exit 6); the human 1-click approval in Cockpit PWA triggers capcli-daemon to recompile capcli.lock, atomically reload the authorizer and governance limits, record rule.config_committed (effect.md#Kernel-event-payloads), auto-commit the staged diff to Git, and wake the suspended task."
+  statement: "'Raw disk edits do not affect running engine state; daemon enforces active compiled capcli.lock until cutover' (world.md#Configuration-proposal-lifecycle: 'proposal isolation'): valid Sub-check 1+2 syntax creates a staged proposal and yields the calling frame (exit 6); the human 1-click approval in Cockpit PWA triggers capcli-daemon to recompile capcli.lock, atomically reload the authorizer and governance limits, record rule.config_committed (effect.md#Kernel-event-payloads), auto-commit the staged diff to Git, and wake the suspended task."
   blast_radius_if_breached: "If disk edits took effect without the cutover gate, any agent could silently rewrite governance limits (ops ceilings, confirm_above floors) on a live engine — the budget cage and trust floors would become advisory text; a daemon auto-commit without the cryptographic 1-click approval would let unattended agents land config changes into Git as though a human signed them."
 
 confusion_matrix:

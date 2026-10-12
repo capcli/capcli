@@ -1,0 +1,62 @@
+$schema: "test-plan/case/v1"
+case_id: "ur_10_removed_scheme_snap_exit3"
+title: "Removed snap:// scheme fails CLI parse with exit 3; snapshots are db entities under db://_snapshots/"
+domain: "urp"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/interface.md#Refusals-and-banned-operations"
+  statement: "snap:// is not a registered scheme: the pointer fails CLI parse with exit 3. Snapshots are database entities addressed as db://_snapshots/<id> through the DbEntityResolver."
+  blast_radius_if_breached: "If snap:// still parsed, snapshot addressing would bypass the DbEntityResolver — no C-authorizer pass, no :principal bind — and snapshot reads would escape the database floor that governs every other stored record."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by asserting exit 3 on a string match of the input — the real parser grammar (which must reject the scheme token) is never exercised."
+  anti_slop_mitigation: "The real capcli binary runs with the literal argv; AS-03 requires the diagnostic to name the removed scheme 'snap://' and point at the db://_snapshots/ form; AS-02 requires zero audit rows."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_ur_10"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_audit"
+        row_count: 7
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli inspect snap://snap_004"
+  input_params:
+    raw_argv: "snap://snap_004"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "cli.parse"
+    culprit: "removed scheme 'snap://' — snapshots are db entities; address the snapshot as db://_snapshots/snap_004"
+    remedy: "use db://_snapshots/snap_004; only the 10 registered schemes parse as URPs"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "none — parse failure precedes kernel dispatch"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _audit == 7 exactly after the run."
+  - rule: "AS-03"
+    verification: "exit_code == 3 exactly and the diagnostic names the literal removed scheme 'snap://' plus the replacement form 'db://_snapshots/'."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: argv 'snap://snap_004', exit 3, audit row count 7."

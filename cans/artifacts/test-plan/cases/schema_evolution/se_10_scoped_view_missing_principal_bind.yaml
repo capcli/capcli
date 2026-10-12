@@ -1,12 +1,12 @@
 $schema: "test-plan/case/v1"
 case_id: "se_10_scoped_view_missing_principal_bind"
-title: "Scoped view whose SQL omits the :principal bind variable is refused by the Gate 2 compile check"
+title: "Scoped view whose SQL omits the :principal bind variable is refused by the Sub-check 2 compile check"
 domain: "schema_evolution"
 target_tier: "unit"
 target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/world.md#principal-binds"
-  statement: "A view declaring scoped: principal requires a :principal bind variable in its SQL; Gate 2 fails if a scoped view omits :principal (and at call time the authorizer denies scoped execution without --as)."
+  statement: "A view declaring scoped: principal requires a :principal bind variable in its SQL; Sub-check 2 fails if a scoped view omits :principal (and at call time the authorizer denies scoped execution without --as)."
   blast_radius_if_breached: "A 'scoped' view without a principal bind leaks every principal's rows to every caller; per-customer data isolation collapses and the --as enforcement becomes decorative."
 confusion_matrix:
   quadrant: "true_negative"
@@ -44,17 +44,17 @@ setup:
     vault_secrets: []
 execution:
   trigger: "rust_api"
-  command: "Gate 2 compile of the fixture schema.yaml (view my_orders declares scoped: principal but the query omits the :principal bind)"
+  command: "Sub-check 2 compile of the fixture schema.yaml (view my_orders declares scoped: principal but the query omits the :principal bind)"
   input_params:
-    gate: "Gate 2: Semantics (principal binds)"
+    gate: "Sub-check 2: Semantics (principal binds)"
     declared_scope: "principal"
     bind_variables_in_query: 0
 expected_observations:
   exit_code: 3
   state_modified: false
   diagnostic:
-    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; principal-bind check is part of the Gate 2 compile subsystem
-    culprit: "view my_orders declares scoped: principal but its SQL omits the :principal bind variable (WHERE o.customer_id = 1 binds a literal); Gate 2 compile check fails"
+    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; principal-bind check is part of the Sub-check 2 compile subsystem
+    culprit: "view my_orders declares scoped: principal but its SQL omits the :principal bind variable (WHERE o.customer_id = 1 binds a literal); Sub-check 2 compile check fails"
     remedy: "Rewrite the view query with WHERE o.customer_id = :principal and re-compile; at call time, remember scoped execution also requires --as <principal>."
   database:
     row_count_delta: 0

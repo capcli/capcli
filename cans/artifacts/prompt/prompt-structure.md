@@ -25,9 +25,10 @@ Rules that follow from the table:
    canonical home plus an ADR (`cans/_adr/`) first.
 2. **Completeness is deferred to `docs/`.** Every campaign slice ends with
    a `doc://` pointer (bank `docs:` frontmatter) to the user-facing page
-   that explains the full topic. `prompt://` addresses agent campaign
-   banks; `doc://` addresses human docs; the two schemes never substitute
-   for each other. Slices never summarise `cans/` and never copy
+   that explains the full topic. Agent campaign banks are documents:
+   `doc://prompts/{bank}/{slug}#{version}`. `doc://` addresses human
+   docs and agent prompt campaigns alike; the bank path distinguishes
+   them, never the scheme. Slices never summarise `cans/` and never copy
    reference tables.
 3. **A prompt is served only when the next action is agent-authored work**
    (synthesis, authoring, judged migration/promotion). A single denial
@@ -49,9 +50,9 @@ Rules that follow from the table:
 | Level | Surface (frozen in `cans/interface.md`) | Cap | Content |
 |---|---|---|---|
 | L0 | boot | 0 prompt tokens | nothing; no bank, catalog, or manifest is mounted |
-| L1 | trigger screen trailer / `next_action` (JSON) | ≤30 tokens (≤60 via `search`, per `cans/action.md`) | pointer `prompt://{bank}/{slug}@{version}` + one-line reason, inside the wireframe's generic trailer slot (`wireframe-structure.md` §6.1.1) |
-| L2 | `capcli inspect prompt://{bank}/{slug}@{version}` | ≤150 tokens | envelope only: vars, section index, caps, blocked status; no body |
-| L3 | `capcli doc outline prompt://{bank}/{slug}@{version}` → `capcli doc read prompt://{bank}/{slug}@{version}#<node> --max-tokens <n>` | 1 leaf/turn, leaf ≤500 tokens | exactly one rendered section, kernel-substituted vars; the `#<node>` fragment selects the outline node, with no new flag, noun, or verb |
+| L1 | trigger screen trailer / `next_action` (JSON) | ≤30 tokens (≤60 via `search`, per `cans/action.md`) | pointer `doc://prompts/{bank}/{slug}#{version}` + one-line reason, inside the wireframe's generic trailer slot (`wireframe-structure.md` §6.1.1) |
+| L2 | `capcli inspect doc://prompts/{bank}/{slug}#{version}` | ≤150 tokens | envelope only: vars, section index, caps, blocked status; no body |
+| L3 | `capcli doc outline doc://prompts/{bank}/{slug}#{version}` → `capcli doc read doc://prompts/{bank}/{slug}#{version}#<node> --max-tokens <n>` | 1 leaf/turn, leaf ≤500 tokens | exactly one rendered section, kernel-substituted vars; the `#<node>` fragment selects the outline node, with no new flag, noun, or verb |
 
 - L0 grammar awareness is delegated exclusively to the harness skill (`SKILL.md`); kernel boot state is zero-token pure.
 
@@ -75,12 +76,12 @@ Caps, stated once:
   segments), where `state` is a legal wireframe state token taken from
   the trigger screen's state segment. Segment 2 is the URI slug
   verbatim; `condition` never enters the URI. Resolution:
-  `prompt://{bank}/{slug}@{version}` → `manifest.json` campaign
+  `doc://prompts/{bank}/{slug}#{version}` → `manifest.json` campaign
   inventory (stem → file). A campaign whose trigger screen is not a
   legal screen ID carries `"serve": "blocked"` in `_triggers.json` (§5).
 - Every command in a campaign body is legal `cans/interface.md` surface.
 - Every file starts with YAML frontmatter: `id`
-  (`prompt://{bank}/{slug}@{version}`), `stem`, `bank`, `slug`, `version`,
+  (`doc://prompts/{bank}/{slug}#{version}`), `stem`, `bank`, `slug`, `version`,
   `trust`, `vars` (kernel sources only), `sections` (per-section token
   caps, each ≤500; a cap covers its rendered size),
   `slice_max_tokens: 500`, `docs:` (`doc://` pointers to the human-facing
@@ -107,9 +108,9 @@ their predicates are disjoint. A trigger with `"serve": "blocked"`
 emits no L1 trailer.
 
 - `routine.prove.success.passed` partition covers both authoring states:
-  `overview_exists: false` → `prompt://authoring/overview_absent@1`;
+  `overview_exists: false` → `doc://prompts/authoring/overview_absent#1`;
   `overview_exists: true` with `trust: "draft"` →
-  `prompt://promotion/routine_passed@1`;
+  `doc://prompts/promotion/routine_passed#1`;
   `overview_exists: true` at reviewed or pinned trust serves no trailer.
 - Branch selection is predicate evaluation over kernel state at serve
   time. A screen fixture renders only the single trailer its recorded

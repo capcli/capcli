@@ -30,7 +30,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://api/catalog_empty@1",
+    "prompt": "doc://prompts/api/catalog_empty#1",
     "reason": "no external API catalogs configured",
     "serve": "L1"
   },

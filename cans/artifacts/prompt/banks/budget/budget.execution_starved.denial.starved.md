@@ -1,5 +1,5 @@
 ---
-id: prompt://budget/execution_starved@1
+id: doc://prompts/budget/execution_starved#1
 stem: budget.execution_starved.denial.starved
 bank: budget
 slug: execution_starved

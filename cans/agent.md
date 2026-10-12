@@ -12,7 +12,7 @@
       - node prefix — disposable containers mint transient IDs: agt_tmp_<uuid8>
       - heartbeat loop — spokes ping Hub every 5s; updates heartbeat_at in agents table: see artifacts/system-schema.yaml#agents
       - reaper eviction — Hub reaps nodes exceeding lease_ttl; marks status: expired and purges active leases: see artifacts/governance.yaml#topology
-      - preemption yield: see physics.md#Exit-code-law
+      - preemption yield: see #Concurrency-scope
       - zero-disk credential — spokes negotiate HMAC capability token in memory via CAPCLI_AGENT_TOKEN; zero filesystem key storage
     - Credential binding
       - capability token — kernel-minted HMAC session token bound to active _budget_frames
@@ -38,7 +38,7 @@
       - federated peers — ws:<name> identities registered as agents; principal column holds the mapped internal :principal
       - peer allowlist — E042 caller allowlist is the set of ws:<name> agent rows with status=active; revoked or expired peers denied
     - Harness environment markers
-      - marker sniffing — Stage 0 reads process env and /proc/$PPID/environ; bans PID-only trust: see physics.md#Pipeline-sequence
+      - marker sniffing — Phase 1 reads process env and /proc/$PPID/environ; bans PID-only trust: see physics.md#Unified-3-phase-execution-engine
       - identity markers — CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID, CODEX_SESSION_ID, CODEX_CONVERSATION_ID, ANTIGRAVITY_CONVERSATION_ID, HERMES_SESSION_KEY
       - presence markers — CLAUDECODE, GEMINI_CLI, CURSOR_AGENT, OPENCLAW_SHELL
       - attribution fallback — presence-only or missing markers map to agt_anon_<session>; mutating writes denied: see physics.md#Runtime-refusals
@@ -48,10 +48,11 @@
       - authority limit — marker acts as metadata, never grants power
       - transport — harness exports CAPCLI_SKILL; unset records null: see artifacts/policy.yaml#skill_origin
     - Concurrency scope
-      - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE; writer transactions bounded to <50ms
+      - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE; writers bound by the lifespan law: see world.md#Lifespan-law
       - writer priority — interactive agent and webhook mutations preempt bulk migration backfills
       - application locks — business-level leases in claims table keyed strictly to (session_id, harness_marker, op_sequence): see world.md#Claims-lease-lifecycle; PID-keyed leases banned
-      - exit 6 yield and resume: see physics.md#Exit-code-law
+      - tier mapping — pipelines hold the macro lease for task ownership, validate read-compute-write via the meso fence, and commit under the micro lock: see physics.md#Distributed-concurrency-laws
+      - preemption — SIGTERM maps directly to the exit 6 yield, which preserves Layer 1 claims: see physics.md#Exit-code-law
       - authoring mutex — filesystem lock on routines/<name>.py during edits; concurrent edits exit 2
       - collision handling — writers queue up to busy_timeout (default 5000ms); timeout exhaustion fails closed with exit 2
       - physical arbiter — SQLite BEGIN IMMEDIATE serializes physical writes
@@ -72,7 +73,7 @@
       - dual-session architecture — harness session and kernel session are strictly decoupled:
         - harness session — cognitive transcript, context window, and conversation memory owned entirely by the LLM runner (Claude Code, Cursor, Codex)
         - kernel session — cryptographic budget frame, claim lease holder, and causal DAG boundary owned entirely by SQLite (_budget_frames, claims)
-      - session slaving — kernel auto-binds its session ID to harness environment markers (CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID) via Stage 0 sniffing; manual session tracking by agents is prohibited
+      - session slaving — kernel auto-binds its session ID to harness environment markers (CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID) via Phase 1 sniffing; manual session tracking by agents is prohibited
       - turn-zero orientation — every harness turn executes capcli run overview as step zero; injects a dense (<60 token) reality snapshot (active fuel, held locks, inbox events) directly into volatile prompt context
       - scoping — session id rides every budget frame, audit event, and claim
       - tracking — session counters govern fuel, wire bytes, rate, and rows affected
@@ -80,7 +81,7 @@
     - Harness execution boundary
       - execution environment — bash subshell isolated via IPC socket to kernel daemon; direct workspace.db file access blocked
       - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)
-      - session persistence — CAPCLI_SESSION env var (override for non-standard harnesses) or workspace.db active context keeps session across turns; Stage 0 sniffing is authoritative in standard harnesses
+      - session persistence — CAPCLI_SESSION env var (override for non-standard harnesses) or workspace.db active context keeps session across turns; Phase 1 sniffing is authoritative in standard harnesses
       - exit contract — process exit codes (0, 2, 3, 4, 5, 6) return status to subshell
       - client boundary — HTTP/WS daemon serving JSON-RPC 2.0 for external harnesses and tools
   - Secrets
@@ -89,10 +90,11 @@
       - schema — name unique, value, scope, expires_at, sens: true
       - audit contract — all secret mutations emit vault.set with masked values and SHA-256 fingerprint
       - two-tier secrets — root secrets held in vault; ephemeral egress tokens derived
-      - access — absolute zero-knowledge in guest runtime; guest address space never allocates credential bytes; guest SDK accepts and passes only opaque URP references (vault://name)
+      - access — absolute zero-knowledge in guest runtime; guest address space never allocates credential bytes; guest SDK accepts and passes only opaque vault://<name> URP handles
+      - trust gate — kernel authorizer confirms caller trust before resolving vault://<name> handles: see trust.md#Ladder-laws
       - encryption — AES-256-GCM at rest; cached in memory by daemon or decrypted ephemerally per CLI run
       - ingestion — provisioned via CLI (`capcli sys vault set`), environment variables (`CAPCLI_SECRET_*`), or external client RPC
-      - echo defense — egress proxy maintains in-memory token set; upstream response bodies and error payloads scanned at wire edge; detected secret bytes scrubbed to [REDACTED_VAULT_TOKEN] before reaching sandbox or _audit
+      - echo defense — egress proxy holds an in-memory set of resolved vault://<name> handle bytes; wire-edge scan of responses scrubs escaping bytes to [REDACTED_VAULT_TOKEN] before sandbox or _audit
       - zeroization — in-memory secret buffers zeroized on subshell CLI exit; vault decryption memory zeroize-protected
       - leak protection — plaintext credential exposure in return payloads triggers immediate kill_and_alert (exit 5) and session token revocation
     - Provisioning workflow
@@ -103,7 +105,7 @@
         - injection channels — headless CLI (`capcli sys vault set`), env auto-binding, or external client RPC
         - suspension — headless execution exits with code 3 on missing secrets; interactive sessions pause via ask
     - Egress injection
-      - injection point — Authorization headers inserted strictly at kernel socket edge prior to TLS handshake; zero plaintext leakage to guest heap or IPC payloads
+      - injection point — Authorization headers inserted at kernel socket edge prior to TLS handshake; vault://<name> handles resolve only at this edge; zero plaintext leakage to guest heap or IPC payloads
       - boundary rotation — egress proxy silently refreshes expired bearer tokens
       - references — catalogs reference secret_ref, never plaintext values
       - trust restriction — draft routines denied secret access

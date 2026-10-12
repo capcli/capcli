@@ -1,5 +1,5 @@
 ---
-id: prompt://federation/remediation@1
+id: doc://prompts/federation/remediation#1
 stem: federation.remediation.denial.denied
 bank: federation
 slug: remediation

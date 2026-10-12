@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.inbox.success.empty",
-  "target": "inbox://*",
+  "target": "*",
   "command": "capcli sys inbox pop",
   "elapsed_ms": 2287,
   "context": {

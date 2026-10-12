@@ -122,7 +122,7 @@ tables:
 views:
   pending_orders:
     description: "Global queue of unsettled orders requiring fulfillment"
-    exposes: [orders, customers]       # Gate 2 compile-checks targets
+    exposes: [orders, customers]       # Sub-check 2 compile-checks targets
     query: |
       SELECT 
         o.id,

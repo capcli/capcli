@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
   "id": "run.inspect.success.prompt",
-  "target": "prompt://authoring/overview_absent@1",
-  "command": "capcli inspect prompt://authoring/overview_absent@1",
+  "target": "doc://prompts/authoring/overview_absent#1",
+  "command": "capcli inspect doc://prompts/authoring/overview_absent#1",
   "elapsed_ms": 1132,
   "context": {
     "env": "dev",
@@ -16,7 +16,7 @@
     "groups": [
       {
         "fields": {
-          "id": "prompt://authoring/overview_absent@1",
+          "id": "doc://prompts/authoring/overview_absent#1",
           "bank": "authoring",
           "version": "1",
           "status": "served",

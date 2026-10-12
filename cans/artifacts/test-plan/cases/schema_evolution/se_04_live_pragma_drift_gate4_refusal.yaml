@@ -1,12 +1,12 @@
 $schema: "test-plan/case/v1"
 case_id: "se_04_live_pragma_drift_gate4_refusal"
-title: "Out-of-band column added to SQLite is detected by the Gate 4 PRAGMA drift scan and boot is refused"
+title: "Out-of-band column added to SQLite is detected by the live-drift PRAGMA scan and boot is refused"
 domain: "schema_evolution"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 invariant:
-  law_reference: "cans/world.md#Gate-4:-Live-drift"
-  statement: "Gate 4 runs as runtime inspection via sys doctor: PRAGMA scans compare live tables against the compiled YAML, and undeclared columns or tables trigger refusal with exit 3 - unmanaged columns are never silently merged into the compiled schema."
+  law_reference: "cans/world.md#Live-drift"
+  statement: "Live drift is diagnosed via sys doctor: PRAGMA scans compare live tables against the compiled YAML, and undeclared columns or tables trigger refusal with exit 3 - unmanaged columns are never silently merged into the compiled schema."
   blast_radius_if_breached: "Undeclared columns leak into production tables outside governance; the authorizer's 3D action x table x column policy never sees them, so writes bypass deny_columns_write and imm_rows protections entirely."
 confusion_matrix:
   quadrant: "true_negative"
@@ -43,16 +43,16 @@ execution:
   trigger: "cli_subcommand"
   command: "capcli sys doctor --json"
   input_params:
-    gate: "Gate 4: Live drift"
+    gate: "Live drift"
     drift_seed: "ALTER TABLE orders ADD COLUMN rush boolean executed out-of-band on envs/dev/workspace.db by an external sqlite3 tool in the test fixture"
-    # NOTE: direct workspace.db file access is denied in operation (world.md#workspace.db); the fixture performs the out-of-band edit solely to seed drift for Gate 4 detection
+    # NOTE: direct workspace.db file access is denied in operation (world.md#workspace.db); the fixture performs the out-of-band edit solely to seed drift for live-drift detection
 expected_observations:
   exit_code: 3
   state_modified: false
   diagnostic:
-    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Gate 4 is the kernel's live drift inspector
-    culprit: "PRAGMA table_info(orders) reports undeclared column 'rush' that does not exist in compiled schema.yaml v12 - live drift detected, boot refused (Gate 4)"
-    remedy: "Either revert the out-of-band column (restore from snapshot) or declare it properly: edit schema.yaml, pass Gates 1-2, dry-run, human approval, then rule apply --type schema."
+    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Live drift is the kernel's live-vs-declared inspector
+    culprit: "PRAGMA table_info(orders) reports undeclared column 'rush' that does not exist in compiled schema.yaml v12 - live drift detected, boot refused (Live drift)"
+    remedy: "Either revert the out-of-band column (restore from snapshot) or declare it properly: edit schema.yaml, pass Sub-checks 1-2, dry-run, human approval, then rule apply --type schema."
   database:
     row_count_delta: 0
     tables_mutated: []

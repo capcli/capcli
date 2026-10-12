@@ -12,7 +12,7 @@ execution_sequence:
     call: "db://records"
     mode: read
   - step: 2
-    call: "apis://upstream_service/commit"
+    call: "cap://upstream_service/commit"
     mode: write
     sim_mode: sandbox
   - step: 3

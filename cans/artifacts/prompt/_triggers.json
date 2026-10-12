@@ -8,7 +8,7 @@
       "predicate": {
         "domain_tables": 0
       },
-      "prompt": "prompt://genesis/blank_world@1",
+      "prompt": "doc://prompts/genesis/blank_world#1",
       "serve": "L1",
       "reason": "blank world: 0 domain tables"
     },
@@ -18,7 +18,7 @@
       "predicate": {
         "domain_tables": 0
       },
-      "prompt": "prompt://genesis/blank_world@1",
+      "prompt": "doc://prompts/genesis/blank_world#1",
       "serve": "L1",
       "reason": "no capabilities and no world to search"
     },
@@ -28,7 +28,7 @@
       "predicate": {
         "domain_tables": 0
       },
-      "prompt": "prompt://onboarding/harness@1",
+      "prompt": "doc://prompts/onboarding/harness#1",
       "serve": "L1",
       "reason": "harness at nominal doctor with empty domain"
     },
@@ -36,7 +36,7 @@
       "id": "t_onboarding_human",
       "screen_id": "sys.help.success.stub",
       "predicate": {},
-      "prompt": "prompt://onboarding/human@1",
+      "prompt": "doc://prompts/onboarding/human#1",
       "serve": "L1",
       "reason": "human operator requested onboarding tour"
     },
@@ -46,7 +46,7 @@
       "predicate": {
         "overview_exists": false
       },
-      "prompt": "prompt://authoring/overview_absent@1",
+      "prompt": "doc://prompts/authoring/overview_absent#1",
       "serve": "L1",
       "reason": "world lacks ground zero situational overview"
     },
@@ -56,7 +56,7 @@
       "predicate": {
         "gap_count": ">=1"
       },
-      "prompt": "prompt://authoring/routine_gaps@1",
+      "prompt": "doc://prompts/authoring/routine_gaps#1",
       "serve": "L1",
       "reason": "telemetry shows uncodified operational sequence"
     },
@@ -64,7 +64,7 @@
       "id": "t_budget_starved",
       "screen_id": "run.execute.denial.budget_cascade",
       "predicate": {},
-      "prompt": "prompt://budget/execution_starved@1",
+      "prompt": "doc://prompts/budget/execution_starved#1",
       "serve": "L1",
       "reason": "call-tree preflight failed budget cascade bounds"
     },
@@ -72,7 +72,7 @@
       "id": "t_budget_network_jail",
       "screen_id": "run.execute.denial.network_jail",
       "predicate": {},
-      "prompt": "prompt://budget/execution_starved@1",
+      "prompt": "doc://prompts/budget/execution_starved#1",
       "serve": "L1",
       "reason": "network jail denial: sandbox egress trapped"
     },
@@ -80,7 +80,7 @@
       "id": "t_budget_claim_held",
       "screen_id": "run.execute.denial.claim_held",
       "predicate": {},
-      "prompt": "prompt://budget/execution_starved@1",
+      "prompt": "doc://prompts/budget/execution_starved#1",
       "serve": "L1",
       "reason": "claim held denial: entity lease contested"
     },
@@ -88,7 +88,7 @@
       "id": "t_budget_missing_secret",
       "screen_id": "run.execute.refusal.missing_secret",
       "predicate": {},
-      "prompt": "prompt://budget/execution_starved@1",
+      "prompt": "doc://prompts/budget/execution_starved#1",
       "serve": "L1",
       "reason": "missing secret refusal: vault credential absent"
     },
@@ -101,7 +101,7 @@
           "prod"
         ]
       },
-      "prompt": "prompt://evolution/schema_drift@1",
+      "prompt": "doc://prompts/evolution/schema_drift#1",
       "serve": "L1",
       "reason": "schema drift requires forward migration plan"
     },
@@ -112,7 +112,7 @@
         "overview_exists": true,
         "trust": "draft"
       },
-      "prompt": "prompt://promotion/routine_passed@1",
+      "prompt": "doc://prompts/promotion/routine_passed#1",
       "serve": "L1",
       "reason": "proof passed: routine eligible for promotion"
     },
@@ -122,7 +122,7 @@
       "predicate": {
         "trust": "draft"
       },
-      "prompt": "prompt://promotion/routine_passed@1",
+      "prompt": "doc://prompts/promotion/routine_passed#1",
       "serve": "L1",
       "reason": "overview proof passed: promotion handoff"
     },
@@ -130,7 +130,7 @@
       "id": "t_api_empty",
       "screen_id": "api.catalog.success.empty",
       "predicate": {},
-      "prompt": "prompt://api/catalog_empty@1",
+      "prompt": "doc://prompts/api/catalog_empty#1",
       "serve": "L1",
       "reason": "no external API catalogs configured"
     },
@@ -138,7 +138,7 @@
       "id": "t_federation_denied",
       "screen_id": "run.execute.denial.federation_denied",
       "predicate": {},
-      "prompt": "prompt://federation/remediation@1",
+      "prompt": "doc://prompts/federation/remediation#1",
       "serve": "L1",
       "reason": "federated call refused: allowlist, cycle, or transport"
     }

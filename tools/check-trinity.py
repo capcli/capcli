@@ -71,8 +71,8 @@ def check_triggers_and_fixtures():
         trailer = data.get("trailer")
         if trailer:
             ptr = trailer.get("prompt", "")
-            if not ptr.startswith("prompt://"):
-                err(f"{fix_file.name}: invalid trailer prompt scheme: '{ptr}'")
+            if not ptr.startswith("doc://prompts/"):
+                err(f"{fix_file.name}: invalid trailer scheme: '{ptr}'")
             
             reason = trailer.get("reason", "")
             trailer_str = f"trailer: {ptr} - {reason}"
@@ -82,6 +82,15 @@ def check_triggers_and_fixtures():
 
 def check_prompt_to_docs():
     doc_ref_pattern = re.compile(r"doc://([a-zA-Z0-9_\-\/]+)(?:#([a-zA-Z0-9_\-]+))?")
+
+    # Prompt campaigns are static artifacts addressed as doc://prompts/{bank}/{slug}#{version};
+    # they resolve to bank files, not docs/.
+    campaign_ids = set()
+    for bank_file in (PROMPT_DIR / "banks").glob("*/*.md"):
+        fm = bank_file.read_text().split("---")[1]
+        m = re.search(r"^id:\s*(\S+)", fm, re.MULTILINE)
+        if m:
+            campaign_ids.add(m.group(1))
 
     for prompt_file in PROMPT_DIR.glob("**/*.md"):
         content = prompt_file.read_text()
@@ -99,6 +108,16 @@ def check_prompt_to_docs():
 
         for match in doc_ref_pattern.finditer(content):
             doc_path, anchor = match.group(1), match.group(2)
+            if doc_path.startswith("prompts/"):
+                # Campaign address resolves to its bank file via the frontmatter id.
+                # Grammar templates (e.g. doc://prompts/{bank}/{slug}#{version})
+                # are address law, not links; skip them.
+                if content[match.end():match.end() + 1] == "{":
+                    continue
+                addr = f"doc://{doc_path}#{anchor}" if anchor else f"doc://{doc_path}"
+                if addr not in campaign_ids:
+                    err(f"Broken campaign link in {prompt_file.name}: '{addr}' matches no bank campaign id")
+                continue
             # doc:// resolution (index semantics): doc://x/y -> docs/x/y.md,
             # section roots resolve to docs/x/index.md.
             target_md = DOCS_DIR / f"{doc_path}.md"

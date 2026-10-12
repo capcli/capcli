@@ -54,7 +54,7 @@ expected_observations:
   state_modified: false
   diagnostic:
     domain: "policy.trust"
-    culprit: "agents.status = revoked for agt_7f3k — sys agent revoke ends execution instantly; HMAC session token agt_7f3k.ses_a9.hmac_7d41c2 rejected at Stage 0 (cryptographic session token verification and active frame lookup)"
+    culprit: "agents.status = revoked for agt_7f3k — sys agent revoke ends execution instantly; HMAC session token agt_7f3k.ses_a9.hmac_7d41c2 rejected in Phase 1 (cryptographic session token verification and active frame lookup)"
     remedy: "revoked credentials are never reactivated: the principal must re-register the agent (capcli sys agent register) and the kernel must mint a fresh session token"
   database:
     row_count_delta: 0 # the read never executes; agents row unchanged; _audit gains exactly 1 denial event

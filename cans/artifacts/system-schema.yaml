@@ -50,7 +50,7 @@ tables:
     sys: true
     columns:
       id: pk
-      provider: text!                  # provider slug matching apis://<provider>
+      provider: text!                  # provider slug matching doc://specs/<provider>
       scope_key: text=global           # per-key or per-endpoint quota partition
       env: text!                       # sim and prod track quotas independently
       bucket_capacity: int!            # max token burst size
@@ -77,7 +77,7 @@ tables:
     imm_cols: [provider, verb]         # provider and verb identity cannot be mutated
     columns:
       id: pk
-      provider: text!                  # provider namespace matching apis://<provider>
+      provider: text!                  # provider namespace matching doc://specs/<provider>
       verb: text!                      # capability pointer (cap://<provider>/<verb>)
       method: text!                    # HTTP verb: GET, POST, PUT, DELETE, PATCH
       path: text!                      # URL path template
@@ -246,9 +246,13 @@ tables:
       resume_at: int!                  # unix epoch seconds
       deferments: int=0                # deferral count against yield_max_deferments
       status: text=pending             # pending, dispatched, aborted
+      cursor: json                     # opaque Phase 2 resume position
+      state_fence: text                # sha256 hex of read row state captured at yield
+      checkpoint_ts: int               # unix epoch seconds of fence capture
     chk:
       - "status IN ('pending', 'dispatched', 'aborted')"
       - "pause_cause IN ('quota', 'preemption')"
+      - "state_fence IS NULL OR length(state_fence) = 64"
     idx:
       - [[status, resume_at]]
       - [frame_id]

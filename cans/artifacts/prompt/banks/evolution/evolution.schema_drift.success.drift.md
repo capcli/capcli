@@ -1,5 +1,5 @@
 ---
-id: prompt://evolution/schema_drift@1
+id: doc://prompts/evolution/schema_drift#1
 stem: evolution.schema_drift.success.drift
 bank: evolution
 slug: schema_drift
@@ -29,7 +29,7 @@ Inspect structural deltas:
 ```bash
 capcli rule diff schema --git
 ```
-Ensure changes avoid circular foreign key references (Gate 2 checks).
+Ensure changes avoid circular foreign key references (Sub-check 2 checks).
 
 ## section:stage_2_dry_run
 Rehearse the migration against the live schema in dry-run mode:

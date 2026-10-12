@@ -31,7 +31,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://genesis/blank_world@1",
+    "prompt": "doc://prompts/genesis/blank_world#1",
     "reason": "blank world: 0 domain tables",
     "serve": "L1"
   },

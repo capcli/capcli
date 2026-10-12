@@ -23,7 +23,7 @@
   "id": "run.execute.denial.federation_denied",
   "target": "ws://tasks/create_todo@v1",
   "trailer": {
-    "prompt": "prompt://federation/remediation@1",
+    "prompt": "doc://prompts/federation/remediation#1",
     "reason": "federated call refused: allowlist, cycle, or transport",
     "serve": "L1"
   }

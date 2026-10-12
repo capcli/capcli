@@ -91,7 +91,7 @@ transport:
   mesh:
     interface: "wg0"
     port: 51820
-    endpoint_pointer: "mesh://peers"
+    endpoint: see artifacts/policy.yaml#network.transports   # mesh rides the WireGuard overlay; per-peer socket tcp://<peer>:51820
     rekey_after_seconds: 3600
   federation_roster:
     pointer: "ws://roster"

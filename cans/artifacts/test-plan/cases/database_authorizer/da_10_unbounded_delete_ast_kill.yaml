@@ -6,7 +6,7 @@ target_tier: "e2e"
 target_crate: "crates/capcli-cli"
 invariant:
   law_reference: "cans/physics.md#Layer-2:-SQL-AST-check"
-  statement: "DELETE statements require WHERE and LIMIT (require_where / require_limit mandatory up to 1000); an unconditional DELETE is killed at prepare-time (pipeline Stage 3 prepare-time cross-check and authorizer callback) before any row is deleted - no dry-run mode is ever assumed."
+  statement: "DELETE statements require WHERE and LIMIT (require_where / require_limit mandatory up to 1000); an unconditional DELETE is killed in Phase 3 (authorizer callback on prepare-time bytecode) before any row is deleted - no dry-run mode is ever assumed."
   blast_radius_if_breached: "A routine 'cleanup' call wipes an entire staging table mid-transaction; downstream pipelines starve, backfills re-ingest duplicated data, and the blast radius audit can no longer bound what was destroyed."
 confusion_matrix:
   quadrant: "true_negative"

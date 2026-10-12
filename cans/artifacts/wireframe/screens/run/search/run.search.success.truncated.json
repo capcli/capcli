@@ -51,7 +51,7 @@
       "vault://stripe_secret_key                  vault  missing",
       "vault://stripe_webhook_secret              vault  missing",
       "quota://stripe                             quota  tracked",
-      "bind://webhook/stripe/invoice_paid         bind   active",
+      "webhook/stripe/invoice_paid                bind   active",
       "doc://refund-policy                        doc    readable"
     ]
   },

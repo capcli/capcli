@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "bind.export.success.mcp",
-  "target": "bind://",
+  "target": "bindings",
   "command": "capcli bind export mcp --out tools.json",
   "elapsed_ms": 1697,
   "context": {

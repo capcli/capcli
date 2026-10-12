@@ -24,17 +24,13 @@
         - turn-zero contract — harness invokes run overview at every turn start to ground LLM context (<60 tokens) in active session fuel, locks, and sensory inbox status
         - search — search <query> [--type <domain>] [--trust X] [--env X]
         - gap detection — run search gaps --since 7d
-        - inspect — inspect <ptr> — resolves pre-flight envelopes across all URP types (cap://, tpl://, doc://, db://, ws://)
+        - inspect — inspect <ptr> — dispatches across the three UrpResolver traits and returns a unified PreflightEnvelope: see action.md#Pointer-taxonomy
       - Aliases — capcli sql, capcli search, capcli inspect
-      - Inspect envelope
-        - sla guarantee — single-response zero-roundtrip go/no-go verdict via can_invoke_now
-        - tokens — file size, parameter schema, result caps
-        - duration — p50, p95, timeout ceiling
-        - storage — writes, reads, max rows affected
-        - concurrency — active locks, max ops per run
-        - api metrics — quota, session fuel remaining, sim mode
-        - composition — nesting depth, child routines, budget cascade
-        - pre-flight check — can_invoke_now boolean verdict
+      - PreflightEnvelope
+        - shape — one envelope per resolver trait; contents vary by resolver class
+        - executables (cap://, ws://) — costs, ops ceiling, budget cascade, single-response zero-roundtrip can_invoke_now verdict
+        - db entities (db://, vault://, audit://, ask://, quota://) — row schema, check constraints, mask flags, TTL
+        - artifacts (doc://, tpl://, policy://) — token size, node outlines, bundle metadata
       - Success affordances
         - exit 0 only — success envelopes carry an `affordances` array; non-zero exits carry remedy instead
         - entry — { rel, command, intent, risk, requires_intent }; rel names the step (next, abort, inspect)
@@ -42,6 +38,7 @@
         - optionality — the array is additive and optional; absence changes no exit, state, or payload byte
     - Storage path: db noun
       - Locking — db lock <table>:<ref> --ttl <duration> --reason "..."
+      - Lock semantics — db lock claims Layer 1 leases, grants only against an active TTL: see action.md#Database-methods; identity and lifecycle: see world.md#claims-lease-lifecycle
       - Release — db unlock <target>
       - Schema — db schema [--table]
       - Snapshots — db snapshot, restore <id>, dump
@@ -73,7 +70,7 @@
         - export — export openapi [--out path], export mcp [--out path]
       - Webhook ingress
         - route verification — external webhooks require valid public --ingress url or active tunnel; raw 127.0.0.1 denied
-      - Management — bind list, inspect, pause, resume, remove
+      - Management — bind list, inspect <name>, pause <name>, resume <name>, remove <name>
       - Credentials — bind keys issue <name> --principal partner:<id>
     - Interaction path: ping noun
       - Notifications — ping notify <principal> <msg> --channel <c> --intent "..."
@@ -111,15 +108,12 @@
       - Harness shim — sys shim <target-bin> [--wrap <path>] — deploys native zero-cost wrapper capturing caller marker hashes and scrubbing secrets: see agent.md#Harness-environment-markers
       - Daemon control — sys serve --start, --stop, --restart, --status
     - Document path: doc noun
-      - Reading — doc read <ptr> [--max-tokens 100] serves doc:// documents and prompt:// campaign leaves
+      - Reading — doc read <ptr> [--max-tokens 100] resolves any doc:// URP; specs and prompt campaigns read identically — `doc read doc://prompts/<campaign>#<leaf>` returns one rendered section
       - Leaf selection — the pointer fragment #<node> selects exactly one outline node
       - token cage ceilings: see cicd.md#Token-cage-ceilings
-      - Prompt leaf — a prompt:// leaf returns one rendered section
-      - Outline — doc outline <ptr> accepts doc:// and prompt://
-      - Prompt outline — on prompt://, doc outline returns the campaign section index
-      - Pointer scope — doc:// addresses human docs; prompt:// addresses agent campaign banks; schemes never substitute
-      - Reading surface — the doc noun is the single reading surface for both schemes; no prompt noun exists
-      - Prompt envelope — inspect prompt://{bank}/{slug}@{version} returns the campaign envelope
+      - Outline — doc outline <ptr> accepts any doc:// pointer; on a campaign pointer it returns the campaign section index
+      - Reading surface — the doc noun is the single reading surface for documents; no prompt noun exists
+      - Campaign envelope — inspect doc://prompts/<campaign>@<version> returns the campaign envelope
     - Template path: template noun
       - New — template new <name> --type routine|world scaffolds blueprint (capcli-template.yaml + starter code) under templates/
       - Pack — template pack <dir> [--out bundle.cap] freezes blueprint into bundle: see world.md#World-templates
@@ -129,6 +123,8 @@
     - Refusals and banned operations
       - ssot enforcement — config mutations require git commits; direct `config set` or manual SQL DDL denied (exit 3)
       - banned bypass flags — `--force`, `--override-budget`, `--force-prod`, `--verbose` rejected at parser (exit 3)
+      - pointer grammar — only scheme://[namespace/]resource[@version][#fragment] pointers parse
+        - parse failures (exit 3) — bare filesystem paths; removed schemes: hub://, prompt://, mesh://, apis://, sink://, snap://
       - unified verb aliases — single authoritative paths:
         - queries/updates — use `capcli sql` (bans `db query`, `db exec`, `db count`)
         - locks — use `db lock` (bans `claim`)
@@ -145,7 +141,7 @@
       - --as <principal> — target execution principal for scoped access
       - --env <name> — target environment override (defaults to sticky context set by `env use`)
       - -m, --intent "<why>|@<path>" — causal motivation for mutating actions (short flag supported)
-      - --workspace <path|urp> — project root anchor or remote hub endpoint (e.g. hub://100.64.0.1:4040, overrides CAPCLI_WORKSPACE)
+      - --workspace <path|urp> — project root anchor or remote network endpoint (e.g. tcp://100.64.0.1:4040, overrides CAPCLI_WORKSPACE): see artifacts/policy.yaml#network.transports
       - --session <token> — cryptographic session handle binding principal and frame
       - --in <path> — file or stdin (@-) source for primary command payload
       - --out <path> — writes execution payload to disk; returns token-lean summary to stdout
@@ -188,7 +184,7 @@
         - signing key custody — daemon holds the approver's Git signing key in the encrypted vault; commits are signed under the caller's key
       - presentation stance — neutral kernel inspector; renders engine primitives without domain abstractions
     - Human decision cards
-      - config proposals — renders visual diff of agent-authored YAML changes with Gate 1 & 2 verification badge; 1-click [Approve & Apply] recompiles lockfile and resumes task
+      - config proposals — renders visual diff of agent-authored YAML changes with Sub-check 1 & 2 verification badge; 1-click [Approve & Apply] recompiles lockfile and resumes task
       - credential requests — out-of-band vault input field encrypts raw secret directly into daemon memory (AES-256-GCM); zero exposure to agent context or shell logs
         - persistence — daemon decrypts into memory only; ciphertext persists to the secrets table: see agent.md#Secrets
       - macro-budget grants — 1-click expansion of session fuel, ops, or duration for suspended frames; grants record per-session overrides in _budget_frames, never governance.yaml mutations

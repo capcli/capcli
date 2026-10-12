@@ -1,5 +1,5 @@
 ---
-id: prompt://onboarding/harness@1
+id: doc://prompts/onboarding/harness#1
 stem: onboarding.harness.success.empty
 bank: onboarding
 slug: harness
@@ -41,7 +41,7 @@ capcli search "" --json
 ```
 Parse the JSON response array. If zero capabilities exist, trigger the Genesis campaign:
 ```bash
-capcli doc outline prompt://genesis/blank_world@1  # then doc read the stage_1 leaf, --max-tokens 500
+capcli doc outline doc://prompts/genesis/blank_world#1  # then doc read the stage_1 leaf, --max-tokens 500
 ```
 
 ## section:stage_3_rehearsal

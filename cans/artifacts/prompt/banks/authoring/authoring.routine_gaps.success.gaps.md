@@ -1,5 +1,5 @@
 ---
-id: prompt://authoring/routine_gaps@1
+id: doc://prompts/authoring/routine_gaps#1
 stem: authoring.routine_gaps.success.gaps
 bank: authoring
 slug: routine_gaps

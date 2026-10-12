@@ -5,7 +5,7 @@ domain: "schema_evolution"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 invariant:
-  law_reference: "cans/world.md#Migration-invariants"
+  law_reference: "cans/world.md#Revision-invariants"
   statement: "Migrations are forward only: down-migrations are banned and snapshots serve as rollbacks - a down-migration script (e.g. DROP TABLE of a v13-introduced table) is denied at the authorizer (global drop: deny) with exit 2, and recovery routes to db restore <id>."
   blast_radius_if_breached: "Ad-hoc down-migrations diverge prod from the declarative schema and the git-tracked world.sql history; forward-only replay and audit forensics can no longer reconstruct what the database actually was."
 confusion_matrix:

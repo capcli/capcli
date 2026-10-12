@@ -15,11 +15,11 @@
     "root": "gates:",
     "nodes": [
       {
-        "label": "Gate 1 syntax pass (YAML parsed; shorthands expanded; roots present)",
+        "label": "Sub-check 1 syntax pass (YAML parsed; shorthands expanded; roots present)",
         "children": []
       },
       {
-        "label": "Gate 2 semantics pass (relational DAG verified: orders.customer_id -> customers.id)",
+        "label": "Sub-check 2 semantics pass (relational DAG verified: orders.customer_id -> customers.id)",
         "children": []
       }
     ],

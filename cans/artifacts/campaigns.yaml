@@ -1,12 +1,12 @@
 # ═══════════════════════════════════════════════════════════════
 # campaigns.yaml — prompt banks & campaign envelopes SSOT
-# Pointers: prompt://{bank}/{slug}@{version}
+# Pointers: doc://prompts/{bank}/{slug}#{version}
 # ═══════════════════════════════════════════════════════════════
 version: 1
 
 banks:
   ops_briefing:
-    urp: "prompt://system/ops_briefing@v1"
+    urp: "doc://prompts/system/ops_briefing#v1"
     description: "Domain situation awareness campaign bank"
     envelope:
       max_tokens: 150

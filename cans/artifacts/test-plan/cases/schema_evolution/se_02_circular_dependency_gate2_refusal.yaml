@@ -1,12 +1,12 @@
 $schema: "test-plan/case/v1"
 case_id: "se_02_circular_dependency_gate2_refusal"
-title: "Circular table references are refused by the Gate 2 petgraph cycle check with exit 3"
+title: "Circular table references are refused by the Sub-check 2 petgraph cycle check with exit 3"
 domain: "schema_evolution"
 target_tier: "unit"
 target_crate: "crates/capcli-core"
 invariant:
-  law_reference: "cans/world.md#Gate-2:-Semantics"
-  statement: "Gate 2 runs compile-time before statement generation: reference targets (ref=) must exist with matching types, and the petgraph is_cyclic_directed check rejects circular references - a schema where Table A references Table B and Table B references Table A aborts with exit 3, never reaching DDL creation."
+  law_reference: "cans/world.md#Sub-check-2:-Semantics"
+  statement: "Sub-check 2 runs compile-time before statement generation: reference targets (ref=) must exist with matching types, and the petgraph is_cyclic_directed check rejects circular references - a schema where Table A references Table B and Table B references Table A aborts with exit 3, never reaching DDL creation."
   blast_radius_if_breached: "A cyclic schema reaches SQLite DDL generation with unresolvable foreign keys; table compile order is undefined, bootstrapping deadlocks, and every environment provisioned from the template is stillborn."
 confusion_matrix:
   quadrant: "true_negative"
@@ -41,16 +41,16 @@ setup:
     vault_secrets: []
 execution:
   trigger: "rust_api"
-  command: "Gate 2 compile of the fixture schema.yaml (invoices ref= customers.id; customers ref= invoices.id) - petgraph cycle check before statement generation"
+  command: "Sub-check 2 compile of the fixture schema.yaml (invoices ref= customers.id; customers ref= invoices.id) - petgraph cycle check before statement generation"
   input_params:
-    gate: "Gate 2: Semantics"
+    gate: "Sub-check 2: Semantics"
     expected_graph_shape: "2 table nodes, 2 ref edges forming a directed cycle"
 expected_observations:
   exit_code: 3
   state_modified: false
   diagnostic:
-    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Gate 2 is the kernel's schema compile subsystem
-    culprit: "circular reference detected: invoices -> customers -> invoices (petgraph is_cyclic_directed); Gate 2 fails before DDL statement generation"
+    domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Sub-check 2 is the kernel's schema compile subsystem
+    culprit: "circular reference detected: invoices -> customers -> invoices (petgraph is_cyclic_directed); Sub-check 2 fails before DDL statement generation"
     remedy: "Break the cycle - reference one direction only (drop customers.default_invoice or invoices.customer_ref) so the topological sort can establish table compile order."
   database:
     row_count_delta: 0
@@ -64,7 +64,7 @@ expected_observations:
     state_modified_field: false
 anti_slop_assertions:
   - rule: "AS-03"
-    verification: "Assert exit_code == 3 (integer) and parse the diagnostic envelope: domain, culprit naming the cycle invoices -> customers -> invoices, remedy present; a raw SQLite runtime error (exit 2 db.engine) fails the test - the cycle must be caught at Gate 2."
+    verification: "Assert exit_code == 3 (integer) and parse the diagnostic envelope: domain, culprit naming the cycle invoices -> customers -> invoices, remedy present; a raw SQLite runtime error (exit 2 db.engine) fails the test - the cycle must be caught at Sub-check 2."
   - rule: "AS-06"
     verification: "Hardcode the literal graph expectations: petgraph node count == 2, edge count == 2, is_cyclic_directed == true; assert the compiled statement list is empty (zero DDL statements generated - the refusal precedes statement generation)."
   - rule: "AS-02"

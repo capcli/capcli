@@ -1,6 +1,6 @@
 # ═══════════════════════════════════════════════════════════════
 # provider-spec.yaml — canonical external provider archetype
-# Pointers: apis://<provider>, apis://<provider>#webhook
+# Pointers: doc://specs/<provider>, doc://specs/<provider>#webhook
 # ═══════════════════════════════════════════════════════════════
 version: 1
 provider: upstream_service

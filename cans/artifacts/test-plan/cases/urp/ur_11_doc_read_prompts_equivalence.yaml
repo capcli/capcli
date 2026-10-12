@@ -1,0 +1,62 @@
+$schema: "test-plan/case/v1"
+case_id: "ur_11_doc_read_prompts_equivalence"
+title: "Reading a prompt campaign via doc read doc://prompts/ returns the identical envelope shape as reading a human spec"
+domain: "urp"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/interface.md#Document-path:-doc-noun"
+  statement: "Prompts are documents: `doc read` resolves any doc:// URP through the same ArtifactResolver path, so a prompt campaign read and a human spec read return envelopes with identical top-level keys — no prompts-special-case code path exists in the read contract."
+  blast_radius_if_breached: "If prompt reads returned a different envelope shape than spec reads, every consumer of doc read (agents, Cockpit, the prompt trailer pipeline) would need to branch on the pointer's path prefix — resurrecting the prompt:// dual-mode machinery under a new name."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by reading the same file twice (or two specs) and asserting shape equality — the prompts path is never exercised, so a prompts-special-case regression would pass."
+  anti_slop_mitigation: "AS-03 requires the two targets to be literally doc://prompts/billing#campaign_v1 and doc://refund-policy and asserts the top-level key sets are exactly equal; reading two specs (or the same target twice) fails the target-literal check."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_ur_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables: []
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli doc read doc://prompts/billing#campaign_v1 && capcli doc read doc://refund-policy"
+  input_params:
+    pointers:
+      - "doc://prompts/billing#campaign_v1"
+      - "doc://refund-policy"
+
+expected_observations:
+  exit_code: 0
+  state_modified: false
+  diagnostic:
+    domain: "doc.read"
+    culprit: "none — nominal path: both pointers resolved through the ArtifactResolver; the campaign leaf rendered as one document section, identical contract to the human spec"
+    remedy: "none required"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "capability.inspect"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Parse both CliEnvelope data blocks: the sorted top-level key sets are exactly equal (set equality, not subset) — a prompts-special-case envelope with extra or missing keys fails; the targets are the literals 'doc://prompts/billing#campaign_v1' and 'doc://refund-policy'."
+  - rule: "AS-02"
+    verification: "Both reads are side-effect free: no table row deltas, no _budget_frames push — document reads burn zero gas."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: the two pointers verbatim — expected key-set equality is asserted on the real outputs, never on re-reads of the same target."

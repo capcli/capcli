@@ -62,7 +62,7 @@
       - trust progression — earned autonomy moves routines from draft to reviewed to pinned via synthetic proof
     - Autonomous authority
       - headless execution — policy rungs and budget cages replace human sign-offs: see trust.md#The-ladder
-      - compiler boundaries — structural validation gates authoring: see world.md#Validation-gates
+      - compiler boundaries — structural validation gates authoring: see world.md#Pre-flight-Sub-checks
       - escalation path — interactive ping prompts reserved for unresolvable halts: see action.md#The-ctx-contract
     - Refusals
       - no ORMs or query builders — raw SQL crosses authorizer directly

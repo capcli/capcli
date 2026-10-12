@@ -40,7 +40,7 @@
     ]
   },
   "trailer": {
-    "prompt": "prompt://onboarding/harness@1",
+    "prompt": "doc://prompts/onboarding/harness#1",
     "reason": "harness at nominal doctor with empty domain",
     "serve": "L1"
   },

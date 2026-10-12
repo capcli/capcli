@@ -16,9 +16,10 @@
         - trust bounds — draft and reviewed in dev/sim only; pinned execution denied (E045_TIER2_PINNED_DENIED): see trust.md#Ladder-laws
   - Deployment topology
     - dedicated server — headless Linux host running capcli-daemon under systemd; required for 24/7 background crons, webhooks, and S3 WORM attestations
-    - federated mesh — sovereign daemon peers on shared VPS (/run/capcli/<ws>.sock) or private WireGuard mesh (mesh://) communicating via authenticated IPC
+    - federated mesh — sovereign daemon peers over shared VPS or private WireGuard network; IPC over unix:// socket paths (e.g. /run/capcli/<ws>.sock) or tcp:// endpoints (e.g. 100.64.0.1:4040)
     - swarm hub — central daemon instance coordinating remote spokes; hosts primary SQLite writer and system tables
-    - swarm spokes — worker nodes communicating with hub over WireGuard mesh (Tailscale), mTLS, or local IPC
+    - swarm spokes — worker nodes reaching the hub over tcp:// WireGuard endpoints (Tailscale), mTLS, or unix:// local IPC
+    - endpoint configuration — transport endpoints configured under: see artifacts/policy.yaml#network.transports
     - ephemeral sandbox node — disposable microVM or container worker; zero-disk state and sync audit ack; identity: see agent.md#Ephemeral-swarm-identity
     - local workstation — ephemeral developer environment; prohibited from serving production endpoints or hosting unattended pinned schedules
     - parity principle — local state mutations and external API egress share equal gate severity
@@ -26,15 +27,35 @@
     - egress engine — optimistic token-bucket quotas slaved to remote headers, secret boundaries, and sim routing intercept network calls
   - Distributed concurrency laws
     - remote authorizer proxy — Hub executes Layer 1 sqlite3_set_authorizer on behalf of spoke ctx.db requests before execution
-    - state fencing — OCC state_fence (sha256 hash of read row state) verified at Hub before physical commit; drift aborts with exit 2
+    - state fencing — OCC state_fence (sha256 hash of read row state) verified at Hub before physical commit; drift aborts with exit 2 (E061_OCC_DRIFT)
+      - hub evaluation — remote authorizer proxies evaluate Layer 2 OCC fences at the Hub prior to physical commit
+    - Layered lock hierarchy — concurrency locking partitions into three non-overlapping timescales; lock layers are distinct from the Two-layer enforcement layers
+      - Layer 1 — macro lease
+        - storage — the claims system table; business scope measured in minutes
+        - purpose — stops concurrent agents touching the same entity
+        - identity — strictly (session_id, harness_marker, op_sequence); OS PID binding is banned
+        - acquisition — explicit ctx.db.lock(target, ttl) claim or routine manifest auto-claim
+        - eviction — background daemon reaps expired claims
+        - lifecycle detail: see world.md#claims-lease-lifecycle
+      - Layer 2 — meso fence
+        - mechanism — OCC state_fence = sha256 of read row state
+        - collection — captured during Phase 1 on ctx.db.get and ctx.db.view reads
+        - verification — re-verified under SQLite lock during Phase 3 commit
+        - drift — mismatch halts immediately with exit 2 (E061_OCC_DRIFT); zero partial writes
+      - Layer 3 — micro lock
+        - mechanism — SQLite BEGIN IMMEDIATE via rusqlite
+        - lifespan — transaction lifespan strictly <15ms
+        - contention — write contention queues up to busy_timeout=5000ms; exhaustion fails closed with exit 2
+      - no external calls inside transactions: see action.md#Interior-rules
+      - no ws:// calls while holding Layer 1 claims: see action.md#Interior-rules
   - Federation invariants
     - socket authentication — local peer verified via Linux SO_PEERCRED at accept; UID/GID mismatch drops connection instantly
     - vector cycle check — call_chain array appended per hop; existing workspace in call_chain fails closed with exit 2 (E041_FEDERATION_CYCLE)
     - chain transport — call_chain rides the IPC call envelope, appended per hop, recorded on federation.call_out: see effect.md#Kernel-event-payloads
     - hop ceiling — federated nesting depth capped at 2 cross-workspace hops; breach exits 2
-    - lock fence rule — local ctx.db.lock leases held during outbound ws:// calls rejected by AST gate
+    - lock fence rule: see action.md#Interior-rules
     - transport retry — missing peer socket polls max 1500ms (3 ticks @ 500ms); timeout exhaustion exits 4 (E055_FEDERATION_UNREACHABLE)
-    - secret transit — plaintext secret bytes in federated params scrubbed to [REDACTED_VAULT_TOKEN] at the socket edge; vault:// references pass opaque: see agent.md#Secrets
+    - secret transit — plaintext secret bytes in federated params scrubbed to [REDACTED_VAULT_TOKEN] at the socket edge; vault://<name> handles pass opaque: see agent.md#Secrets
     - hop/nesting interplay — federated hops count toward call nesting depth; both ceilings enforced, hop ceiling 2 binds first: see #Exit-code-law
     - in-process concurrency — multi-threaded harness subagents (same PID) serialize via OCC state_fence and marker-scoped claims; collision yields via exit 6: see #Exit-code-law
     - network partition fail-closed — lost connection to Hub during sync audit delivery aborts command immediately with exit 5
@@ -86,12 +107,31 @@
       - cross-check — compares AST classification against SQLite EXPLAIN
       - opcode trap — OpenWrite detected on statement classified as read denies run
       - discrepancy — unclassified writes (OpenWrite bytecode) trigger denial
-    - Pipeline sequence
-      - Stage 0 — harness marker extraction, session resolution / implicit fork check, and cryptographic session token verification: see agent.md#Harness-environment-markers
-      - Stage 1 — intent target binding and AST blast-radius cross-check
-      - Stage 2 — AST parse and structural pattern scan
-      - Stage 3 — prepare-time cross-check and authorizer callback
-      - Stage 4 — physical SQLite execution and audit event emission
+    - Unified 3-phase execution engine
+      - scope — single execution model for every capability invocation: capcli run, capcli sql, worker tasks
+      - Phase 1: static pre-flight — host-side, memory-only; zero physical DB writes, zero network calls
+        - harness identity — marker sniffing (PPID/env), token validation, principal check (--as)
+        - syntax & AST — SQL/routine parse, binding check; f-strings and interpolation banned
+        - complexity ceilings — max 2000 tokens, cyclomatic ≤ 10, max 8 params
+        - graph integrity — petgraph dependency cycle scan; A → B → A banned
+        - lockfile & schema — capcli.lock hash match against current schema
+        - static budget headroom — can_invoke_now evaluated against session ceiling
+        - refusal — any check fails with exit 3; state untouched
+      - Phase 2: sandboxed guest — isolated runner: bwrap on Linux tier 1, microVM/WASM on tier 2
+        - isolation — guest address space has zero socket access and zero credential plaintext
+        - sequence — Gather (reads) → Compute (pure logic) → Commit (staged ops)
+        - IPC actions — discrete ctx.db.*, ctx.api.*, ctx.emit emissions to kernel socket
+        - crash — guest crash, unhandled runtime exception, or type violation exits 4; full rollback, state_modified: false
+        - yield — proactive yield on low token/fuel floors exits 6; a checkpoint, not an error: see #Exit-code-law
+      - Phase 3: kernel commit & audit arbiter — kernel-side physical commit
+        - layer 1 authorizer — sqlite3_set_authorizer evaluates action × table × col
+        - layer 1.2 mutation hook — row limits enforced on active VDBE bytecode execution
+        - atomic commit — physical transaction executed under SQLite BEGIN IMMEDIATE
+        - ledger append — _audit event appended with prev_hash link; outbox synced
+        - policy denial — authorizer block, check constraint, or budget limit exits 2 with miette diagnostic trace
+        - kernel panic — ledger disk corruption or plaintext secret leak exits 5; token revocation
+        - exit 0 — single deterministic audit record appended to _audit
+      - phase map — Layer 2 AST executes in Phase 1; Layers 1, 1.2, and 1.5 execute in Phase 3
     - Policy vs governance split
       - policy.yaml — behavioral rules: what capabilities may do (verbs)
       - governance.yaml — structural rules: what capabilities may be (nouns)
@@ -125,25 +165,30 @@
       - quota exhaustion — remaining <= deny_at_remaining throws exit 6 (Background) or exit 2 (Critical)
     - Exit code law
       - scope — exit contract binds capcli commands returning CliEnvelope; external tooling defines its own exit contract
-      - exit 0 — success with audit event recorded; upstream HTTP failures handled gracefully in envelope
-      - exit 2 — invariant or governance block; state untouched (state_modified: false)
+      - exit 0 — success with single deterministic audit record appended to _audit; upstream HTTP failures handled gracefully in envelope
+      - exit 2 — Phase 3 policy denial; invariant or governance block; state untouched (state_modified: false)
         - domain policy.federation — caller unallowlisted, routine trust < pinned, or cycle detected (E042_FEDERATION_DENIED, E041_FEDERATION_CYCLE)
         - domain db.engine — SQLite check constraints, foreign key violations, busy timeout
         - domain policy.authorizer — C-level table/column write denied
         - domain policy.budget — frame limits, session op/fuel ceilings exhausted, or call nesting > 5
-        - domain policy.revision — Gate 5 rehearsal broke pinned routine contract
+        - domain policy.revision — offline revision rehearsal breaks the pinned routine contract: see world.md#Revision-safety
         - domain policy.trust — action forbidden by caller trust rung (e.g. draft touching prod)
-      - exit 3 — compile-time refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, statically-declared unpaginated payload shape
+      - exit 3 — Phase 1 static pre-flight refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, statically-declared unpaginated payload shape
         - runtime result size — oversized output returns the keyset pagination schema instead of exiting; see action.md#Shape-constraints
-      - exit 4 — domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
+      - exit 4 — Phase 2 guest crash; domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
         - domain federation.transport — peer unreachable after 1500ms timeout (E055_FEDERATION_UNREACHABLE)
-      - exit 5 — domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
-      - exit 6 — proactive yield; releases all held claims locks, records OCC state_fence, persists resume target to _suspended_tasks
+      - exit 5 — Phase 3 kernel panic; domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
+      - exit 6 — Phase 2 proactive yield
+        - at yield — Layer 3 physical transactions close immediately; zero open SQLite transactions permitted
+        - fence capture — Layer 2 state_fence and resume cursor persist to db://_suspended_tasks
+        - lease retention — Layer 1 claims retained so sibling agents cannot steal the task
       - mechanical daemon resumption — when a yielded frame is unblocked by clock refill (reset_at) or human 1-click approval in Cockpit, capcli-daemon executes the pre-compiled guest routine directly in the sandbox to completion; waking or re-prompting the LLM harness for purely mechanical execution is prohibited
-      - resume verification — resumption verifies OCC state_fence against live row state; table drift during suspension aborts immediately with exit 2 (E061_OCC_DRIFT)
+      - resume verification
+        - lease check — resumption verifies the Layer 1 claims lease is still active and owned by the caller
+        - fence check — OCC state_fence verified against live row state; table drift during suspension aborts immediately with exit 2 (E061_OCC_DRIFT)
       - compile at yield — daemon compiles the guest routine into a standalone artifact at yield time; resumption runs that artifact to completion without waking the harness
       - result delivery — daemon posts completion results to the sensory inbox; harness surfaces them at the next turn-zero overview: see interface.md#CLI-surface
-      - preemption yield — worker spot/container SIGTERM maps directly to exit 6; traps execution, drops claims, flushes cursor checkpoint, parks frame to Hub _suspended_tasks
+      - preemption yield — worker spot/container SIGTERM maps directly to exit 6; traps execution, flushes cursor checkpoint, parks frame to db://_suspended_tasks: see #Exit-code-law
       - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence, writes an audit event; the frame never resumes
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
@@ -204,7 +249,7 @@
     - Boundary isolation
       - perimeter layers
         - credentials isolation — token injection, redaction, and zeroization mechanics: see agent.md#Secrets
-        - egress allowlist — outbound calls restricted to apis/ catalog
+        - egress allowlist — outbound calls restricted to the doc://specs/<provider> catalog
         - shell egress trap — open bash blocked from raw socket connect via seccomp-bpf
         - network jail — unshared network namespace for routines
         - virtualization — gVisor or Firecracker for multi-tenant tiers

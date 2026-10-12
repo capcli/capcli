@@ -7,7 +7,7 @@ target_crate: "crates/capcli-core"
 
 invariant:
   law_reference: "cans/physics.md#Runtime-refusals--anonymous-swarm-write--mutating-action-from-presence-only-or-marker-less-harness-rejected"
-  statement: "Stage 0 sniffs harness environment markers (process env and /proc/$PPID/environ); PID-only trust is banned (cans/agent.md#Harness-environment-markers). A mutating action from a presence-only or marker-less harness — no identity marker, only a presence flag — maps to agt_anon_<session> and is refused any mutating write; without explicit --session/--by the command is rejected with exit 3."
+  statement: "Phase 1 sniffs harness environment markers (process env and /proc/$PPID/environ); PID-only trust is banned (cans/agent.md#Harness-environment-markers). A mutating action from a presence-only or marker-less harness — no identity marker, only a presence flag — maps to agt_anon_<session> and is refused any mutating write; without explicit --session/--by the command is rejected with exit 3."
   blast_radius_if_breached: "Any un-attributed harness process on the host mutates production state under an anonymous identity: claims keyed to (session_id, harness_marker, op_sequence) can never be attributed, audit trails gain orphaned agt_anon actors, and the trust ladder's anonymous swarm ceiling (draft cap) becomes decorative."
 
 confusion_matrix:
@@ -47,7 +47,7 @@ execution:
   trigger: "cli_subcommand"
   command: "capcli sql \"UPDATE orders SET status='shipped' WHERE id=1\" --intent \"ship order 1\""
   input_params:
-    identity_markers_present: [] # no identity markers sniffed at Stage 0
+    identity_markers_present: [] # no identity markers sniffed in Phase 1
     presence_markers_present: ["CLAUDECODE"] # presence-only harness
     session_flag: null # no explicit --session
     by_flag: null # no explicit --by
@@ -57,7 +57,7 @@ expected_observations:
   state_modified: false
   diagnostic:
     domain: "kernel.session"
-    culprit: "no identity marker sniffed at Stage 0 (presence-only: CLAUDECODE); caller attributed to agt_anon_ses_x7 — mutating writes denied; explicit --session/--by required"
+    culprit: "no identity marker sniffed in Phase 1 (presence-only: CLAUDECODE); caller attributed to agt_anon_ses_x7 — mutating writes denied; explicit --session/--by required"
     remedy: "run from a registered harness that exports an identity marker, or pass explicit --session and --by bound to a minted session token"
   database:
     row_count_delta: 0 # write never executes; _audit gains exactly 1 denial event
@@ -76,4 +76,4 @@ anti_slop_assertions:
   - rule: "AS-02"
     verification: "SELECT count(*) FROM orders == 3 and SELECT status FROM orders WHERE id=1 != 'shipped' before and after; SELECT count(*) FROM claims == 0 — the anonymous write never executes and no marker-less claim row is created; _audit delta is exactly 1 denial event."
   - rule: "AS-06"
-    verification: "Hardcoded literals: presence marker 'CLAUDECODE', identity marker set empty, expected exit 3, attributed identity pattern 'agt_anon_<session>'; the Stage 0 sniffing is realized against a real process environment — never by mocking the marker extractor."
+    verification: "Hardcoded literals: presence marker 'CLAUDECODE', identity marker set empty, expected exit 3, attributed identity pattern 'agt_anon_<session>'; the Phase 1 sniffing is realized against a real process environment — never by mocking the marker extractor."

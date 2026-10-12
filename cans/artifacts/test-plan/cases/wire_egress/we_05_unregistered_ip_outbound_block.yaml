@@ -1,13 +1,13 @@
 $schema: "test-plan/case/v1"
 case_id: "we_05_unregistered_ip_outbound_block"
-title: "Egress proxy blocks the outbound request to raw IP 192.168.1.50 outside the apis/ catalog allowlist"
+title: "Egress proxy blocks the outbound request to raw IP 192.168.1.50 outside the provider catalog allowlist (doc://specs/)"
 domain: "wire_egress"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 
 invariant:
   law_reference: "cans/physics.md#Boundary-isolation"
-  statement: "'Egress allowlist — outbound calls restricted to apis/ catalog' (policy.yaml#api.egress: allowlist_from apis/, deny_public_ips true — no raw IP targets): an outbound HTTP request aimed at a raw IP address that is not a registered provider host is rejected by the kernel egress proxy before any connection is established."
+  statement: "'Egress allowlist — outbound calls restricted to the provider catalog' (policy.yaml#api.egress: allowlist_from apis/, deny_public_ips true — no raw IP targets; providers addressed as doc://specs/<provider>): an outbound HTTP request aimed at a raw IP address that is not a registered provider host is rejected by the kernel egress proxy before any connection is established."
   blast_radius_if_breached: "Raw-IP egress would let a compromised or hallucinating routine exfiltrate data to arbitrary hosts (bypassing domain-based allowlists, DNS logs, and DLP), turning the kernel into an uncontrolled corporate data-leak channel."
 
 confusion_matrix:
@@ -31,7 +31,7 @@ setup:
 
 execution:
   trigger: "json_rpc"
-  command: 'ctx.api.call("stripe.charges", params={"amount": 2000, "currency": "usd"}, intent="probe unregistered host") with the egress target host overridden to "http://192.168.1.50/v1/charges" (raw IP outside the apis/ catalog allowlist)'
+  command: 'ctx.api.call("stripe.charges", params={"amount": 2000, "currency": "usd"}, intent="probe unregistered host") with the egress target host overridden to "http://192.168.1.50/v1/charges" (raw IP outside the provider catalog allowlist)'
   input_params:
     verb: "stripe.charges"
     target_host: "192.168.1.50"
@@ -42,7 +42,7 @@ expected_observations:
   state_modified: false
   diagnostic:
     domain: "policy.egress"
-    culprit: "egress target http://192.168.1.50/v1/charges is a raw public IP outside the apis/ catalog allowlist (api.egress.allowlist_from: apis/; deny_public_ips: true — no raw IP targets)"
+    culprit: "egress target http://192.168.1.50/v1/charges is a raw public IP outside the provider catalog allowlist (api.egress.allowlist_from: apis/; deny_public_ips: true — no raw IP targets)"
     remedy: "route the call through an imported provider verb (capcli api sync <provider> <url>) so the target resolves from apis/<provider>.yaml; raw IP egress is structurally denied"
   database:
     row_count_delta: 0

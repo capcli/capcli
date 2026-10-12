@@ -40,9 +40,9 @@ setup:
     vault_secrets: []
 execution:
   trigger: "rust_api"
-  command: "Gate 1 shorthand compile of the fixture schema.yaml whose fixture_table declares a 51-entry seed array"
+  command: "Sub-check 1 shorthand compile of the fixture schema.yaml whose fixture_table declares a 51-entry seed array"
   input_params:
-    gate: "Gate 1: Syntax (shorthand expansion incl. seed volume cap)"
+    gate: "Sub-check 1: Syntax (shorthand expansion incl. seed volume cap)"
     seed_rows_declared: 51
     seed_rows_cap: 50
 expected_observations:

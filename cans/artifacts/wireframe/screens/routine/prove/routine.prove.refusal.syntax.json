@@ -21,7 +21,7 @@
       "highlight": "return"
     },
     "IndentationError": "expected an indented block after the @routine decorator wrapper at line 19; malformed guest code never enters the sandbox",
-    "gate": "py_compile syntax check (scaffolding verification; Gate 1)",
+    "gate": "py_compile syntax check (scaffolding verification; Sub-check 1)",
     "sandbox_entry": "refused — compile failure precedes jail entry",
     "lines": [
       "FATAL  compile.routine.bad_syntax",

@@ -291,3 +291,19 @@ schema:
     agent_writable: false               # file permission denies write
     kernel_upgrade_only: true           # only kernel releases modify it
     require_hash_verify: true           # boot verifies file hash against kernel version
+
+# ───────────────────────────────────────────────────────────────
+# 14. TELEMETRY — kernel event egress configuration
+# ───────────────────────────────────────────────────────────────
+# sinks are declared here as plain endpoints with explicit drivers,
+# never as resource-pointer URIs.
+telemetry:
+  sinks:
+    notifications:                      # notify hand delivery target, per env
+      sim: { driver: file, path: "envs/sim/telemetry/notifications.jsonl" }   # sim mock sink
+      dev: { driver: file, path: "envs/dev/telemetry/notifications.jsonl" }   # dev mock sink
+      prod: { driver: none }            # prod notify exits through notify channels
+    audit_mirror:
+      driver: jsonl
+      path: "audit/audit_mirror.jsonl"
+  retention_days: 90                    # telemetry file retention
