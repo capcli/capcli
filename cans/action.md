@@ -119,7 +119,8 @@
       - token envelope — max 2,000 tokens (LOC unrestricted; whitespace, comments, docstrings unpenalized)
       - complexity — cyclomatic complexity <= 10 branch paths; evaluated at AST prepare-time
       - signatures — max 8 typed Param declarations; description required
-      - execution caps — max 50 ops per run; max 300s duration; max 10 txn statements
+      - execution caps — fuel envelope per frame, declared at invocation and enforced at frame push: see budget.md#Cascade
+      - wall-clock — decoupled from fuel; OS watchdog kills past 300s: see artifacts/governance.yaml#routine_shape
       - pagination posture — routines must encapsulate iteration and filtering loops internally; multi-turn LLM subshell pagination loops banned
       - output envelope — max 500 result tokens; raw string slicing banned; oversized output returns keyset pagination schema ({ items, pagination: { has_more, next_cursor } }); breach exits 3
   - Routine templates
@@ -257,8 +258,15 @@
       - External api methods
         - ctx.api.call(verb, params, intent, compensate=None, select=None) — governed HTTP egress; declare compensate verb for kernel saga auto-rollback
         - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) — kernel-managed in-flight polling (1 aggregate op)
-        - egress retry — idempotent verbs (GET/PUT/DELETE) auto-retry on 429/503/network-drop; mutating POST without declared idempotency header fails closed immediately (exit 4)
+        - egress retry — idempotent verbs (GET/PUT/DELETE) auto-retry on 503/network-drop; mutating POST without declared idempotency header fails closed immediately (exit 4)
+        - 429 handling — upstream 429 with Retry-After yields the routine (exit 6): see physics.md#Exit-code-law
         - ctx.api.verify(verb, key) — key validation check
+        - socket edge interception — the kernel checks every ctx.api.call at the socket boundary in strict order:
+          - check ceiling — monthly provider spend ceiling; breach denies before dispatch (exit 2): see budget.md#Quotas
+          - check cadence — leaky-bucket cadence; waits under 2s sleep the socket transparently: see budget.md#Quotas
+          - dispatch and deduct fuel — wire bytes and primitive steps burn fuel at dispatch: see budget.md#Cascade
+          - auto-tune from headers — response rate-limit headers recalibrate the local bucket: see budget.md#Quotas
+          - proactive yield — waits over 2s, or upstream 429 with Retry-After, yield the routine (exit 6): see physics.md#Exit-code-law
       - Quota brokerage methods
         - ctx.quota.inspect(verb) — returns total, available, priority floors, and reset_at
       - Blob storage methods

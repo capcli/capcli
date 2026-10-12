@@ -28,7 +28,14 @@
       - Aliases — capcli sql, capcli search, capcli inspect
       - PreflightEnvelope
         - shape — one envelope per resolver trait; contents vary by resolver class
-        - executables (cap://, ws://) — costs, ops ceiling, budget cascade, single-response zero-roundtrip can_invoke_now verdict
+        - executables (cap://, ws://) — resource contract fields and the single-response zero-roundtrip can_invoke_now verdict
+        - field: fuel_declared — int; fuel the routine declares for this invocation: see budget.md#Record
+        - field: session_fuel_remaining — int; unspent fuel in the session wallet: see budget.md#Cascade
+        - field: cadence_status — enum; leaky-bucket headroom for the next socket dispatch: see budget.md#Quotas
+        - field: ceiling_status — enum; monthly provider spend ledger position: see budget.md#Quotas
+        - field: can_invoke_now — boolean; true only when fuel and quota checks pass
+        - routine_min_fuel — int; minimum session fuel admitting the routine; equal to fuel_declared
+        - refusal law — AST/pre-flight rejects with exit 2 when session_fuel_remaining < routine_min_fuel; the routine is never invoked: see physics.md#Exit-code-law
         - db entities (db://, vault://, audit://, ask://, quota://) — row schema, check constraints, mask flags, TTL
         - artifacts (doc://, tpl://, policy://) — token size, node outlines, bundle metadata
       - Success affordances

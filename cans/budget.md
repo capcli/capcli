@@ -1,5 +1,6 @@
 - Budget
 <!-- ref-by: action.md, agent.md, effect.md, interface.md, overview.md, time.md, trust.md, world.md -->
+  - 3-pillar engine — fuel is the internal currency, frames are hierarchical wallets, the gateway governs provider cadence and ceilings
   - Frames
     - Lifecycle
       - frame push — routine invocation pushes frame onto call stack: see budget.md#Record
@@ -23,12 +24,7 @@
         - declared_max_duration_ms: int — wall-clock ceiling
         - Defaults configured in routine_shape.execution
       - Consumed counters
-        - consumed_ops: int=0
-        - consumed_duration_ms: int=0
-        - consumed_fuel: int=0
-        - consumed_egress_bytes: int=0
-        - consumed_rows: int=0
-        - consumed_api_calls: int=0
+        - consumed_fuel: int=0 — the single internal counter; every cost converts to fuel: see #Fuel-formula
         - turn-zero exemption — overview calls are kernel-funded and budget-exempt (≤60 tokens); never charged to the session frame
       - Bookkeeping
         - created_at, closed_at: int timestamps
@@ -38,72 +34,51 @@
     - Events
       - budget.frame_push
         - Payload: frame_id, routine@version, parent_frame, session, env
-        - declared: { max_ops: 50, max_duration_seconds: 300 }
-        - inherited_remaining: { ops: 38, duration_ms: 254800, fuel: 82000, egress_bytes: 4194304 }
-        - inherited_remaining is the parent-side min() already computed per dimension
+        - declared: { max_fuel: 50, max_duration_seconds: 300 }
+        - inherited_remaining: { fuel: 82000 }
+        - inherited_remaining is the parent-side min() already computed
       - budget.frame_pop
-        - consumed: { ops: 4, duration_ms: 1200, fuel: 1600, egress_bytes: 12480 }
-        - returned_to_parent: { ops: 34, duration_ms: 253600, fuel: 80400, egress_bytes: 4181824 }
+        - consumed: { fuel: 1600 }
+        - returned_to_parent: { fuel: 80400 }
         - Parent sees exactly what the child burned — pools reconcile per frame
       - Frame push/pop are audit events; tailable live via `sys audit tail --follow`
     - Telemetry streaming — frame lifecycle pushes over WebSocket/SSE: see interface.md#Daemon-API-&-telemetry-surface
       - streaming updates — consumption pushes via WebSocket: see effect.md#Audit-spine
       - denial markers — visual badges signal quota blocks: see #Exhaustion
   - Cascade
-    - Priority Floors
-      - Priority Classes — Critical, Standard, Background (see artifacts/governance.yaml#routine_shape)
-      - Preemption — Low priority tasks yield via exit 6 when `tokens_available` drops below class floor in `policy.yaml`:
-        - Background tasks yield at 15 tokens remaining (reserving quota for scheduled posts)
-        - Standard tasks yield at 5 tokens remaining
-        - Critical tasks drain pool to 0
-      - Safe yield mechanics: see physics.md#Exit-code-law
-
     - min() law
       - Federated budget cascade — cross-workspace calls delegate remaining pool:
         callee_effective_limit = min(caller_remaining, callee_policy_ceiling, callee_governance_ceiling)
       - Callee exhaustion isolation — callee budget exhaustion aborts callee cleanly (exit 2) without consuming caller frame
+      - Frame push — the kernel carves the child slice from the parent frame; parent available balance decrements at push
+      - Frame run — the child burns only its own slice
+      - Frame pop — unspent fuel reconciles to the parent immediately on routine exit
+      - Frame exhaustion — child fuel hitting 0 aborts the child cleanly with exit 2; the parent retains its remaining balance
       - Static call-graph evaluation — kernel inspects declared child dependency trees prior to root frame execution
-      - Pre-flight rejection — if parent_remaining or session headroom cannot satisfy the worst-case leaf path, can_invoke_now returns false before invocation
+      - Pre-flight rejection — if parent remaining or session headroom cannot satisfy the worst-case leaf path, can_invoke_now returns false before invocation
+      - Fuel floor denial — session fuel below the routine minimum fuel denies with exit 2 before the frame pushes
       - Subagent cage inheritance — in-process workers sharing PID inherit parent frame limits; thread spawning cannot escape session ceiling: see agent.md#Identity-chain
       - Implicit fork — divergent harness thread marker under same PID forces a session fork: see agent.md#Harness-environment-markers
-      - Child effective limit = min(declared need, governance ceiling, parent_remaining, session_ceiling)
+      - Child effective fuel = min(declared fuel, parent remaining, session remaining, governance max)
       - Scope — the four-term formula governs the local/nested cascade only; federated calls use the federated cascade formula above (caller session never crosses the workspace boundary)
       - Governance ceiling comes from routine_shape.execution limits (artifacts/governance.yaml)
       - The kernel enforces the tightest constraint at every frame — the cage tightens, never widens
       - Splitting is not escaping
-        - Session-level counters never reset through composition
-        - 100-op routine split into 10x10 sub-routines still hits the session ops ceiling
-        - Session ops ceiling: see artifacts/governance.yaml#routine_shape.execution.session_ops_ceiling
+        - Session-level fuel never resets through composition
+        - 100-fuel routine split into 10x10 sub-routines still hits the session fuel ceiling
+        - Session ceiling — the session-level fuel pool: see artifacts/governance.yaml#routine_shape
     - Dimensions
-      - Ops
-        - Unit: primitive executions per frame
-        - Scope: per-frame (max_ops_per_run) plus session (session_ops_ceiling)
-        - Cascade: child consumes from the parent's pool
-      - Distributed Swarm Fuel Arbitration
-        - central atomicity — all fuel and rate deductions execute atomically on Hub workspace.db
-        - optimistic spoke allocation — spokes pre-reserve fuel blocks (default 1000) via RPC to avoid per-op latency
-        - fuel starvation — exhausted session pool at Hub immediately halts distributed spoke workers with exit 2
-        - preemption floor — low tokens trigger exit 6 across all non-critical spokes simultaneously
-      - Duration
-        - Unit: wall-clock milliseconds
-        - Scope: per-routine plus session
-        - Cascade: child time consumes the parent's clock
-      - Fuel & Wire Egress
-        - Unit: deterministic integer gas & socket payload bytes
-        - Scope: one pool per session
-        - Cascade: no bypass via splitting — single session pool
-      - Rows affected
-        - Unit: rows written or affected
-        - Scope: one pool per trust level per session
-        - Cascade: draft/reviewed/pinned each carry their own pool
-      - Rate
-        - Unit: writes_per_minute
-        - Scope: per-session
-        - Cascade: applies to the entire session, not per routine
-      - Result tokens
-        - Unit: tokens returned to the model
-        - Scope: per-routine only
-        - Cascade: none — each routine caps its own output independently
+      - Fuel formula — the single internal currency; integer fuel only, never fractional
+        - 1 primitive step = 1 fuel
+        - 10 DB rows read = 1 fuel; partial batches round up
+        - 1 DB row written = 10 fuel
+        - 1 KB wire egress = 5 fuel
+      - OS watchdog rule — wall-clock duration is not fuel; the 300s sandbox watchdog kills past the limit: see artifacts/governance.yaml#routine_shape
+    - Distributed swarm arbitration
+      - central atomicity — all fuel and rate deductions execute atomically on Hub workspace.db
+      - optimistic spoke allocation — spokes pre-reserve fuel blocks (default 1000) via RPC to avoid per-op latency
+      - fuel starvation — exhausted session pool at Hub immediately halts distributed spoke workers with exit 2
+      - preemption floor — low tokens trigger exit 6 across all non-critical spokes simultaneously
     - Composition flags (artifacts/governance.yaml)
       - budget_inheritance: min — see artifacts/governance.yaml#budget_inheritance
       - ops_cascade: true, duration_cascade: true
@@ -118,30 +93,27 @@
         - gap visibility — sim_gaps arrays missing simulated providers
         - denial reasons — blocking_reasons details exact failing constraints
       - constraint resolution
-        - tightest dimension — tightest_constraint names dimension nearest exhaustion
-        - limit string — effective_limits formats min(ceiling, parent_remaining)
-      - budget_status.cascade: session_ops_remaining 488, session_duration_remaining_ms 555000
-      - session_fuel_remaining 80400, session_egress_bytes_remaining 4181824, session_rate_remaining 287
-      - tightest_constraint names the first dimension to block (null while headroom lasts)
-      - composition.effective_limits: "min(50, session_remaining)" strings per dimension
+        - tightest pillar — tightest_constraint names the first blocking pillar: frame fuel, session fuel, cadence, ceiling
+        - limit string — effective_limits formats min(declared fuel, parent remaining, session remaining, governance max)
+      - budget_status.cascade: session_fuel_remaining 80400
+      - cadence_status and ceiling_status ride alongside fuel headroom
+      - tightest_constraint names the first pillar to block (null while headroom lasts)
       - composition block: max_nesting_depth, child_routines list, budget_inheritance
   - Quotas
-    - Optimistic rate limiting
-      - Local bucket — optimistic token-bucket regulates client-side cadence; slaved dynamically to upstream headers
-      - Multi-window tracking — supports dual-rate partitions (burst bucket + rolling window ceilings e.g. 24h / 86400s)
-      - Gate decision — local bucket empty pauses dispatch up to timeout; hard limit exhaustion throws exit 2
-      - Dynamic header calibration — reconciles RFC headers and structured JSON payloads; unexpected 429 instantly forces local bucket tokens to 0
-      - Remote 429 handling — local bucket locked until upstream Retry-After epoch: see physics.md#Exit-code-law
-      - Storage
-        - State lands in `_api_quota` rows — kernel-written, agent-readable
-        - Rows scoped per env: sim and prod quotas independent — rehearsal never burns prod limits
-        - Rows surface in cost_envelope.live_quota: limit, remaining, reset_at, status per provider
-      - Enforcement
-        - Static session fuel caps and wire limits are the floor under dynamic quota
-        - Pre-call deny at deny_at_remaining → exit 2 before egress: see physics.md#Fail-closed-stance
-        - Remote 429 triggers backoff retry; persistent exhaustion surfaces upstream provider limits cleanly
-        - Live remaining/reset_at/budget status before invoking: see action.md#External-APIs
-      - Fallback: providers without standard headers get kernel-counted sliding windows
+    - Dial 1: Cadence (leaky token bucket)
+      - Socket boundary — the bucket gates dispatch at the kernel socket edge, per provider
+      - Transparent sleep — expected wait under 2s pauses socket dispatch inside the kernel; the routine never observes it
+      - Proactive yield — expected wait over 2s or an upstream 429 with Retry-After yields proactively with exit 6: see physics.md#Exit-code-law
+      - Header auto-tuning — X-RateLimit-Remaining and Reset response headers recalibrate the local bucket on every response
+      - Unexpected 429 — a remote 429 instantly drains the local bucket to 0 and parks frames with exit 6: see artifacts/policy.yaml#api.rate_limit
+      - Preemption floors — background yields at 15 tokens, standard at 5 tokens, critical drains to 0: see artifacts/policy.yaml#api.rate_limit
+      - Live quota read — remaining, reset_at, and status before invoking: see action.md#External-api-methods
+      - Storage — state lands in _api_quota rows, kernel-written and agent-readable; sim and prod tracked independently: see world.md#Dual-schema
+      - Fallback — providers without standard headers get kernel-counted sliding windows
+    - Dial 2: Ceiling (spend ledger)
+      - Monthly ledger — persistent counters track calls and cost per provider against the monthly limit
+      - Fail-closed denial — a breached ceiling rejects the request before socket dispatch with exit 2: see physics.md#Fail-closed-stance
+      - Fuel is the floor — static session fuel caps sit under the dynamic ceiling
     - Governance caps
       - maintenance budgets — consolidation max 30 minutes; max 10 proposals
       - trigger budgets — cron min 5 minutes; webhook 100 events/min; poll max 10
@@ -162,23 +134,24 @@
         - sync max_catalog_size_mb: 10 — compiled catalog stays lean
   - Exhaustion
     - budget.exhausted event
-      - Payload: frame_id, routine, blocking_level, dimension, declared, consumed
+      - Payload: frame_id, routine, blocking_level, pillar, declared, consumed
       - attempted_op names the primitive that crossed the line (db.exec)
       - exit_code: 2 — a policy denial, not a runtime error
     - Citation format
-      - "routine B (frame_004) exhausted ops: 20/20" — exact frame and dimension
+      - "routine B (frame_004) exhausted fuel: 20/20" — exact frame and pillar
       - budget_denial_cites_remaining: shows remaining at the blocking level
       - budget_denial_cites_ancestors: parent/session remaining for context
-      - "session remaining: 488 ops" — the ancestor context line
+      - "session remaining: 488 fuel" — the ancestor context line
       - cite_measured_value + suggest_remediation apply to budget denials too (artifacts/governance.yaml)
     - Worked example
-      - archive_old_orders@3 hits ops 20/20 at frame_005
+      - archive_old_orders@3 hits fuel 20/20 at frame_005
       - attempted_op: db.exec — exit 2 mid-DAG
-      - Session had 488 ops left — the routine frame was the tightest constraint
+      - Session had 488 fuel left — the routine frame was the tightest constraint
     - Policy
-      - budget_exhaustion: yield_or_deny — governed by priority class (artifacts/governance.yaml)
+      - budget_exhaustion: yield_or_deny — governed by priority class: see artifacts/governance.yaml#routine_shape
       - Yield and resumption mechanics: see physics.md#Exit-code-law
-      - Hard deny — dry pool + Critical task throws exit 2 (see physics.md#Exit-code-law)
+      - Exit 6 (yield) — preemption floors, cadence waits over 2s, upstream 429 with Retry-After
+      - Exit 2 (deny) — empty tanks: frame fuel 0 or session fuel 0; spend ceiling breach; Critical task on a dry pool
       - No partial execution past budget — routine fails cleanly, no half-executed side effects
       - Runtime: op #51 aborts (limit_exceeded), watchdog kills past 300s
     - Pre-flight
