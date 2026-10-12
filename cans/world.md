@@ -10,7 +10,7 @@
         - spoke-thin mode — stateless client node; delegates both guest compute and database execution to Hub
         - spoke-fat mode — compute-local worker; runs guest routines in local sandbox, proxies ctx.db calls to Hub via RPC
         - spoke-ephemeral mode — stateless disposable node; in-memory buffer only, zero local disk footprint: see agent.md#Ephemeral-swarm-identity
-        - replica mode — distributed embedded replica; local reads via LibSQL cache, writes forwarded upstream to primary
+        - replica mode — read-only local replica; local reads served from LibSQL cache, all writes forwarded to Hub: see physics.md#Distributed-concurrency-laws
       - Distributed consensus and swarm coordination
         - writer serialization — Hub serializes physical writes via SQLite BEGIN IMMEDIATE; spokes queue via busy_timeout
         - lease arbitration — cross-spoke resource locks mediated through claims table: see artifacts/system-schema.yaml#claims

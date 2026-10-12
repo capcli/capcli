@@ -15,6 +15,7 @@
         - network jail — kernel-enforced socket null-routing; cooperative host process execution is Tier 0 (DENIED)
         - trust bounds — draft and reviewed in dev/sim only; pinned execution denied (E045_TIER2_PINNED_DENIED): see trust.md#Ladder-laws
   - Deployment topology
+    - dual-axis contract — swarm and federation are separate axes: spokes proxy DB to the Hub; federated workspaces are sovereign peers, each with its own DB and budget: see #Federation-invariants
     - dedicated server — headless Linux host running capcli-daemon under systemd; required for 24/7 background crons, webhooks, and S3 WORM attestations
     - federated mesh — sovereign daemon peers over shared VPS or private WireGuard network; IPC over unix:// socket paths (e.g. /run/capcli/<ws>.sock) or tcp:// endpoints (e.g. 100.64.0.1:4040)
     - swarm hub — central daemon instance coordinating remote spokes; hosts primary SQLite writer and system tables
@@ -56,6 +57,7 @@
     - lock fence rule: see action.md#Interior-rules
     - transport retry — missing peer socket polls max 1500ms (3 ticks @ 500ms); timeout exhaustion exits 4 (E055_FEDERATION_UNREACHABLE)
     - secret transit — plaintext secret bytes in federated params scrubbed to [REDACTED_VAULT_TOKEN] at the socket edge; vault://<name> handles pass opaque: see agent.md#Secrets
+    - session isolation — caller session never crosses the workspace boundary; callee mints its own session per call: see budget.md#Frames
     - hop/nesting interplay — federated hops count toward call nesting depth; both ceilings enforced, hop ceiling 2 binds first: see #Exit-code-law
     - in-process concurrency — multi-threaded harness subagents (same PID) serialize via OCC state_fence and marker-scoped claims; collision yields via exit 6: see #Exit-code-law
     - network partition fail-closed — lost connection to Hub during sync audit delivery aborts command immediately with exit 5
