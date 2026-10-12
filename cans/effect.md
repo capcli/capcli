@@ -35,6 +35,8 @@
       - swarm.node_reap — agent, reason (ttl_expired|sigterm|evicted), claims_released_count
       - swarm.preemption_yield — agent, frame_id, checkpoint_cursor: see physics.md#Distributed-concurrency-laws
       - routine.draft — template_source, template_hash, trust, version: see action.md#Routine-templates
+      - rule.config_proposed — file, diff_hash, agent, gate_status: see world.md#Configuration-proposal-lifecycle
+      - rule.config_committed — file, approver_principal, git_commit, lockfile_hash: see interface.md#Administrative-cockpit-pwa
       - env.init_from_template — source_uri, bundle_sha256, schema_version, seed_tables_count: see world.md#World-templates
       - api.sync — provider, added, removed, changed, unchanged: see action.md#Catalog-synchronization
       - api.token_refresh — provider, token_type, expires_in, refresh_outcome

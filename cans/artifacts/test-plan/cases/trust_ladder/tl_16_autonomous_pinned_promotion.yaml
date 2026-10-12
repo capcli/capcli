@@ -1,0 +1,74 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_16_autonomous_pinned_promotion"
+title: "Reviewed routine promotes to pinned 100% autonomously on simulation proof with zero denials and no human queue"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/trust.md#Autonomous-pinned-promotion"
+  statement: "'Routines achieve pinned trust 100% autonomously without human queue approvals' (trust.md#Gates-&-promotion: 'autonomous pinned promotion'): a reviewed routine passing the 100% simulation replay invariant suite with zero policy denials, live contract schema verification for external API verbs, and p95 latency <= 70% of the timeout ceiling advances reviewed -> pinned with zero human involvement — promotion queues requiring manual review are eliminated."
+  blast_radius_if_breached: "If promotion demanded human sign-off after the proof suite passed, every pinned routine would sit in a queue — the ladder would stall behind human latency, and any 'autonomous' promotion without the full three-gate proof would elevate code that never survived replay, contract, and latency verification."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by approving the promotion through a human principal in the fixture (or pre-seeding the routine at pinned) and asserting the rung — the test would pass while the promotion was manual or the proof gates never ran."
+  anti_slop_mitigation: "AS-06 hardcodes the three proof literals (100% replay pass, zero denials, p95 <= 0.7 * timeout); AS-05 requires the promotion audit event to carry an empty approver field and the proof bundle hashes; AS-02 proves _pending_asks has no promotion row and the routine's rung reads 'pinned' from the kernel store, not from fixture seeding."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_tl_16"
+    trust: "reviewed" # routine invoice_recon@v4 currently reviewed; the kernel evaluates promotion, not a human
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1   # invoice_recon@v4: trust == reviewed, sim_replay_pass_rate == 1.0, policy_denials == 0
+      - name: "_pending_asks"
+        row_count: 0   # no human queue entries; there must be none after the run either
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: 'capcli routine ship invoice_recon@v4 --trust pinned — the kernel runs the proof bundle (100% sim replay invariant suite, live contract schema verification for the one external API verb, p95 latency check against the timeout ceiling) and promotes on full pass'
+  input_params:
+    routine: "invoice_recon@v4"
+    from_trust: "reviewed"
+    to_trust: "pinned"
+    sim_replay_pass_rate: 1.0
+    policy_denials: 0
+    contract_schema_match: 1.0
+    p95_latency_ms: 630
+    timeout_ceiling_ms: 1000
+    human_approvals_used: 0
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "trust.promotion"
+    culprit: "none (nominal) — 100% sim replay invariant pass, zero policy denials, live contract schema verified, p95 630ms <= 700ms (70% of 1000ms ceiling); reviewed -> pinned promoted autonomously with zero human approvals"
+    remedy: "no action — rung holds pinned; routine enters the 1-hour canary observation window (trust.md#Canary-veto-window)"
+  database:
+    row_count_delta: 1   # promotion event in the ledger
+    tables_mutated: ["routine_stats", "_audit"]   # routine_stats rung updated in place; _pending_asks untouched (still 0 rows)
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "trust.promoted"   # payload carries rung reviewed -> pinned, proof bundle hashes, approver absent
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Hardcoded literals: sim_replay_pass_rate == 1.0 (not >= 0.99), policy_denials == 0, p95_latency_ms == 630, ceiling == 1000, and 630 <= 0.7 * 1000 — the literals come from the test spec, never re-derived from the engine's proof output; a single denial or a 0.999 pass rate fails promotion."
+  - rule: "AS-05"
+    verification: "The trust.promoted event's approver field is empty/absent and its payload records the three proof hashes (replay bundle, contract verification, latency measurement); prev_hash equals the SHA-256 of the prior _audit row; verify_chain() passes — a promotion row carrying a human approver principal fails the test."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _pending_asks is zero before AND after (no human queue was touched); SELECT trust FROM routine_stats WHERE routine = 'invoice_recon' reads 'pinned' from the kernel store — ruling out pre-seeding by asserting the initial row read 'reviewed'."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 0 and parse the CliEnvelope: the promotion verdict cites the autonomous path (no 'awaiting human approval' line), rung transition reviewed -> pinned; any human-approval reference in the envelope fails the test."

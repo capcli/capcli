@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_18_mechanical_daemon_resume_completion"
+title: "Yielded frame unblocked by clock refill is executed by capcli-daemon to completion with zero LLM re-prompts"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/physics.md#Mechanical-daemon-resumption"
+  statement: "'When a yielded frame is unblocked by clock refill (reset_at) or human 1-click approval in Cockpit, capcli-daemon executes the pre-compiled guest routine directly in the sandbox to completion; waking or re-prompting the LLM harness for purely mechanical execution is prohibited' (physics.md#Exit-code-law: 'mechanical daemon resumption'): a frame yielded with exit 6 resumes purely as sandbox computation — the harness wake count is zero."
+  blast_radius_if_breached: "If resumption woke the LLM harness, every routine suspension would burn model tokens and introduce non-deterministic re-reasoning into execution that was already planned — turning a clock-refill pause into a fresh LLM turn, re-opening the door to hallucinated tool calls and destroying resume determinism."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by letting the fixture re-invoke the harness on resume (or by invoking the routine directly itself) and asserting completion — the run completes, but it was LLM-driven, not mechanical daemon execution."
+  anti_slop_mitigation: "AS-06 hardcodes harness_wake_count == 0 measured from the kernel-side session ledger (not a fixture flag the harness can set). AS-05 requires the resumed run's audit rows to carry the daemon actor identity, never a harness session id. AS-02 proves the _suspended_tasks row was cleared by the daemon refill loop, not by a test command."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_18"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_suspended_tasks"
+        row_count: 1   # frame frm_bc_18 parked with exit 6; resume_target set; unblock condition: quota reset_at epoch + 3600
+      - name: "_budget_frames"
+        row_count: 1   # parent frame with the routine's remaining ops
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'advance MockClock past quota reset_at; daemon refill loop detects the unblocked frame and executes the pre-compiled guest routine ledger_write@v3 in the sandbox; test reads the completed run and the harness wake ledger'
+  input_params:
+    frame_id: "frm_bc_18"
+    routine: "ledger_write@v3"
+    unblock_trigger: "clock_refill"
+    expected_harness_wake_count: 0
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "kernel.daemon"
+    culprit: "none (nominal) — clock refill unblocked frm_bc_18; capcli-daemon executed the pre-compiled guest routine in the sandbox to completion; harness_wake_count == 0"
+    remedy: "no action — resumption stayed purely mechanical"
+  database:
+    row_count_delta: 3   # routine.run completion + budget.frame_push + budget.frame_pop audit events
+    tables_mutated: ["_audit", "_budget_frames", "_suspended_tasks"]   # _suspended_tasks row removed on resume
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run"   # outcome: success; actor is the daemon identity, not a harness session
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Hardcoded literal: harness_wake_count == 0 — measured by a kernel-side query of the session ledger for new LLM harness wake events tied to the resumed run between unblock and completion; the fixture never touches this counter and any re-prompt (wake, re-plan, re-tool-call) fails the test."
+  - rule: "AS-05"
+    verification: "The routine.run row's actor field is the daemon identity (not the original harness session id); prev_hash equals the SHA-256 of the prior _audit row; verify_chain() passes — proving the completion was produced by daemon sandbox execution, not by re-invoking the harness."
+  - rule: "AS-04"
+    verification: "Clock refill is driven by MockClock epoch ticks inside the Rust runtime (reset_at is an epoch literal in the test) — no wall-clock reads, no manual 'resume now' test command; the daemon refill loop must observe the unblock condition itself."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM _suspended_tasks is zero after completion (the daemon cleared the row on resume) and the parent _budget_frames row shows consumed_ops advanced by exactly the routine's executed op count."

@@ -184,13 +184,16 @@ tables:
       - [[session_id, harness_marker, op_sequence]]
 
   _pending_asks:
-    description: "Suspended routine questions awaiting structured human or partner resolution"
+    description: "Suspended routine questions and config proposals awaiting human or partner resolution"
     sys: true
     columns:
       ask_id: text pk                  # question UUID
+      frame_id: text ref=_suspended_tasks.frame_id   # yielded frame to resume on resolution
       principal: text!                 # target human or partner identity
       question: text!                  # prompt text
       options: json!                   # allowed choice strings array
+      kind: text=inquiry               # inquiry → ask card | credential → credential requests | config_proposal → config proposals | budget_bump → macro-budget grants
+      diff_payload: json               # unified git-style diff and target file for config_proposal
       state_fences: json!              # OCC version hashes of read dependencies captured at suspension
       timeout_at: int!                 # unix epoch seconds
       status: text=pending             # pending, resolved, expired
@@ -198,6 +201,7 @@ tables:
       created_at: int!
     chk:
       - "status IN ('pending', 'resolved', 'expired')"
+      - "kind IN ('inquiry', 'credential', 'config_proposal', 'budget_bump')"
     idx:
       - [[principal, status]]
 

@@ -87,6 +87,8 @@ cans/artifacts/test-plan/
       bc_15_spoke_prereserve_preemption_floor.yaml
       bc_16_federated_min_cascade.yaml
       bc_17_callee_exhaustion_isolation.yaml
+      bc_18_mechanical_daemon_resume_completion.yaml
+      bc_19_occ_drift_resume_abort_exit2.yaml
     audit_dag/
       ad_01_sha256_prev_hash_linking.yaml
       ad_02_sink_failure_kernel_panic.yaml
@@ -118,6 +120,8 @@ cans/artifacts/test-plan/
       tl_13_circuit_breaker_demotion_streak.yaml
       tl_14_federated_caller_floor_pinned.yaml
       tl_15_federated_initiation_floor.yaml
+      tl_16_autonomous_pinned_promotion.yaml
+      tl_17_canary_veto_rollback_draft.yaml
     schema_evolution/
       se_01_yaml_syntax_gate1_refusal.yaml
       se_02_circular_dependency_gate2_refusal.yaml
@@ -132,9 +136,7 @@ cans/artifacts/test-plan/
       se_11_forward_only_migration_invariant.yaml
       se_12_git_worktree_isolation_boundary.yaml
       se_13_git_push_dry_run_merge_gate.yaml
-      se_14_template_bundle_cap_breach.yaml
-      se_15_template_kernel_compat_refusal.yaml
-      se_16_template_ast_rewrite_draft_floor.yaml
+      se_14_config_proposal_lifecycle.yaml
     coordination_claims/
       cc_01_exclusive_lease_acquisition.yaml
       cc_02_contested_claim_rejection.yaml
@@ -449,7 +451,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | Case ID | Target Tier | Invariant & Scenario Narrative | Matrix | Banned Slop Pattern |
 |---|---|---|---|---|
 | `bc_01_downward_min_inheritance.yaml` | Unit | Parent frame (ops=20) inspects child routine (declared ops=50); pre-flight static analysis detects child starvation and returns `can_invoke_now: false`. | TP | Permitting invocation when declared child branch exceeds available parent headroom. |
-| `bc_02_session_ops_ceiling_starvation.yaml` | Integration | Ten child routines execute 5 ops each; total session ops ceiling (50) is reached; 11th call dies with `exit 2`. | TN | Resetting session counters across child frame pushes. |
+| `bc_02_session_ops_ceiling_starvation.yaml` | Integration | Ten child routines execute 5 ops each; total session ops ceiling (2500) is reached; 11th call dies with `exit 2`. | TN | Resetting session counters across child frame pushes. |
 | `bc_03_leaf_op_51_hard_kill.yaml` | E2E | Routine without declared custom limit attempts op #51; kernel watchdog halts frame with `exit 2` at boundary. | TN | Allowing half-executed state mutations on the 51st operation. |
 | `bc_04_duration_watchdog_cleanup.yaml` | Integration | Guest routine enters infinite loop; watchdog timer trips at 300s (simulated); process killed, transaction rolled back. | TN | Leaking orphaned child processes or zombie threads after kill. |
 | `bc_05_fuel_pool_depletion_exit2.yaml` | Unit | Routine exceeds session fuel allocation (100,000 units); kernel denies subsequent primitive invocation. | TN | Continuing execution with negative fuel balance. |
@@ -465,6 +467,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `bc_15_spoke_prereserve_preemption_floor.yaml` | Integration | Spokes pre-reserve 1000-fuel blocks via RPC and burn locally; Hub low-token floor yields all non-critical spokes with `exit 6` on one tick, critical spoke exempt. | TN | Reading local block totals without Hub reconciliation, or yielding one spoke at a time. |
 | `bc_16_federated_min_cascade.yaml` | Integration | Federated callee effective limit = min(caller_remaining, callee_policy_ceiling, callee_governance_ceiling); rotated variants prove each term can bind. | TP | Asserting with caller_remaining as the only binding input, or using the local min() formula across workspaces. |
 | `bc_17_callee_exhaustion_isolation.yaml` | Integration | Callee exhausts its delegated budget and aborts with `exit 2`; caller `consumed_ops` is bit-identical before and after. | TN | Exhausting the caller frame instead, or inventing a failure penalty charged to the caller. |
+| `bc_18_mechanical_daemon_resume_completion.yaml` | Integration | Frame yielded (`exit 6`) unblocked by clock refill; `capcli-daemon` executes the pre-compiled guest routine in the sandbox to completion; harness wake count is exactly 0. | TP | Re-invoking the LLM harness on resume and asserting completion, or resuming via a manual test command. |
+| `bc_19_occ_drift_resume_abort_exit2.yaml` | Integration | Yielded frame's OCC `state_fence` mismatches live row state at resume; daemon aborts immediately with `exit 2` (`E061_OCC_DRIFT`); frame purged, nothing committed. | TN | Drifting a table the fence never covered, or letting the frame resume and commit against drifted rows. |
 
 ### 6.5 Memory Spine & Causal DAG (`cases/audit_dag/`)
 
@@ -504,6 +508,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `tl_13_circuit_breaker_demotion_streak.yaml` | Integration | Routine has 20 consecutive runs with success rate <0.70; autonomous circuit-breaker demotes routine to `draft`. | TN | Allowing a broken pinned routine to repeatedly fail in production without auto-demotion. |
 | `tl_14_federated_caller_floor_pinned.yaml` | Integration | `ws://` call targeting a draft routine fails closed with `exit 2` (E042_FEDERATION_DENIED) despite allowlist and SO_PEERCRED passing. | TN | Targeting a pinned routine and asserting denial, or letting the call execute past the trust gate. |
 | `tl_15_federated_initiation_floor.yaml` | Integration | Draft routine initiating a `ws://` call is denied (trust >= reviewed required); callee is pinned to isolate the caller-side floor. | TN | Conflating with the inbound caller floor (tl_14) by targeting a draft callee instead of a draft caller. |
+| `tl_16_autonomous_pinned_promotion.yaml` | Integration | Reviewed routine passes 100% sim replay invariants, zero policy denials, live contract schema verification, p95 <= 70% of timeout ceiling; kernel promotes reviewed -> pinned with zero human approvals. | TP | Promoting via a human approval in the fixture, or promoting on 4-of-5 proof metrics. |
+| `tl_17_canary_veto_rollback_draft.yaml` | Integration | Newly pinned routine (40min into the 1-hour window) posts 1.2% error (> 1% threshold); daemon watchdog demotes pinned -> draft and alerts Cockpit PWA. | TN | Hand-demoting in the fixture instead of exercising the autonomous veto, or asserting no rollback at a below-threshold error rate. |
 
 ### 6.7 Schema Evolution & Validation Gates (`cases/schema_evolution/`)
 
@@ -522,9 +528,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `se_11_forward_only_migration_invariant.yaml` | Integration | Agent attempts down-migration script; kernel rejects execution; mandates VACUUM snapshot restore for backward recovery. | TN | Implementing down-migration SQL execution path in engine. |
 | `se_12_namespace_isolation_boundary.yaml` | Integration | Migrations executed in `envs/dev/` namespace; test confirms `envs/prod/` SQLite database file remains untouched. | TP | Running migrations across environment boundaries directly. |
 | `se_13_git_push_dry_run_merge_gate.yaml` | Integration | Production merge pipeline runs `git push --dry-run` to verify remote credentials before committing physical DDL changes. | TP | Applying DDL changes locally when remote git repository is unreachable. |
-| `se_14_template_bundle_cap_breach.yaml` | Integration | World template bundle exceeding 5MB denied at `capcli template pack` with `exit 2` (`policy.template` size limit). | TN | Extracting unverified large archives to `/tmp` before validating file size. |
-| `se_15_template_kernel_compat_refusal.yaml` | Unit | Template declaring `min_kernel_version: 0.5.0` on a 0.4.2 kernel refused intake with `exit 3`. | TN | Ignoring template manifest compatibility constraints during unpack. |
-| `se_16_template_ast_rewrite_draft_floor.yaml` | Integration | Routine instantiated via `capcli template scaffold` rewrites routine name via AST, locks trust rung to `draft` (v1), and logs `routine.draft`. | TP | Allowing imported templates to inherit `pinned` trust or running bash sed replacement. |
+| `se_14_config_proposal_lifecycle.yaml` | E2E | Agent saves YAML edit; Gates 1+2 stage a proposal and yield the frame (`exit 6`); human 1-click PWA approval triggers daemon lockfile recompile, atomic authorizer reload, `rule.config_committed`, and Git auto-commit. | TP | Applying the disk edit to the running engine before approval, or auto-committing without the human cryptographic signature. |
 
 ### 6.8 Coordination & Claims (`cases/coordination_claims/`)
 

@@ -13,7 +13,7 @@ invariant:
 confusion_matrix:
   quadrant: "true_positive"
   slop_risk: "An AI agent fakes this test by asserting the child's *declared* max_ops (50) instead of the clamped *effective* limit, or by deriving the expected effective limit from the engine's own frame_push payload — a tautology that passes even when the clamp is missing."
-  anti_slop_mitigation: "AS-06 forces the hardcoded literal 20 (= min(50, 50, 20, 500)) as the expected effective limit, never the engine's output. AS-05 verifies the budget.frame_push audit event actually recorded inherited_remaining.ops == 20 with a valid chain link. AS-03 requires the typed exit 0 with the parsed envelope."
+  anti_slop_mitigation: "AS-06 forces the hardcoded literal 20 (= min(50, 50, 20, 2500)) as the expected effective limit, never the engine's output. AS-05 verifies the budget.frame_push audit event actually recorded inherited_remaining.ops == 20 with a valid chain link. AS-03 requires the typed exit 0 with the parsed envelope."
 
 setup:
   env: "dev"
@@ -36,14 +36,14 @@ execution:
     parent_remaining_ops: 20
     child_declared_ops: 50
     governance_ceiling_ops: 50   # routine_shape.execution.max_ops_per_run
-    session_ceiling_ops: 500     # routine_shape.execution.session_ops_ceiling
+    session_ceiling_ops: 2500    # routine_shape.execution.session_ops_ceiling
 
 expected_observations:
   exit_code: 0
   state_modified: true
   diagnostic:
     domain: "budget.cascade"
-    culprit: "none — nominal path: child effective ops clamped to min(declared 50, governance 50, parent 20, session 500) = 20; the cage tightens, never widens"
+    culprit: "none — nominal path: child effective ops clamped to min(declared 50, governance 50, parent 20, session 2500) = 20; the cage tightens, never widens"
     remedy: "none required — inherited_remaining is the parent-side min() already computed per dimension (budget.md#budget.frame_push)"
   database:
     row_count_delta: 1
@@ -62,4 +62,4 @@ anti_slop_assertions:
   - rule: "AS-05"
     verification: "_audit gains exactly one budget.frame_push event row; its payload records inherited_remaining.ops == 20 (the parent-side min() already computed per dimension) and declared.max_ops == 50; prev_hash equals the SHA-256 of the prior row; verify_chain() passes."
   - rule: "AS-06"
-    verification: "Hardcoded literal: expected effective limit == 20 (min of the four literals 50/50/20/500), never read back from the engine's frame row; additionally the child frame's consumed_ops must cap at 20 — an executed 21st op (allowed because it 'declared 50') fails the test."
+    verification: "Hardcoded literal: expected effective limit == 20 (min of the four literals 50/50/20/2500), never read back from the engine's frame row; additionally the child frame's consumed_ops must cap at 20 — an executed 21st op (allowed because it 'declared 50') fails the test."

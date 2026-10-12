@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_17_canary_veto_rollback_draft"
+title: "Newly pinned routine exceeding 1% error in the first hour is rolled back to draft with a Cockpit PWA alert"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/trust.md#Canary-veto-window"
+  statement: "'Newly pinned routines enter a 1-hour autonomous canary observation window; error rate exceeding 1% triggers automatic rollback to draft and alerts Cockpit PWA' (trust.md#Gates-&-promotion: 'canary veto window'): a pinned routine 40 minutes into its window with a 1.2% error rate is demoted pinned -> draft by the watchdog — no human gate, no delay."
+  blast_radius_if_breached: "A pinned routine failing at >1% that keeps its rung would ship unproven failures into prod behind the strongest trust signal — every downstream policy floor that trusts 'pinned' (bulk ops, cross-workspace calls, prod writes) inherits the broken routine's blast radius."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by running the routine at 0.5% error (below the threshold) and asserting no rollback (inverted), or by hand-demoting in the fixture and asserting 'draft' — the autonomous veto itself is never exercised."
+  anti_slop_mitigation: "AS-06 pins the literal error rate 0.012 > 0.01 threshold and the window position 40min < 60min; AS-02 proves the rung demoted to draft via a kernel read (not fixture assignment) and that the PWA alert row exists; AS-04 drives the 1-hour window on MockClock so the window timing is deterministic."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_tl_17"
+    trust: "pinned" # invoice_recon@v4 promoted to pinned 40 minutes ago; canary window still open
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "routine_stats"
+        row_count: 1   # invoice_recon@v4: trust == pinned, canary_window_started_at == T0, errors == 12, runs == 1000
+      - name: "_pending_asks"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'daemon canary watchdog ticks at T0 + 40min (MockClock); reads routine_stats (12 errors / 1000 runs = 1.2% > 1%); demotes rung pinned -> draft, writes the canary veto event, and emits the Cockpit PWA alert'
+  input_params:
+    routine: "invoice_recon@v4"
+    canary_window_minutes: 60
+    minutes_since_pin: 40
+    error_runs: 12
+    total_runs: 1000
+    error_rate: 0.012
+    veto_threshold: 0.01
+
+expected_observations:
+  exit_code: 0   # the watchdog tick itself succeeds; the VETO is carried in the trust state, not the exit code
+  state_modified: true
+  diagnostic:
+    domain: "trust.canary"
+    culprit: "canary veto — invoice_recon@v4 posted error rate 1.2% (12/1000) exceeding the 1% threshold inside the 1-hour window (40min elapsed); watchdog demoted pinned -> draft and alerted Cockpit PWA"
+    remedy: "fix the routine, re-prove in sim, and re-promote — the rung stays draft until a fresh full proof bundle passes"
+  database:
+    row_count_delta: 2   # trust.demoted canary veto event + PWA alert row
+    tables_mutated: ["routine_stats", "_audit", "_pending_asks"]   # _pending_asks gains the human-visible alert row
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "trust.demoted"   # reason: canary_veto; payload carries error_rate, threshold, window position
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Hardcoded literals: error_rate == 0.012 (12/1000, both literals) is strictly greater than the 0.01 veto threshold, and minutes_since_pin == 40 is strictly inside the 60-minute window — the comparison uses spec literals, never the engine's computed rate; a 0.009 error rate (below threshold) must NOT trigger the veto (positive control)."
+  - rule: "AS-02"
+    verification: "SELECT trust FROM routine_stats WHERE routine = 'invoice_recon' reads 'draft' from the kernel store after the tick (ruling out fixture assignment: the pre-tick read must show 'pinned'); the PWA alert row exists in _pending_asks with the canary_veto payload."
+  - rule: "AS-04"
+    verification: "The 40-minute window position is driven by MockClock epoch ticks inside the Rust runtime — no wall-clock reads; the watchdog tick is the daemon's own scheduled execution, not a manual demote command."
+  - rule: "AS-05"
+    verification: "The trust.demoted event's payload records error_rate 0.012, threshold 0.01, and reason 'canary_veto'; prev_hash equals the SHA-256 of the prior _audit row; verify_chain() passes."

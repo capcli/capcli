@@ -21,6 +21,7 @@
         - abort — run abort <frame_id> — cancels a suspended frame; fence release law: see physics.md#Exit-code-law
         - sql — sql "<query>" [-p k=v] [-m "intent"] [--dry-run] — unified AST-gated query & execution
         - overview — run overview [--as <principal>] — single-shot domain situational briefing
+        - turn-zero contract — harness invokes run overview at every turn start to ground LLM context (<60 tokens) in active session fuel, locks, and sensory inbox status
         - search — search <query> [--type <domain>] [--trust X] [--env X]
         - gap detection — run search gaps --since 7d
         - inspect — inspect <ptr> — resolves pre-flight envelopes across all URP types (cap://, tpl://, doc://, db://, ws://)
@@ -47,7 +48,7 @@
     - Routine path: routine noun
       - Authoring — direct write in routines/<name>.py or scaffold via `capcli template scaffold tpl://routine/<name> <target> [-p k=v]`
       - Verification — routine prove <name> [-p k=v] [--env sim]
-      - Promotion — routine ship <name> <reviewed|pinned> [--env X] [--reason "..."] [--queue]
+      - Promotion — routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
       - Maintenance — routine sweep [--since 30d]
       - Profiling — routine stats <name> [--deep]
       - Recovery — routine rollback <name> [version]
@@ -181,8 +182,16 @@
   - Administrative cockpit PWA
     - Architecture & serving
       - distribution — embedded static bundle served by capcli-daemon at 127.0.0.1:4040
-      - client authority — strictly zero authority; communicates solely via authenticated JSON-RPC and WS
+      - client authority — zero execution logic; serves as exclusive out-of-band human decision broker (WebAuthn / Passkey authenticated)
+      - zero-cli human law — humans interact exclusively via 1-click mobile decision cards in PWA; terminal and raw YAML editing by humans are prohibited
+      - background git synchronization — approving a proposal in Cockpit instructs daemon to recompile capcli.lock, write audit ledger, and commit to Git
+        - signing key custody — daemon holds the approver's Git signing key in the encrypted vault; commits are signed under the caller's key
       - presentation stance — neutral kernel inspector; renders engine primitives without domain abstractions
+    - Human decision cards
+      - config proposals — renders visual diff of agent-authored YAML changes with Gate 1 & 2 verification badge; 1-click [Approve & Apply] recompiles lockfile and resumes task
+      - credential requests — out-of-band vault input field encrypts raw secret directly into daemon memory (AES-256-GCM); zero exposure to agent context or shell logs
+        - persistence — daemon decrypts into memory only; ciphertext persists to the secrets table: see agent.md#Secrets
+      - macro-budget grants — 1-click expansion of session fuel, ops, or duration for suspended frames; grants record per-session overrides in _budget_frames, never governance.yaml mutations
     - Cockpit functional layers
       - Layer 1: State Inspector — renders schema tables, columns, indexes, and format-preserved masked cells (████)
       - Layer 2: Capability Inspector — routine catalog, template blueprints via inspect (tpl://), version diffs, OpenAPI verb states, and manifest-vs-fingerprint graphs

@@ -16,7 +16,7 @@
         - retention rules — rolling local retention managed by maintenance: see artifacts/governance.yaml#backup
         - catalog inspection — CLI inspection surface: see interface.md#Storage-path:-db-noun
   - Storage & Backup
-    - Declarative source tracking — git repository holds read-only human declarations (schema.yaml, policy.yaml); kernel runtime never auto-commits or manages git index locks
+    - Declarative source tracking — git repository holds declarative configurations; capcli-daemon manages atomic Git commits strictly upon cryptographic human PWA approvals; direct unverified agent git mutations remain prohibited
     - Snapshot persistence — transactionally clean VACUUM INTO snapshots and JSONL audit mirrors stream directly to append-only S3/R2 object storage
     - Retention — immutable point-in-time snapshots and audit logs retain on object storage with WORM locking; local disk retains rolling 30-day cache
   - Hash chains

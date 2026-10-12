@@ -73,6 +73,20 @@
       - kernel-owned file — system-schema.yaml
       - physical compilation — single unified DDL in workspace.db
       - boundary invariant — manual SQL DDL editing prohibited
+  - Configuration proposal lifecycle
+    - authoring freedom — agents edit schema.yaml, policy.yaml, and governance.yaml directly on disk using standard tools
+    - proposal isolation — raw disk edits do not affect running engine state; daemon enforces active compiled capcli.lock until cutover
+    - gate intake — saving edits triggers Gate 1 (syntax) and Gate 2 (semantics) validation:
+      - invalid syntax — fails closed with exit 3 to the agent without notifying human
+      - valid syntax — creates staged proposal, generates diff hash, and yields calling frame (exit 6)
+      - file watch — daemon watches staged YAML paths; saving edits triggers gate intake and validation
+    - human resolution — Cockpit PWA presents structured 1-click diff card to human operator
+    - atomic cutover — human approval triggers capcli-daemon to:
+      - recompile capcli.lock with updated root hash
+      - atomically reload in-memory authorizer and governance limits
+      - record rule.config_committed in _audit
+      - auto-commit staged file diff and capcli.lock to Git
+      - wake suspended task for immediate execution
     - schema.yaml
       - ownership
         - author — agent harness in dev worktree

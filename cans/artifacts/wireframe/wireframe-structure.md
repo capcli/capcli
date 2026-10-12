@@ -159,7 +159,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (6 verbs → 47 screens)
+### 4.1 `run/` (6 verbs → 48 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -181,6 +181,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.execute.yield.quota` | yield | 6 | api.quota | rate_limit | Suspends task; sets `yield_until` timestamp |
 | `run.execute.denial.quota` | denial | 2 | api.quota | hard_deny | Critical-priority task drained provider pool to 0; hard-denied, never yielded |
 | `run.execute.success.resumed` | success | 0 | — | resumed | Daemon re-dispatches task on token refill |
+| `run.execute.denial.occ_drift` | denial | 2 | db.engine | occ_fence | `E061_OCC_DRIFT`: OCC state_fence drifted during suspension; daemon frame resume aborted |
 | `run.execute.crash.runtime` | crash | 4 | routine.runtime | exception | Guest language uncaught error |
 | `run.execute.crash.poll_timeout` | crash | 4 | routine.runtime | timeout | `poll_until` exceeds 30-second ceiling |
 | `run.execute.panic.secret_leak` | panic | 5 | kernel.panic | leak | `kill_and_alert` triggered on plaintext secret leak |

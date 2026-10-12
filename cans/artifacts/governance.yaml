@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════════════════════════════
 # governance.yaml — registry & capability shape governance
 # Version-locked with schema.yaml + policy.yaml at boot.
-# Compiled by kernel; never runtime-editable; exceptions = git commits.
+# Compiled by kernel; never runtime-editable except through the configuration proposal lifecycle (see world.md#Configuration-proposal-lifecycle).
 # ═══════════════════════════════════════════════════════════════
 version: 8
 lockfile: capcli.lock                 # deterministic compiler target; drift law: see policy.yaml#fail_closed
@@ -91,11 +91,12 @@ routine_shape:
 
   execution:
     max_ops_per_run: 50               # primitive DAG ceiling — op 51 aborts
+    macro_envelope_enabled: true      # permits routines to draw from session_ops_ceiling without micro-suspensions
     max_duration_seconds: 300         # sandbox watchdog kill
     max_result_tokens: 500            # summary cap crossing to the model
     enforce_pagination_contract: true # bans raw JSON string chopping; requires { items, next_cursor } schema
     max_txn_statements: 10            # one transaction stays one thought
-    session_ops_ceiling: 500          # session-level hard cap; frames cascade within this
+    session_ops_ceiling: 2500         # macro-budget ceiling per session
 
   # Proactive Brokerage
   priority_classes: [critical, standard, background]

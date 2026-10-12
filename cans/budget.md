@@ -29,6 +29,7 @@
         - consumed_egress_bytes: int=0
         - consumed_rows: int=0
         - consumed_api_calls: int=0
+        - turn-zero exemption — overview calls are kernel-funded and budget-exempt (≤60 tokens); never charged to the session frame
       - Bookkeeping
         - created_at, closed_at: int timestamps
         - yield_until: int timestamp for scheduled re-entry on quota depletion

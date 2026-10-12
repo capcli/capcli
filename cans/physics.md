@@ -139,8 +139,11 @@
         - domain federation.transport — peer unreachable after 1500ms timeout (E055_FEDERATION_UNREACHABLE)
       - exit 5 — domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
       - exit 6 — proactive yield; releases all held claims locks, records OCC state_fence, persists resume target to _suspended_tasks
+      - mechanical daemon resumption — when a yielded frame is unblocked by clock refill (reset_at) or human 1-click approval in Cockpit, capcli-daemon executes the pre-compiled guest routine directly in the sandbox to completion; waking or re-prompting the LLM harness for purely mechanical execution is prohibited
+      - resume verification — resumption verifies OCC state_fence against live row state; table drift during suspension aborts immediately with exit 2 (E061_OCC_DRIFT)
+      - compile at yield — daemon compiles the guest routine into a standalone artifact at yield time; resumption runs that artifact to completion without waking the harness
+      - result delivery — daemon posts completion results to the sensory inbox; harness surfaces them at the next turn-zero overview: see interface.md#CLI-surface
       - preemption yield — worker spot/container SIGTERM maps directly to exit 6; traps execution, drops claims, flushes cursor checkpoint, parks frame to Hub _suspended_tasks
-      - resume verification — resume verifies OCC state_fence against live row state; drift aborts with exit 2
       - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence, writes an audit event; the frame never resumes
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law

@@ -1,0 +1,73 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_19_occ_drift_resume_abort_exit2"
+title: "Resume verification detects state_fence drift on a yielded frame and aborts with exit 2 (E061_OCC_DRIFT)"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/physics.md#Resume-verification"
+  statement: "'Resumption verifies OCC state_fence against live row state; table drift during suspension aborts immediately with exit 2 (E061_OCC_DRIFT)' (physics.md#Exit-code-law: 'resume verification'): a frame whose checkpointed state_fence no longer matches the live rows is never resumed — the abort is a hard exit 2 with zero state mutation."
+  blast_radius_if_breached: "Resuming a frame on drifted rows would replay planned writes against state the planner never saw — lost updates, double-spends on counters, and silent ledger corruption that no audit event can reconstruct, because the fence that would have bound the plan is gone."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by drifting a table the fence never covered (so the resume succeeds and the 'abort' is asserted on a hand-rolled error), or by checking exit 2 while the frame actually resumed and committed — a silent success hiding behind the asserted code."
+  anti_slop_mitigation: "AS-06 hardcodes the exact fence table ('inventory'), the drifted row key ('INV-7'), and the expected code E061_OCC_DRIFT; AS-02 proves zero business rows mutated and the suspended frame was purged (never silently resumed); AS-03 forces the typed exit 2 with the diagnostic naming the fence mismatch."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_19"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_suspended_tasks"
+        row_count: 1   # frame frm_bc_19 yielded with exit 6; OCC state_fence recorded over inventory row INV-7 (qty == 40)
+      - name: "inventory"
+        row_count: 1   # row INV-7: qty == 40 at fence time
+    vault_secrets: []
+    # out-of-band write during suspension changes INV-7 qty 40 -> 25 BEFORE the resume attempt
+
+execution:
+  trigger: "json_rpc"
+  command: 'out-of-band UPDATE inventory SET qty = 25 WHERE sku = "INV-7" during suspension; daemon refill loop detects unblock condition, runs resume verification, compares OCC state_fence against live row state'
+  input_params:
+    frame_id: "frm_bc_19"
+    fence_table: "inventory"
+    fence_row: "INV-7"
+    fence_qty_at_checkpoint: 40
+    live_qty_at_resume: 25
+    expected_exit: 2
+    expected_code: "E061_OCC_DRIFT"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "kernel.physics"
+    culprit: "OCC state_fence drift — frame frm_bc_19 checkpointed inventory INV-7 qty == 40; live row reads qty == 25; resume verification aborts with exit 2 (E061_OCC_DRIFT); the frame never resumes"
+    remedy: "re-plan against current state and re-queue; the drifted write stands — the aborted frame commits nothing"
+  database:
+    row_count_delta: 1   # one abort audit event; the drifted INV-7 row itself is the fixture's out-of-band write
+    tables_mutated: ["_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.resumed_aborted"   # resume verification failure; payload carries expected fence vs live state
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: code == 'E061_OCC_DRIFT' exactly, domain == 'kernel.physics', the diagnostic names fence table 'inventory', row 'INV-7', checkpointed qty 40 vs live 25 — an exit 2 without the E061 code and the fence mismatch line fails the test."
+  - rule: "AS-02"
+    verification: "SELECT qty FROM inventory WHERE sku = 'INV-7' still reads exactly 25 (the drifted value — the resume mutated nothing); SELECT count(*) FROM _suspended_tasks is zero (the frame was purged on abort, not parked); no routine.run event exists for frm_bc_19."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: fence table 'inventory', row 'INV-7', checkpointed qty == 40, live qty == 25, expected code 'E061_OCC_DRIFT' — the drift must land on the fenced row, never a table outside the fence."
+  - rule: "AS-05"
+    verification: "The abort audit event's prev_hash equals the SHA-256 of the prior _audit row and its payload records the fence-vs-live mismatch (table, row, checkpoint hash, live hash); verify_chain() passes."

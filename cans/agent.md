@@ -69,13 +69,18 @@
       - threshold justifications — high-impact writes demand --reason
   - Sessions and boundaries
     - Session lifecycle
+      - dual-session architecture — harness session and kernel session are strictly decoupled:
+        - harness session — cognitive transcript, context window, and conversation memory owned entirely by the LLM runner (Claude Code, Cursor, Codex)
+        - kernel session — cryptographic budget frame, claim lease holder, and causal DAG boundary owned entirely by SQLite (_budget_frames, claims)
+      - session slaving — kernel auto-binds its session ID to harness environment markers (CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID) via Stage 0 sniffing; manual session tracking by agents is prohibited
+      - turn-zero orientation — every harness turn executes capcli run overview as step zero; injects a dense (<60 token) reality snapshot (active fuel, held locks, inbox events) directly into volatile prompt context
       - scoping — session id rides every budget frame, audit event, and claim
       - tracking — session counters govern fuel, wire bytes, rate, and rows affected
       - workspace anchor — CAPCLI_WORKSPACE env var or --workspace flag anchors root; cd reliance banned
     - Harness execution boundary
       - execution environment — bash subshell isolated via IPC socket to kernel daemon; direct workspace.db file access blocked
       - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)
-      - session persistence — CAPCLI_SESSION env var or workspace.db active context preserves session across turns
+      - session persistence — CAPCLI_SESSION env var (override for non-standard harnesses) or workspace.db active context keeps session across turns; Stage 0 sniffing is authoritative in standard harnesses
       - exit contract — process exit codes (0, 2, 3, 4, 5, 6) return status to subshell
       - client boundary — HTTP/WS daemon serving JSON-RPC 2.0 for external harnesses and tools
   - Secrets

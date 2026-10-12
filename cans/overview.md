@@ -31,7 +31,9 @@
     - Governance line
       - behavioral policy — policy.yaml governs runtime acts (verbs)
       - structural governance — governance.yaml governs artifact shapes (nouns)
-      - compilation — compiled together at startup; runtime mutation denied
+      - compilation — compiled together into capcli.lock at startup; live engine never reads uncompiled YAML text
+      - configuration mutation — agents author YAML modifications freely on disk as staged proposals; proposals activate only upon cryptographic human approval via Cockpit PWA
+      - daemon git authority — human approvals in Cockpit trigger capcli-daemon to recompile capcli.lock and commit changes to Git automatically; manual human Git manipulation is prohibited
   - Mental model
     - three-surface law — state in SQLite, capabilities in guest scripts, experience in JSONL
     - Storage trinity

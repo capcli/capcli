@@ -111,7 +111,7 @@ query:
   bulk:
     require_pre_count: true                    # capcli sql --count before mass ops
     require_trust: reviewed
-    confirm_above: { rows: 50000 }             # raised: human gate only on massive blast radius; measures aggregate pre-count across chunks, not per-statement rows
+    confirm_above: { rows: 50000 }             # macro blast-radius floor — operations below this execute fully autonomously; measures aggregate pre-count across chunks, not per-statement rows
 
   system_tables:
     deny_write: [_audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, routine_stats, _suspended_tasks, _templates, _outbox_events]
@@ -362,3 +362,4 @@ fail_closed:
   headless_approval: deny
   missing_principal_on_scoped: deny
   secret_exposure_detected: kill_and_alert
+  unapproved_config_cutover: refuse          # config cutover without cryptographic human approval denied, exit 2

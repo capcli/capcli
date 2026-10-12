@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "se_14_config_proposal_lifecycle"
+title: "Agent YAML edit flows author -> gates -> PWA approval -> daemon lockfile recompile and git auto-commit"
+domain: "schema_evolution"
+target_tier: "e2e"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/world.md#Configuration-proposal-lifecycle"
+  statement: "'Raw disk edits do not affect running engine state; daemon enforces active compiled capcli.lock until cutover' (world.md#Configuration-proposal-lifecycle: 'proposal isolation'): valid Gate 1+2 syntax creates a staged proposal and yields the calling frame (exit 6); the human 1-click approval in Cockpit PWA triggers capcli-daemon to recompile capcli.lock, atomically reload the authorizer and governance limits, record rule.config_committed (effect.md#Kernel-event-payloads), auto-commit the staged diff to Git, and wake the suspended task."
+  blast_radius_if_breached: "If disk edits took effect without the cutover gate, any agent could silently rewrite governance limits (ops ceilings, confirm_above floors) on a live engine — the budget cage and trust floors would become advisory text; a daemon auto-commit without the cryptographic 1-click approval would let unattended agents land config changes into Git as though a human signed them."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by applying the YAML edit directly to the running engine (skipping proposal isolation) and asserting the new limit immediately — the lifecycle would 'pass' without any staged proposal, PWA card, or git commit ever existing."
+  anti_slop_mitigation: "AS-06 hardcodes the isolation checkpoint: before approval the compiled capcli.lock root hash is byte-identical to pre-edit and the engine still enforces the OLD limit; only after the human click does the hash change. AS-05 requires rule.config_proposed then rule.config_committed events in the ledger, plus a real git commit object containing the staged file diff."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_se_14"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_pending_asks"
+        row_count: 0   # no staged proposal yet
+      - name: "_audit"
+        row_count: 3
+    vault_secrets: []
+    # governance.yaml on disk holds quota_refresh_interval: 3600; compiled capcli.lock root hash recorded as baseline
+
+execution:
+  trigger: "rust_api"
+  command: 'agent saves governance.yaml edit (quota_refresh_interval 3600 -> 1800) via standard file tools; daemon gate intake runs; Cockpit PWA approves the 1-click diff card; daemon cutover runs; final probe: read lockfile hash, engine-reported interval, and git log'
+  input_params:
+    edited_file: "governance.yaml"
+    edited_key: "quota_refresh_interval"
+    old_value: 3600
+    new_value: 1800
+    proposal_kind: "config"
+    git_branch: "dev"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "world.config"
+    culprit: "none (nominal) — agent edit staged as proposal (exit 6 yield), human 1-click approval executed, daemon recompiled capcli.lock with a new root hash and auto-committed the diff to Git"
+    remedy: "none — lifecycle complete: staged proposal resolved, lockfile hash rotated, git history extended"
+  database:
+    row_count_delta: 3   # rule.config_proposed + rule.config_committed + _pending_asks resolved (row removed on commit)
+    tables_mutated: ["_pending_asks", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "rule.config_committed"   # effect.md#Kernel-event-payloads: file, approver_principal, git_commit, lockfile_hash
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-06"
+    verification: "Isolation checkpoint: capture the compiled capcli.lock root hash before the agent saves the edit; after gate intake but before PWA approval the hash must be byte-identical (immutable literal match), and a query of the live governance limit must still return 3600 — the disk edit is visible nowhere in running state until cutover."
+  - rule: "AS-03"
+    verification: "Gate intake returns the typed exit 6 (frame yield) with a _pending_asks row (kind == 'config', diff_payload non-empty, diff_hash == sha256 of the staged diff); the human click is simulated via the PWA approval endpoint with a cryptographic signature — skipping the signature fails the cutover with exit 2."
+  - rule: "AS-05"
+    verification: "_audit gains exactly one rule.config_proposed row then one rule.config_committed row (ordered, hash-chained); the committed row's git_commit matches a real commit object on git_branch containing the staged governance.yaml diff AND the recompiled capcli.lock; verify_chain() passes over the full ledger."
+  - rule: "AS-02"
+    verification: "After cutover the live engine reports quota_refresh_interval == 1800 and the suspended task (if any) resumed with the new limit; the raw agent-written YAML file alone (without approval) changed nothing."

@@ -39,6 +39,7 @@ errors:
     E045_TIER2_PINNED_DENIED: { urp: "policy://errors/E045", desc: "Pinned routine execution refused on Tier 2 host" }
     E050_RUNTIME_DISALLOWED: { urp: "policy://errors/E050", desc: "Runtime engine disallowed by governance/policy" }
     E060_REVISION_REJECTED: { urp: "policy://errors/E060", desc: "State revision invariant violated" }
+    E061_OCC_DRIFT: { urp: "policy://errors/E061", desc: "OCC state_fence drift detected on frame resume" }
   exit_3:                                # Compile-time refusals
     E033_TOKEN_OVERFLOW: { urp: "policy://errors/E033", desc: "Token envelope exceeded 2000 tokens" }
     E031_COMPLEXITY_HIGH: { urp: "policy://errors/E031", desc: "Cyclomatic complexity exceeds 10 branches" }

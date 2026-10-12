@@ -8,7 +8,7 @@ target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/action.md#External-api-methods"
   statement: "ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) is kernel-managed in-flight polling charged as exactly 1 aggregate op (action.md#External-api-methods): the sleep executes in the Rust runtime so the Python interpreter never busy-waits (action.md#Execution-guards in-flight wait); five polling iterations must debit consumed_ops by 1, not 5, and the routine's ops budget is not prematurely exhausted."
-  blast_radius_if_breached: "Per-iteration op accounting turns every poll loop into a budget furnace: a 5-iteration wait burns 5 of the max 50 ops per run (and cascades into the session_ops_ceiling: 500), prematurely exhausting frames to exit 2 budget denials on perfectly healthy routines and starving quota for real work."
+  blast_radius_if_breached: "Per-iteration op accounting turns every poll loop into a budget furnace: a 5-iteration wait burns 5 of the max 50 ops per run (and cascades into the session_ops_ceiling: 2500), prematurely exhausting frames to exit 2 budget denials on perfectly healthy routines and starving quota for real work."
 
 confusion_matrix:
   quadrant: "true_positive"

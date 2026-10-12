@@ -68,7 +68,15 @@
   - Gates & promotion
     - Ship gate
       - command — see interface.md#Routine-path
-      - verification — kernel checks routine_stats and audit mirror directly; --reason optional for human context
+      - autonomous pinned promotion — a reviewed routine advances to pinned autonomously when the auto-promotion conjunction holds plus:
+        - 100% simulation replay invariant suite with zero policy denials
+        - live contract schema verification for external API verbs
+      - canary veto window — newly pinned routines face 1-hour observation; error rate >1% triggers automatic rollback to draft and Cockpit PWA alert
+      - established pinned scope — 30%-over-20-runs circuit breaker: see time.md#decay-and-subtraction
+      - human intervention boundary
+        - risk-flagged operations — human approval: >50k rows, destructive revisions
+        - configuration proposals — approval gate: see world.md#Configuration-proposal-lifecycle
+        - routine promotion — manual review queues eliminated; promotion is fully autonomous
       - production prerequisites
         - git status — branch merged into prod worktree
         - synthetic proof — 100% replay invariant pass and fuzzing in sim
@@ -81,21 +89,12 @@
         - policy compliance — policy_denials: exactly 0
         - runtime stability — fingerprint_drift_events: exactly 0
         - latency ceiling — p95_duration <= 0.70 * declared_max_duration
-      - conjunction rule — failure of any single metric routes to human queue
+      - conjunction rule — failure of any single metric blocks promotion; the candidate remains draft until the next evaluation
       - audit trail — emits routine.auto_promoted event
       - retroactive control — human veto via rollback --to-trust draft
     - Pinned promotion
-      - full autonomy — autonomous pin unlocked via invariant & mutation tests
-      - boundary safety — high fuel consumption or schema migrations governed by hard-coded budget caps
-    - Promotion queue
-      - mechanics — capcli routine ship <name> reviewed --queue
-      - inspection — capcli routine pending surfaces batch candidates
-      - SLA monitoring
-        - breach trigger — queue age threshold: see artifacts/governance.yaml#maintenance
-        - alarm — sys doctor emits promotion.sla_breached
-      - veto window
-        - duration — 1-hour automated canary telemetry window
-        - action — autonomous rollback to draft on veto-window failure: see time.md#decay-and-subtraction
+      - autonomous criteria — see #Ship-gate
+      - boundary safety — high fuel consumption or schema revisions governed by hard-coded budget caps
   - Evidence
     - Manifest evidence
       - delta review

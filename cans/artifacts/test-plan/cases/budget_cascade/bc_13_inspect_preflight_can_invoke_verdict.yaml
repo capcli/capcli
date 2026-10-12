@@ -13,7 +13,7 @@ invariant:
 confusion_matrix:
   quadrant: "true_negative"
   slop_risk: "An AI agent fakes this test by asserting only exit 0 of the inspect command (the command 'succeeded') while ignoring the verdict field — the engine returning can_invoke_now: true at zero headroom (the actual bug) would pass the test."
-  anti_slop_mitigation: "AS-03 forces parsing of the CliEnvelope data block: budget_status.can_invoke_now == false exactly, tightest_constraint == 'session_ops', blocking_reasons non-empty — the verdict is the assertion, not the exit code. AS-06 pins the literal headroom 0 of 500. AS-02 proves the read-only inspect mutated nothing."
+  anti_slop_mitigation: "AS-03 forces parsing of the CliEnvelope data block: budget_status.can_invoke_now == false exactly, tightest_constraint == 'session_ops', blocking_reasons non-empty — the verdict is the assertion, not the exit code. AS-06 pins the literal headroom 0 of 2500. AS-02 proves the read-only inspect mutated nothing."
 
 setup:
   env: "dev"
@@ -26,7 +26,7 @@ setup:
     schema_yaml: null
     tables:
       - name: "_budget_frames"
-        row_count: 1   # session frame with consumed_ops 500 of the 500 session_ops_ceiling — zero headroom
+        row_count: 1   # session frame with consumed_ops 2500 of the 2500 session_ops_ceiling — zero headroom
       - name: "_api_quota"
         row_count: 1   # provider 'threads': healthy quota (28 available) — ops is the sole blocking dimension
     vault_secrets: []
@@ -37,7 +37,7 @@ execution:
   input_params:
     routine: "sync_orders@5"
     session_ops_remaining: 0
-    session_ops_ceiling: 500
+    session_ops_ceiling: 2500
     quota_remaining: 28
 
 expected_observations:
@@ -45,7 +45,7 @@ expected_observations:
   state_modified: false
   diagnostic:
     domain: "run.preflight"
-    culprit: "tightest constraint: session_ops — 0 of 500 session ops remaining (headroom is zero); effective_limits formats min(ceiling, parent_remaining) per dimension and ops collapses to 0"
+    culprit: "tightest constraint: session_ops — 0 of 2500 session ops remaining (headroom is zero); effective_limits formats min(ceiling, parent_remaining) per dimension and ops collapses to 0"
     remedy: "free session ops (chunk the work, close child frames, or start a new session) before invoking; false + blocking_reasons means don't call"
   database:
     row_count_delta: 0
@@ -60,8 +60,8 @@ expected_observations:
 
 anti_slop_assertions:
   - rule: "AS-02"
-    verification: "SELECT count(*) FROM _budget_frames and _api_quota identical before/after (strict equality) and the frame row's consumed_ops still reads exactly 500 — the pre-flight evaluation is read-only and pushes no frame, burns no op, debits no token."
+    verification: "SELECT count(*) FROM _budget_frames and _api_quota identical before/after (strict equality) and the frame row's consumed_ops still reads exactly 2500 — the pre-flight evaluation is read-only and pushes no frame, burns no op, debits no token."
   - rule: "AS-03"
     verification: "Parse the CliEnvelope data block (not just exit_code == 0): budget_status.can_invoke_now == false exactly, tightest_constraint == 'session_ops', blocking_reasons is a non-empty array naming the ops constraint, and composition.effective_limits shows the ops dimension clamped to 0 — a true verdict or missing fields fail the test."
   - rule: "AS-06"
-    verification: "Hardcoded literals: session_ops_remaining == 0, ceiling == 500, quota_remaining == 28 (healthy — proving the tightest-constraint picker selected ops, not quota); the expected verdict false is an immutable literal, never derived from re-running the preflight."
+    verification: "Hardcoded literals: session_ops_remaining == 0, ceiling == 2500, quota_remaining == 28 (healthy — proving the tightest-constraint picker selected ops, not quota); the expected verdict false is an immutable literal, never derived from re-running the preflight."
