@@ -43,3 +43,10 @@ sim:
   sandbox_base_url: "https://sandbox.upstream.domain/v1"
   cassette_path: "apis/cassettes/upstream_service.cassette.jsonl"
   mock_fixtures: "apis/fixtures/upstream_service.mock.yaml"
+
+# ───────────────────────────────────────────────────────────────
+# 4. EGRESS DECLARATION GATE
+# ───────────────────────────────────────────────────────────────
+egress_gate:
+  require_declarations: true   # rate_limit.headers and webhook.scheme must be declared per provider
+  on_missing: refuse_call      # exit 2 — undeclared egress denied, state untouched

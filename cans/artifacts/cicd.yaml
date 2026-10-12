@@ -17,6 +17,7 @@ sla:
   local_inner_loop_seconds: 15
   local_pre_push_seconds: 45
   pr_gate_minutes: 4
+  schema_rehearsal_minutes: 4  # PR-pipeline Gate 5 rehearsal fits the free-tier PR gate budget
 
 trinity:
   paths:
@@ -72,6 +73,11 @@ matrix:
       - os: windows-latest
         tier: tier_2
         sandbox: broker
+  assertions:
+    # Tier 2 runners must refuse pinned routine execution: E045_TIER2_PINNED_DENIED, exit 2.
+    - scope: deep_test
+      tier: tier_2
+      pinned_execution: { expect_code: E045_TIER2_PINNED_DENIED, expect_exit: 2 }
   release:
     include:
       - os: ubuntu-latest

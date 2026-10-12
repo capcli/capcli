@@ -228,7 +228,7 @@ tables:
       - [[capability, version]]
 
   _suspended_tasks:
-    description: "Daemon-managed background tasks paused via exit 6 awaiting quota refill"
+    description: "Daemon-managed background tasks paused via exit 6 awaiting quota refill or preemption release"
     sys: true
     columns:
       id: pk
@@ -238,11 +238,13 @@ tables:
       version: int!
       params: json!
       priority: text=standard          # critical, standard, background
+      pause_cause: text=quota            # quota, preemption
       resume_at: int!                  # unix epoch seconds
       deferments: int=0                # deferral count against yield_max_deferments
       status: text=pending             # pending, dispatched, aborted
     chk:
       - "status IN ('pending', 'dispatched', 'aborted')"
+      - "pause_cause IN ('quota', 'preemption')"
     idx:
       - [[status, resume_at]]
       - [frame_id]

@@ -21,6 +21,7 @@
         - apis:// — provider contract specs, webhook verifiers, and egress profiles
         - sink:// — notification, audit, and telemetry egress sinks
         - ws:// — sovereign federated workspace capability routines (e.g. ws://tasks/create_todo@v1); shape-disjoint from WebSocket transport URLs (ws://host:port/...)
+        - Ad-hoc paths banned — every target is a URP from the taxonomy above; bare filesystem paths rejected at parse (exit 3)
       - Surface uniformity
         - commands — search, inspect, run, doc
         - flattening — search returns typed URN pointers with action hints

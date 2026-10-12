@@ -29,6 +29,11 @@ syscalls:
 # ───────────────────────────────────────────────────────────────
 errors:
   exit_2:                                # Governance & invariant blocks
+    E005_FILE_LOCKED_BY_KERNEL: { urp: "policy://errors/E005", desc: "Direct host file mutation bypassed kernel authorizer" }
+    E012_REQUIRE_WHERE_LIMIT: { urp: "policy://errors/E012", desc: "Unbounded mutation without WHERE/LIMIT" }
+    E020_CHECK_FAILED: { urp: "policy://errors/E020", desc: "Check constraint violation; mutation rolled back" }
+    E030_SYS_CONNECT_BLOCKED: { urp: "policy://errors/E030", desc: "seccomp trap: raw socket connect denied" }
+    E040_PROMOTION_UNPROVEN: { urp: "policy://errors/E040", desc: "Promotion requirements unmet" }
     E041_FEDERATION_CYCLE: { urp: "policy://errors/E041", desc: "Detected cycle in ws:// call chain" }
     E042_FEDERATION_DENIED: { urp: "policy://errors/E042", desc: "Caller ws identity not on active allowlist" }
     E045_TIER2_PINNED_DENIED: { urp: "policy://errors/E045", desc: "Pinned routine execution refused on Tier 2 host" }
@@ -43,6 +48,7 @@ errors:
   exit_5:                                # Kernel panics
     E001_SECRET_LEAK_PANIC: { urp: "policy://errors/E001", desc: "Plaintext credential escape in output" }
     E002_SINK_CORRUPTION: { urp: "policy://errors/E002", desc: "Audit trail pipeline undrainable" }
+  exit_6: {}                             # Quota / preemption yield — checkpoint, not an error; no E-code assigned
 
 # ───────────────────────────────────────────────────────────────
 # 3. HARNESS MARKER DETECTION (Item 9)

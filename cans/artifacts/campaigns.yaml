@@ -9,15 +9,15 @@ banks:
     urp: "prompt://system/ops_briefing@v1"
     description: "Domain situation awareness campaign bank"
     envelope:
-      max_tokens: 800
+      max_tokens: 150
       format: markdown_slices
     sections:
       - node: "#context"
-        max_tokens: 250
+        max_tokens: 45
         source: "doc://specs/system_state"
       - node: "#kpis"
-        max_tokens: 300
+        max_tokens: 60
         source: "db://views/system_vitals"
       - node: "#instructions"
-        max_tokens: 250
+        max_tokens: 45
         body: "Operate within declared AST limits. Mutating writes require valid --intent."

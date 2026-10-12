@@ -311,5 +311,5 @@
     - token cage ceilings — pointer: policy://cages/token_limits
       - routine file — 2000 tokens max
       - output payload — 500 tokens max (oversized payloads must return keyset pagination schema)
-      - leaf prompt slice — 300 tokens max
+      - leaf prompt slice — 500 tokens max
       - search description — 60 tokens max

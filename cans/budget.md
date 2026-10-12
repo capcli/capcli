@@ -66,6 +66,7 @@
       - Subagent cage inheritance — in-process workers sharing PID inherit parent frame limits; thread spawning cannot escape session ceiling: see agent.md#Identity-chain
       - Implicit fork — divergent harness thread marker under same PID forces a session fork: see agent.md#Harness-environment-markers
       - Child effective limit = min(declared need, governance ceiling, parent_remaining, session_ceiling)
+      - Scope — the four-term formula governs the local/nested cascade only; federated calls use the federated cascade formula above (caller session never crosses the workspace boundary)
       - Governance ceiling comes from routine_shape.execution limits (artifacts/governance.yaml)
       - The kernel enforces the tightest constraint at every frame — the cage tightens, never widens
       - Splitting is not escaping

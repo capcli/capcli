@@ -22,3 +22,8 @@ You interact with the workspace exclusively via `capcli`. Direct database file a
 * `0`: Success (contains structured affordances).
 * `2`: Governance/Authorizer denial (state untouched).
 * `3`: Compile/Syntax failure (malformed statement, unpaginated shape).
+* `4`: Runtime fault (clean rollback).
+* `5`: Panic or plaintext credential leak (immediate kill).
+* `6`: Quota/preemption yield (frame parked to _suspended_tasks).
+
+Full exit law: see cans/physics.md#Exit-code-law.

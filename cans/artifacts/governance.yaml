@@ -4,7 +4,7 @@
 # Compiled by kernel; never runtime-editable; exceptions = git commits.
 # ═══════════════════════════════════════════════════════════════
 version: 8
-lockfile: capcli.lock                 # deterministic compiler target
+lockfile: capcli.lock                 # deterministic compiler target; drift law: see policy.yaml#fail_closed
 policy_version: 5
 
 # ───────────────────────────────────────────────────────────────
