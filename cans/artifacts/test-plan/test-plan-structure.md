@@ -179,6 +179,10 @@ cans/artifacts/test-plan/
       bt_11_ask_options_count_ceiling.yaml
       bt_12_webhook_ingress_public_url_mandate.yaml
       bt_13_bind_federation_siphon.yaml
+      bt_14_inbox_atomic_claim_single_winner.yaml
+      bt_15_inbox_crash_retry_dead_letter.yaml
+      bt_16_ctx_on_subscription_ast_reject.yaml
+      bt_17_ping_resolve_enqueues_resumption.yaml
     vault_secrets/
       vs_01_missing_secret_cockpit_url_refusal.yaml
       vs_02_env_var_auto_binding.yaml
@@ -603,6 +607,10 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `bt_11_ask_options_count_ceiling.yaml` | Unit | `ctx.ping.ask` supplied with 6 response options; gate rejects suspension request (maximum allowed options: 5). | TN | Permitting unbounded choice menus in structured human inquiries. |
 | `bt_12_webhook_ingress_public_url_mandate.yaml` | Unit | Registering external webhook binding with localhost or loopback IP (`127.0.0.1`) without tunnel rejected. | TN | Allowing loopback callback addresses for external webhook providers. |
 | `bt_13_bind_federation_siphon.yaml` | Integration | `bind federation` creates a peer outbox siphon with the cursor tracked in `_watch_cursors`; each dispatched event advances the cursor exactly once. | TP | Asserting the bind without checking the cursor row, or assuming advancement without reading the cursor before and after. |
+| `bt_14_inbox_atomic_claim_single_winner.yaml` | Integration | Two kernel workers race one pending `_inbox` row; the atomic `UPDATE ... RETURNING` claim yields exactly one winner, the loser gets zero rows. | TP | Issuing the claims sequentially and asserting single-winner without a real race. |
+| `bt_15_inbox_crash_retry_dead_letter.yaml` | Integration | Bound routine crashes (exit 4) three times; the row rolls to failed per attempt, then moves to `dead_letter` — never redispatched a fourth time. | TP | Seeding `attempts=3` in setup instead of driving three real crashes. |
+| `bt_16_ctx_on_subscription_ast_reject.yaml` | Unit | Routine registering a `ctx.on` listener is rejected at AST parse with exit 3; no sandbox spawns and the `_inbox` row stays unclaimed. | TN | Testing an unregistered callback variable, or mocking the parser instead of running the real AST pass. |
+| `bt_17_ping_resolve_enqueues_resumption.yaml` | Integration | `ping resolve` flips the `_pending_asks` row and enqueues a resumption row into `_inbox` with `source='ping'`; the worker claim later dispatches it. | TP | Flipping the ask row via direct SQL, or asserting resumption without checking `source='ping'`. |
 
 ### 6.10 Vault & Zero-Knowledge Secrets (`cases/vault_secrets/`)
 

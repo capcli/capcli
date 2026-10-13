@@ -699,7 +699,7 @@ def overview():
     pending = ctx.db.query("SELECT count(*) as count FROM orders WHERE status = 'pending'")[0]["count"]
     fuel = ctx.db.query("SELECT consumed_fuel FROM _budget_frames WHERE outcome = 'active' ORDER BY created_at DESC LIMIT 1")
     asks = ctx.db.query("SELECT count(*) as count FROM _pending_asks WHERE status = 'pending'")[0]["count"]
-    inbox_qty = ctx.db.query("SELECT count(*) as count FROM _inbox WHERE processed = 0")[0]["count"]
+    inbox_qty = ctx.db.query("SELECT count(*) as count FROM _inbox WHERE status = 'pending'")[0]["count"]
     locks = ctx.db.query("SELECT target FROM claims WHERE created_at + ttl > strftime('%s','now')")
     
     return {

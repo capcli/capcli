@@ -36,7 +36,7 @@
     {
       "rel": "next",
       "command": "capcli sys inbox pop --channel webhook",
-      "intent": "Sensory events popped from the intake queue (cron/webhook sources; durable store TBD)",
+      "intent": "Sensory events popped from the intake queue (cron/webhook sources; durable store _inbox)",
       "risk": "mutating",
       "requires_intent": true
     }

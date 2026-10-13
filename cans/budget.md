@@ -117,7 +117,7 @@
     - Governance caps
       - maintenance budgets — consolidation max 30 minutes; max 10 proposals
       - trigger budgets — cron min 5 minutes; webhook 100 events/min; poll max 10
-      - queue caps — dead letter retention 30 days or 1,000 items
+      - queue caps — dead letter: see world.md#Inbox-lifecycle
       - All governance caps (registry, schedule, watch, serve, surface): see artifacts/governance.yaml
     - Output caps
       - Routine results

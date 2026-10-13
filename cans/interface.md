@@ -104,7 +104,7 @@
       - Deprovisioning — env remove <name>
     - System path: sys noun
       - Help stub — sys help (aliases: capcli --help, capcli help) — returns <= 6-line discovery stub
-      - Sensory inbox — sys inbox pop [--channel <name>]
+      - Sensory inbox — sys inbox pop [--channel <name>]: reads _inbox; see world.md#Inbox-lifecycle
       - Audit tailing — sys audit tail [--follow] [--capability X] [--since 1h]
       - Causal tracing — sys audit trace <op-id> [--explain]
       - Mirror queries — sys audit query <sql> [-p k=v]

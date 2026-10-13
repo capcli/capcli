@@ -171,6 +171,7 @@
           - retries — rows exceeding 3 failed attempts move to the dead letter queue
           - dead letter queue — FIFO retention, 30-day expiry, 1,000-item cap
           - single-worker — the atomic RETURNING claim guarantees exactly-once dispatch across workers
+          - sensory read — sys inbox pop reads _inbox rows; consumption marking: TBD
         - column locking
           - tag — imm_cols: [...]
           - authorizer effect — UPDATE denied on targeted columns

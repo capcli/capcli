@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_14_inbox_atomic_claim_single_winner"
+title: "Two kernel workers racing one pending _inbox row: atomic claim yields exactly one winner"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/world.md#Inbox-lifecycle"
+  statement: "Kernel worker daemons dequeue _inbox rows with a single atomic statement (UPDATE _inbox SET status='in_flight', locked_by=:worker WHERE id=(SELECT id FROM _inbox WHERE status='pending' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s','now')) ORDER BY priority DESC, id ASC LIMIT 1) RETURNING *). Exactly one worker's claim returns the row; every other concurrent claimant receives zero rows. The claimed row carries the winner's worker id in locked_by with status in_flight."
+  blast_radius_if_breached: "Two workers both believe they own the stimulus: the bound routine spawns twice, double-spending its budget frame, double-emitting ctx.emit events, and double-mutating domain rows — split-brain dispatch with no serialization point."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent issues the two claims sequentially (the second then correctly finds nothing) and asserts single-winner without ever racing; or asserts on locked_by alone without proving the loser received zero rows."
+  anti_slop_mitigation: "AS-01 fires both claim statements from two OS threads against one live SQLite WAL database with a barrier start; AS-02 asserts the winner's row count == 1 with locked_by set and the loser's row count == 0; AS-03 asserts exactly one routine spawn in routine_stats."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "system:capcli-cron"
+    agent_id: "kernel-worker"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_inbox"
+        row_count: 1 # one pending row: source='cron', status='pending', scheduled_at in the past, priority 0
+      - name: "routine_stats"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "concurrent_claim"
+  command: "capcli test inbox-race --row 1 --workers 2"
+  input_params:
+    inbox_row_id: 1
+    worker_a: "worker-a"
+    worker_b: "worker-b"
+    barrier: "both claim statements start within the same millisecond"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "kernel.dispatch"
+    culprit: "losing worker's claim returned zero rows — row already in_flight under the winner"
+    remedy: "none — exactly-once dispatch held"
+  database:
+    row_count_delta: 0 # no new rows; the pending row flipped to in_flight
+    tables_mutated: ["_inbox"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "inbox.claim (row 1 -> in_flight, locked_by=<winner>)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Both UPDATE...RETURNING statements execute concurrently (barrier-synchronized threads, one shared database file in WAL mode) — never sequentially; record each statement's returned row count."
+  - rule: "AS-02"
+    verification: "SELECT status, locked_by FROM _inbox WHERE id=1 returns exactly one row with status='in_flight' and locked_by non-null; the two statements' returned-row counts sum to exactly 1."
+  - rule: "AS-03"
+    verification: "SELECT count(*) FROM routine_stats == 1 — exactly one routine spawn for the single claimed stimulus; zero double-dispatch."

@@ -1,4 +1,4 @@
-# capcli canonical test plan manifest — machine-readable index of all 188 cases
+# capcli canonical test plan manifest — machine-readable index of all 192 cases
 # Derived from test-plan-structure.md §1 (directory tree) and §6 (master catalog).
 # Quadrant and target_tier values MUST match the §6 catalog tables exactly.
 $schema: "test-plan/manifest/v1"
@@ -6,7 +6,7 @@ plan:
   name: "capcli canonical test plan"
   structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
   matrix_doc: "cans/artifacts/test-plan/matrix.yaml"
-  total_cases: 188
+  total_cases: 192
   domains: 12
   crate_tier_convention:
     unit: "crates/capcli-core"
@@ -1403,3 +1403,31 @@ cases:
     target_crate: "crates/capcli-cli"
     quadrant: "true_positive"
     title: "Reading a prompt campaign via doc read doc://prompts/ returns the identical envelope shape as reading a human spec"
+  - case_id: "bt_14_inbox_atomic_claim_single_winner"
+    file: "cases/bindings_triggers/bt_14_inbox_atomic_claim_single_winner.yaml"
+    domain: "bindings_triggers"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "Two kernel workers racing one pending _inbox row: atomic claim yields exactly one winner"
+  - case_id: "bt_15_inbox_crash_retry_dead_letter"
+    file: "cases/bindings_triggers/bt_15_inbox_crash_retry_dead_letter.yaml"
+    domain: "bindings_triggers"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "Third consecutive routine crash moves the _inbox row to dead_letter; no fourth dispatch"
+  - case_id: "bt_16_ctx_on_subscription_ast_reject"
+    file: "cases/bindings_triggers/bt_16_ctx_on_subscription_ast_reject.yaml"
+    domain: "bindings_triggers"
+    target_tier: "unit"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Routine registering a ctx.on listener rejected at AST parse with exit 3; no sandbox spawned"
+  - case_id: "bt_17_ping_resolve_enqueues_resumption"
+    file: "cases/bindings_triggers/bt_17_ping_resolve_enqueues_resumption.yaml"
+    domain: "bindings_triggers"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "Human ping resolve flips the ask row and enqueues task resumption into _inbox"

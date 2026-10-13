@@ -1,0 +1,66 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_15_inbox_crash_retry_dead_letter"
+title: "Third consecutive routine crash moves the _inbox row to dead_letter; no fourth dispatch"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/world.md#Inbox-lifecycle"
+  statement: "An _inbox row whose bound routine crashes (exit 4) or exhausts budget (exit 2) rolls back to failed and increments attempts. A row exceeding 3 failed attempts moves to dead_letter; the dead letter queue holds FIFO with 30-day expiry and a 1,000-item cap. Dead rows are never redispatched."
+  blast_radius_if_breached: "A poison stimulus redispatches forever: an infinite crash loop burns fuel, floods the audit spine with crash events, and starves every other queued stimulus behind the poison row."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent seeds attempts=3 in setup and asserts dead_letter without ever executing the crash path; or crashes the routine once and asserts DLQ without the two prior failures."
+  anti_slop_mitigation: "AS-01 seeds attempts=0 and drives three real exit-4 crashes, asserting the failed transition per attempt; AS-02 asserts dead_letter only after the third crash and proves no fourth dispatch occurs."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "system:capcli-cron"
+    agent_id: "kernel-worker"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_inbox"
+        row_count: 1 # source='webhook', status='pending', attempts=0; bound routine always exits 4
+      - name: "_audit"
+        row_count: 2
+    vault_secrets: []
+
+execution:
+  trigger: "routine_crash_loop"
+  command: "capcli test inbox-poison --row 1 --crashes 3"
+  input_params:
+    inbox_row_id: 1
+    crash_exit: 4
+    max_attempts: 3
+
+expected_observations:
+  exit_code: 0 # harness exit; each per-attempt routine exit is 4
+  state_modified: true
+  diagnostic:
+    domain: "kernel.dispatch"
+    culprit: "bound routine crashed with exit 4 on attempt 3 — row exceeded 3 failed attempts"
+    remedy: "inspect the dead letter row; fix the routine; requeue manually"
+  database:
+    row_count_delta: 0
+    tables_mutated: ["_inbox"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "inbox.dead_letter (row 1, attempts=3, last_exit=4)"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Drive three real dispatches, each ending in the routine's exit 4 — never seed attempts=3 in setup; after each crash assert status='failed' and attempts incremented by exactly 1."
+  - rule: "AS-02"
+    verification: "After the third crash: SELECT status, attempts FROM _inbox WHERE id=1 == ('dead_letter', 3); a fourth dispatch attempt returns zero rows — the row is never redispatched."
+  - rule: "AS-03"
+    verification: "SELECT count(*) FROM routine_stats == 3 — exactly three spawns, one per attempt; the dead row produces no fourth spawn."

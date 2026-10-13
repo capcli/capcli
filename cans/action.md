@@ -164,7 +164,7 @@
         - cron fire — daemon time trigger
         - webhook dispatch — inbound provider event
         - ask resume — suspension release via ping ask
-        - inbox poll — capcli sys inbox pop fetches sensory queued tasks
+        - inbox poll — capcli sys inbox pop fetches sensory queued tasks from _inbox: see world.md#Inbox-lifecycle
         - inbound dispatch — kernel worker daemon claims _inbox rows atomically and spawns the bound routine: see world.md#Inbox-lifecycle
       - Sensory grounding
         - physical stimulus — worker agents consume real inbox queue items; ad-hoc telepathic order hallucinations banned
@@ -173,7 +173,7 @@
         - transaction integrity — ctx.api.call inside a ctx.db.txn block fails compilation with exit 3 (E034_TXN_EXTERNAL_CALL)
         - federation boundary — ctx.call to a ws:// target inside a ctx.db.txn block fails compilation with exit 3 (E034_TXN_EXTERNAL_CALL)
         - lock fence rule — ctx.call to a ws:// target while holding local Layer 1 claims is rejected at compile time with exit 3 (E035_LOCK_FENCE_BREACH)
-        - transient polling — atomic ctx.api.poll_until permitted; raw time.sleep loops banned
+        - transient polling — atomic ctx.api.poll_until permitted; raw time.sleep loops: rejected at AST parse (Exit 3)
         - banned patterns — ctx.on listeners, reactive streams, subscriptions: rejected at AST parse (Exit 3)
         - failure modes — callbacks break DAG linearity, txn boundaries, replay
         - architecture law — events start routines, routines never consume events
@@ -391,7 +391,7 @@
         - orphan protection — retiring a routine auto-disables schedules loudly
         - restart safety — max 1 catchup execution permitted on daemon boot
         - webhook limits — payload max 65,536 bytes; 100 events/minute ceiling
-        - dead letter queue — FIFO retention for 30 days or max 1,000 items
+        - dead letter queue — see world.md#Inbox-lifecycle
     - Serve lifecycle split
       - Daemon server architecture
         - CLI configuration — bind commands commit to workspace.db and emit bind.* events to _audit

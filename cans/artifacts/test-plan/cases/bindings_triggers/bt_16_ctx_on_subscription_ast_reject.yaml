@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_16_ctx_on_subscription_ast_reject"
+title: "Routine registering a ctx.on listener rejected at AST parse with exit 3; no sandbox spawned"
+domain: "bindings_triggers"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Interior-rules"
+  statement: "Events start routines; routines never consume events. Guest routine source that registers a reactive listener (ctx.on), subscription, or callback is rejected at AST parse with exit 3 before any sandbox spawns and before any _inbox row is claimed."
+  blast_radius_if_breached: "A routine that listens instead of being dispatched breaks DAG linearity, escapes transaction boundaries, and defeats replay: the audit spine records effects with no dispatching cause, and in-sandbox listeners deadlock the worker pool."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent tests a routine that merely defines an unused callback variable (never registers) and asserts rejection; or asserts exit 3 from a mocked parser without running the real AST pass."
+  anti_slop_mitigation: "AS-01 uses a genuine ctx.on('tick', handler) registration call in guest source and runs the production AST parser; AS-02 asserts zero sandbox spawns and zero _inbox claims; AS-03 runs the positive control with the listener removed."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:quinn@example.com"
+    agent_id: "agt_7f3k"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_inbox"
+        row_count: 1 # pending row for the capability; must remain unclaimed
+      - name: "routine_stats"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "routine_publish"
+  command: "capcli routine publish ./listener_routine --json"
+  input_params:
+    guest_source: "ctx.on('tick', lambda e: handle(e))"
+    registration_form: "ctx.on event subscription"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "kernel.compile"
+    culprit: "AST parse rejected ctx.on listener registration — events start routines; routines never consume events (cans/action.md#Interior-rules)"
+    remedy: "remove the listener; model the trigger as a bind cron/webhook/endpoint/federation source that enqueues into _inbox"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "compile.deny (exit 3, ctx.on listener registration)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Guest source contains a genuine ctx.on(...) registration expression; run the production AST parser (no mocks, no stubs) and assert exit_code == 3 exactly."
+  - rule: "AS-02"
+    verification: "SELECT status FROM _inbox == 'pending' (unclaimed) and SELECT count(*) FROM routine_stats == 0 — rejection happened before dispatch and before any sandbox spawn."
+  - rule: "AS-03"
+    verification: "Positive control: the identical routine with the ctx.on line removed parses clean (exit 0 envelope) — proving the rejection targets the listener, not the file."

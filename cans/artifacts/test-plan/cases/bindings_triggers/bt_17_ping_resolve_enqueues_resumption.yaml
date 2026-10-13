@@ -1,0 +1,65 @@
+$schema: "test-plan/case/v1"
+case_id: "bt_17_ping_resolve_enqueues_resumption"
+title: "Human ping resolve flips the ask row and enqueues task resumption into _inbox"
+domain: "bindings_triggers"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/world.md#Inbox-lifecycle"
+  statement: "Resolving a ping.ask card (ping resolve <ask-id> --choice <opt>) flips the ask row in _pending_asks and enqueues a task-resumption row into _inbox with source='ping' and status='pending'; the kernel worker daemon later claims it atomically and resumes the suspended routine."
+  blast_radius_if_breached: "The human answers but the routine never resumes: the ask row flips while no resumption is queued — a silent hang where the operator believes the task continued and the routine waits forever."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent flips the ask row via direct SQL in setup and asserts the _inbox row exists without ever invoking ping resolve; or asserts resumption without checking source='ping'."
+  anti_slop_mitigation: "AS-01 invokes the real ping resolve command path; AS-02 asserts the _inbox row's source and status columns and its linkage to the ask id; AS-03 proves the queued row is dispatchable by the worker claim."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:quinn@example.com"
+    agent_id: "agt_7f3k"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_pending_asks"
+        row_count: 1 # ask_01, status='pending', suspends routine refund@2
+      - name: "_inbox"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "human_resolve"
+  command: "capcli ping resolve ask_01 --choice approve --json"
+  input_params:
+    ask_id: "ask_01"
+    choice: "approve"
+
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "ping.ask"
+    culprit: "ask_01 resolved with choice approve — resumption queued, not yet dispatched"
+    remedy: "none"
+  database:
+    row_count_delta: 1 # one _inbox row enqueued
+    tables_mutated: ["_pending_asks", "_inbox"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "ask.resolve (ask_01 -> approve); inbox.enqueue (source='ping', status='pending')"
+    chain_valid: true
+    state_modified_field: true
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Invoke the production ping resolve command (no direct SQL on _pending_asks in setup or test); assert exit_code == 0."
+  - rule: "AS-02"
+    verification: "SELECT status FROM _pending_asks WHERE id='ask_01' == 'resolved'; SELECT source, status FROM _inbox == ('ping', 'pending') — exactly one row, source literal 'ping'."
+  - rule: "AS-03"
+    verification: "Run the kernel worker claim once: the ping row is claimed (status='in_flight') and the suspended routine resumes — proving the queued resumption is dispatchable, not a dead row."
