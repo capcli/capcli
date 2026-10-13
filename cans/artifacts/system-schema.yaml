@@ -124,6 +124,23 @@ tables:
       - [[routine, version]]
       - [parent_frame]
 
+  _bindings:
+    description: "Trigger bindings: cron schedules, webhooks, federation siphons, endpoint ingress routes"
+    sys: true
+    columns:
+      name: text pk                   # binding name; plain <name> on every bind verb
+      kind: text!                     # cron | webhook | federation | endpoint
+      capability: text!               # routine ref the binding invokes (capability[@version])
+      config: json!                   # kind-specific: cron_expr | provider,event,ingress,verifier | source_ws,event | auth,rate,channel
+      state: text=active              # active, paused
+      created_at: int!                # unix epoch seconds
+    chk:
+      - "kind IN ('cron', 'webhook', 'federation', 'endpoint')"
+      - "state IN ('active', 'paused')"
+    idx:
+      - [kind]
+      - [state]
+
   secrets:
     description: "Egress credentials and tokens; memory-decrypted at boot, never visible to agent"
     sens: true

@@ -379,7 +379,7 @@
     - Signature verification — engine dynamically verifies timestamped headers, HMAC digests, and payloads against declarative specs in doc://specs/<provider>#webhook
     - Binding management
       - Lifecycle commands — bind list, inspect, pause, resume, remove
-      - Address form — plain <name> on every verb; bindings are workspace.db records with no URP scheme
+      - Address form — plain <name> on every verb; rows addressable as db://_bindings/<name>
       - Key management — bind keys issue <name> --principal partner:<id>
       - Health checks — bind endpoint <name> --health
       - Schedule defenses
