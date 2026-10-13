@@ -1,13 +1,13 @@
 $schema: "test-plan/case/v1"
 case_id: "bc_19_occ_drift_resume_abort_exit2"
-title: "Resume verification detects state_fence drift on a yielded frame and aborts with exit 2 (E061_OCC_DRIFT)"
+title: "Resume verification detects write-set state_fence drift on a yielded frame and aborts with exit 2 (E061_OCC_DRIFT)"
 domain: "budget_cascade"
 target_tier: "integration"
 target_crate: "crates/capcli-daemon"
 
 invariant:
-  law_reference: "cans/physics.md#Resume-verification"
-  statement: "'Resumption verifies OCC state_fence against live row state; table drift during suspension aborts immediately with exit 2 (E061_OCC_DRIFT)' (physics.md#Exit-code-law: 'resume verification'): a frame whose checkpointed state_fence no longer matches the live rows is never resumed — the abort is a hard exit 2 with zero state mutation."
+  law_reference: "cans/physics.md#Distributed-concurrency-laws"
+  statement: "'The state_fence records per-row read versions plus the frame's declared write intent. Drift on a row the frame wrote or declared in write intent is a write-write conflict: exit 2 (E061_OCC_DRIFT) immediately, zero partial writes, frame purged' (physics.md Layer 2 — meso fence): a frame whose checkpointed write-intent row no longer matches the live row is never resumed — the abort is a hard exit 2 with zero state mutation. Read-only drift re-fences and resumes instead; this case pins the write-set abort path."
   blast_radius_if_breached: "Resuming a frame on drifted rows would replay planned writes against state the planner never saw — lost updates, double-spends on counters, and silent ledger corruption that no audit event can reconstruct, because the fence that would have bound the plan is gone."
 
 confusion_matrix:
@@ -26,11 +26,12 @@ setup:
     schema_yaml: null
     tables:
       - name: "_suspended_tasks"
-        row_count: 1   # frame frm_bc_19 yielded with exit 6; OCC state_fence recorded over inventory row INV-7 (qty == 40)
+        row_count: 1   # frame frm_bc_19 yielded with exit 6; OCC state_fence recorded over inventory row INV-7 (qty == 40) WITH declared write intent (planned write: qty 30)
       - name: "inventory"
         row_count: 1   # row INV-7: qty == 40 at fence time
     vault_secrets: []
-    # out-of-band write during suspension changes INV-7 qty 40 -> 25 BEFORE the resume attempt
+    # out-of-band write during suspension changes INV-7 qty 40 -> 25 BEFORE the resume attempt;
+    # the drift lands on a write-intent row, so the resume path is the write-write conflict abort (not the read-drift re-fence path)
 
 execution:
   trigger: "json_rpc"
@@ -49,7 +50,7 @@ expected_observations:
   state_modified: false
   diagnostic:
     domain: "kernel.physics"
-    culprit: "OCC state_fence drift — frame frm_bc_19 checkpointed inventory INV-7 qty == 40; live row reads qty == 25; resume verification aborts with exit 2 (E061_OCC_DRIFT); the frame never resumes"
+    culprit: "OCC state_fence drift — frame frm_bc_19 checkpointed inventory INV-7 qty == 40 with declared write intent; live row reads qty == 25; write-write conflict aborts the resume with exit 2 (E061_OCC_DRIFT); the frame never resumes"
     remedy: "re-plan against current state and re-queue; the drifted write stands — the aborted frame commits nothing"
   database:
     row_count_delta: 1   # one abort audit event; the drifted INV-7 row itself is the fixture's out-of-band write
@@ -68,6 +69,6 @@ anti_slop_assertions:
   - rule: "AS-02"
     verification: "SELECT qty FROM inventory WHERE sku = 'INV-7' still reads exactly 25 (the drifted value — the resume mutated nothing); SELECT count(*) FROM _suspended_tasks is zero (the frame was purged on abort, not parked); no routine.run event exists for frm_bc_19."
   - rule: "AS-06"
-    verification: "Hardcoded literals: fence table 'inventory', row 'INV-7', checkpointed qty == 40, live qty == 25, expected code 'E061_OCC_DRIFT' — the drift must land on the fenced row, never a table outside the fence."
+    verification: "Hardcoded literals: fence table 'inventory', row 'INV-7', checkpointed qty == 40, live qty == 25, declared write intent with planned write qty 30, expected code 'E061_OCC_DRIFT' — the drift must land on a write-intent fenced row, never a read-only row (read-only drift re-fences and resumes under the same law)."
   - rule: "AS-05"
     verification: "The abort audit event's prev_hash equals the SHA-256 of the prior _audit row and its payload records the fence-vs-live mismatch (table, row, checkpoint hash, live hash); verify_chain() passes."

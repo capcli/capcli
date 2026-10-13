@@ -155,6 +155,11 @@
           - expiry reaping — background daemon reaps claims whose ttl has elapsed since created_at
           - claim binding — ctx.db.lock binds directly to this lifecycle: see action.md#Database-methods
           - yield interplay — exit 6 interaction: see physics.md#Exit-code-law
+          - heartbeat — live holders heartbeat their claim every 30s via claims.heartbeat_at
+          - stale marking — no heartbeat within 60s grace marks the claim stale
+          - takeover — db lock <table>:<ref> --takeover acquires a stale claim; appends claim.stolen naming the previous holder and its last heartbeat
+          - abandon — db unlock <target> --abandon releases without acquiring; requires --reason; denied while the holder heartbeat is fresh; appends claim.abandoned naming the previous holder and operator identity
+          - ttl ceiling — TTL reaping stays the hard ceiling regardless of heartbeats
         - outbox atomic claim
           - claim statement — UPDATE _outbox_events SET status = 'in_flight', locked_by = :worker WHERE id = (...) RETURNING *
           - initial status — new events enter as 'pending'; the atomic claim flips status to 'in_flight'
@@ -320,6 +325,7 @@
     - Concurrency commands
       - acquisition — db lock <table>:<ref> --ttl <duration> --reason "..."
       - release — db unlock <target>
+      - lifecycle — lease identity, heartbeats, takeover, abandonment: see #claims-lease-lifecycle
     - Introspection commands
       - ddl display — db schema [--table]
       - state management — db snapshot, db restore <id>, db dump

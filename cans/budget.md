@@ -126,7 +126,10 @@
         - serve response max_result_tokens 500 — inherited routine cap
       - Ping surfaces
         - notify message_max_tokens 300 — notifications are summaries, not essays
-        - ask question_max_tokens 100, max_options 5
+        - ask — option counts beyond max_options proceed with exit 0 and carry a lint advisory on the ask envelope: see physics.md#Exit-code-law
+          - structured options stay mandatory: see artifacts/policy.yaml#notify.ask
+          - token and timeout bounds (question_max_tokens 100, timeout caps) stay hard
+          - numeric guidance: see artifacts/governance.yaml#notify.ask
         - ask default_timeout_minutes 60, max_timeout_minutes 480
       - Search and catalog
         - search max_results: 20, semantic_min_relevance: 0.6

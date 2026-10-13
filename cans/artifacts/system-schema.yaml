@@ -192,6 +192,8 @@ tables:
       op_sequence: int!                # op sequence number within the session
       ttl: int!                        # duration in seconds
       created_at: int!                 # lease acquisition timestamp
+      heartbeat_at: int                # last holder heartbeat (unix epoch); 60s silence marks the claim stale: see cans/world.md#claims-lease-lifecycle
+      stale: int=0                     # daemon-set stale marker: 0 fresh | 1 stale (missed heartbeat grace elapsed)
       disconnect_policy: text=auto_drop # auto_drop | retain_until_ttl
     chk:
       - "disconnect_policy IN ('auto_drop', 'retain_until_ttl')"

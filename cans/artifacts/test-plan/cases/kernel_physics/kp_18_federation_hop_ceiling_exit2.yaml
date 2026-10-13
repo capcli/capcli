@@ -1,19 +1,19 @@
 $schema: "test-plan/case/v1"
 case_id: "kp_18_federation_hop_ceiling_exit2"
-title: "Third cross-workspace hop breaches the hop ceiling and exits 2"
+title: "Third hop to a new workspace breaches the hop ceiling and exits 2"
 domain: "kernel_physics"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/physics.md#hop-ceiling"
-  statement: "Federated nesting depth is capped at 2 cross-workspace hops: a ctx.call to ws:// whose inbound call_chain already holds 2 entries breaches the ceiling and exits 2 — the hop ceiling binds before the general call-nesting ceiling (nesting > 5), and federated hops count toward nesting depth."
+  law_reference: "cans/physics.md#Federation-invariants"
+  statement: "Cross-workspace hops are capped at 3, and the third hop is a legal re-entry only (a workspace already in the chain, riding its original idempotency key: see the bounded re-entry law). A ctx.call to ws:// whose inbound call_chain already holds 2 entries and targets a NEW workspace breaches the ceiling and exits 2 — the hop ceiling binds before the general call-nesting ceiling (nesting > 5), and federated hops count toward nesting depth."
   blast_radius_if_breached: "Unbounded delegation chains across sovereign workspaces: each hop re-delegates budget and re-authenticates, so a deep chain multiplies trust assumptions — a compromised leaf workspace inherits the delegated authority of every ancestor with no depth bound."
 
 confusion_matrix:
   quadrant: "true_negative"
-  slop_risk: "Agent tests with a call_chain of length 1 (only 1 hop deep, legal) and asserts denial — vacuous; or conflates the hop ceiling with the nesting > 5 ceiling and asserts exit 2 for the wrong reason."
-  anti_slop_mitigation: "AS-06 hardcodes the 2-entry inbound call_chain (['crm', 'billing']) so the attempted 3rd hop is exact; AS-03 pins exit 2 with the hop-ceiling culprit (not the nesting culprit); a companion positive control with a 1-entry chain must succeed."
+  slop_risk: "Agent tests with a call_chain of length 1 (only 1 hop deep, legal) and asserts denial — vacuous; or conflates the hop ceiling with the nesting > 5 ceiling and asserts exit 2 for the wrong reason; or tests a keyed re-entry as the 3rd hop and asserts denial — inverting the bounded re-entry law."
+  anti_slop_mitigation: "AS-06 hardcodes the 2-entry inbound call_chain (['crm', 'billing']) with the 3rd hop targeting the new workspace 'ledger' so the breach is exact; AS-03 pins exit 2 with the hop-ceiling culprit (not the nesting culprit); companion positive controls: a 1-entry chain must succeed, and a 3rd hop that is a keyed re-entry must succeed."
 
 setup:
   env: "dev"
@@ -56,8 +56,8 @@ expected_observations:
   state_modified: false
   diagnostic:
     domain: "policy.federation"
-    culprit: "hop ceiling breached — inbound call_chain ['crm', 'billing'] already at 2 cross-workspace hops; 3rd hop to 'ledger' refused"
-    remedy: "flatten the delegation chain: billing must complete its own work and return, rather than delegating a 3rd hop; federated nesting is capped at 2 hops"
+    culprit: "hop ceiling breached — inbound call_chain ['crm', 'billing'] already at 2 cross-workspace hops; 3rd hop to new workspace 'ledger' is not a keyed re-entry and is refused"
+    remedy: "flatten the delegation chain: billing must complete its own work and return, rather than delegating a 3rd hop to a new workspace; the 3rd hop is reserved for keyed re-entry only"
   database:
     row_count_delta: 0
     tables_mutated: []
@@ -75,4 +75,4 @@ anti_slop_assertions:
   - rule: "AS-02"
     verification: "SELECT count(*) FROM _budget_frames unchanged; zero bytes written to /run/capcli/ledger.sock; _audit delta is exactly 1 denial event."
   - rule: "AS-06"
-    verification: "Hardcoded literals: inbound chain ['crm', 'billing'], target 'ws://ledger/post_entry@v1', ceiling constant 2; positive control: the same call with inbound chain ['crm'] (1 hop) must proceed to preflight — proving the ceiling, not the call itself, is what denies."
+    verification: "Hardcoded literals: inbound chain ['crm', 'billing'], target 'ws://ledger/post_entry@v1' (a new workspace, not a re-entry), ceiling constant 3 with the 3rd hop reserved for keyed re-entry; positive controls: the same call with inbound chain ['crm'] (1 hop) must proceed to preflight, and a 3rd hop that re-enters 'crm' on its original idempotency key must proceed — proving the ceiling and the re-entry law, not the call itself, decide."

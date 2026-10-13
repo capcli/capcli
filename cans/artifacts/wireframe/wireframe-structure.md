@@ -211,7 +211,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Template URP does not resolve |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.refusal.removed_scheme` | refusal | 3 | missing_param | removed_scheme | hub:// removed scheme refused at parse with exit 3 |
-| `run.inspect.denial.trust` | denial | 2 | policy.trust | unreadable | Draft routine secret inspection denied |
+| `run.inspect.success.masked` | success | 0 | policy.trust | redacted | Secret references rendered as [REDACTED_VAULT_TOKEN]; inspect exits 0 on all rungs |
 | `run.abort.success.aborted` | success | 0 | — | aborted | Suspended frame purged; OCC fence released |
 | `run.abort.refusal.unknown_frame` | refusal | 3 | missing_param | unknown_frame | Abort target frame not suspended |
 

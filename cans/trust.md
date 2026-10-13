@@ -48,7 +48,7 @@
         - sim footnote — draft routines execute in sim strictly under `capcli routine prove`
         - prod — rung pinned only; tier 1 only; live risk real state
         - iron invariant 1 — prod is an exclusive club: Tier 1 + pinned; any missing condition fails closed at pre-flight (exit 2): E045_PROD_TIER1_MANDATE, E046_TRUST_VIOLATION: see physics.md#Exit-code-law
-        - iron invariant 2 — tier 2 confined to dev/sim rehearsal; targeting --env prod structurally refused
+        - iron invariant 2 — tier 2 confined to dev/sim rehearsal; targeting --env prod structurally refused: see physics.md#Platform-tier-taxonomy
         - iron invariant 3 — pinned executes on tier 2 when target env is dev or sim
       - template trust floor — imported routines and world templates enter strictly at draft trust
       - zero trust inheritance — blueprints confer zero promotional credit; pre-pinned imports banned
@@ -66,17 +66,22 @@
       - federated caller floor — ws:// external entry points mandate trust: pinned; calling draft or reviewed routines across federation fails closed with exit 2 (E042_FEDERATION_DENIED)
       - federated initiation floor — routines initiating ws:// calls must hold trust >= reviewed
       - demotion priority — demotion commands execute without gate resistance
-      - mock drift demotion — upstream provider OpenAPI spec_hash changes or breaking contract changes immediately demote pinned capabilities to draft
-      - circuit demotion — sustained routine failure auto-demotes to draft: see time.md#decay-and-subtraction
+      - demotion granularity — automatic demotion moves exactly one rung; multi-rung demotion denied; every automatic demotion emits an alert event
+      - mock drift demotion — upstream provider OpenAPI spec_hash changes or breaking contract changes immediately demote pinned capabilities one rung to reviewed
+      - circuit demotion — sustained routine failure auto-demotes one rung: see time.md#decay-and-subtraction
   - Gates & promotion
     - Monotonic promotion pipeline
-      - draft to reviewed — AST complexity <= 10; token envelope < 2000; offline cassette tests pass (apis/*.cassette.jsonl)
+      - draft to reviewed — AST complexity <= 10; token envelope < 2000; offline cassette tests pass (apis/*.cassette.jsonl); prove-run secret leases: see agent.md#Secrets
       - reviewed to pinned — 100% sim replay on masked data with zero policy denials; live contract schema verification for external verbs; human or Tier-1 CI sign-off
       - elevation skips — direct draft-to-pinned promotion denied (exit 3)
     - Ship gate
       - command — see interface.md#Routine-path
       - autonomous pinned promotion — reviewed advances to pinned autonomously when the auto-promotion conjunction holds; promotion criteria: see #Monotonic-promotion-pipeline
-      - canary veto window — newly pinned routines face 1-hour observation; error rate >1% triggers automatic rollback to draft and Cockpit PWA alert
+      - canary veto window — newly pinned routines face 1-hour observation: see #Ladder-laws
+        - trigger — error rate >1% demotes pinned→reviewed exactly one rung
+        - freeze — the kernel freezes routine traffic immediately on demotion
+        - alert — the Cockpit PWA alert fires and the operator is paged
+        - re-promotion — requires explicit operator action; autonomous re-promotion during the freeze is denied
       - established pinned scope — 30%-over-20-runs circuit breaker: see time.md#decay-and-subtraction
       - human intervention boundary
         - risk-flagged operations — human approval: >50k rows, destructive migrations

@@ -117,8 +117,11 @@
         - return value — summary-sized dict
     - Shape constraints
       - token envelope — max 2,000 tokens (LOC unrestricted; whitespace, comments, docstrings unpenalized)
-      - complexity — cyclomatic complexity <= 10 branch paths; evaluated at AST prepare-time
-      - signatures — max 8 typed Param declarations; description required
+      - complexity — cyclomatic complexity beyond the governance ceiling emits a lint advisory at prove, evaluated at AST prepare-time; exit 0; compilation proceeds: see physics.md#Exit-code-law
+        - numeric ceiling: see artifacts/governance.yaml#routine_shape
+      - signatures — typed Param declarations beyond the governance ceiling emit a lint advisory at prove; exit 0; compilation proceeds: see physics.md#Exit-code-law
+        - numeric ceiling: see artifacts/governance.yaml#routine_shape
+      - description — Param descriptions required
       - execution caps — fuel envelope per frame, declared at invocation and enforced at frame push: see budget.md#Cascade
       - wall-clock — decoupled from fuel; OS watchdog kills past 300s: see artifacts/governance.yaml#routine_shape
       - pagination posture — routines must encapsulate iteration and filtering loops internally; multi-turn LLM subshell pagination loops banned
@@ -288,6 +291,11 @@
       - Human IO methods
         - ctx.ping.notify(principal, message, channel, intent) — notice
         - ctx.ping.ask(principal, question, options, timeout) — suspension
+        - option guidance — see budget.md#Output-caps
+        - ask predicate — approval binds to intent
+          - capture — at ping.ask suspension the kernel captures the ask predicate and the rows the decision reads
+          - resolve — on resolve the kernel re-evaluates the predicate against fresh reads; predicate holding lets the approval stand; drift outside the predicate's read set never invalidates an approval: see physics.md#Distributed-concurrency-laws
+          - falsified — predicate falsified by a write-write conflict exits 2 (E061_OCC_DRIFT); the diagnostic names the falsifying row; the approval is discarded, never applied to changed facts
       - Utility methods
         - ctx.log(msg) — audited log entry
         - ctx.params — validated input mapping

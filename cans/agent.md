@@ -111,6 +111,12 @@
       - boundary rotation — egress proxy silently refreshes expired bearer tokens
       - references — catalogs reference secret_ref, never plaintext values
       - trust restriction — draft routines denied secret access: exit 2 at pre-flight; floor orthogonal to env matrix; dev-runnable drafts never resolve vault:// handles: see trust.md#Weakest-link-matrix
+      - prove-run secret leases — kernel custody extends to bounded prove runs; the draft floor stands unchanged
+        - minting — capcli routine prove --env sim mints a prove-run lease bound to (prove run id, session id, frame id)
+        - resolution — vault://<name> handles resolve under the lease for that prove run only; E047 does not fire under an active lease
+        - scope — sim egress only; validity bounded by the prove run wall-clock; auto-revokes at run end; never persisted to the secrets table
+        - custody — guest address space receives opaque handles only; plaintext never reaches guest heap, IPC payloads, or _audit
+        - redaction — every lease-scoped secret byte in output scrubs to [REDACTED_VAULT_TOKEN]
   - Coordination
     - World coordination
       - claims — distributed lease locks with TTL via db lock for multi-step ops

@@ -45,6 +45,10 @@ network:
       mode: wireguard                           # mesh role rides an encrypted peer overlay
       peer_template: "tcp://<peer>:51820"       # per-peer socket template
     max_evacuation_ms: 2000            # flush window before hard abort
+  dial:
+    total_ms: 10000                # default dial budget covering peer cold start; fail-closed is invariant, the budget is policy: see cans/physics.md#Federation-invariants
+    tick_interval_ms: 500          # socket poll tick
+    backoff: 2.0                   # exponential backoff multiplier per tick
 
 # ───────────────────────────────────────────────────────────────
 # 1. LAYER 1 — compiled to sqlite3_set_authorizer

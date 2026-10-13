@@ -14,14 +14,23 @@
       - tier 2 (virtualized / wasm) — macOS (Darwin), Android (Termux), Windows native
         - sandbox — mandatory microVM (Darwin/Windows: Colima / Lima) or WASM sandbox (Wasmtime; Termux and any tier 2 host) with unmapped socket capabilities
         - network jail — kernel-enforced socket null-routing; cooperative host process execution is Tier 0 (DENIED)
-        - trust bounds — dev and sim environments only; pinned routines execute against dev/sim targets; --env prod structurally denied: see trust.md#Weakest-link-matrix
+        - trust bounds — dev and sim environments only; pinned routines execute against dev/sim targets; --env prod denied absent a waiver: see trust.md#Weakest-link-matrix
+        - tier waiver — --tier-waiver grants one --env prod invocation on a tier 2 host
+          - channel — interactive TTY only, typed operator confirmation; headless invocation denied
+          - scope — binds to (session id, routine, run); never persisted, never defaulted, never inherited
+          - audit — kernel renders a degraded-tier banner and appends tier.waiver_granted audit event carrying the operator identity before dispatch
+          - effect — E045_PROD_TIER1_MANDATE does not fire under a valid waiver; pinned rung and E046 still apply
   - Deployment topology
     - dual-axis contract — swarm and federation are separate axes: spokes proxy DB to the Hub; federated workspaces are sovereign peers, each with its own DB and budget: see #Federation-invariants
     - dedicated server — headless Linux host running capcli-daemon under systemd; required for 24/7 background crons, webhooks, and S3 WORM attestations
-    - federated mesh — sovereign daemon peers over shared VPS or private WireGuard network; IPC over unix:// socket paths (e.g. /run/capcli/<ws>.sock) or tcp:// endpoints (e.g. 100.64.0.1:4040)
-    - swarm hub — central daemon instance coordinating remote spokes; hosts primary SQLite writer and system tables
-    - swarm spokes — worker nodes reaching the hub over tcp:// WireGuard endpoints (Tailscale), mTLS, or unix:// local IPC
-    - endpoint configuration — transport endpoints configured under: see artifacts/policy.yaml#network.transports
+    - default profile — single-host deployment
+      - hub — one Hub daemon; local spokes reach it over unix:// IPC (e.g. /run/capcli/hub.sock)
+      - storage — the SQLite writer, the claims system table, and system tables live on this host
+      - scope — no network, no overlay, no orchestrator
+    - remote profile — explicit opt-in
+      - transport — remote spokes and sovereign peers communicate over WireGuard with mTLS; endpoints configured under: see artifacts/policy.yaml#network.transports
+      - mechanics — Hub/spoke roles, heartbeat, and reaper mechanics are invariants of the remote profile only: see agent.md#Ephemeral-swarm-identity
+      - auth scope — SO_PEERCRED socket authentication applies to local IPC; it never crosses a network boundary
     - ephemeral sandbox node — disposable microVM or container worker; zero-disk state and sync audit ack; identity: see agent.md#Ephemeral-swarm-identity
     - local workstation — ephemeral developer environment; prohibited from serving production endpoints or hosting unattended pinned schedules
     - parity principle — local state mutations and external API egress share equal gate severity
@@ -29,7 +38,7 @@
     - egress engine — optimistic token-bucket quotas slaved to remote headers, secret boundaries, and sim routing intercept network calls
   - Distributed concurrency laws
     - remote authorizer proxy — Hub executes Layer 1 sqlite3_set_authorizer on behalf of spoke ctx.db requests before execution
-    - state fencing — OCC state_fence (sha256 hash of read row state) verified at Hub before physical commit; drift aborts with exit 2 (E061_OCC_DRIFT)
+    - state fencing — OCC state_fence verified at Hub before physical commit: see #Distributed-concurrency-laws (Layer 2)
       - hub evaluation — remote authorizer proxies evaluate Layer 2 OCC fences at the Hub prior to physical commit
     - Layered lock hierarchy — concurrency locking partitions into three non-overlapping timescales; lock layers are distinct from the Two-layer enforcement layers
       - Layer 1 — macro lease
@@ -40,10 +49,12 @@
         - eviction — background daemon reaps expired claims
         - lifecycle detail: see world.md#claims-lease-lifecycle
       - Layer 2 — meso fence
-        - mechanism — OCC state_fence = sha256 of read row state
+        - mechanism — OCC state_fence records per-row read versions plus the frame's declared write intent
         - collection — captured during Phase 1 on ctx.db.get and ctx.db.view reads
         - verification — re-verified under SQLite lock during Phase 3 commit
-        - drift — mismatch halts immediately with exit 2 (E061_OCC_DRIFT); zero partial writes
+        - read drift — drift on rows the frame only read triggers re-read and re-fence; a suspended frame re-fences at most 3 times, then exits 2 (E061_OCC_DRIFT)
+        - write drift — drift on rows the frame wrote or declared in write intent is a write-write conflict: exits 2 (E061_OCC_DRIFT) immediately; zero partial writes; frame purged
+        - commit backstop — commit-time fence re-verified under the Phase 3 SQLite lock stands final
       - Layer 3 — micro lock
         - mechanism — SQLite BEGIN IMMEDIATE via rusqlite
         - lifespan — transaction lifespan strictly <15ms
@@ -52,14 +63,16 @@
       - no ws:// calls while holding Layer 1 claims: see action.md#Interior-rules
   - Federation invariants
     - socket authentication — local peer verified via Linux SO_PEERCRED at accept; UID/GID mismatch drops connection instantly
-    - vector cycle check — call_chain array appended per hop; existing workspace in call_chain fails closed with exit 2 (E041_FEDERATION_CYCLE)
-    - chain transport — call_chain rides the IPC call envelope, appended per hop, recorded on federation.call_out: see effect.md#Kernel-event-payloads
-    - hop ceiling — federated nesting depth capped at 2 cross-workspace hops; breach exits 2
+    - bounded re-entry — a workspace may re-enter a call tree exactly once on its original idempotency key; repeated hops replay idempotently: see effect.md#Replay-invariants
+    - cycle check — a third entry by one workspace, or re-entry on a fresh key, fails closed with exit 2 (E041_FEDERATION_CYCLE)
+    - chain transport — call_chain carries (workspace, idempotency_key) per hop, rides the IPC call envelope, appended per hop, recorded on federation.call_out: see effect.md#Kernel-event-payloads
+    - hop ceiling — cross-workspace hops capped at 3; the third hop is a legal re-entry only; breach exits 2
     - lock fence rule: see action.md#Interior-rules
-    - transport retry — missing peer socket polls max 1500ms (3 ticks @ 500ms); timeout exhaustion exits 4 (E055_FEDERATION_UNREACHABLE)
+    - transport retry — missing peer socket dials with exponential backoff against the budget configured at artifacts/policy.yaml#network.dial; exhaustion fails closed with exit 4 (E055_FEDERATION_UNREACHABLE)
+    - dial budget — fail-closed is invariant; the budget is policy; kernel never restates the number; default 10s total, covering peer cold start
     - secret transit — plaintext secret bytes in federated params scrubbed to [REDACTED_VAULT_TOKEN] at the socket edge; vault://<name> handles pass opaque: see agent.md#Secrets
     - session isolation — caller session never crosses the workspace boundary; callee mints its own session per call: see budget.md#Frames
-    - hop/nesting interplay — federated hops count toward call nesting depth; both ceilings enforced, hop ceiling 2 binds first: see #Exit-code-law
+    - hop/nesting interplay — federated hops count toward call nesting depth; both ceilings enforced, hop ceiling 3 binds first: see #Exit-code-law
     - in-process concurrency — multi-threaded harness subagents (same PID) serialize via OCC state_fence and marker-scoped claims; collision yields via exit 6: see #Exit-code-law
     - network partition fail-closed — lost connection to Hub during sync audit delivery aborts command immediately with exit 5
     - swarm identity and reaper mechanics: see agent.md#Ephemeral-swarm-identity
@@ -116,7 +129,7 @@
       - Phase 1: static pre-flight — host-side, memory-only; zero physical DB writes, zero network calls
         - harness identity — marker sniffing (PPID/env), token validation, principal check (--as)
         - syntax & AST — SQL/routine parse, binding check; f-strings and interpolation banned
-        - complexity ceilings — max 2000 tokens, cyclomatic ≤ 10, max 8 params
+        - complexity ceilings — max 2000 tokens
         - graph integrity — native DFS dependency cycle scan; A → B → A banned
         - lockfile & schema — capcli.lock hash match against current schema
         - static budget headroom — can_invoke_now evaluated against session ceiling
@@ -133,7 +146,7 @@
         - atomic commit — physical transaction executed under SQLite BEGIN IMMEDIATE
         - ledger append — _audit event appended with prev_hash link; outbox synced
         - policy denial — authorizer block, check constraint, or budget limit exits 2 with native diagnostic trace
-        - kernel panic — ledger disk corruption or plaintext secret leak exits 5; token revocation
+        - kernel panic — sink loss or plaintext secret leak exits 5; row-level corruption: see effect.md#Event-integrity; token revocation
         - exit 0 — single deterministic audit record appended to _audit
       - phase map — Layer 2 AST executes in Phase 1; Layers 1, 1.2, and 1.5 execute in Phase 3
     - Policy vs governance split
@@ -170,6 +183,9 @@
       - cadence floor — bucket floor yields exit 6 when wait exceeds 2s or upstream 429 carries Retry-After; shorter waits sleep in-kernel: see budget.md#Quotas
     - Exit code law
       - scope — exit contract binds capcli commands returning CliEnvelope; external tooling defines its own exit contract
+      - lint tier — advisory findings exit 0
+        - envelope — each finding carried under lint_findings
+        - effect — lint findings never deny, never block promotion, never gate execution; they inform the author
       - exit 0 — success with single deterministic audit record appended to _audit; upstream HTTP failures handled gracefully in envelope
       - exit 2 — Phase 3 policy denial; invariant or governance block; state untouched (state_modified: false)
         - domain policy.federation — caller unallowlisted, routine trust < pinned, or cycle detected (E042_FEDERATION_DENIED, E041_FEDERATION_CYCLE)
@@ -178,16 +194,16 @@
         - domain policy.budget — frame fuel exhaustion, session fuel exhaustion, or call nesting > 5: see budget.md#Frames
         - domain policy.quota — provider spend ceiling breach; hard denial, never yield: see budget.md#Quotas
         - domain policy.migration — offline migration rehearsal breaks the pinned routine contract: see world.md#Migration-safety
-        - domain policy.platform — --env prod on a tier 2 host fails closed at pre-flight (E045_PROD_TIER1_MANDATE); remedy: use --env sim locally
+        - domain policy.platform — E045_PROD_TIER1_MANDATE: see physics.md#Platform-tier-taxonomy
         - domain policy.trust — draft or reviewed routine in --env prod fails closed at pre-flight (E046_TRUST_VIOLATION); remedy: routine ship <name> pinned
-        - domain policy.trust — draft routine resolving vault:// handles fails closed at pre-flight (E047_SECRET_TRUST_FLOOR); runtime authorizer backstop: see agent.md#Secrets
+        - domain policy.trust — E047_SECRET_TRUST_FLOOR: see agent.md#Secrets
         - pre-flight matrix checks — E045, E046, and E047 evaluate before dispatch; denial carries exit 2, state untouched
-      - exit 3 — Phase 1 static pre-flight refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, statically-declared unpaginated payload shape
+      - exit 3 — Phase 1 static pre-flight refusal: token envelope > 2,000, AST cycle, string interpolation, statically-declared unpaginated payload shape
         - runtime result size — oversized output returns the keyset pagination schema instead of exiting; see action.md#Shape-constraints
       - exit 4 — Phase 2 guest crash; domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
-        - domain federation.transport — peer unreachable after 1500ms timeout (E055_FEDERATION_UNREACHABLE)
+        - domain federation.transport — see #Federation-invariants
         - watchdog kill — wall-clock exceeding 300s kills the guest; wall-clock is not fuel
-      - exit 5 — Phase 3 kernel panic; domain kernel.panic; media loss, or raw credential bytes in stdout/stderr streams, return payloads, or audit payloads triggering immediate kill_and_alert
+      - exit 5 — Phase 3 kernel panic; domain kernel.panic; sink loss, or raw credential bytes in stdout/stderr streams, return payloads, or audit payloads triggering immediate kill_and_alert; row-level corruption: see effect.md#Event-integrity
         - panic protocol — guest process aborts with exit 5 (kernel.panic); session capability token revoked instantly: see agent.md#Secrets
         - panic protocol — in-memory secret buffers zeroized; security alert event appended to the audit.db ledger: see effect.md#Audit-spine
       - exit 6 — Phase 2 proactive yield
@@ -198,7 +214,8 @@
       - mechanical daemon resumption — when a yielded frame is unblocked by clock refill (reset_at) or human 1-click approval in Cockpit, capcli-daemon executes the pre-compiled guest routine directly in the sandbox to completion; waking or re-prompting the LLM harness for purely mechanical execution is prohibited
       - resume verification
         - lease check — resumption verifies the Layer 1 claims lease is still active and owned by the caller
-        - fence check — OCC state_fence verified against live row state; table drift during suspension aborts immediately with exit 2 (E061_OCC_DRIFT)
+        - fence check — see #Distributed-concurrency-laws
+        - ask predicate — see action.md#The-ctx-contract
       - compile at yield — daemon compiles the guest routine into a standalone artifact at yield time; resumption runs that artifact to completion without waking the harness
       - result delivery — daemon posts completion results to the sensory inbox; harness surfaces them at the next turn-zero overview: see interface.md#CLI-surface
       - preemption yield — worker spot/container SIGTERM maps directly to exit 6; traps execution, flushes cursor checkpoint, parks frame to db://_suspended_tasks: see #Exit-code-law

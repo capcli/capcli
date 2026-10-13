@@ -10,7 +10,7 @@
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json
       - Prefix standard — [env:tier] prepended to all output streams; only legal pairings emit ([dev:tier_2], [sim:tier_2], [dev:tier_1], [sim:tier_1], [prod:tier_1]): see trust.md#Weakest-link-matrix
-      - Illegal pairings never emit — [prod:tier_2] cannot occur; pre-flight denies it with exit 2 (E045_PROD_TIER1_MANDATE): see physics.md#Exit-code-law
+      - Illegal pairings never emit — [prod:tier_2] cannot occur without a valid --tier-waiver; pre-flight denies it with exit 2 (E045_PROD_TIER1_MANDATE): see physics.md#Exit-code-law
       - Tier 2 banner — emits host.degraded_isolation warning: see physics.md#Platform-tier-taxonomy
       - Caller categories
         - [harness] — safe for autonomous agent execution
@@ -19,6 +19,7 @@
     - Hot path: run noun
       - Commands
         - execute — run <capability> [-p k=v]
+        - tier waiver — --tier-waiver grants one --env prod invocation on a tier 2 host: see physics.md#Platform-tier-taxonomy
         - abort — run abort <frame_id> — cancels a suspended frame; fence release law: see physics.md#Exit-code-law
         - sql — sql "<query>" [-p k=v] [-m "intent"] [--dry-run] — unified AST-gated query & execution
         - overview — run overview [--as <principal>] — single-shot domain situational briefing
@@ -26,6 +27,9 @@
         - search — search <query> [--type <domain>] [--trust X] [--env X]
         - gap detection — run search gaps --since 7d
         - inspect — inspect <ptr> — dispatches across the three UrpResolver traits and returns a unified PreflightEnvelope: see action.md#Pointer-taxonomy
+          - masking law — exits 0 on every trust rung; secret material renders as [REDACTED_VAULT_TOKEN]: see agent.md#Secrets
+          - no denial — no authorizer denial fires for inspecting routines that reference secrets
+          - resolution vs description — E047 governs resolution, never description
       - Aliases — capcli sql, capcli search, capcli inspect
       - PreflightEnvelope
         - shape — one envelope per resolver trait; contents vary by resolver class
@@ -48,6 +52,8 @@
     - Storage path: db noun
       - Locking — db lock <table>:<ref> --ttl <duration> --reason "..."
       - Lock semantics — db lock claims Layer 1 leases, grants only against an active TTL: see action.md#Database-methods; identity and lifecycle: see world.md#claims-lease-lifecycle
+      - Takeover — db lock <table>:<ref> --takeover acquires a stale claim: see world.md#claims-lease-lifecycle
+      - Abandon — db unlock <target> --abandon releases without acquiring, requires --reason: see world.md#claims-lease-lifecycle
       - Release — db unlock <target>
       - Schema — db schema [--table]
       - Snapshots — db snapshot, restore <id>, dump
@@ -116,7 +122,9 @@
         - platform probe — reports host OS, platform tier, and sandbox: see physics.md#Platform-tier-taxonomy
         - permitted environments — reports the target environments legal for the detected host tier (tier 1: dev, sim, prod; tier 2: dev, sim); no sandbox spawned
         - machine contract — --json emits platform tier plus the permitted-env list as machine fields
-      - Backups — sys backup [--push], recover <snapshot-id>
+        - tamper acknowledgement — sys doctor --ack-tamper records review and clears degraded status: see effect.md#Event-integrity
+      - Backups — sys backup [--push] always completes the local snapshot; push is best-effort: see recovery.md#Storage-&-Backup; recover <snapshot-id>
+      - Ledger init — sys init --fresh re-initializes the ledger after total media loss: see recovery.md#Restore-path
       - Sandboxing — sys exec <cmd> --sandbox
       - Harness shim — sys shim <target-bin> [--wrap <path>] — deploys native zero-cost wrapper capturing caller marker hashes and scrubbing secrets: see agent.md#Harness-environment-markers
       - Daemon control — sys serve --start, --stop, --restart, --status

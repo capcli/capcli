@@ -3591,7 +3591,7 @@
         "run.inspect.refusal.missing_ptr"
       ],
       "to": [
-        "run.inspect.denial.trust"
+        "run.inspect.success.masked"
       ],
       "trigger": "inspect_draft_ptr",
       "label": "capcli inspect cap://refund_and_archive@1",
@@ -3603,7 +3603,7 @@
         "journey_inspect_preflight"
       ],
       "from": [
-        "run.inspect.denial.trust"
+        "run.inspect.success.masked"
       ],
       "to": [
         "run.inspect.success.template"

@@ -48,6 +48,7 @@
       - budget.frame_push/pop — declared, consumed, remaining: see budget.md#Frames
       - serve.request — endpoint, channel (rest|mcp), trace_id, routine@version, api_key_id, status
       - promotion.sla_breached — queue age beyond SLA threshold; see time.md#decay-and-subtraction
+      - kernel.genesis.data_loss — prior root hash (when known), loss scope, operator principal, confirmation receipts; opens every re-initialized ledger: see recovery.md#Restore-path
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
       - template instantiation — capcli template scaffold emits exactly one event: routine.draft (routine kind) or env.init_from_template (world kind)
@@ -55,12 +56,15 @@
         - stall — sink stall triggers out-of-band spooling and alerts; failed audit writes held in a 5-minute in-memory buffer
         - buffering — while buffered, all new mutating business writes are denied (exit 2)
         - exhaustion — undrainable buffer → kernel panic (exit 5)
-      - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok
+      - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok; a re-initialized ledger opens with kernel.genesis.data_loss first: see #Kernel-event-payloads
       - no synthetic types — onboarding.* and fake lifecycle events denied
-      - tamper quarantine — broken sha256 links isolate corrupted leaves to a quarantine branch; valid historical blocks remain operable; critical security alert emitted
+      - tamper quarantine — broken sha256 links isolate corrupted leaves to a quarantine branch; corruption never aborts boot; valid historical blocks remain operable; critical security alert emitted
+      - boot verification — kernel validates the last 1,000 blocks against the chain at boot; failed blocks route to quarantine; boot completes in degraded mode
+      - degraded mode — status flag degraded: tamper_evidence; kernel serves all tables except quarantined data; quarantined leaves stay fail-closed; tamper alerts repeat until acknowledgement
+      - operator acknowledgement — sys doctor --ack-tamper records review and clears degraded status; the acknowledgement appends a kernel event to the chain
+      - exit 5 scope — kernel panic reserved for sink loss and credential leaks; row-level corruption exits 0 with degraded status, never 5
       - denial logging — denied operations emit audit events with effect: none
       - tamper detection — per-row sha256 chain verified against root ledger hash
-      - boot verification — kernel validates the last 1,000 blocks against the chain at boot
       - line linking — each _audit row carries prev_hash; row_hash = sha256(prev_hash || canonical_event_json); chain mirrored to JSONL
       - mirror secrecy — no unscrubbed credential bytes in _audit or the JSONL mirrors; secret-keyed params mask per artifacts/masking.yaml#json_secret, wire echoes scrub: see agent.md#Secrets
       - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata

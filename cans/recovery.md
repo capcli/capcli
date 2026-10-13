@@ -17,7 +17,9 @@
         - catalog inspection — CLI inspection surface: see interface.md#Storage-path:-db-noun
   - Storage & Backup
     - Declarative source tracking — git repository holds declarative configurations; capcli-daemon manages atomic Git commits strictly upon cryptographic human PWA approvals; direct unverified agent git mutations remain prohibited
-    - Snapshot persistence — transactionally clean VACUUM INTO snapshots and JSONL audit mirrors stream directly to append-only S3/R2 object storage
+    - Snapshot persistence — transactionally clean VACUUM INTO snapshots complete locally on every sys backup; local durability never gates on remote state
+    - Push best-effort — --push attempts the git commit and object-store upload; divergence or remote failure completes with exit 0, warning push: pending, records pending-push state
+    - Reconciliation — pending-push state retries on the next successful push; sys recover --list shows pending-push backups
     - Retention — immutable point-in-time snapshots and audit logs retain on object storage with WORM locking; local disk retains rolling 30-day cache
     - tier-3 anchor — ledger root hashes anchored to S3 Object Lock (WORM) with KMS notary signatures: see effect.md#Event-integrity
   - Hash chains
@@ -30,6 +32,11 @@
       - local snapshot — instant rollback via db restore <id>
       - git revision — workspace reconstruction via sys recover <commit>
       - offsite archive — disaster recovery pull from object storage
+    - Ledger re-initialization
+      - command — sys init --fresh re-initializes the ledger after total media loss; dual confirmation required: operator key signature plus typed incident reason
+      - fail-closed default — without dual confirmation the kernel refuses, exit 5
+      - sole write path — emergency recovery mode stays read-only; init --fresh is the only write path out of total loss
+      - genesis event — opens with kernel.genesis.data_loss: see effect.md#Kernel-event-payloads
     - Emergency recovery mode
       - activation — CAPCLI_RECOVERY=1 environment variable enables emergency recovery mode
       - handler — native recover command in crates/capcli-cli/src/commands/
