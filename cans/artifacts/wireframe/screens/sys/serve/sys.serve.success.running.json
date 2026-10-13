@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.serve.success.running",
-  "target": "sys://daemon",
+  "target": "daemon",
   "command": "capcli sys serve --start",
   "elapsed_ms": 387,
   "context": {

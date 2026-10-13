@@ -40,7 +40,7 @@
     "footer": {
       "provider": "stripe",
       "state_filter": "active",
-      "verbs": "4 active of 418 total (414 dormant)"
+      "verbs": "418 active of 418 total (4 invoked)"
     }
   },
   "affordances": [

@@ -26,10 +26,10 @@
       },
       {
         "fields": {
-          "next": "capcli api activate stripe.payment_intents.create --intent \"...\""
+          "next": "capcli api prove stripe.payment_intents.create --env sim"
         },
         "lines": [
-          "cap://stripe/payment_intents.create api      dormant",
+          "cap://stripe/payment_intents.create api      active",
           "Creates PaymentIntent for card/invoice capture"
         ]
       },

@@ -47,7 +47,7 @@
       "│     └── issue_credit_note       active    draft",
       "├── cap://threads",
       "│     ├── create_media_post       active    draft",
-      "│     └── get_media_post          dormant   —",
+      "│     └── get_media_post          active    —",
       "└── cap://fedex",
       "├── ship                    active    reviewed",
       "└── track                   active    reviewed",

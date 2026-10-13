@@ -55,9 +55,10 @@ Logged, not resolved — each needs its cans owner's ruling:
 - C-8 Tier 1 sandbox floor: physics.md absent bwrap → fallback container/microvm, abort only if all providers fail; `sys.doctor.refusal.boot` fixture calls bwrap "mandatory on Tier 1", floor 0.8.0. errors.md R43 follows the fixture.
 - C-9 doc slicing: `doc.read.success.sliced` fixture renders outline-node output from `doc read --max-tokens 100`; interface.md defines no leaf addressing (known open ruling; `--section` illegal in v1 regardless).
 - C-10 agent registry cap: "8 registered agents" cap exists only in the `sys.register.denial.cap` fixture; no owner (agent.md/governance.yaml/policy.yaml) states it.
+  - C-10 resolution (2026-10-13, user: decide all rulings, no ask-backs): canonical home assigned — `cans/artifacts/governance.yaml#registry.max_agents: 8` ("agent registry capacity ceiling; registration past 8 exits 2"), alongside the sibling registry caps; fixture remedy now carries the one-hop pointer `limit: artifacts/governance.yaml#registry.max_agents` per the cap-denial convention. Fixture `rule` label `policy.registry.agent_cap` kept (diagnostic label convention shared with the five sibling cap denials).
 
 ## Still open
-Task audit-2026-10-07 items C-1..C-10 above. All earlier cross-file keepers and duplicate ownership claims reconciled.
+Task audit-2026-10-07 items C-1..C-9 above. All earlier cross-file keepers and duplicate ownership claims reconciled.
 
 ---
 Task ID: PM15-D (wireframe post-mortem round 2, item 2 — env.remove dual confirmation)
@@ -118,3 +119,8 @@ Logged, not resolved — cans/ is SSOT and was left untouched; fixes live in the
 - C-20 policy.yaml LAYER-1 `alter` vs raw-DDL denial law: cans/artifacts/policy.yaml (the live config the C authorizer compiles from) still declared `alter: { require_trust: reviewed }` — schema ops gated by trust — contradicting WO-8's new law: raw DDL (ALTER/DROP/CREATE TABLE) denied at the C authorizer for draft AND reviewed principals, exit 2 (see physics.md#Layer-1:-sqlite3_set_authorizer); the kernel 4-phase revision pipeline is the sole legal DDL path, revision vocabulary only.
 - C-20 ruling: `alter: deny` in policy.yaml, comment updated; cans/AGENTS.md's "read them, never edit them" rule for artifacts/*.yaml treated as stale vs explicit authorization for this live-config fix.
 - C-20 status: Resolved 2026-10-13 — single-line config fix landed uncommitted; compile path (YAML → C authorizer) unchanged; `yaml.safe_load` parses clean; nothing else in the file touched.
+
+## Resolved 2026-10-13 (paradox resolutions §§6-10 — operator: agent decides)
+
+- C-21 mock-drift/circuit demotion targets vs single-rung law: trust.md#Ladder-laws mock drift demotion and circuit demotion named draft as the automatic demotion target, colliding with the new demotion-granularity law (automatic demotion moves exactly one rung; multi-rung demotion denied). Resolution: both changed to one-rung demotion (pinned→reviewed), applied directly in trust.md. Reasoning: multi-rung demotion destroys the reviewed evidence the routine earned and erases the distinction between never-proven and proven-but-regressed; one rung preserves the evidence trail and gives a defined re-entry.
+- C-22 row-corruption exit-5 law vs prior round-2 ruling: _adr/003-wireframe-state-taxonomy.md (round 2) and C-12 reclassified row-level chain tamper to sys.doctor.panic.quarantine (exit 5, kernel.panic) per recovery.md#Hash-chains; test-plan ad_15_boot_chain_walk_quarantine.yaml pins exit 5 on a broken link; the wireframe sys.doctor.panic.quarantine fixture asserts exit 5. The new effect.md#Event-integrity law narrows exit 5 to sink loss and credential leaks — row corruption boots degraded (exit 0) with quarantine, never 5. Resolution: cans law changed per delegated ruling; the wireframe fixture, test-plan case, and ADR-003 round-2 note now contradict cans and need mechanical updates in their owning layers (not this file set).

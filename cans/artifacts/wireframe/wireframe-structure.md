@@ -29,7 +29,6 @@ cans/artifacts/wireframe/
       restore/
       dump/
     routine/
-      new/
       prove/
       ship/
       pending/
@@ -177,7 +176,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.execute.denial.claim_held` | denial | 2 | db.claims | locked | Exclusive `--lock` ref already held |
 | `run.execute.denial.federation_denied` | denial | 2 | policy.federation | unallowlisted | `E042_FEDERATION_DENIED`: peer not an active federated agent |
 | `run.execute.denial.federation_cycle` | denial | 2 | policy.federation | cycle | `E041_FEDERATION_CYCLE`: workspace already in call_chain |
-| `run.execute.denial.federation_unreachable` | denial | 4 | federation.transport | unreachable | `E055_FEDERATION_UNREACHABLE` after 1500ms poll |
+| `run.execute.crash.federation_unreachable` | crash | 4 | federation.transport | unreachable | `E055_FEDERATION_UNREACHABLE` after 1500ms poll |
 | `run.execute.refusal.missing_secret`| refusal| 3 | policy.secrets | missing_key | Missing credential redirects to Cockpit URL |
 | `run.execute.yield.ask` | yield | 6 | ping.ask | suspended | Routine hit `ctx.ping.ask`; frame checkpointed to `_pending_asks`, exits 6 until human resolves |
 | `run.execute.yield.quota` | yield | 6 | api.quota | rate_limit | Suspends task; sets `yield_until` timestamp |
@@ -291,7 +290,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `api.ship.refusal.missing_reason` | refusal | 3 | missing_param | missing_arg | Missing elevation justification |
 | `api.stats.success.populated` | success | 0 | — | populated | Quota usage and error metrics |
 | `api.stats.refusal.not_found` | refusal | 3 | validation | not_found | Target provider not found |
-| `api.retire.success.completed` | success | 0 | — | completed | API verb deactivated to dormant |
+| `api.retire.success.completed` | success | 0 | — | completed | API verb retired |
 | `api.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target verb not found |
 | `api.rollback.success.completed` | success | 0 | — | completed | Reverts API spec to prior hash |
 | `api.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback limit of 5 |
@@ -349,6 +348,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `ping.list.success.populated` | success | 0 | — | populated | Pending suspension questions |
 | `ping.list.success.empty` | success | 0 | — | empty | Zero pending inquiries |
 | `ping.resolve.success.resolved` | success | 0 | — | resolved | Choice selected; resumes task |
+| `ping.resolve.success.rejected` | success | 0 | — | rejected | Deny choice selected; resumes task on the reject branch |
 | `ping.resolve.denial.occ_conflict` | denial | 2 | policy.notify | occ_fence | Kernel OCC fence gate caught entity drift during suspension; resume denied |
 | `ping.resolve.refusal.not_found` | refusal | 3 | validation | not_found | Invalid ask ID |
 | `ping.resolve.denial.expired` | denial | 2 | policy.notify | expired | Timeout elapsed; fail-closed |
@@ -639,7 +639,7 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.success.report",
-  "target": "sys://host",
+  "target": "host",
   "command": "capcli sys doctor --report",
   "context": {
     "env": "prod",
@@ -891,7 +891,7 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.denial.thrashing",
-  "target": "sys://host",
+  "target": "host",
   "command": "capcli sys doctor",
   "context": {
     "env": "dev",
@@ -1098,7 +1098,7 @@ Fixture (`wireframe/v2`):
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.success.clock_drift",
-  "target": "sys://host",
+  "target": "host",
   "command": "capcli sys doctor",
   "context": {
     "env": "dev",
@@ -1112,7 +1112,7 @@ Fixture (`wireframe/v2`):
     "groups": [
       {
         "fields": {
-          "⚠  clock drift warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
+          "clock_drift_warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
           "causal ordering unaffected": "intact"
         }
       },

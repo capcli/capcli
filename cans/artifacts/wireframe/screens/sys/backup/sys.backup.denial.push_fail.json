@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.backup.denial.push_fail",
-  "target": "sys://workspace",
+  "target": "workspace",
   "command": "capcli sys backup --push",
   "elapsed_ms": 376,
   "context": {

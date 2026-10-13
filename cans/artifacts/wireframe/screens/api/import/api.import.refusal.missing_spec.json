@@ -11,7 +11,7 @@
     "lines": [
       "capcli api import stripe /v1/charges POST"
     ],
-    "remedy": "re-run with --spec <url|file>, e.g. capcli api import stripe /v1/charges POST --spec https://api.stripe.com/openapi.json",
+    "remedy": "re-run with --spec <url-or-file>, e.g. capcli api import stripe /v1/charges POST --spec https://api.stripe.com/openapi.json",
     "rule": "missing_param.no_spec"
   },
   "context": {

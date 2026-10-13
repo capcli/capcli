@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.success.recovery",
-  "target": "sys://host",
+  "target": "host",
   "command": "CAPCLI_RECOVERY=1 capcli sys doctor",
   "elapsed_ms": 2043,
   "context": {
@@ -15,7 +15,7 @@
     "groups": [
       {
         "fields": {
-          "⚠  break-glass active": "CAPCLI_RECOVERY=1 — policy disabled, audit sink online"
+          "break_glass_active": "CAPCLI_RECOVERY=1 — policy disabled, audit sink online"
         }
       },
       {

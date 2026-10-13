@@ -14,7 +14,7 @@
     "rule": "validation.overview.oversized",
     "domain": "validation",
     "culprit": "Overview payload exceeded the 500-token aggregate ceiling: overview@2 renders 612 tokens (cap: 500). A single-shot KPI aggregate cannot paginate; clipping is banned.",
-    "remedy": "tighten the routine's aggregate shape in a new version: drop or condense sections until the briefing lands under 500 tokens",
+    "remedy": "overview@2 refused at the result gate (612 > 500 tokens, exit 3). Ground this turn with scoped queries: capcli sql for domain KPI read views, capcli ping list --pending for open asks, capcli sys doctor for health, capcli run inspect cap://<capability> for session fuel headroom. Durable fix: ship overview@3 with a condensed aggregate under 500 tokens",
     "routine": "overview@2 (draft)",
     "sections": "9 (v1 shipped 5)",
     "aggregate": "single-shot KPI briefing (not a collection)",

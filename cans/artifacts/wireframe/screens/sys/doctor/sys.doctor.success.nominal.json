@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.success.nominal",
-  "target": "sys://host",
+  "target": "host",
   "command": "capcli sys doctor --boot-check",
   "elapsed_ms": 2319,
   "context": {

@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.exec.success.completed",
-  "target": "sys://sandbox",
+  "target": "sandbox",
   "command": "capcli sys exec \"python3 etl.py\" --sandbox",
   "elapsed_ms": 1455,
   "context": {

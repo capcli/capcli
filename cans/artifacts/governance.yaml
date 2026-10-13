@@ -12,6 +12,7 @@ policy_version: 5
 # ───────────────────────────────────────────────────────────────
 registry:
   max_routines: 1000                  # local hybrid ONNX vector index scales registry capacity
+  max_agents: 8                       # agent registry capacity ceiling; registration past 8 exits 2
   soft_cap: 800                       # sys doctor nags; consolidation urged
   embedded_semantic_index: true       # in-binary ONNX vector similarity enabled
   max_per_agent_draft: 30             # anti-flood per agent identity
@@ -21,21 +22,22 @@ registry:
     require_description: true         # unsearchable = unregistrable
 
 # ───────────────────────────────────────────────────────────────
-# 1.2 TOPOLOGY & SWARM — distributed state & compute geometry
+# 1.2 TOPOLOGY — single-host default, remote opt-in
+# Two deployment profiles, no cluster orchestrator: see cans/physics.md#Deployment-topology.
 # ───────────────────────────────────────────────────────────────
 topology:
   default_mode: local                 # local | hub | spoke_thin | spoke_fat | spoke_ephemeral | replica
   allowed_modes: [local, hub, spoke_thin, spoke_fat, spoke_ephemeral, replica]
   transports: [unix_socket, wireguard_mesh, mtls]
-  hub:
+  hub:                                # default profile — single-host Hub, local spokes over unix:// IPC: see cans/physics.md#Deployment-topology
     max_concurrent_spokes: 256
     idle_timeout_seconds: 60
     busy_timeout_ms: 5000             # SQLite BEGIN IMMEDIATE queue ceiling
-  spoke:
+  spoke:                              # remote profile — WireGuard + mTLS opt-in: see cans/physics.md#Deployment-topology
     rpc_pool_size: 16
     connect_timeout_ms: 2000
     keepalive_interval_seconds: 10
-  ephemeral:
+  ephemeral:                          # remote profile only — heartbeat/reaper mechanics are remote-profile invariants: see cans/agent.md#Ephemeral-swarm-identity
     max_concurrent_nodes: 1000        # auto-scaling dynamic container ceiling
     default_ttl_seconds: 300          # dead worker reap window
     heartbeat_interval_seconds: 5
@@ -66,7 +68,8 @@ template:
 # ───────────────────────────────────────────────────────────────
 routine_shape:
   tokens:     { max: 2000 }              # file size ceiling (context cost)
-  params:     { max: 8 }                  # interface bloat guard
+  params:     { max: 8 }                  # shape guidance (lint tier, not a denial): see cans/action.md#Shape-constraints
+  complexity: { max: 10 }                 # shape guidance (lint tier, not a denial): see cans/action.md#Shape-constraints
   description:{ min_words: 5 }            # searchable or it doesn't ship
   imports:    { max_routine_imports: 3 }  # composition depth hygiene
   
@@ -123,8 +126,7 @@ routine_shape:
     routine_scoped_cascade: [fuel]
     routine_scoped_independent: [result_tokens]
   versions:
-    max_versions_kept: 25             # provenance graph stays navigable
-    max_rollback_depth: 5
+    max_versions_kept: 25             # provenance graph stays navigable; rollback addresses any retained version: see cans/time.md#decay-and-subtraction
   manifest_drift: anomaly             # undeclared primitives trigger governance event
 
 # ───────────────────────────────────────────────────────────────

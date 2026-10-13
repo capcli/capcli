@@ -13,7 +13,7 @@
           "provider": "stripe",
           "spec": "https://api.stripe.com/openapi.json",
           "trust": "draft",
-          "verb": "cap://stripe.charges.create (dormant)"
+          "verb": "cap://stripe.charges.create (active)"
         }
       }
     ],

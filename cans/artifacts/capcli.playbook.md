@@ -495,8 +495,8 @@ capcli api sync stripe https://spec.stripe.com/oas/v3
   spec_raw_mb:   14.2
   pruning:       auto-pruned unreferenced paths (catalog size < 10MB ceiling)
   catalog_path:  apis/stripe.yaml (2.1MB)
-  total_verbs:   420 (all dormant)
-  help:          activate verbs with 'capcli api activate <verb>'
+  total_verbs:   420 (active at draft trust)
+  help:          prove a verb with 'capcli api prove <verb> --env sim'
 ```
 
 ---
@@ -504,7 +504,7 @@ capcli api sync stripe https://spec.stripe.com/oas/v3
 **[Harness Turn 17]**
 ```text
 <thinking>
-420 verbs imported. All dormant.
+420 verbs imported. Active at draft trust.
 Using global pointer search to find payment capabilities and related secrets without context bloat.
 Target: payment intents.
 </thinking>
@@ -518,7 +518,7 @@ Target: payment intents.
 [
   {
     "ptr": "cap://stripe/payment_intents.create",
-    "status": "dormant",
+    "status": "active",
     "summary": "Creates PaymentIntent for card/invoice capture"
   },
   {
@@ -535,23 +535,23 @@ Target: payment intents.
 ```text
 <thinking>
 Target verb found: stripe.payment_intents.create.
-Activating verb for wholesale cafe invoice charging.
-Requires declared intent.
+Proving verb in sim before promotion to reviewed.
 </thinking>
 ```
 **Tool Call:** 
 ```bash
-capcli api activate stripe.payment_intents.create --intent "enable wholesale cafe card and invoice billing"
+capcli api prove stripe.payment_intents.create --env sim
 ```
 
 ---
 
 **[Capcli Kernel]**
 ```text
-[VERB_ACTIVATED]
+[PROVEN]
 STATUS:       SUCCESS (Exit 0)
 VERB:         stripe.payment_intents.create
-STATE:        active
+MODE:         sim (sandbox)
+CONTRACT:     6/6 invariants passed
 TRUST_LEVEL:  draft
 SECRET_REF:   stripe_secret_key
 RATE_BUCKET:  proactive_token_bucket initialized (capacity: 60, refill: 1.0/s)

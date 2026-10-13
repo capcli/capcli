@@ -14,9 +14,8 @@
     "rule": "policy.authorizer.endpoint_cap_exceeded",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Max 10 active endpoints reached. Exposure surface stays small.",
+    "culprit": "Max 10 active endpoints reached. New endpoint binding refused.",
     "measured": "10 active endpoints (cap: 10)",
-    "remedy": "retire an unused endpoint first (capcli bind remove)",
-    "active_endpoints": "10 of 10"
+    "remedy": "retire an unused endpoint first (capcli bind remove); limit: artifacts/governance.yaml#serve.max_endpoints"
   }
 }

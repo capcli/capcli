@@ -13,13 +13,6 @@
   "archetype": "document",
   "component": {
     "header_badge": "outline doc://refund-policy",
-    "meta": {
-      "tokens": "312 (full document)"
-    },
-    "fields": {
-      "nodes": "8",
-      "sections": "5"
-    },
     "body": [
       "doc://refund-policy (pinned)",
       "├── 1. Scope",

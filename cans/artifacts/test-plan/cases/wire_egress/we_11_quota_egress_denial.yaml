@@ -1,0 +1,63 @@
+$schema: "test-plan/case/v1"
+case_id: "we_11_quota_egress_denial"
+title: "Egress denied at the pre-call quota gate with exit 2"
+domain: "wire_egress"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Live-quota-tracking"
+  statement: "The pre-call gate denies egress with exit 2 before dispatch when the provider quota ceiling is breached (action.md: 'ceiling breach denies egress with exit 2 before dispatch'; see budget.md#Quotas). No packet leaves the socket; the denial is typed in the policy.egress domain."
+  blast_radius_if_breached: "Egress past a breached ceiling burns provider quota the operator capped, bypassing the Dial 1 cadence the budget frame was admitted under."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by asserting a generic 404/unknown-verb error instead of the typed exit-2 quota denial, or by refilling the bucket in fixture setup so the gate never fires."
+  anti_slop_mitigation: "AS-02 proves zero packets transmitted and the quota row unchanged. AS-03 forces the typed exit 2 with the parsed diagnostic naming the quota ceiling. AS-06 pins the bucket state literal before and after."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_we_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_api_quota"
+        row_count: 1   # provider 'stripe' bucket at 0 remaining; ceiling breached
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: 'kernel registry dispatch of cap://stripe.invoices via the run path while the provider quota bucket reads 0 remaining'
+  input_params:
+    verb: "stripe.invoices"
+    verb_state: "active"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.egress"
+    culprit: "quota ceiling breached for provider stripe (0 remaining); pre-call gate denies dispatch (cans/action.md#Live-quota-tracking, cans/budget.md#Quotas)"
+    remedy: "wait for the bucket refill window or lower dispatch cadence; live quota read before invoking: see cans/action.md#Live-quota-tracking"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT remaining FROM _api_quota returns 0 before and after (strict equality) AND packets_transmitted == 0 — the denied dispatch moved no quota and emitted no packet."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 (not exit 3 — the verb exists and is active; the gate, not the parser, refused) and parse the CliEnvelope diagnostic: domain == 'policy.egress', culprit names the quota ceiling."
+  - rule: "AS-06"
+    verification: "Hardcoded literal: verb_state == 'active' before AND after the invocation; deriving the expected state from the engine's own catalog read is banned."

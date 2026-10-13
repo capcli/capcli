@@ -69,7 +69,7 @@ cans/artifacts/test-plan/
       we_08_standard_priority_yield_floor.yaml
       we_09_critical_priority_pool_drain.yaml
       we_10_wire_payload_byte_cap_breach.yaml
-      we_11_dormant_verb_egress_denial.yaml
+      we_11_quota_egress_denial.yaml
       we_12_ephemeral_bearer_auto_refresh.yaml
       we_13_sim_rehearsal_isolated_quota.yaml
       we_14_wire_echo_filter_scrub.yaml
@@ -473,7 +473,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `we_08_standard_priority_yield_floor.yaml` | Unit | Standard priority task checks quota; available tokens equal 5; task yields cleanly with `exit 6`. | TN | Allowing standard task to drain bucket down to 0 like a critical task. |
 | `we_09_critical_priority_pool_drain.yaml` | Unit | Critical priority task checks quota; available tokens equal 3; task permitted to consume down to 0 tokens. | TP | Blocking critical task at background threshold (15 tokens). |
 | `we_10_wire_payload_byte_cap_breach.yaml` | Integration | Egress proxy detects outbound POST payload size exceeding 65,536 bytes; blocks call before socket transmission. | TN | Streaming oversized request to physical server before checking limit. |
-| `we_11_dormant_verb_egress_denial.yaml` | Unit | Dormant OpenAPI verb invocation is rejected by the egress proxy without auto-activation | TN | An AI agent fakes this test by pre-activating the verb in the fixture setup (so the call succeeds and the 'denial' is never exercised), or by |
+| `we_11_quota_egress_denial.yaml` | Unit | Egress denied at the pre-call quota gate with exit 2 when the provider bucket is empty | TN | An AI agent fakes this test by asserting a generic 404/unknown-verb error instead of the typed exit-2 quota denial, or by |
 | `we_12_ephemeral_bearer_auto_refresh.yaml` | Integration | Egress proxy detects bearer token expiration (`expires_at < now`); executes OAuth token refresh flow before dispatching main request. | TP | Passing expired token and expecting remote API 401 handling. |
 | `we_13_sim_rehearsal_isolated_quota.yaml` | Integration | High-volume replay executed in `sim` environment burns sim quota bucket; prod bucket balance remains 100% untouched. | TP | Sharing a single quota bucket across environments. |
 | `we_14_wire_echo_filter_scrub.yaml` | Integration | Upstream HTTP 401 echoes the vaulted credential in its JSON error body; kernel scrubs every occurrence to `[REDACTED_VAULT_TOKEN]` on raw wire bytes before deserialization; zero plaintext in sandbox, `_audit`, or JSONL mirror. | TN | Scrubbing after JSON parse (header/chunked echoes bypass it), or swallowing the provider denial as exit 0. |

@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.panic.quarantine",
-  "target": "sys://audit-chain",
+  "target": "_audit",
   "command": "capcli sys doctor --boot-check",
   "elapsed_ms": 1589,
   "context": {

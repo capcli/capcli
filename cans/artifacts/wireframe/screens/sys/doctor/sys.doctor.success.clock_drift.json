@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.success.clock_drift",
-  "target": "sys://host",
+  "target": "host",
   "command": "capcli sys doctor",
   "elapsed_ms": 2195,
   "context": {
@@ -16,7 +16,7 @@
     "groups": [
       {
         "fields": {
-          "⚠  clock drift warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
+          "clock_drift_warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
           "causal ordering unaffected": "intact"
         }
       },

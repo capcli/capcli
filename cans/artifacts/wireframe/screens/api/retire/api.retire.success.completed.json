@@ -17,9 +17,9 @@
       {
         "fields": {
           "verb": "cap://stripe.refund_charge",
-          "transition": "active → dormant",
+          "transition": "active → retired",
           "reason": "deprecated upstream",
-          "callable": "false (dormant verbs are discoverable, inspectable, uncallable)"
+          "callable": "false (retired verbs are uncallable, preserved for provenance)"
         }
       }
     ]

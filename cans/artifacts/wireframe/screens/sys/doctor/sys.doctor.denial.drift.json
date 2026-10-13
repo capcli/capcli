@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "sys.doctor.denial.drift",
-  "target": "sys://host",
+  "target": "host",
   "command": "capcli sys doctor",
   "elapsed_ms": 267,
   "context": {
