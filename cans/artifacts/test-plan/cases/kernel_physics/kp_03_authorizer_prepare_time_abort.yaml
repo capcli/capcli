@@ -42,9 +42,9 @@ setup:
 
 execution:
   trigger: "rust_api"
-  command: 'capcli_core::db::pipeline::prepare("UPDATE ledger_entries SET amount = :amount WHERE id = :id LIMIT 1", params { amount: 500, id: 4 }) — sqlite3_prepare_v2 with the native sqlite3_set_authorizer callback attached'
+  command: 'capcli_core::db::pipeline::prepare("UPDATE ledger_entries SET amount = :amount WHERE id = :id", params { amount: 500, id: 4 }) — sqlite3_prepare_v2 with the native sqlite3_set_authorizer callback attached'
   input_params:
-    statement: "UPDATE ledger_entries SET amount = :amount WHERE id = :id LIMIT 1"
+    statement: "UPDATE ledger_entries SET amount = :amount WHERE id = :id"
     bound_params: { amount: 500, id: 4 }
     target_column: "amount"
     column_shorthand: "int~ (integer immutable write-once)"

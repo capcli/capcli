@@ -1,12 +1,12 @@
 $schema: "test-plan/case/v1"
 case_id: "da_01_unbounded_update_ast_kill"
-title: "Unbounded UPDATE without WHERE/LIMIT is killed at the AST gate with zero rows touched"
+title: "Unbounded UPDATE without a bounded WHERE is killed at the AST gate with zero rows touched"
 domain: "database_authorizer"
 target_tier: "e2e"
 target_crate: "crates/capcli-cli"
 invariant:
   law_reference: "cans/physics.md#Layer-2:-SQL-AST-check"
-  statement: "UPDATE and DELETE require WHERE and LIMIT (require_where / require_limit mandatory up to 1000); an UPDATE carrying neither is denied at AST parse and prepare-time cross-check before any VDBE write opcode executes, so zero rows are ever touched."
+  statement: "UPDATE and DELETE require a WHERE targeting a specific primary key or bounded predicate; an UPDATE carrying an unbounded predicate is denied at AST parse and prepare-time cross-check before any VDBE write opcode executes, so zero rows are ever touched."
   blast_radius_if_breached: "A runaway agent bulk-update rewrites all 500 order rows in a single statement; every downstream fulfillment consumer acts on corrupted status data and the audit ledger no longer describes physical reality."
 confusion_matrix:
   quadrant: "true_negative"
@@ -51,8 +51,8 @@ expected_observations:
   state_modified: false
   diagnostic:
     domain: "policy.query"
-    culprit: "UPDATE orders SET status = 'shipped' - no WHERE predicate and no LIMIT clause (rule policy.query.update_delete.require_where / require_limit)"
-    remedy: "Add a WHERE predicate and LIMIT <= 100 (policy.yaml query.update_delete.max_rows_affected: 100) or loop bounded chunks via ctx.db.execute, each chunk its own transaction and audit event."
+    culprit: "UPDATE orders SET status = 'shipped' - no WHERE predicate, unbounded blast radius (rule policy.query.update_delete.require_where / require_limit)"
+    remedy: "Add a WHERE targeting a specific primary key or bounded predicate (mid-flight cap policy.yaml query.update_delete.max_rows_affected: 100), or loop bounded chunks via ctx.db.execute, each chunk its own transaction and audit event."
   database:
     row_count_delta: 0
     tables_mutated: []

@@ -39,7 +39,7 @@
       {
         "fields": {
           "session_fuel": "80400 remaining",
-          "threads_quota": "287 remaining (24h window)"
+          "threads_quota": "28 remaining (24h window)"
         },
         "lines": [
           "budget_headroom:"

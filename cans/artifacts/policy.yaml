@@ -115,10 +115,9 @@ query:
 
   update_delete:
     require_where: true
-    require_limit: true
-    max_limit: 1000
+    require_limit: true                        # bounded-write gate: WHERE must target a specific primary key or bounded predicate; unbounded predicates denied at AST parse (exit 2); stock SQLite has no UPDATE/DELETE LIMIT support — the bound lives in the WHERE clause, backstopped mid-flight by max_rows_affected
     max_rows_affected: 100                     # enforced mid-flight via sqlite3_update_hook; hard abort on overflow
-    runtime_mutation_trap: true                # terminates VDBE execution if mutated rows > limit, regardless of tautologies
+    runtime_mutation_trap: true                # terminates VDBE execution if mutated rows exceed the cap, regardless of tautologies
 
   insert:
     max_rows_per_statement: 500                # chunked beyond this
@@ -326,7 +325,7 @@ env:
       draft:
         max_rows_affected: 100                   # 10× looser than prod draft (10)
         max_insert_per_statement: 200            # seed-sized inserts allowed
-        # UPDATE/DELETE still require WHERE + LIMIT — physics unchanged
+        # UPDATE/DELETE still require a bounded WHERE — physics unchanged
         # prod draft stays at 10. this overlay is dev-only.
 
 # ───────────────────────────────────────────────────────────────

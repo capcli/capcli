@@ -38,11 +38,11 @@ setup:
     vault_secrets: []
 execution:
   trigger: "rust_api"
-  command: "UPDATE ledger_entries SET amount_cents = 0 WHERE id = 7 LIMIT 1"
+  command: "UPDATE ledger_entries SET amount_cents = 0 WHERE id = 7"
   input_params:
     targeted_column: "amount_cents"
     column_shorthand: "int~ (integer immutable write-once)"
-    statement_shape: "WHERE + LIMIT present - passes Layer-2 AST bounds, must still die at Layer 1"
+    statement_shape: "bounded WHERE present - passes Layer-2 AST bounds, must still die at Layer 1"
 expected_observations:
   exit_code: 2
   state_modified: false

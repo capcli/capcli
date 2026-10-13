@@ -42,11 +42,11 @@ setup:
 
 execution:
   trigger: "routine_ctx_call"
-  command: "inside ctx.db.txn(): ctx.db.mutate('UPDATE orders SET status=:s WHERE id=:i LIMIT 1', s='held', i=3); ctx.call('ws://billing/settle_invoice@v2', {'invoice_id': 3})"
+  command: "inside ctx.db.txn(): ctx.db.mutate('UPDATE orders SET status=:s WHERE id=:i', s='held', i=3); ctx.call('ws://billing/settle_invoice@v2', {'invoice_id': 3})"
   input_params:
     target_urp: "ws://billing/settle_invoice@v2"
     inside_txn: true
-    local_mutation: "UPDATE orders SET status='held' WHERE id=3 LIMIT 1"
+    local_mutation: "UPDATE orders SET status='held' WHERE id=3"
     expected_code: "E034_TXN_EXTERNAL_CALL"
 
 expected_observations:

@@ -43,7 +43,7 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli sql \"UPDATE claims SET ttl = 120 WHERE resource = 'orders:ORD-10' LIMIT 1\" -m \"extend payout lease\""
+  command: "capcli sql \"UPDATE claims SET ttl = 120 WHERE resource = 'orders:ORD-10'\" -m \"extend payout lease\""
   input_params:
     target_table: "claims (system table — kernel-only writes)"
     current_holder: "agt_cc10a (ttl 60, unexpired)"

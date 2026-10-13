@@ -104,7 +104,7 @@
     - Layer 1.2: VDBE execution progress & mutation hook
       - engine — sqlite3_update_hook + sqlite3_progress_handler
       - hook checks — counts physical B-Tree row mutations and VDBE byte-code steps during execution
-      - mid-flight abort — aborts transaction instantly if mutated row count exceeds declared LIMIT, independent of WHERE clause structure
+      - mid-flight abort — aborts transaction instantly if mutated row count exceeds the max_rows_affected cap, independent of WHERE clause structure
     - Layer 2: SQL AST check
       - engine — sqlparser crate pre-check (secondary to Layer 1.2 runtime mutation hook)
       - checks
@@ -114,7 +114,7 @@
         - execution mode — multi-statement raw query strings denied structurally
         - intent gate — mutating writes require valid non-empty causal intent
         - structure — unparseable SQL and schema bypass sequences denied
-        - update/delete — require_where and require_limit mandatory up to 1000
+        - update/delete — bounded writes only: see #Syntax-constraints
         - row bounds — select max 10000, insert max 500, update/delete max 100
         - pagination bounds — OFFSET > 50 denied at prepare-time (exit 2); result envelope contract: see action.md#Shape-constraints
         - deny patterns
@@ -222,6 +222,7 @@
       - result delivery — daemon posts completion results to the sensory inbox; harness surfaces them at the next turn-zero overview: see interface.md#CLI-surface
       - preemption yield — worker spot/container SIGTERM maps directly to exit 6; traps execution, flushes cursor checkpoint, parks frame to db://_suspended_tasks: see #Exit-code-law
       - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence and the frame's Layer 1 claims, writes an audit event; the frame never resumes
+      - drift recovery — E061_OCC_DRIFT on a suspended frame aborts the drifted frame (run abort <frame_id>) before re-running the routine; a direct re-run hits the retained claims lease (claim_held)
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
       - engine — native terminal diagnostics rendered procedurally via zero-dependency text formatter
@@ -248,7 +249,7 @@
       - gate interception — prepare-time checks enforce physics: see #Layer-1:-sqlite3_set_authorizer
     - Syntax constraints
       - parameterization — positional or named bindings mandatory; interpolation banned
-      - write limits — UPDATE and DELETE require WHERE and LIMIT
+      - write limits — UPDATE and DELETE require WHERE targeting a specific primary key or bounded predicate; unbounded predicates denied at AST parse; mutation hook aborts past 100 rows
       - transaction wraps — raw writes execute inside explicit transactions
       - statement count — multi-statement execution denied
     - Hard denials

@@ -37,7 +37,7 @@ setup:
     vault_secrets: []
 execution:
   trigger: "cli_subcommand"
-  command: "capcli sql \"UPDATE inventory SET stock = stock - 1 WHERE id = 7 LIMIT 1\" -m \"decrement WIDGET-01 stock\""
+  command: "capcli sql \"UPDATE inventory SET stock = stock - 1 WHERE id = 7\" -m \"decrement WIDGET-01 stock\""
   input_params:
     contending_agent: "agt_da_06a"
     contending_transaction: "BEGIN IMMEDIATE hold on WAL write lock (no commit while victim waits)"

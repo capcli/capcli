@@ -55,9 +55,9 @@ Observe prepare-time interception (`exit 2`). AST blocks unbounded mutations.
 Zero rows are touched.
 
 ## section:stage_4_write
-Remediate the write using explicit WHERE bounds, LIMIT, and causal intent:
+Remediate the write using an explicit primary-key WHERE and causal intent:
 ```bash
-capcli sql "UPDATE orders SET status = 'shipped' WHERE id = 1 LIMIT 1" -m "Manual order dispatch"
+capcli sql "UPDATE orders SET status = 'shipped' WHERE id = 1" -m "Manual order dispatch"
 ```
 Verify the commit in `_audit`.
 

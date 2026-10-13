@@ -43,7 +43,7 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: 'capcli sql "UPDATE orders SET status = :status WHERE id = :id LIMIT 1" -p status=shipped -p id=1042 -m "mark order shipped" (the audit volume is remounted read-only before invocation)'
+  command: 'capcli sql "UPDATE orders SET status = :status WHERE id = :id" -p status=shipped -p id=1042 -m "mark order shipped" (the audit volume is remounted read-only before invocation)'
   input_params:
     sink_condition: "read-only filesystem on the audit volume (EROFS)" # NOTE: not located in cans/ specs
     failure_buffer_window: "5m in-memory queue before the sink declares hard failure"

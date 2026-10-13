@@ -99,6 +99,8 @@
       - wire echo filter — proxy holds active secret hashes in memory; scans headers and body at wire edge before deserialization; escapes scrubbed to [REDACTED_VAULT_TOKEN] before sandbox or _audit
       - zeroization — in-memory secret buffers zeroized on subshell CLI exit; vault decryption memory zeroize-protected
       - leak protection — plaintext credential exposure in return payloads triggers immediate kill_and_alert (exit 5) and session token revocation
+        - detection model — kernel scans guest stdout/stderr/return against active secret hashes; a match means credential-shaped bytes materialized in guest output, never vault-delivered plaintext
+        - sources — author-embedded literal or fabricated secret-shaped match; vault/proxy zero-knowledge stays intact
     - Provisioning workflow
       - Lifecycle steps
         - detection — missing secret_ref trips pre-call check before egress

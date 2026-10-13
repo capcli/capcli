@@ -52,10 +52,10 @@ setup:
     vault_secrets: []
 execution:
   trigger: "cli_subcommand"
-  command: "capcli sql \"DELETE FROM orders WHERE id = 2 LIMIT 1\" -m \"remove test order ORD-002\""
+  command: "capcli sql \"DELETE FROM orders WHERE id = 2\" -m \"remove test order ORD-002\""
   input_params:
     cascade_target: "order_items (imm_rows: true) via order_items.order_id ON DELETE CASCADE"
-    parent_statement_shape: "WHERE + LIMIT present - passes Layer-2 AST bounds"
+    parent_statement_shape: "bounded WHERE present - passes Layer-2 AST bounds"
     foreign_keys_pragma: "enabled (authorizer-permitted)"
 expected_observations:
   exit_code: 2

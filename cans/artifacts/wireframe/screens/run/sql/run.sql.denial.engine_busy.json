@@ -2,7 +2,7 @@
   "$schema": "wireframe/v2",
   "id": "run.sql.denial.engine_busy",
   "target": "db://orders",
-  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50\" -m \"batch ship processing orders\"",
+  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"batch ship processing orders\"",
   "elapsed_ms": 367,
   "context": {
     "env": "dev",
@@ -19,7 +19,7 @@
     "measured": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active",
     "remedy": "retry after holder commits, or inspect the claim via capcli inspect db://orders",
     "lines": [
-      "UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50"
+      "UPDATE orders SET status = 'shipped' WHERE id = :id"
     ]
   }
 }

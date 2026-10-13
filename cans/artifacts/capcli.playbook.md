@@ -334,9 +334,9 @@ EVENT_ID:      op_004
 [FAIL] ast.unbounded_mutation
   code:      E012_REQUIRE_WHERE_LIMIT
   statement: DELETE FROM orders;
-  rule:      policy.query.update_delete.require_where
-  template:  DELETE FROM {table} WHERE {predicate} LIMIT {max_1000};
-  example:   DELETE FROM orders WHERE status = :status LIMIT 50;
+  rule:      policy.query.update_delete.require_limit
+  template:  DELETE FROM {table} WHERE {predicate};
+  example:   DELETE FROM orders WHERE id = :id;
 ```
 
 ---
@@ -345,12 +345,12 @@ EVENT_ID:      op_004
 ```text
 <thinking>
 Exit 2 on second query. Unbounded DELETE rejected by AST parser.
-State was not modified. Re-run query using parameterized WHERE clause and explicit LIMIT 50.
+State was not modified. Re-run query with a primary-key WHERE clause.
 </thinking>
 ```
 **Tool Call:** 
 ```bash
-capcli sql "DELETE FROM orders WHERE status = :st LIMIT 50;" -p st=pending -m "clear pending test orders within safety bounds"
+capcli sql "DELETE FROM orders WHERE id = :oid;" -p oid=7 -m "clear test order within safety bounds"
 ```
 
 ---
@@ -360,8 +360,8 @@ capcli sql "DELETE FROM orders WHERE status = :st LIMIT 50;" -p st=pending -m "c
 [MUTATION_SUCCESS]
 STATUS:        SUCCESS (Exit 0)
 ROWS_AFFECTED: 1
-STATEMENT:     DELETE FROM orders WHERE status = :st LIMIT 50;
-BOUND_PARAMS:  {"st": "pending"}
+STATEMENT:     DELETE FROM orders WHERE id = :oid;
+BOUND_PARAMS:  {"oid": 7}
 EVENT_ID:      op_006
 AUDIT_LOG:     _audit updated [prev:sha256:88bc231f... -> curr:sha256:99da314e...]
 ```
@@ -371,7 +371,7 @@ AUDIT_LOG:     _audit updated [prev:sha256:88bc231f... -> curr:sha256:99da314e..
 **[Harness Turn 12]**
 ```text
 <thinking>
-AST validation passed. Mutation committed within declared limit.
+AST validation passed. Mutation committed.
 Current task: Inspect all audit log events to verify causal lineage before moving to external APIs.
 Executing raw query on _audit system table.
 </thinking>

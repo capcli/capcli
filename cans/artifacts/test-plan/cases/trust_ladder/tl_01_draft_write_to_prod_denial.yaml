@@ -7,7 +7,7 @@ target_crate: "crates/capcli-cli"
 
 invariant:
   law_reference: "cans/space.md#policy-—-draft-writes-denied-unconditionally-by-overlay"
-  statement: "The prod environment overlay denies every mutating write from a draft-trust caller unconditionally: no intent metadata, row shape, or flag can substitute for the pinned rung required by the prod world (authority — pinned trust required). The statement is well-formed (WHERE + LIMIT, 1 row) so the ONLY blocking factor is the draft trust floor."
+  statement: "The prod environment overlay denies every mutating write from a draft-trust caller unconditionally: no intent metadata, row shape, or flag can substitute for the pinned rung required by the prod world (authority — pinned trust required). The statement is well-formed (primary-key WHERE, 1 row) so the ONLY blocking factor is the draft trust floor."
   blast_radius_if_breached: "Unproven code mutates live production data: mass order-status corruption, drift between the git prod worktree and the runtime substrate, and financial fulfillment mistakes executed with no sim proof and no promoted_by provenance — unrecoverable without snapshot restore."
 
 confusion_matrix:
@@ -40,7 +40,7 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=ORD-1042 -m \"mark order shipped after carrier pickup\" --env prod"
+  command: "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=ORD-1042 -m \"mark order shipped after carrier pickup\" --env prod"
   input_params:
     id: "ORD-1042"
     intent: "mark order shipped after carrier pickup"

@@ -40,10 +40,10 @@ setup:
     vault_secrets: []
 execution:
   trigger: "rust_api"
-  command: "DELETE FROM order_items WHERE id = 5 LIMIT 1"
+  command: "DELETE FROM order_items WHERE id = 5"
   input_params:
     table_tag: "imm_rows: true"
-    statement_shape: "WHERE + LIMIT present - passes Layer-2 AST bounds, must still die at Layer 1"
+    statement_shape: "bounded WHERE present - passes Layer-2 AST bounds, must still die at Layer 1"
 expected_observations:
   exit_code: 2
   state_modified: false

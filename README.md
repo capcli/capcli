@@ -154,7 +154,7 @@ Have fun with that at 3:00 AM. Prompts are probabilistic suggestions. `sqlite3_s
 No. `schema.yaml`, `policy.yaml`, and `governance.yaml` compile into `capcli.lock`. In `prod`, runtime drift triggers an instant `exit 3` boot refusal. In `dev` and `sim`, valid YAML changes auto-recompile the lockfile to prevent developer and agent lockouts.
 
 #### What Harnesses does this work with?
-All of them. Claude Code, Hermes, OpenAI Swarms, DeepSeek, custom LangChain loops, or a naked `curl` bash script. If your system can type a command into a terminal, it can run inside Capcli.
+All of them. Claude Code, Hermes, OpenAI Swarms, DeepSeek, custom LangChain loops, or a naked `curl` bash script. The kernel fingerprints every caller from environment markers (`CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`, `HERMES_SESSION_KEY`, and friends). A caller without a recognized identity marker is classified as anonymous, and anonymous callers get reads and queries only — mutating writes from anonymous callers are refused with `exit 3`. A naked `curl` works out of the box for reads; to mutate, it presents explicit operator identity (`--session`/`--by`) per the harness-identity law in `cans/agent.md`. If your system can type a command into a terminal, it can talk to Capcli — to change anything, it has to say who it is.
 
 ---
 
