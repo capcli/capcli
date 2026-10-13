@@ -443,7 +443,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.doctor.success.quarantine`| success | 0 | — | quarantine | Break-glass read-only quarantine ledger inspection (`CAPCLI_RECOVERY=1`); valid history verified |
 | `sys.doctor.denial.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
 | `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |
-| `sys.backup.denial.push_fail` | denial | 2 | policy.authorizer | push_fail | Remote S3/Git push rejected |
+| `sys.backup.success.push_pending` | success | 0 | — | push_pending | Local snapshot complete; push recorded pending, retried on next push |
 | `sys.recover.success.restored` | success | 0 | — | restored | Reconstructed from object store |
 | `sys.recover.refusal.not_found` | refusal | 3 | validation | not_found | Recovery snapshot missing |
 | `sys.recover.denial.active_locks`| denial | 2 | db.claims | active_locks | Active locks prevent state reversal |

@@ -71,7 +71,7 @@
       - circuit demotion — sustained routine failure auto-demotes one rung: see time.md#decay-and-subtraction
   - Gates & promotion
     - Monotonic promotion pipeline
-      - draft to reviewed — AST complexity <= 10; token envelope < 2000; offline cassette tests pass (apis/*.cassette.jsonl); prove-run secret leases: see agent.md#Secrets
+      - draft to reviewed — token envelope < 2000; complexity and params are lint guidance, never a gate: see action.md#Shape-constraints; offline cassette tests pass (apis/*.cassette.jsonl); prove-run secret leases: see agent.md#Secrets
       - reviewed to pinned — 100% sim replay on masked data with zero policy denials; live contract schema verification for external verbs; human or Tier-1 CI sign-off
       - elevation skips — direct draft-to-pinned promotion denied (exit 3)
     - Ship gate

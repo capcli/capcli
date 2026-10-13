@@ -180,9 +180,9 @@
     "journey_backup_recovery": {
       "name": "Workspace Backup & Snapshot Recovery",
       "color": "#0ea5e9",
-      "entry": "sys.backup.denial.push_fail",
+      "entry": "sys.backup.success.push_pending",
       "terminal": "sys.recover.success.restored",
-      "description": "Dual-storage backup push rejected (git non-fast-forward, s3 403) -> retry lands -> recovery gauntlet (unknown commit, active claim leases) -> workspace restored from the 3f9c2ab checkpoint"
+      "description": "Local snapshot lands; push best-effort (git non-fast-forward, s3 403) -> pending-push recorded -> retry lands -> recovery gauntlet (unknown commit, active claim leases) -> workspace restored from the 3f9c2ab checkpoint"
     },
     "journey_serve_lifecycle": {
       "name": "Daemon Serve Lifecycle",
@@ -3058,12 +3058,12 @@
       "arrow_type": "success"
     },
     {
-      "id": "t_backup_push_fail_to_completed",
+      "id": "t_backup_push_pending_to_completed",
       "journeys": [
         "journey_backup_recovery"
       ],
       "from": [
-        "sys.backup.denial.push_fail"
+        "sys.backup.success.push_pending"
       ],
       "to": [
         "sys.backup.success.completed"

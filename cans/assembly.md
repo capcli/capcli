@@ -164,7 +164,7 @@
       - Subsystem modules
         - runner.rs — multi-runtime process supervisor (bun, python3, native)
         - jail.rs — sandbox manager: see physics.md#Platform-tier-taxonomy
-        - shape_gate.rs — enforces <= 2,000 tokens envelope, cyclomatic complexity <= 10, max 8 params
+        - shape_gate.rs — enforces <= 2,000 tokens envelope; complexity and params emit lint advisories: see action.md#Shape-constraints
         - saga.rs — dual-write coordinator; handles compensation rollbacks on DB commit failure
         - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
         - manifest.rs — receives declared manifests via runner IPC: see action.md#manifests-fingerprints

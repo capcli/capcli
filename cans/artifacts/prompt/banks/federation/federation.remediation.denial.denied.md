@@ -29,9 +29,9 @@ E042_FEDERATION_DENIED — caller not an active federated peer:
 ## section:stage_2_cycle
 E041_FEDERATION_CYCLE — workspace already in call_chain:
 1. Inspect the chain on the denial receipt; find the repeated workspace.
-2. Break the cycle: inline the call or route through a non-cyclic workspace. Never retry the same chain.
+2. One re-entry on the original idempotency key is lawful; a third entry or a fresh key is a true cycle — break it by inlining the call or routing through a non-cyclic workspace.
 
 ## section:stage_3_transport
-E055_FEDERATION_UNREACHABLE — peer socket absent after 1500ms:
+E055_FEDERATION_UNREACHABLE — peer socket absent after the policy dial budget exhausts (artifacts/policy.yaml#network.dial):
 1. Start the peer daemon, or confirm the socket path.
 2. In sim/CI, rely on cassette replay from federation/cassettes/ instead of a live peer.

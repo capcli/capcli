@@ -247,7 +247,7 @@
       - substrate — dedicated central GitHub repository (governance.yaml#template.registry_repo) serving as PR-driven marketplace
       - intake PR gate — author PRs require 100% green CI before merge:
         - runs rule validate on capcli-template.yaml
-        - asserts shape caps (cyclomatic complexity <= 10, tokens <= 2000, max 8 params)
+        - asserts shape law (tokens <= 2000 hard; complexity and params lint advisories): see action.md#Shape-constraints
         - executes headless sandbox test simulation
         - builds frozen .cap bundle via template pack and computes SHA-256
       - distribution index — merged PRs trigger release workflow publishing immutable bundle.cap asset and appending entry to index.json:
