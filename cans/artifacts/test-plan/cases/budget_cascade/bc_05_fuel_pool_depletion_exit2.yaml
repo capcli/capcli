@@ -6,7 +6,7 @@ target_tier: "unit"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/budget.md#Fuel-&-Wire-Egress"
+  law_reference: "cans/budget.md#Fuel-formula"
   statement: "'Unit: deterministic integer gas & socket payload bytes; Scope: one pool per session' (policy.yaml#api.fuel.per_session_fuel: 100000; fuel_scope: session): when the session fuel pool is fully consumed, the kernel denies the subsequent primitive invocation with exit 2 — 'kernel denies subsequent primitive invocation' — and execution never continues with a negative fuel balance (policy.yaml#budget.partial_result_on_exhaustion: false)."
   blast_radius_if_breached: "Continuing past a dry fuel pool (or letting the balance go negative) would let a routine execute unbounded gas-burning work — runaway API fan-out and compute spend with no ceiling, discovered only on the monthly provider invoice."
 

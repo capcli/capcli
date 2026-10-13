@@ -9,7 +9,7 @@
         - Executables — ExecutableResolver: code that executes, consumes fuel, and mutates world state
           - cap://[provider/]routine[@version] — local routines and imported provider verbs
           - ws://workspace/routine[@version] — federated cross-workspace capability routines; shape-disjoint from WebSocket transport URLs (ws://host:port/...)
-          - inspect — costs, ops ceiling, budget cascade, can_invoke_now
+          - inspect — fuel envelope, session headroom, quota gates, can_invoke_now verdict: see interface.md#PreflightEnvelope
           - resolve — pushes a frame to _budget_frames, runs the sandboxed runner, returns output
         - DB entities — DbEntityResolver: data rows and state records stored inside SQLite
           - db://table[#column] — physical tables, columns, check constraints, and read views
@@ -56,7 +56,7 @@
           - cost envelope
           - budget state
       - Cost envelope dimensions
-        - resources — tokens, db writes, api quota
+        - resources — fuel only; every cost converts to fuel: see budget.md#Fuel-formula
         - performance — duration p50/p95, concurrency
         - reliability — total runs, success rate
     - Search surface
@@ -257,7 +257,7 @@
         - ctx.uuid() — deterministic pseudo-random token minted via HMAC-SHA256(session_token, op_sequence)
       - External api methods
         - ctx.api.call(verb, params, intent, compensate=None, select=None) — governed HTTP egress; declare compensate verb for kernel saga auto-rollback
-        - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) — kernel-managed in-flight polling (1 aggregate op)
+        - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) — kernel-managed in-flight polling; iterations burn fuel per step and egress: see budget.md#Fuel-formula
         - egress retry — idempotent verbs (GET/PUT/DELETE) auto-retry on 503/network-drop; mutating POST without declared idempotency header fails closed immediately (exit 4)
         - 429 handling — upstream 429 with Retry-After yields the routine (exit 6): see physics.md#Exit-code-law
         - ctx.api.verify(verb, key) — key validation check
@@ -323,7 +323,7 @@
       - Manifest contents
         - call sequence — provider.verb, db targets with access mode
         - txn wrappers — ordered list of nested execution leaves
-        - estimated cost class — declared ops count (e.g. 2x http, 2x write)
+        - estimated cost class — declared fuel envelope (e.g. 2x http, 2x write): see budget.md#Fuel-formula
         - sim modes — per-verb mode declaration (sandbox, mock, dry-run, skip, prod-only)
         - manifest_hash — sha256 of declaration stored with code_hash
     - Runtime fingerprint (dynamic)
@@ -370,7 +370,7 @@
         - retire — active or deprecated to retired
     - Live quota tracking
       - mechanics — token bucket calculation and _api_quota sync: see budget.md#Quotas
-      - pre-call gate — remaining <= deny_at_remaining denies egress with exit 2
+      - pre-call gate — ceiling breach denies egress with exit 2 before dispatch; cadence depletion sleeps the socket or yields exit 6: see budget.md#Quotas
   - Bindings
     - Trigger types
       - cron — bind cron <name> <capability> "<cron_expr>" [-m "intent"]

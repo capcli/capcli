@@ -6,7 +6,7 @@ target_tier: "integration"
 target_crate: "crates/capcli-daemon"
 
 invariant:
-  law_reference: "cans/budget.md#Distributed-Swarm-Fuel-Arbitration"
+  law_reference: "cans/budget.md#Distributed-swarm-arbitration"
   statement: "Optimistic spoke allocation: 'spokes pre-reserve fuel blocks (default 1000) via RPC to avoid per-op latency'; preemption floor: 'low tokens trigger exit 6 across all non-critical spokes simultaneously'. A spoke debits its local reserved block per primitive without a Hub round-trip per op; when Hub tokens cross the low floor, every non-critical spoke yields its frame with exit 6 (frames park in _suspended_tasks; physics.md#Exit-code-law exit 6) while critical work keeps the pool."
   blast_radius_if_breached: "Per-op Hub round-trips make swarm execution latency-bound and unscalable; a low-token floor that yields only the unlucky spoke lets the rest drain the pool mid-flight, killing critical work on an empty bucket and scattering half-finished frames with no resume target."
 

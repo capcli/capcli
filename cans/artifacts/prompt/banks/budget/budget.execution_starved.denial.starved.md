@@ -30,8 +30,9 @@ Resolve call-tree budget starvation:
    ```bash
    capcli inspect cap://<routine_name>
    ```
-2. Adjust the parent routine's `@routine` declaration:
-   `limits={"max_ops": parent_ops + sum(child_ops)}`
+2. Size the parent routine's `fuel_declared` from the preflight envelope:
+   `capcli inspect cap://<routine_name>` reports `fuel_declared` and `session_fuel_remaining`;
+   set `fuel_declared` to cover the child's declared fuel inside session headroom.
 
 ## section:stage_2_jail
 Remediate sandbox network traps:

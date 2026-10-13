@@ -154,8 +154,6 @@ trust:
 # 4. RATE & BUDGET — frequency is behavior
 # ───────────────────────────────────────────────────────────────
 rate:
-  writes_per_minute: 60
-  capability_calls_per_minute: 300
   template_imports_per_day: 10                 # anti-flood intake rate ceiling
   denials_alert_threshold: 20                  # sustained denial = agent thrashing, surface it
 
@@ -196,13 +194,15 @@ api:
     skip_reports_gap: true               # skipped verbs produce manifest gap warning
   fuel:
     per_session_fuel: 100000             # integer gas allocation per session
+    per_session_fuel: 100000             # integer fuel allocation per session
     max_call_egress_bytes: 5242880       # 5MB physical wire limit per egress dispatch
     confirm_above_fuel: 50000            # gate reserved for high wire/compute impact
   rate_limit:                                    # live quota from provider responses
-    model: optimistic_token_bucket               # client-side bucket is an optimistic cache slaved to upstream headers
+    model: leaky_token_bucket                    # client-side leaky bucket slaved to upstream headers
     default_capacity: 60                         # burst ceiling
     refill_rate_per_sec: 1.0                     # steady-state token drip
-    pre_call_gate: true                          # fail-closed: tokens < 1 → exit 2 immediately
+    monthly_spend_ceiling: 0                     # Dial 2 volume ceiling, provider currency units; 0 = unbounded
+    monthly_call_ceiling: 0                      # Dial 2 volume ceiling in calls; 0 = unbounded
     priority_floors:                             # simple preemption floors for scarce APIs
       background_yield_tokens: 15                # background yields (exit 6) if tokens < 15
       standard_yield_tokens: 5                   # standard yields (exit 6) if tokens < 5
@@ -217,7 +217,7 @@ api:
     allow_transient: true                        # permits short-interval status polling in routines
     max_poll_duration_seconds: 30                # hard ceiling for async container/job verification
     min_poll_interval_seconds: 2                 # prevents tight busy-waiting
-    count_as_single_op: true                     # whole poll loop registers as 1 aggregate op
+    metered_per_iteration: true                  # poll loop fuel = steps + egress burned per iteration
     audit:
       record_before_after: true                  # quota_before/quota_after on every api.call event
       denial_cites_remaining: true               # exit 2 message includes remaining + reset_at
@@ -307,7 +307,6 @@ env:
     allowed_runtimes: [python, javascript, typescript] # ranked: python 1st, js 2nd, ts 3rd
     serve: { bind: "127.0.0.1" }               # public lives behind a proxy
   sim:
-    rate: { writes_per_minute: 1000 }          # fast iteration
     bulk: { require_pre_count: false }
     api:
       base_url_overrides_from: apis/*.sim.yaml

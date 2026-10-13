@@ -1,19 +1,19 @@
 $schema: "test-plan/case/v1"
 case_id: "bc_03_leaf_op_51_hard_kill"
-title: "Op 51 hard kill at the default 50-op frame ceiling with zero half-executed mutations"
+title: "51st fuel burn hard kill at the declared 50-fuel frame envelope with zero half-executed mutations"
 domain: "budget_cascade"
 target_tier: "e2e"
 target_crate: "crates/capcli-cli"
 
 invariant:
   law_reference: "cans/physics.md#Exit-code-law"
-  statement: "'State rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug' combined with the default frame ceiling: a routine without a declared custom limit gets governance max_ops_per_run 50, so 'op #51 aborts (limit_exceeded)' (budget.md#Runtime) with exit 2 at the boundary — no half-executed side effects survive."
-  blast_radius_if_breached: "A half-executed 51st operation would leave partially-written business rows committed after a 'denial' — corrupted ledger state that downstream routines trust, producing silent data divergence across the enterprise with no rollback path."
+  statement: "'State rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug' combined with frame fuel exhaustion: a routine declaring a 50-fuel envelope burns fuel 50/50, so the 51st fuel burn aborts the child cleanly with exit 2 at the boundary — no half-executed side effects survive."
+  blast_radius_if_breached: "A half-executed 51st fuel burn would leave partially-written business rows committed after a 'denial' — corrupted ledger state that downstream routines trust, producing silent data divergence across the enterprise with no rollback path."
 
 confusion_matrix:
   quadrant: "true_negative"
-  slop_risk: "An AI agent fakes this test by asserting exit 2 without proving the substrate: the 51st op may have already mutated rows before the process died, and a test that never re-queries the table passes while corrupted rows persist."
-  anti_slop_mitigation: "AS-02 mandates the direct before/after SELECT count(*) on the target table — zero rows may differ. AS-03 forces the typed exit 2 plus the exact budget citation format (frame, dimension, attempted_op). AS-06 pins the literals 50/51 and the citation string."
+  slop_risk: "An AI agent fakes this test by asserting exit 2 without proving the substrate: the 51st fuel burn may have already mutated rows before the process died, and a test that never re-queries the table passes while corrupted rows persist."
+  anti_slop_mitigation: "AS-02 mandates the direct before/after SELECT count(*) on the target table — zero rows may differ. AS-03 forces the typed exit 2 plus the exact budget citation format (frame, fuel, attempted burn). AS-06 pins the literals 50/51 and the citation string."
 
 setup:
   env: "dev"
@@ -32,7 +32,7 @@ setup:
             recounted: "bool"
     tables:
       - name: "orders"
-        row_count: 0   # fresh staging table; the recount routine's 50 legal ops find no rows to change
+        row_count: 0   # fresh staging table; the recount routine's 50 legal fuel burns find no rows to change
       - name: "_budget_frames"
         row_count: 0
     vault_secrets: []
@@ -42,17 +42,16 @@ execution:
   command: 'capcli run cap://bulk_recount@1 -p warehouse=west -m "nightly ledger recount"'
   input_params:
     routine: "bulk_recount@1"
-    declared_max_ops: null   # no declared custom limit -> governance default applies
-    default_max_ops_per_run: 50
-    ops_attempted: 51
+    fuel_declared: 50   # declared fuel envelope for the frame
+    fuel_attempted: 51   # 51 primitive steps at 1 fuel each
 
 expected_observations:
   exit_code: 2
   state_modified: false
   diagnostic:
     domain: "policy.budget"
-    culprit: "frame ops ceiling exhausted: bulk_recount@1 (frame) hit 50/50 ops at attempted_op db.exec — op #51 aborted (limit_exceeded); no declared custom limit so the governance default max_ops_per_run: 50 applies"
-    remedy: "split the work into chunked routines or declare a higher max_ops in a new routine version — the 51st operation never executes half-way"
+    culprit: "frame fuel exhausted: bulk_recount@1 (frame) hit 50/50 fuel at attempted burn db.exec — the 51st fuel unit aborted (limit_exceeded); frame fuel exhaustion aborts the child cleanly"
+    remedy: "split the work into chunked routines or declare a larger fuel envelope in a new routine version — the 51st fuel burn never executes half-way"
   database:
     row_count_delta: 0
     tables_mutated: []
@@ -66,8 +65,8 @@ expected_observations:
 
 anti_slop_assertions:
   - rule: "AS-02"
-    verification: "SELECT count(*) FROM orders before and after execution is identical (strict equality, literal 0 -> 0) and no orders row carries recounted = true — proving the 51st op committed nothing despite the process dying at the boundary."
+    verification: "SELECT count(*) FROM orders before and after execution is identical (strict equality, literal 0 -> 0) and no orders row carries recounted = true — proving the 51st fuel burn committed nothing despite the process dying at the boundary."
   - rule: "AS-03"
-    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.budget', the culprit follows the citation format 'routine (frame) exhausted ops: 50/50' with attempted_op naming the offending primitive (db.exec), and the ancestor context line cites session remaining."
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.budget', the culprit follows the citation format 'routine (frame) exhausted fuel: 50/50' with attempted_burn naming the offending primitive (db.exec), and the ancestor context line cites session remaining."
   - rule: "AS-06"
-    verification: "Hardcoded literals: ceiling 50 (governance default), abort at op 51, citation '50/50' — the expected frame counter values are immutable literals, never read back from the frame row the engine wrote."
+    verification: "Hardcoded literals: envelope 50, abort at fuel burn 51, citation '50/50' — the expected frame counter values are immutable literals, never read back from the frame row the engine wrote."

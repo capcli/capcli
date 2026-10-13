@@ -14,16 +14,16 @@
     "rule": "policy.budget.exhausted",
     "domain": "policy.budget",
     "layer": "budget",
-    "culprit": "Frame ops ceiling exhausted: archive_old_orders@3 (frame_005) hit 20/20 ops at attempted_op db.exec.",
-    "measured": "frame ops 20/20 · session remaining 488 ops",
-    "remedy": "split the work into chunked routines, or raise declared max_ops in a new routine version",
-    "attempted_op": "db.exec (op #21 crossed the frame ceiling)",
+    "culprit": "Frame fuel exhausted: archive_old_orders@3 (frame_005) hit 20/20 fuel at attempted_op db.exec; the frame aborts with exit 2 and the parent retains its balance.",
+    "measured": "frame fuel 20/20 · session fuel remaining 488",
+    "remedy": "split the work into chunked routines, or raise fuel_declared in a new routine version",
+    "attempted_op": "db.exec (attempt 21 crossed the frame fuel ceiling)",
     "blocking_level": "frame",
-    "remaining": "0 ops at frame level",
-    "ancestors": "session remaining 488 ops (frame was the tightest constraint)",
+    "remaining": "0 fuel at frame level",
+    "ancestors": "session fuel remaining 488 (frame was the tightest constraint)",
     "partial_execution": "the routine failed cleanly",
     "lines": [
-      "archive_old_orders@3 (frame_005) exhausted ops: 20/20",
+      "archive_old_orders@3 (frame_005) exhausted fuel: 20/20",
       "with zero half-executed side effects."
     ]
   }

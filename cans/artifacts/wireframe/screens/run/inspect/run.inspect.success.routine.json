@@ -37,12 +37,11 @@
       },
       {
         "fields": {
-          "can_invoke_now": "true",
-          "session_ops_remaining": "488",
-          "session_duration_remaining": "555000ms",
+          "fuel_declared": "50",
           "session_fuel_remaining": "80400",
-          "session_egress_remaining": "4181824 bytes",
-          "session_rate_remaining": "287",
+          "cadence_status": "nominal",
+          "ceiling_status": "nominal",
+          "can_invoke_now": "true",
           "tightest_constraint": "null"
         },
         "lines": [

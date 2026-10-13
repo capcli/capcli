@@ -90,13 +90,12 @@ routine_shape:
         ext: [".ts"]
 
   execution:
-    max_ops_per_run: 50               # primitive DAG ceiling — op 51 aborts
-    macro_envelope_enabled: true      # permits routines to draw from session_ops_ceiling without micro-suspensions
+    max_fuel_per_run: 50              # fuel envelope per run — frame burns at most 50 fuel
+    macro_envelope_enabled: true      # permits routines to draw from the session fuel pool without micro-suspensions
     max_duration_seconds: 300         # sandbox watchdog kill
     max_result_tokens: 500            # summary cap crossing to the model
     enforce_pagination_contract: true # bans raw JSON string chopping; requires { items, next_cursor } schema
-    max_txn_statements: 10            # one transaction stays one thought
-    session_ops_ceiling: 2500         # macro-budget ceiling per session
+    session_fuel_ceiling: 2500        # session fuel pool ceiling
 
   # Proactive Brokerage
   priority_classes: [critical, standard, background]
@@ -114,18 +113,14 @@ routine_shape:
       tier_2: [darwin, termux, win]   # see: cans/physics.md#Platform-tier-taxonomy
     pinned_requires_tier_1: true      # see: cans/trust.md#Ladder-laws
   composition:
-    budget_inheritance: min            # child effective = min(declared, parent_remaining)
-    ops_cascade: true                  # child ops consume from parent's pool
-    duration_cascade: true             # child time consumes from parent's clock
+    budget_inheritance: min            # child effective = min(declared fuel, parent remaining, session remaining, governance max)
     fuel_scope: session                # fuel is session-level, not per-routine
-    rate_scope: session                # rate is session-level, not per-routine
-    rows_scope: trust_session          # rows per trust level per session
     result_tokens_scope: routine       # each routine caps its own output independently
     max_nesting_depth: 5               # composition depth hygiene
     budget_exhaustion: deny            # exhausted budget = exit 2, never silent truncation
     cascade: true
-    session_scoped: [fuel, egress_bytes, writes_per_minute, capability_calls_per_minute, rows_affected]
-    routine_scoped_cascade: [ops, duration_ms]
+    session_scoped: [fuel]
+    routine_scoped_cascade: [fuel]
     routine_scoped_independent: [result_tokens]
   versions:
     max_versions_kept: 25             # provenance graph stays navigable

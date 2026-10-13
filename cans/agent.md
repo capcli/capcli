@@ -34,6 +34,7 @@
         - scheduler — capcli-cron owns automated time triggers
         - webhooks — capcli-watch owns asynchronous provider dispatches
         - listener — capcli-serve owns synchronous endpoint requests
+        - execution token — kernel mints an ephemeral HMAC session token bound to the executing system principal per _inbox task execution: see world.md#Inbox-lifecycle
       - revocation — sys agent revoke ends execution instantly
       - federated peers — ws:<name> identities registered as agents; principal column holds the mapped internal :principal
       - peer allowlist — E042 caller allowlist is the set of ws:<name> agent rows with status=active; revoked or expired peers denied
@@ -76,7 +77,7 @@
       - session slaving — kernel auto-binds its session ID to harness environment markers (CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID) via Phase 1 sniffing; manual session tracking by agents is prohibited
       - turn-zero orientation — every harness turn executes capcli run overview as step zero; injects a dense (<60 token) reality snapshot (active fuel, held locks, inbox events) directly into volatile prompt context
       - scoping — session id rides every budget frame, audit event, and claim
-      - tracking — session counters govern fuel, wire bytes, rate, and rows affected
+      - tracking — session counters govern fuel: see budget.md#Fuel-formula; wire, row, and rate costs convert to fuel or sit quota-side: see budget.md#Quotas
       - workspace anchor — CAPCLI_WORKSPACE env var or --workspace flag anchors root; cd reliance banned
     - Harness execution boundary
       - execution environment — bash subshell isolated via IPC socket to kernel daemon; direct workspace.db file access blocked

@@ -34,7 +34,7 @@
     - Events
       - budget.frame_push
         - Payload: frame_id, routine@version, parent_frame, session, env
-        - declared: { max_fuel: 50, max_duration_seconds: 300 }
+        - declared: { declared_max_ops: 50, declared_max_duration_ms: 300000 }
         - inherited_remaining: { fuel: 82000 }
         - inherited_remaining is the parent-side min() already computed
       - budget.frame_pop

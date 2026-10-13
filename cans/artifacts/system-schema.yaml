@@ -64,6 +64,9 @@ tables:
       last_reconciled_at: int!         # timestamp of last header reconciliation
       last_op: text                    # last verb to touch this quota
       last_updated: int!               # timestamp of last header extraction
+      period_spend: int=0              # Dial 2 ledger: provider-currency spend this period
+      period_calls: int=0              # Dial 2 ledger: calls this period
+      period_start: int=0              # unix epoch seconds opening the current ledger period
     chk:
       - "last_provider_remaining >= -1"
       - "quota_type IN ('token_bucket', 'sliding_window')"
@@ -112,7 +115,7 @@ tables:
       subagent_scope: text             # harness marker of in-process subagent; null if single agent
       declared_max_ops: int!           # declared primitive ceiling
       declared_max_duration_ms: int!   # declared timeout ceiling
-      consumed_fuel: int=0             # normalized gas consumed (integer)
+      consumed_fuel: int=0             # normalized fuel consumed (integer)
       yield_until: int=0               # unix epoch seconds for scheduled resumption on exit 6
       outcome: text=active             # frame completion state
       created_at: int!

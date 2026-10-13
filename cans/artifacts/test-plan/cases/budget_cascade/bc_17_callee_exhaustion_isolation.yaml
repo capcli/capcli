@@ -1,19 +1,19 @@
 $schema: "test-plan/case/v1"
 case_id: "bc_17_callee_exhaustion_isolation"
-title: "Callee budget exhaustion aborts the callee cleanly without consuming the caller frame"
+title: "Callee fuel exhaustion aborts the callee cleanly without consuming the caller frame"
 domain: "budget_cascade"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 
 invariant:
   law_reference: "cans/budget.md#Callee-exhaustion-isolation"
-  statement: "Callee exhaustion is isolated: when the federated callee exhausts its delegated budget it aborts cleanly with exit 2 and the caller's frame is not consumed — the failure boundary sits at the workspace edge, so a peer burning its delegation cannot drain the caller's pools."
+  statement: "Callee exhaustion is isolated: when the federated callee exhausts its delegated fuel it aborts cleanly with exit 2 and the caller's frame is not consumed — the failure boundary sits at the workspace edge, so a peer burning its delegation cannot drain the caller's pools."
   blast_radius_if_breached: "Cross-workspace budget contagion: a runaway callee consumes the caller's frame on failure — the caller pays twice (delegation + failure penalty) and a malicious peer can drain caller sessions by repeatedly exhausting on purpose."
 
 confusion_matrix:
   quadrant: "true_negative"
   slop_risk: "Agent exhausts the caller frame instead of the callee delegation, or asserts the caller frame was partially consumed 'as a fee' — inventing a failure penalty the law forbids."
-  anti_slop_mitigation: "AS-02 proves caller consumed_ops is bit-identical before and after; AS-03 pins the callee-side exit 2 with the exhaustion diagnostic; AS-06 hardcodes the delegation (10 ops) and the callee burn (10 ops)."
+  anti_slop_mitigation: "AS-02 proves caller consumed_fuel is bit-identical before and after; AS-03 pins the callee-side exit 2 with the exhaustion diagnostic; AS-06 hardcodes the delegation (100 fuel) and the callee burn (100 fuel)."
 
 setup:
   env: "dev"
@@ -33,31 +33,31 @@ setup:
             frame_id: text pk
             routine: text
             session: text
-            consumed_ops: int
+            consumed_fuel: int
     tables:
       - name: "_budget_frames"
-        row_count: 1 # root frame frame_011, session ses_bc17, 10 ops remaining, 0 consumed
+        row_count: 1 # root frame frame_011, session ses_bc17, 100 fuel remaining, 0 consumed
       - name: "_audit"
         row_count: 4
     vault_secrets: []
     # federation pre-condition: peer "billing" on /run/capcli/billing.sock, allowlisted;
-    # target burn_all@v1 pinned; delegation is 10 ops; the callee routine is instrumented to burn 11 ops
+    # target burn_all@v1 pinned; delegation is 100 fuel; the callee routine is instrumented to burn 101 fuel
 
 execution:
   trigger: "routine_ctx_call"
-  command: "ctx.call('ws://billing/burn_all@v1', {}) with 10 ops delegated; callee attempts an 11th op"
+  command: "ctx.call('ws://billing/burn_all@v1', {}) with 100 fuel delegated; callee attempts a 101st fuel burn"
   input_params:
     target_urp: "ws://billing/burn_all@v1"
-    delegated_ops: 10
-    callee_attempted_ops: 11
+    delegated_fuel: 100
+    callee_attempted_fuel: 101
 
 expected_observations:
   exit_code: 2
   state_modified: false
   diagnostic:
     domain: "policy.budget"
-    culprit: "callee budget exhausted — delegated 10 ops consumed, 11th op denied; callee aborts cleanly, caller frame unconsumed"
-    remedy: "delegate a larger pool (if the caller can afford it) or reduce the callee's op cost; the caller frame was not charged for the failure"
+    culprit: "callee fuel exhausted — delegated 100 fuel consumed, 101st fuel burn denied; callee aborts cleanly, caller frame unconsumed"
+    remedy: "delegate a larger fuel pool (if the caller can afford it) or reduce the callee's fuel cost; the caller frame was not charged for the failure"
   database:
     row_count_delta: 1 # federation.call_out denial/failure event on the caller side
     tables_mutated: ["_audit"]
@@ -71,8 +71,8 @@ expected_observations:
 
 anti_slop_assertions:
   - rule: "AS-02"
-    verification: "SELECT consumed_ops FROM _budget_frames WHERE frame_id='frame_011' is bit-identical before and after (0 == 0) — the caller paid nothing for the callee's failure; callee-side consumed_ops == 10 (exactly the delegation, never 11)."
+    verification: "SELECT consumed_fuel FROM _budget_frames WHERE frame_id='frame_011' is bit-identical before and after (0 == 0) — the caller paid nothing for the callee's failure; callee-side consumed_fuel == 100 (exactly the delegation, never 101)."
   - rule: "AS-03"
-    verification: "Assert the callee-side exit_code == 2 with the budget-exhaustion diagnostic; the caller observes a clean federated failure (not a transport error, not exit 5)."
+    verification: "Assert the callee-side exit_code == 2 with the fuel-exhaustion diagnostic; the caller observes a clean federated failure (not a transport error, not exit 5)."
   - rule: "AS-06"
-    verification: "Hardcoded literals: delegated 10 ops, attempted 11, caller consumed delta 0; the burn is executed by a real peer routine on a real socket — never by stubbing the callee's op counter."
+    verification: "Hardcoded literals: delegated 100 fuel, attempted 101, caller consumed delta 0; the burn is executed by a real peer routine on a real socket — never by stubbing the callee's fuel counter."

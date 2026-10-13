@@ -200,7 +200,7 @@
       - config proposals — renders visual diff of agent-authored YAML changes with Sub-check 1 & 2 verification badge; 1-click [Approve & Apply] recompiles lockfile and resumes task
       - credential requests — out-of-band vault input field encrypts raw secret directly into daemon memory (AES-256-GCM); zero exposure to agent context or shell logs
         - persistence — daemon decrypts into memory only; ciphertext persists to the secrets table: see agent.md#Secrets
-      - macro-budget grants — 1-click expansion of session fuel, ops, or duration for suspended frames; grants record per-session overrides in _budget_frames, never governance.yaml mutations
+      - macro-budget grants — 1-click expansion of session fuel for suspended frames; grants record per-session overrides in _budget_frames, never governance.yaml mutations
     - Cockpit functional layers
       - Layer 1: State Inspector — renders schema tables, columns, indexes, and format-preserved masked cells (████)
       - Layer 2: Capability Inspector — routine catalog, template blueprints via inspect (tpl://), version diffs, OpenAPI verb states, and manifest-vs-fingerprint graphs

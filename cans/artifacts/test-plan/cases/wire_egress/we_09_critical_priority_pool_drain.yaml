@@ -6,7 +6,7 @@ target_tier: "unit"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/budget.md#Priority-Floors"
+  law_reference: "cans/budget.md#Quotas"
   statement: "'Critical tasks drain pool to 0' (policy.yaml#api.rate_limit.priority_floors.critical_floor_tokens: 0): a critical-priority frame is permitted to consume the remaining quota down to exactly 0 tokens — no background (15) or standard (5) floor is imposed on it — and its dispatch completes with exit 0."
   blast_radius_if_breached: "Blocking critical work at the background/standard floor would hard-fail payment settlements, incident escalations, and other time-critical enterprise operations while quota headroom still legally remained."
 

@@ -1,19 +1,19 @@
 $schema: "test-plan/case/v1"
 case_id: "we_01_proactive_bucket_exhaustion"
-title: "Proactive token-bucket pre-call gate denies egress at 0 tokens before any packet leaves the kernel"
+title: "Empty token bucket with >2s refill wait proactively yields exit 6 before any packet leaves the kernel"
 domain: "wire_egress"
 target_tier: "unit"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/budget.md#Proactive-rate-limiting"
-  statement: "The client-side token-bucket throttle is the primary authority: when the local bucket is empty (tokens < 1) the pre-call gate aborts dispatch with exit 2 BEFORE the packet reaches the wire ('Gate decision — local bucket empty pauses dispatch up to timeout; hard limit exhaustion throws exit 2'; policy.yaml#api.rate_limit.pre_call_gate: fail-closed, tokens < 1 -> exit 2 immediately)."
-  blast_radius_if_breached: "A drained provider quota bucket would keep receiving dispatch attempts anyway, triggering upstream 429 storms, provider-side bans of enterprise API keys, and cascading routine failures in every session that shares the provider."
+  law_reference: "cans/budget.md#Quotas"
+  statement: "Dial 1 Cadence governs the socket edge: when the local leaky bucket is empty the kernel computes the expected refill wait — under 2s it sleeps the socket transparently, over 2s it yields the routine proactively with exit 6 (budget.md#Quotas). At 0 tokens with a 0.1 token/s refill the expected wait is 10s, so dispatch is never attempted and no packet leaves the kernel. Exit 2 is reserved for Dial 2 ceiling breach, never cadence."
+  blast_radius_if_breached: "A drained provider bucket that kept receiving dispatch attempts anyway would trigger upstream 429 storms, provider-side bans of enterprise API keys, and cascading routine failures in every session that shares the provider."
 
 confusion_matrix:
   quadrant: "true_negative"
-  slop_risk: "An AI agent fakes this test by asserting a network timeout or generic connection error instead of the local client-side rate refusal — e.g. mocking the HTTP client to return a timeout and asserting .is_err(), which proves nothing about the pre-call gate."
-  anti_slop_mitigation: "AS-03 forbids .is_err()/.is_ok() assertions: the integer exit code must equal 2 and the CliEnvelope diagnostic block (domain, culprit, remedy) must be parsed. AS-01 bans mocking the token-bucket counters (quota_gate.rs path). AS-02 physically queries _api_quota to prove the row and every table are untouched and no packet was dispatched."
+  slop_risk: "An AI agent fakes this test by asserting a network timeout or generic connection error instead of the local cadence yield — e.g. mocking the HTTP client to return a timeout and asserting .is_err(), which proves nothing about the proactive yield path."
+  anti_slop_mitigation: "AS-03 forbids .is_err()/.is_ok() assertions: the integer exit code must equal 6 and the CliEnvelope diagnostic block (domain, culprit, remedy) must be parsed. AS-01 bans mocking the token-bucket counters (quota_gate.rs path). AS-02 physically queries _api_quota to prove the row and every table are untouched and no packet was dispatched. AS-04 bans a real 10s sleep: the yield decision is proactive from bucket state."
 
 setup:
   env: "dev"
@@ -26,25 +26,25 @@ setup:
     schema_yaml: null
     tables:
       - name: "_api_quota"
-        row_count: 1   # provider 'threads': 24h rolling window 50/50 consumed, remaining 0, status tracked
+        row_count: 1   # provider 'threads': bucket empty, 0 tokens available, refill 0.1/s, status tracked
     vault_secrets: []
 
 execution:
   trigger: "rust_api"
-  command: 'ctx.api.call("threads.posts", params={"text": "daily ops digest"}, intent="daily ops digest") invoked through the capcli-core engine API with the proactive bucket pre-drained to 0 tokens'
+  command: 'ctx.api.call("threads.posts", params={"text": "daily ops digest"}, intent="daily ops digest") invoked through the capcli-core engine API with the cadence bucket pre-drained to 0 tokens'
   input_params:
     verb: "threads.posts"
     tokens_available: 0
-    refill_rate_per_sec: 1.0
-    pre_call_gate: true
+    refill_rate_per_sec: 0.1   # expected wait for 1 token = 10s, over the 2s proactive-yield threshold
+    cadence_threshold_s: 2
 
 expected_observations:
-  exit_code: 2
+  exit_code: 6
   state_modified: false
   diagnostic:
-    domain: "policy.budget"
-    culprit: "proactive token bucket exhausted for threads.posts: 0 tokens available (24h window 50/50 used); pre-call deny at deny_at_remaining before egress"
-    remedy: "wait for the 1.0 token/s refill or the 24h window reset_at before re-invoking; do not retry in a tight loop — the local bucket is the primary authority"
+    domain: "policy.quota"
+    culprit: "cadence bucket exhausted for threads.posts: 0 tokens available, expected refill wait 10s exceeds the 2s threshold — proactive yield before egress; no packet dispatched"
+    remedy: "the frame resumes on bucket refill (reset_at) via capcli-daemon; do not retry in a tight loop — the local bucket is the cadence authority"
   database:
     row_count_delta: 0
     tables_mutated: []
@@ -52,14 +52,16 @@ expected_observations:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "api.call (decision: denied, effect: none)"
+    event_emitted: "api.call (decision: yielded, effect: none)"
     chain_valid: true
     state_modified_field: false
 
 anti_slop_assertions:
   - rule: "AS-01"
-    verification: "No mock of the token-bucket counter or the quota gate: the 0-token state is a real _api_quota row read by the engine and the denial must be produced by the production pre-call gate path (assembly.md#Core-domain-subsystems quota_gate.rs 'fails closed if bucket tokens < 1'), never by a stubbed client error."
+    verification: "No mock of the token-bucket counter or the quota gate: the 0-token state is a real _api_quota row read by the engine and the yield must be produced by the production cadence path (assembly.md#Core-domain-subsystems quota_gate.rs 'yields exit 6 when expected wait exceeds 2s'), never by a stubbed client error."
   - rule: "AS-02"
     verification: "SELECT count(*) FROM _api_quota returns 1 before and after execution (strict equality); the threads row's remaining field still reads 0; no business tables exist in the world, so zero side effects are provable."
   - rule: "AS-03"
-    verification: "Assert integer exit_code == 2 (not a timeout, not exit 4/5) and parse the CliEnvelope JSON: diagnostic.domain == 'policy.budget', the culprit cites 0 tokens / deny_at_remaining, and a non-empty remedy is present; a bare .is_err() assertion is a linter failure."
+    verification: "Assert integer exit_code == 6 (not a timeout, not exit 2/4/5) and parse the CliEnvelope JSON: diagnostic.domain == 'policy.quota', the culprit cites 0 tokens and the 10s expected wait against the 2s threshold, and a non-empty remedy is present; a bare .is_err() assertion is a linter failure."
+  - rule: "AS-04"
+    verification: "Deterministic MockClock, no real sleeps: the kernel must decide the yield proactively from bucket state (0 tokens / 0.1 per s = 10s expected) without sleeping the 10s; any real 10-second wait or SystemTime::now usage fails the linter."

@@ -28,7 +28,7 @@ setup:
       - name: "_suspended_tasks"
         row_count: 1   # frame frm_bc_18 parked with exit 6; resume_target set; unblock condition: quota reset_at epoch + 3600
       - name: "_budget_frames"
-        row_count: 1   # parent frame with the routine's remaining ops
+        row_count: 1   # parent frame with the routine's remaining fuel
     vault_secrets: []
 
 execution:
@@ -66,4 +66,4 @@ anti_slop_assertions:
   - rule: "AS-04"
     verification: "Clock refill is driven by MockClock epoch ticks inside the Rust runtime (reset_at is an epoch literal in the test) — no wall-clock reads, no manual 'resume now' test command; the daemon refill loop must observe the unblock condition itself."
   - rule: "AS-02"
-    verification: "SELECT count(*) FROM _suspended_tasks is zero after completion (the daemon cleared the row on resume) and the parent _budget_frames row shows consumed_ops advanced by exactly the routine's executed op count."
+    verification: "SELECT count(*) FROM _suspended_tasks is zero after completion (the daemon cleared the row on resume) and the parent _budget_frames row shows consumed_fuel advanced by exactly the routine's burned fuel."

@@ -6,7 +6,7 @@ target_tier: "unit"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/budget.md#Priority-Floors"
+  law_reference: "cans/budget.md#Quotas"
   statement: "'Standard tasks yield at 5 tokens remaining' (policy.yaml#api.rate_limit.priority_floors.standard_yield_tokens: 5): when a standard-priority frame's pre-call check sees available tokens at the standard floor, it yields cleanly with exit 6 (physics.md#Exit-code-law: exit 6 — domain api.quota, proactive rate yield) instead of draining the bucket the way a critical task may."
   blast_radius_if_breached: "If standard tasks drained the pool to 0, time-critical critical-class work (payments, incident pages) would arrive at a dry bucket and hard-fail with exit 2 across the enterprise exactly during load peaks."
 

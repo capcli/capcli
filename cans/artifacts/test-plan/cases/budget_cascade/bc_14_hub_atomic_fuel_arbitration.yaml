@@ -6,8 +6,8 @@ target_tier: "integration"
 target_crate: "crates/capcli-daemon"
 
 invariant:
-  law_reference: "cans/budget.md#Distributed-Swarm-Fuel-Arbitration"
-  statement: "Central atomicity: 'all fuel and rate deductions execute atomically on Hub workspace.db'; fuel starvation: 'exhausted session pool at Hub immediately halts distributed spoke workers with exit 2'. Fifty spokes burning against one session pool serialize every deduction through the Hub — the pool is debited once per primitive, never per-spoke-copied — and the first deduction past exhaustion denies with exit 2 (budget.md#Fuel-&-Wire-Egress: one pool per session; physics.md#Exit-code-law exit 2: policy.budget, session fuel ceilings exhausted)."
+  law_reference: "cans/budget.md#Distributed-swarm-arbitration"
+  statement: "Central atomicity: 'all fuel and rate deductions execute atomically on Hub workspace.db'; fuel starvation: 'exhausted session pool at Hub immediately halts distributed spoke workers with exit 2'. Fifty spokes burning against one session pool serialize every deduction through the Hub — the pool is debited once per primitive, never per-spoke-copied — and the first deduction past exhaustion denies with exit 2 (budget.md#Fuel-formula: one pool per session; physics.md#Exit-code-law exit 2: policy.budget, session fuel ceilings exhausted)."
   blast_radius_if_breached: "Non-atomic per-spoke accounting lets 50 workers each read the same remaining balance and overspend external API quotas concurrently: provider rate ceilings breached fleet-wide, throttling or billing overruns discovered only on the provider invoice."
 
 confusion_matrix:

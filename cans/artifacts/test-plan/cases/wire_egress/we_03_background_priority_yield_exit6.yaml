@@ -6,7 +6,7 @@ target_tier: "e2e"
 target_crate: "crates/capcli-cli"
 
 invariant:
-  law_reference: "cans/budget.md#Safe-Yield"
+  law_reference: "cans/budget.md#Quotas"
   statement: "'Frames suspended at floor return exit 6 and land cleanly in _suspended_tasks': a background-priority task hitting the quota floor (bucket below the 15-token background floor, reserving quota for scheduled posts) is suspended — not hard-killed — and re-enters at yield_until (physics.md#Exit-code-law: exit 6 — domain api.quota; proactive rate yield; task suspended until yield_until timestamp)."
   blast_radius_if_breached: "If background tasks were hard-killed with exit 2 (or worse, allowed to drain the bucket), scheduled posts and batch jobs would die mid-flight across the enterprise, requiring manual restarts and starving the time-critical traffic the floor exists to protect."
 

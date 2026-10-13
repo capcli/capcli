@@ -8,7 +8,7 @@ target_crate: "crates/capcli-daemon"
 invariant:
   law_reference: "cans/action.md#Schedule-defenses"
   statement: "Restart safety caps daemon-boot catchup at max 1 catchup execution (artifacts/governance.yaml#schedule max_catchup_fires: 1): a cron binding that missed 24 ticks during 2 hours of daemon downtime must execute exactly one catchup fire on restart; the remaining missed ticks are discarded, never replayed in a burst."
-  blast_radius_if_breached: "A thundering herd of 24 catchup runs on every daemon restart hammers external provider rate limits (compounding 429 storms), re-burns session fuel and rows budgets on stale events, and produces 24 duplicate mutating effects (double refunds, double inventory writes) for a single logical schedule."
+  blast_radius_if_breached: "A thundering herd of 24 catchup runs on every daemon restart hammers external provider rate limits (compounding 429 storms), re-burns session fuel on stale events, and produces 24 duplicate mutating effects (double refunds, double inventory writes) for a single logical schedule."
 
 confusion_matrix:
   quadrant: "true_positive"

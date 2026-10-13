@@ -237,7 +237,7 @@ capcli apply --dry-run
   gate_1_syntax:    ok (2 tables, 9 columns)
   gate_2_semantics: ok (relational DAG verified: orders.product_id -> products.id)
   fpa_masking:      orders.customer_email (anonymized in sim)
-  snapshot_dryrun:  snap_migration_001_dryrun generated
+  snapshot_dryrun:  snap_revision_001_dryrun generated
   effect:           none (dry-run)
 ```
 
@@ -260,12 +260,12 @@ capcli apply -m "apply initial wholesale coffee erp tables"
 
 **[Capcli Kernel]**
 ```text
-[MIGRATION_COMMITTED]
+[REVISION_COMMITTED]
 STATUS:       SUCCESS (Exit 0)
 ENV:          dev
 EVENT_ID:     op_002
 TRANSACTION:  ISOLATED
-SNAPSHOT_ID:  snap_migration_001
+SNAPSHOT_ID:  snap_revision_001
 TABLES_LIVE:  [products, orders]
 LOCKFILE:     capcli.lock generated (sha256:4a8f9c2d...)
 AUDIT_LOG:    _audit updated [prev:sha256:7f9a1b2c... -> curr:sha256:11e9a4c0...]
@@ -692,7 +692,7 @@ from capcli import routine, ctx
     trust="draft",
     idempotent=True,
     description="Dense situational summary of wholesale coffee ERP health",
-    limits={"max_ops": 5, "max_duration_seconds": 5}
+    fuel_declared=50
 )
 def overview():
     low_stock = ctx.db.query("SELECT sku, stock FROM products WHERE stock < 20 LIMIT 5")
@@ -921,7 +921,7 @@ from capcli import routine, ctx, Param
     trust="draft",
     idempotent=True,
     description="Atomic wholesale order validation, Stripe billing, and inventory decrement",
-    limits={"max_ops": 8, "max_duration_seconds": 15}
+    fuel_declared=200
 )
 def process_wholesale_order(sku: Param[str], qty: Param[int], cafe_email: Param[str]):
     # 1. Distributed Concurrency Lock (Lease with TTL)
@@ -1085,7 +1085,7 @@ capcli env use sim
 ```text
 [PASS] env_switch
   env:           sim
-  workspace:     envs/sim/workspace.db (forked from snap_migration_001)
+  workspace:     envs/sim/workspace.db (forked from snap_revision_001)
   masking:       fpa_active (customer_email -> anon_*@sim.local)
   egress_engine: mock_local (apis/stripe.sim.yaml)
   egress_mode:   isolated (mock_local)

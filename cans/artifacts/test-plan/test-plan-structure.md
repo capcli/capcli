@@ -47,7 +47,7 @@ cans/artifacts/test-plan/
       da_02_where_tautology_bypass_kill.yaml
       da_03_multi_statement_injection.yaml
       da_04_system_table_write_denial.yaml
-      da_05_ddl_trust_floor_enforcement.yaml
+      da_05_raw_ddl_denied_reviewed_caller.yaml
       da_06_connection_queue_busy_timeout.yaml
       da_07_prepared_statement_cache_invalidation.yaml
       da_08_column_immutability_enforcement.yaml
@@ -133,16 +133,20 @@ cans/artifacts/test-plan/
       se_02_circular_dependency_gate2_refusal.yaml
       se_03_lockfile_hash_drift_gate3_refusal.yaml
       se_04_live_pragma_drift_gate4_refusal.yaml
-      se_05_forward_ddl_snapshot_rollback.yaml
+      se_05_rule_prove_pinned_break_exit2.yaml
       se_06_env_merge_prod_dual_flag_gate.yaml
       se_07_shorthand_expansion_ddl_generation.yaml
       se_08_system_schema_tamper_boot_refusal.yaml
       se_09_seed_data_volume_cap_breach.yaml
       se_10_scoped_view_missing_principal_bind.yaml
-      se_11_forward_only_migration_invariant.yaml
+      se_11_forward_only_revision_invariant.yaml
       se_12_git_worktree_isolation_boundary.yaml
       se_13_git_push_dry_run_merge_gate.yaml
       se_14_config_proposal_lifecycle.yaml
+      se_15_revision_lock_timing_sla.yaml
+      se_16_align_chunking_exit6_yield.yaml
+      se_17_shadow_cutover_zero_loss.yaml
+      se_18_prove_before_merge_mandate.yaml
     coordination_claims/
       cc_01_exclusive_lease_acquisition.yaml
       cc_02_contested_claim_rejection.yaml
@@ -438,9 +442,9 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `da_02_where_tautology_bypass_kill.yaml` | Unit | Malicious query `UPDATE users SET role = 'admin' WHERE id = '1' OR 1=1` is trapped mid-flight by VDBE mutation hook on row 2. | TN | Relying on AST pattern matching rather than physical VDBE update hook row counters. |
 | `da_03_multi_statement_injection.yaml` | Unit | Input `SELECT 1; DROP TABLE users;` passed to query engine is rejected by AST multi-statement parser rule. | TN | Splitting statements with string `.split(';')` rather than AST tokenizer validation. |
 | `da_04_system_table_write_denial.yaml` | Integration | Agent issues `INSERT INTO _budget_frames VALUES (...)`; C-authorizer on `workspace.db` rejects write to system table with `SQLITE_DENY`. | TN | Granting agent write permissions to system tables in test fixture setup. |
-| `da_05_ddl_trust_floor_enforcement.yaml` | E2E | Draft caller runs `ALTER TABLE orders ADD COLUMN rush boolean`; rejected with `exit 2` (ALTER requires `reviewed`). | TN | Running test in `dev` with elevated `reviewed` trust pre-configured. |
+| `da_05_raw_ddl_denied_reviewed_caller.yaml` | E2E | Reviewed caller runs raw `ALTER TABLE orders ADD COLUMN rush boolean`; denied at the C authorizer with `exit 2` (raw DDL denied for draft and reviewed alike; the revision pipeline is the sole DDL path). | TN | Running test in `dev` with `pinned` trust pre-configured so the ALTER succeeds. |
 | `da_06_connection_queue_busy_timeout.yaml` | Integration | Two concurrent transactions contend for SQLite WAL lock; second transaction blocks until `busy_timeout` then fails cleanly with `exit 2`. | TN | Using uncontrolled threads without lock step synchronization. |
-| `da_07_prepared_statement_cache_invalidation.yaml` | Unit | Table schema is migrated; cached VDBE prepared statement detects schema cookie change and recompiles cleanly. | TP | Restarting the entire process to wipe cache rather than testing in-flight invalidation. |
+| `da_07_prepared_statement_cache_invalidation.yaml` | Unit | Table schema is revised; cached VDBE prepared statement detects schema cookie change and recompiles cleanly. | TP | Restarting the entire process to wipe cache rather than testing in-flight invalidation. |
 | `da_08_column_immutability_enforcement.yaml` | Unit | Column defined with immutable shorthand (`int~`) rejects UPDATE attempt via C-authorizer `deny_columns_write`. | TN | Checking column update block in application logic rather than inside SQLite authorizer. |
 | `da_09_table_imm_rows_delete_denial.yaml` | Unit | Table tagged `imm_rows: true` rejects DELETE statements via SQLite authorizer returning `SQLITE_DENY`. | TN | Allowing DELETE to succeed and checking soft-delete flags. |
 | `da_10_unbounded_delete_ast_kill.yaml` | E2E | `DELETE FROM audit_staging` without WHERE clause killed at prepare-time with `exit 2`. | TN | Catching error post-delete or assuming dry-run mode automatically. |
@@ -474,7 +478,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | Case ID | Target Tier | Invariant & Scenario Narrative | Matrix | Banned Slop Pattern |
 |---|---|---|---|---|
 | `bc_01_downward_min_inheritance.yaml` | Unit | Parent frame (ops=20) inspects child routine (declared ops=50); pre-flight static analysis detects child starvation and returns `can_invoke_now: false`. | TP | Permitting invocation when declared child branch exceeds available parent headroom. |
-| `bc_02_session_ops_ceiling_starvation.yaml` | Integration | Ten child routines execute 5 ops each; total session ops ceiling (2500) is reached; 11th call dies with `exit 2`. | TN | Resetting session counters across child frame pushes. |
+| `bc_02_session_ops_ceiling_starvation.yaml` | Integration | Ten child routines burn 5 fuel each; the 100000-fuel session pool saturates; 11th call dies with `exit 2`. | TN | Resetting session fuel counters across child frame pushes. |
 | `bc_03_leaf_op_51_hard_kill.yaml` | E2E | Routine without declared custom limit attempts op #51; kernel watchdog halts frame with `exit 2` at boundary. | TN | Allowing half-executed state mutations on the 51st operation. |
 | `bc_04_duration_watchdog_cleanup.yaml` | Integration | Guest routine enters infinite loop; watchdog timer trips at 300s (simulated); process killed, transaction rolled back. | TN | Leaking orphaned child processes or zombie threads after kill. |
 | `bc_05_fuel_pool_depletion_exit2.yaml` | Unit | Routine exceeds session fuel allocation (100,000 units); kernel denies subsequent primitive invocation. | TN | Continuing execution with negative fuel balance. |
@@ -489,7 +493,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `bc_14_hub_atomic_fuel_arbitration.yaml` | Integration | 50 spokes burn against one session pool; every deduction executes atomically on Hub workspace.db; the primitive past exhaustion halts with `exit 2`, final consumed exactly 10000. | TN | Running spokes sequentially or mocking per-spoke counters so the overspend race never exists. |
 | `bc_15_spoke_prereserve_preemption_floor.yaml` | Integration | Spokes pre-reserve 1000-fuel blocks via RPC and burn locally; Hub low-token floor yields all non-critical spokes with `exit 6` on one tick, critical spoke exempt. | TN | Reading local block totals without Hub reconciliation, or yielding one spoke at a time. |
 | `bc_16_federated_min_cascade.yaml` | Integration | Federated callee effective limit = min(caller_remaining, callee_policy_ceiling, callee_governance_ceiling); rotated variants prove each term can bind. | TP | Asserting with caller_remaining as the only binding input, or using the local min() formula across workspaces. |
-| `bc_17_callee_exhaustion_isolation.yaml` | Integration | Callee exhausts its delegated budget and aborts with `exit 2`; caller `consumed_ops` is bit-identical before and after. | TN | Exhausting the caller frame instead, or inventing a failure penalty charged to the caller. |
+| `bc_17_callee_exhaustion_isolation.yaml` | Integration | Callee exhausts its delegated fuel and aborts with `exit 2`; caller `consumed_fuel` is bit-identical before and after. | TN | Exhausting the caller frame instead, or inventing a failure penalty charged to the caller. |
 | `bc_18_mechanical_daemon_resume_completion.yaml` | Integration | Frame yielded (`exit 6`) unblocked by clock refill; `capcli-daemon` executes the pre-compiled guest routine in the sandbox to completion; harness wake count is exactly 0. | TP | Re-invoking the LLM harness on resume and asserting completion, or resuming via a manual test command. |
 | `bc_19_occ_drift_resume_abort_exit2.yaml` | Integration | Yielded frame's OCC `state_fence` mismatches live row state at resume; daemon aborts immediately with `exit 2` (`E061_OCC_DRIFT`); frame purged, nothing committed. | TN | Drifting a table the fence never covered, or letting the frame resume and commit against drifted rows. |
 | `bc_20_resume_lease_ownership_exit2.yaml` | Integration | Resume attempt on a frame whose Layer 1 lease expired aborts with `exit 2` even though the `state_fence` still matches; frame purged, nothing resumes. | TN | Drifting the fenced row too (so the fence check, not the lease check, fires), or testing a still-active lease. |
@@ -544,16 +548,20 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `se_02_circular_dependency_gate2_refusal.yaml` | Unit | Table A references Table B; Table B references Table A; Sub-check 2 petgraph cycle check aborts with `exit 3`. | TN | Attempting DDL creation and relying on SQLite runtime error. |
 | `se_03_lockfile_hash_drift_gate3_refusal.yaml` | Integration | On-disk schema.yaml edited without updating capcli.lock refuses prod boot at Sub-check 3 with exit 3 | TN | Agent permits execution in production with uncompiled schema changes - e.g. |
 | `se_04_live_pragma_drift_gate4_refusal.yaml` | Integration | Table column added directly to SQLite via external tool; `sys doctor` PRAGMA check detects drift and refuses boot. | TN | Silently merging unmanaged columns into compiled schema. |
-| `se_05_forward_ddl_snapshot_rollback.yaml` | Integration | Revision safety executes test DDL on temporary snapshot; transaction fails; snapshot auto-restores; live DB untouched. | TN | Running migration on live database without verifying clean rollback on snapshot. |
+| `se_05_rule_prove_pinned_break_exit2.yaml` | Integration | `rule prove <id> --env sim` rehearsal detects a pinned routine whose query breaks against the revised schema; cutover aborts with `exit 2` (diagnostic domain `policy.revision`). | TN | Rehearsing with an empty pinned-routine roster so `prove` passes vacuously. |
 | `se_06_env_merge_prod_dual_flag_gate.yaml` | E2E | Merging dev schema into prod without both --confirm-backup and --confirm-prod is rejected with exit 2 | TN | Agent permits the production merge with a single confirmation flag (e.g. |
 | `se_07_shorthand_expansion_ddl_generation.yaml` | Unit | Shorthand notation (`int~`, `text!`, `pk`, `mask=true`) compiles deterministically to correct SQLite DDL dialect. | TP | Manually writing SQL DDL in test rather than asserting compiled output from YAML shorthands. |
 | `se_08_system_schema_tamper_boot_refusal.yaml` | Integration | Agent modifies `system-schema.yaml` on disk; boot hash check verifies system schema integrity and halts boot with `exit 3`. | TN | Permitting runtime alterations to kernel system tables. |
 | `se_09_seed_data_volume_cap_breach.yaml` | Unit | Table definition specifies 51 seed rows; Sub-check 1 shorthand compiler rejects schema (max 50 rows per seed table). | TN | Allowing large datasets to bypass compile checks disguised as seed data. |
 | `se_10_scoped_view_missing_principal_bind.yaml` | Unit | View declares `scoped: principal` but SQL query omits `:principal` bind variable; Sub-check 2 compile check halts with `exit 3`. | TN | Allowing scoped view creation without enforcing parameter binding compile check. |
-| `se_11_forward_only_migration_invariant.yaml` | Integration | Agent attempts down-migration script; kernel rejects execution; mandates VACUUM snapshot restore for backward recovery. | TN | Implementing down-migration SQL execution path in engine. |
-| `se_12_git_worktree_isolation_boundary.yaml` | Integration | Migration applied in the envs/dev/ worktree leaves the envs/prod/ database physically untouched | TP | Agent runs the migration on the primary branch workspace database directly (or points both environments at one workspace.db path in the fixture), so |
+| `se_11_forward_only_revision_invariant.yaml` | Integration | Agent attempts a hand-written reverse-revision script; kernel rejects execution; mandates a forward revert bundle or VACUUM snapshot restore for backward recovery. | TN | Implementing a reverse-revision SQL execution path in the engine. |
+| `se_12_git_worktree_isolation_boundary.yaml` | Integration | Revision applied in the envs/dev/ worktree leaves the envs/prod/ database physically untouched | TP | Agent runs the revision on the primary branch workspace database directly (or points both environments at one workspace.db path in the fixture), so |
 | `se_13_git_push_dry_run_merge_gate.yaml` | Integration | Production merge pipeline runs `git push --dry-run` to verify remote credentials before committing physical DDL changes. | TP | Applying DDL changes locally when remote git repository is unreachable. |
 | `se_14_config_proposal_lifecycle.yaml` | E2E | Agent saves YAML edit; Sub-checks 1+2 stage a proposal and yield the frame (`exit 6`); human 1-click PWA approval triggers daemon lockfile recompile, atomic authorizer reload, `rule.config_committed`, and Git auto-commit. | TP | Applying the disk edit to the running engine before approval, or auto-committing without the human cryptographic signature. |
+| `se_15_revision_lock_timing_sla.yaml` | Integration | Phase-1 Expand and phase-3 Contract swap hold the SQLite write lock within bound (`<10ms` expand, `<20ms` contract); `rule prove --env sim` rehearsal records phase-level lock timings. | TP | Stubbing the lock-timing probe or measuring only aggregate apply duration. |
+| `se_16_align_chunking_exit6_yield.yaml` | Integration | Align-phase `align.py` copies rows in `<=500`-row transactions; on fuel exhaustion it yields cleanly via `exit 6` and resumes from the recorded chunk boundary with no re-processed or skipped rows. | TP | Funding the test with an unbounded fuel frame so the yield path is never hit. |
+| `se_17_shadow_cutover_zero_loss.yaml` | Integration | Concurrent delta writes during the Contract phase replicate via `AFTER INSERT/UPDATE/DELETE` triggers; at the zero-lag swap every concurrent write is present — zero lost rows. | TP | Pausing write traffic during Contract so trigger replication is never exercised. |
+| `se_18_prove_before_merge_mandate.yaml` | Integration | `env merge <name> prod` without a passing `rule prove` in sim is refused at the merge gate with `exit 2` (diagnostic domain `policy.revision`). | TN | Proving in `dev` instead of `sim` or proving a different revision id. |
 
 ### 6.8 Coordination & Claims (`cases/coordination_claims/`)
 
