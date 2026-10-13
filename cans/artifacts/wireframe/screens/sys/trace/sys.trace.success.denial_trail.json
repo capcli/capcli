@@ -23,7 +23,7 @@
             "children": []
           },
           {
-            "label": "✗ policy.ast policy.query.update_delete.require_limit",
+            "label": "✗ policy.ast policy.query.update_delete.require_bounded_predicate",
             "children": [
               {
                 "label": "effect: none (0 rows touched)",
@@ -32,7 +32,7 @@
             ]
           },
           {
-            "label": "remedy add LIMIT, or target specific primary key",
+            "label": "remedy target a specific primary key or a bounded predicate",
             "children": []
           }
         ]

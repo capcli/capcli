@@ -157,7 +157,7 @@
         - claims.rs — distributed lease locks via claims: see world.md#claims-lease-lifecycle
       - Execution gates
         - authorizer_gate.rs — table and column write allowlists: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - write_gate.rs — mandates WHERE clause and LIMIT: see physics.md#Raw-SQL-rules
+        - write_gate.rs — mandates primary-key-targeted or bounded WHERE: see physics.md#Raw-SQL-rules
         - isolation_gate.rs — denies ctx.api.call inside txn: see physics.md#Layer-2:-SQL-AST-check
       - Domain telemetry — tracks VDBE opcode analysis counts and connection lease durations
     - Domain 2: Routine engine & sandboxing (routine/)

@@ -238,7 +238,7 @@
         - condition — cross-world DDL without git merge
         - decision — denied: see artifacts/policy.yaml#env.prod
     - Migration invariants
-      - forward only — rollbacks execute strictly via forward revert bundles
+      - forward only — rollbacks execute strictly via forward revert bundles; every rollback commits a new version and the active pointer moves forward to it, never backward
       - user vs kernel separation — state population runs in user space routines; structural rebuilds run in kernel
       - snapshot pairing — cold VACUUM snapshot created prior to Expand phase for disaster-only recovery
       - lockfile check — capcli.lock verification at boot: see physics.md#Fail-closed-stance

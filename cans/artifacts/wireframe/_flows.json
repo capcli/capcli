@@ -40,9 +40,9 @@
     "journey_tamper_forensics": {
       "name": "Tamper Quarantine & Forensic Isolation",
       "color": "#f0883e",
-      "entry": "sys.doctor.panic.quarantine",
+      "entry": "sys.doctor.degraded.quarantine",
       "terminal": "sys.doctor.success.quarantine",
-      "description": "Broken SHA-256 chain detected at boot-check -> kernel.panic (exit 5): corrupted leaves isolated to the quarantine branch (audit.quarantine.jsonl), boot refused -> CAPCLI_RECOVERY=1 break-glass read-only quarantine ledger inspection; valid history stays queryable"
+      "description": "Broken SHA-256 chain detected at boot-check -> corrupted leaves isolated to the quarantine branch (audit.quarantine.jsonl); boot completes degraded (exit 0), valid history stays queryable, quarantined leaves fail-closed -> CAPCLI_RECOVERY=1 break-glass read-only quarantine ledger inspection"
     },
     "journey_human_in_the_loop": {
       "name": "Ping Ask Suspension & Resolution",
@@ -541,7 +541,7 @@
         "journey_tamper_forensics"
       ],
       "from": [
-        "sys.doctor.panic.quarantine"
+        "sys.doctor.degraded.quarantine"
       ],
       "to": [
         "sys.doctor.success.quarantine"
@@ -3444,7 +3444,7 @@
         "run.sql.refusal.missing_intent"
       ],
       "trigger": "fix_syntax",
-      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 100\"",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127",
       "arrow_type": "denial"
     },
     {
@@ -3489,7 +3489,7 @@
         "run.sql.denial.engine_busy"
       ],
       "trigger": "bounded_write_contended",
-      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing' LIMIT 50\" -m \"batch ship processing orders\"",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"batch ship processing orders\"",
       "arrow_type": "denial"
     },
     {
@@ -3519,7 +3519,7 @@
         "run.sql.success.populated"
       ],
       "trigger": "bounded_keyed_write",
-      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
       "arrow_type": "success"
     },
     {
@@ -3729,7 +3729,7 @@
         "run.sql.success.populated"
       ],
       "trigger": "exec_bounded_write",
-      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id LIMIT 1\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
       "arrow_type": "success"
     },
     {

@@ -142,7 +142,7 @@ Naming convention, both artifact directories (`wireframe/`, `prompt/`): a leadin
 
 Canonical file: `_states.json` (same directory). It is the single home of the state taxonomy: exit code → label, exit → legal domains, exit → required diagnostic fields. Not reproduced here by design.
 
-The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6 (cans/physics.md#Exit-code-law). The screen-ID state slot takes exactly these labels; severity and lifecycle words (`warning`, `tamper`, `suspended`, `rolled_back`) live in the condition slot. A domain determines its exit: `api.quota` alone is dual-registered (exit 2 Critical, exit 6 Background). Exit 6 covers both quota yields and `ping.ask` frame suspensions (cans/action.md suspension contract).
+The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6 (cans/physics.md#Exit-code-law). The screen-ID state slot takes exactly these labels; severity and lifecycle words (`warning`, `tamper`, `suspended`, `rolled_back`) live in the condition slot. A domain determines its exit: two domains are dual-registered — `api.quota` (exit 2 Critical, exit 6 Background) and `policy.template` (exit 2 denial on pack-time invariant breach, exit 3 refusal on intake validation). Exit 6 covers both quota yields and `ping.ask` frame suspensions (cans/action.md suspension contract).
 
 ---
 
