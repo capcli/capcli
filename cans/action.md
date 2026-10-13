@@ -396,7 +396,11 @@
       - Key management — bind keys issue <name> --principal partner:<id>
       - Health checks — bind endpoint <name> --health
       - Schedule defenses
-        - orphan protection — retiring a routine auto-disables schedules loudly
+        - orphan protection — retiring a routine dissolves its ingress bindings in the same commit; no orphan window exists
+          - scope — every cron, webhook, and endpoint binding on the routine in _bindings
+          - atomicity — routine flips to retired and binding rows delete in one transaction; deferred or next-tick dissolution banned
+          - loud dissolution — the retire receipt names each dissolved binding id; bind.delete events land in _audit in the same op batch
+          - bindings never block retirement — kernel-managed rows dissolve automatically; active import edges block instead (see time.md#Stage-details)
         - restart safety — max 1 catchup execution permitted on daemon boot
         - webhook limits — payload max 65,536 bytes; 100 events/minute ceiling
         - dead letter queue — see world.md#Inbox-lifecycle

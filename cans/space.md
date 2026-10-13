@@ -28,6 +28,7 @@
       - sim defaults — mode resolution: see artifacts/governance.yaml#api
     - World governance
       - namespace boundary — capcli/envs/<name>/ is an isolated directory namespace containing declarative overrides and state
+      - worktree branch naming — environment worktree branches carry the envs/<name> form, congruent with the namespace boundary
       - substrate isolation — capcli/envs/<name>/workspace.db and capcli/envs/<name>/audit.db are uncommitted, locally managed SQLite instances
       - filesystem mandate — POSIX locking compliance required: see physics.md#Platform-tier-taxonomy
       - prod promotion gate — `env merge <name> prod` verifies Tier 1 host first: see trust.md#Weakest-link-matrix

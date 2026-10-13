@@ -1105,7 +1105,7 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_positive"
-    title: "Retiring a bound routine auto-disables its cron schedule loudly via daemon tick"
+    title: "Retiring a bound routine dissolves its cron schedule in the same commit"
   - case_id: "bt_08_webhook_rate_limit_throttle"
     file: "cases/bindings_triggers/bt_08_webhook_rate_limit_throttle.yaml"
     domain: "bindings_triggers"

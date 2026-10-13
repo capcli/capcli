@@ -108,7 +108,7 @@
       - active schedule ceiling — see artifacts/governance.yaml#schedule
       - minimum interval — see artifacts/governance.yaml#schedule
       - catchup behavior — max catchup fires: see artifacts/governance.yaml#schedule
-      - orphan handling — retiring routine auto-disables bound schedule
+      - orphan handling: see action.md#Bindings
     - System integrity cadence
       - audit mirror sync — max lag: see artifacts/governance.yaml#maintenance
       - hash chain audit — verification cron: see artifacts/governance.yaml#maintenance

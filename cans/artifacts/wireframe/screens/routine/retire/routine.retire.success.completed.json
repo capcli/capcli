@@ -22,10 +22,10 @@
       },
       {
         "fields": {
-          "orphan_trigger_warning": "retiring legacy_etl@6 orphans 2 bound ingress routes; the kernel dismantles them loudly",
-          "cron binding": "bnd_3k2f \"legacy_etl_nightly\" (0 4 * * *) paused -> dissolved by daemon on next tick (dead_schedule_disable: true)",
-          "endpoint binding": "bnd_8d3p legacy_etl@6 (http://127.0.0.1:4040/endpoints/legacy_etl, api-key) revoked with retirement — retired = uncallable",
-          "audit events": "op_retire_01 (routine.retire committed) + bind.delete chains in _audit on the next daemon tick"
+          "orphan_trigger_warning": "retiring legacy_etl@6 dissolves its 2 bound ingress routes in the same commit; no trigger outlives the routine",
+          "cron binding": "bnd_3k2f \"legacy_etl_nightly\" (0 4 * * *) dissolved atomically at retire time — no pause, no next tick",
+          "endpoint binding": "bnd_8d3p legacy_etl@6 (http://127.0.0.1:4040/endpoints/legacy_etl, api-key) dissolved with the retire commit — retired = uncallable",
+          "audit events": "op_retire_01 (routine.retire committed) + bind.delete events for bnd_3k2f and bnd_8d3p in _audit in the same op batch"
         }
       },
       {
