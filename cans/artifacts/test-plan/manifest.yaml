@@ -1,4 +1,4 @@
-# capcli canonical test plan manifest — machine-readable index of all 175 cases
+# capcli canonical test plan manifest — machine-readable index of all 181 cases
 # Derived from test-plan-structure.md §1 (directory tree) and §6 (master catalog).
 # Quadrant and target_tier values MUST match the §6 catalog tables exactly.
 $schema: "test-plan/manifest/v1"
@@ -6,7 +6,7 @@ plan:
   name: "capcli canonical test plan"
   structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
   matrix_doc: "cans/artifacts/test-plan/matrix.yaml"
-  total_cases: 175
+  total_cases: 181
   domains: 12
   crate_tier_convention:
     unit: "crates/capcli-core"
@@ -16,12 +16,12 @@ plan:
 domains:
   kernel_physics:
     prefix: "kp"
-    case_count: 21
+    case_count: 23
     description: "Kernel physics — dual-engine enforcement, platform tier taxonomy, seccomp-bpf jails, tmpfs scratch isolation, NTP drift halt, audit-sink fail-closed host integrity probes."
     spec_sources: ["cans/physics.md", "cans/world.md", "cans/effect.md"]
   database_authorizer:
     prefix: "da"
-    case_count: 13
+    case_count: 15
     description: "Database floor & C-authorizer — unbounded UPDATE/DELETE AST kills, WHERE tautology traps, system table write denial, column/table immutability, row ceilings."
     spec_sources: ["cans/physics.md", "cans/world.md"]
   wire_egress:
@@ -31,7 +31,7 @@ domains:
     spec_sources: ["cans/physics.md", "cans/action.md", "cans/budget.md", "cans/space.md"]
   budget_cascade:
     prefix: "bc"
-    case_count: 19
+    case_count: 20
     description: "Budget cage & frame cascade — downward min inheritance, session ops ceilings, fuel pools, earmark ringfence and TTL sweep, watchdogs, suspended-task refill."
     spec_sources: ["cans/budget.md", "artifacts/governance.yaml", "artifacts/policy.yaml", "cans/time.md"]
   audit_dag:
@@ -66,7 +66,7 @@ domains:
     spec_sources: ["cans/agent.md", "cans/interface.md", "cans/effect.md"]
   sdk_harness:
     prefix: "sh"
-    case_count: 12
+    case_count: 13
     description: "SDK & guest harness contract — frame token traps, ctx.api/ctx.db rules, manifest reflection over IPC, poll_until aggregate accounting, storage HMAC URLs, claims locks."
     spec_sources: ["cans/action.md", "cans/agent.md"]
   urp:
@@ -75,7 +75,7 @@ domains:
     description: "URP resolver engine — 3-class dispatch (executable, db-entity, artifact), universal pointer grammar parse law, exit-3 refusals for bare paths and removed schemes, prompts-are-documents read equivalence."
     spec_sources: ["cans/action.md", "cans/interface.md"]
 cases:
-  # ── kernel_physics (kp) — 21 cases ─────────────────────────
+  # ── kernel_physics (kp) — 23 cases ─────────────────────────
   - case_id: "kp_01_syscall_seccomp_trap"
     file: "cases/kernel_physics/kp_01_syscall_seccomp_trap.yaml"
     domain: "kernel_physics"
@@ -223,7 +223,21 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
     title: "Missing peer socket exhausts the 1500ms poll and exits 4 (E055_FEDERATION_UNREACHABLE)"
-  # ── database_authorizer (da) — 13 cases ────────────────────
+  - case_id: "kp_22_exit6_yield_claims_retained"
+    file: "cases/kernel_physics/kp_22_exit6_yield_claims_retained.yaml"
+    domain: "kernel_physics"
+    target_tier: "integration"
+    target_crate: "crates/capcli-daemon"
+    quadrant: "true_positive"
+    title: "Exit-6 yield parks the frame with the Layer 1 claim row still present and caller-owned (claims 1 -> 1)"
+  - case_id: "kp_23_suspended_tasks_yield_capture"
+    file: "cases/kernel_physics/kp_23_suspended_tasks_yield_capture.yaml"
+    domain: "kernel_physics"
+    target_tier: "integration"
+    target_crate: "crates/capcli-daemon"
+    quadrant: "true_positive"
+    title: "Exit-6 yield parks cursor, 64-hex state_fence, and checkpoint_ts on the _suspended_tasks row"
+  # ── database_authorizer (da) — 15 cases ────────────────────
   - case_id: "da_01_unbounded_update_ast_kill"
     file: "cases/database_authorizer/da_01_unbounded_update_ast_kill.yaml"
     domain: "database_authorizer"
@@ -315,6 +329,20 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
     title: "501-row single-batch INSERT exceeds the 500-row insert ceiling and aborts cleanly with exit 2"
+  - case_id: "da_14_txn_lifespan_bound_violation_exit2"
+    file: "cases/database_authorizer/da_14_txn_lifespan_bound_violation_exit2.yaml"
+    domain: "database_authorizer"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Writer holding a SQLite write lock past the 15ms lifespan bound aborts with exit 2"
+  - case_id: "da_15_commit_time_fence_drift_exit2"
+    file: "cases/database_authorizer/da_15_commit_time_fence_drift_exit2.yaml"
+    domain: "database_authorizer"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Row tampered between Phase-1 read and Phase-3 commit aborts with exit 2 (E061_OCC_DRIFT), zero partial writes"
   # ── wire_egress (we) — 13 cases ────────────────────────────
   - case_id: "we_01_proactive_bucket_exhaustion"
     file: "cases/wire_egress/we_01_proactive_bucket_exhaustion.yaml"
@@ -407,7 +435,7 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_positive"
     title: "High-volume sim rehearsal burns only the sim-scoped quota bucket while the prod balance stays untouched"
-  # ── budget_cascade (bc) — 19 cases ─────────────────────────
+  # ── budget_cascade (bc) — 20 cases ─────────────────────────
   - case_id: "bc_01_downward_min_inheritance"
     file: "cases/budget_cascade/bc_01_downward_min_inheritance.yaml"
     domain: "budget_cascade"
@@ -541,6 +569,13 @@ cases:
     target_crate: "crates/capcli-daemon"
     quadrant: "true_negative"
     title: "Resume verification detects state_fence drift on a yielded frame and aborts with exit 2 (E061_OCC_DRIFT)"
+  - case_id: "bc_20_resume_lease_ownership_exit2"
+    file: "cases/budget_cascade/bc_20_resume_lease_ownership_exit2.yaml"
+    domain: "budget_cascade"
+    target_tier: "integration"
+    target_crate: "crates/capcli-daemon"
+    quadrant: "true_negative"
+    title: "Resume with an expired Layer 1 lease aborts with exit 2 even when the state_fence matches"
   # ── audit_dag (ad) — 14 cases ──────────────────────────────
   - case_id: "ad_01_sha256_prev_hash_linking"
     file: "cases/audit_dag/ad_01_sha256_prev_hash_linking.yaml"
@@ -1149,7 +1184,7 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
     title: "Routine printing a decrypted credential to stdout is killed by the egress leak scanner (kill_and_alert, exit 5) with the secret redacted from every audit record"
-  # ── sdk_harness (sh) — 12 cases ────────────────────────────
+  # ── sdk_harness (sh) — 13 cases ────────────────────────────
   - case_id: "sh_01_missing_frame_token_trap"
     file: "cases/sdk_harness/sh_01_missing_frame_token_trap.yaml"
     domain: "sdk_harness"
@@ -1234,6 +1269,13 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_positive"
     title: "ctx.db.lock records the lease in the claims table and auto-clears it on routine exit"
+  - case_id: "sh_13_ws_call_under_claim_lock_exit3"
+    file: "cases/sdk_harness/sh_13_ws_call_under_claim_lock_exit3.yaml"
+    domain: "sdk_harness"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "ctx.call to a ws:// target while holding a local Layer 1 claim is rejected at compile time with exit 3"
   # ── urp (ur) — 11 cases ────────────────────────────────────
   - case_id: "ur_01_inspect_db_table_envelope"
     file: "cases/urp/ur_01_inspect_db_table_envelope.yaml"

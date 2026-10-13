@@ -43,10 +43,10 @@ capcli api catalog <provider>
 Dispatch inside routines via `ctx.api.call("<provider>.<verb>", payload)`.
 
 ## section:stage_3_claims
-Resolve contested lease collisions (`db.claims`):
+Resolve contested lease collisions (`db://claims`):
 If an exclusive entity lease is held by another session:
 ```bash
-capcli sql "SELECT * FROM claims WHERE resource = :target" -p target="orders:ORD-1"
+capcli sql "SELECT * FROM claims WHERE target = :target" -p target="orders:ORD-1"
 ```
 Do not poll in a tight while loop. Yield control back to sensory inbox:
 ```bash

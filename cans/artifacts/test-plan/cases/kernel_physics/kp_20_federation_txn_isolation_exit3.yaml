@@ -7,7 +7,7 @@ target_crate: "crates/capcli-core"
 
 invariant:
   law_reference: "cans/physics.md#federation-isolation"
-  statement: "Federated calls are forbidden inside kernel saga transactions: ctx.call to a ws:// target issued inside a ctx.db.txn block is rejected with exit 3 — a cross-workspace call cannot participate in a local atomic commit, and the lock fence additionally rejects outbound ws:// calls while local ctx.db.lock leases are held."
+  statement: "Federated calls are forbidden inside kernel saga transactions: ctx.call to a ws:// target issued inside a ctx.db.txn block is rejected with exit 3 (E034_TXN_EXTERNAL_CALL) — a cross-workspace call cannot participate in a local atomic commit, and the lock fence additionally rejects outbound ws:// calls while local ctx.db.lock leases are held."
   blast_radius_if_breached: "Split-brain commits: the local transaction commits while the federated callee fails (or vice versa) — no distributed 2PC exists, so atomicity silently degrades to best-effort across the workspace boundary."
 
 confusion_matrix:
@@ -47,13 +47,14 @@ execution:
     target_urp: "ws://billing/settle_invoice@v2"
     inside_txn: true
     local_mutation: "UPDATE orders SET status='held' WHERE id=3 LIMIT 1"
+    expected_code: "E034_TXN_EXTERNAL_CALL"
 
 expected_observations:
   exit_code: 3
   state_modified: false
   diagnostic:
     domain: "compile"
-    culprit: "federation isolation — ctx.call to ws:// target 'ws://billing/settle_invoice@v2' forbidden inside ctx.db.txn blocks; federated calls cannot join local atomic commits"
+    culprit: "federation isolation — ctx.call to ws:// target 'ws://billing/settle_invoice@v2' forbidden inside ctx.db.txn blocks (E034_TXN_EXTERNAL_CALL); federated calls cannot join local atomic commits"
     remedy: "move the ws:// call outside the txn block: complete the federated call first, then open ctx.db.txn for the local mutation (or vice versa)"
   database:
     row_count_delta: 0 # txn rolled back: the UPDATE never commits
@@ -68,7 +69,7 @@ expected_observations:
 
 anti_slop_assertions:
   - rule: "AS-03"
-    verification: "Assert exit_code == 3 and diagnostic.domain == 'compile' with the federation-isolation culprit naming the ws:// target; exit 2 here would mean the wrong gate fired."
+    verification: "Assert exit_code == 3 and parse the CliEnvelope: code == 'E034_TXN_EXTERNAL_CALL' exactly, diagnostic.domain == 'compile' with the federation-isolation culprit naming the ws:// target; exit 2 here would mean the wrong gate fired."
   - rule: "AS-02"
     verification: "SELECT status FROM orders WHERE id=3 != 'held' after the run — the enclosing txn rolled back atomically; zero bytes on /run/capcli/billing.sock; _audit delta is exactly 1 denial event."
   - rule: "AS-06"

@@ -29,7 +29,7 @@
           "next": "capcli api activate stripe.payment_intents.create --intent \"...\""
         },
         "lines": [
-          "api://stripe.payment_intents.create api      dormant",
+          "cap://stripe/payment_intents.create api      dormant",
           "Creates PaymentIntent for card/invoice capture"
         ]
       },

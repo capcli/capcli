@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "api.catalog.success.truncated",
-  "target": "api://catalog",
+  "target": "catalog",
   "command": "capcli api catalog",
   "elapsed_ms": 370,
   "context": {
@@ -26,11 +26,11 @@
           "trust": "draft"
         }
       ],
-      "next_cursor": "api://shipstation.create_order",
+      "next_cursor": "cap://shipstation/create_order",
       "has_more": true
     },
     "meta": {
-      "next_cursor": "api://shipstation.create_order",
+      "next_cursor": "cap://shipstation/create_order",
       "has_more": true
     },
     "fields": {
@@ -41,14 +41,14 @@
     },
     "body": [
       "catalog",
-      "├── api://stripe",
+      "├── cap://stripe",
       "│     ├── refund_charge           active    draft",
       "│     ├── create_payment_intent   active    draft",
       "│     └── issue_credit_note       active    draft",
-      "├── api://threads",
+      "├── cap://threads",
       "│     ├── create_media_post       active    draft",
       "│     └── get_media_post          dormant   —",
-      "└── api://fedex",
+      "└── cap://fedex",
       "├── ship                    active    reviewed",
       "└── track                   active    reviewed",
       "... 493 further verbs elided (listing capped at 500) ..."

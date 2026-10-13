@@ -169,9 +169,9 @@
         - physical stimulus — worker agents consume real inbox queue items; ad-hoc telepathic order hallucinations banned
       - Interior rules
         - execution model — strictly sequential
-        - transaction integrity — ctx.api.call inside a ctx.db.txn block fails compilation with exit 3
-        - federation boundary — ctx.call to a ws:// target inside a ctx.db.txn block fails compilation with exit 3
-        - lock fence rule — ctx.call to a ws:// target while holding local Layer 1 claims is rejected at compile time with exit 3
+        - transaction integrity — ctx.api.call inside a ctx.db.txn block fails compilation with exit 3 (E034_TXN_EXTERNAL_CALL)
+        - federation boundary — ctx.call to a ws:// target inside a ctx.db.txn block fails compilation with exit 3 (E034_TXN_EXTERNAL_CALL)
+        - lock fence rule — ctx.call to a ws:// target while holding local Layer 1 claims is rejected at compile time with exit 3 (E035_LOCK_FENCE_BREACH)
         - transient polling — atomic ctx.api.poll_until permitted; raw time.sleep loops banned
         - banned patterns — ctx.on listeners, reactive streams, subscriptions
         - failure modes — callbacks break DAG linearity, txn boundaries, replay
@@ -264,6 +264,7 @@
         - socket edge interception — the kernel checks every ctx.api.call at the socket boundary in strict order:
           - check ceiling — monthly provider spend ceiling; breach denies before dispatch (exit 2): see budget.md#Quotas
           - check cadence — leaky-bucket cadence; waits under 2s sleep the socket transparently: see budget.md#Quotas
+          - auth attach — kernel resolves vault://<name> handles and inserts Authorization headers between the cadence check and dispatch, strictly before TLS
           - dispatch and deduct fuel — wire bytes and primitive steps burn fuel at dispatch: see budget.md#Cascade
           - auto-tune from headers — response rate-limit headers recalibrate the local bucket: see budget.md#Quotas
           - proactive yield — waits over 2s, or upstream 429 with Retry-After, yield the routine (exit 6): see physics.md#Exit-code-law
@@ -292,6 +293,7 @@
       - API call boundaries
         - kernel mediation — egress executed exclusively through kernel binary
         - auth engines — kernel resolves Bearer, Basic, OAuth2 refresh tokens, AWS SigV4 signing, and mTLS client certs from vault
+        - secret params — ctx.api.call accepts opaque vault://<name> handles in params; guest SDKs never attach auth headers; plaintext credential bytes never cross the guest boundary: see agent.md#Secrets
         - wire projection — select JSONPath filters large upstream responses at kernel socket edge before passing payload to guest sandbox
         - dual-write safety — mutating API calls staged to _outbox_events require upstream idempotency headers; routes lacking support mandate synchronous execution
         - outbox claim and draining: see world.md#Dual-schema

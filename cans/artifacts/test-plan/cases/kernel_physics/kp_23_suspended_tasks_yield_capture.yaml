@@ -1,0 +1,70 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_23_suspended_tasks_yield_capture"
+title: "Exit-6 yield parks cursor, 64-hex state_fence, and checkpoint_ts on the _suspended_tasks row"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/physics.md#Exit-code-law"
+  statement: "'fence capture — Layer 2 state_fence and resume cursor persist to db://_suspended_tasks' (physics.md#Exit-code-law): at yield the kernel writes the opaque resume cursor, the sha256 state_fence, and the fence-capture timestamp onto the parked row — the three columns a later resume verification reads before touching live state."
+  blast_radius_if_breached: "A parked row missing its fence or cursor cannot be resume-verified — the daemon either resumes blind against unvalidated state or refuses every resume and strands the frame; the capture columns are the resume contract."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by parking a row with a null cursor or a truncated fence while asserting success, or by checking column presence without validating the fence is 64 hex characters — a shape check that never proves capture integrity."
+  anti_slop_mitigation: "AS-06 hardcodes the frame id ('frame_kp_23') and the exact column contract (cursor non-null json, state_fence 64 lowercase hex, checkpoint_ts int inside the yield window); AS-02 reads the parked row back with SELECT and validates each column; AS-03 forces the typed exit 6."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_kp_23"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "claims"
+        row_count: 1   # claim row held by agt_kp_23 on orders:ORD-23, ttl 600
+      - name: "_suspended_tasks"
+        row_count: 0
+      - name: "orders"
+        row_count: 1   # row ORD-23: status 'packing'
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'worker agt_kp_23 executes frame_kp_23; Phase 1 read of orders ORD-23 collects the state_fence; host SIGTERM arrives mid-frame; the trap handler captures cursor, fence, and checkpoint_ts onto the _suspended_tasks row and yields'
+  input_params:
+    agent_id: "agt_kp_23"
+    frame_id: "frame_kp_23"
+    expected_exit: 6
+
+expected_observations:
+  exit_code: 6
+  state_modified: false
+  diagnostic:
+    domain: "kernel.physics"
+    culprit: "preemption yield — SIGTERM trapped mid-frame; cursor, state_fence, and checkpoint_ts captured to _suspended_tasks for frame_kp_23; frame yields with exit 6"
+    remedy: "none — resume verification reads these three columns before touching live state"
+  database:
+    row_count_delta: 2   # one parked _suspended_tasks row + one yield audit event
+    tables_mutated: ["_suspended_tasks", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "swarm.preemption_yield"   # payload carries frame_id and the captured fence hash
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 6 and parse the CliEnvelope diagnostic: domain == 'kernel.physics' — an exit 6 without the fence-capture line fails the test."
+  - rule: "AS-02"
+    verification: "SELECT cursor, state_fence, checkpoint_ts FROM _suspended_tasks WHERE frame_id = 'frame_kp_23': cursor is non-null json; state_fence matches ^[0-9a-f]{64}$ (64 lowercase hex, never truncated or null); checkpoint_ts is an integer inside the recorded yield window [T_yield_start, T_yield_end]."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: frame_id 'frame_kp_23', fence length exactly 64 hex chars — the capture contract is byte-exact, never shape-only."
+  - rule: "AS-05"
+    verification: "The yield audit event's prev_hash equals the SHA-256 of the prior _audit row and its payload records the captured state_fence value; verify_chain() passes."

@@ -19,10 +19,12 @@
     - Declarative source tracking — git repository holds declarative configurations; capcli-daemon manages atomic Git commits strictly upon cryptographic human PWA approvals; direct unverified agent git mutations remain prohibited
     - Snapshot persistence — transactionally clean VACUUM INTO snapshots and JSONL audit mirrors stream directly to append-only S3/R2 object storage
     - Retention — immutable point-in-time snapshots and audit logs retain on object storage with WORM locking; local disk retains rolling 30-day cache
+    - tier-3 anchor — ledger root hashes anchored to S3 Object Lock (WORM) with KMS notary signatures: see effect.md#Event-integrity
   - Hash chains
     - ledger tamper-evidence and attestation mechanics: see effect.md#Event-integrity
     - boot gate — require_hash_verify verifies system-schema hash at boot
     - replay gate — replay re-verifies code_hash before execution
+    - dr reconciliation — disaster-recovery restore and replay re-verify the ledger chain walk before execution: see effect.md#Event-integrity
   - Restore path
     - Recovery tiers
       - local snapshot — instant rollback via db restore <id>

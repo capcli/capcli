@@ -1,0 +1,69 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_22_exit6_yield_claims_retained"
+title: "Exit-6 yield parks the frame with the Layer 1 claim row still present and caller-owned (claims 1 -> 1)"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/physics.md#Exit-code-law"
+  statement: "'at yield — Layer 3 physical transactions close immediately; zero open SQLite transactions permitted' and 'lease retention — Layer 1 claims retained so sibling agents cannot steal the task' (physics.md#Exit-code-law): a SIGTERM preemption yield closes the SQLite transaction, persists the fence and cursor to db://_suspended_tasks, and leaves the caller's claims row intact — claims 1 -> 1 across the yield, holder and identity tuple unchanged."
+  blast_radius_if_breached: "Dropping claims at yield lets a sibling agent claim the same entity while the original frame is merely suspended — two writers, one entity, and a resume that commits against stolen state; retaining the lease is what makes suspension safe."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "An AI agent fakes this test by yielding a frame that never held a claim (claims 0 -> 0 trivially 'retained'), or by asserting exit 6 while the claims row was deleted and re-inserted — a drop-and-recreate hiding behind the final count."
+  anti_slop_mitigation: "AS-06 hardcodes the claim identity (target 'orders:ORD-22', holder 'agt_kp_22', session_id 'sess_kp_22', harness_marker 'hm_kp_22', op_sequence 7); AS-02 proves the exact same row survives (rowid and created_at unchanged — no delete/re-insert); AS-03 forces the typed exit 6 with the lease-retention line."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_kp_22"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "claims"
+        row_count: 1   # claim row: target orders:ORD-22, holder agt_kp_22, session_id sess_kp_22, harness_marker hm_kp_22, op_sequence 7, ttl 600, created_at = T0
+      - name: "_suspended_tasks"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'worker agt_kp_22 executes frame_kp_22 against orders:ORD-22 under its Layer 1 claim; host SIGTERM arrives mid-frame; the trap handler closes the SQLite transaction, captures the state_fence and cursor, parks the frame, and yields'
+  input_params:
+    agent_id: "agt_kp_22"
+    frame_id: "frame_kp_22"
+    claim_target: "orders:ORD-22"
+    expected_exit: 6
+
+expected_observations:
+  exit_code: 6
+  state_modified: false
+  diagnostic:
+    domain: "kernel.physics"
+    culprit: "preemption yield — SIGTERM trapped mid-frame; Layer 3 transaction closed, fence and cursor parked to _suspended_tasks, Layer 1 claim retained by agt_kp_22; frame yields with exit 6"
+    remedy: "none — the frame resumes on unblock; the retained claim blocks sibling steals while suspended"
+  database:
+    row_count_delta: 2   # one parked _suspended_tasks row + one yield audit event
+    tables_mutated: ["_suspended_tasks", "_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "swarm.preemption_yield"   # payload carries agent, frame_id, and the retained claim identity tuple
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 6 and parse the CliEnvelope diagnostic: domain == 'kernel.physics', the diagnostic names the retained Layer 1 claim — an exit 6 without the lease-retention line fails the test."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM claims WHERE holder = 'agt_kp_22' is exactly 1; the surviving row keeps the same rowid, session_id 'sess_kp_22', harness_marker 'hm_kp_22', op_sequence 7, and created_at as the fixture (no delete/re-insert); SELECT count(*) FROM _suspended_tasks is 1."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: target 'orders:ORD-22', holder 'agt_kp_22', tuple (sess_kp_22, hm_kp_22, 7) — the retained row is the yielder's own claim, never a recreated lookalike."
+  - rule: "AS-05"
+    verification: "The yield audit event's prev_hash equals the SHA-256 of the prior _audit row and its payload records the retained claim identity tuple; verify_chain() passes."

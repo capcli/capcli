@@ -1,0 +1,67 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_13_ws_call_under_claim_lock_exit3"
+title: "ctx.call to a ws:// target while holding a local Layer 1 claim is rejected at compile time with exit 3"
+domain: "sdk_harness"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/action.md#Interior-rules"
+  statement: "'lock fence rule — ctx.call to a ws:// target while holding local Layer 1 claims is rejected at compile time with exit 3 (E035_LOCK_FENCE_BREACH)' (action.md#Interior-rules): a routine that holds a Layer 1 claim on a local entity and then issues a cross-workspace ws:// call never compiles — the AST gate rejects the pattern before any socket opens and before any frame runs."
+  blast_radius_if_breached: "A federated call made under a local lease couples the lease lifetime to a remote round-trip the local kernel cannot bound — the claim wedges while the peer hangs, and a peer-side failure strands a lease no local watchdog can safely reap."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by issuing the ws:// call without holding any claim (testing the txn variant instead), or by letting the call reach the socket layer and asserting on the transport error — the compile gate is never exercised."
+  anti_slop_mitigation: "AS-06 hardcodes the held claim (target 'inventory:7', holder 'agt_sh_13') and the ws:// target ('ws://peer/reconcile@1'); AS-02 proves zero packets left the host and the claim row is untouched (the routine never executed); AS-03 forces the typed exit 3 with code == 'E035_LOCK_FENCE_BREACH' naming the lock fence rule."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_sh_13"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "claims"
+        row_count: 1   # claim row: target inventory:7, holder agt_sh_13, session_id sess_sh_13, harness_marker hm_sh_13, op_sequence 3, ttl 600
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'routine submitted with body: ctx.db.lock("inventory:7") already held by agt_sh_13, then ctx.call("ws://peer/reconcile@1", {"sku": "INV-7"}); the AST compiler walks the body, finds the ws:// call under the held Layer 1 claim, and rejects the routine'
+  input_params:
+    claim_target: "inventory:7"
+    ws_target: "ws://peer/reconcile@1"
+    expected_exit: 3
+    expected_code: "E035_LOCK_FENCE_BREACH"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "compile"
+    culprit: "lock fence rule — ctx.call to ws:// target 'ws://peer/reconcile@1' forbidden while holding local Layer 1 claim on 'inventory:7' (E035_LOCK_FENCE_BREACH); cross-workspace calls cannot join a local lease"
+    remedy: "release the claim (or complete the ws:// call before acquiring it): never hold a local lease across a federated call"
+  database:
+    row_count_delta: 0   # compile gate: nothing executed, the claim row is untouched
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "federation.call_out (decision: denied, effect: none — lock fence rule, Layer 1 claim held on inventory:7)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 3 and parse the CliEnvelope diagnostic: code == 'E035_LOCK_FENCE_BREACH' exactly, domain == 'compile', the diagnostic names the lock fence rule and the held claim target 'inventory:7' — an exit 3 without the E035 code and that line fails the test."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM claims WHERE holder = 'agt_sh_13' is still 1 with the identical row (the compile gate ran before execution — the claim was never touched); wire capture shows zero packets; no routine.run event exists."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: claim target 'inventory:7', ws:// target 'ws://peer/reconcile@1' — the ws:// call sits lexically under the held claim in the submitted routine body."
+  - rule: "AS-05"
+    verification: "The denial audit event's prev_hash equals the SHA-256 of the prior _audit row and its payload records the rejected AST node (ws:// call under claim); verify_chain() passes."

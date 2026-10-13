@@ -1,0 +1,71 @@
+$schema: "test-plan/case/v1"
+case_id: "da_15_commit_time_fence_drift_exit2"
+title: "Row tampered between Phase-1 read and Phase-3 commit aborts with exit 2 (E061_OCC_DRIFT), zero partial writes"
+domain: "database_authorizer"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/physics.md#Distributed-concurrency-laws"
+  statement: "'collection — captured during Phase 1 on ctx.db.get and ctx.db.view reads' and 'verification — re-verified under SQLite lock during Phase 3 commit' and 'drift — mismatch halts immediately with exit 2 (E061_OCC_DRIFT); zero partial writes' (physics.md Layer 2): a row tampered between the Phase-1 read and the Phase-3 commit trips the fence at commit time on a normal (non-resume) commit — the planned write never lands."
+  blast_radius_if_breached: "Committing a planned write against a row that moved since the plan was computed is a lost update — the planner's arithmetic (deltas, balances, counters) applies to state it never saw, and the corruption is silent because the commit itself succeeds."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by tampering with a row the fence never covered (so the commit succeeds and the 'abort' is asserted on a hand-rolled error), or by drifting the row after the commit already landed — the fence check is never actually exercised."
+  anti_slop_mitigation: "AS-06 hardcodes the fenced table ('inventory'), the fenced row ('INV-9'), the Phase-1 qty (100), the tampered qty (60), the planned write (qty 90), and the expected code E061_OCC_DRIFT; AS-02 proves the live row still reads 60 after the abort (the planned 90 never landed — zero partial writes); AS-03 forces the typed exit 2 naming the fence mismatch."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_da_15"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "inventory"
+        row_count: 1   # row INV-9: qty == 100 at Phase-1 read time
+    vault_secrets: []
+    # out-of-band UPDATE sets INV-9 qty 100 -> 60 AFTER the Phase-1 read, BEFORE the Phase-3 commit
+
+execution:
+  trigger: "json_rpc"
+  command: 'Phase 1: routine reads inventory INV-9 via ctx.db.get (qty 100 — state_fence captured); Phase 2: out-of-band UPDATE sets qty 60; Phase 3: kernel re-reads the row under the SQLite write lock, compares the fence, and halts on mismatch'
+  input_params:
+    fence_table: "inventory"
+    fence_row: "INV-9"
+    qty_at_phase1: 100
+    qty_after_tamper: 60
+    planned_write_qty: 90
+    expected_exit: 2
+    expected_code: "E061_OCC_DRIFT"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "kernel.physics"
+    culprit: "OCC state_fence drift — Phase-3 commit re-verification: inventory INV-9 fenced at qty 100, live row reads qty 60; commit halted with exit 2 (E061_OCC_DRIFT); zero partial writes"
+    remedy: "re-read the row and re-plan against current state; the tampered write stands — the aborted commit wrote nothing"
+  database:
+    row_count_delta: 1   # one abort audit event; the tampered INV-9 row itself is the fixture's out-of-band write
+    tables_mutated: ["_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.fence_drift_abort"   # Phase-3 commit-time fence failure; payload carries expected fence vs live state
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: code == 'E061_OCC_DRIFT' exactly, domain == 'kernel.physics', the diagnostic names fence table 'inventory', row 'INV-9', fenced qty 100 vs live 60 — an exit 2 without the E061 code and the fence mismatch line fails the test."
+  - rule: "AS-02"
+    verification: "SELECT qty FROM inventory WHERE sku = 'INV-9' still reads exactly 60 (the tampered value — the planned write of 90 never landed); no routine.commit event exists for the frame."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: fence table 'inventory', row 'INV-9', fenced qty 100, tampered qty 60, planned write 90, expected code 'E061_OCC_DRIFT' — the drift lands on the fenced row between Phase 1 and Phase 3, never outside the fence."
+  - rule: "AS-05"
+    verification: "The abort audit event's prev_hash equals the SHA-256 of the prior _audit row and its payload records the fence-vs-live mismatch (table, row, checkpoint hash, live hash); verify_chain() passes."

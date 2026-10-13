@@ -24,8 +24,8 @@
       {
         "lines": [
           "low_conversion (searched, never invoked):",
-          "api://stripe.payouts.list   5 views · 0 invokes · last seen 3d ago",
-          "api://stripe.disputes.list  3 views · 0 invokes · last seen 5d ago"
+          "cap://stripe/payouts.list   5 views · 0 invokes · last seen 3d ago",
+          "cap://stripe/disputes.list  3 views · 0 invokes · last seen 5d ago"
         ]
       },
       {

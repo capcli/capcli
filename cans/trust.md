@@ -26,7 +26,7 @@
           - audit logging — full payload recording
       - pinned
         - status — hardened operational production baseline
-        - host prerequisite — execution requires Tier 1 host: see physics.md#Platform-tier-taxonomy
+        - host prerequisite — Tier 1 required for prod-environment execution only; pinned runs on tier 2 when target env is dev or sim: see physics.md#Platform-tier-taxonomy
         - mock disqualification — offline mock tests (apis/*.mock.yaml) alone cannot grant pinned trust
         - contract proof mandate — external API verbs require live contract proof (validated JSON Schema against live responses) or shadow canary execution before pinning; call-count graduation banned
         - bounds
@@ -39,14 +39,17 @@
     - Orthogonal axes
       - trust axis — caps capability blast radius (draft, reviewed, pinned)
       - environment axis — isolates state substrate (dev, sim, prod)
-      - convention pairings
-        - dev world — draft trust baseline
-        - sim world — reviewed trust proving ground
-        - prod world — pinned trust production floor
+      - convention pairings: see #Weakest-link-matrix
       - travel rule — routines cross environments via kernel env merge pipeline
     - Ladder laws
-      - platform ceiling — Tier 2 hosts capped at reviewed rung: see physics.md#Platform-tier-taxonomy
-      - pinned execution refusal — invoking pinned routine on Tier 2 throws exit 2 (E045_TIER2_PINNED_DENIED)
+      - Weakest link matrix
+        - dev — rungs draft, reviewed, pinned; tier 1 or 2; live risk none
+        - sim — rungs reviewed, pinned; tier 1 or 2; live risk none
+        - sim footnote — draft routines execute in sim strictly under `capcli routine prove`
+        - prod — rung pinned only; tier 1 only; live risk real state
+        - iron invariant 1 — prod is an exclusive club: Tier 1 + pinned; any missing condition fails closed at pre-flight (exit 2): E045_PROD_TIER1_MANDATE, E046_TRUST_VIOLATION: see physics.md#Exit-code-law
+        - iron invariant 2 — tier 2 confined to dev/sim rehearsal; targeting --env prod structurally refused
+        - iron invariant 3 — pinned executes on tier 2 when target env is dev or sim
       - template trust floor — imported routines and world templates enter strictly at draft trust
       - zero trust inheritance — blueprints confer zero promotional credit; pre-pinned imports banned
       - anonymous swarm ceiling — marker-less caller capped at draft; reviewed/pinned runs and mutating writes require --by or --session, exit 3 on breach: see agent.md#Harness-environment-markers
@@ -57,8 +60,8 @@
         - external egress — HTTP calls leaving perimeter require explicit grant
       - composition trust floor — callees must match or exceed caller trust: pinned can call pinned only; reviewed can call reviewed or pinned; drafts cannot be dependencies
       - contract proof promotion: see #The-ladder
-      - monotonic ascent — ladder climbed sequentially; elevation skips denied
-      - verified promotion — promotion automated upon passing synthetic sim replay and invariant suite
+      - monotonic ascent: see #Monotonic-promotion-pipeline
+      - verified promotion: see #Monotonic-promotion-pipeline
       - dependency floor — cross-agent callee routines must hold trust >= reviewed
       - federated caller floor — ws:// external entry points mandate trust: pinned; calling draft or reviewed routines across federation fails closed with exit 2 (E042_FEDERATION_DENIED)
       - federated initiation floor — routines initiating ws:// calls must hold trust >= reviewed
@@ -66,11 +69,13 @@
       - mock drift demotion — upstream provider OpenAPI spec_hash changes or breaking contract changes immediately demote pinned capabilities to draft
       - circuit demotion — sustained routine failure auto-demotes to draft: see time.md#decay-and-subtraction
   - Gates & promotion
+    - Monotonic promotion pipeline
+      - draft to reviewed — AST complexity <= 10; token envelope < 2000; offline cassette tests pass (apis/*.cassette.jsonl)
+      - reviewed to pinned — 100% sim replay on masked data with zero policy denials; live contract schema verification for external verbs; human or Tier-1 CI sign-off
+      - elevation skips — direct draft-to-pinned promotion denied (exit 3)
     - Ship gate
       - command — see interface.md#Routine-path
-      - autonomous pinned promotion — a reviewed routine advances to pinned autonomously when the auto-promotion conjunction holds plus:
-        - 100% simulation replay invariant suite with zero policy denials
-        - live contract schema verification for external API verbs
+      - autonomous pinned promotion — reviewed advances to pinned autonomously when the auto-promotion conjunction holds; promotion criteria: see #Monotonic-promotion-pipeline
       - canary veto window — newly pinned routines face 1-hour observation; error rate >1% triggers automatic rollback to draft and Cockpit PWA alert
       - established pinned scope — 30%-over-20-runs circuit breaker: see time.md#decay-and-subtraction
       - human intervention boundary
@@ -93,7 +98,7 @@
       - audit trail — emits routine.auto_promoted event
       - retroactive control — human veto via rollback --to-trust draft
     - Pinned promotion
-      - autonomous criteria — see #Ship-gate
+      - autonomous criteria — see #Monotonic-promotion-pipeline
       - boundary safety — high fuel consumption or schema revisions governed by hard-coded budget caps
   - Evidence
     - Manifest evidence

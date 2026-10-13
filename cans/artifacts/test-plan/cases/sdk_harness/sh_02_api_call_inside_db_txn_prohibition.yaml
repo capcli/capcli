@@ -1,19 +1,19 @@
 $schema: "test-plan/case/v1"
 case_id: "sh_02_api_call_inside_db_txn_prohibition"
-title: "ctx.api.call inside an open ctx.db.txn block is rejected for transaction isolation"
+title: "ctx.api.call inside a ctx.db.txn block fails compilation with exit 3"
 domain: "sdk_harness"
 target_tier: "unit"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/physics.md#Layer-2:-SQL-AST-check"
-  statement: "Transaction integrity: ctx.api.call is strictly forbidden inside ctx.db.txn blocks (action.md#Interior-rules). The SDK raises a transaction isolation error at call time — the network call never dispatches, the open transaction rolls back cleanly with zero rows committed, and long-running HTTP egress can never hold a SQLite write lock."
+  law_reference: "cans/action.md#Interior-rules"
+  statement: "Transaction integrity: 'ctx.api.call inside a ctx.db.txn block fails compilation with exit 3 (E034_TXN_EXTERNAL_CALL)' (action.md#Interior-rules). The compiler rejects the routine at compile time — the network call never dispatches, no transaction ever opens, zero rows committed, and long-running HTTP egress can never hold a SQLite write lock."
   blast_radius_if_breached: "A slow (or hung) upstream HTTP call inside a write transaction pins the SQLite WAL writer lock for its full 300s timeout: every concurrent writer on the host queues into busy_timeout failures, and a mid-flight crash rolls back the local mutation while the irreversible HTTP effect already left the kernel — split-brain state with no rollback path (action.md#External-APIs irreversibility)."
 
 confusion_matrix:
   quadrant: "true_negative"
-  slop_risk: "Agent wraps the api call in a try/except inside the test (swallowing the isolation error) and asserts the txn succeeded; or disables the SDK guard flag in the fixture; or mocks ctx.api.call to return instantly so the lock-holding hazard never reproduces."
-  anti_slop_mitigation: "AS-01 bans mocking the guard boundary and the API transport; the error must surface from the real SDK layer; AS-02 proves the transaction rolled back with a direct SELECT; AS-03 requires the typed isolation error and envelope diagnostic, not a generic exception."
+  slop_risk: "Agent wraps the api call in a try/except inside the test (swallowing the compile error) and asserts the routine executed; or disables the SDK guard flag in the fixture; or mocks ctx.api.call to return instantly so the lock-holding hazard never reproduces."
+  anti_slop_mitigation: "AS-01 bans mocking the guard boundary and the API transport; the rejection must surface from the real compiler layer; AS-02 proves nothing executed with a direct SELECT; AS-03 requires the typed exit-3 diagnostic and envelope, not a generic exception."
 
 setup:
   env: "dev"
@@ -44,34 +44,35 @@ execution:
   command: 'with ctx.db.txn() as tx:\n    ctx.db.execute("UPDATE orders SET status = :s WHERE ref = :r", {"s": "refunding", "r": "ORD-10"}, intent="mark refunding")\n    ctx.api.call("stripe.refunds.create", params={"order": "ORD-10"}, intent="issue refund inside open txn")'
   input_params:
     routine: "refund_and_archive@4"
-    txn_statements_before_violation: 1
+    statements_in_rejected_block: 1
     forbidden_call: 'ctx.api.call("stripe.refunds.create", ...) inside ctx.db.txn block'
     http_dispatched: false
+    expected_code: "E034_TXN_EXTERNAL_CALL"
 
 expected_observations:
-  exit_code: 2
+  exit_code: 3
   state_modified: false
   diagnostic:
     domain: "sdk.harness"
-    culprit: 'ctx.api.call("stripe.refunds.create") invoked inside an open ctx.db.txn block — network egress is structurally forbidden within transaction scope (transaction isolation)'
+    culprit: 'ctx.api.call("stripe.refunds.create") inside a ctx.db.txn block — compile-time rejection: external calls inside transactions fail compilation with exit 3 (E034_TXN_EXTERNAL_CALL, transaction integrity)'
     remedy: "split the flow: commit the local mutation first (close the txn), then issue ctx.api.call outside the block; or use kernel-managed ctx.api.poll_until for dependent remote state, never inside the txn"
   database:
     row_count_delta: 0
-    tables_mutated: [] # open transaction rolled back: ORD-10 stays pending
+    tables_mutated: [] # routine never compiled: ORD-10 stays pending
   wire:
-    packets_transmitted: 0 # the isolation guard fires before any HTTP dispatch
+    packets_transmitted: 0 # the compile gate fires before any HTTP dispatch
     syscall_42_trapped: false
   audit:
-    event_emitted: "governance.deny" # NOTE: txn-isolation denial event name not located in cans/effect.md payload list; effect: none (effect.md#Denials)
+    event_emitted: "governance.deny" # NOTE: compile-rejection denial event name not located in cans/effect.md payload list; denial structure (layer AST, effect: none) per effect.md#Denials
     chain_valid: true
     state_modified_field: false
 
 anti_slop_assertions:
   - rule: "AS-02"
-    verification: "SELECT status FROM orders WHERE ref = 'ORD-10' directly on envs/dev/workspace.db after the failed run: must still equal 'pending' (transaction cleanly rolled back, zero rows committed); SELECT count(*) FROM orders unchanged."
+    verification: "SELECT status FROM orders WHERE ref = 'ORD-10' directly on envs/dev/workspace.db after the failed run: must still equal 'pending' (routine never compiled, zero rows committed); SELECT count(*) FROM orders unchanged."
   - rule: "AS-03"
-    verification: "Assert integer exit_code == 2 and parse the CliEnvelope: diagnostic.culprit names the ctx.api.call-inside-txn violation and diagnostic.remedy prescribes the split flow; the SDK must raise the typed transaction isolation error, not a generic Exception subclass."
+    verification: "Assert integer exit_code == 3 and parse the CliEnvelope: code == 'E034_TXN_EXTERNAL_CALL' exactly, diagnostic.culprit names the ctx.api.call-inside-txn violation and diagnostic.remedy prescribes the split flow; the compiler rejects the routine at compile time with exit 3, never a runtime exception."
   - rule: "AS-01"
-    verification: "No mocking of the ctx.api transport or the SDK guard: the guard fires against the real call site. Companion control: the identical ctx.api.call OUTSIDE any txn block must dispatch normally in the same test binary, proving the guard is scope-aware rather than a blanket api ban."
+    verification: "No mocking of the ctx.api transport or the compile gate: the gate fires against the real source. Companion control: the identical ctx.api.call OUTSIDE any txn block must dispatch normally in the same test binary, proving the gate is scope-aware rather than a blanket api ban."
   - rule: "AS-06"
-    verification: "The expected rollback outcome ('pending' status preserved) is an immutable literal hardcoded in the test — never read back from the engine's own report of what it rolled back."
+    verification: "The expected no-execution outcome ('pending' status preserved) is an immutable literal hardcoded in the test — never read back from the engine's own report."

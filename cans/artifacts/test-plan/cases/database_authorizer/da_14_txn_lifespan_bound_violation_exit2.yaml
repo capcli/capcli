@@ -1,0 +1,68 @@
+$schema: "test-plan/case/v1"
+case_id: "da_14_txn_lifespan_bound_violation_exit2"
+title: "Writer holding a SQLite write lock past the 15ms lifespan bound aborts with exit 2"
+domain: "database_authorizer"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/world.md#Lifespan-law"
+  statement: "'write locks held strictly during atomic commits, never across agent execution; transaction lifespan strictly <15ms' (world.md#Lifespan-law; physics.md Layer 3: 'transaction lifespan strictly <15ms'): a routine that opens BEGIN IMMEDIATE and keeps the write lock across a full agent execution step violates the lifespan bound — the kernel aborts the transaction with exit 2 and commits nothing."
+  blast_radius_if_breached: "A write lock held across agent execution serializes every other writer behind one agent's think-time; WAL checkpoints stall, sibling frames queue past busy_timeout, and a crashed holder leaves the database wedged until the 5000ms ceiling trips — the deadlock and WAL-bloat regime the lifespan law exists to forbid."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by opening a transaction and committing inside 15ms (never breaching the bound) while asserting the abort, or by asserting exit 2 on a transaction the kernel committed normally — the asserted code hides a non-violation."
+  anti_slop_mitigation: "AS-06 hardcodes the bound (15ms), the held duration (40ms of MockClock-stepped guest compute inside the open txn), the table ('ledger'), and the expected exit 2; AS-02 proves the ledger table is byte-identical before and after (the txn rolled back, nothing committed); AS-03 forces the typed exit 2 naming the lifespan violation."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_da_14"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "ledger"
+        row_count: 3   # rows LED-1..LED-3, balances 100/200/300
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'guest routine opens ctx.db.txn, writes ledger LED-1 balance 100 -> 90, then runs 40ms of MockClock-stepped guest compute while still holding the write lock; the kernel lifespan watchdog trips at 15ms'
+  input_params:
+    table: "ledger"
+    row: "LED-1"
+    lifespan_bound_ms: 15
+    held_duration_ms: 40
+    expected_exit: 2
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "kernel.physics"
+    culprit: "transaction lifespan violation — writer held the SQLite write lock for 40ms against the 15ms lifespan bound; transaction aborted with exit 2, zero rows committed"
+    remedy: "restructure the routine: compute first, then open ctx.db.txn for the atomic commit only"
+  database:
+    row_count_delta: 1   # one abort audit event; ledger untouched
+    tables_mutated: ["_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.txn_lifespan_violation"   # lifespan watchdog trip; payload carries bound_ms, held_ms, table
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'kernel.physics', the diagnostic names the 15ms bound and the 40ms held duration — an exit 2 without the lifespan-violation line fails the test."
+  - rule: "AS-02"
+    verification: "SELECT balance FROM ledger WHERE id = 'LED-1' still reads exactly 100 (the in-txn write of 90 never committed); SELECT count(*) FROM ledger is 3; no routine.commit event exists for the frame."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: bound 15ms, held 40ms, table 'ledger', row 'LED-1' — the violation is a genuine over-held write lock, never a fast commit."
+  - rule: "AS-05"
+    verification: "The abort audit event's prev_hash equals the SHA-256 of the prior _audit row and its payload records bound_ms 15 and held_ms 40; verify_chain() passes."

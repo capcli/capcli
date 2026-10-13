@@ -1,0 +1,75 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_20_resume_lease_ownership_exit2"
+title: "Resume with an expired Layer 1 lease aborts with exit 2 even when the state_fence matches"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-daemon"
+
+invariant:
+  law_reference: "cans/physics.md#Resume-verification"
+  statement: "'lease check — resumption verifies the Layer 1 claims lease is still active and owned by the caller' (physics.md#Resume-verification): a yielded frame whose claim has expired (created_at + ttl in the past) never resumes — the daemon aborts with exit 2 and purges the frame, even when the checkpointed state_fence still matches live row state."
+  blast_radius_if_breached: "Resuming on an expired lease lets a frame execute after its ownership lapsed — a sibling may have legitimately claimed the entity in the meantime, so the resumed writes land on contested state with no lease holder accountable."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by drifting the fenced row as well (so the abort could be the fence check, not the lease check), or by testing a still-active lease and asserting the abort on a hand-rolled error — the lease gate is never actually exercised."
+  anti_slop_mitigation: "AS-06 hardcodes the expired claim (target 'orders:ORD-20', holder 'agt_bc_20', ttl 300, created_at T0, resume attempted at T0+900) and pins the fence table row unchanged (qty 40 at checkpoint and at resume); AS-02 proves the abort came from the lease gate (diagnostic names the expired lease, fence matches); AS-03 forces the typed exit 2."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@example.com"
+    agent_id: "agt_bc_20"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_suspended_tasks"
+        row_count: 1   # frame frm_bc_20 yielded with exit 6; OCC state_fence recorded over inventory row INV-20 (qty == 40)
+      - name: "claims"
+        row_count: 1   # claim row: target orders:ORD-20, holder agt_bc_20, ttl 300, created_at T0 — expired at resume time T0+900
+      - name: "inventory"
+        row_count: 1   # row INV-20: qty == 40 at fence time AND at resume time (no drift — the fence matches)
+    vault_secrets: []
+
+execution:
+  trigger: "json_rpc"
+  command: 'daemon refill loop detects unblock condition for frm_bc_20 and runs resume verification: the lease check runs first against the claims table, finds created_at + ttl < now, and aborts before the fence check matters'
+  input_params:
+    frame_id: "frm_bc_20"
+    claim_target: "orders:ORD-20"
+    claim_ttl: 300
+    claim_created_at: "T0"
+    resume_at: "T0+900"
+    fence_qty_at_checkpoint: 40
+    live_qty_at_resume: 40
+    expected_exit: 2
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "kernel.physics"
+    culprit: "resume lease check failed — frame frm_bc_20 claim on orders:ORD-20 expired (ttl 300 elapsed since created_at); resumption aborted with exit 2; the frame never resumes"
+    remedy: "re-plan against current state and re-queue with a fresh claim; the expired lease is reaped by the daemon"
+  database:
+    row_count_delta: 1   # one abort audit event; the suspended frame is purged and the expired claim reaped
+    tables_mutated: ["_audit"]
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.resumed_aborted"   # lease-check failure; payload carries the expired claim identity and the matching fence
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'kernel.physics', the diagnostic names the expired lease on 'orders:ORD-20' — an exit 2 without the lease-check line fails the test."
+  - rule: "AS-02"
+    verification: "SELECT qty FROM inventory WHERE sku = 'INV-20' reads 40 at checkpoint and 40 at resume (fence matches — the abort is provably the lease gate, not the fence); SELECT count(*) FROM _suspended_tasks is zero (frame purged); no routine.run event exists for frm_bc_20."
+  - rule: "AS-06"
+    verification: "Hardcoded literals: target 'orders:ORD-20', ttl 300, resume at T0+900, fence qty 40 unchanged — the lease is genuinely expired and the fence genuinely matches."
+  - rule: "AS-05"
+    verification: "The abort audit event's prev_hash equals the SHA-256 of the prior _audit row and its payload records the expired claim (target, holder, ttl, created_at); verify_chain() passes."

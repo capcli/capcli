@@ -1,7 +1,7 @@
 {
   "$schema": "wireframe/v2",
   "id": "api.catalog.success.empty",
-  "target": "api://catalog",
+  "target": "catalog",
   "command": "capcli api catalog",
   "elapsed_ms": 1843,
   "context": {

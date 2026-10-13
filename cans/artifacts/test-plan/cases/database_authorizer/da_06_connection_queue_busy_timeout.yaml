@@ -43,7 +43,7 @@ execution:
     contending_transaction: "BEGIN IMMEDIATE hold on WAL write lock (no commit while victim waits)"
     contender_outcome: "rolls back after the victim fails, so no mutation ever lands"
     busy_timeout_ms: 5000
-    # NOTE: not located in cans/ specs - concrete busy_timeout value chosen for the harness; the busy-timeout queue behavior itself is specified in cans/world.md#concurrency
+    # busy_timeout=5000ms per cans/physics.md Layer 3 micro lock: write contention queues up to busy_timeout=5000ms; exhaustion fails closed with exit 2
 expected_observations:
   exit_code: 2
   state_modified: false

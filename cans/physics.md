@@ -4,16 +4,17 @@
     - Platform tier taxonomy
       - tier 1 (hardened) — Linux bare-metal, VPS, Docker (with userns), WSL2
         - sandbox — unprivileged bwrap namespaces; automatically falls back to rootless OCI (crun/podman) or gVisor if host kernel restricts user namespaces
-        - network jail — seccomp-bpf filter trapping raw socket connect (syscall 42) across all engines
+        - network jail — seccomp-bpf filter trapping raw socket connect (syscall 42) across all engines; guest egress routes only via kernel IPC to the socket proxy: see agent.md#Secrets
         - syscall profiles — dynamic seccomp filters per engine:
           - profile_python: allow clone, futex, basic POSIX signals
           - profile_bun_node: allow epoll_create1, epoll_ctl, eventfd2, io_uring_setup
           - profile_binary: allow clone3, futex, rseq, rt_sigreturn
         - trust bounds — all rungs permitted (draft, reviewed, pinned): see trust.md#The-ladder
+        - prod host class — tier 1 is the only platform class permitted for --env prod: see trust.md#Weakest-link-matrix
       - tier 2 (virtualized / wasm) — macOS (Darwin), Android (Termux), Windows native
         - sandbox — mandatory microVM (Darwin/Windows: Colima / Lima) or WASM sandbox (Wasmtime; Termux and any tier 2 host) with unmapped socket capabilities
         - network jail — kernel-enforced socket null-routing; cooperative host process execution is Tier 0 (DENIED)
-        - trust bounds — draft and reviewed in dev/sim only; pinned execution denied (E045_TIER2_PINNED_DENIED): see trust.md#Ladder-laws
+        - trust bounds — dev and sim environments only; pinned routines execute against dev/sim targets; --env prod structurally denied: see trust.md#Weakest-link-matrix
   - Deployment topology
     - dual-axis contract — swarm and federation are separate axes: spokes proxy DB to the Hub; federated workspaces are sovereign peers, each with its own DB and budget: see #Federation-invariants
     - dedicated server — headless Linux host running capcli-daemon under systemd; required for 24/7 background crons, webhooks, and S3 WORM attestations
@@ -82,7 +83,8 @@
         - function denylist — load_extension, writefile, readfile denied
       - compilation — authorizer table compiled from artifacts/policy.yaml
       - ddl trust floors
-        - alter table — requires reviewed trust; draft attempts exit with 2
+        - raw DDL — ALTER/DROP/CREATE TABLE denied at authorizer for draft and reviewed principals; denial exits 2
+        - legal route — kernel revision pipeline is the sole DDL path: see world.md#Four-phase-state-revision-pipeline
         - vacuum — requires pinned trust; denied unconditionally in prod; executable in dev/sim by pinned callers
     - Layer 1.2: VDBE execution progress & mutation hook
       - engine — sqlite3_update_hook + sqlite3_progress_handler
@@ -154,7 +156,7 @@
       - schema integrity — system_schema hash verified at boot: see world.md#Dual-schema
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
-      - secret leak — plaintext vault token escape in output payload triggers kill_and_alert (exit 5): see agent.md#Secrets
+      - secret leak — raw unscrubbed credential bytes detected in guest stdout/stderr streams, routine return payloads, or audit event payloads trigger kill_and_alert (exit 5): see agent.md#Secrets
       - sql errors — unparseable SQL or authorizer errors fail closed
       - anonymous swarm write — mutating action from presence-only or marker-less harness without explicit --session/--by rejected (exit 3): see agent.md#Harness-environment-markers
       - federated caller auth — socket-authenticated ws:// callers use SO_PEERCRED + pinned trust floor, not harness markers: see #Federation-invariants
@@ -163,7 +165,7 @@
       - ambiguity — unclassified read/write treated as write
       - standalone bypass — routine invocation outside kernel runner exits 3
       - principal missing — scoped view invoked without --as rejected
-      - audit sink error — sink write failures deny business writes; failed audit writes held in in-memory 5-minute buffer, exit 5 when undrainable
+      - audit sink error — fail-closed sink law: sink write failures deny business writes; undrainable buffer panics: see effect.md#Audit-spine
       - ceiling breach — provider spend ceiling breach rejects with exit 2 before socket dispatch; zero packets, zero TLS handshake: see budget.md#Quotas
       - cadence floor — bucket floor yields exit 6 when wait exceeds 2s or upstream 429 carries Retry-After; shorter waits sleep in-kernel: see budget.md#Quotas
     - Exit code law
@@ -176,13 +178,17 @@
         - domain policy.budget — frame fuel exhaustion, session fuel exhaustion, or call nesting > 5: see budget.md#Frames
         - domain policy.quota — provider spend ceiling breach; hard denial, never yield: see budget.md#Quotas
         - domain policy.revision — offline revision rehearsal breaks the pinned routine contract: see world.md#Revision-safety
-        - domain policy.trust — action forbidden by caller trust rung (e.g. draft touching prod)
+        - domain policy.platform — --env prod on a tier 2 host fails closed at pre-flight (E045_PROD_TIER1_MANDATE); remedy: use --env sim locally
+        - domain policy.trust — draft or reviewed routine in --env prod fails closed at pre-flight (E046_TRUST_VIOLATION); remedy: routine ship <name> pinned
+        - pre-flight matrix checks — E045 and E046 evaluate before dispatch; denial carries exit 2, state untouched
       - exit 3 — Phase 1 static pre-flight refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, statically-declared unpaginated payload shape
         - runtime result size — oversized output returns the keyset pagination schema instead of exiting; see action.md#Shape-constraints
       - exit 4 — Phase 2 guest crash; domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back
         - domain federation.transport — peer unreachable after 1500ms timeout (E055_FEDERATION_UNREACHABLE)
         - watchdog kill — wall-clock exceeding 300s kills the guest; wall-clock is not fuel
-      - exit 5 — Phase 3 kernel panic; domain kernel.panic; media loss, or secret leak detection in output payload triggering immediate kill_and_alert
+      - exit 5 — Phase 3 kernel panic; domain kernel.panic; media loss, or raw credential bytes in stdout/stderr streams, return payloads, or audit payloads triggering immediate kill_and_alert
+        - panic protocol — guest process aborts with exit 5 (kernel.panic); session capability token revoked instantly: see agent.md#Secrets
+        - panic protocol — in-memory secret buffers zeroized; security alert event appended to the audit.db ledger: see effect.md#Audit-spine
       - exit 6 — Phase 2 proactive yield
         - yield triggers — cadence wait exceeding 2s, upstream 429 with Retry-After, or priority-class preemption floors: see budget.md#Quotas
         - at yield — Layer 3 physical transactions close immediately; zero open SQLite transactions permitted
@@ -195,7 +201,7 @@
       - compile at yield — daemon compiles the guest routine into a standalone artifact at yield time; resumption runs that artifact to completion without waking the harness
       - result delivery — daemon posts completion results to the sensory inbox; harness surfaces them at the next turn-zero overview: see interface.md#CLI-surface
       - preemption yield — worker spot/container SIGTERM maps directly to exit 6; traps execution, flushes cursor checkpoint, parks frame to db://_suspended_tasks: see #Exit-code-law
-      - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence, writes an audit event; the frame never resumes
+      - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence and the frame's Layer 1 claims, writes an audit event; the frame never resumes
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
       - engine — native terminal diagnostics rendered procedurally via `miette` and `codespan`
@@ -226,7 +232,7 @@
       - transaction wraps — raw writes execute inside explicit transactions
       - statement count — multi-statement execution denied
     - Hard denials
-      - ddl execution — alter and vacuum require elevated trust
+      - ddl execution — alter/drop denied at authorizer for draft and reviewed principals (exit 2); vacuum floors: see #Layer-1:-sqlite3_set_authorizer
       - trigger injection — agent-created triggers denied at authorizer
       - extension loading — load_extension and file functions denied
       - system table writes — direct updates to _audit, agents, claims denied

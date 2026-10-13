@@ -4,20 +4,22 @@
     - World definitions
       - dev world
         - purpose — birthplace for exploratory authoring
-        - constraints — draft routines execute freely
+        - trust — all rungs execute: draft, reviewed, pinned
+        - risk — no live risk: see trust.md#Weakest-link-matrix
         - pre-flight — bulk pre-count checks waived
       - sim world
         - purpose — proving ground for production candidate routines
         - data source — seeded from prod with sensitive data masked
+        - trust — reviewed and pinned execute; draft executes strictly under `capcli routine prove`
         - execution — real historical audit inputs replayed against candidates
       - prod world
         - purpose — live operational destination
-        - policy — draft writes denied unconditionally by overlay
-        - authority — reviewed or pinned trust required
+        - exclusivity — pinned trust on Tier 1 hosts only: see trust.md#Weakest-link-matrix
+        - violation — draft or reviewed invocation fails closed at pre-flight with exit 2 (E046_TRUST_VIOLATION): see physics.md#Exit-code-law
     - Alignment conventions
       - orthogonality — environment bounds data; trust bounds capabilities
-      - default pairs — dev with draft; sim with reviewed; prod with pinned
-      - travel law — routines travel dev → sim → prod via manifest migration pipelines
+      - default pairs — see trust.md#Weakest-link-matrix
+      - travel law — routines travel dev → sim → prod via manifest promotion pipelines
     - Policy overlays
       - mechanism — unified engine parameterized per environment
       - endpoint remap — base_url swapped via apis/<provider>.sim.yaml
@@ -28,8 +30,8 @@
       - namespace boundary — envs/<name>/ is an isolated directory namespace containing declarative overrides and state
       - substrate isolation — envs/<name>/workspace.db and envs/<name>/audit.db are uncommitted, locally managed SQLite instances
       - filesystem mandate — POSIX locking compliance required: see physics.md#Platform-tier-taxonomy
-      - prod promotion gate — Tier 1 host required for prod merge: see trust.md#Ladder-laws
-      - prod protection — destructive operations require out-of-band cryptographic challenge signatures (WebAuthn/Passkey or GPG/SSH key) via Cockpit challenge or local key; CLI flag bypasses rejected
+      - prod promotion gate — `env merge <name> prod` verifies Tier 1 host first: see trust.md#Weakest-link-matrix
+      - prod protection — operations require out-of-band cryptographic challenge signatures (WebAuthn/Passkey or GPG/SSH key) via Cockpit challenge or local key; CLI flag bypasses rejected
       - backup mandate — git and object push required on mutation
   - Primitive scoping
     - Event identity
@@ -88,5 +90,7 @@
     - Safety controls
       - prod destructive auth: see #World-governance
       - git push gate — prod merge requires verified remote push credentials via git push --dry-run
-      - merge scope — declarative schemas, routines, and migration scripts only; binary database files remain strictly partition-local
-      - merge pipeline — env merge verifies schema forward-compatibility in sim, snapshots target DB, and applies forward migration plan
+      - merge scope — declarative schemas, routines, and revision bundles only; binary database files remain strictly partition-local
+      - merge pipeline — env merge verifies Tier 1 host, runs rule prove in sim, snapshots target DB, then executes phased cutover: see world.md#Revision-safety
+        - rehearsal verbs — rule prove rehearses the four phases in sim: see interface.md#Governance-path:-rule-noun
+        - fail-closed — pinned-routine break aborts rehearsal with exit 2

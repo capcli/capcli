@@ -2,15 +2,17 @@
 <!-- ref-by: action.md, assembly.md, budget.md, interface.md, overview.md, recovery.md, space.md, world.md -->
   - Audit spine
     - Storage hierarchy
-      - audit.db (SSOT)
+      - audit.db (Tier 1 — hot SSOT)
         - role — isolated transactional source of truth for all events
         - location — independent system database envs/<name>/audit.db
-        - access — zero connection pooling with workspace.db; concurrent writes bypass domain locks
-      - audit/*.jsonl (export mirror)
+        - access — chmod 600, WAL mode, zero connection pooling with workspace.db; concurrent writes bypass domain locks
+      - audit/*.jsonl (Tier 2 — cold mirror)
         - role — secondary read-only export view streamed from _audit table
-        - persistence — flushed to disk and git for offline diffing and cold recovery
+        - persistence — daily append-only audit/YYYY-MM-DD.jsonl files, flushed to disk and git-committed for offline diffing and cold recovery
         - sync freshness — mirror lag hard SLA capped at 5 minutes
-        - format — daily append-only files
+      - remote anchor (Tier 3)
+        - anchor — S3 Object Lock (WORM) checkpoint and KMS notary signatures: see #Event-integrity
+      - flow — unidirectional Tier 1 → Tier 2 → Tier 3
     - Event anatomy
       - identity — event, ts, env, stage, channel, trace_id
       - actor — agent, session, principal, harness_marker_hash (sha256): see agent.md#Harness-environment-markers
@@ -21,7 +23,7 @@
       - terminal boundary — raw stdout/stderr discarded; canonical JSON outcome hashed exclusively
     - Kernel event payloads
       - bind.create/delete — target_urp, trigger_type, schedule_or_source: see action.md#Bindings
-      - vault.set — secret_name, secret_hash_prefix, action: injected: see agent.md#Secrets
+      - vault.set — secret_name, secret_hash_prefix, action: injected; prefix is the truncated SHA-256 fingerprint, full hash and plaintext never recorded: see agent.md#Secrets
       - env.switch/merge — source_env, target_env, git_commit, ddl_status: see space.md#Environment-axis
       - sys.agent.register/revoke — agent_id, principal, token_hash: see agent.md#System-agent-registry
       - capability.search — query, results_count, resolution_stage: see action.md#Search-surface
@@ -32,8 +34,9 @@
       - saga.execute — egress_verb, compensate_verb, db_mutation, outcome
       - saga.compensate — parent_op, compensate_verb, reason: db_abort, status
       - swarm.node_join — agent, topology_mode, endpoint, ephemeral_flag: see artifacts/governance.yaml#topology
-      - swarm.node_reap — agent, reason (ttl_expired|sigterm|evicted), claims_released_count
+      - swarm.node_reap — agent, reason (ttl_expired|sigterm|evicted), claims_released_count — sigterm preemption yield retains claims; reaper-initiated kill releases them
       - swarm.preemption_yield — agent, frame_id, checkpoint_cursor: see physics.md#Distributed-concurrency-laws
+      - kernel.panic.secret_leak — culprit: kill_and_alert, decision: denied, effect: none: see physics.md#Exit-code-law
       - routine.draft — template_source, template_hash, trust, version: see action.md#Routine-templates
       - rule.config_proposed — file, diff_hash, agent, gate_status: see world.md#Configuration-proposal-lifecycle
       - rule.config_committed — file, approver_principal, git_commit, lockfile_hash: see interface.md#Administrative-cockpit-pwa
@@ -48,14 +51,18 @@
     - Event integrity
       - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
       - template instantiation — capcli template scaffold emits exactly one event: routine.draft (routine kind) or env.init_from_template (world kind)
-      - failure buffer — business writes denied while audit sink is down; failed audit writes held in in-memory 5-minute buffer, exit 5 when undrainable
+      - fail-closed sink law — No Audit = No Execution: a workspace.db business transaction cannot commit without staging its audit leaf event
+        - stall — sink stall triggers out-of-band spooling and alerts; failed audit writes held in a 5-minute in-memory buffer
+        - buffering — while buffered, all new mutating business writes are denied (exit 2)
+        - exhaustion — undrainable buffer → kernel panic (exit 5)
       - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok
       - no synthetic types — onboarding.* and fake lifecycle events denied
-      - tamper quarantine — broken sha256 links isolate corrupted leaves to a quarantine branch; valid historical blocks remain operable
-      - write continuity — sink failure triggers out-of-band spooling and alerts; hard kernel panic (exit 5) is reserved for total media loss
+      - tamper quarantine — broken sha256 links isolate corrupted leaves to a quarantine branch; valid historical blocks remain operable; critical security alert emitted
       - denial logging — denied operations emit audit events with effect: none
       - tamper detection — per-row sha256 chain verified against root ledger hash
-      - line linking — each _audit row carries prev_hash: sha256:<previous_row_hash>; chain mirrored to JSONL
+      - boot verification — kernel validates the last 1,000 blocks against the chain at boot
+      - line linking — each _audit row carries prev_hash; row_hash = sha256(prev_hash || canonical_event_json); chain mirrored to JSONL
+      - mirror secrecy — no unscrubbed credential bytes in _audit or the JSONL mirrors; secret-keyed params mask per artifacts/masking.yaml#json_secret, wire echoes scrub: see agent.md#Secrets
       - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata
       - external attestation — ledger root hash checkpointed to S3 Object Lock (WORM) storage with KMS signatures
       - notary witness — periodic KMS signature stamped to witness.log

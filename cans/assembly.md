@@ -148,7 +148,7 @@
         - revision.rs — revision engine: see world.md#Schema-evolution
         - bytecode.rs — EXPLAIN opcode parser checking OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
         - snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
-        - claims.rs — distributed lease locks via _claims: see agent.md#Coordination
+        - claims.rs — distributed lease locks via claims: see world.md#claims-lease-lifecycle
       - Execution gates
         - authorizer_gate.rs — table and column write allowlists: see physics.md#Layer-1:-sqlite3_set_authorizer
         - write_gate.rs — mandates WHERE clause and LIMIT: see physics.md#Raw-SQL-rules

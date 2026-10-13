@@ -242,7 +242,7 @@ tables:
       deferments: int=0                # deferral count against yield_max_deferments
       status: text=pending             # pending, dispatched, aborted
       cursor: json                     # opaque Phase 2 resume position
-      state_fence: text                # sha256 hex of read row state captured at yield
+      state_fence: text                # sha256 hex of read row state captured at yield (singular: one fence per suspended frame; cf _pending_asks.state_fences for the multi-dependency form)
       checkpoint_ts: int               # unix epoch seconds of fence capture
     chk:
       - "status IN ('pending', 'dispatched', 'aborted')"

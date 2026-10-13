@@ -36,7 +36,8 @@ errors:
     E040_PROMOTION_UNPROVEN: { urp: "policy://errors/E040", desc: "Promotion requirements unmet" }
     E041_FEDERATION_CYCLE: { urp: "policy://errors/E041", desc: "Detected cycle in ws:// call chain" }
     E042_FEDERATION_DENIED: { urp: "policy://errors/E042", desc: "Caller ws identity not on active allowlist" }
-    E045_TIER2_PINNED_DENIED: { urp: "policy://errors/E045", desc: "Pinned routine execution refused on Tier 2 host" }
+    E045_PROD_TIER1_MANDATE: { urp: "policy://errors/E045", desc: "--env prod invoked on Tier 2 host; fails closed, exit 2" }
+    E046_TRUST_VIOLATION: { urp: "policy://errors/E046", desc: "draft/reviewed routine invoked in prod" }
     E050_RUNTIME_DISALLOWED: { urp: "policy://errors/E050", desc: "Runtime engine disallowed by governance/policy" }
     E060_REVISION_REJECTED: { urp: "policy://errors/E060", desc: "State revision invariant violated" }
     E061_OCC_DRIFT: { urp: "policy://errors/E061", desc: "OCC state_fence drift detected on frame resume" }
@@ -44,6 +45,8 @@ errors:
     E033_TOKEN_OVERFLOW: { urp: "policy://errors/E033", desc: "Token envelope exceeded 2000 tokens" }
     E031_COMPLEXITY_HIGH: { urp: "policy://errors/E031", desc: "Cyclomatic complexity exceeds 10 branches" }
     E032_STRING_INTERPOLATION: { urp: "policy://errors/E032", desc: "Raw SQL string interpolation detected" }
+    E034_TXN_EXTERNAL_CALL: { urp: "policy://errors/E034", desc: "External call inside a ctx.db.txn block" }
+    E035_LOCK_FENCE_BREACH: { urp: "policy://errors/E035", desc: "Outbound ws:// call while holding Layer 1 claims" }
   exit_4:                                # Runtime faults
     E055_FEDERATION_UNREACHABLE: { urp: "policy://errors/E055", desc: "Peer workspace socket timed out (1500ms)" }
   exit_5:                                # Kernel panics

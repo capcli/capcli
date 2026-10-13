@@ -18,6 +18,7 @@
         - ephemeral identity and reaper mechanics: see agent.md#Ephemeral-swarm-identity
       - audit.db
         - ssot role — isolated, append-only SQLite database for _audit ledger to eliminate WAL lock contention
+        - independence — independent SQLite database physically partitioned from workspace.db; WAL checkpoint contention eliminated by partition: see effect.md#Audit-spine
         - process — capcli kernel-managed
         - permissions — chmod 600
         - engine substrate
@@ -33,7 +34,7 @@
           - reader bounds — persistent reader locks banned; daemon WebSocket tails use short-lived connection snapshots to prevent WAL checkpoint starvation
           - checkpointing — kernel runs PRAGMA wal_checkpoint(PASSIVE) after writes; maintenance ticks run TRUNCATE to bound WAL size < 100MB
           - writers — serialized atomic transactions via busy-timeout queue
-          - lifespan law — write locks held strictly during atomic commits, never across agent execution; transaction lifespan strictly <15ms
+          - lifespan law — write locks held during atomic commits only, never across agent execution; user-space transactions strictly <15ms; kernel revision swaps carry their own <20ms bound
           - checkpoint guarantee — no transaction outlives its commit, so write-lock starvation of WAL checkpoints is impossible by construction
           - network isolation — network calls never execute inside transactions: see action.md#Interior-rules
           - tier partition — concurrency splits into macro lease (claims), meso fence (state_fence), and micro lock (SQLite): see physics.md#Distributed-concurrency-laws
@@ -151,7 +152,7 @@
       - concurrency & outbox
         - claims lease lifecycle — canonical home of lease identity and lifecycle
           - lease identity — each lease keys strictly to the tuple (session_id, harness_marker, op_sequence)
-          - expiry reaping — background daemon reaps claims whose expires_at has passed
+          - expiry reaping — background daemon reaps claims whose ttl has elapsed since created_at
           - claim binding — ctx.db.lock binds directly to this lifecycle: see action.md#Database-methods
           - yield interplay — exit 6 interaction: see physics.md#Exit-code-law
         - outbox atomic claim
@@ -198,11 +199,13 @@
     - Four-phase state revision pipeline
       - 1. Expand phase — additive, non-breaking DDL (nullable columns, new tables); execution SLA < 10ms
       - 2. Align phase — user-space pinned routine (revisions/NNNN/align.py); bounded chunks (max 500 rows/txn); yields cleanly on quota/fuel (exit 6)
-      - 3. Contract phase — destructive DDL executed by kernel revision.rs via trigger-replicated online shadow table; background alignment runs in chunks (max 500 rows/txn)
+      - 3. Contract phase — kernel revision.rs executes destructive DDL via trigger-replicated shadow table; final swap holds exclusive write lock strictly <20ms
       - 4. Pin phase — verifies live PRAGMA matches schema.yaml; updates root hash in capcli.lock
     - Online schema evolution mechanics
-      - kernel responsibility — Rust kernel creates shadow table, attaches delta replication triggers, copies base data in chunks, and performs atomic swap (<20ms lock)
-      - lock duration — exclusive write lock held only during final trigger detach and table rename
+      - kernel responsibility — Rust kernel creates shadow table _shadow_<table>, attaches delta replication triggers, copies base rows in 500-row chunks
+      - delta triggers — AFTER INSERT, AFTER UPDATE, AFTER DELETE on the live table replicate in-flight mutations to the shadow table
+      - zero-lag swap — BEGIN IMMEDIATE once replication lag reaches zero; drops triggers, renames shadow to live, drops old table
+      - lock duration — exclusive write lock held only during trigger detach and table rename
     - Revision lifecycle commands
       - planning — rule plan --name <slug> generates revisions/NNNN_<slug>/ bundle
       - rehearsal — rule prove <id> --env sim validates FK integrity, lock timing, and alignment fuel
@@ -296,7 +299,7 @@
     - status — offline lifecycle step, not a runtime gate: see interface.md#Governance-path:-rule-noun
     - execution — rehearsal runs on masked sim snapshot; checks PRAGMA foreign_key_check
     - pinned routine safety — simulated rehearsal of ALL pinned routines against revised schema; any query break or column drop aborts cutover with exit 2
-    - online cutover check — verifies shadow table delta lag reaches zero before executing atomic <20ms table swap
+    - online cutover check — verifies shadow table delta lag reaches zero before executing the atomic swap
     - state alignment safety — validates alignment routine terminates cleanly within session fuel bounds
     - failure code — aborts cutover, discards rehearsal state, returns exit 2 or 3
   - Command surface db

@@ -30,7 +30,7 @@ topology:
   hub:
     max_concurrent_spokes: 256
     idle_timeout_seconds: 60
-    busy_timeout_ms: 5000             # SQLite BEGIN IMMEDIATE wait floor
+    busy_timeout_ms: 5000             # SQLite BEGIN IMMEDIATE queue ceiling
   spoke:
     rpc_pool_size: 16
     connect_timeout_ms: 2000

@@ -90,11 +90,12 @@
       - schema — name unique, value, scope, expires_at, sens: true
       - audit contract — all secret mutations emit vault.set with masked values and SHA-256 fingerprint
       - two-tier secrets — root secrets held in vault; ephemeral egress tokens derived
-      - access — absolute zero-knowledge in guest runtime; guest address space never allocates credential bytes; guest SDK accepts and passes only opaque vault://<name> URP handles
-      - trust gate — kernel authorizer confirms caller trust before resolving vault://<name> handles: see trust.md#Ladder-laws
+      - zone 1 blind sandbox — guest address space never allocates credential bytes; guest SDK accepts and passes only opaque vault://<name> URP handles
+      - socket jail — guest raw socket connect trapped at OS level, forcing all egress through the kernel proxy: see physics.md#Platform-tier-taxonomy
+      - trust floor — kernel authorizer confirms trust >= reviewed before resolving vault://<name> handles: see trust.md#Ladder-laws
       - encryption — AES-256-GCM at rest; cached in memory by daemon or decrypted ephemerally per CLI run
       - ingestion — provisioned via CLI (`capcli sys vault set`), environment variables (`CAPCLI_SECRET_*`), or external client RPC
-      - echo defense — egress proxy holds an in-memory set of resolved vault://<name> handle bytes; wire-edge scan of responses scrubs escaping bytes to [REDACTED_VAULT_TOKEN] before sandbox or _audit
+      - wire echo filter — proxy holds active secret hashes in memory; scans headers and body at wire edge before deserialization; escapes scrubbed to [REDACTED_VAULT_TOKEN] before sandbox or _audit
       - zeroization — in-memory secret buffers zeroized on subshell CLI exit; vault decryption memory zeroize-protected
       - leak protection — plaintext credential exposure in return payloads triggers immediate kill_and_alert (exit 5) and session token revocation
     - Provisioning workflow
@@ -105,10 +106,10 @@
         - injection channels — headless CLI (`capcli sys vault set`), env auto-binding, or external client RPC
         - suspension — headless execution exits with code 3 on missing secrets; interactive sessions pause via ask
     - Egress injection
-      - injection point — Authorization headers inserted at kernel socket edge prior to TLS handshake; vault://<name> handles resolve only at this edge; zero plaintext leakage to guest heap or IPC payloads
+      - injection point — zone 2 guarded proxy injects Authorization headers at socket edge before TLS; vault://<name> resolves only at this edge; zero plaintext leakage to guest heap or IPC payloads
       - boundary rotation — egress proxy silently refreshes expired bearer tokens
       - references — catalogs reference secret_ref, never plaintext values
-      - trust restriction — draft routines denied secret access
+      - trust restriction — draft routines denied secret access: exit 2 at pre-flight; floor orthogonal to env matrix; dev-runnable drafts never resolve vault:// handles: see trust.md#Weakest-link-matrix
   - Coordination
     - World coordination
       - claims — distributed lease locks with TTL via db lock for multi-step ops

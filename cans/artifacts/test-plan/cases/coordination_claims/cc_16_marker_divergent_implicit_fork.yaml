@@ -8,7 +8,7 @@ target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/agent.md#Credential-binding--implicit-fork--divergent-harness-thread-marker-under-same-PID-forces-session-fork"
   statement: "In-process harness workers (threads/event-loop workers) sharing one PID are distinct subagents tracked via harness markers (cans/agent.md#Harness-environment-markers). A divergent harness thread marker under the same PID forces an implicit session fork: see cans/budget.md#Cascade. Claims are keyed strictly to (session_id, harness_marker, op_sequence) and in-process concurrency serializes via OCC state_fence; a claim collision between the forked workers yields the loser with exit 6 (cans/physics.md#Distributed-concurrency-laws)."
-  blast_radius_if_breached: "Same-PID workers collapse into one identity: the forked worker spends the parent's budget frame without a cage, claims collide on PID-keyed rows, and concurrent mutations race without OCC fencing — silent double-spend of the claim and of the parent's fuel pool."
+  blast_radius_if_breached: "Same-PID workers collapse into one identity: the forked worker spends the parent's budget frame without a cage, claims keyed by PID alone collide across the fork, and concurrent mutations race without OCC fencing — silent double-spend of the claim and of the parent's fuel pool."
 
 confusion_matrix:
   quadrant: "true_positive"

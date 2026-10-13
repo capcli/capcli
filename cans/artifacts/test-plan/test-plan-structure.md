@@ -40,6 +40,8 @@ cans/artifacts/test-plan/
       kp_19_federation_unversioned_ws_ast_exit3.yaml
       kp_20_federation_txn_isolation_exit3.yaml
       kp_21_federation_transport_retry_exit4.yaml
+      kp_22_exit6_yield_claims_retained.yaml
+      kp_23_suspended_tasks_yield_capture.yaml
     database_authorizer/
       da_01_unbounded_update_ast_kill.yaml
       da_02_where_tautology_bypass_kill.yaml
@@ -54,6 +56,8 @@ cans/artifacts/test-plan/
       da_11_foreign_key_cascade_authorizer_trap.yaml
       da_12_disallowed_sqlite_function_trap.yaml
       da_13_row_ceiling_transaction_overflow.yaml
+      da_14_txn_lifespan_bound_violation_exit2.yaml
+      da_15_commit_time_fence_drift_exit2.yaml
     wire_egress/
       we_01_proactive_bucket_exhaustion.yaml
       we_02_dynamic_header_calibration_sync.yaml
@@ -88,6 +92,7 @@ cans/artifacts/test-plan/
       bc_17_callee_exhaustion_isolation.yaml
       bc_18_mechanical_daemon_resume_completion.yaml
       bc_19_occ_drift_resume_abort_exit2.yaml
+      bc_20_resume_lease_ownership_exit2.yaml
     audit_dag/
       ad_01_sha256_prev_hash_linking.yaml
       ad_02_sink_failure_kernel_panic.yaml
@@ -193,6 +198,7 @@ cans/artifacts/test-plan/
       sh_10_ctx_storage_hmac_presigned_url.yaml
       sh_11_non_serializable_result_exit4.yaml
       sh_12_ctx_db_lock_distributed_lease.yaml
+      sh_13_ws_call_under_claim_lock_exit3.yaml
     urp/
       ur_01_inspect_db_table_envelope.yaml
       ur_02_inspect_tpl_envelope.yaml
@@ -412,13 +418,15 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `kp_12_sigkill_subshell_transaction_rollback.yaml` | Integration | Subprocess running guest routine receives SIGKILL; kernel WAL supervisor detects dead PID and rolls back uncommitted transaction. | TN | Leaving dangling locks in `claims` or leaving SQLite WAL in busy uncommitted state. |
 | `kp_13_unprivileged_userns_docker_check.yaml` | Integration | Host running inside Docker without unprivileged user namespaces automatically falls over to gVisor or microVM isolation without security degradation. | TP | Refusing boot inside containers instead of routing to supported containerized isolation providers. |
 | `kp_14_dynamic_seccomp_profile_switch.yaml` | Unit | Jail runner applies distinct dynamic seccomp profiles per runtime (`profile_python` vs `profile_bun_node` vs `profile_binary`). | TP | Applying universal permissive seccomp profile across all language runtimes. |
-| `kp_15_sigterm_preemption_exit6_checkpoint.yaml` | Integration | Host SIGTERM hits a disposable worker mid-frame; trap flushes cursor checkpoint, drops claims, parks frame in `_suspended_tasks` with `exit 6`, emits `swarm.preemption_yield`. | TN | Asserting exit 6 without proving the parked frame, checkpoint cursor, and released claims. |
+| `kp_15_sigterm_preemption_exit6_checkpoint.yaml` | Integration | Host SIGTERM hits a disposable worker mid-frame; trap flushes cursor checkpoint, retains claims, parks frame in `_suspended_tasks` with `exit 6`, emits `swarm.preemption_yield`. | TN | Asserting exit 6 without proving the parked frame, checkpoint cursor, and retained claims. |
 | `kp_16_network_partition_sync_audit_exit5.yaml` | Integration | Spoke-Hub connection lost during sync audit delivery; ephemeral spoke aborts immediately with `exit 5`, no local spool, no exit 0 without central audit receipt. | TN | Buffering the audit event to local disk and completing locally — the fail-open ghost path. |
 | `kp_17_federation_cycle_call_chain_exit2.yaml` | Integration | Federated call whose `call_chain` already contains the workspace fails closed with `exit 2` (E041_FEDERATION_CYCLE) before any socket write. | TN | Testing a direct self-call instead of a genuine 2-hop cycle, or asserting after the IPC write already happened. |
 | `kp_18_federation_hop_ceiling_exit2.yaml` | Integration | 3rd cross-workspace hop breaches the hop ceiling (inbound chain of 2) and exits 2; the hop ceiling binds before nesting > 5. | TN | Testing with a 1-hop chain (legal) and asserting denial, or conflating the hop ceiling with the nesting ceiling. |
 | `kp_19_federation_unversioned_ws_ast_exit3.yaml` | Integration | Unversioned `ws://` call target fails at AST compile with `exit 3` — no socket opened, no frame pushed. | TN | Letting the call reach the socket layer and asserting on the transport error instead of the compile gate. |
-| `kp_20_federation_txn_isolation_exit3.yaml` | Integration | `ctx.call` to a `ws://` target inside a `ctx.db.txn` block is rejected with `exit 3`; the enclosing txn rolls back atomically. | TN | Issuing the call outside the txn block, or testing `ctx.api.call` instead of the federation-specific gate. |
+| `kp_20_federation_txn_isolation_exit3.yaml` | Integration | `ctx.call` to a `ws://` target inside a `ctx.db.txn` block is rejected at compile time with `exit 3`; the routine never compiles, no transaction opens. | TN | Issuing the call outside the txn block, or testing `ctx.api.call` instead of the federation-specific gate. |
 | `kp_21_federation_transport_retry_exit4.yaml` | Integration | Missing peer socket exhausts the 1500ms poll (3 ticks @ 500ms, MockClock-stepped) and exits 4 (E055_FEDERATION_UNREACHABLE). | TN | Using a real 1500ms sleep, or asserting exit 2 instead of the exit 4 transport failure. |
+| `kp_22_exit6_yield_claims_retained.yaml` | Integration | SIGTERM preemption yield closes the SQLite transaction and parks the frame with the Layer 1 claim row intact (claims 1 -> 1, holder and identity tuple unchanged). | TP | Yielding a frame that never held a claim, or dropping and re-inserting the claim row behind the final count. |
+| `kp_23_suspended_tasks_yield_capture.yaml` | Integration | Yielded frame's `_suspended_tasks` row carries a non-null json cursor, a 64-hex `state_fence`, and an integer `checkpoint_ts` inside the yield window. | TP | Asserting column presence without validating the 64-hex fence shape, or parking a null cursor. |
 
 ### 6.2 Database Floor & C-Authorizer (`cases/database_authorizer/`)
 
@@ -437,6 +445,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `da_11_foreign_key_cascade_authorizer_trap.yaml` | Integration | Deleting row triggers cascading delete on child table where child table has immutable constraint; authorizer halts cascade. | TN | Disabling foreign keys in test SQLite connection. |
 | `da_12_disallowed_sqlite_function_trap.yaml` | Unit | Query invoking `load_extension('evil.so')` or `writefile('/etc/passwd')` denied by authorizer function allowlist. | TN | Relying on filesystem permissions rather than SQLite authorizer function intercept. |
 | `da_13_row_ceiling_transaction_overflow.yaml` | Integration | Transaction inserting 501 rows in single batch exceeds 500-row insert ceiling; aborted cleanly with `exit 2`. | TN | Truncating input array silently instead of aborting transaction. |
+| `da_14_txn_lifespan_bound_violation_exit2.yaml` | Integration | Writer holding the SQLite write lock 40ms past the 15ms lifespan bound aborts with `exit 2`; the transaction rolls back, nothing commits. | TN | Committing inside 15ms while asserting the abort, or asserting exit 2 on a normally committed transaction. |
+| `da_15_commit_time_fence_drift_exit2.yaml` | Integration | Row tampered between Phase-1 read and Phase-3 commit trips the OCC fence at commit time; aborts with `exit 2` (`E061_OCC_DRIFT`), zero partial writes. | TN | Drifting a row the fence never covered, or drifting after the commit already landed. |
 
 ### 6.3 Wire Floor & Quota Brokerage (`cases/wire_egress/`)
 
@@ -479,6 +489,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `bc_17_callee_exhaustion_isolation.yaml` | Integration | Callee exhausts its delegated budget and aborts with `exit 2`; caller `consumed_ops` is bit-identical before and after. | TN | Exhausting the caller frame instead, or inventing a failure penalty charged to the caller. |
 | `bc_18_mechanical_daemon_resume_completion.yaml` | Integration | Frame yielded (`exit 6`) unblocked by clock refill; `capcli-daemon` executes the pre-compiled guest routine in the sandbox to completion; harness wake count is exactly 0. | TP | Re-invoking the LLM harness on resume and asserting completion, or resuming via a manual test command. |
 | `bc_19_occ_drift_resume_abort_exit2.yaml` | Integration | Yielded frame's OCC `state_fence` mismatches live row state at resume; daemon aborts immediately with `exit 2` (`E061_OCC_DRIFT`); frame purged, nothing committed. | TN | Drifting a table the fence never covered, or letting the frame resume and commit against drifted rows. |
+| `bc_20_resume_lease_ownership_exit2.yaml` | Integration | Resume attempt on a frame whose Layer 1 lease expired aborts with `exit 2` even though the `state_fence` still matches; frame purged, nothing resumes. | TN | Drifting the fenced row too (so the fence check, not the lease check, fires), or testing a still-active lease. |
 
 ### 6.5 Memory Spine & Causal DAG (`cases/audit_dag/`)
 
@@ -601,7 +612,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | Case ID | Target Tier | Invariant & Scenario Narrative | Matrix | Banned Slop Pattern |
 |---|---|---|---|---|
 | `sh_01_missing_frame_token_trap.yaml` | Integration | Python script imports `capcli` SDK and runs directly without kernel runner; trapped with immediate exit 3. | TN | Allowing guest script to execute outside sandboxed runner wrapper. |
-| `sh_02_api_call_inside_db_txn_prohibition.yaml` | Unit | Guest script attempts `ctx.api.call()` inside `with ctx.db.txn():`; SDK throws transaction isolation error. | TN | Allowing long-running network calls inside open database transactions. |
+| `sh_02_api_call_inside_db_txn_prohibition.yaml` | Unit | Guest script attempts `ctx.api.call()` inside `with ctx.db.txn():`; the compiler rejects the routine with `exit 3`. | TN | Allowing long-running network calls inside open database transactions. |
 | `sh_03_poll_until_aggregate_accounting.yaml` | Integration | Routine calls `ctx.api.poll_until()` which loops 5 times; kernel charges routine exactly 1 aggregate operation. | TP | Charging 5 independent operations and prematurely exhausting budget. |
 | `sh_04_param_type_mismatch_exit3.yaml` | Unit | Routine expects `order_id: Param[int]`; caller supplies `"abc"`; SDK input validation rejects with `exit 3`. | TN | Passing unvalidated types to routine body and crashing at runtime (`exit 4`). |
 | `sh_05_overview_result_token_truncation.yaml` | E2E | Overview output past 500 result tokens truncates cleanly with truncated: true and valid JSON | TP | Agent shrinks the overview fixture below 500 tokens so truncation never triggers, then asserts truncated: false as 'valid'; or checks json.loads |
@@ -612,6 +623,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `sh_10_ctx_storage_hmac_presigned_url.yaml` | Integration | `ctx.storage.url('invoice.pdf', ttl=3600)` generates valid HMAC-signed temporary access link. | TP | Returning unsigned or public direct URLs to private object storage. |
 | `sh_11_non_serializable_result_exit4.yaml` | Unit | Routine attempts to return a non-JSON serializable object (e.g., active file descriptor); SDK traps and exits 4 cleanly. | TN | Raising raw unhandled runtime exception without standard CLI diagnostic envelope. |
 | `sh_12_ctx_db_lock_distributed_lease.yaml` | Integration | Routine acquires lock via `ctx.db.lock("inventory:10")`; verifies lock is recorded in `claims` and auto-cleared on exit. | TP | Managing locks exclusively in memory without persisting to system claims table. |
+| `sh_13_ws_call_under_claim_lock_exit3.yaml` | Integration | `ctx.call` to a `ws://` target while holding a local Layer 1 claim is rejected at AST compile with `exit 3`; no socket opens, the claim row is untouched. | TN | Issuing the ws:// call without holding a claim, or letting the call reach the socket layer and asserting on transport. |
 
 ### 6.12 URP Resolver Engine (`cases/urp/`)
 

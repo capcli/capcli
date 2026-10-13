@@ -9,7 +9,8 @@
       - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json
-      - Prefix standard — [env:tier] prepended to all output streams (e.g. [dev:tier_2], [prod:tier_1])
+      - Prefix standard — [env:tier] prepended to all output streams; only legal pairings emit ([dev:tier_2], [sim:tier_2], [dev:tier_1], [sim:tier_1], [prod:tier_1]): see trust.md#Weakest-link-matrix
+      - Illegal pairings never emit — [prod:tier_2] cannot occur; pre-flight denies it with exit 2 (E045_PROD_TIER1_MANDATE): see physics.md#Exit-code-law
       - Tier 2 banner — emits host.degraded_isolation warning: see physics.md#Platform-tier-taxonomy
       - Caller categories
         - [harness] — safe for autonomous agent execution
@@ -53,6 +54,7 @@
       - Authoring — direct write in routines/<name>.py or scaffold via `capcli template scaffold tpl://routine/<name> <target> [-p k=v]`
       - Verification — routine prove <name> [-p k=v] [--env sim]
       - Promotion — routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
+        - Monotonic promotion — elevation skips (draft→pinned directly) refused with exit 3: see trust.md#Monotonic-promotion-pipeline
       - Maintenance — routine sweep [--since 30d]
       - Profiling — routine stats <name> [--deep]
       - Recovery — routine rollback <name> [version]
@@ -88,9 +90,9 @@
     - Governance path: rule noun
       - Inspection — rule show [target=schema]
       - Comparison — rule diff [target=schema] [--git] vs HEAD or live DB PRAGMAs
-      - Planning — rule plan --name <slug> [-m "<why>"] — generates migration bundle (plan.json, backfill stub)
-      - Verification — rule prove <id> [--env sim] — rehearses expand, backfill, and contract SLA
-      - Application — rule apply [target=schema] [--dry-run] [-m|--intent "<why>")
+      - Planning — rule plan --name <slug> [-m "<why>"] — generates revisions/NNNN_<slug>/ bundle (plan.json, align.py stub): see world.md#Four-phase-state-revision-pipeline
+      - Verification — rule prove <id> [--env sim] — rehearses all four phases on a masked sim snapshot; pinned-routine break aborts with exit 2: see world.md#Revision-safety
+      - Application — rule apply <id> [--dry-run] [-m|--intent "<why>"] — executes expand→align→contract→pin: see world.md#Four-phase-state-revision-pipeline
       - Validation — rule validate [target] — unified syntax, petgraph acyclic, and template bundle linting
     - World path: env noun
       - Provisioning — environments are provisioned empty via `capcli env new <name> [--seed prod]`, or populated from blueprints via `capcli template scaffold tpl://world/<name> <target> [-p k=v]`
@@ -110,6 +112,8 @@
       - Vault provisioning — sys vault set <key> <val>, sys vault import-env
       - Diagnostics — sys doctor [--boot-check] [--json]
         - platform probe — reports host OS, platform tier, and sandbox: see physics.md#Platform-tier-taxonomy
+        - permitted environments — reports the target environments legal for the detected host tier (tier 1: dev, sim, prod; tier 2: dev, sim); no sandbox spawned
+        - machine contract — --json emits platform tier plus the permitted-env list as machine fields
       - Backups — sys backup [--push], recover <snapshot-id>
       - Sandboxing — sys exec <cmd> --sandbox
       - Harness shim — sys shim <target-bin> [--wrap <path>] — deploys native zero-cost wrapper capturing caller marker hashes and scrubbing secrets: see agent.md#Harness-environment-markers
@@ -128,7 +132,9 @@
       - Import — template import <urp|url|file> [--sha256 <hash>]: see world.md#World-templates
       - Scaffold — template scaffold <urp> <target-name> [-p k=v] hydrates draft files into routines/ or world envs/
     - Refusals and banned operations
-      - ssot enforcement — config mutations require git commits; direct `config set` or manual SQL DDL denied (exit 3)
+      - matrix denials — env/trust/platform pre-flight denials fail with exit 2: see physics.md#Exit-code-law; pairings: see trust.md#Weakest-link-matrix
+      - ssot enforcement — config mutations require git commits; direct `config set` denied (exit 3)
+      - raw DDL via sql — ALTER, DROP, or CREATE TABLE through `capcli sql` outside the revision pipeline denied (exit 2): see world.md#Agent-denial-rules
       - banned bypass flags — `--force`, `--override-budget`, `--force-prod`, `--verbose` rejected at parser (exit 3)
       - pointer grammar — only scheme://[namespace/]resource[@version][#fragment] pointers parse
         - parse failures (exit 3) — bare filesystem paths; removed schemes: hub://, prompt://, mesh://, apis://, sink://, snap://
@@ -201,7 +207,7 @@
       - Layer 3: Policy & Governance — live policy authorizer rules, lockfile SHA256 integrity, and rate ceilings
       - Layer 4: Audit Spine — live streaming event tail, causal DAG trace explorer, and machine denial decoders
       - Layer 5: Budget & Telemetry — call stack frame trees, fuel consumption meters, wire byte counters, and token-bucket drain gauges
-      - Layer 6: Promotion & Approvals — staged routine promotions, DDL forward migration previews, and canary veto timers
+      - Layer 6: Promotion & Approvals — staged routine promotions, DDL revision previews, and canary veto timers
       - Layer 7: Human Interaction (Ask) — structured question resolution cards with fail-closed timeout indicators
       - Layer 8: Vault & Biometrics — out-of-band credential injection screen with mobile biometric/FaceID support
       - Federation surfaces
