@@ -180,7 +180,8 @@
         - domain policy.revision — offline revision rehearsal breaks the pinned routine contract: see world.md#Revision-safety
         - domain policy.platform — --env prod on a tier 2 host fails closed at pre-flight (E045_PROD_TIER1_MANDATE); remedy: use --env sim locally
         - domain policy.trust — draft or reviewed routine in --env prod fails closed at pre-flight (E046_TRUST_VIOLATION); remedy: routine ship <name> pinned
-        - pre-flight matrix checks — E045 and E046 evaluate before dispatch; denial carries exit 2, state untouched
+        - domain policy.trust — draft routine resolving vault:// handles fails closed at pre-flight (E047_SECRET_TRUST_FLOOR); runtime authorizer backstop: see agent.md#Secrets
+        - pre-flight matrix checks — E045, E046, and E047 evaluate before dispatch; denial carries exit 2, state untouched
       - exit 3 — Phase 1 static pre-flight refusal: token envelope > 2,000, cyclomatic complexity > 10, AST cycle, string interpolation, statically-declared unpaginated payload shape
         - runtime result size — oversized output returns the keyset pagination schema instead of exiting; see action.md#Shape-constraints
       - exit 4 — Phase 2 guest crash; domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back

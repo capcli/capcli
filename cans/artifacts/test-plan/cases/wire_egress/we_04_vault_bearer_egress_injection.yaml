@@ -62,5 +62,7 @@ anti_slop_assertions:
     verification: "No mock of the egress proxy or the AES-256-GCM vault decryption: run the real boundary path and scan the guest subshell's runtime memory (pre-zeroize window) for the plaintext secret — zero matches; the Authorization header is observable only in the kernel-side proxy capture, and audit params are redacted (policy.yaml#audit.redact auth_headers: always)."
   - rule: "AS-03"
     verification: "Assert integer exit_code == 0 and parse the CliEnvelope: state_modified true, audit_op present, data carries the provider response — no .is_ok() shortcut; the envelope's recorded params must show the redacted/masked form of the charge payload."
+  - rule: "AS-04"
+    verification: "Socket-edge interception order proof: the kernel's interception trace for this call shows auth attach strictly between the cadence check and dispatch (action.md#The-ctx-contract 'auth attach — kernel resolves vault://<name> handles and inserts Authorization headers between the cadence check and dispatch, strictly before TLS') — the pre-dispatch capture carries no Authorization header, the dispatched packet does, and no cadence wait occurred after the header was attached."
   - rule: "AS-05"
     verification: "_audit sequence increments by exactly 1 with the api.call event; the row's prev_hash equals the SHA-256 of the prior row, result_hash matches the canonical JSON hash of the response, and capcli-core::audit::verify_chain() passes."

@@ -1,0 +1,49 @@
+{
+  "$schema": "wireframe/v2",
+  "archetype": "receipt",
+  "audit_op": "op_3d8e",
+  "command": "capcli run cap://stripe.refund@2 -p charge_id=ch_9d21K -m \"refund failed delivery\"",
+  "component": {
+    "groups": [
+      {
+        "fields": {
+          "frame": "frame_033 (2/6 ops · 211ms)",
+          "intent": "\"refund failed delivery\"",
+          "routine": "stripe.refund@2 (reviewed)",
+          "session": "ses_b311c"
+        }
+      },
+      {
+        "lines": [
+          "leaves:",
+          "1. api.call    stripe.refund                 203ms"
+        ]
+      },
+      {
+        "fields": {
+          "echoed": "credential bytes in error body",
+          "scrubbed": "1 occurrence → [REDACTED_VAULT_TOKEN]",
+          "upstream": "400 invalid_request_error"
+        },
+        "lines": [
+          "result: scrubbed error delivered to sandbox; plaintext never crossed the wire edge"
+        ]
+      },
+      {
+        "fields": {
+          "result_hash": "sha256:4f7c2a91e0b3d668e5aa"
+        }
+      }
+    ],
+    "title": null
+  },
+  "context": {
+    "data_shape": "populated",
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed"
+  },
+  "elapsed_ms": 214,
+  "id": "run.execute.success.echo_scrubbed",
+  "target": "cap://stripe.refund@2"
+}

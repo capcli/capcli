@@ -1,0 +1,70 @@
+$schema: "test-plan/case/v1"
+case_id: "we_14_wire_echo_filter_scrub"
+title: "Upstream 401 echoing the credential in its JSON error body is scrubbed to [REDACTED_VAULT_TOKEN] at the wire edge before deserialization"
+domain: "wire_egress"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/agent.md#Wire-echo-filter"
+  statement: "'Wire echo filter — proxy holds active secret hashes in memory; scans headers and body at wire edge before deserialization; escapes scrubbed to [REDACTED_VAULT_TOKEN] before sandbox or _audit': when the provider echoes the vaulted credential in an HTTP 401 JSON error body, the kernel proxy detects the active secret hash in the response bytes, replaces every occurrence with [REDACTED_VAULT_TOKEN] before JSON deserialization, and only the scrubbed payload reaches the guest sandbox and the audit records."
+  blast_radius_if_breached: "Provider error echoes deliver the live credential straight into the guest sandbox: routines log it, retry loops persist it, and the audit mirror permanently captures the decrypted key — the echo filter exists precisely because providers routinely reflect tokens in 400/401 diagnostics."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "An AI agent fakes this test by scrubbing the string in the test harness after deserialization (asserting on an already-parsed JSON object) — the law demands the scan happen on raw wire bytes before deserialization, so a header-level or chunked echo would bypass a parse-then-scrub implementation undetected; or it asserts the scrub while letting the provider denial surface as exit 0."
+  anti_slop_mitigation: "AS-01 forces the echo to arrive on the raw response byte stream (a real 401 wire response with the credential embedded in the JSON body) and asserts the scrub happened pre-deserialization: the guest sandbox receives only the scrubbed payload and zero plaintext bytes appear in any substrate record. AS-03 forces the typed exit 2 api.upstream denial (per the we_07 provider-denial precedent), so the scrub is proven on the real denial path. AS-06 bans the unicode-block-glyph shortcut and proves zero literal occurrences across _audit, the JSONL mirror, and the machine envelope."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.finance@example.com"
+    agent_id: "agt_we_14"
+    trust: "reviewed"   # external API writes require reviewed; draft routines are denied secret access
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "secrets"
+        row_count: 1
+      - name: "_api_quota"
+        row_count: 1   # provider 'stripe': tokens available; the 401 is a provider-side credential rejection, not a quota event
+      - name: "_audit"
+        row_count: 4
+    vault_secrets:
+      - ref: "vault://stripe_key"
+        scope: "prod"
+
+execution:
+  trigger: "json_rpc"
+  command: 'ctx.api.call("stripe.charges", params={"amount": 2000, "currency": "usd"}, intent="settle refund for order ORD-10")'
+  input_params:
+    verb: "stripe.charges"
+    secret_ref: "vault://stripe_key"
+    upstream_response: "HTTP 401 with JSON body {\"error\": {\"message\": \"Invalid API key provided: sk_test_WE14_FIXTURE_7c2e\", \"type\": \"invalid_request_error\"}} — the provider echoes the plaintext credential in the error body"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "api.upstream"
+    culprit: "provider returned HTTP 401 echoing the plaintext credential in its JSON error body; the wire echo filter scrubbed every occurrence to [REDACTED_VAULT_TOKEN] before deserialization — the scrubbed error payload is what the guest sandbox received"
+    remedy: "rotate stripe_key at the provider (the 401 indicates the stored credential is stale), then re-run; the scrub is automatic and needs no action"
+  database:
+    row_count_delta: 1
+    tables_mutated: ["_audit"]   # api.call denial event row with the scrubbed payload; the 401 is a provider response, not a kernel refusal
+  wire:
+    packets_transmitted: 1
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "No mock of the wire-edge scanner: serve the real 401 response bytes with the plaintext literal 'sk_test_WE14_FIXTURE_7c2e' embedded in the JSON error body, then prove the scrub happened on raw bytes before deserialization — the guest sandbox's received payload contains the exact string [REDACTED_VAULT_TOKEN] and zero occurrences of the plaintext literal; the deserializer never saw the unscrubbed bytes."
+  - rule: "AS-03"
+    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'api.upstream', the culprit names the 401 and the scrubbed error payload, and the envelope's recorded params show the masked form of the request payload — no .is_ok() shortcut; the provider denial is surfaced, not swallowed by the filter."
+  - rule: "AS-06"
+    verification: "Hardcoded redaction semantics: the plaintext literal 'sk_test_WE14_FIXTURE_7c2e' occurs 0 times in the _audit table, the JSONL mirror file, the guest stdout/stderr streams, and the machine envelope; scrubbing used the literal string [REDACTED_VAULT_TOKEN] — unicode block glyphs (████) banned in machine payloads; _audit sequence increments by exactly 1 with prev_hash chaining intact."

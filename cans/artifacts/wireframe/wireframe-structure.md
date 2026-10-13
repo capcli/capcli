@@ -159,16 +159,18 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (6 verbs → 48 screens)
+### 4.1 `run/` (6 verbs → 51 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `run.execute.success.populated` | success | 0 | — | populated | Deterministic execution and commit |
 | `run.execute.success.redirected` | success | 0 | — | redirected | Payload directed to file via `--out`; stdout emits receipt |
 | `run.execute.success.truncated` | success | 0 | — | truncated | Result >500 tokens; returns `next_cursor` |
+| `run.execute.success.echo_scrubbed` | success | 0 | — | echo_scrubbed | Upstream 400 echoed a credential; wire filter scrubbed to `[REDACTED_VAULT_TOKEN]` before sandbox |
 | `run.execute.denial.budget` | denial | 2 | policy.budget | exhausted | Frame ops/duration ceiling exhausted |
 | `run.execute.denial.budget_cascade` | denial | 2 | policy.budget | starved | Pre-flight call-tree analysis detects starved child branch; invocation blocked |
 | `run.execute.denial.trust` | denial | 2 | policy.trust | unproven | Draft routine executed in prod |
+| `run.execute.denial.secrets_unproven` | denial | 2 | policy.trust | secret_floor | Draft routine resolving a `vault://` handle denied at pre-flight |
 | `run.execute.denial.tier2_pinned` | denial | 2 | policy.trust | tier2 | `E045_TIER2_PINNED_DENIED` on macOS/Win |
 | `run.execute.denial.authorizer` | denial | 2 | policy.authorizer | forbidden | Prohibited table or column mutation |
 | `run.execute.denial.network_jail` | denial | 2 | kernel.sandbox | syscall_42 | Trapped raw `connect()` via seccomp-bpf |

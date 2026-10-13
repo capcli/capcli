@@ -1,4 +1,4 @@
-# capcli canonical test plan manifest — machine-readable index of all 183 cases
+# capcli canonical test plan manifest — machine-readable index of all 184 cases
 # Derived from test-plan-structure.md §1 (directory tree) and §6 (master catalog).
 # Quadrant and target_tier values MUST match the §6 catalog tables exactly.
 $schema: "test-plan/manifest/v1"
@@ -6,7 +6,7 @@ plan:
   name: "capcli canonical test plan"
   structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
   matrix_doc: "cans/artifacts/test-plan/matrix.yaml"
-  total_cases: 183
+  total_cases: 184
   domains: 12
   crate_tier_convention:
     unit: "crates/capcli-core"
@@ -26,7 +26,7 @@ domains:
     spec_sources: ["cans/physics.md", "cans/world.md"]
   wire_egress:
     prefix: "we"
-    case_count: 13
+    case_count: 14
     description: "Wire floor & quota brokerage — proactive token buckets, JSONPath quota header sync, priority yield floors, vaulted bearer injection, egress byte caps, sim mock fallback."
     spec_sources: ["cans/physics.md", "cans/action.md", "cans/budget.md", "cans/space.md"]
   budget_cascade:
@@ -436,6 +436,13 @@ cases:
     quadrant: "true_positive"
     title: "High-volume sim rehearsal burns only the sim-scoped quota bucket while the prod balance stays untouched"
   # ── budget_cascade (bc) — 20 cases ─────────────────────────
+  - case_id: "we_14_wire_echo_filter_scrub"
+    file: "cases/wire_egress/we_14_wire_echo_filter_scrub.yaml"
+    domain: "wire_egress"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Upstream 401 echoing the credential in its JSON error body is scrubbed to [REDACTED_VAULT_TOKEN] at the wire edge before deserialization"
   - case_id: "bc_01_downward_min_inheritance"
     file: "cases/budget_cascade/bc_01_downward_min_inheritance.yaml"
     domain: "budget_cascade"

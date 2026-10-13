@@ -658,7 +658,7 @@ Re-running pointer inspect to verify vault credential resolution.
 ```json
 {
   "verb": "stripe.payment_intents.create",
-  "trust": "draft",
+  "trust": "reviewed",
   "secret_ref": "stripe_secret_key",
   "vault_status": "LOCKED_IN_MEMORY",
   "can_invoke_now": true,
