@@ -36,7 +36,7 @@
       - swarm.node_join — agent, topology_mode, endpoint, ephemeral_flag: see artifacts/governance.yaml#topology
       - swarm.node_reap — agent, reason (ttl_expired|sigterm|evicted), claims_released_count — sigterm preemption yield retains claims; reaper-initiated kill releases them
       - swarm.preemption_yield — agent, frame_id, checkpoint_cursor: see physics.md#Distributed-concurrency-laws
-      - kernel.panic.secret_leak — culprit: kill_and_alert, decision: denied, effect: none: see physics.md#Exit-code-law
+      - kernel.panic.secret_leak — culprit: kill_and_alert, decision: denied, effect: none; row shape follows #Event-anatomy: see physics.md#Exit-code-law
       - routine.draft — template_source, template_hash, trust, version: see action.md#Routine-templates
       - rule.config_proposed — file, diff_hash, agent, gate_status: see world.md#Configuration-proposal-lifecycle
       - rule.config_committed — file, approver_principal, git_commit, lockfile_hash: see interface.md#Administrative-cockpit-pwa
