@@ -112,7 +112,7 @@ cans/artifacts/test-plan/
       ad_15_boot_chain_walk_quarantine.yaml
     trust_ladder/
       tl_01_draft_write_to_prod_denial.yaml
-      tl_02_tier2_pinned_execution_refusal.yaml
+      tl_02_tier2_weakest_link_matrix.yaml
       tl_03_auto_promotion_conjunction_pass.yaml
       tl_04_canary_telemetry_auto_demote.yaml
       tl_05_unproven_template_draft_floor.yaml
@@ -128,6 +128,7 @@ cans/artifacts/test-plan/
       tl_15_federated_initiation_floor.yaml
       tl_16_autonomous_pinned_promotion.yaml
       tl_17_canary_veto_rollback_draft.yaml
+      tl_18_reviewed_prod_execution_denial.yaml
     schema_evolution/
       se_01_yaml_syntax_gate1_refusal.yaml
       se_02_circular_dependency_gate2_refusal.yaml
@@ -322,9 +323,9 @@ Every test written by an autonomous developer agent must strictly satisfy these 
 * **Enforcement:** The expected value must be an immutable literal hardcoded in the test specification.
 
 ### AS-07: Platform Tier Boundary Law
-* **Rule:** Tests for pinned trust must explicitly run in two configurations: Tier 1 (must pass) and Tier 2 (must fail with `E045_TIER2_PINNED_DENIED`).
-* **Slop Vector:** Agent runs pinned test on a macOS dev machine; the engine permits it because an unconfined flag was leaked, masking a Tier 2 security violation.
-* **Enforcement:** Mock platform probe to inject `PlatformTier::Tier2` and assert immediate hard denial.
+* **Rule:** Tests for pinned trust must cover the Weakest Link matrix: tier 2 with dev/sim targets must pass; tier 2 with prod target must fail with `E045_PROD_TIER1_MANDATE` (exit 2); draft/reviewed routines with prod target must fail with `E046_TRUST_VIOLATION` (exit 2).
+* **Slop Vector:** Agent runs the pinned test only against a dev target on macOS and declares the matrix proven, never exercising the prod target where the Tier 2 denial must fire.
+* **Enforcement:** Mock platform probe to inject `PlatformTier::Tier2`; assert pinned dev/sim targets pass and the prod target hard-denies with `E045_PROD_TIER1_MANDATE`.
 
 ### AS-08: Sandbox Scratch Wipe Law
 * **Rule:** Tests executing sandboxed routines (`sys exec --sandbox` or `run`) must assert that the `/scratch` tmpfs directory is physically wiped clean after execution.
@@ -404,7 +405,7 @@ anti_slop_assertions:
 
 ## 6. Master Test Plan Bible & Case Catalog
 
-This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–16 cases per domain, 159 cases total).
+This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–16 cases per domain, 188 cases total).
 
 ### 6.1 Kernel Physics (`cases/kernel_physics/`)
 
@@ -523,7 +524,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | Case ID | Target Tier | Invariant & Scenario Narrative | Matrix | Banned Slop Pattern |
 |---|---|---|---|---|
 | `tl_01_draft_write_to_prod_denial.yaml` | E2E | Caller with `draft` trust attempts mutating write in `prod` environment; denied with `exit 2` (`draft_writes: deny`). | TN | Permitting draft writes in prod when `--intent` is provided. |
-| `tl_02_tier2_pinned_execution_refusal.yaml` | E2E | Host is Tier 2 (macOS); caller executes routine with `pinned` trust; denied with `exit 2` (`E045_TIER2_PINNED_DENIED`). | TN | Bypassing platform check because host machine happens to be Darwin in CI. |
+| `tl_02_tier2_weakest_link_matrix.yaml` | E2E | Tier 2 host: pinned routine targeting `prod` denied with `exit 2` (`E045_PROD_TIER1_MANDATE`); identical pinned invocation targeting `sim` executes (exit 0). | TN | Testing only one target environment, or asserting denial without the typed code. |
 | `tl_03_auto_promotion_conjunction_pass.yaml` | Integration | Routine meets all 5 auto-promotion metrics in sim (100% replay pass, zero denials, zero drift); promotes to `reviewed`. | TP | Promoting routine when 4 of 5 metrics pass and 1 fails. |
 | `tl_04_canary_telemetry_auto_demote.yaml` | Integration | Promoted routine experiences error spike during 1-hour canary window; autonomous watchdog auto-demotes trust to `draft`. | TN | Leaving failing routine in `pinned` state awaiting manual human intervention. |
 | `tl_05_unproven_template_draft_floor.yaml` | Unit | Newly imported routine template enters system; kernel forces trust rung to `draft` regardless of bundle claim. | TN | Trusting template manifest declaration of "pinned". |
@@ -539,6 +540,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `tl_15_federated_initiation_floor.yaml` | Integration | Draft routine initiating a `ws://` call is denied (trust >= reviewed required); callee is pinned to isolate the caller-side floor. | TN | Conflating with the inbound caller floor (tl_14) by targeting a draft callee instead of a draft caller. |
 | `tl_16_autonomous_pinned_promotion.yaml` | Integration | Reviewed routine passes 100% sim replay invariants, zero policy denials, live contract schema verification, p95 <= 70% of timeout ceiling; kernel promotes reviewed -> pinned with zero human approvals. | TP | Promoting via a human approval in the fixture, or promoting on 4-of-5 proof metrics. |
 | `tl_17_canary_veto_rollback_draft.yaml` | Integration | Newly pinned routine (40min into the 1-hour window) posts 1.2% error (> 1% threshold); daemon watchdog demotes pinned -> draft and alerts Cockpit PWA. | TN | Hand-demoting in the fixture instead of exercising the autonomous veto, or asserting no rollback at a below-threshold error rate. |
+| `tl_18_reviewed_prod_execution_denial.yaml` | E2E | `reviewed`-trust routine invoked with `--env prod`; denied with `exit 2` (`E046_TRUST_VIOLATION`). | TN | Pre-promoting the fixture to pinned, or asserting denial without the typed code. |
 
 ### 6.7 Schema Evolution & Compile Checks (`cases/schema_evolution/`)
 
