@@ -30,7 +30,7 @@
       {
         "fields": {
           "catchup_policy": "max 1 fire on daemon restart",
-          "dead_schedule": "auto-disable on routine retire (loud)"
+          "dead_schedule": "dissolved in the same commit as the routine retire (loud)"
         },
         "lines": [
           "defenses:"
