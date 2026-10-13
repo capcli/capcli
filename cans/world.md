@@ -23,7 +23,7 @@
         - permissions — chmod 600
         - engine substrate
             - sqlite local — standalone local embedded database
-            - libsql replica — embedded replica with Turso cloud sync
+            - libsql replica — embedded replica syncing from the Hub (LibSQL cache)
             - remote refusal — pure HTTP databases without C authorizer denied
         - tracking
           - git status — world.sql and schema revisions tracked in git; workspace.db strictly gitignored
