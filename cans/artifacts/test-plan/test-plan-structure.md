@@ -108,6 +108,7 @@ cans/artifacts/test-plan/
       ad_12_audit_query_parameterization.yaml
       ad_13_kms_witness_signature_checkpoint.yaml
       ad_14_federation_call_events_trace.yaml
+      ad_15_boot_chain_walk_quarantine.yaml
     trust_ladder/
       tl_01_draft_write_to_prod_denial.yaml
       tl_02_tier2_pinned_execution_refusal.yaml
@@ -509,6 +510,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `ad_12_audit_query_parameterization.yaml` | E2E | `sys audit query` command rejects raw string concatenation; requires `-p key=val` parameter bindings. | TN | Permitting raw unparameterized SQL against system audit mirror. |
 | `ad_13_kms_witness_signature_checkpoint.yaml` | Integration | Kernel witness worker periodically signs current ledger root hash with KMS key and appends to `witness.log`. | TP | Stamping checkpoints without cryptographic digital signature. |
 | `ad_14_federation_call_events_trace.yaml` | Integration | `federation.call_out`/`call_in` pair emitted with `child_trace_id` linkage; W3C traceparent stitches the peer DAG to the root chain; `call_chain` rides the envelope. | TP | Asserting only the caller-side event, or faking the trace linkage by string-matching instead of walking both hash chains. |
+| `ad_15_boot_chain_walk_quarantine.yaml` | Integration | Boot-time walk validates the last 1,000 `_audit` blocks; a broken link quarantines the corrupted span, emits a critical security alert, and halts with exit 5. | TN | Asserting boot health from daemon startup alone without recomputing the chain. |
 
 ### 6.6 Trust Ladder & Promotion (`cases/trust_ladder/`)
 

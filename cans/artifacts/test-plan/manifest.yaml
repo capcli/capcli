@@ -1,4 +1,4 @@
-# capcli canonical test plan manifest — machine-readable index of all 181 cases
+# capcli canonical test plan manifest — machine-readable index of all 183 cases
 # Derived from test-plan-structure.md §1 (directory tree) and §6 (master catalog).
 # Quadrant and target_tier values MUST match the §6 catalog tables exactly.
 $schema: "test-plan/manifest/v1"
@@ -6,7 +6,7 @@ plan:
   name: "capcli canonical test plan"
   structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
   matrix_doc: "cans/artifacts/test-plan/matrix.yaml"
-  total_cases: 181
+  total_cases: 183
   domains: 12
   crate_tier_convention:
     unit: "crates/capcli-core"
@@ -36,7 +36,7 @@ domains:
     spec_sources: ["cans/budget.md", "artifacts/governance.yaml", "artifacts/policy.yaml", "cans/time.md"]
   audit_dag:
     prefix: "ad"
-    case_count: 14
+    case_count: 15
     description: "Memory spine & causal DAG — SHA-256 prev-hash linking, genesis anchors, tamper root-worm walks, FPA redaction, W3C traceparent, JSONL mirror SLA, KMS witness."
     spec_sources: ["cans/effect.md", "cans/space.md"]
   trust_ladder:
@@ -576,7 +576,7 @@ cases:
     target_crate: "crates/capcli-daemon"
     quadrant: "true_negative"
     title: "Resume with an expired Layer 1 lease aborts with exit 2 even when the state_fence matches"
-  # ── audit_dag (ad) — 14 cases ──────────────────────────────
+  # ── audit_dag (ad) — 15 cases ──────────────────────────────
   - case_id: "ad_01_sha256_prev_hash_linking"
     file: "cases/audit_dag/ad_01_sha256_prev_hash_linking.yaml"
     domain: "audit_dag"
@@ -675,6 +675,13 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_positive"
     title: "federation.call_out/call_in events stitch the cross-workspace DAG via child_trace_id and W3C traceparent"
+  - case_id: "ad_15_boot_chain_walk_quarantine"
+    file: "cases/audit_dag/ad_15_boot_chain_walk_quarantine.yaml"
+    domain: "audit_dag"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Boot-time chain walk detects a broken link in the last 1,000 blocks, quarantines the corrupted span, and halts with exit 5"
   # ── trust_ladder (tl) — 17 cases ───────────────────────────
   - case_id: "tl_01_draft_write_to_prod_denial"
     file: "cases/trust_ladder/tl_01_draft_write_to_prod_denial.yaml"

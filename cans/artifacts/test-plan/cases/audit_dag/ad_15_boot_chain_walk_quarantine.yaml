@@ -1,0 +1,66 @@
+$schema: "test-plan/case/v1"
+case_id: "ad_15_boot_chain_walk_quarantine"
+title: "Boot-time chain walk detects a broken link in the last 1,000 blocks, quarantines the corrupted span, and halts with exit 5"
+domain: "audit_dag"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "cans/effect.md#boot-verification--kernel-validates-the-last-1,000-blocks-against-the-chain-at-boot"
+  statement: "At boot the kernel recomputes the hash chain over the last 1,000 _audit blocks; a broken sha256 link isolates the corrupted leaves to a quarantine branch while valid historical blocks remain operable, a critical security alert is emitted, and the kernel refuses to start execution (exit 5, domain kernel.panic) — no new writes land on an unverified ledger."
+  blast_radius_if_breached: "Booting past a broken chain lets execution proceed on a tampered ledger: subsequent rows chain onto corrupted history, the WORM witness anchor diverges silently, quarantine never triggers, and tamper-evidence degrades to a scheduled-only check an attacker can outrun between walks."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts boot health from the daemon process starting (or _audit being non-empty), never recomputing a single digest, and treats the quarantine branch as a renamed backup directory without asserting the corrupted leaves actually moved there."
+  anti_slop_mitigation: "AS-01 flips one byte in the payload of a row inside the last 1,000 via direct file edit (never the SQL layer); AS-02 asserts the exact first-divergence row index from a full recompute; AS-03 pins exit 5 with a kernel.panic diagnostic naming the row; AS-04 asserts the corrupted span is queryable only under the quarantine branch while pre-tamper rows still verify."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "human.oncall@acme.corp"
+    agent_id: "agt_ad_15"
+    trust: "reviewed"
+  initial_state:
+    tables:
+      - name: "_audit"
+        row_count: 1200 # 200 rows of older history outside the boot window + 1,000 rows inside it
+    tamper:
+      method: "direct file edit of envs/dev/audit.db — one byte flipped in the payload column of the row 300 back from the tip (inside the 1,000-block boot window), bypassing the SQL layer entirely"
+  vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys boot --env dev"
+  input_params:
+    boot_walk_window: "last 1,000 _audit blocks recomputed with sha2::Sha256 over the canonical serialization (crates/capcli-core/src/sys/hashchain.rs)"
+    mock_clock: "no wall-clock dependence — the walk is synchronous at boot"
+
+expected_observations:
+  exit_code: 5
+  state_modified: false
+  diagnostic:
+    domain: "kernel.panic"
+    culprit: "audit chain walk failure at boot: broken sha256 link at the tampered row; corrupted span isolated to the quarantine branch"
+    remedy: "restore envs/dev/audit.db from the last verified snapshot or the WORM-anchored ledger, re-run the boot walk, and investigate the tamper source before resuming"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "critical security alert on the broken link and the quarantine action"
+    chain_valid: false # walk fails at the tampered row by design
+    quarantine_branch: "corrupted leaves isolated to the quarantine branch; rows before the tamper point still verify"
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Tamper is a physical one-byte flip in the payload column via direct file edit — never an UPDATE through the SQL layer (the authorizer denies _audit UPDATE unconditionally via imm_rows)."
+  - rule: "AS-02"
+    verification: "Recompute the chain over the last 1,000 rows with sha2::Sha256 and assert the first divergence index equals the tampered row; rows older than the window are not required to fail the boot walk."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 5 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'kernel.panic', culprit names the broken-link row index, remedy present; a started daemon process alone is a linter failure."
+  - rule: "AS-04"
+    verification: "Assert the corrupted span is absent from the live chain query and present under the quarantine branch, and that all rows before the tamper point still pass verify_chain()."

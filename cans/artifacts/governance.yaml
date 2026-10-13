@@ -40,8 +40,8 @@ topology:
     default_ttl_seconds: 300          # dead worker reap window
     heartbeat_interval_seconds: 5
     missed_heartbeats_to_reap: 3
-    force_sync_audit_ack: true        # no exit 0 without central audit receipt
-    memory_buffer_mb: 16              # RAM audit buffer before network flush
+    force_sync_audit_ack: true        # no exit 0 without central audit receipt; spoke-side extension of the fail-closed sink law: see cans/effect.md#Audit-spine
+    memory_buffer_mb: 16              # RAM buffer for spoke→hub audit replication only; distinct from the 5-minute local fail-closed stall buffer: see cans/effect.md#Event-integrity
 
 # ───────────────────────────────────────────────────────────────
 # 1.5 TEMPLATES — blueprints are unproven proposals
@@ -153,7 +153,7 @@ maintenance:
     fail_threshold: 0.7               # success rate below → rollback candidate
     stale_sim_after_days: 14          # sim data too old vs prod → re-seed nag
   audits:
-    mirror_lag_max_minutes: 5         # JSONL → _audit mirror freshness SLA
+    mirror_lag_max_minutes: 5         # _audit → JSONL mirror freshness SLA (Tier 2 cold mirror)
     hash_chain_verify: "0 4 * * *"    # daily integrity check
     queue_age_max_hours: 48           # promotion queue SLA; breach emits promotion.sla_breached
 
@@ -305,5 +305,5 @@ telemetry:
       prod: { driver: none }            # prod notify exits through notify channels
     audit_mirror:
       driver: jsonl
-      path: "audit/audit_mirror.jsonl"
+      path: "audit/audit_mirror.jsonl"  # live telemetry tap of audit events; NOT the Tier 2 cold mirror (daily audit/YYYY-MM-DD.jsonl): see cans/effect.md#Storage-hierarchy
   retention_days: 90                    # telemetry file retention
