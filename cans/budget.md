@@ -42,7 +42,7 @@
         - returned_to_parent: { fuel: 80400 }
         - Parent sees exactly what the child burned — pools reconcile per frame
       - Frame push/pop are audit events; tailable live via `sys audit tail --follow`
-    - Telemetry streaming — frame lifecycle pushes over WebSocket/SSE: see interface.md#Daemon-API-&-telemetry-surface
+    - Telemetry streaming — frame lifecycle pushes over WebSocket/SSE: see interface.md#client-rpc-contract
       - streaming updates — consumption pushes via WebSocket: see effect.md#Audit-spine
       - denial markers — visual badges signal quota blocks: see #Exhaustion
   - Cascade

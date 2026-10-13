@@ -23,7 +23,7 @@
       {
         "lines": [
           "agt_tmp_9f3k22ab expired — reason: ttl_expired — claims released: 2",
-          "agt_4t6r expired — reason: sigterm — claims released: 1"
+          "agt_4t6r expired — reason: evicted — claims released: 1"
         ]
       },
       {

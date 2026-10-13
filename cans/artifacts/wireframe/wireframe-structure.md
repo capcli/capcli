@@ -171,7 +171,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.execute.denial.budget_cascade` | denial | 2 | policy.budget | starved | Pre-flight call-tree analysis detects starved child branch; invocation blocked |
 | `run.execute.denial.trust` | denial | 2 | policy.trust | unproven | Draft routine executed in prod |
 | `run.execute.denial.secrets_unproven` | denial | 2 | policy.trust | secret_floor | Draft routine resolving a `vault://` handle denied at pre-flight |
-| `run.execute.denial.tier2_pinned` | denial | 2 | policy.trust | tier2 | `E045_TIER2_PINNED_DENIED` on macOS/Win |
+| `run.execute.denial.prod_tier2` | denial | 2 | policy.platform | tier2 | `E045_PROD_TIER1_MANDATE` on --env prod from tier 2 |
 | `run.execute.denial.authorizer` | denial | 2 | policy.authorizer | forbidden | Prohibited table or column mutation |
 | `run.execute.denial.network_jail` | denial | 2 | kernel.sandbox | syscall_42 | Trapped raw `connect()` via seccomp-bpf |
 | `run.execute.denial.claim_held` | denial | 2 | db.claims | locked | Exclusive `--lock` ref already held |
@@ -253,7 +253,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.ship.success.queued` | success | 0 | — | queued | Enqueued for human review; zero code shipped |
 | `routine.ship.denial.metrics` | denial | 2 | policy.authorizer | low_success | Success rate falls below 0.95 |
 | `routine.ship.refusal.missing_reason`| refusal | 3 | missing_param | missing_arg | Elevation to pinned requires reason |
-| `routine.ship.denial.trust` | denial | 2 | policy.trust | tier2_refusal | Pinned promotion denied on Tier 2 |
+| `routine.ship.denial.trust` | denial | 2 | policy.trust | promotion_signoff | Pinned promotion denied without human or Tier-1 CI sign-off |
 | `routine.pending.success.populated` | success | 0 | — | populated | Batch promotion candidates listed |
 | `routine.pending.success.empty` | success | 0 | — | empty | No routines pending promotion |
 | `routine.sweep.success.populated` | success | 0 | — | populated | Deduplication proposals generated |

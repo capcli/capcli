@@ -68,4 +68,4 @@ anti_slop_assertions:
   - rule: "AS-03"
     verification: "Assert integer exit_code == 2 and parse the CliEnvelope: diagnostic.domain in the policy.trust class, culprit names refund_status@1 and the pinned floor, remedy references the trust ladder; envelope.state_modified == false."
   - rule: "AS-07"
-    verification: "Execute the identical bind on both platform tiers: on tier_1 the denial must cite the trust floor (policy.trust / unpinned); on tier_2 the same denial must fire before any E045_TIER2_PINNED_DENIED platform masking — proving the trust floor, not the host profile, is the gate."
+    verification: "Execute the identical bind on both platform tiers: on tier_1 the denial must cite the trust floor (policy.trust / unpinned); on tier_2 the same denial must cite the trust floor as well — the platform tier no longer masks it, since tier-2 pinned execution is permitted for dev/sim targets under the Weakest Link matrix."

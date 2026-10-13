@@ -87,9 +87,9 @@ anti_slop_laws:
     enforcement: "The expected value must be an immutable literal hardcoded in the test specification."
   AS-07:
     name: "Platform Tier Boundary Law"
-    rule: "Tests for pinned trust must explicitly run in two configurations: Tier 1 (must pass) and Tier 2 (must fail with E045_TIER2_PINNED_DENIED)."
-    slop_vector: "Agent runs pinned test on a macOS dev machine; the engine permits it because an unconfined flag was leaked, masking a Tier 2 security violation."
-    enforcement: "Mock platform probe to inject PlatformTier::Tier2 and assert immediate hard denial."
+    rule: "Tests for pinned trust must cover the Weakest Link matrix: tier 2 with dev/sim targets must pass; tier 2 with prod target must fail with E045_PROD_TIER1_MANDATE (exit 2); draft/reviewed routines with prod target must fail with E046_TRUST_VIOLATION (exit 2)."
+    slop_vector: "Agent runs the pinned test only against a dev target on macOS and declares the matrix proven, never exercising the prod target where the Tier 2 denial must fire."
+    enforcement: "Mock platform probe to inject PlatformTier::Tier2; assert pinned dev/sim targets pass and the prod target hard-denies with E045_PROD_TIER1_MANDATE."
   AS-08:
     name: "Sandbox Scratch Wipe Law"
     rule: "Tests executing sandboxed routines (sys exec --sandbox or run) must assert that the /scratch tmpfs directory is physically wiped clean after execution."

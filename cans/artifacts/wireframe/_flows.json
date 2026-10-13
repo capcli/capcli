@@ -3306,10 +3306,10 @@
         "run.execute.denial.trust"
       ],
       "to": [
-        "run.execute.denial.tier2_pinned"
+        "run.execute.denial.prod_tier2"
       ],
-      "trigger": "run_on_degraded_host",
-      "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+      "trigger": "target_prod_on_tier2",
+      "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\" --env prod",
       "arrow_type": "denial"
     },
     {
@@ -3318,7 +3318,7 @@
         "journey_execution_gates"
       ],
       "from": [
-        "run.execute.denial.tier2_pinned"
+        "run.execute.denial.prod_tier2"
       ],
       "to": [
         "run.execute.success.populated"

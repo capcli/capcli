@@ -6,14 +6,14 @@ target_tier: "e2e"
 target_crate: "crates/capcli-cli"
 
 invariant:
-  law_reference: "cans/trust.md#monotonic-ascent-—-ladder-climbed-sequentially;-elevation-skips-denied"
+  law_reference: "cans/trust.md#Monotonic-promotion-pipeline"
   statement: "The trust ladder is climbed sequentially (draft -> reviewed -> pinned): a human running 'routine ship <name> pinned' on a routine currently holding draft trust is rejected before any gate metric is even evaluated, because the draft -> pinned elevation skip is structurally denied — the routine must first graduate to reviewed."
   blast_radius_if_breached: "A human pins unproven code in one command: a routine that never passed sim replay, canary evidence, or invariant suites gains may_run_unattended, 500-row ceilings, summary-only audit, and endpoint-serving rights — the entire promotion evidence chain is bypassed by a single flag."
 
 confusion_matrix:
   quadrant: "true_negative"
   slop_risk: "Agent pre-promotes the fixture routine to reviewed (so the ship-to-pinned legitimately proceeds to metric checks and fails there with a different diagnostic), or asserts a generic failure without proving the rung stayed at draft — masking that the skip itself, not the metrics, was the blocker (catalog banned slop: permitting elevation skips directly from draft to pinned)."
-  anti_slop_mitigation: "AS-02 forces a registry re-read proving trust is still the literal 'draft' and promoted_through was not extended; AS-03 forces the typed exit 2 with the monotonic-ascent diagnostic naming the sequential requirement, distinct from a metrics denial."
+  anti_slop_mitigation: "AS-02 forces a registry re-read proving trust is still the literal 'draft' and promoted_through was not extended; AS-03 forces the typed exit 3 with the monotonic-ascent diagnostic naming the sequential requirement, distinct from a metrics denial."
 
 setup:
   env: "prod"
@@ -53,7 +53,7 @@ execution:
     requested_rung: "pinned"
 
 expected_observations:
-  exit_code: 2
+  exit_code: 3
   state_modified: false
   diagnostic:
     domain: "policy.trust"
@@ -74,4 +74,4 @@ anti_slop_assertions:
   - rule: "AS-02"
     verification: "After the denied ship: SELECT trust FROM routines WHERE name='payout' AND version=7 returns the literal 'draft', promoted_through is unchanged (SELECT promoted_through equality against the pre-command snapshot), and SELECT count(*) FROM _audit reflects only the denial event — no promotion row, no version bump."
   - rule: "AS-03"
-    verification: "Parse the --json CliEnvelope: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit cites the sequential ladder (draft -> reviewed -> pinned) rather than ship-gate metrics — proving the skip check fired first, before routine_stats evaluation; stdout prefix '[prod:tier_1]'."
+    verification: "Parse the --json CliEnvelope: exit_code == 3, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit cites the sequential ladder (draft -> reviewed -> pinned) rather than ship-gate metrics — proving the skip check fired first, before routine_stats evaluation; stdout prefix '[prod:tier_1]'."

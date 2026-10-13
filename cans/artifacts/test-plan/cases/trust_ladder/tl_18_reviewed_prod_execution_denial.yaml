@@ -1,0 +1,72 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_18_reviewed_prod_execution_denial"
+title: "Reviewed-trust routine invoked with --env prod is denied with E046_TRUST_VIOLATION (exit 2)"
+domain: "trust_ladder"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/physics.md#Exit-code-law; cans/trust.md#Weakest-link-matrix"
+  statement: "Production is an exclusive club: only pinned trust on Tier 1 hosts executes against prod. Invoking a reviewed-trust routine with --env prod fails closed at pre-flight with exit 2 and code E046_TRUST_VIOLATION — reviewed is a rehearsal rung, never a production rung — with state completely unmodified."
+  blast_radius_if_breached: "Reviewed code (proven only against mocks and masked sim replays, never live-contract-proven) mutates live production state and fires prod egress: unproven blast radius on real customer data."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the routine with --env sim and asserts the denial, never exercising the prod target; or asserts a generic exit 2 without matching the E046_TRUST_VIOLATION code literal; or pre-promotes the fixture routine to pinned in setup, masking the rung check."
+  anti_slop_mitigation: "AS-03 forces the typed E046_TRUST_VIOLATION code in diagnostic.domain policy.trust with exit_code == 2; AS-02 forces pre/post SELECT count(*) equality on envs/prod/workspace.db proving zero mutation; the fixture routine's rung is asserted as the literal 'reviewed' before the command runs."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_tl_18"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          description: "customer fulfillment orders"
+          columns:
+            id: pk
+            status: text!
+          idx: [[status]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "orders"
+        row_count: 12
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -m \"fulfill urgent pending orders\" --env prod"
+  input_params:
+    order_id: "ORD-1042"
+    routine_trust: "reviewed"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.trust"
+    culprit: "E046_TRUST_VIOLATION — reviewed-trust routine dispatch_order@4 invoked with --env prod; production requires pinned trust"
+    remedy: "promote via 'capcli routine ship dispatch_order pinned' (through reviewed), then execute against prod"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (decision: denied, effect: none; code E046_TRUST_VIOLATION)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Open envs/prod/workspace.db read-only before and after; SELECT count(*) FROM orders strictly identical (12 and 12); SELECT trust FROM routines WHERE name='dispatch_order' returns the literal 'reviewed' — the denial promotes nothing."
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit contains the literal 'E046_TRUST_VIOLATION', diagnostic.remedy names 'routine ship' to pinned; stdout prefix '[prod:tier_1]'."

@@ -53,5 +53,5 @@
       - Step 3: Teardown — remove environments with dual confirmation flags: see space.md#Safety-controls
     - Teardown invariants
       - identity revocation — sys agent revoke invalidates all tokens: see agent.md#System-agent-registry
-      - backup verification — push dry-run required before deletion: see #Commit-automation
+      - backup verification — push dry-run required before deletion: see #teardown-invariants
       - cryptographic authorization: see space.md#World-governance

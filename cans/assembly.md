@@ -112,7 +112,7 @@
         - reaper.rs — background timer evaluating spoke heartbeats; purges dead claims leases and expires agents
         - yield_queue.rs — evaluates _suspended_tasks and re-dispatches tasks on quota refill
         - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
-        - cron.rs — croner schedule evaluator daemon: see time.md#Schedule-&-maintenance
+        - cron.rs — croner schedule evaluator daemon: see time.md#schedule-maintenance
         - webhook.rs — inbound HMAC signature verification: see action.md#Bindings
         - assets.rs — rust-embed static bundle serving administrative cockpit: see interface.md#Administrative-cockpit-pwa
   - TypeScript runtime harness package
@@ -161,8 +161,8 @@
         - shape_gate.rs — enforces <= 2,000 tokens envelope, cyclomatic complexity <= 10, max 8 params
         - saga.rs — dual-write coordinator; handles compensation rollbacks on DB commit failure
         - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
-        - manifest.rs — receives declared manifests via runner IPC: see action.md#Manifests-&-fingerprints
-        - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#Runtime-fingerprint-(dynamic)
+        - manifest.rs — receives declared manifests via runner IPC: see action.md#manifests-fingerprints
+        - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#runtime-fingerprint
         - ipc_socket.rs — cross-platform IPC (UDS on POSIX/Termux, Named Pipes on Windows): see action.md#Sandbox-execution
       - Execution gates
         - shape_gate.rs — checks token, complexity, and param limits: see artifacts/governance.yaml#routine_shape
@@ -199,7 +199,7 @@
       - Domain telemetry — tracks rate bucket token drain, wire egress bytes, fuel consumption, and retry counts
     - Domain 5: Event & schedule bindings (bind/)
       - Subsystem modules
-        - cron.rs — evaluates cron patterns via croner crate: see time.md#Schedule-&-maintenance
+        - cron.rs — evaluates cron patterns via croner crate: see time.md#schedule-maintenance
         - webhook.rs — vendor signature drivers (Stripe, GitHub, Slack, Shopify, Twilio, RFC): see action.md#Bindings
         - endpoint.rs — routes pinned HTTP calls via axum: see action.md#Serve-lifecycle-split
         - keys.rs — hashes and validates partner API keys: see artifacts/governance.yaml#serve
@@ -308,7 +308,7 @@
       - test_ping_timeout.rs — validates fail-closed inquiry timeouts: see artifacts/policy.yaml#notify
       - test_mirror.rs — tests transactional JSONL stream flushing: see effect.md#Storage-hierarchy
     - End-to-end test tier (crates/capcli-cli/tests/e2e/)
-      - test_wireframe_fixtures.rs — golden-file engine asserting CLI stdout/exit codes against all screen fixtures: see wireframe-structure.md#Rust-Integration-Test-Runner
+      - test_wireframe_fixtures.rs — golden-file engine asserting CLI stdout/exit codes against all screen fixtures: see wireframe-structure.md#62-rust-integration-test-runner
       - test_onboarding_human.rs — validates human S0 to S10 sequence: see interface.md#Human-journey-stages
       - test_onboarding_harness.rs — validates agent H0 to H7 sequence: see interface.md#Harness-journey-stages
       - test_budget_cascade.rs — tests min() pool inheritance down call stack: see budget.md#Cascade

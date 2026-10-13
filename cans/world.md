@@ -122,8 +122,8 @@
       - integrity verification
         - hash verification — mandatory at boot: see artifacts/governance.yaml#schema.system
         - mismatch behavior — refuse boot: see artifacts/policy.yaml#fail_closed
-      - managed surfaces — 13 kernel tables defined in artifacts/system-schema.yaml
-        - registry roster — _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _outbox_events, routine_stats, _suspended_tasks, _templates
+      - managed surfaces — 15 kernel tables defined in artifacts/system-schema.yaml
+        - roster — _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _outbox_events, _inbox, routine_stats, _suspended_tasks, _templates, _bindings
     - Shorthand expansion
       - column shorthands
         - primary key
@@ -162,6 +162,15 @@
           - lease semantics — locked_by records claiming worker or federated subscriber daemon; atomic RETURNING claim guarantees single-worker dispatch
           - federated siphoning — peer daemons poll or stream events with visibility='public' from _outbox_events via socket, tracking positions in _watch_cursors
           - draining — daemon drains _outbox_events asynchronously; headless subshell CLI drains pending calls synchronously prior to exit 0
+        - inbox lifecycle
+          - table — _inbox durable inbound dispatch queue in workspace.db; verified stimuli queue here before any routine spawns
+          - lifecycle — pending → in_flight → completed; crash (Exit 4) or budget exhaustion (Exit 2) rolls the row to failed
+          - claim statement — UPDATE _inbox SET status = 'in_flight', locked_by = :worker
+          - claim filter — WHERE id = (SELECT id FROM _inbox WHERE status = 'pending' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s', 'now'))
+          - claim order — ORDER BY priority DESC, id ASC LIMIT 1) RETURNING *
+          - retries — rows exceeding 3 failed attempts move to the dead letter queue
+          - dead letter queue — FIFO retention, 30-day expiry, 1,000-item cap
+          - single-worker — the atomic RETURNING claim guarantees exactly-once dispatch across workers
         - column locking
           - tag — imm_cols: [...]
           - authorizer effect — UPDATE denied on targeted columns

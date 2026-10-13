@@ -46,13 +46,13 @@
       - data inputs — test parameters sampled via capcli sys audit sample
     - ship stage
       - command — see interface.md#Routine-path
-      - authority model — see overview.md#Human-authority
+      - authority model — see overview.md#human-harness
       - metric prerequisites — success rates queried from routine_stats
       - production promotion — automated upon passing synthetic fuzz and replay suite
-    - auto-promotion path — qualifying low-risk routines: see trust.md#Gates-&-promotion
-      - promotion conjunction — risk-weighted pass metrics: see trust.md#Auto-promotion-(draft-to-reviewed)
+    - auto-promotion path — qualifying low-risk routines: see trust.md#gates-promotion
+      - promotion conjunction — risk-weighted pass metrics: see trust.md#auto-promotion
       - audit payload — records routine.auto_promoted with 5-point metric record
-      - veto window — 1-hour canary telemetry rollback trigger: see trust.md#Promotion-queue
+      - veto window — 1-hour canary telemetry rollback trigger: see #promotion-queue
     - promotion queue
       - queue enqueue — capcli routine ship <name> reviewed --queue
       - queue inspection — capcli routine pending

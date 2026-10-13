@@ -7,7 +7,7 @@ target_crate: "crates/capcli-cli"
 
 invariant:
   law_reference: "cans/space.md#policy-—-draft-writes-denied-unconditionally-by-overlay"
-  statement: "The prod environment overlay denies every mutating write from a draft-trust caller unconditionally: no intent metadata, row shape, or flag can substitute for the reviewed rung required by the prod world (authority — reviewed or pinned trust required). The statement is well-formed (WHERE + LIMIT, 1 row) so the ONLY blocking factor is the draft trust floor."
+  statement: "The prod environment overlay denies every mutating write from a draft-trust caller unconditionally: no intent metadata, row shape, or flag can substitute for the pinned rung required by the prod world (authority — pinned trust required). The statement is well-formed (WHERE + LIMIT, 1 row) so the ONLY blocking factor is the draft trust floor."
   blast_radius_if_breached: "Unproven code mutates live production data: mass order-status corruption, drift between the git prod worktree and the runtime substrate, and financial fulfillment mistakes executed with no sim proof and no promoted_by provenance — unrecoverable without snapshot restore."
 
 confusion_matrix:
@@ -51,7 +51,7 @@ expected_observations:
   diagnostic:
     domain: "policy.trust"
     culprit: "draft-trust caller agt_tl_01 attempting a mutating write on orders in env prod; env overlay env.prod.draft_writes=deny is unconditional"
-    remedy: "prove the change in sim ('capcli routine prove <name> --env sim'), ship to reviewed trust, or execute exploratory writes from env dev"
+    remedy: "prove the change in sim ('capcli routine prove <name> --env sim'), ship to pinned trust (via reviewed), or execute exploratory writes from env dev"
   database:
     row_count_delta: 0
     tables_mutated: []

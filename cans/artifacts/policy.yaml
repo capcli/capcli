@@ -193,16 +193,16 @@ api:
     dry_run_returns_simulated: true      # dry-run verbs return { simulated: true }
     skip_reports_gap: true               # skipped verbs produce manifest gap warning
   fuel:
-    per_session_fuel: 100000             # integer gas allocation per session
     per_session_fuel: 100000             # integer fuel allocation per session
     max_call_egress_bytes: 5242880       # 5MB physical wire limit per egress dispatch
     confirm_above_fuel: 50000            # gate reserved for high wire/compute impact
-  rate_limit:                                    # live quota from provider responses
+  rate_limit:                                    # live quota from provider responses; Dial 1 cadence + Dial 2 ceilings
     model: leaky_token_bucket                    # client-side leaky bucket slaved to upstream headers
     default_capacity: 60                         # burst ceiling
     refill_rate_per_sec: 1.0                     # steady-state token drip
     monthly_spend_ceiling: 0                     # Dial 2 volume ceiling, provider currency units; 0 = unbounded
     monthly_call_ceiling: 0                      # Dial 2 volume ceiling in calls; 0 = unbounded
+    pre_call_gate: true                          # socket-edge gate: tokens < 1 → kernel sleeps (<2s) or yields exit 6 (>2s); exit 2 reserved for Dial 2 ceiling breach
     priority_floors:                             # simple preemption floors for scarce APIs
       background_yield_tokens: 15                # background yields (exit 6) if tokens < 15
       standard_yield_tokens: 5                   # standard yields (exit 6) if tokens < 5

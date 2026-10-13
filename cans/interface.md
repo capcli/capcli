@@ -77,6 +77,7 @@
         - bind federation <name> <source_ws> <event> <capability@version> [-m "<why>"] — asynchronous peer outbox siphon
         - bind endpoint <routine@version> --auth api-key [--rate <r>] [--channel all|rest|mcp]
         - export — export openapi [--out path], export mcp [--out path]
+        - ingestion — every trigger source verifies then enqueues into _inbox: see action.md#Trigger-types
       - Webhook ingress
         - route verification — external webhooks require valid public --ingress url or active tunnel; raw 127.0.0.1 denied
       - Management — bind list, inspect <name>, pause <name>, resume <name>, remove <name>
@@ -85,7 +86,7 @@
       - Notifications — ping notify <principal> <msg> --channel <c> --intent "..."
       - Inquiries — ping ask <principal> <q> --options <opts> [--timeout <t>] --intent "..."
       - Listing — ping list [--pending]
-      - Resolution — ping resolve <ask-id> --choice <opt>: see physics.md#Exit-code-law
+      - Resolution — ping resolve <ask-id> --choice <opt>: flips the ask row, enqueues task resumption in _inbox: see action.md#Trigger-types; exit semantics: see physics.md#Exit-code-law
       - Expiry — ping expire <ask-id>
     - Governance path: rule noun
       - Inspection — rule show [target=schema]
@@ -169,7 +170,7 @@
   - Client RPC contract
     - Client instantiation and transport
       - Connection setup
-        - entry point — in-tree module in packages/pwa/src/client.ts: see cans/assembly.md#Application-shell-and-transport
+        - entry point — in-tree module in packages/pwa/src/client.ts: see assembly.md#administrative-cockpit-package
         - config parameters — createClient({ endpoint, token, brand }): see interface.md#Client-RPC-contract
         - transport engine — HTTP POST for RPC; WebSocket / SSE for tail: see action.md#Serve-lifecycle-split
       - White-label customization

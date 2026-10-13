@@ -74,10 +74,10 @@ matrix:
         tier: tier_2
         sandbox: broker
   assertions:
-    # Tier 2 runners must refuse pinned routine execution: E045_TIER2_PINNED_DENIED, exit 2.
+    # Tier 2 runners must refuse --env prod: E045_PROD_TIER1_MANDATE, exit 2.
     - scope: deep_test
       tier: tier_2
-      pinned_execution: { expect_code: E045_TIER2_PINNED_DENIED, expect_exit: 2 }
+      prod_target: { expect_code: E045_PROD_TIER1_MANDATE, expect_exit: 2 }
   release:
     include:
       - os: ubuntu-latest

@@ -165,6 +165,7 @@
         - webhook dispatch — inbound provider event
         - ask resume — suspension release via ping ask
         - inbox poll — capcli sys inbox pop fetches sensory queued tasks
+        - inbound dispatch — kernel worker daemon claims _inbox rows atomically and spawns the bound routine: see world.md#Inbox-lifecycle
       - Sensory grounding
         - physical stimulus — worker agents consume real inbox queue items; ad-hoc telepathic order hallucinations banned
       - Interior rules
@@ -173,7 +174,7 @@
         - federation boundary — ctx.call to a ws:// target inside a ctx.db.txn block fails compilation with exit 3 (E034_TXN_EXTERNAL_CALL)
         - lock fence rule — ctx.call to a ws:// target while holding local Layer 1 claims is rejected at compile time with exit 3 (E035_LOCK_FENCE_BREACH)
         - transient polling — atomic ctx.api.poll_until permitted; raw time.sleep loops banned
-        - banned patterns — ctx.on listeners, reactive streams, subscriptions
+        - banned patterns — ctx.on listeners, reactive streams, subscriptions: rejected at AST parse (Exit 3)
         - failure modes — callbacks break DAG linearity, txn boundaries, replay
         - architecture law — events start routines, routines never consume events
     - Composition and cascade
@@ -192,7 +193,7 @@
         - counter scopes — fuel, wire bytes, rate, rows session-scoped
         - constraint direction — cages tighten downward
         - min cascade law — see budget.md#Cascade
-        - sim mode propagation — child gaps propagate up: see space.md#Rehearsal-&-sim
+        - sim mode propagation — child gaps propagate up: see space.md#rehearsal-sim
     - Skill invocation protocol
       - Pipeline stages — direct invocation via capcli run; search/inspect used only on cache miss or signature ambiguity
       - Bootstrap skill — teaches harness CLI grammar and discovery; maps to no routine, carries no Param declarations
@@ -251,6 +252,7 @@
         - ctx.txn(egress=..., write=...) — kernel-mediated saga context; wraps compensating HTTP rollback and DB mutation
         - ctx.call(target, params, timeout_s=None, compensate=None) — local or federated (ws://) routine execution; compensate verb triggers on caller saga failure
         - ctx.emit(event, payload) — atomic write to local _outbox_events for asynchronous federated consumption: see world.md#Outbox-atomic-claim
+          - commits inside the caller's SQLite transaction — domain writes and emitted events commit atomically in the same transaction
         - ctx.db.lock(target, ttl) — Layer 1 lease claim in the claims table with active TTL; lease identity and lifecycle: see world.md#claims-lease-lifecycle
       - Deterministic inputs
         - ctx.now() — monotonic logical timestamp locked to causal frame start
@@ -376,10 +378,13 @@
       - cron — bind cron <name> <capability> "<cron_expr>" [-m "intent"]
       - webhook — bind webhook <name> <provider> <event> <capability> [--verifier doc://specs/<provider>#webhook] [-m "intent"]
       - endpoint — bind endpoint <routine@version> --auth api-key [--rate <r>]
+      - federation — bind federation <name> <source_ws> <event> <capability@version> — background siphon pulls public peer events into _inbox
+      - inbound intake — all trigger sources verify, then enqueue into _inbox
+        - cron tick evaluation, webhook HMAC per signature-verification node, endpoint authorizer gates, ping-ask resumption, federated siphon of public peer events: see world.md#Inbox-lifecycle
     - Signature verification — engine dynamically verifies timestamped headers, HMAC digests, and payloads against declarative specs in doc://specs/<provider>#webhook
     - Binding management
       - Lifecycle commands — bind list, inspect, pause, resume, remove
-      - Address form — plain <name> on every verb; rows addressable as db://_bindings/<name>
+      - Address form — binding id on every verb (e.g. bnd_3k2f); rows addressable as db://_bindings/<id>
       - Key management — bind keys issue <name> --principal partner:<id>
       - Health checks — bind endpoint <name> --health
       - Schedule defenses

@@ -12,12 +12,12 @@
   "audit_op": "op_ship_03",
   "archetype": "diagnostic",
   "component": {
-    "rule": "policy.trust.tier2_refusal",
+    "rule": "policy.trust.promotion_signoff",
     "domain": "policy.trust",
     "layer": "trust",
-    "culprit": "Pinned promotion denied on Tier 2; the platform ceiling caps this host at reviewed.",
-    "measured": "platform ceiling reviewed (requested: pinned on tier_2 host)",
-    "remedy": "run the promotion from a tier_1 host (Linux, WSL2, or Docker with userns)",
+    "culprit": "Pinned promotion denied: ship requires human sign-off or Tier-1 CI pipeline.",
+    "measured": "sign-off absent (autonomous ship from tier_2 host)",
+    "remedy": "re-run with human sign-off or from the Tier-1 CI pipeline",
     "routine": "order_sync@2 (current rung: reviewed)",
     "target": "pinned",
     "host": "tier_2 (degraded isolation; broker-mediated sandbox)"

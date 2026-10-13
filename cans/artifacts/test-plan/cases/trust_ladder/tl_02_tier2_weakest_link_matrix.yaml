@@ -1,0 +1,77 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_02_tier2_weakest_link_matrix"
+title: "Weakest Link matrix on Tier 2: pinned routine denied for prod target (E045_PROD_TIER1_MANDATE, exit 2), executes for sim target (exit 0)"
+domain: "trust_ladder"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "cans/trust.md#Weakest-link-matrix; cans/physics.md#Exit-code-law"
+  statement: "The Weakest Link matrix governs execution jointly by environment, trust rung, and platform tier: on a Tier 2 host (Darwin), a pinned routine invoked with --env prod fails closed at pre-flight with exit 2 and code E045_PROD_TIER1_MANDATE (production demands Tier 1 plus pinned); the identical pinned invocation with --env sim executes to completion with exit 0 — local testing of pinned logic on laptops is permitted."
+  blast_radius_if_breached: "Tier 2 hosts reach live production state through broker-mediated sandboxing — macOS/Windows fleets mutate prod data and fire prod egress without namespace containment; or symmetrically, developers lose local rehearsal of pinned logic and ship untested production code."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent exercises only the prod-target leg (or only the sim-target leg) and declares the matrix proven; or asserts a generic failure on the denied leg without matching the E045_PROD_TIER1_MANDATE code literal; or runs both legs on the ambient CI host OS instead of injecting PlatformTier::Tier2."
+  anti_slop_mitigation: "AS-07 mandates two explicit target-environment configurations on an injected PlatformTier::Tier2: --env prod must hard-deny at pre-flight with the typed E045_PROD_TIER1_MANDATE code, and --env sim must run the pinned routine to completion (exit 0). AS-03 requires the code literal in the denial diagnostic; AS-02 proves the orders table is untouched on the denied leg."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_2"
+  caller_identity:
+    principal: "user:dana"
+    agent_id: "agt_tl_02"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      tables:
+        orders:
+          description: "customer fulfillment orders"
+          columns:
+            id: pk
+            status: text!
+          idx: [[status]]
+    tables:
+      - name: "routines"
+        row_count: 1
+      - name: "orders"
+        row_count: 12
+      - name: "_audit"
+        row_count: 4
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\" --env <target>"
+  input_params:
+    order_id: "ORD-1042"
+    carrier: "fedex"
+    target_matrix:
+      - "prod: pinned invocation on tier_2 must hard-deny at pre-flight with E045_PROD_TIER1_MANDATE (exit 2); state untouched"
+      - "sim: identical pinned invocation on tier_2 must execute to completion (exit 0)"
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.platform"
+    culprit: "E045_PROD_TIER1_MANDATE — --env prod invoked on a tier_2 host (darwin); production execution requires Tier 1 plus pinned trust"
+    remedy: "use --env sim for local testing of pinned logic; production runs require a Tier 1 Linux host"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "routine.run (decision: denied, effect: none; code E045_PROD_TIER1_MANDATE)"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-07"
+    verification: "Run the case twice with an injected platform probe forcing PlatformTier::Tier2: the --env prod leg must deny at pre-flight with exit 2 and the typed E045_PROD_TIER1_MANDATE code, and the --env sim leg must execute cap://dispatch_order@4 to completion (exit 0, routine.run allowed, ORD-1042 transitions exactly once, stdout prefix '[sim:tier_2]') — both legs in the same test binary so ambient CI hardware cannot mask either outcome."
+  - rule: "AS-03"
+    verification: "Parse the --json CliEnvelope on the prod-target leg: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.platform', diagnostic.culprit contains the literal 'E045_PROD_TIER1_MANDATE', diagnostic.remedy names '--env sim'; stdout contains 'FAIL policy.platform.prod_tier1'."
+  - rule: "AS-02"
+    verification: "On the denied prod-target leg, SELECT count(*) FROM orders before and after on envs/dev/workspace.db — strictly 12 both times, and SELECT count(*) FROM routines stays 1 with trust = 'pinned' (the refusal demotes nothing by itself)."

@@ -131,7 +131,8 @@ tables:
     description: "Trigger bindings: cron schedules, webhooks, federation siphons, endpoint ingress routes"
     sys: true
     columns:
-      name: text pk                   # binding name; plain <name> on every bind verb
+      id: text pk                     # kernel-minted binding id (e.g. bnd_3k2f)
+      name: text!                     # human label given at creation (e.g. weekly_digest)
       kind: text!                     # cron | webhook | federation | endpoint
       capability: text!               # routine ref the binding invokes (capability[@version])
       config: json!                   # kind-specific: cron_expr | provider,event,ingress,verifier | source_ws,event | auth,rate,channel
@@ -141,6 +142,7 @@ tables:
       - "kind IN ('cron', 'webhook', 'federation', 'endpoint')"
       - "state IN ('active', 'paused')"
     idx:
+      - [name]
       - [kind]
       - [state]
 
@@ -309,4 +311,22 @@ tables:
     chk:
       - "status IN ('pending', 'in_flight', 'dispatched', 'failed')"
       - "visibility IN ('public', 'local')"
+
+  _inbox:
+    target_db: workspace.db
+    description: "Durable inbound dispatch queue: verified stimuli await atomic worker claim"
+    sys: true
+    columns:
+      id: pk
+      source: text!                    # cron | webhook | endpoint | ping | federation
+      source_ref: text                  # source-side handle for traceability
+      payload: json! mask=true         # inbound stimulus payload
+      status: text=pending             # pending, in_flight, completed, failed, dead_letter
+      scheduled_at: int                # epoch seconds; NULL = dispatchable immediately
+      priority: int=0                  # claim order: higher priority first
+      attempts: int=0                  # failed dispatch attempts
+      locked_by: text                  # claiming worker id; set atomically by claim UPDATE
+      created_at: int!
+    chk:
+      - "status IN ('pending', 'in_flight', 'completed', 'failed', 'dead_letter')"
 

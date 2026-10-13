@@ -111,7 +111,7 @@ routine_shape:
     tiers:
       tier_1: [linux, wsl2]           # see: cans/physics.md#Platform-tier-taxonomy
       tier_2: [darwin, termux, win]   # see: cans/physics.md#Platform-tier-taxonomy
-    pinned_requires_tier_1: true      # see: cans/trust.md#Ladder-laws
+    pinned_prod_requires_tier_1: true  # see: cans/trust.md#Weakest-link-matrix
   composition:
     budget_inheritance: min            # child effective = min(declared fuel, parent remaining, session remaining, governance max)
     fuel_scope: session                # fuel is session-level, not per-routine

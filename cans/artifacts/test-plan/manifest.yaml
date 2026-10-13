@@ -1,4 +1,4 @@
-# capcli canonical test plan manifest — machine-readable index of all 187 cases
+# capcli canonical test plan manifest — machine-readable index of all 188 cases
 # Derived from test-plan-structure.md §1 (directory tree) and §6 (master catalog).
 # Quadrant and target_tier values MUST match the §6 catalog tables exactly.
 $schema: "test-plan/manifest/v1"
@@ -6,7 +6,7 @@ plan:
   name: "capcli canonical test plan"
   structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
   matrix_doc: "cans/artifacts/test-plan/matrix.yaml"
-  total_cases: 187
+  total_cases: 188
   domains: 12
   crate_tier_convention:
     unit: "crates/capcli-core"
@@ -41,7 +41,7 @@ domains:
     spec_sources: ["cans/effect.md", "cans/space.md"]
   trust_ladder:
     prefix: "tl"
-    case_count: 17
+    case_count: 18
     description: "Trust ladder & promotion — draft/reviewed/pinned floors, monotonic ascent, auto-promotion conjunction, canary telemetry demotion, human veto, circuit breaker."
     spec_sources: ["cans/trust.md", "cans/physics.md"]
   schema_evolution:
@@ -88,8 +88,8 @@ cases:
     domain: "kernel_physics"
     target_tier: "integration"
     target_crate: "crates/capcli-core"
-    quadrant: "true_negative"
-    title: "Tier 2 boot degrades sandbox to broker with visible WARN and denies pinned execution"
+    quadrant: "true_positive"
+    title: "Tier 2 boot degrades sandbox to broker with visible WARN; pinned dev-target execution proceeds"
   - case_id: "kp_03_authorizer_prepare_time_abort"
     file: "cases/kernel_physics/kp_03_authorizer_prepare_time_abort.yaml"
     domain: "kernel_physics"
@@ -697,13 +697,13 @@ cases:
     target_crate: "crates/capcli-cli"
     quadrant: "true_negative"
     title: "Draft-trust caller attempting a bounded mutating write in prod is denied unconditionally by the env overlay (draft_writes: deny)"
-  - case_id: "tl_02_tier2_pinned_execution_refusal"
-    file: "cases/trust_ladder/tl_02_tier2_pinned_execution_refusal.yaml"
+  - case_id: "tl_02_tier2_weakest_link_matrix"
+    file: "cases/trust_ladder/tl_02_tier2_weakest_link_matrix.yaml"
     domain: "trust_ladder"
     target_tier: "e2e"
     target_crate: "crates/capcli-cli"
     quadrant: "true_negative"
-    title: "Pinned-trust routine invoked on a Tier 2 host (Darwin) is hard-denied with E045_TIER2_PINNED_DENIED while the identical invocation passes on Tier 1"
+    title: "Weakest Link matrix on Tier 2: pinned routine denied for prod target (E045_PROD_TIER1_MANDATE, exit 2), executes for sim target (exit 0)"
   - case_id: "tl_03_auto_promotion_conjunction_pass"
     file: "cases/trust_ladder/tl_03_auto_promotion_conjunction_pass.yaml"
     domain: "trust_ladder"
@@ -809,6 +809,13 @@ cases:
     target_crate: "crates/capcli-daemon"
     quadrant: "true_negative"
     title: "Newly pinned routine exceeding 1% error in the first hour is rolled back to draft with a Cockpit PWA alert"
+  - case_id: "tl_18_reviewed_prod_execution_denial"
+    file: "cases/trust_ladder/tl_18_reviewed_prod_execution_denial.yaml"
+    domain: "trust_ladder"
+    target_tier: "e2e"
+    target_crate: "crates/capcli-cli"
+    quadrant: "true_negative"
+    title: "Reviewed-trust routine invoked with --env prod is denied with E046_TRUST_VIOLATION (exit 2)"
   # ── schema_evolution (se) — 14 cases ───────────────────────
   - case_id: "se_01_yaml_syntax_gate1_refusal"
     file: "cases/schema_evolution/se_01_yaml_syntax_gate1_refusal.yaml"
