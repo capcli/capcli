@@ -15,7 +15,7 @@
     "domain": "policy.secrets",
     "layer": "vault",
     "culprit": "Channel 'slack' has no webhook configured in vault.",
-    "remedy": "prompt human supervisor to inject the channel webhook via Cockpit (http://127.0.0.1:4040/vault), or dispatch via a configured channel",
+    "remedy": "Inject the channel webhook secret out-of-band — `capcli sys vault set notify_slack_webhook --in @-` (stdin, never argv), `CAPCLI_SECRET_NOTIFY_SLACK_WEBHOOK` in the harness env, or external client RPC — then retry notify; or dispatch via a configured channel",
     "channel": "slack",
     "secret_ref": "vault://notify_slack_webhook",
     "lines": [

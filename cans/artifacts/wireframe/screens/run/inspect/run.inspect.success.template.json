@@ -35,10 +35,10 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
-      "intent": "Instantiate draft routine sync_orders",
-      "risk": "mutating",
-      "requires_intent": true
+      "command": "capcli inspect quota://threads",
+      "intent": "Quota headroom verified before instantiation",
+      "risk": "safe",
+      "requires_intent": false
     }
   ]
 }

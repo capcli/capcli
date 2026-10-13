@@ -15,7 +15,7 @@
     "domain": "policy.authorizer",
     "layer": "authorizer",
     "culprit": "Unsigned hooks rejected. HMAC-SHA256 verification must be armed at bind time.",
-    "remedy": "Inject the provider signing secret out-of-band — `capcli sys vault set stripe_webhook_secret <value>` in the operator shell, `CAPCLI_SECRET_STRIPE_WEBHOOK_SECRET` in the harness env, or external client RPC — then re-run bind webhook. Verification arms against the opaque vault://stripe_webhook_secret handle; plaintext never enters agent context.",
+    "remedy": "Inject the provider signing secret out-of-band — `capcli sys vault set stripe_webhook_secret --in @-` (stdin, never argv) in the operator shell, `CAPCLI_SECRET_STRIPE_WEBHOOK_SECRET` in the harness env, or external client RPC — then re-run bind webhook. Verification arms against the opaque vault://stripe_webhook_secret handle; plaintext never enters agent context.",
     "provider": "stripe",
     "signing": "none armed (vault://stripe_webhook_secret absent)"
   }
