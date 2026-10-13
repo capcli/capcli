@@ -1,0 +1,597 @@
+
+- Physical laws: the kernel is compiled machine physics, enforced at prepare time, at runtime, and at the OS boundary
+  - Capcli is a deterministic microkernel with out-of-process plugins; five mechanisms never delegate to IPC
+    - sqlite3_set_authorizer performs C-level prepare-time pointer intercept; it runs as a native C callback inside sqlite3_prepare_v2, wired through rusqlite with a native Rust closure
+    - The AST structural scanner carries the WHERE/LIMIT blast shields; scanning is structural, never probabilistic; zero neural networks, ONNX runtimes, or probabilistic parsing exist in the kernel
+    - The VDBE bytecode hook caps physical B-tree mutation and stands as the state_modified:false guarantor
+    - Budget frames and the fuel ledger compute the downward min() cascade and pre-flight headroom gates; the cage tightens, never widens
+    - The append-only SHA-256 causal DAG ledger is the root integrity record, the WORM attestation source, and the cryptographic truth
+    - The native tri-jail supervisor owns platform process isolation, credential boundary, and network intercept
+    - The microkernel evaluates ASTs, bounds B-tree writes, locks fuel cages, traps raw socket attempts, and timestamps the DAG
+  - Layer 1 authorizer: access control at prepare time, compiled from artifacts/policy.yaml
+    - The authorizer decides access control only (SQLITE_OK, SQLITE_DENY, SQLITE_IGNORE); every statement evaluates a 3D action x table x column tuple
+      - The authorizer protects SQLite; the egress proxy protects HTTP
+      - The authorizer table compiles from artifacts/policy.yaml, whose authorizer section declares alter: deny
+    - Tenant isolation forces access through scoped :principal views
+      - Direct SELECT, UPDATE, and DELETE on tenant:true tables are blocked
+      - scoped:principal views require a :principal bind variable
+      - Omission fails Sub-check 2; the kernel maps --as to the domain row key before binding
+      - A scoped view invoked without --as is rejected for a missing principal
+      - ctx.db.mutate asserts row owner == :principal
+    - Mutation allowlists gate tables, columns, and claims
+      - Layer 1 enforces read, insert, update, and delete table-mutation allowlists
+      - deny_columns_write guards immutable keys
+      - Claims lease insert and delete issued by ctx.db.lock are kernel-internal, never agent SQL
+      - Layer 2 deny_write applies to raw agent statements
+    - Schema operations are restricted or denied
+      - drop, alter, and vacuum are restricted at Layer 1
+      - Raw DDL (ALTER, DROP, CREATE TABLE) is denied for draft and reviewed principals with exit 2
+      - vacuum demands pinned trust, is denied unconditionally in prod, and runs in dev and sim for pinned callers
+      - Agent-created triggers are denied as trigger injection
+      - direct updates to _audit, agents, and claims are denied
+    - The function and pragma surface is closed by default
+      - The function allowlist is exactly count, sum, min, max, avg, json_extract, date
+      - the denylist blocks load_extension, writefile, readfile
+      - query_only and foreign_keys are strictly permitted; attach and detach are unconditionally denied
+  - Layer 1.2 VDBE hook and Layer 1.5 dry-run: runtime caps and the opcode trap
+    - The 1.2 hook runs on sqlite3_update_hook plus sqlite3_progress_handler, counting physical B-tree row mutations and VDBE bytecode steps
+    - Breach of max_rows_affected aborts the transaction instantly, independent of WHERE clause structure
+    - Layer 1.5 performs a sqlite3_prepare_v2 dry-run inside a test transaction and cross-checks the AST classification against SQLite EXPLAIN
+    - OpenWrite on a statement classified as read denies the run; unclassified writes (OpenWrite bytecode) trigger denial
+  - Layer 2 AST scanner: structural pre-checks, secondary to the runtime hook
+    - Bound parameters are mandatory; raw SQL string interpolation and f-strings fail compilation with exit 3
+    - Multi-statement raw query strings are denied structurally; unparseable SQL and schema bypass sequences are denied
+    - An unclassified read/write is treated as a write; mutating writes require a valid non-empty causal intent
+    - UPDATE and DELETE are bounded writes only (select max 10000, insert max 500, update/delete max 100)
+      - UPDATE and DELETE require WHERE on a specific primary key or bounded predicate
+      - Unbounded predicates die at AST parse; the hook aborts past 100 rows
+      - OFFSET greater than 50 is denied at prepare time with exit 2
+    - Attack shapes are denied: boolean injections (UPDATE SET WHERE OR 1=1), unconditional deletions (DELETE FROM WHERE NOT EXISTS), tautology bypasses (WHERE 1=1)
+    - Interior rules forbid dangerous crossings
+      - No external calls inside transactions: ctx.api.call or ctx.call to ws:// inside ctx.db.txn fails compilation with exit 3 (E034_TXN_EXTERNAL_CALL)
+      - No ws:// calls while holding Layer 1 claims: breach fails at compile time with exit 3 (E035_LOCK_FENCE_BREACH)
+  - Raw SQL discipline: exploration with the authorizer in the loop
+    - Raw SQL is permitted for data exploration; ORMs, custom query builders, direct driver paths, and external ORM sockets are banned
+    - Raw writes execute inside explicit transactions; bulk operations loop bounded chunks via ctx.db.execute, each chunk an independent transaction and audit event
+      - Max rows per chunk follows artifacts/policy.yaml#query
+      - sql --count is mandatory before mass updates (waived in dev/sim)
+      - Prod bulk updates above 10 rows require approval
+      - writes exceeding row caps require human confirmation
+    - Direct agent socket connections and raw subshell access to workspace.db are denied; the file sits behind the daemon IPC socket and local IPC is permitted exclusively to the kernel endpoint
+    - Open bash is blocked from raw socket connect via seccomp-bpf
+  - Concurrency: three non-overlapping timescales, distinct from the enforcement layers
+    - Layer 1 macro leases live in the claims table with business scope in minutes; identity is strictly (session_id, harness_marker, op_sequence) and OS PID binding is banned
+    - Leases are acquired via explicit ctx.db.lock(target, ttl) or routine manifest auto-claim; a background daemon reaps expired claims
+    - Layer 2 meso fence records per-row read versions plus declared write intent, captured during Phase 1 on ctx.db.get/view and re-verified under SQLite lock during Phase 3 commit as the final backstop
+      - Read drift on read-only rows triggers re-read and re-fence (max 3 re-fences for a suspended frame, then exit 2 E061_OCC_DRIFT)
+      - Write drift is an immediate write-write conflict exiting 2 with zero partial writes
+      - Daemon purge drops the _suspended_tasks row and releases the frame's Layer 1 claims lease
+    - Layer 3 micro locks use SQLite BEGIN IMMEDIATE via rusqlite with lifespan strictly under 15ms; contention queues up to busy_timeout=5000ms and exhaustion fails closed with exit 2
+    - Network calls never execute inside transactions; write locks are held during atomic commits only, never across agent execution
+  - Kernel stance: deny by default, impossible paths over instructions
+    - Capcli is the governed perimeter between agent harness and workspace; the kernel executes effects, enforces physics, and logs audit while cognition lives in the harness
+    - Agent intentions are never inherently trusted; the default stance is deny across all capability vectors and policy checks fail closed on ambiguity
+    - Impossible paths are preferred over prompt instructions; designed denials teach the harness through structured feedback
+    - Execution containment is enforced at OS level; configuration cannot loosen the SQLite authorizer or jail walls
+    - policy.yaml governs runtime acts (verbs) and governance.yaml governs artifact shapes; both compile into capcli.lock at startup and the live engine never reads uncompiled YAML
+      - No runtime policy mutation; policy changes require git commits
+      - State lives in SQLite, capabilities live in guest scripts, experience lives in JSONL
+      - YAML declares, guest runtime executes, JSONL records
+    - The kernel matches, dispatches, delivers, and logs with zero LLM inference; discovery tables (_audit, _api_quota, _budget_frames) are authorizer-granted read-only
+    - Outbound channels are db mutations, isolated routines, and external HTTP egress
+
+- Execution engine and exits: one engine, six exits, zero partial state
+  - The unified 3-phase engine is the single execution model; every live invocation runs Phase 1 to Phase 3 without exception and pushes a frame to _budget_frames
+    - In the phase map, Layer 2 AST executes in Phase 1 while Layers 1, 1.2, and 1.5 execute in Phase 3
+    - The mutation pipeline order is intent declaration, gate intake, AST pre-parse and target validation, authorizer and update hook, physical commit, then async audit emission
+    - exception: binary — the engine model defines exactly two cross-phase views (layer-to-phase map, mutation pipeline order)
+  - Phase 1 pre-flight is host-side and memory-only: zero physical DB writes, zero network calls
+    - Identity is verified via marker sniffing (PPID/env), token validation, and principal check (--as); PID-only trust is banned
+    - SQL/routine syntax is parsed with bindings checked; f-strings and interpolation are banned; complexity ceiling is max 2000 tokens
+    - A native DFS cycle scan bans A-to-B-to-A cycles; the capcli.lock hash is matched against the current schema
+    - Static budget headroom is evaluated via can_invoke_now against the session ceiling
+    - Mutating operations require --intent (missing --intent throws exit 3); the intent target must match AST write tables and columns, and high-impact writes demand --reason
+    - Presence-only or marker-less harness mutating without explicit --session/--by is rejected with exit 3; a missing, forged, or expired session token aborts with exit 3
+    - Any Phase 1 check failure refuses with exit 3 and leaves state untouched
+  - Phase 2 runs the guest isolated in bwrap (tier 1) or microVM/WASM (tier 2), emitting discrete ctx actions over IPC
+    - The guest address space has zero socket access and zero credential plaintext
+    - Routine invocation outside the kernel runner exits 3 as standalone bypass
+    - Guest crash, unhandled exception, or type violation exits 4 with full rollback and state_modified:false
+    - Proactive yield on low token/fuel floors exits 6 as a checkpoint, never an error
+  - Phase 3 performs the kernel-side physical commit under SQLite BEGIN IMMEDIATE
+    - The Layer 1 authorizer evaluates action x table x column; the 1.2 hook enforces row limits on active VDBE bytecode
+    - The _audit event appends with prev_hash link and the outbox syncs
+    - Authorizer block, check constraint, or budget limit exits 2 with a native diagnostic trace; sink loss or secret leak exits 5 with token revocation
+  - The execution governor selects fast path or yield path per operation at runtime
+    - Operations requiring wire egress or exceeding 15ms take the yield path; all others take the fast path
+    - Fast path executes the plugin child process inline, pipes input, reads output, deducts fuel, and returns the payload with micro-locks unbroken and zero context switching
+    - Yield path intercepts the wire call into _outbox_events, halts the routine with exit 6, checkpoints fence/environment/cursor, and closes Layer 3 locks
+      - Egress executes out-of-band via the kernel proxy; the result lands in _inbox; capcli-daemon runs the pre-compiled guest routine to completion without waking the harness
+      - Waking or re-prompting the LLM harness for purely mechanical execution is prohibited
+  - The exit contract binds capcli commands returning CliEnvelope; exit codes, schema models, and the routine contract are immutable
+    - Exit labels map 1:1 onto exit codes (0 success, 2 denial, 3 refusal, 4 crash, 5 panic, 6 yield); any non-zero exit leaves state_modified:false and any partial commit is a critical kernel bug
+    - Exit 0 appends a single deterministic audit record; upstream HTTP failures are handled gracefully in the envelope
+    - Exit 2 is Phase 3 policy denial with state untouched, across nine domains; exit 2 domains
+      - policy.federation: unallowlisted caller, trust below pinned, or cycle (E042_FEDERATION_DENIED, E041_FEDERATION_CYCLE)
+      - db.engine: check constraints, FK violations, busy timeout; policy.authorizer: C-level table/column write denial
+      - policy.budget: frame/session fuel exhaustion, nesting beyond 5; policy.quota: spend ceiling breach, never yield
+      - policy.migration: rehearsal breaking the pinned routine contract; policy.platform: E045_PROD_TIER1_MANDATE
+      - policy.trust: draft/reviewed in prod fails closed at pre-flight (E046_TRUST_VIOLATION), remedy routine ship <name> pinned; E047_SECRET_TRUST_FLOOR
+      - The pre-flight matrix evaluates E045, E046, and E047 before dispatch
+    - Exit 3 is Phase 1 refusal (token envelope over 2,000, AST cycle, interpolation, unpaginated payload shape); oversized runtime output returns the keyset pagination schema instead
+    - Exit 4 is Phase 2 guest crash (uncaught sandbox exception or type crash, clean rollback); wall-clock past 300s kills the guest with exit 4; wall-clock/fuel decoupling: see: routine.md
+    - Exit 5 is Phase 3 kernel panic narrowed to sink loss and credential leaks
+      - Raw credential bytes in streams/payloads trigger kill_and_alert
+      - the session token is revoked instantly and secret buffers are zeroized
+      - A security alert appends to audit.db; row corruption never exits 5
+    - Exit 6 is Phase 2 proactive yield (cadence waits over 2s, upstream 429 with Retry-After, preemption floors); yield mechanics
+      - Layer 3 transactions close immediately; the fence and cursor persist to db://_suspended_tasks and Layer 1 claims are retained
+      - Resumption verifies the lease is still active and owned by the caller
+      - results post to the sensory inbox for the next turn-zero overview
+      - SIGTERM maps to exit 6 with cursor checkpoint flush and frame parking; run abort <frame_id> purges the resume target, releases fence and claims, writes an audit event, and the frame never resumes
+        - E061_OCC_DRIFT on a still-suspended frame requires abort before re-run; direct re-run hits the retained lease (claim_held); write-drift needs no abort since the purge released the lease
+    - Plugin process exits map as: 0 success (staged ops committed), 2 policy denial (state untouched), 3 syntax/refusal (bad params), 4 crash (clean rollback)
+    - _states.json owns the exit-to-domain registry; api.quota is dual-registered at exits 2 and 6; policy.authorizer is an exit-2 domain
+  - Diagnostics render procedurally: CliEnvelope<T> with { context, exit_code, state_modified, data, diagnostic, audit_op } in four locked archetypes
+    - Archetype A (diagnostic) serves exits 2-6 with header, caret-marked failing span, and indented metadata; the canonical error payload carries exactly domain, culprit, and remedy
+    - Archetype B (tree) uses ├──, └──, │; archetype C (receipt) aligns exit-0 pairs with ─ dividers; archetype D (document) renders slices with pagination cursor state
+    - --json returns the raw envelope; --out <path> writes the payload while stdout returns a sub-30-token receipt; all arguments accept @<path>/@- 
+    - Table pipes are banned; stdout/stderr are unlogged and only canonical JSON is hashed; advisory lint findings exit 0 under lint_findings and never gate execution
+
+- Trust, tiers and waivers: prod is an exclusive club of Tier 1 plus pinned, and trust never flows upward
+  - Tier 1 comprises Linux bare-metal, VPS, Docker with userns, and WSL2, sandboxed by unprivileged bwrap namespaces
+    - The network jail traps raw socket connect (syscall 42) with a seccomp-bpf filter across all engines; guest egress routes only via kernel IPC to the socket proxy
+    - Per-engine seccomp profiles: python allows clone, futex, basic POSIX signals; bun_node allows epoll_create1, epoll_ctl, eventfd2, io_uring_setup; binary allows clone3, futex, rseq, rt_sigreturn
+    - Tier 1 permits all trust rungs (draft, reviewed, pinned)
+    - The tier-1 sandbox floor is the native tri-jail for the host platform; no container/microvm fallback chain exists and an unavailable jail fails closed
+  - Tier 2 comprises macOS (Darwin), Android (Termux), and Windows native, confined to dev/sim rehearsal
+    - Sandboxing mandates a microVM (Colima/Lima) or WASM sandbox (Wasmtime) with unmapped socket capabilities
+    - the network jail applies kernel-enforced socket null-routing and cooperative host execution is denied
+    - Targeting --env prod on tier 2 is structurally refused; multi-tenant tiers use gVisor or Firecracker virtualization
+  - The tri-jail engine provides zero-trust kernel-enforced sandboxing on Linux, macOS, and Windows without WASM and without VMs
+    - Linux: private user/mount/IPC/PID/UTS namespaces via bwrap userns; --unshare-net; seccomp-bpf intercepts connect/syscall 42 with SIGSYS killing violators via exit 2
+    - Root filesystem is an empty tmpfs; the plugin checkout mounts read-only; only capcli/plugins/state/<slug>/ mounts read-write
+    - macOS: sandbox-exec with a dynamically compiled Scheme profile (deny default, allow process-exec, file-read on plugin subpath, file-write on state subpath, deny network/system-socket)
+    - Windows: restricted AppContainer token with low integrity; internetClient/privateNetworkClientServer stripped with WFP blocking outbound; Job Object clamps CPU/memory and forbids child spawning
+  - The weakest-link matrix binds environment, rung, and tier: dev runs all rungs on tier 1/2 with no live risk; sim runs reviewed/pinned on tier 1/2; prod runs pinned only on tier 1 with real live risk
+    - Iron invariant 1: prod is Tier 1 plus pinned; any missing condition fails closed at pre-flight with exit 2 (E045_PROD_TIER1_MANDATE, E046_TRUST_VIOLATION)
+    - Iron invariant 2: tier 2 is confined to dev/sim rehearsal
+    - The E045 slot exclusively means E045_PROD_TIER1_MANDATE; no dual meaning survives
+  - A --tier-waiver grants exactly one --env prod invocation on a tier 2 host, bound to (session id, routine, run) and never persisted, defaulted, or inherited
+    - Grant requires interactive TTY with typed operator confirmation; headless invocation is denied
+    - The kernel renders a degraded-tier banner and appends tier.waiver_granted carrying the operator identity
+    - A valid waiver satisfies the tier condition via the waiver path as a DAG-logged human-approved artifact; E046 and the pinned-rung requirement are not waivable
+  - Trust floors require callees to match or exceed callers
+    - Pinned calls pinned only; reviewed calls reviewed or pinned; drafts can never be dependencies in production or simulation; violation rejects at pre-flight with exit 2 (E046_TRUST_VIOLATION)
+    - Cross-agent callee routines hold trust >= reviewed
+    - ws:// external entry points mandate trust pinned (draft/reviewed across federation fails closed with exit 2 E042_FEDERATION_DENIED); routines initiating ws:// calls hold trust >= reviewed
+  - A marker-less caller is capped at draft; reviewed/pinned runs and mutating writes require --by or --session with exit 3 on breach
+    - The kernel freezes routine traffic immediately on canary demotion; the Cockpit PWA alert fires and the operator is paged
+    - High fuel consumption and schema migrations in pinned promotion are governed by hard-coded budget caps; there is no override path past gates or budgets
+  - Trust receipts are generated via capcli sys doctor --report, computed directly from the kernel _audit mirror
+    - Receipts verify deployment topology (dedicated_daemon/systemd or local_workstation/ephemeral), host tier, and sandbox provider (bwrap, podman, or broker)
+    - Receipts verify audited operations count and policy denials count
+    - Receipts verify unaudited writes are exactly zero, secret exposure is zero plaintext leaks, backup last-push age and hash check, and recovery drill confirmation
+
+- Fuel, frames and quotas: fuel is the currency, frames are hierarchical wallets, the gateway governs cadence and ceilings
+  - Fuel accounting
+    - Fuel is the internal currency, frames are hierarchical wallets, and the gateway governs provider cadence and ceilings; every cost converts to fuel and fuel is integer only, never fractional
+      - consumed_fuel is the single internal counter starting at 0
+      - 1 primitive step costs 1 fuel; 10 DB rows read cost 1 fuel (partial batches round up); 1 DB row written costs 10 fuel; 1 KB of wire egress costs 5 fuel; wall-clock duration is not fuel
+    - budget_inheritance=min, ops_cascade/duration_cascade=true, fuel_scope/rate_scope=session, rows_scope=trust_session, result_tokens_scope=routine
+    - Exit 2 covers empty tanks, spend ceiling breach, and Critical tasks on a dry pool; static session caps sit under the dynamic ceiling
+    - Caps: maintenance budgets cap consolidation at 30 minutes/10 proposals; trigger budgets floor cron at 5 min, cap webhook at 100 events/min, cap poll at 10
+      - Search caps at 20 results/0.6 relevance; search_index caps descriptions at 60 tokens; catalog sync caps at 10 MB
+      - All governance caps follow artifacts/governance.yaml
+    - Exhaustion resolves to yield (exit 6) when yield-eligible under its priority class, else deny (exit 2); silent truncation never occurs
+      - budget.exhausted events carry frame_id, routine, blocking_level, pillar, declared, consumed, attempted_op, exit_code 2
+      - citations read "routine B (frame_004) exhausted fuel: 20/20" with remaining shown at the blocking level and ancestors
+      - Fuel-cap forensics localize to the leaf op; fix the policy, not the routine; visual badges signal quota blocks
+  - Budget frames
+    - Routine invocation pushes a frame onto the kernel-managed _budget_frames table, restricted to kernel-core writes
+      - A frame closes on success, denied, or exhausted; outcome is check-constrained to active, success, exhausted, denied, error, yielded
+      - frame_id is text unique per invocation; the record names the exact pinned routine@version; parent_frame links to the caller (null at session root)
+      - A frame is scoped to one session in one world via session/env text; subagent_scope is null for a single agent, set to the harness marker otherwise
+      - declared_max_ops and declared_max_duration_ms are int ceilings with defaults in artifacts/governance.yaml#routine_shape; bookkeeping carries created_at/closed_at and yield_until timestamps
+      - _budget_frames is indexed on [session, env], [routine, version], [parent_frame]; push/pop stream to JSONL and are tailable via sys audit tail --follow
+      - budget.frame_push carries ids, declared limits, and inherited_remaining with the parent-side min() precomputed
+      - budget.frame_pop carries consumed and returned_to_parent fuel with per-frame pool reconciliation
+      - Overview calls are kernel-funded and budget-exempt up to 60 tokens, never charged to the session frame
+    - The min() cascade tightens downward: child effective fuel = min(declared fuel, parent remaining, session remaining, governance max)
+      - The four-term formula governs the local/nested cascade only; the governance ceiling comes from artifacts/governance.yaml#routine_shape and the kernel enforces the tightest constraint at every frame
+      - Session fuel never resets through composition: a 100-fuel routine split into 10x10 sub-routines still hits the session ceiling
+      - The pool value is canonical in artifacts/governance.yaml#routine_shape
+      - On push the kernel carves the child slice and decrements the parent balance
+        - the child burns only its slice
+        - on pop unspent fuel reconciles immediately
+        - child hitting 0 aborts cleanly with exit 2 while the parent retains its balance
+      - No partial execution happens past budget
+      - Federated calls use the three-term form callee_effective_fuel = min(caller_remaining, callee_policy_limit)
+      - the caller session never crosses the workspace boundary and callee exhaustion aborts the callee cleanly with exit 2
+    - Static pre-flight inspects declared child dependency trees before root execution; can_invoke_now returns false when parent remaining or session headroom cannot satisfy the worst-case leaf path
+      - Session fuel below the routine minimum denies with exit 2 before the frame pushes; can_invoke_now false plus blocking_reasons means do not call
+      - Composition flags are canonical in artifacts/governance.yaml
+    - In-process workers sharing a PID inherit parent frame limits and cannot escape the session ceiling via thread spawning; a divergent harness marker forces a session fork
+    - The pre-flight inspection surface exposes can_invoke_now (boolean), sim_gaps, blocking_reasons, tightest_constraint, and effective_limits
+    - budget_status.cascade carries session_fuel_remaining plus cadence/ceiling status
+    - The inspect composition block carries max_nesting_depth, child_routines, and budget_inheritance; there is no `budget` noun and no `--override-budget` flag
+
+  - Egress gateway
+    - Dial 1 cadence gates dispatch at the kernel socket edge per provider
+      - Waits under 2s pause dispatch transparently (the routine never observes the sleep); waits over 2s or upstream 429 with Retry-After yield proactively with exit 6
+      - X-RateLimit-Remaining/Reset headers recalibrate the bucket per response; an unexpected 429 drains it to 0 and parks frames with exit 6
+      - Preemption floors yield background at 15 tokens, standard at 5, critical drains to 0 (values in artifacts/policy.yaml#api.rate_limit); low tokens trigger exit 6 across non-critical spokes
+      - Remaining, reset_at, and status are readable before invoking
+        - quota state lands in kernel-written _api_quota rows with sim/prod tracked independently
+        - header-less providers get kernel-counted sliding windows
+    - Dial 2 monthly ledger tracks calls and cost per provider; a breached ceiling rejects with exit 2 before socket dispatch with zero packets and zero TLS handshake
+    - exception: binary — the gateway defines exactly two dials (Dial 1 cadence, Dial 2 monthly ceiling)
+- Secret perimeter: two zones, zero knowledge, hash-scanned wire
+  - Secret storage
+    - Root secrets are held in the vault and ephemeral egress tokens are derived from them; the secrets table carries name unique, value, scope, expires_at, sens:true
+      - Secrets are encrypted with AES-256-GCM at rest, cached in memory by the daemon or decrypted ephemerally per CLI run; buffers are zeroized on subshell exit and vault memory is zeroize-protected
+      - Secrets are provisioned via CLI (capcli sys vault set), CAPCLI_SECRET_* env vars, or external client RPC
+      - All mutations emit vault.set with masked values and SHA-256 fingerprint (secret_name, secret_hash_prefix, action:injected; never the full hash or plaintext)
+    - Credential intake uses an out-of-band vault input field encrypting the raw secret directly into daemon memory with AES-256-GCM
+    - nothing reaches agent context or shell logs and ciphertext persists to the secrets table
+    - The calling workspace never sees the callee's credentials; callee plugins interact only with the callee's local AES-256 vault
+
+  - Trust-gated resolution
+    - The channel is zero-knowledge: the guest address space never allocates credential bytes and the SDK passes only opaque vault://<name> handles
+      - Only the opaque handle crosses the jail boundary; the token stays opaque to the guest language heap and plugins never handle raw third-party API keys
+      - Raw network sockets are denied inside the tri-jail so plugins are physically incapable of opening direct TLS connections
+      - guest socket connect is trapped at OS level, forcing all egress through the kernel proxy
+    - The kernel confirms trust >= reviewed before resolving vault://<name> handles (E047_SECRET_TRUST_FLOOR); draft routines are denied secret access with exit 2 at pre-flight
+    - Inspecting routines that reference secrets renders [REDACTED_VAULT_TOKEN] with no authorizer denial; E047 governs resolution, never description
+    - The zone 2 guarded proxy injects Authorization headers at the socket edge before TLS; vault://<name> resolves only at this edge with zero plaintext leaking to guest heap or IPC payloads
+      - Egress executes exclusively through the kernel binary, which resolves Bearer, Basic, OAuth2 refresh, AWS SigV4, and mTLS client certs from the vault and silently refreshes expired bearer tokens
+      - Plugins request egress via the `capcli sys egress` utility or curl against the kernel's local IPC bridge
+      - outbound calls are restricted to the doc://specs/<provider> catalog and HTTP leaving the perimeter requires an explicit grant
+      - Vault backends resolve and decrypt ephemerally at the socket boundary before TLS dispatch; credentials never touch disk or guest memory
+  - Wire and leak defense
+    - Before opening a TLS socket the kernel evaluates monthly spend ledgers and leaky token buckets in _api_quota; depletion denies with exit 2 or yields with exit 6 before any byte touches the wire
+    - A missing secret_ref trips the pre-call check
+      - the kernel checks CAPCLI_SECRET_<NAME> before raising suspension
+      - headless execution exits 3 on missing secrets while interactive sessions pause via ask
+    - The wire-edge scrubber scans incoming/outgoing bodies against SHA-256 hashes of all stored secrets and scrubs matches to [REDACTED_VAULT_TOKEN] before the plugin or _audit sees them
+    - Secret-keyed params mask per masking.yaml; federated params scrub at the socket edge while vault://<name> handles pass opaque; no unscrubbed credential bytes appear in _audit or JSONL mirrors
+    - Leak protection is hash/pattern scanning of guest stdout/stderr/return against active secret hashes
+    - a match fires kill_and_alert (exit 5) with instant session token revocation and transaction rollback; the exit-5 panic proves the perimeter works, not that the proxy leaked
+- Audit spine: the append-only SHA-256 causal DAG, fail-closed on sink loss
+  - Ledger integrity
+    - audit.db is the isolated transactional SSOT for all events (Tier 1 hot), living at capcli/envs/<name>/audit.db with chmod 600, WAL mode, and zero connection pooling with workspace.db
+      - It is physically partitioned from workspace.db, eliminating WAL checkpoint contention
+      - audit/*.jsonl is the secondary read-only export view streamed from _audit (Tier 2 cold mirror) as daily append-only capcli/audit/YYYY-MM-DD.jsonl files with a hard 5-minute mirror lag SLA
+      - The Tier 3 remote anchor is an S3 Object Lock (WORM) checkpoint with KMS notary signatures; audit flow is unidirectional Tier 1 → Tier 2 → Tier 3
+      - The telemetry audit_mirror sink (audit/audit_mirror.jsonl) is a live tap, distinct from the Tier 2 cold mirror
+    - Each _audit row carries prev_hash with row_hash = sha256(prev_hash || canonical_event_json), mirrored to JSONL and verified against the root ledger hash
+      - 100% of CLI verbs, bindings, and environment transitions advance the hash chain; receipts cite the ledger root hash and the WORM checkpoint with git hashes as ephemeral metadata
+      - The root hash checkpoints to S3 Object Lock (WORM) with KMS signatures; a periodic KMS signature stamps witness.log; the chain walk runs on the artifacts/governance.yaml#maintenance schedule
+      - "git revision" and rev_hash/prev_hash keep their spellings; the migration term never touches them
+    - No Audit means No Execution: a workspace.db transaction cannot commit without staging its audit leaf event
+      - Sink write failures deny business writes; a stall triggers out-of-band spooling with failed writes held in a 5-minute in-memory buffer, during which all new mutating writes are denied with exit 2
+      - An undrainable buffer triggers kernel panic with exit 5; a lost Hub connection during sync audit delivery aborts with exit 5 as sink loss
+      - Spoke-to-hub replication (no exit 0 without central audit receipt) is a stricter spoke-side extension; both fail closed
+    - Replay re-verifies code_hash, recreates identical state (ctx.now() bound to frame start, ctx.uuid() from HMAC-SHA256(session_token, op_sequence) PRNG), and executes under current policy
+    - External API calls are flagged replay:manual and auto-replay is forbidden; environment-scoped idempotency keys prevent duplicates; disaster restore re-verifies the chain walk first
+
+  - Event envelope
+    - A world starts with rule.apply, sql query, sql write deny, sql write ok
+    - a re-initialized ledger opens with kernel.genesis.data_loss first (carrying prior root hash when known, loss scope, operator principal, confirmation receipts)
+      - onboarding.* and fake lifecycle events are denied; broken sha256 links isolate corrupted leaves to a quarantine branch without aborting boot, valid blocks stay operable, and a critical alert emits
+      - At boot the kernel validates the last 1,000 blocks
+      - failed blocks route to quarantine and boot completes degraded (status degraded:tamper_evidence, quarantined data unserved, alerts repeat until acknowledgement)
+      - sys doctor --ack-tamper records operator review, clears degraded status, and appends a kernel event; corruption is traced forensically to routine, world, agent, and version
+    - Every event carries six field groups
+      - Identity: event, ts, env, stage, channel, trace_id; actor: agent, session, principal, harness_marker_hash
+      - Causality: caused_by, intent, intent_chain; payload: capability, sql, params verbatim for replay
+      - Policy: decision, rules_matched; outcome: rows_affected, result_hash, duration_ms, exit_code
+      - Raw stdout/stderr is discarded at the terminal boundary and only the canonical JSON outcome is hashed
+        - env/stage stamp every leaf
+        - the intent chain (session goal → routine intent → op intent) and skill_origin/marker hash ride every leaf
+    - Per-event payloads carry the acting entities and outcome
+      - bind.* carries target_urp, trigger_type, schedule_or_source; env.switch/merge carries source/target env, git_commit, ddl_status
+      - sys.agent.register/revoke carries agent_id, principal, token_hash; capability.search carries query, results_count, resolution_stage
+      - db.exec carries sql, params, vdbe_inspect, rules_matched, rows_affected, result_hash; routine.run carries routine, version, hashes, triggered_by, outcome
+      - federation.call_out/in carries target/source, urp, params_hash, call_chain, budget_delegated, caller_principal, parent_frame_id, caused_by_op, outcome
+      - saga.execute/compensate carries verbs, mutation, parent_op, reason, status
+      - swarm events carry agent, topology/endpoint/flags, and claim release counts (sigterm yield retains claims, reaper kill releases them)
+      - rule.config_proposed/committed carries file, diff_hash, agent, gate_status or approver, git_commit, lockfile_hash
+      - api.sync/token_refresh/first_prod_call carries provider deltas and call counts; serve.request carries endpoint, channel, trace_id, routine@version, api_key_id, status
+        - first_prod_call adds contract_proof_hash
+        - token_refresh carries provider, token_type, expires_in, refresh_outcome
+        - api.call sim events carry sim_mode, http_called, fixture_used
+    - caused_by references the parent operation id; the hierarchy is op → routine → session goal; sequential routine interiors guarantee an acyclic DAG
+      - Budget frames bind via parent_frame; inbound HTTP binds via serve.request; W3C traceparent lands in trace_id linking external and federated callers
+      - sys audit trace <op-id> walks the DAG to the root intent and pinpoints the exact failing leaf; execution halts at the first failing leaf
+  - Denial forensics
+    - Denied operations emit audit events with effect:none, carrying domain classification, violated rule id, and the enforcing layer (authorizer/AST/governance/budget)
+    - The event carries measured value vs ceiling, remediation instructions, and state_modified strictly false
+      - Denial streams route to diagnosis; 20 sustained denials trigger a thrashing alert (threshold in artifacts/policy.yaml#rate); patterns inform harness adjustments as training data
+      - Forensics distinguishes code failures from policy breaches
+        - quarantine prevents auto-retry on unhandled faults
+        - primitive_failures/cost aggregate by version/leaf/capability
+        - --explain prints exact rules and remediation
+    - exception: binary — denial auditing defines exactly two laws (effect:none emission, forensic payload)
+- URP and addressing: typed pointers with a fixed grammar and an open registry
+  - Universal Resource Pointers are typed URN pointers; the grammar is scheme://[namespace/]resource[@version][#fragment] and bare paths or non-conforming URIs fail parse with exit 3
+  - The denied schemes hub://, prompt://, mesh://, apis://, sink://, snap:// fail parse with exit 3; socket endpoints are not URPs
+  - The kernel resolves every pointer through the Rust UrpResolver trait: inspect(urp) returns a PreflightEnvelope, resolve(urp, ctx) returns a ResolvedPayload
+    - Resolving an executable pushes a frame to _budget_frames and runs the sandboxed runner
+    - Resolving db:// passes through the SQLite engine and Layer 1 C-Authorizer binding :principal; artifact resolution burns zero fuel reading the slice via #fragment
+    - Custom schemes are registered by plugins: see: plugin.md
+  - Scheme inventory covers executables, entities, and artifacts
+    - cap://[provider/]routine[@version] addresses local routines and provider verbs; ws://workspace/routine[@version] addresses federated routines, shape-disjoint from WebSocket URLs
+    - db://table[#column] addresses tables, columns, constraints, and views; vault://secret_name is an ephemeral secret resolved at the socket boundary
+    - audit://op_id addresses a DAG leaf; ask://ask_id addresses a suspended inquiry; quota://provider addresses the rate-bucket counter and reset epoch
+    - doc://path/to/spec[#node] addresses specs and prompt campaigns with one leaf per read; tpl:// addresses blueprints (see: template.md); policy://rule_id addresses governance constraints
+  - Inspecting an executable returns the fuel envelope, session headroom, quota gates, and the can_invoke_now verdict
+    - The flat PreflightEnvelope carries fuel_declared, session_fuel_remaining, cadence_status, ceiling_status, can_invoke_now, nesting under budget_status
+    - AST/pre-flight rejects with exit 2 when session_fuel_remaining < routine_min_fuel without invoking
+      - db-entity envelopes carry row schema/constraints/mask flags/TTL
+      - artifact envelopes carry token size/node outlines/bundle metadata
+    - Success envelopes carry an affordances array ({ rel, command, intent, risk, requires_intent }, run verbatim, never inferred, additive and optional); non-zero exits carry remedy
+    - Inspecting doc://prompts/ returns vars, section index, caps, and blocked status with the body withheld
+    - secrets render as [REDACTED_VAULT_TOKEN] with no authorizer denial since E047 governs resolution, never description
+    - doc://<slug>#<node-id> is the canonical leaf address and doc-read cursors use the same form; --section does not exist
+  - Artifact resolution reads any doc:// URP (specs and prompt campaigns identically) with the #fragment selecting exactly one node; doc outline returns the section index; no prompt noun exists
+  - capcli inspect on a doc:// URP returns outline nodes; doc read doc://<path>#<fragment> fetches one leaf including prompt campaigns at doc://prompts/<bank>/<slug>#<version>
+  - Kernel search pairs token prefix matching with SQLite FTS5 BM25 for zero-roundtrip local discovery with zero external ranking, no API calls, and no neural runtimes
+    - Search targets routines, api verbs, views, and template blueprints
+      - db ops bypass search and are inline gated
+      - cascade runs exact → prefix → fuzzy → did-you-mean with exact-id short-circuit at zero cost
+    - Search and inspect are optional
+      - direct invocation is permitted when the signature is known
+      - results are pointers and sub-60-token summaries, never raw blobs
+      - semantic matches below 0.60 are rejected
+    - search gaps --since 7d surfaces zero-result queries first
+      - deterministic kernel SQL views surface op frequencies and n-grams
+      - the token index resolves intent across 1,000+ routines sub-millisecond
+      - low invoke rate signals poor description
+    - Registry limits are enforced at routine prove and api import while filesystem writes are ungated
+    - Skills live in the harness and routines live in capcli; skills invoke capabilities via capcli run with raw SQL banned
+    - Skill summaries are constrained per artifacts/governance.yaml#routine_shape and the skill name lands in triggered_by_skill
+    - The harness skill carries the L0 grammar directive and kernel boot mounts 0 prompt tokens
+  - Aliases resolve before handler gates: `capcli sql` → `capcli run sql`
+    - `capcli apply` → `capcli sys schema apply`
+    - the alias parser stays alive in recovery where `capcli sql` rewrites to `run sql` before gating
+
+- CLI surface and screens: three primitives, procedural output, progressive disclosure
+  - Primitive verbs
+    - The CLI exposes exactly 3 primitives: `capcli run <urp>` dispatches an executable capability (routine or plugin verb)
+      - `capcli sys <verb>` performs kernel operations
+      - `capcli plugin <verb>` manages plugin lifecycle: see: plugin.md
+      - Surface verbs are search, inspect, run, and doc, restated under the 3-primitive ruling
+    - run verbs dispatch executable capabilities
+      - run <capability> [-p k=v] executes; run abort <frame_id> cancels a suspended frame
+      - run sql "<query>" is the unified AST-gated surface: SELECT runs read-only without intent, writes enforce AST bounds and require intent
+      - run overview [--as] briefs; run search <query> [--type][--trust][--env] searches; run inspect <ptr> returns the PreflightEnvelope
+      - All SQL routes exclusively through `capcli run sql`, crossing AST and C-authorizer layers before engine evaluation
+    - sys verbs perform kernel operations
+      - sys help returns a ≤6-line stub; sys inbox pop [--channel] reads _inbox
+      - sys audit tails, traces, queries, and replays: tail [--follow][--capability][--since 1h], trace <op-id> [--explain], query <sql> [-p k=v], replay --from <point> [--dry-run]
+      - sys swarm list [--active] and sys swarm reap manage the swarm
+      - sys agent register, sys agent list, sys agent revoke <id> follow subsystem-first order; revoke invalidates all tokens and ends execution instantly
+        - registry caps: see: artifacts/governance.yaml#registry (max_agents: 8; registration past 8 exits 2)
+      - sys vault set <key> <val> and sys vault import-env provision secrets
+      - sys doctor [--boot-check][--json] probes the host without spawning a sandbox; --ack-tamper records review; doctor halts boot on compromised boundaries
+        - reports host OS/tier/sandbox and legal envs per tier
+      - sys shim <target-bin> [--wrap] deploys a zero-cost wrapper; sys serve --start/--stop/--restart/--status controls the daemon; sys exec <cmd> --sandbox provides an external jail
+      - backup, recover, and init verbs: sys backup [--push]; sys recover [<snapshot-id>] [--list]; sys init --fresh
+      - sys backup always completes the local VACUUM INTO snapshot while --push is best-effort
+    - Lock operations (db noun dropped; carried as kernel operations)
+      - Lock takes a Layer 1 lease against an active TTL (--ttl <duration> --reason); --takeover acquires a stale claim appending claim.stolen
+      - unlock --abandon releases without acquiring, requires --reason, and is denied while the holder heartbeat is fresh
+  - Invocation context
+    - Caller categories are [harness] (autonomous-safe), [human] (interactive approval), [both]
+      - root --help is capped at 6 lines pointing to search and full noun-tree dumps are banned
+      - humans receive tables and agents pass --json
+    - The twelve universal flags (--json, --as, --env, -m/--intent, --workspace, --session, --in, --out, plus at-symbol expansion) are frozen
+    - --dry-run plans without applying; --reason justifies threshold crossings; --by declares identity verified via process credentials; --lock takes an exclusive claim lease on run
+    - Refusals
+      - Env/trust/platform pre-flight denials fail with exit 2; direct config set is denied with exit 3 since mutations require git commits
+      - Raw DDL outside the migration pipeline is denied with exit 2
+      - The banned bypass flags --force/--override-budget/--force-prod/--verbose are rejected at the parser with exit 3; there is no `budget` noun
+      - Single authoritative paths hold per operation
+        - Queries via capcli sql; locks via lock operations; sandboxing via sys exec --sandbox; explanations via sys audit trace --explain
+        - Egress via capcli run or ctx.api.call; budgets via capcli inspect quota://; imports are full catalog sync only
+        - Authoring via direct write or sys template scaffold tpl://
+        - blueprints via inspect tpl://, search --type tpl, validate
+  - Surfaces and fixtures
+    - The client instantiates via createClient({ endpoint, token, brand }) with HTTP POST for RPC and WebSocket/SSE for tail
+      - surface nouns are aliasable except sys
+      - branding touches human text only, never JSON
+      - The client surface is client.run(), client.sql(), client.routine.prove(), client.search(), client.inspect(), client.audit.tail(), client.audit.trace()
+      - Every envelope is { exit, json, text } with elapsed_ms, recorded as illustrative metadata in fixtures and never asserted by the golden runner
+    - The cockpit is an embedded static bundle served by capcli-daemon at 127.0.0.1:4040 with zero execution logic
+    - It acts as the exclusive out-of-band human decision broker authenticated via WebAuthn/Passkey
+      - The zero-cli human law holds: humans interact exclusively via 1-click mobile decision cards; terminal and raw YAML editing by humans are prohibited
+      - It is an independent zero-authority client over authenticated JSON-RPC with RPC at POST /rpc and live tails at ws://127.0.0.1:4040/ws/audit
+      - Eight functional layers: State Inspector, Capability Inspector, Policy and Governance, Audit Spine, Budget and Telemetry, Promotion and Approvals, Human Interaction (Ask), Vault and Biometrics
+      - Interaction primitives are Inspect, Authorize, Inject, and Rollback with patterns Browse/Approve/Answer/Recover/Observe
+      - federation surfaces are the peer roster, ws:// catalog with version pins, cross-workspace DAG stitching, and delegated budgets
+      - Config proposals render a visual diff with Sub-check 1/2 badge; 1-click approve recompiles the lockfile and resumes the task
+    - Onboarding follows read → dry-run → denial → write → recovery proof; human stages run S0–S10 and harness stages run H0–H7
+      - Anti-decisions: no blank templates or static tours, no kernel-generated schemas, no synthetic event types, no direct writes to production
+      - S4 is a deliberate unbounded-write denial citing require_where
+      - Intent declaration precedes environment scaffolding; the harness drafts while the kernel gates and the human approves
+    - Golden screen JSON fixtures record exit codes 0–6
+      - every screen with a trailer maps to a trigger rule
+      - screen_id follows noun.verb.descriptor.state with the noun segment from the locked primitive set
+      - The state slot takes exactly the six exit labels (success, denial, refusal, crash, panic, yield); severity/lifecycle words belong in the condition slot; exit labels map 1:1 onto exit codes
+      - The wireframe output contract carries one generic slot (trailer/next_action) with frozen machine_schema prompt/reason/serve; screen-to-trailer mapping: see: triggers.md
+      - The L1 trailer is capped at 30 tokens (doc://prompts/... - <reason>); campaign envelopes at 150 tokens with metadata/index only; leaf sections at 500 tokens with Trinity failing beyond
+      - doc://prompts/ URPs serve triggers and leaf sections progressively; every doc:// URI resolves to a real docs/ file with anchors verified against heading slugs
+    - Token cage ceilings: routine files ≤2000 tokens, search descriptions ≤60 tokens, output payloads ≤500 tokens (oversized return the keyset pagination schema), leaf prompt slices ≤500 tokens
+
+- Composition, sessions and federation: every crossing is mediated, metered, and logged
+  - Deployment topology
+    - Swarm and federation are separate axes: spokes proxy DB to the Hub while federated workspaces are sovereign peers each with its own DB and budget
+      - The default profile is single-host (one Hub daemon, spokes over unix:// IPC, writer/claims/system tables on the single host, no network/overlay/orchestrator)
+      - the remote profile is explicit opt-in over WireGuard with mTLS
+      - A dedicated server is a headless Linux host running capcli-daemon under systemd for 24/7 crons, webhooks, and S3 WORM attestations
+      - the admin/cockpit surface binds 127.0.0.1:4040 in every profile with the loopback lock covering only that surface
+      - In the remote profile only, the swarm RPC listener binds the policy.yaml mesh interface with mTLS
+        - hub/spoke roles, heartbeat, and reaper mechanics are remote-profile invariants
+        - SO_PEERCRED never crosses a network boundary
+      - An ephemeral sandbox node is a disposable microVM/container worker with zero-disk state and sync audit ack
+      - A local workstation cannot serve production endpoints or host unattended pinned schedules; local mutations and external egress share equal gate severity
+    - Node modes
+      - Local embeds single-process SQLite; Hub holds live workspace.db/audit.db and executes spoke RPCs
+      - Spoke-thin delegates compute and DB to the Hub; spoke-fat runs guests locally and proxies ctx.db via RPC
+      - Spoke-ephemeral is stateless with zero disk footprint; replica serves reads from LibSQL cache and forwards writes
+      - The Hub executes Layer 1 sqlite3_set_authorizer for spoke ctx.db requests and verifies the OCC state_fence before physical commit
+      - it serializes writes via BEGIN IMMEDIATE while spokes queue via busy_timeout
+      - Cross-spoke locks mediate through the claims table; socket disconnect rolls back spoke transactions and drops holder claims; spokes connect via unix socket, WireGuard mesh, or mTLS
+      - Spoke-ephemeral nodes cannot create workspace.db; workspace files stay open read/write for schemas/routines/scripts; kernel daemon mediation is the mandatory sole gateway
+    - The runtime home is <workspace>/capcli (workspace root holds user artifacts only), derived from the CAPCLI_WORKSPACE/--workspace anchor
+    - capcli/ is machine-managed and gitignored wholesale while declarative blueprints live in artifacts/
+  - State substrate
+    - workspace.db is the SSOT for domain tables, claims, and local state
+    - audit.db is the isolated SSOT for the _audit ledger, physically partitioned with WAL contention eliminated, kernel-managed, chmod 600
+      - Pure HTTP databases without a C authorizer are denied as engine substrate; workspace.db runs WAL mode (chmod 600) with -wal serializing commits and -shm indexing concurrent readers
+      - Persistence partitions at capcli/envs/<name>/workspace.db; binary snapshots sync to object store; WAL journal is enabled with concurrent non-blocking reads and persistent reader locks banned
+      - WebSocket tails use short-lived snapshots against WAL starvation; the kernel runs PRAGMA wal_checkpoint(PASSIVE) after writes and maintenance TRUNCATEs below 100MB
+      - Writers serialize via a busy-timeout queue holding locks during atomic commits only; user-space transactions stay strictly under 15ms and no transaction outlives its commit
+      - world.sql is a deterministic DDL and seed dump committed to git (identical worlds yield identical bytes), generated locally on migration and synced to object storage
+      - system-schema.yaml defines 15 kernel-managed tables
+    - _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _outbox_events, _inbox, routine_stats, _suspended_tasks, _templates, _bindings
+      - storage/ is the local blob namespace; audit/ holds JSONL exports with daily mirrors, checkpoint.sig, and witness.log
+      - migrations/ holds compiled bundles (plan.json, align.py); /run/capcli holds kernel.sock and peer sockets with /scratch as the tmpfs download sandbox
+    - Sockets live outside the runtime home; runtime-internal paths in specs and fixtures are relative to the runtime home
+  - Identity, sessions and claims
+    - Identity chains principal (human/root authority) → agent (registered harness) → session (engagement scope) → op (single DAG leaf execution)
+      - A subagent is a thread/event-loop worker sharing the parent PID tracked via harness markers
+      - a federated caller is ws:<name> mapped to an internal :principal with the E042 allowlist as active ws:<name> agent rows
+      - Disposable containers mint agt_tmp_<uuid8>; spokes ping the Hub every 5s and the Hub reaps past lease_ttl, expiring status and purging leases
+      - Spokes negotiate in-memory HMAC tokens via CAPCLI_AGENT_TOKEN with zero filesystem key storage, bound to the active _budget_frames
+      - The active session and principal pin to capcli/envs/<name>/workspace.db
+        - tokens and ids are kernel-issued and self-declaration is denied
+        - the agents table carries id/name/harness/principal/status with id and principal immutable
+      - Identity markers are sniffed verbatim
+        - Session markers: CLAUDE_CODE_SESSION_ID, CODEX_THREAD_ID, CODEX_SESSION_ID, CODEX_CONVERSATION_ID, ANTIGRAVITY_CONVERSATION_ID, HERMES_SESSION_KEY
+        - Presence markers: CLAUDECODE, GEMINI_CLI, CURSOR_AGENT, OPENCLAW_SHELL
+        - presence-only maps to agt_anon_<session> with mutating writes denied
+        - Markers are metadata, never power; CAPCLI_SKILL exports the skill or null
+      - --by declares machine agent identity and --as declares the target principal bound to SQLite :principal
+      - the kernel treats callers uniformly by marker/principal/agent/session and PID is never a trust axis
+      - Kernel principals are scheduler (capcli-cron), webhooks (capcli-watch), and listener (capcli-serve), each minted an ephemeral HMAC session token per _inbox task execution
+    - The harness session (cognitive transcript owned by the LLM runner) and the kernel session (cryptographic budget frame, claim holder, DAG boundary owned by SQLite) are strictly decoupled
+      - The kernel auto-binds its session ID to harness markers via Phase 1 sniffing and manual session tracking is prohibited; the session id rides every frame, event, and claim
+      - CAPCLI_SESSION or workspace.db active context keeps the session across turns with Phase 1 sniffing authoritative
+      - a divergent marker under one PID forces a session fork with a scoped parent token for children
+      - The harness runs in a bash subshell isolated via IPC socket with direct workspace.db access blocked
+      - multi-threaded subagents sharing a PID serialize via OCC fence and marker-scoped claims with collision yielding via exit 6
+    - Claims leases key strictly to (session_id, harness_marker, op_sequence); live holders heartbeat every 30s, 60s of silence marks stale, and TTL reaping is the hard ceiling regardless of heartbeats
+  - Messaging and composition
+    - ctx.emit(event, payload) atomically writes to _outbox_events inside the caller's SQLite transaction
+      - New events enter 'pending'; the atomic UPDATE...RETURNING claim flips one row to 'in_flight' with locked_by recording the worker, guaranteeing single-worker dispatch
+      - The daemon drains _outbox_events asynchronously (a headless CLI drains synchronously before exit 0); peer daemons poll/stream visibility='public' events tracking positions in _watch_cursors
+      - Mutating API calls staged to _outbox_events require upstream idempotency headers; routes lacking idempotency support mandate synchronous execution
+    - _inbox is the durable inbound dispatch queue; verified stimuli queue there before any routine spawns and the lifecycle runs pending → in_flight → completed (crash/exhaustion rolls to failed)
+      - The atomic UPDATE...RETURNING claim guarantees exactly-once dispatch ordered by priority; rows exceeding 3 failures move to the dead letter queue (FIFO, 30-day expiry, 1,000-item cap)
+      - sys inbox pop reads _inbox; the worker daemon claims rows atomically and spawns the bound routine; workers consume real queue items and telepathic order hallucinations are banned
+      - All trigger sources verify, then enqueue into _inbox: see: plugin.md; at most 1 catchup execution is permitted on daemon boot
+    - Hub-mediated composition: plugins never open direct peer-to-peer sockets; every composition call routes through the microkernel
+      - On a call the kernel cycle-checks the graph, computes the min() fuel cascade, pushes a frame to _budget_frames, and logs the DAG with caused_by; the callee executes in its own tri-jail sandbox
+      - Unspent fuel reconciles to the caller on return; a fuel-exhausted child aborts cleanly with exit 2 (child effective fuel = min(caller_remaining, child_declared_max, governance_ceiling))
+      - Nesting is capped at 5 frames (a 6th aborts with exit 2); install runs a native DFS over declared dependencies with cycles aborting via exit 3
+      - Installing a plugin flattens its dependency DAG into capcli.lock (version, binary_sha256, resolved_dependencies); a tampered sub-dependency binary halts daemon boot with exit 3
+    - Federation exports routines (cap://), never plugins; a remote workspace can never call a peer's plugins directly
+      - Federated calls to ws://<target>/<routine>@<version> resolve over IPC; unversioned ws:// fails AST compile with exit 3
+      - Preflight verifies the target socket and caller permissions; local peers verify via SO_PEERCRED with UID/GID mismatch dropping instantly
+      - call_chain carries (workspace, idempotency_key) per hop on the IPC envelope, appended per hop and recorded on federation.call_out
+      - One re-entry on the original key replays idempotently; a third entry or fresh key fails closed with exit 2 (E041_FEDERATION_CYCLE)
+      - Hops are capped at 3 (the third is a legal re-entry only) and count toward nesting depth with the hop ceiling binding first; cycles detected via the call-chain header exit 2
+      - A missing peer socket dials with exponential backoff against policy.yaml#network.dial (fail-closed invariant
+        - default 10s covering cold start)
+        - exhaustion fails closed with exit 4 (E055_FEDERATION_UNREACHABLE)
+      - Federated fuel deducts from the caller's delegated pool (min(caller_remaining, callee_policy_limit))
+      - federated mock mode replays recorded ws:// responses from the provider mock artifact when the peer is absent or in sim/CI
+      - Socket-authenticated ws:// callers use SO_PEERCRED plus the pinned trust floor, not harness markers
+    - Kernel-plugin IPC uses channel A (control plane: stdio/kernel.sock, JSON-lines/RPC) and channel B (data plane: /dev/shm ring buffer, zero-copy)
+      - The kernel spawns the plugin inside the tri-jail communicating via stdin/stdout with no socket code for authors
+      - invocation carries call_id/verb/params/session/context(trace_id) and the response carries call_id/status/data
+      - The runner embeds native C/Rust FFI bindings (capcli_native) for DB/authorizer calls via shared memory ring buffer
+      - the Unix socket is reserved for async out-of-band events (cron dispatch, webhook intake, outbox draining)
+      - Channel B activates past 100 rows or for blob streams: the kernel mmaps via memfd_create (Linux) or named segments (macOS/Windows) into the plugin's space for zero-copy columnar reads
+
+- Change, backup and environments: schema changes are forward-only, recovery is tiered, environments are isolated
+  - Build and schema pipeline
+    - Boot refuses on a compromised foundation
+      - Python < 3.11 or git < 2.30 aborts with exit 3 on all tiers; absent policy.yaml/governance.yaml, invalid configuration, or version mismatch refuses boot
+      - policy.yaml holds behavioral verb rules and governance.yaml holds structural rules; both compile at kernel boot with runtime mutation denied and the default stance deny
+      - The live engine never reads uncompiled YAML
+      - A capcli.lock SHA256 mismatch aborts boot with exit 3 in prod while dev/sim auto-recompile on passing syntax/semantics; un-migrated schema or system_schema hash mismatch aborts boot with exit 3
+      - Remote HTTP databases lacking the C authorizer are refused
+      - Missing bwrap on tier 1 fails closed; on tier 2 it downgrades to provider=broker with a warning
+      - Clock delta vs NTP over 500ms warns while DAG/leases bind CLOCK_MONOTONIC; missing git identity falls back to capcli[bot] or aborts; unparseable SQL and authorizer errors fail closed
+      - sink_gate denies writes on audit write failure (exit 5); boot_gate aborts on missing runtimes, drift, or lock mismatch
+    - Declarative YAML compiles to physical DDL; schema.yaml is agent-owned and system-schema.yaml is kernel-owned, compiling to a single unified DDL in workspace.db
+      - schema.yaml declares domain tables, read views, and policy-vetted triggers with dimension ceilings validated at compile time; manual SQL DDL editing is prohibited
+      - schema.yaml is agent-writable in a dev worktree; system-schema.yaml is kernel-maintainer-only, agent read-only, upgraded via release binaries only
+      - Column shorthands
+        - Key and constraint shorthands
+          - pk → autoincrement key; text! → unique; text=val → default
+          - int~ → write-once; ref= → foreign key
+        - Visibility and provenance shorthands
+          - mask=true → masking; prov:true → kernel-populated authorship (created_by, modified_by)
+          - sens:true → sim-masked; sys:true → agent read-only
+        - Immutability and index shorthands
+          - imm_rows/imm_cols → authorizer denial; idx → indexes (idx: [[col_a, col_b]] expands to a composite index); rel: → search graph
+          - chk:/trig: → CHECK/trigger; seed:[...] ≤50 rows/table audited
+      - The engine enforces type affinity, PKs, FK cascades, unique and check constraints; the authorizer denies ~ updates and the serializer redacts mask=true columns; exposes:[...] is mandatory on views
+    - Sub-checks verify compilation
+      - Sub-check 1 (YAML validity, no duplicate keys, shorthand expansion, required roots; exit 3 on failure)
+      - Sub-check 2 (ref=/rel:/idx targets exist, topological order, DFS rejects cycles, SQL validity; exit 3 on failure)
+      - Sub-check 3 (boot-time lockfile hash; prod mismatch aborts boot, dev/sim auto-recompile)
+      - Live drift is diagnostic only: PRAGMA scans compare live tables against compiled YAML and undeclared columns/tables refuse with exit 3
+    - Migration is the canonical term for db/schema change (migrations/, migrate.rs, expand→align→contract→pin, E060_MIGRATION_REJECTED)
+      - The kernel pipeline is the sole legal DDL path running plan/prove/apply
+      - Expand runs additive non-breaking DDL under 10ms SLA with a cold VACUUM snapshot first; Align runs migrations/NNNN/align.py in ≤500-row txns yielding cleanly with exit 6
+      - The kernel creates _shadow_<table>, attaches delta triggers, copies base rows in 500-row chunks, and replicates in-flight mutations
+      - Contract runs destructive DDL via migrate.rs
+        - The zero-lag swap (BEGIN IMMEDIATE at zero lag, drop triggers, rename shadow to live, drop old table) holds the write lock <20ms
+        - Pin verifies PRAGMA matches schema.yaml and updates capcli.lock
+      - Safety rehearsal gates cutover: any break aborts with exit 2 and discards rehearsal state; snapshot mechanics: see: template.md
+      - Migrations are forward-only with rollbacks as forward revert bundles; state population runs in user-space while structural rebuilds run in the kernel
+      - Raw ALTER/DROP TABLE is denied with exit 2; agent rebuild scripts die at the AST gate; direct workspace.db edits denied via chmod 600; cross-world DDL without git merge denied
+    - Migration operations
+      - plan --name <slug> generates migrations/NNNN_<slug>/; prove <id> rehearses all four phases; apply <id> executes the cutover
+      - validate/show/diff compare against HEAD or live PRAGMAs
+      - sys schema validate runs in CI: YAML parse, petgraph cycle scans (cycles exit 3), AST advisories, migration rehearsal, SHA-256 root hash assertion; uncommitted changes abort CI with exit 3
+    - Crates mirror the physics
+      - capcli-types holds exit/capability/audit/template/schema/governance/rpc models; capcli-core holds db/parse/compile/budget/audit/vault
+      - capcli-cli routes subcommands and renders over CliEnvelope<T>; capcli-daemon serves 127.0.0.1:4040, evaluates spoke RPC via hub_rpc.rs, reaps via reaper.rs, and embeds the cockpit
+  - Environments and recovery
+    - Config proposals stage on disk and activate only upon cryptographic human approval via the Cockpit PWA
+      - Saving edits triggers Sub-check 1 (syntax) and Sub-check 2 (semantics); invalid syntax fails closed with exit 3 without notifying a human
+      - Valid syntax creates a staged proposal, hashes the diff, and yields the frame with exit 6; the daemon watches staged paths and the Cockpit presents a 1-click diff card with the Sub-check badge
+      - On approval the daemon recompiles capcli.lock, reloads the authorizer and limits, records rule.config_committed, auto-commits to Git under the approver's vault-held key, and wakes the task
+      - Manual human Git manipulation is prohibited; raw disk edits never affect running state until cutover
+    - Backup is local-first: binary VACUUM INTO snapshots complete locally on every `sys backup` with remote state never gating durability; --push is best-effort (exit 0, push:pending retried later)
+      - sys recover --list shows human-named recovery points (snap_auto_*, snap_migration_*, snap_onboarding_*) with rolling retention managed by maintenance
+      - sys recover --list shows pending-push backups
+      - Immutable snapshots and audit logs retain on WORM storage with 30-day local cache; ledger root hashes anchor to S3 Object Lock with KMS notary signatures
+      - sys schema restore <id> reverses database state atomically as disaster-only recovery; tiers are local snapshot, git revision, and offsite archive
+        - distinct from sys recover, which restores workspace-level snapshots
+      - Git holds declarative configurations; capcli-daemon commits only upon cryptographic human PWA approvals; unverified agent git mutations are prohibited
+      - sys init --fresh re-initializes after total media loss with dual confirmation; without it the kernel refuses with exit 5
+      - Emergency recovery stays read-only (CAPCLI_RECOVERY=1): the allowlist is run sql, db dump, sys audit tail, sys backup, sys recover; the AST gate denies non-SELECT with exit 2
+    - Offboarding orders backup first, identity revocation second, state dump third, env removal last
+      - Survey inspects prod and removes endpoint binds; Preserve pushes backup, exports dump, and revokes identities (sys agent revoke invalidates all tokens)
+      - Teardown removes environments with dual confirmation flags
+      - Teardown requires out-of-band cryptographic confirmation (WebAuthn/Passkey or GPG/SSH) that terminal flags cannot substitute; CLI bypasses are rejected
+    - capcli/envs/<name>/ is an isolated directory namespace with uncommitted locally-managed workspace.db/audit.db; capacity is capped at 5 concurrent environments
+      - Dev runs all rungs with pre-count checks waived; sim is seeded from prod with masked data (reviewed/pinned run, draft only under `routine prove`)
+      - Prod is pinned on Tier 1 only; draft/reviewed fail closed with exit 2
+      - Leaf events stamp env/stage with distinct sim/prod namespaces; idempotency keys are f(routine_version, params, env); _api_quota partitions by env
+      - env merge <name> prod verifies the Tier 1 host and requires verified push credentials
+      - Scope is declarative schemas/routines/migration bundles only; the pipeline verifies tier 1, proves in sim, snapshots, then cuts over
+      - env new/use/list/inspect/doctor/merge/remove manage the lifecycle; doctor checks unmerged routines, inspect flags drift, sim data older than 14 days nags re-seed
+      - Simulation modes
+        - Sandbox routes to the provider test endpoint
+        - mock replays apis/<provider>.mock.yaml with unrecorded endpoints failing closed
+        - Dry-run returns simulated:true; prod-only denies physical egress outside prod
+      - Historical replay runs `capcli sys audit replay --from prod --since 7d` deterministically against forked state; external HTTP re-fire requires human confirmation
+    - Initialization paths: guided mission (intent directs workers to author modules), emergent discovery (blank world accumulates audit density), predefined structure (human-committed schema governs)

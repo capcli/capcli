@@ -1,0 +1,467 @@
+- Guest code identity
+  - Canonical form
+    - Address and authorship
+      - The routine address
+        - A routine is a sandboxed procedural script addressed cap://<name>@<ver>, authored by AI agents or developers, implementing Gather → Compute → Commit
+        - The address carries the capability name and the sequential integer version
+      - Agent authorship
+        - Runtime AI agents author routines carrying domain business logic, consuming capabilities strictly via ctx
+        - Agents autonomously scaffold, test via prove, and auto-promote routines from draft to reviewed
+    - Core vocabulary
+      - Effect vocabulary
+        - An op is a single atomic capability call
+        - An effect is a state change in world
+      - Record vocabulary
+        - An event is an immutable audit log record
+        - A routine is a learned composition with version and code_hash
+    - exception: binary — exactly address/authorship and vocabulary; no third facet exists
+  - Registration mechanics
+    - Creation and gating
+      - Free creation
+        - Creation is free within the harness filesystem
+        - Registration is gated by kernel rules
+    - The overview routine
+      - Session priming
+        - routines/overview.py registers under the name overview as the session priming routine
+        - Its output mounts at volatile turn leaves; system prompt mounting is banned to preserve KV cache
+      - Snapshot content
+        - The overview routine aggregates domain KPIs, pending asks, sensory inbox counts, active lease locks, budget headroom, system health into a dense stdout summary
+        - Every harness turn invokes run overview as step zero, injecting a dense (<60 token) reality snapshot of active fuel, held locks, and inbox events into volatile prompt context
+    - exception: binary — exactly creation-gating and the overview routine; no third facet exists
+  - Substrates, runners, SDKs
+    - Language substrates
+      - Supported languages
+        - Python (.py) is first class; JavaScript (.js) second class; TypeScript (.ts) third class
+        - Files live in routines/ or declared binaries
+      - Authoring paths
+        - Authoring is direct write to routines/<name>.py or scaffold from tpl://routine/<name> — see: template.md
+        - Language runners are execution drivers: Python (capcli-py), Node/Bun (capcli-ts), native dynamic workers — see: kernel.md
+    - SDK surfaces
+      - TypeScript SDK
+        - packages/ts publishes @capcli/sdk with zero runtime dependencies, exporting routine, Param, ctx
+        - ctx.ts covers ctx.db, ctx.txn, ctx.now, ctx.uuid, ctx.cursor, ctx.api, ctx.call; ipc.ts streams JSON-RPC over /run/capcli/kernel.sock
+      - Python SDK
+        - packages/py publishes capcli-py targeting >= 3.11 with zero dependencies, exporting @routine, Param, ctx
+        - native_bridge.py provides the in-process FFI bridge (capcli_native.so) using shared memory for zero-copy DB and authorizer calls; the socket client serves background daemon RPC exclusively
+    - exception: binary — exactly language substrates and SDK surfaces; no third facet exists
+  - Decorator, skills, purpose
+    - The @routine decorator
+      - Declared fields
+        - The decorator takes name, trust, idempotent, description, limits
+        - trust is the ladder rung: draft, reviewed, pinned; idempotent is a boolean prerequisite for retries
+      - Documentation fields
+        - description is a required summary string; Param descriptions are required
+        - limits are declared caps staying under the governance ceiling
+      - The call pattern
+        - Inputs type as Param[str]; reads use ctx.api.call with secret injection and ctx.db.query with AST check
+        - Writes use ctx.api.call with pre-call fuel check and ctx.db.txn-wrapped ctx.db.execute; the routine returns a summary-sized dict
+    - Skills
+      - Skill kinds
+        - A bootstrap skill teaches harness CLI grammar, maps to no routine, carries no Param declarations
+        - A capability skill is a generated wrapper for one routine; frontmatter maps 1:1 to Param declarations; signature mismatch exits 3
+      - Skill prohibitions
+        - Skills forbid shipping unproven routines, raw SQL instruction, ship or draft verbs, reading secrets or masked columns, bypassing run via raw HTTP, cross-session result caching
+    - Purpose and codification
+      - Compositional purpose
+        - Routine purpose is branching, retries, and multi-step composition
+    - Six anti-decisions
+      - Code and authority
+        - No YAML procedures; control flow belongs in code
+        - No module imports confer authority; ctx injection only
+      - Lifecycle honesty
+        - No self-promotion; the trust ladder requires gates
+        - No silent edits; a code change forces a version bump
+      - Mandatory decay
+        - No immortal routines; decay and consolidation are mandatory
+        - No deletion; retirement keeps the provenance graph
+- Execution sequence
+  - Phase order
+    - Gather Compute Commit
+      - Phase 2 executes the Gather (reads), Compute (pure logic), Commit (staged ops) sequence
+      - Execution is strictly three non-interleaved phases: Gather to Compute to Commit & Saga
+    - Sequentiality
+      - Execution is strictly sequential
+    - exception: binary — exactly the Gather→Compute→Commit sequence and its sequentiality
+  - Routine-to-routine calls
+    - The ctx.call rule
+      - Composition executes strictly via ctx.call(routine, params); direct cross-routine module imports are banned
+      - ctx.call(target, params, timeout_s=None, compensate=None) executes local or federated (ws://) routines; the compensate verb triggers on caller saga failure
+    - Sim boundaries
+      - Prod-only children route to schema-validated mocks in sim
+      - Cross-agent call trust floor — see: kernel.md
+    - exception: binary — exactly the ctx.call rule and sim boundaries; no third facet exists
+  - Iteration discipline
+    - Internal loops
+      - Routines encapsulate iteration and filtering loops internally; multi-turn LLM subshell pagination loops are banned
+      - Atomic ctx.api.poll_until is permitted; raw time.sleep loops are rejected at AST parse with exit 3
+    - Event discipline
+      - ctx.on listeners, reactive streams, and subscriptions are rejected at AST parse with exit 3; events start routines and routines never consume events
+    - exception: binary — exactly internal loops and event discipline; no third facet exists
+  - Kernel mediation
+    - ctx.txn(egress=..., write=...) is the kernel-mediated saga context wrapping compensating HTTP rollback and DB mutation
+    - Routines bundle atomic DB transactions with external API verbs inside this context
+    - exception: binary — exactly the ctx.txn context and its bundling rule; no third facet exists
+  - Invocation
+    - Live invocation
+      - Authorized runs
+        - Live invocation runs via run, cron, webhook, or ask resume; the rung authorizes the run and the engine governs execution
+        - Routines are invoked via run, replacing ad-hoc primitives
+      - Direct invocation
+        - Direct invocation runs via capcli run; search and inspect serve cache miss or signature ambiguity only
+        - A suspended ask frame exits with code 6 — see: kernel.md for the exit-code contract
+    - Pre-execution validation
+      - Gate containment
+        - Pre-execution validation runs via policy gates with sandbox containment during execution
+    - exception: binary — exactly live invocation and pre-execution validation; no third facet exists
+- The ctx contract
+  - Reads
+    - Verified views
+      - Primary read path
+        - ctx.db.view(name, params) executes verified named AST views from schema.yaml and is the primary read mechanism
+        - Read views are pre-defined queries serving as SSOT, encapsulating joins and aggregates outside routine code — see: kernel.md
+    - Dynamic queries
+      - Parameterized SQL
+        - ctx.db.query(sql, params) takes dynamic parameterized SQL
+        - Raw string interpolation or concatenation fails with exit 3
+    - Key lookups
+      - ctx.db.get(table, id=val, require={...}) performs structured key-value lookup
+      - read fencing — see: kernel.md
+    - exception: binary — exactly verified views and dynamic queries; no third facet exists
+  - Writes and locks
+    - Structured mutation
+      - Single-row writes
+        - ctx.db.mutate(table, id=val, set={...}, intent="...") performs structured single-row mutation
+    - Lease-bound locks
+      - Claims leases
+        - ctx.db.lock binds directly to the claims lease lifecycle — see: kernel.md for lease mechanics
+    - exception: binary — exactly structured mutation and lease-bound locks; no third facet exists
+  - Time, identity, cursors
+    - Clock and identity
+      - Logical time
+        - ctx.now() returns a monotonic logical timestamp locked to causal frame start
+        - ctx.uuid() mints a deterministic pseudo-random token via HMAC-SHA256(session_token, op_sequence)
+    - Chunked iteration
+      - Cursor lifecycle
+        - ctx.cursor.load(name, default=0) loads persistent cursor position from _watch_cursors
+        - ctx.cursor.save_and_yield(name, next_cursor) commits chunk state and yields the routine; ctx.cursor.reset(name) clears a completed cursor sequence
+    - exception: binary — exactly clock/identity and chunked iteration; no third facet exists
+  - Outbound boundaries
+    - Federation emission
+      - ctx.emit(event, payload) writes provider='federation', verb=event, with a kernel-minted idempotency_key mirrored to idempotency_header — see: kernel.md for table mechanics
+    - Sandbox containment
+      - Raw records stay inside the sandbox
+    - exception: binary — exactly federation emission and sandbox containment; no third facet exists
+- Sandboxing
+  - The socket ban
+    - Routines never touch raw network sockets; they interact with the world strictly via ctx
+    - The ban covers subprocess, os, and raw socket access paths
+    - exception: binary — exactly the prohibition and its access-path coverage; no third facet exists
+  - Trap checks
+    - `capcli sys routine prove` verifies the jail traps before promotion
+    - Traps cover subprocess, os, and raw socket access paths
+    - exception: binary — exactly the prove verification and its trap coverage; no third facet exists
+  - Disposable sandbox lifecycle
+    - Routines execute inside disposable sandboxes with automated fuel cages — see: kernel.md for cage enforcement
+    - Control flow is isolated to sandboxed routines
+  - Tri-jail mechanics, platform tiers, and the sandbox floor are kernel law — see: kernel.md
+- Trust rungs
+  - The two axes
+    - Rung semantics
+      - draft, reviewed, and pinned are Authoring Promotion Rungs governing trust and authorization to run, never runtime engine stages
+      - The trust axis caps capability blast radius, orthogonal to the environment axis (dev, sim, prod) isolating the state substrate
+    - The pipeline
+      - The lifecycle pipeline is draft → prove → ship → live → monitor → subtraction
+      - Routines travel dev → sim → prod via manifest promotion pipelines
+    - exception: binary — trust has exactly two axes: rung semantics and the pipeline
+  - Draft
+    - The exploratory state
+      - Draft definition
+        - draft is the unproven exploratory trust state
+        - Row ceilings follow artifacts/policy.yaml#trust.draft
+      - Draft constraints
+        - Writes carry require_where: true; credential access is can_read.secrets: false
+        - Network egress is sandboxed socket only
+      - Draft observability
+        - Audit logging records full payloads; denial logging records the full explain trace
+    - Draft in sim
+      - Prove-gated simulation
+        - Draft routines execute in sim strictly under `capcli sys routine prove`
+        - prove runs at draft trust regardless of declaration
+      - Draft entry
+        - Imported routines and world templates enter strictly at draft trust
+        - Templated routines must pass the contract invariant suite in sim before promotion
+    - Draft mechanics
+      - File locking
+        - Draft holds a file lock on routines/<name>.py during edits; concurrent edits exit 2
+      - Duplicate detection
+        - Near-duplicate scan uses a native Levenshtein implementation computing normalized edit distance
+        - Similarity >= 0.85 requires justification in --reason; the warning alerts the author before drafting
+  - Reviewed
+    - The proven state
+      - Reviewed definition
+        - reviewed is the trust state proven through simulation and signed off
+        - Simulation mock bounds are qualified by passing offline mock fixtures (apis/*.mock.yaml)
+      - Reviewed bounds
+        - Row ceilings follow artifacts/policy.yaml#trust.reviewed
+        - reviewed unlocks mass updates per artifacts/policy.yaml#query.bulk; bulk operations require trust >= reviewed
+      - Reviewed provenance
+        - Promotion records the promoted_by human or CI identity
+        - Audit logging records full payloads
+    - Mock limits
+      - Pinned bar
+        - Offline mock tests (apis/*.mock.yaml) alone cannot grant pinned trust
+    - exception: binary — exactly the proven state and its mock limits; no third facet exists
+  - The hardened baseline
+    - Pinned meaning
+      - pinned is the hardened operational production baseline
+      - Row ceilings follow artifacts/policy.yaml#trust.pinned; audit logging records summaries
+    - Pinned bounds
+      - Tier bounds for pinned execution — see: kernel.md
+    - exception: binary — exactly pinned meaning and pinned bounds; no third facet exists
+- Prove and promotion
+  - Prove
+    - The prove operation
+      - Prove scope
+        - `capcli sys routine prove <name> [-p k=v] [--env sim]` verifies jail traps on subprocess, os, and raw socket access
+        - It validates param schemas, verifies table and egress permissions, and applies shape limits
+        - Prove validates at authoring time; its simulated execution never enters the runtime engine
+      - Prove inputs
+        - Prove test parameters are sampled via `capcli sys audit sample`; prove executes real historical audit inputs
+        - Cyclomatic complexity or Param declarations beyond the governance ceiling emit a lint advisory at prove with exit 0; compilation proceeds
+    - Manifest proof
+      - Declared manifest
+        - The declared manifest is reflected by the @routine decorator over kernel.sock during prove
+        - It contains the call sequence, txn wrappers, estimated cost class, per-verb sim modes, the sha256 manifest_hash; manifest proof saves estimated_cost_class with the version
+      - Fingerprint comparison
+        - prove compares the dynamic fingerprint aggregated from _audit leaf events against the static manifest
+        - Executed leaves must be a subset of declared leaves; execution of undeclared primitives triggers a governance.anomaly event
+    - Prove-run secret lease
+      - Lease minting
+        - `capcli sys routine prove --env sim` mints a prove-run lease bound to (prove run id, session id, frame id)
+        - vault://<name> handles resolve for that prove run only; the lease is sim-egress-only and bounded by prove-run wall-clock
+      - Lease hygiene
+        - The lease auto-revokes at run end, never persists to the secrets table, delivers opaque handles to guest
+        - Lease-scoped secret bytes scrub to [REDACTED_VAULT_TOKEN]
+    - Rehearsal bar
+      - Latency ceiling
+        - Rehearsal P95 exceeding 70% of the timeout ceiling denies promotion
+  - Ship gates
+    - The ship operation
+      - Ship authority
+        - Ship authority follows the human-harness model; metric prerequisites are queried from routine_stats
+        - `capcli sys routine ship <name> <reviewed|pinned> [--env X] [--reason]` promotes; elevation skips (draft to pinned directly) are refused with exit 3
+      - Skip prohibition
+        - Direct draft-to-pinned promotion is denied with exit 3
+    - draft → reviewed
+      - Gate requirements
+        - Requires the token envelope ceiling (see: kernel.md), passing offline mock tests (apis/<provider>.mock.yaml), and prove-run secret leases; mock artifacts: see: kernel.md
+        - Whitespace, comments, and docstrings are unpenalized in the envelope count; complexity and params are lint guidance, never a gate
+    - reviewed → pinned
+      - Gate requirements
+        - Requires 100% sim replay on masked data with zero policy denials, live contract schema verification for external verbs, human or Tier-1 CI sign-off
+    - Manifest review
+      - Diff discipline
+        - Manifest deltas are reviewed as single-line behavioral changes; humans review the manifest diff rather than code text
+        - Undeclared leaf additions are flagged explicitly
+      - Match scoring
+        - The manifest match score is executed leaves divided by declared leaves
+        - Undeclared primitives block auto-promotion
+  - Auto-promotion
+    - The conjunction
+      - Conjunction trigger
+        - reviewed advances to pinned autonomously when the auto-promotion conjunction holds
+        - Manual review queues for routine promotion are eliminated; promotion is fully autonomous
+      - Metric set
+        - Production prerequisites: branch merged into prod worktree, 100% replay invariant pass and fuzzing in sim, success rate >= 0.90
+        - Auto-promotion requires invariant_suite_passed: true with boundary and idempotency assertions passing; success_rate >= 0.95
+        - Auto-promotion requires manifest_subset_match: true — executed leaves are a subset of declared leaves with zero undeclared leaves
+        - Auto-promotion requires policy_denials exactly 0; fingerprint_drift_events exactly 0; p95_duration <= 0.70 * declared_max_duration
+      - Conjunction rule
+        - Failure of any single metric blocks promotion; the candidate remains draft until the next evaluation
+    - Effects
+      - Promotion effects
+        - Auto-promotion emits a routine.auto_promoted event
+        - It applies to qualifying low-risk routines with risk-weighted pass metrics, records a 5-point metric record, and runs a 1-hour canary telemetry rollback trigger
+      - Automated pass
+        - Production promotion is automated upon passing the synthetic fuzz and replay suite; mock execution satisfies the conjunction metrics with zero policy denials
+        - Humans can veto auto-promotion retroactively via rollback --to-trust draft
+    - exception: binary — exactly the conjunction and its effects; no third facet exists
+  - Ship evidence
+    - Parameter evidence
+      - Historical sampling
+        - Parameter sampling for ship evidence uses real historical values from `capcli sys audit sample`
+        - Synthetic fixtures are banned for ship evidence
+      - Sim resolution
+        - Prod-only verbs execute against schema-validated mock fixtures in sim; un-simulated verbs resolve to schema-validated mock fixtures in sim
+    - Contract evidence
+      - Egress verification
+        - Contract verification targets all external HTTP egress capabilities
+        - Live contract proof validates responses against upstream OpenAPI JSON Schemas, with safe idempotent routes verified via read-only shadow canarying
+      - Pinning bar
+        - External API verbs require live contract proof or shadow canary execution before pinning; call-count graduation is banned
+    - Cost and receipt evidence
+      - Latency and fuel
+        - Cost evidence records p50 and p95 duration per leaf primitive
+        - Cost evidence records integer compute fuel and socket wire bytes incurred per primitive
+      - Receipt lines
+        - Receipts verify the simulation proofs line: count of successful sim runs
+        - Receipts verify the promotion transitions line: count of validated gate crossings
+- Pinned operations, canary, demotion, versioning
+  - Pinned operations
+    - Autonomy floor
+      - Production autonomy
+        - Production writes are fully autonomous, governed by pinned trust rungs and AST limits
+        - Bulk modifications are autonomous up to declared routine row ceilings
+      - Approval scope
+        - Human approval is scoped to risk-flagged operations (>50k rows, destructive schema revisions) and the configuration proposal pipeline
+    - Unattended runs
+      - Daemon mandate
+        - pinned headless schedules carry may_run_unattended: true and strictly mandate a dedicated systemd server daemon
+        - Local workstations are prohibited from unattended prod runs
+      - Serving floor
+        - Endpoint serving carries a minimum floor per artifacts/governance.yaml#serve
+    - exception: binary — exactly the autonomy floor and unattended runs; no third facet exists
+  - The veto window
+    - Observation window
+      - Newly pinned routines carry a 1-hour canary veto window
+      - Canary error rate above 1% demotes pinned to reviewed exactly one rung; a 1-hour veto canary auto-rolls back on error spikes
+    - Freeze discipline
+      - Re-promotion after canary demotion requires explicit operator action; autonomous re-promotion during the freeze is denied
+      - Established pinned scope uses a 30%-over-20-runs circuit breaker
+    - exception: binary — exactly the observation window and freeze discipline; no third facet exists
+  - Demotion
+    - Command demotion
+      - Gateless demotion
+        - Demotion commands execute without gate resistance
+        - Automatic demotion moves exactly one rung; multi-rung demotion is denied
+      - Demotion alerts
+        - Every automatic demotion emits an alert event; explicit human demotion commands are unaffected
+    - Drift and failure demotion
+      - Contract drift
+        - Upstream provider OpenAPI spec_hash changes or breaking contract changes immediately demote pinned capabilities one rung to reviewed
+        - Sustained routine failure auto-demotes one rung
+      - Circuit demotion
+        - Failure rate > 0.30 over 20 runs triggers autonomous circuit-breaker demotion from pinned to reviewed, suspends active crons, and alerts Cockpit
+    - exception: binary — exactly command demotion and drift/failure demotion; no third facet exists
+  - Versioning
+    - Version records
+      - Hash pinning
+        - Version stamps carry code_hash, manifest_hash, created_by, promoted_by; code_hash and manifest_hash are permanently linked
+        - Code edits force a new version; silent edits are banned
+      - Record fields
+        - A version record holds capability name and sequential integer version, code_hash and manifest_hash, created_by agent and promoted_by human, the promoted_through environment array
+        - In-place modification is banned; changes increment the version
+      - Retention
+        - Versions are kept per the retention ceiling; rollback reach is the retention window
+        - Version retention bounds follow artifacts/governance.yaml#routine_shape
+    - Lineage
+      - Journey records
+        - promoted_through records the [dev, sim, prod] environment journey
+        - consolidated_from preserves the origins of merged routines
+    - exception: binary — exactly version records and lineage; no third facet exists
+  - Drift posture
+    - Governed anomaly
+      - Leaf effects pass the kernel gate; versions are hash-pinned; manifest drift is treated as a governed anomaly
+      - The runtime fingerprint is compared to the manifest continuously during live execution
+    - Drift evidence
+      - Undeclared primitives executing at runtime surface as governed anomaly events under routine_shape.manifest_drift
+      - Runtime fingerprint divergence from the declared manifest is consolidation and promotion evidence, never a stop condition
+    - exception: binary — exactly governed anomaly and drift evidence; no third facet exists
+- Rollback, retire, decay
+  - The rollback operation
+    - Positional version
+      - `capcli sys routine rollback <name> [version]` carries a positional version
+      - Rollback addresses any version inside the retention window; there is no separate depth bound
+    - Un-retirement
+      - Rollback un-retires routines by reinstating the pointer
+    - exception: binary — exactly positional version and un-retirement; no third facet exists
+  - Retire
+    - The retire operation
+      - Reason requirement
+        - `capcli sys routine retire <name> [--reason]`; --reason is required to retire a routine that is pinned, prod-active, or ingress-bound, and optional otherwise
+        - Retiring a routine dissolves ALL ingress bindings (cron, webhook, endpoint) in the same commit; deferred or next-tick dissolution is banned
+      - Retired state
+        - Retirement makes capabilities uncallable while historical provenance is preserved
+        - Retired pointers remain immutable in the historical DAG
+    - Retirement guards
+      - Dependency guard
+        - The routine dependency graph blocks retirement of active dependencies
+        - Unused for 30 days flags a retirement candidate; dropped tables or deprecated APIs force quarantine
+      - Decay pipeline
+        - The decay pipeline is active → candidate → quarantined → retired
+    - exception: binary — exactly the retire operation and retirement guards; no third facet exists
+  - Sweep and consolidation
+    - The sweep operation
+      - Decay management
+        - `capcli sys routine sweep [--since 30d]` manages decay
+        - `capcli sys routine stats <name> [--deep]` inspects routine metrics
+        - A weekly scan flags duplicate proposals via `capcli sys doctor`; it proposes diffs and never merges executable code automatically
+    - Merge clustering
+      - Candidate clustering
+        - Merge clustering uses native Levenshtein distance, dynamic leaf-sequence fingerprint similarity thresholds, and native DFS traversal to cluster nearest routine graphs
+        - The harness generates consolidated routine code; automated gate tests run the candidate against the test suite
+      - Merge execution
+        - Autonomous execution proceeds if the synthetic suite passes with zero drift; retired routines link via consolidated_from: [...]
+        - Maintenance consolidation clusters merge candidates by primitive-sequence identity at maintenance.consolidation.fingerprint_similarity 0.90
+        - Code-text similarity uses duplicate_similarity 0.85; merge proposals stay human-gated (merge_requires_human true; auto_retire_dead false); thresholds live in artifacts/governance.yaml
+    - Mirror views
+      - Miner definitions
+        - Mirror view definitions are shared_subsequences (frequent n-grams proposing routines) and primitive_cost (duration p50/p95, fuel, wire bytes per leaf)
+        - primitive_failures tracks leaf failures by version and sequence; op_frequency counts atomic op calls across sessions
+  - Gate taxonomy
+    - Gates are register (namespace and creation rate validation), prove (shape, static manifest, invariant verification), and runtime (ops, timeout, drift verification)
+    - monitor covers dead and failing threshold detection; sweep covers deduplication and consolidation proposals
+    - Execution is gated per call by policy and budget
+- Envelopes, discovery, governance
+  - Token envelopes
+    - The result envelope
+      - The 500-token ceiling
+        - max_result_tokens is 500, the summary ceiling crossing to the model
+        - Serve responses inherit the routine cap of max_result_tokens 500
+      - Oversize handling
+        - Raw string slicing is banned; oversized output returns the keyset pagination schema ({ items, pagination: { has_more, next_cursor } }); breach exits 3
+    - The notify envelope
+      - Summary cap
+        - Notify messages cap at message_max_tokens 300; notifications are summaries, not essays
+    - The ask envelope
+      - Option bounds
+        - Ask option counts beyond max_options proceed with exit 0 and carry a lint advisory on the ask envelope
+        - Structured ask options stay mandatory per artifacts/policy.yaml#notify.ask
+      - Time bounds
+        - Ask token and timeout bounds (question_max_tokens 100, timeout caps) stay hard
+        - ask default_timeout_minutes is 60 and max_timeout_minutes is 480
+  - Execution bounds
+    - Watchdog
+      - Wall-clock is decoupled from fuel; the OS watchdog kills past 300s
+      - Warm runner recycling keeps execution overhead under 50ms
+    - Fuel envelope
+      - The fuel envelope per frame is declared at invocation and enforced at frame push — see: kernel.md
+    - exception: binary — exactly watchdog and fuel envelope; no third facet exists
+  - Discovery and codification
+    - Exploratory discovery
+      - Bounded probing
+        - Discovery runs bounded exploratory SQL queries and simulated API probes
+        - The kernel logs all database and egress attempts with intent and parameters
+    - Passive mining
+      - Miner triggers
+        - The background n-gram miner triggers after floor events; direct routine drafting remains ungated from day zero
+        - Raw bounded SQL mutations and imported API calls accumulate telemetry in dev before codification into governed routines
+    - Codification
+      - Scaffolding paths
+        - Codification permits immediate direct scaffolding from declared requirements; passive mining triggers opportunistic routine proposals on frequent sequences
+        - The harness scaffolds routine code using the governance synthesis_target language
+        - Repeated DB and API call sequences compile into governed routines; compiler boundaries gate authoring through structural validation
+    - Capabilities are operational muscle memory served over REST and MCP
+  - Governance relationships
+    - Enforcement wiring
+      - routine_shape enforcement
+        - routine_shape is enforced by routine draft (static) plus routine prove (runtime); overrides compile via capcli sys schema apply
+        - Maintenance runs on `capcli sys routine sweep` plus bind cron; schedule, watch, and serve bind to cron, webhook, endpoint — see: plugin.md for bind mechanics
+      - Operations wiring
+        - Environment operations run new, remove, doctor; backup runs `capcli sys backup` plus `capcli sys doctor`; denials surface via `capcli sys audit trace --explain`
+    - Artifact-owned law
+      - Cite never duplicate
+        - The governance.yaml routine_shape section declares routine shape enforcement including manifest drift and fingerprint caps
+        - The governance.yaml maintenance section declares consolidation law including similarity thresholds and the human-gated merge rule
+        - The policy.yaml trust section declares trust policy; the manifest.yaml sections (routine, manifest_hash, trust, execution_sequence, cost_envelope) declare the routine manifest contract
+    - exception: binary — exactly enforcement wiring and artifact-owned law; no third facet exists

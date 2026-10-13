@@ -1,0 +1,73 @@
+- Trigger registry
+  - Sole registry law
+    - _triggers.json is the sole trigger registry
+      - every trigger entry carries screen, predicate, pointer, serve level, reason
+        - screen names the CLI state that fires the trigger
+        - predicate gates the trigger on world state; empty predicate always fires
+        - pointer names the served document in doc:// form
+        - serve level selects the prompt depth: L1 only
+        - reason records why this screen serves this pointer
+      - screen keys track the CLI surface
+        - the registry re-derives when the surface changes; keys never drift by hand
+    - bank frontmatter carries no trigger facts
+      - prompt banks declare content and metadata only
+      - trigger facts live in the registry or nowhere
+  - prompts are documents addressed as doc://prompts/{bank}/{slug}#{version}; the ArtifactResolver resolves them under the single pointer grammar
+    - grammar: scheme://[namespace/]resource[@version][#fragment]
+    - the prompt:// scheme is not registered and resolves nothing
+  - Slice caps
+    - prompt leaves request at most 500 tokens
+    - doc read defaults to 100 tokens per slice
+    - the global result ceiling is 500 tokens
+  - Registry content
+    - genesis bank
+      - t_genesis_blank_world
+        - screen db.schema.success.empty, predicate domain_tables=0
+          - serves doc://prompts/genesis/blank_world#1: blank world, zero domain tables
+        - screen run.search.success.empty, predicate domain_tables=0
+          - serves doc://prompts/genesis/blank_world#1: no capabilities and no world to search
+    - onboarding bank
+      - t_onboarding_harness
+        - screen sys.doctor.success.nominal, predicate domain_tables=0
+          - serves doc://prompts/onboarding/harness#1: nominal doctor with empty domain
+      - t_onboarding_human
+        - screen sys.help.success.stub, empty predicate
+          - serves doc://prompts/onboarding/human#1: human operator requested the onboarding tour
+    - authoring bank
+      - t_authoring_overview
+        - screen routine.prove.success.passed, predicate overview_exists=false
+          - serves doc://prompts/authoring/overview_absent#1: world lacks ground-zero overview
+      - t_authoring_gaps
+        - screen run.search.success.gaps, predicate gap_count>=1
+          - serves doc://prompts/authoring/routine_gaps#1: telemetry shows uncodified sequence
+    - budget bank
+      - t_budget_starved
+        - screen run.execute.denial.budget_cascade, empty predicate
+          - serves doc://prompts/budget/execution_starved#1: preflight failed cascade bounds
+      - t_budget_network_jail
+        - screen run.execute.denial.network_jail, empty predicate
+          - serves doc://prompts/budget/execution_starved#1: sandbox egress trapped
+      - t_budget_claim_held
+        - screen run.execute.denial.claim_held, empty predicate
+          - serves doc://prompts/budget/execution_starved#1: entity lease contested
+      - t_budget_missing_secret
+        - screen run.execute.refusal.missing_secret, empty predicate
+          - serves doc://prompts/budget/execution_starved#1: vault credential absent
+    - evolution bank
+      - t_evolution_drift
+        - screen rule.diff.success.populated, predicate env_in=[dev, prod]
+          - serves doc://prompts/evolution/schema_drift#2: drift requires a forward migration plan
+    - promotion bank
+      - t_promotion_passed
+        - screen routine.prove.success.passed, predicate overview_exists=true and trust=draft
+          - serves doc://prompts/promotion/routine_passed#1: proof passed, promotion eligible
+        - screen routine.prove.success.overview, predicate trust=draft
+          - serves doc://prompts/promotion/routine_passed#1: overview proof passed, promotion handoff
+    - api bank
+      - t_api_empty
+        - screen api.catalog.success.empty, empty predicate
+          - serves doc://prompts/api/catalog_empty#1: no external API catalogs configured
+    - federation bank
+      - t_federation_denied
+        - screen run.execute.denial.federation_denied, empty predicate
+          - serves doc://prompts/federation/remediation#1: refused on allowlist, cycle, or transport

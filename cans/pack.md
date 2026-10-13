@@ -1,0 +1,77 @@
+- Pack — layer 4: atomic multi-layer cartridges
+  - Pack identity
+    - Immutable signed distribution cartridge
+      - Content is fixed at signature time
+      - The signature seals the manifest and the full bundle
+      - Post-signature modification invalidates the pack
+      - Intake verifies the signature before any unpack step
+    - Four-layer carrier
+      - One pack carries plugin, schema, routine, and binding layers together
+      - Layer declarations live in Bundle composition
+    - Zero execution
+      - A pack NEVER executes
+      - The pack has no runtime presence
+    - Atomic installation unit
+      - A pack installs as one unit or not at all
+      - Intake mechanics live in Atomic all-or-nothing intake
+  - Pack manifest
+    - capcli-pack.yaml is the pack manifest
+    - id names the pack
+    - name titles the pack
+    - version marks the release
+    - min_kernel_version states the minimum kernel version the pack requires
+  - Bundle composition
+    - Plugins
+      - Each bundled plugin declares id, source, and binary_sha256
+      - binary_sha256 pins the exact bits installed
+      - Mismatch handling is defined in Atomic all-or-nothing intake below
+      - Plugin contract: see: plugin.md
+    - Schema tables
+      - Each bundled table declares columns, imm_cols, and prov
+      - Table law: see: kernel.md
+    - Routines
+      - Each bundled routine declares src and trust
+      - Routine law: see: routine.md
+    - Bindings
+      - Each bundled binding declares type, name, provider, event, and capability
+      - Bindings are inbound: provider and event name the stimulus, capability names the target
+  - Atomic all-or-nothing intake
+    - Transaction boundary
+      - The pack is the intake transaction boundary
+      - All four layers commit together or not at all
+    - Uniform scope
+      - Atomicity covers plugins, schemas, routines, and bindings equally
+      - No layer gets its own intake transaction
+    - Failure triggers
+      - Any failure aborts the entire installation
+      - A single sub-plugin checksum mismatch aborts
+      - Manifest or signature failure aborts
+    - Abort semantics
+      - Aborting leaves the world untouched: state_modified:false
+      - Aborting reports exit 3
+      - No partial installation state survives the abort
+      - Exit and state law: see: kernel.md
+  - Draft-floor inheritance
+    - Dev entry trust
+      - Every plugin, schema, routine, and binding in an imported pack enters at draft trust
+      - Entry happens in dev
+      - Promotion is earned through the trust lifecycle, never granted at intake
+        - Intake assigns draft; only the lifecycle promotes
+        - Trust lifecycle: see: routine.md
+    - Prod refusal
+      - Installing a pack directly into --env prod is structurally refused
+      - Refusal reports exit 2: E045
+        - The refusal is structural, not discretionary
+        - E045 enforcement: see: kernel.md
+    - Zero promotional credit
+      - Blueprints confer zero promotional credit
+      - Intake confers no trust advantage
+    - Pre-pinned import ban
+      - Imports may not arrive pre-pinned
+      - Pinning is earned post-intake, never declared at intake
+  - Anti-lifecycle-script law
+    - Packs are pure declarative text and AST-compiled code
+    - postinstall.sh is banned
+    - Pre-compile hooks are banned
+    - Dynamic network downloads during unpack are banned
+    - Any violation reports exit 3

@@ -1,0 +1,38 @@
+- Conformance
+  - Deterministic builds
+    - workspace definition
+      - Cargo.toml declares workspace members, musl targets, and release profiles
+      - rust-toolchain.toml pins the minimum supported Rust version at 1.85 with rustfmt and clippy
+      - Cargo.lock is the deterministic dependency lockfile and is always committed
+    - supply chain
+      - dependencies audit against the RustSec advisory database
+      - non-compliant licenses are denied
+  - Distribution contract
+    - the kernel ships as a single static musl binary
+      - static compilation covers x86_64 and aarch64 musl targets
+      - release cross-compilation covers Linux musl x86_64 and aarch64, Darwin x86_64 and aarch64, Windows x86_64
+        - Windows binaries carry the .exe naming
+      - SHA256SUMS.txt anchors binary integrity for every release artifact
+    - the binary carries no build residue
+      - wireframe screens are excluded from the runtime binary
+      - the CLI renders output procedurally from the screen taxonomy
+      - zero host npm, Bun, or node_modules ships inside the kernel binary
+    - the Python SDK ships as a wheel alongside the binary
+  - Integrity gates
+    - declarative artifacts are committed or the push fails
+      - uncommitted modifications to declarative artifacts, including capcli.lock, fail the push
+    - schema integrity is validated at build time
+      - uncommitted schema changes fail the build with exit 3
+  - behavioral acceptance cases bind one physical invariant to one cans law node
+    - the binding is 1:1 with crate tests: one case, one invariant, one test
+    - schema cases live in the schema_migration domain with sm_* case IDs
+    - tests organize into unit, integration, and end-to-end tiers with fixture catalogs
+      - coverage spans template intake, EXPLAIN OpenWrite detection, authorizer callbacks, routine shape bounds, token buckets, cycle rejection, hash chains, vault zeroize
+      - coverage spans pointer validation, bwrap isolation, IPC sockets, S3 uploads, API proxy secret injection, webhook HMAC gates, ping timeouts, JSONL mirroring
+      - coverage spans wireframe fixtures, onboarding sequences, budget cascade, recovery drills, API lifecycle, env worktrees
+  - Checker tools
+    - tools/check-trinity.py runs with zero third-party dependencies
+      - it runs identically in local and CI environments
+      - it returns exit 0 on intact links and exit 1 on breaches
+    - token estimation divides text length by 3.5 characters per token
+  - releases trigger on semver tags matching v[0-9]+.[0-9]+.[0-9]+*; tags are write-once, modifying a tag requires a new release version

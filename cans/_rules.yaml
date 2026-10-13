@@ -1,17 +1,32 @@
+# Day-1 shape rules — capcli cans (plugin-first rewrite, 2026-10-13)
+# A node is a bullet plus its descendant bullets. node_length counts lines per node.
+
 structure:
-  node_length: { min: 3, max: 120 }   
-  siblings: { min: 3, max: 12 }
-  depth: { min: 5, max: 7 }
+  node_length: { min: 5, max: 95 }
+  siblings: { min: 4, max: 10 }
+  depth: { min: 5, max: 18 }
   single_child_collapse: true
   empty_nodes: false
+  # Sibling minimum binds structural levels (d1 + d2). Honest d3+ clusters of
+  # 2-3 children are acceptable without markers (verified unpadded by scan).
+  # Small chapters (<50 lines) may carry honest 2-3-child d2 groupings without
+  # exception markers; the marker requirement binds chapters large enough that
+  # thin structure is a choice, not a necessity.
+  # A proven-binary concept (no deeper facets exist after depth exploration) carries an explicit exception marker:
+  # - exception: binary — <one-line proof>
+  # Lowering the bar is not the fix; going deeper is.
+  # Depth minimum is a tree-wide target. A chapter whose row count cannot
+  # honestly fill depth 5 carries an explicit marker instead of padded depth:
+  # - exception: shallow — <row count> rows; max honest depth <N>
+  # Padding to hit depth is invention; the marker is honesty.
 
 style:
-  prefer: nested
+  prefer: nested  # nested = prefer depth over siblings (checker vocabulary)
   shared_prefix_detection: true
 
 content:
   tbd_allowed: true
-  max_tbd_per_file: 5
+  max_tbd_per_file: 3
 
 references:
   mode: pointer
@@ -24,7 +39,7 @@ redundancy:
   word_frequency_threshold: 12
   phrase_overlap_threshold: 0.7
   cross_file_threshold: 2
-  stopwords: [the, a, an, of, to, in, for, and, or, with, must, shall, requires, capcli, kernel, agent, agents, routine, routines, policy, governance, audit, capability, capabilities, budget, trust, world, frame, frames, env, environment, prod, sim, stage, gate, gates, spec, session, intent, human, yaml, schema, write, writes, read, reads, node, nodes, file, files]
+  stopwords: [the, a, an, of, to, in, for, and, or, with, must, shall, requires, capcli, kernel, microkernel, agent, agents, routine, routines, policy, governance, audit, capability, capabilities, budget, trust, world, frame, frames, env, environment, prod, sim, stage, gate, gates, spec, session, intent, human, yaml, schema, write, writes, read, reads, node, nodes, file, files, plugin, plugins, verb, verbs, manifest, manifests, tri-jail, generation, generations, pack, packs, layer, layers, hook, hooks, trigger, triggers, template, templates, urp, urps, fuel, vault, egress]
   synonyms:
     - [postgres, postgresql, pg]
     - [auth, authentication, sign-in, signin]

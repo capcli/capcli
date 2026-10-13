@@ -1,0 +1,186 @@
+- Plugin identity
+  - A plugin is an isolated, out-of-process executable host driver addressed as plugin://<id>
+  - A plugin contains zero business logic
+  - Every plugin implements one unified protocol: an isolated native OS process communicating via stdio or JSON-RPC 2.0 over unix domain sockets
+  - A plugin never declares whether it is sync, async, a driver, or a background worker
+  - Five plugin domains
+    - External API gateway behavior: provider specs, token buckets, remote REST protocols
+    - Blob storage: S3, Cloudflare R2, GCS, local filesystem blob drivers
+    - Inbound bindings: cron engines, webhooks, SQS, Kafka, stream consumers
+    - Human interface: Slack, Telegram, WhatsApp, Discord, PagerDuty notification sinks
+    - Federation transport: ws:// WireGuard meshes, Tailscale tunnels, NATS peer bridges
+  - Authorship
+    - exception: binary — LED-1365/1369 define exactly two authorship laws
+    - Humans and system engineers author plugins as infrastructure drivers, built once and rarely modified
+    - Agents never write plugins at runtime; installing or modifying a plugin mutates capcli.lock and requires out-of-band cryptographic human approval via the Cockpit PWA
+  - Raw unmanaged socket egress is blocked; exploratory calls route via imported catalog verbs through capcli run
+  - Sandboxing: see: kernel.md
+- Manifest contract
+  - capcli-plugin.yaml declares identity fields id, name, and version
+  - capcli-plugin.yaml declares min_kernel_version and entrypoint
+  - capcli-plugin.yaml declares verbs
+    - Each verb declares name, description, and params
+    - Verb params declare type, required, and default
+    - Each verb declares fuel_declared
+    - Metering: see: kernel.md
+  - capcli-plugin.yaml declares subscribes: causal DAG subscription topics such as db.exec:orders and saga.compensate
+  - capcli-plugin.yaml declares provides for native deep integration surfaces such as urp_schemes and triggers
+  - capcli-plugin.yaml declares permissions: vault key names, egress domains, max_fuel_per_op, and storage_access
+  - capcli-plugin.yaml declares dependencies as semver ranges resolved into a DAG
+  - Registry record
+    - exception: binary — LED-0967/0968 define exactly two record laws
+    - A capability record carries identity (kind, name, version), boundary (trust, env), and discovery description text for search
+    - Provenance tracks routine code_hash and manifest_hash, api provider and spec_hash, and promoted_through history
+  - Catalogs reference secret_ref, never plaintext values
+  - Secret handling at the trust boundary: see: kernel.md
+- Verbs, hooks and permissions
+  - A plugin declares verbs (what it executes), hooks (what it observes), and permissions (what it requests)
+  - ctx API surface
+    - ctx.api.call(verb, params, intent, compensate=None, select=None) performs governed HTTP egress with a declared compensate verb for kernel saga auto-rollback
+    - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s) is kernel-managed in-flight polling; iterations burn fuel per step and egress
+    - Metering: see: kernel.md
+    - ctx.quota.inspect(verb) returns total, available, priority floors, and reset_at
+    - ctx.storage calls
+      - ctx.storage.put(name, data, mime) uploads a blob and returns metadata
+      - ctx.storage.get(key) retrieves the stream with verified sha256
+      - ctx.storage.url(key, ttl) mints a signed temporary access url
+  - Idempotent verbs (GET/PUT/DELETE) auto-retry on 503 or network-drop; a mutating POST without a declared idempotency header fails closed immediately with exit 4
+  - HTTP writes lack rollback and transactions
+  - Pre-call policy checks run before egress leaves the kernel; non-idempotent retries are denied
+  - Enforcement: see: kernel.md
+- Lifecycle: mutating verbs
+  - capcli plugin <verb> manages the plugin lifecycle
+  - install <source>
+    - Installs a remote plugin or pack from GitHub or the registry
+    - Install stages
+      - Clones into temp
+      - Previews permissions
+      - Executes the build command
+      - Creates the generation directory <pid>-<gen>
+      - Sets a shared flock lease on .in-use
+      - Recompiles capcli.lock
+    - Install exits 0 on OK, 2 on policy denial such as prod install banned, 3 on invalid manifest or hash mismatch, 4 on build failure
+    - Install preview: before writing to disk, install displays an interactive preview of demanded vault keys, egress domains, and shell commands requiring explicit operator confirmation
+    - Exit codes: see: kernel.md
+  - link <path>
+    - exception: binary — LED-1334 defines exactly two link laws
+    - Symlinks a local directory for the hot-reload dev loop, bypassing git clone and hot-reloading the manifest on disk changes
+    - Restricted to dev: link in prod exits 2; a path missing capcli-plugin.yaml exits 3
+  - unlink <id> detaches the local symlink from the registry and leaves local filesystem files untouched; unknown or not-linked exits 3
+  - enable <id> flips enabled:true in plugins.json, re-enabling hook dispatch and mounting the command surface; unknown exits 3
+  - disable <id> flips enabled:false; the kernel unmounts verbs and skips event hooks immediately, and running daemons receive SIGTERM; unknown exits 3
+  - uninstall <id>
+    - exception: binary — LED-1342 defines exactly two uninstall laws
+    - Unregisters from plugins.json and retains generation files until running tasks drop .in-use leases for later GC
+    - --purge-state wipes capcli/plugins/state/<id>/; active dependencies exit 2, unknown exits 3
+- Lifecycle: observing verbs
+  - list renders a receipt table of installed plugins: ID, version, source, trust rung, generation ID, active lease status
+  - inspect <id|urp> returns a unified PreflightEnvelope: manifest commands, requested vault keys, allowed egress domains, hook subscriptions, and fuel caps; unknown plugin ID exits 3
+  - search <query> queries the cached marketplace index.json and returns matching IDs, ratings, verified publisher badges, and summaries under 60 tokens
+  - logs <id> streams ring-buffered stdout/stderr capped at 64 KiB plus completion traces from background executions
+  - doctor [id] probes the host substrate: tri-jail availability, syscall 42 trapping, IPC latency over kernel.sock; 0 nominal, 2 jail compromised or degraded
+  - Enforcement: see: kernel.md
+- Generations, GC and lockfile
+  - plugins.json is the SSOT of registered plugins (Vec<InstalledPluginInfo>)
+  - .plugins.lock is the cross-process flock mutex
+  - .locks/<slug>.lock is the per-plugin mutation lock serializing install, build, and GC
+  - Immutable generations
+    - installations/<slug>/<pid>-<gen>/ is an immutable checkout generation holding a shared-flock .in-use lease file
+    - checkout/ holds the immutable git checkout plus compiled binary
+    - Every running routine or daemon frame holds a shared flock on the generation's .in-use file
+    - A plugin update creates a new <pid>-<gen+1> directory and atomically swaps the pointer in plugins.json and capcli.lock
+    - Background GC attempts an exclusive flock on .in-use and skips generations still held by running processes; files are never deleted while mapped in memory by an active process
+  - plugins/state/<slug>/ is the isolated read-write persistent directory for the plugin
+  - update [id...]
+    - Omitted id means all; checks remote commits under .locks/<slug>.lock
+    - On change it builds <pid>-<gen+1>, verifies checksums, and atomically swaps the pointer while running tasks retain the old generation
+    - Update exits 3 on mismatched signatures or compile error, 4 on build failure in the new generation
+    - Exit codes: see: kernel.md
+- Marketplace
+  - A GitHub crawler runs every 30 minutes indexing public repositories tagged `capcli-plugin` that contain a valid capcli-plugin.yaml
+  - The index compiles to an immutable static JSON file at https://registry.capcli.dev/v1/plugins.json
+  - The CLI downloads directly from source via git clone with zero artifact hosting
+  - The index carries verified publisher badges
+- Extension slots: wire, secret and data surfaces
+  - The microkernel exposes 7 native extension surfaces where plugins take over system primitives
+  - Custom URP schemes
+    - provides.urp_schemes registers the schemes the plugin resolves
+    - The plugin implements the UrpResolver trait
+    - inspect returns metadata, size, TTL, and permissions at 0 fuel cost
+    - resolve passes the Layer 1 authorizer, burns fuel, and returns data
+    - The implementation runs inside the plugin process
+    - Metering: see: kernel.md
+  - provides.vault_backend registers vault and KMS backend schemes such as vault://aws/* and vault://1password/*
+  - Storage drivers
+    - exception: binary — LED-1318/1162 define exactly two storage-driver laws
+    - provides.storage_drivers registers storage drivers; routines call ctx.storage.put(..., backend=...)
+    - Blob gates deny unlisted MIME types per allowlist and block uploads exceeding the 10MB ceiling; blob writes are gated by caller trust rung
+  - provides.audit_sinks registers audit notary sinks; committed SHA-256 blocks flush to external WORM storage asynchronously without delaying SQLite transactions
+- Extension slots: event and peer surfaces
+  - --driver <provider> selects the trigger-driver plugin
+  - --ingress|--tunnel selects reachability mode
+  - External webhooks require a valid public --ingress url or active tunnel; raw 127.0.0.1 is denied
+  - Inbound trigger drivers
+    - A plugin registers inbound trigger drivers via provides.triggers to feed the durable _inbox
+    - On an external event the plugin daemon verifies signatures, creates a stimulus envelope, and commits it into _inbox; the microkernel then spawns the bound routine
+    - Inbound triggers are cron schedules, webhooks, and endpoint bindings
+    - ctx.bind exposes cron, webhook, federation, and endpoint trigger declarations
+    - Trigger types
+      - cron <name> <capability> "<cron_expr>": time declarations
+      - webhook <name> <provider> <event> <capability>: async event subscriptions; payloads capped at 65,536 bytes with a 100 events/minute ceiling
+      - endpoint <routine@version> --auth api-key: sync HTTP exposure
+        - Endpoint governance: minimum trust pinned, explicit routine@version, default-writes deny, max 10 endpoints, max 25 API keys, local binding to 127.0.0.1, response bodies capped at 65,536 bytes
+        - Trust enforcement: see: kernel.md
+      - federation <name> <source_ws> <event> <capability@version>: background siphon pulling public peer events into _inbox
+    - Routine starters: direct call, cron fire, webhook dispatch, ask resume, inbox poll via sys inbox pop; inbound dispatch claims _inbox rows atomically and spawns the bound routine
+    - Inbox mechanics: see: kernel.md
+  - Binding operations
+    - list, inspect <id>, pause <id>, resume <id>, remove <id> manage bindings; every binding carries an id on the verb (e.g. bnd_3k2f) and rows are addressable as db://_bindings/<id>
+    - keys issue <name> --principal partner:<id> issues binding keys
+    - export openapi [--out path] and export mcp [--out path] publish the binding surface
+    - Retiring a routine dissolves its ingress bindings in the same commit with no orphan window; bindings never block retirement
+    - The retire receipt names each dissolved binding id and bind.delete events land in _audit in the same op batch
+    - Bind caps: governance.yaml schedule, watch, serve sections: see: artifacts/governance.yaml
+  - Ping channels
+    - Registration
+      - A plugin registers human ping channels via provides.ping_channels
+      - Interactive channels carry human ping inquiries and sensory inbox loops
+    - Operations
+      - ctx.ping.notify(principal, message, channel, intent) sends a notice
+      - ctx.ping.ask(principal, question, options, timeout) suspends on a question
+      - notify, ask, list [--pending], resolve, expire manage human interaction; resolve <ask-id> --choice <opt> flips the ask row and enqueues task resumption in _inbox
+      - Clicking approve posts the cryptographic resolution back to _inbox
+      - ctx.ping.ask() renders interactive approval buttons in the chat app
+    - Discipline
+      - Interactive ping prompts are reserved for unresolvable halts
+      - Ask option choices limited to max 5; question token caps enforced; suspended routines fail closed on timeout
+      - Exit 6 gains the domain ping.ask: ping owns the ask lifecycle and the _pending_asks store
+      - Exit codes: see: kernel.md
+    - Notification caps: governance.yaml notify section: see: artifacts/governance.yaml
+  - Federation transports
+    - Federation is implemented as an infrastructure plugin connecting sovereign workspaces
+    - Plugins declare no remote-callability; cross-workspace invocation is refused — see: kernel.md
+    - ctx.call("ws://billing/plugin:stripe/charge") is banned structurally with exit 3
+    - Transports: capcli.plugin.federation.wireguard (default Linux/mesh driver), capcli.plugin.federation.tailscale, capcli.plugin.federation.nats
+    - The federation plugin listens for _outbox_events with visibility:public, encrypts over mTLS/WireGuard, and pushes them to the peer workspace's _inbox
+    - Exit codes: see: kernel.md
+- Provider verb catalog
+  - Provider verbs are plugin operations; no api noun exists: import, sync, record, diff, catalog, prove, ship, stats, retire, rollback manage the provider verb catalog
+  - Catalog management verbs
+    - import <provider> <path> <method> [--spec <url|file>] imports isolated endpoints on demand
+    - sync <provider> <spec_url> refreshes the whole provider catalog, legalized under cadence limits
+    - record <verb> captures live responses and compiles strict JSON Schema assertions; offline fixtures are capped at reviewed
+    - diff <provider> compares spec_hash
+  - Provider profiles in apis/<provider>.yaml declare base_url, auth_scheme, rate_limit headers, idempotency mapping, and webhook verification spec
+  - Verb states and trust
+    - Import lands at draft trust
+    - active: imported at draft trust
+    - deprecated: flagged by upstream spec removal, callable with warning
+    - retired: uncallable, preserved for provenance
+  - Provider artifacts
+    - apis/<provider>.yaml holds compiled provider verbs
+    - apis/<provider>.sim.yaml holds simulation base URL overlays
+    - apis/<provider>.mock.yaml holds offline canned simulation fixtures
+    - governance.yaml api section declares external API cadence and provider caps: see: artifacts/governance.yaml
+    - policy.yaml api, schedule, watch, serve, and notify sections declare the live caps for plugin-mediated surfaces: see: artifacts/policy.yaml
+    - provider-spec.yaml declares the provider capability contract: see: artifacts/provider-spec.yaml
