@@ -13,9 +13,9 @@
   "component": {
     "rule": "policy.api.quota_exhausted",
     "domain": "api.quota",
-    "culprit": "Provider quota exhausted: threads has 0/50 tokens left in the 24h window.",
+    "culprit": "Provider quota exhausted: threads has 0/50 tokens left in the burst bucket.",
     "remedy": "task safely yielded; daemon will auto-resume at reset_at",
-    "tokens_left": "0 / 50 (24h window)",
+    "tokens_left": "0 / 50",
     "reset_at": "18:00:00 UTC (in 4h 12m)",
     "suspended_frame": "task_99a8b1",
     "provider": "threads",

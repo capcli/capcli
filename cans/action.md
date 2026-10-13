@@ -99,7 +99,7 @@
         - routine — learned composition with version and code_hash
     - Anatomy and decorator
       - Python contract example: routines/refund.py
-        - @routine(name="refund", trust="pinned", limits={"max_ops": 8})
+        - @routine(name="refund", trust="pinned", limits={"fuel_declared": 8})
         - alternative SDK substrates: JavaScript (.js) and TypeScript (.ts)
       - Structure — @routine(name, trust, idempotent, description, limits)
       - Decorator fields

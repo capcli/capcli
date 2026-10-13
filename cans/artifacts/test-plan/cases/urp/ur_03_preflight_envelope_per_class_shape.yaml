@@ -7,7 +7,7 @@ target_crate: "crates/capcli-cli"
 
 invariant:
   law_reference: "cans/interface.md#Hot-path:-run-noun"
-  statement: "`capcli inspect` dispatches every pointer through the same UrpResolver trait pair (inspect/resolve) and returns one PreflightEnvelope per resolver class — uniform dispatch, class-varying payload: executables carry costs, ops ceiling, budget cascade and the can_invoke_now verdict; db entities carry row schema, check constraints, mask flags, TTL; artifacts carry token size, node outlines, bundle metadata."
+  statement: "`capcli inspect` dispatches every pointer through the same UrpResolver trait pair (inspect/resolve) and returns one PreflightEnvelope per resolver class — uniform dispatch, class-varying payload: executables carry fuel_declared, session_fuel_remaining, cadence_status, ceiling_status and the can_invoke_now verdict; db entities carry row schema, check constraints, mask flags, TTL; artifacts carry token size, node outlines, bundle metadata."
   blast_radius_if_breached: "A single generic envelope for all classes would collapse the dispatch contract — db reads would surface can_invoke_now verdicts, artifact reads would surface costs — and every consumer branching on envelope shape (agents, Cockpit, the anti-slop linter) would misread the pointer kind."
 
 confusion_matrix:

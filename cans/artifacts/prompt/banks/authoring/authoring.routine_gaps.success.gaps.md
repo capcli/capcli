@@ -32,7 +32,7 @@ Identify operations that must run atomically.
 
 ## section:stage_2_scaffold
 Write the typed routine wrapping the operational sequence directly at `routines/<routine_name>.py`.
-Declare typed `Param` inputs and explicit `limits={"max_ops": N, "max_duration_seconds": S}` in the file header.
+Declare typed `Param` inputs and explicit `fuel_declared=N` in the file header.
 
 ## section:stage_3_prove
 Rehearse the scaffolded routine against masked simulation data:

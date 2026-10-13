@@ -28,7 +28,7 @@ Scaffold `routines/overview.py`:
 ```python
 from capcli import routine, ctx
 
-@routine(name="overview", idempotent=True, limits={"max_ops": 5, "max_duration_seconds": 5})
+@routine(name="overview", idempotent=True, fuel_declared=50)
 def overview():
     kpis = ctx.db.query("SELECT * FROM orders_summary")
     pending = ctx.db.query("SELECT count(*) as count FROM orders WHERE status = 'pending'")

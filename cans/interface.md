@@ -35,6 +35,7 @@
         - field: cadence_status — enum; leaky-bucket headroom for the next socket dispatch: see budget.md#Quotas
         - field: ceiling_status — enum; monthly provider spend ledger position: see budget.md#Quotas
         - field: can_invoke_now — boolean; true only when fuel and quota checks pass
+        - inspect nesting — the five fields are flat; under inspect output they nest under a budget_status section (addressed budget_status.<field>)
         - routine_min_fuel — int; minimum session fuel admitting the routine; equal to fuel_declared
         - refusal law — AST/pre-flight rejects with exit 2 when session_fuel_remaining < routine_min_fuel; the routine is never invoked: see physics.md#Exit-code-law
         - db entities (db://, vault://, audit://, ask://, quota://) — row schema, check constraints, mask flags, TTL

@@ -153,10 +153,9 @@
       - Exit 6 (yield) — preemption floors, cadence waits over 2s, upstream 429 with Retry-After
       - Exit 2 (deny) — empty tanks: frame fuel 0 or session fuel 0; spend ceiling breach; Critical task on a dry pool
       - No partial execution past budget — routine fails cleanly, no half-executed side effects
-      - Runtime: op #51 aborts (limit_exceeded), watchdog kills past 300s
+      - Runtime: frame fuel 0 aborts the child with exit 2; watchdog kills past 300s with exit 4
     - Pre-flight
-      - budget_status.can_invoke_now is the pre-flight verdict; false + blocking_reasons → don't call
-      - Warnings are non-blocking — remaining below warn_at_remaining
-      - sim_gaps ride along in budget_status — prod-only verbs, unapproved first calls
+      - can_invoke_now is the pre-flight verdict; false + blocking_reasons → don't call
+      - sim_gaps ride along in budget_status — prod-only verbs, unapproved first calls: see #Gap-visibility
     - No `budget` noun, no `--override-budget`: see interface.md#Refusals-and-banned-operations
     - Fuel-cap forensics localize to the leaf op; fix the policy, not the routine: see effect.md#Failure-forensics

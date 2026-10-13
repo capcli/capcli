@@ -6,8 +6,8 @@ target_tier: "integration"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/action.md#Execution-limits"
-  statement: "'Timeout — watchdog kill' (governance.yaml#routine_shape.execution.max_duration_seconds: 300; budget.md#Runtime: 'watchdog kills past 300s'): a guest routine stuck in an infinite loop is killed at the 300s boundary, its open transaction is rolled back (physics.md#Exit-code-law state rollback law), and no orphaned child processes or leaked scratch state survive the kill."
+  law_reference: "cans/physics.md#Exit-code-law"
+  statement: "'Timeout — watchdog kill' (governance.yaml#routine_shape.execution.max_duration_seconds: 300; physics.md#Exit-code-law exit 4): a guest routine stuck in an infinite loop is killed at the 300s boundary, its open transaction is rolled back, and no orphaned child processes or leaked scratch state survive the kill."
   blast_radius_if_breached: "A runaway loop that survives the watchdog would hold a SQLite write transaction open indefinitely, block every other enterprise session on the WAL, leak zombie processes on the host, and consume unbounded CPU while appearing 'busy' to operators."
 
 confusion_matrix:
@@ -46,10 +46,10 @@ execution:
     txn_open: true
 
 expected_observations:
-  exit_code: 2
+  exit_code: 4
   state_modified: false
   diagnostic:
-    domain: "policy.budget"
+    domain: "routine.runtime"
     culprit: "duration watchdog: watchdog_probe@1 exceeded max_duration_seconds 300 (governance routine_shape.execution) inside an infinite loop with an open transaction; process killed and transaction rolled back"
     remedy: "fix the loop — use ctx.api.poll_until for waits (raw time.sleep loops are banned); the watchdog guarantees no frame runs past 300s"
   database:
@@ -59,7 +59,7 @@ expected_observations:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "budget.exhausted (dimension: duration_ms)"
+    event_emitted: "none — the watchdog kill emits no budget event (duration is not fuel)"
     chain_valid: true
     state_modified_field: false
 
@@ -67,7 +67,7 @@ anti_slop_assertions:
   - rule: "AS-02"
     verification: "SELECT count(*) FROM orders is identical before and after (the staged insert rolled back with the killed transaction) and the WAL holds no uncommitted frames from the dead PID (physics.md#Exit-code-law: non-zero exit guarantees state_modified false)."
   - rule: "AS-03"
-    verification: "Assert integer exit_code == 2 and parse the CliEnvelope diagnostic: domain == 'policy.budget', culprit names the 300s watchdog kill and the rolled-back transaction, remedy points at poll_until."
+    verification: "Assert integer exit_code == 4 and parse the CliEnvelope diagnostic: domain == 'routine.runtime', culprit names the 300s watchdog kill and the rolled-back transaction, remedy points at poll_until."
   - rule: "AS-04"
     verification: "Deterministic MockClock: step the synthetic clock and assert the kill fires at exactly the 300,000ms tick (not 299,999, not wall-clock-drifted); no tokio::time::sleep / SystemTime::now anywhere in the path."
   - rule: "AS-08"

@@ -8,7 +8,7 @@ target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/time.md#Cron-governance"
   statement: "A cron binding whose expression fires faster than the schedule minimum interval (min_interval_minutes: 5, artifacts/governance.yaml#schedule) is rejected by the policy authorizer before any schedule row is committed; a 1-minute expression such as \"* * * * *\" must never become an active trigger. Tighter loops are only legal inside kernel-managed ctx.api.poll_until in-flight polling (artifacts/governance.yaml#watch poll.min_interval_minutes exempts in-flight poll_until)."
-  blast_radius_if_breached: "A sub-5-minute cron bound to a mutating routine fires ~1,440 unattended executions per day under kernel principal capcli-cron: session-scoped fuel/rows budgets burn out, the SQLite WAL is hammered by a fire storm, and production tables mutate with zero human oversight while occupying one of the max 20 active schedule slots."
+  blast_radius_if_breached: "A sub-5-minute cron bound to a mutating routine fires ~1,440 unattended executions per day under kernel principal capcli-cron: session-scoped fuel budgets burn out, the SQLite WAL is hammered by a fire storm, and production tables mutate with zero human oversight while occupying one of the max 20 active schedule slots."
 
 confusion_matrix:
   quadrant: "true_negative"

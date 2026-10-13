@@ -24,7 +24,7 @@
       },
       {
         "fields": {
-          "limits": "8 ops · 15s · 500 result tokens"
+          "limits": "50 fuel declared · 300s watchdog · 500 result tokens"
         }
       },
       {

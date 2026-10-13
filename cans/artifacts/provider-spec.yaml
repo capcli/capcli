@@ -14,7 +14,7 @@ auth:
 # 1. RATE LIMIT & IDEMPOTENCY HEADERS (Item 1)
 # ───────────────────────────────────────────────────────────────
 rate_limit:
-  parser_model: optimistic_token_bucket
+  parser_model: leaky_token_bucket
   headers:
     remaining: "RateLimit-Remaining"
     reset: "RateLimit-Reset"
