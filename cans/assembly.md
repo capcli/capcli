@@ -5,7 +5,7 @@
       - Cargo.toml — defines workspace members, musl targets, and release profiles
       - rust-toolchain.toml — pins MSRV 1.85+ with rustfmt and clippy components
       - Cargo.lock — deterministic dependency lockfile across all workspace crates
-      - .gitignore — ignores **/workspace.db*, *.snap.db, target/, dist/, and tmpfs scratch
+      - .gitignore — ignores capcli/ runtime directories, *.snap.db, target/, dist/, and tmpfs scratch
       - repomix.config.json — context packing configuration for LLM code review
     - Host system dependencies
       - git binary — host git >= 2.30 for read-only declarative repo tracking
@@ -35,7 +35,9 @@
       - governance.yaml — structural limits, token caps, and fuel caps: see artifacts/governance.yaml
       - policy.yaml — behavioral authorizer and AST rules: see physics.md#Two-layer-enforcement
       - sealing.rules — cross-domain boundaries and sealing laws: see cans/_rules.yaml
-  - Instance workspace substrate
+  - Instance runtime home
+    - location — <workspace>/capcli holds all runtime state; the workspace root holds user artifacts only
+    - version control — capcli/ is machine-managed and gitignored; declarative blueprints live in the repository artifacts/: see #Declarative-artifacts-directory
     - Static configuration files
       - capcli.lock — root hash SSOT of compiled configs: see world.md#Pre-flight-Sub-checks
       - world.sql — deterministic DDL schema snapshot: see world.md#SQLite-as-SSOT
@@ -72,6 +74,10 @@
         - envs/dev/ — local development world with isolated DB: see space.md#World-definitions
         - envs/sim/ — simulation replay world with masked see space.md#World-definitions
         - envs/prod/ — live production world for pinned trust: see space.md#World-definitions
+    - External to the runtime home
+      - /run/capcli/kernel.sock — daemon IPC socket: see agent.md#Harness-execution-boundary
+      - /run/capcli/<ws>.sock — federated workspace peer sockets: see physics.md#Federation-invariants
+      - /scratch — tmpfs registry-download sandbox: see world.md#Remote-ingestion-&-wire-physics
   - Rust workspace packages layout
     - Shared contracts crate
       - crate identity — crates/capcli-types (@capcli/types)

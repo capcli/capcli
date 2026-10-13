@@ -26,8 +26,8 @@
             - libsql replica — embedded replica syncing from the Hub (LibSQL cache)
             - remote refusal — pure HTTP databases without C authorizer denied
         - tracking
-          - git status — world.sql and schema revisions tracked in git; workspace.db strictly gitignored
-          - persistence — partitioned at envs/<name>/workspace.db; binary snapshots synced to object store
+          - git status — the capcli/ runtime home is machine-managed and gitignored; declarative blueprints live in the repository artifacts/
+          - persistence — partitioned at capcli/envs/<name>/workspace.db; binary snapshots synced to object store
         - concurrency
           - journal mode — WAL mode enabled
           - readers — concurrent non-blocking reads

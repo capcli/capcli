@@ -4,11 +4,11 @@
     - Storage hierarchy
       - audit.db (Tier 1 — hot SSOT)
         - role — isolated transactional source of truth for all events
-        - location — independent system database envs/<name>/audit.db
+        - location — independent system database capcli/envs/<name>/audit.db
         - access — chmod 600, WAL mode, zero connection pooling with workspace.db; concurrent writes bypass domain locks
       - audit/*.jsonl (Tier 2 — cold mirror)
         - role — secondary read-only export view streamed from _audit table
-        - persistence — daily append-only audit/YYYY-MM-DD.jsonl files, flushed to disk and git-committed for offline diffing and cold recovery
+        - persistence — daily append-only capcli/audit/YYYY-MM-DD.jsonl files, flushed to disk for offline diffing and cold recovery
         - sync freshness — mirror lag hard SLA capped at 5 minutes
       - remote anchor (Tier 3)
         - anchor — S3 Object Lock (WORM) checkpoint and KMS notary signatures: see #Event-integrity

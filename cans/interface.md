@@ -156,7 +156,7 @@
       - --as <principal> — target execution principal for scoped access
       - --env <name> — target environment override (defaults to sticky context set by `env use`)
       - -m, --intent "<why>|@<path>" — causal motivation for mutating actions (short flag supported)
-      - --workspace <path|urp> — project root anchor or remote network endpoint (e.g. tcp://100.64.0.1:4040, overrides CAPCLI_WORKSPACE): see artifacts/policy.yaml#network.transports
+      - --workspace <path|urp> — project root anchor (runtime home is <root>/capcli) or remote network endpoint (e.g. tcp://100.64.0.1:4040, overrides CAPCLI_WORKSPACE): see artifacts/policy.yaml#network.transports
       - --session <token> — cryptographic session handle binding principal and frame
       - --in <path> — file or stdin (@-) source for primary command payload
       - --out <path> — writes execution payload to disk; returns token-lean summary to stdout

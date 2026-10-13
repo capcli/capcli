@@ -16,7 +16,7 @@
       - zero-disk credential — spokes negotiate HMAC capability token in memory via CAPCLI_AGENT_TOKEN; zero filesystem key storage
     - Credential binding
       - capability token — kernel-minted HMAC session token bound to active _budget_frames
-      - workspace pinning — active session and principal pinned to envs/<name>/workspace.db
+      - workspace pinning — active session and principal pinned to capcli/envs/<name>/workspace.db
       - implicit fork — divergent harness thread marker under same PID forces session fork: see budget.md#Cascade
       - session fork — child agents inherit scoped parent token via session fork
       - acting identity — --by declares machine agent identity for audit trails and token validation
@@ -78,7 +78,7 @@
       - turn-zero orientation — every harness turn executes capcli run overview as step zero; injects a dense (<60 token) reality snapshot (active fuel, held locks, inbox events) directly into volatile prompt context
       - scoping — session id rides every budget frame, audit event, and claim
       - tracking — session counters govern fuel: see budget.md#Fuel-formula; wire, row, and rate costs convert to fuel or sit quota-side: see budget.md#Quotas
-      - workspace anchor — CAPCLI_WORKSPACE env var or --workspace flag anchors root; cd reliance banned
+      - workspace anchor — CAPCLI_WORKSPACE env var or --workspace flag anchors the project root; runtime state lives in <project>/capcli; cd reliance banned
     - Harness execution boundary
       - execution environment — bash subshell isolated via IPC socket to kernel daemon; direct workspace.db file access blocked
       - execution model — stateless CLI subshell invocation (capcli <noun> <verb>)

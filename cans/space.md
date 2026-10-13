@@ -27,8 +27,8 @@
       - capacity limits — max 5 concurrent environments (prod, dev, sim, 2 experiments)
       - sim defaults — mode resolution: see artifacts/governance.yaml#api
     - World governance
-      - namespace boundary — envs/<name>/ is an isolated directory namespace containing declarative overrides and state
-      - substrate isolation — envs/<name>/workspace.db and envs/<name>/audit.db are uncommitted, locally managed SQLite instances
+      - namespace boundary — capcli/envs/<name>/ is an isolated directory namespace containing declarative overrides and state
+      - substrate isolation — capcli/envs/<name>/workspace.db and capcli/envs/<name>/audit.db are uncommitted, locally managed SQLite instances
       - filesystem mandate — POSIX locking compliance required: see physics.md#Platform-tier-taxonomy
       - prod promotion gate — `env merge <name> prod` verifies Tier 1 host first: see trust.md#Weakest-link-matrix
       - prod protection — operations require out-of-band cryptographic challenge signatures (WebAuthn/Passkey or GPG/SSH key) via Cockpit challenge or local key; CLI flag bypasses rejected
