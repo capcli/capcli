@@ -49,7 +49,7 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli routine ship sync_orders reviewed --queue --reason \"recurring fulfillment sync, human-reviewed\"",
+      "command": "capcli routine ship overview reviewed --queue --reason \"sim prove passed\"",
       "intent": "Enqueued for human review; zero code shipped",
       "risk": "mutating",
       "requires_intent": true

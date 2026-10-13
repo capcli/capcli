@@ -29,6 +29,8 @@
       - scope — no network, no overlay, no orchestrator
     - remote profile — explicit opt-in
       - transport — remote spokes and sovereign peers communicate over WireGuard with mTLS; endpoints configured under: see artifacts/policy.yaml#network.transports
+      - hub bind — the daemon admin/cockpit surface binds 127.0.0.1:4040 in every profile; the loopback lock covers this surface only
+      - mesh bind — remote profile only: the swarm RPC listener binds the mesh interface declared at artifacts/policy.yaml#network.transports with mTLS; spokes dial the hub at that endpoint
       - mechanics — Hub/spoke roles, heartbeat, and reaper mechanics are invariants of the remote profile only: see agent.md#Ephemeral-swarm-identity
       - auth scope — SO_PEERCRED socket authentication applies to local IPC; it never crosses a network boundary
     - ephemeral sandbox node — disposable microVM or container worker; zero-disk state and sync audit ack; identity: see agent.md#Ephemeral-swarm-identity

@@ -33,6 +33,7 @@ topology:
     max_concurrent_spokes: 256
     idle_timeout_seconds: 60
     busy_timeout_ms: 5000             # SQLite BEGIN IMMEDIATE queue ceiling
+    # mesh bind — remote profile: swarm RPC listen endpoint declared at artifacts/policy.yaml#network.transports; admin/cockpit surface binds loopback per serve.bind: see cans/physics.md#Deployment-topology
   spoke:                              # remote profile — WireGuard + mTLS opt-in: see cans/physics.md#Deployment-topology
     rpc_pool_size: 16
     connect_timeout_ms: 2000
@@ -226,7 +227,7 @@ serve:
   min_trust: pinned                   # non-negotiable floor
   require_version_pin: true           # serve order_status@12, never a moving target
   allow_writes_default: false         # inbound writes cost explicit opt-in
-  bind: "127.0.0.1"                   # internal-first; public lives behind a proxy
+  bind: "127.0.0.1"                   # internal-first; public lives behind a proxy; admin/serve surface only — swarm RPC binds the mesh endpoint declared at artifacts/policy.yaml#network.transports
   key_rotation_days: 90               # keys expire; re-issue is a human act
   response:
     max_body_bytes: 65536

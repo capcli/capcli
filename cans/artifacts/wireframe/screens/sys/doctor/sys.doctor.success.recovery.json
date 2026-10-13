@@ -26,7 +26,8 @@
           "audit_sink": "online",
           "chain_status": "unverifiable — audit.db ledger root unreadable (I/O error); await object-store restore",
           "entry_event": "recovery_mode_entered logged on startup",
-          "allowlist": "sql (read-only), db dump, sys audit tail, sys backup, sys recover"
+          "allowlist": "run sql (read-only), db dump, sys audit tail, sys backup, sys recover",
+          "alias_parser": "alive — capcli sql resolves to run sql before gating"
         }
       },
       {

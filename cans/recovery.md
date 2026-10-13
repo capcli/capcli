@@ -41,7 +41,9 @@
       - activation — CAPCLI_RECOVERY=1 environment variable enables emergency recovery mode
       - handler — native recover command in crates/capcli-cli/src/commands/
       - components — loads schema and audit sink only; policy disabled
-      - allowlist — sql (read-only), db dump, sys audit tail, sys backup, sys recover
+      - allowlist — canonical tokens only: run sql, db dump, sys audit tail, sys backup, sys recover
+      - alias parser — alive in recovery; capcli sql rewrites to run sql before gating: see interface.md#CLI-surface
+      - read-only sql — the Layer-1 AST gate denies every non-SELECT statement in recovery mode with exit 2: see physics.md#Raw-SQL-rules
       - audit trail — logs recovery_mode_entered event on startup
     - Re-entry context
       - context reinstatement

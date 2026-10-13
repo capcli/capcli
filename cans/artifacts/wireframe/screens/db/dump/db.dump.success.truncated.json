@@ -26,12 +26,12 @@
           "ddl": "CREATE TABLE order_items (...)"
         }
       ],
-      "next_cursor": "cur_5f2a",
-      "has_more": true
+      "next_cursor": null,
+      "has_more": false
     },
     "meta": {
-      "next_cursor": "cur_5f2a",
-      "has_more": true
+      "next_cursor": null,
+      "has_more": false
     },
     "fields": {
       "database": "envs/dev/workspace.db",
@@ -39,8 +39,17 @@
       "tables": "41",
       "result_tokens": "500 of 31204 (cap: 500)",
       "truncated": "true",
-      "note": "use --out <path> to write the full dump to disk"
+      "note": "stdout preview clips at the 500-token cap; re-run with --out <path> to write the full 31204-token dump to disk"
     },
     "body": []
-  }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli db dump --out out/workspace-dump.sql",
+      "intent": "Write the full dump to disk past the stdout token cap",
+      "risk": "safe",
+      "requires_intent": false
+    }
+  ]
 }

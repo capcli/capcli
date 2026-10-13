@@ -41,11 +41,11 @@
           86.4
         ]
       ],
-      "next_cursor": "10000",
+      "next_cursor": "10003",
       "has_more": true
     },
     "meta": {
-      "next_cursor": "10000",
+      "next_cursor": "10003",
       "has_more": true
     },
     "fields": {
@@ -54,15 +54,15 @@
       "total_rows": "14290",
       "row_cap": "10000 (select.max_limit)",
       "truncated": "true",
-      "resume": "append WHERE id > :cursor to continue past the cap"
+      "resume": "append WHERE id > 10003 to continue past the cap"
     },
     "body": []
   },
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli api catalog stripe --state active --json",
-      "intent": "Imported catalog verbs listed",
+      "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders WHERE id > 10003\"",
+      "intent": "Resume the capped query from the last returned id",
       "risk": "safe",
       "requires_intent": false
     },

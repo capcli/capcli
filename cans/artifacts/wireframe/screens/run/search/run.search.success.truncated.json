@@ -16,9 +16,26 @@
     "header_badge": "20 matches for 'stripe' (capped)",
     "pagination": {
       "items": [
-        "cap://stripe/refund_charge",
-        "vault://stripe_secret_key",
-        "quota://stripe"
+        "cap://stripe/payment_intents.create        api    active",
+        "cap://stripe/payment_intents.confirm       api    active",
+        "cap://stripe/payment_intents.cancel        api    active",
+        "cap://stripe/refund_charge                 api    active",
+        "cap://stripe/charges.list                  api    active",
+        "cap://stripe/customers.create              api    active",
+        "cap://stripe/customers.retrieve            api    active",
+        "cap://stripe/invoices.create               api    active",
+        "cap://stripe/invoices.send                 api    active",
+        "cap://stripe/invoice_items.create          api    active",
+        "cap://stripe/payment_methods.attach        api    active",
+        "cap://stripe/payouts.list                  api    active",
+        "cap://stripe/balance.retrieve              api    active",
+        "cap://stripe/disputes.list                 api    active",
+        "cap://stripe/verification_sessions.create  api    active",
+        "vault://stripe_secret_key                  vault  missing",
+        "vault://stripe_webhook_secret              vault  missing",
+        "quota://stripe                             quota  tracked",
+        "webhook/stripe/invoice_paid                bind   active",
+        "doc://refund-policy                        doc    readable"
       ],
       "next_cursor": "doc://refund-policy",
       "has_more": true
@@ -58,8 +75,8 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli search gaps --since 7d",
-      "intent": "Surfaces missing capabilities via `--since`",
+      "command": "capcli inspect cap://stripe/refund_charge",
+      "intent": "Inspect the first match from this result set",
       "risk": "safe",
       "requires_intent": false
     }

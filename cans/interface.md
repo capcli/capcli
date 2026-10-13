@@ -6,6 +6,7 @@
       - Command shape — capcli <noun> <verb> [target] [--flags]
       - Subcommand tree — eleven nouns (run, db, routine, api, bind, ping, rule, env, sys, doc, template)
       - Ergonomic alias — `capcli apply` aliases `capcli rule apply schema`; `capcli sql` aliases `capcli run sql`
+        - gating — the recovery allowlist names canonical paths; aliases resolve before the handler gates: see recovery.md#Emergency-recovery-mode
       - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
       - Registry law — all capabilities resolve through unified registry
       - Flag conventions — humans receive tables; agents pass --json

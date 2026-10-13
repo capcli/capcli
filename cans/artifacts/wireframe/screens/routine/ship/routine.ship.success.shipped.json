@@ -51,13 +51,6 @@
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli routine ship order_sync reviewed",
-      "intent": "Canary telemetry trips auto-rollback",
-      "risk": "mutating",
-      "requires_intent": true
-    },
-    {
       "rel": "inspect",
       "command": "capcli sys doctor --report",
       "intent": "Full YAML Trust Receipt",

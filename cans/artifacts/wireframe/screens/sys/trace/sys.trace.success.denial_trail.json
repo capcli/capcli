@@ -47,8 +47,8 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli template scaffold tpl://routine/overview overview",
-      "intent": "Mandatory overview routine scaffolded (harness H6)",
+      "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
+      "intent": "Denied UPDATE retried against primary key; blast radius 1",
       "risk": "mutating",
       "requires_intent": true
     }

@@ -13,7 +13,7 @@
   "component": {
     "domain": "validation",
     "culprit": "no CAPCLI_SECRET_* environment variables present in process scope",
-    "remedy": "export CAPCLI_SECRET_<NAME> in the harness shell, or provision via capcli sys vault set",
+    "remedy": "Set CAPCLI_SECRET_<NAME> in the harness shell and re-run `capcli sys vault import-env`; or provision the value directly with `capcli sys vault set <key> <value>`. Imported values land in the encrypted vault with SHA-256 fingerprints; plaintext zeroized after ingest.",
     "lines": [
       "FATAL  validation.not_found"
     ]
