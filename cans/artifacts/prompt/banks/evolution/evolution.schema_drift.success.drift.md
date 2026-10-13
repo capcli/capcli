@@ -18,13 +18,13 @@ slice_max_tokens: 500
 status: served
 ---
 
-# ⚡ ONLINE SCHEMA EVOLUTION PROTOCOL (4-PHASE REVISION)
+# ⚡ ONLINE SCHEMA MIGRATION PROTOCOL (4-PHASE MIGRATION)
 `rule diff` detected structural drift between `schema.yaml` and live SQLite PRAGMAs.
 Raw DDL (ALTER/DROP/CREATE TABLE) is denied for draft and reviewed principals — exit 2.
-Structural changes ride the four-phase revision pipeline — see world.md#Schema-evolution.
+Structural changes ride the four-phase migration pipeline — see world.md#Schema-migration.
 
 ## section:stage_1_expand
-Inspect structural deltas, then author the revision bundle:
+Inspect structural deltas, then author the migration bundle:
 ```bash
 capcli rule diff schema --git
 capcli rule plan --name <slug>
@@ -32,7 +32,7 @@ capcli rule plan --name <slug>
 Expand phase is additive non-breaking DDL only (nullable columns, new tables); execution SLA < 10ms.
 
 ## section:stage_2_align
-Align phase runs in user space via `revisions/NNNN_<slug>/align.py`: bounded chunks (max 500 rows/txn), yields cleanly on quota or fuel exhaustion (exit 6).
+Align phase runs in user space via `migrations/NNNN_<slug>/align.py`: bounded chunks (max 500 rows/txn), yields cleanly on quota or fuel exhaustion (exit 6).
 Rehearse in sim before prod:
 ```bash
 capcli rule prove <id> --env sim
@@ -40,7 +40,7 @@ capcli rule prove <id> --env sim
 `rule prove` in sim is mandatory before `env merge <name> prod` — all pinned routines rehearse, any break exits 2.
 
 ## section:stage_3_contract
-Contract phase runs in kernel space (`revision.rs`): creates `_shadow_<table>`, attaches AFTER INSERT/UPDATE/DELETE delta triggers replicating in-flight mutations, copies base rows in 500-row chunks.
+Contract phase runs in kernel space (`migrate.rs`): creates `_shadow_<table>`, attaches AFTER INSERT/UPDATE/DELETE delta triggers replicating in-flight mutations, copies base rows in 500-row chunks.
 Zero-lag swap: BEGIN IMMEDIATE at zero replication lag, drops triggers, renames shadow to live, drops the old table; exclusive write lock held < 20ms.
 
 ## section:stage_4_pin
@@ -48,4 +48,4 @@ Pin phase verifies live PRAGMA matches `schema.yaml` and updates the root hash i
 ```bash
 capcli rule apply <id> -m "<intent>"
 ```
-A cold VACUUM snapshot pairs each revision for disaster-only recovery.
+A cold VACUUM snapshot pairs each migration for disaster-only recovery.

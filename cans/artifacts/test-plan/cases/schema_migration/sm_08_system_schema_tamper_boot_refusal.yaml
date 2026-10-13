@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_08_system_schema_tamper_boot_refusal"
+case_id: "sm_08_system_schema_tamper_boot_refusal"
 title: "Tampered system-schema.yaml fails the boot hash check and halts the kernel with exit 3"
 domain: "schema_evolution"
 target_tier: "integration"

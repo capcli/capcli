@@ -1,11 +1,11 @@
 $schema: "test-plan/case/v1"
-case_id: "se_15_revision_lock_timing_sla"
+case_id: "sm_15_migration_lock_timing_sla"
 title: "Phase-1 Expand and phase-3 Contract swap hold the SQLite write lock within bound (<10ms expand, <20ms contract)"
 domain: "schema_evolution"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 invariant:
-  law_reference: "cans/world.md#Four-phase-state-revision-pipeline"
+  law_reference: "cans/world.md#Four-phase-state-migration-pipeline"
   statement: "Expand phase DDL executes with an SLA < 10ms and the Contract phase exclusive write lock is held strictly < 20ms (trigger detach + table rename only); rule prove --env sim rehearses and records lock-timing observations for both phases before any cutover."
   blast_radius_if_breached: "An unbounded Expand or swap lock freezes every writer on the Hub for the whole fleet: routine executions queue behind the lock, VDBE progress handlers abort mid-flight, and a sim rehearsal that never measured lock timing ships a production cutover blind."
 confusion_matrix:
@@ -16,7 +16,7 @@ setup:
   env: "sim"
   platform_tier: "tier_1"
   caller_identity:
-    principal: "harness.revisionbot@acme.corp"
+    principal: "harness.migrationbot@acme.corp"
     agent_id: "agt_se_15"
     trust: "reviewed"
   initial_state:
@@ -41,10 +41,10 @@ setup:
     vault_secrets: []
 execution:
   trigger: "cli_subcommand"
-  command: "capcli rule prove rev_0008_orders_rush --env sim"
+  command: "capcli rule prove mig_0008_orders_rush --env sim"
   input_params:
-    revision_id: "rev_0008_orders_rush"
-    revision_change: "orders gains nullable column rush (Expand); no destructive phase needed for this additive revision"
+    migration_id: "mig_0008_orders_rush"
+    migration_change: "orders gains nullable column rush (Expand); no destructive phase needed for this additive migration"
     sla_expand_ms: 10
     sla_contract_swap_ms: 20
 expected_observations:
@@ -70,7 +70,7 @@ expected_observations:
       write_lock_ms: 4
       sla_ceiling_ms: 10
     contract_phase:
-      swap_note: "additive revision has no destructive swap; rehearsal still binds the ceiling for the destructive path"
+      swap_note: "additive migration has no destructive swap; rehearsal still binds the ceiling for the destructive path"
       write_lock_ms: 0
       sla_ceiling_ms: 20
 anti_slop_assertions:

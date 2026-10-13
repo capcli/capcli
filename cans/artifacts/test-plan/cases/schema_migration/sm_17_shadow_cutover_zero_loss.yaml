@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_17_shadow_cutover_zero_loss"
+case_id: "sm_17_shadow_cutover_zero_loss"
 title: "Concurrent delta writes during Contract phase replicate via AFTER INSERT/UPDATE/DELETE triggers with zero lost rows at swap"
 domain: "schema_evolution"
 target_tier: "integration"
@@ -16,7 +16,7 @@ setup:
   env: "sim"
   platform_tier: "tier_1"
   caller_identity:
-    principal: "harness.revisionbot@acme.corp"
+    principal: "harness.migrationbot@acme.corp"
     agent_id: "agt_se_17"
     trust: "pinned"
   initial_state:
@@ -47,9 +47,9 @@ setup:
     concurrent_workload: "50 concurrent writes (30 inserts, 15 updates, 5 deletes) issued against orders while the Contract swap runs"
 execution:
   trigger: "cli_subcommand"
-  command: "capcli rule apply rev_0010_orders_restructure --env sim (phase 3 Contract: zero-lag swap of _shadow_orders to live while the concurrent workload runs)"
+  command: "capcli rule apply mig_0010_orders_restructure --env sim (phase 3 Contract: zero-lag swap of _shadow_orders to live while the concurrent workload runs)"
   input_params:
-    revision_id: "rev_0010_orders_restructure"
+    migration_id: "mig_0010_orders_restructure"
     concurrent_inserts: 30
     concurrent_updates: 15
     concurrent_deletes: 5
@@ -68,7 +68,7 @@ expected_observations:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "revision.contract (decision: allow; zero-lag swap, delta reconciliation 50/50)"
+    event_emitted: "migration.contract (decision: allow; zero-lag swap, delta reconciliation 50/50)"
     chain_valid: true
     state_modified_field: true
   observations:

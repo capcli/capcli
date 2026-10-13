@@ -103,7 +103,7 @@
       },
       "prompt": "doc://prompts/evolution/schema_drift#2",
       "serve": "L1",
-      "reason": "schema drift requires forward revision plan"
+      "reason": "schema drift requires forward migration plan"
     },
     {
       "id": "t_promotion_passed",

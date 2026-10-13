@@ -1,13 +1,13 @@
 $schema: "test-plan/case/v1"
-case_id: "se_09_seed_data_volume_cap_breach"
+case_id: "sm_09_seed_data_volume_cap_breach"
 title: "Table definition with 51 seed rows is rejected by the seed volume cap (max 50 rows per table)"
 domain: "schema_evolution"
 target_tier: "unit"
 target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/world.md#Seed-data"
-  statement: "Seed data is declared as a seed: [...] array executed inside the revision DDL transaction with a volume cap of max 50 rows per table to prevent draft bulk loading (governance.yaml template.world.max_seed_rows_per_table: 50); 51 rows refuses the schema at the shorthand compiler gate with exit 3."
-  blast_radius_if_breached: "Large datasets bypass every revision gate disguised as seed data: a draft template ships a 100k-row 'seed' straight into prod through the intake pipeline, dodging chunking, pre-counts, and blast-radius caps."
+  statement: "Seed data is declared as a seed: [...] array executed inside the migration DDL transaction with a volume cap of max 50 rows per table to prevent draft bulk loading (governance.yaml template.world.max_seed_rows_per_table: 50); 51 rows refuses the schema at the shorthand compiler gate with exit 3."
+  blast_radius_if_breached: "Large datasets bypass every migration gate disguised as seed data: a draft template ships a 100k-row 'seed' straight into prod through the intake pipeline, dodging chunking, pre-counts, and blast-radius caps."
 confusion_matrix:
   quadrant: "true_negative"
   slop_risk: "Agent allows the oversized seed array through by splitting it across two tables of 26+26 rows (or 51 single-row INSERT statements) in the fixture - the per-table cap is never actually evaluated against the declared array."
@@ -51,7 +51,7 @@ expected_observations:
   diagnostic:
     domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; seed cap is enforced by the schema compile gates
     culprit: "fixture_table seed array length 51 > max 50 rows per table (volume cap prevents draft bulk loading); measured value 51 vs ceiling 50"
-    remedy: "Trim the seed array to <= 50 rows; ship bulk starter data through the governed revision path (chunked inserts, pre-count, reviewed trust) instead of seed."
+    remedy: "Trim the seed array to <= 50 rows; ship bulk starter data through the governed migration path (chunked inserts, pre-count, reviewed trust) instead of seed."
   database:
     row_count_delta: 0
     tables_mutated: []

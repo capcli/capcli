@@ -17,7 +17,7 @@ sla:
   local_inner_loop_seconds: 15
   local_pre_push_seconds: 45
   pr_gate_minutes: 4
-  schema_rehearsal_minutes: 4  # PR-pipeline revision-safety rehearsal fits the free-tier PR gate budget
+  schema_rehearsal_minutes: 4  # PR-pipeline migration-safety rehearsal fits the free-tier PR gate budget
 
 trinity:
   paths:

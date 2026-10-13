@@ -9,7 +9,7 @@
       {
         "fields": {
           "intent": "\"rush shipping priority flag\"",
-          "revision": "add_order_priority"
+          "migration": "add_order_priority"
         }
       },
       {
@@ -32,7 +32,7 @@
     {
       "rel": "next",
       "command": "capcli rule prove add_order_priority --env sim",
-      "intent": "Rehearse the planned revision in sim",
+      "intent": "Rehearse the planned migration in sim",
       "risk": "safe",
       "requires_intent": false
     }

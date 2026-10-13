@@ -79,7 +79,7 @@
       - canary veto window — newly pinned routines face 1-hour observation; error rate >1% triggers automatic rollback to draft and Cockpit PWA alert
       - established pinned scope — 30%-over-20-runs circuit breaker: see time.md#decay-and-subtraction
       - human intervention boundary
-        - risk-flagged operations — human approval: >50k rows, destructive revisions
+        - risk-flagged operations — human approval: >50k rows, destructive migrations
         - configuration proposals — approval gate: see world.md#Configuration-proposal-lifecycle
         - routine promotion — manual review queues eliminated; promotion is fully autonomous
       - production prerequisites
@@ -99,7 +99,7 @@
       - retroactive control — human veto via rollback --to-trust draft
     - Pinned promotion
       - autonomous criteria — see #Monotonic-promotion-pipeline
-      - boundary safety — high fuel consumption or schema revisions governed by hard-coded budget caps
+      - boundary safety — high fuel consumption or schema migrations governed by hard-coded budget caps
   - Evidence
     - Manifest evidence
       - delta review

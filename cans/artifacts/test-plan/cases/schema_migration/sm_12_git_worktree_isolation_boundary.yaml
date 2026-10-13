@@ -1,22 +1,22 @@
 $schema: "test-plan/case/v1"
-case_id: "se_12_git_worktree_isolation_boundary"
-title: "Revision applied in the envs/dev/ worktree leaves the envs/prod/ database physically untouched"
+case_id: "sm_12_git_worktree_isolation_boundary"
+title: "Migration applied in the envs/dev/ worktree leaves the envs/prod/ database physically untouched"
 domain: "schema_evolution"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/space.md#World-governance"
-  statement: "Each environment is an isolated git worktree branch (envs/<name>/) whose workspace.db is gitignored uncommitted local runtime state - a revision executed in envs/dev/ mutates only envs/dev/workspace.db, and envs/prod/workspace.db remains byte-identical."
+  statement: "Each environment is an isolated git worktree branch (envs/<name>/) whose workspace.db is gitignored uncommitted local runtime state - a migration executed in envs/dev/ mutates only envs/dev/workspace.db, and envs/prod/workspace.db remains byte-identical."
   blast_radius_if_breached: "A dev-only experiment writes directly into the primary prod database file; unreviewed DDL reaches production without merge, snapshot, or the push gate, and prod data is silently redefined."
 confusion_matrix:
   quadrant: "true_positive"
-  slop_risk: "Agent runs the revision on the primary branch workspace database directly (or points both environments at one workspace.db path in the fixture), so the isolation boundary is never actually crossed or verified."
+  slop_risk: "Agent runs the migration on the primary branch workspace database directly (or points both environments at one workspace.db path in the fixture), so the isolation boundary is never actually crossed or verified."
   anti_slop_mitigation: "AS-02 physically queries BOTH database files (prod count and byte-hash equality before/after); AS-05 verifies the dev apply event and hash chain; AS-06 hardcodes the literal prod baseline."
 setup:
   env: "dev"
   platform_tier: "tier_1"
   caller_identity:
-    principal: "harness.revisionbot@acme.corp"
+    principal: "harness.migrationbot@acme.corp"
     agent_id: "agt_se_12"
     trust: "reviewed"
   initial_state:
@@ -48,7 +48,7 @@ setup:
   # parallel state: envs/prod/workspace.db also holds 500 order rows at compiled schema v12 (no shipping_modes)
 execution:
   trigger: "cli_subcommand"
-  command: "capcli rule apply rev_0013_shipping_modes --env dev -m \"add shipping_modes v13\""
+  command: "capcli rule apply mig_0013_shipping_modes --env dev -m \"add shipping_modes v13\""
   input_params:
     target_worktree: "envs/dev/ (isolated git worktree branch)"
     bystander_worktree: "envs/prod/ (must remain untouched, compiled v12)"
@@ -67,7 +67,7 @@ expected_observations:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "rule.apply (allow; schema revision event for v13 in dev)"
+    event_emitted: "rule.apply (allow; schema migration event for v13 in dev)"
     chain_valid: true
     state_modified_field: true
 anti_slop_assertions:

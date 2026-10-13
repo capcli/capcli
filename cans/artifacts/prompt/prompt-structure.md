@@ -31,7 +31,7 @@ Rules that follow from the table:
    them, never the scheme. Slices never summarise `cans/` and never copy
    reference tables.
 3. **A prompt is served only when the next action is agent-authored work**
-   (synthesis, authoring, judged revision/promotion). A single denial
+   (synthesis, authoring, judged migration/promotion). A single denial
    whose kernel `remedy:` line fully specifies the next command gets no
    prompt.
 
@@ -119,7 +119,7 @@ emits no L1 trailer.
 - Predicates keyed on actor identity are prohibited: the kernel is
   actor-neutral (`cans/agent.md` Harness-neutrality); screen identity
   carries the distinction.
-- Revision-class campaigns scope to reserved-root environments via
+- Migration-class campaigns scope to reserved-root environments via
   `env_in: ["dev", "prod"]`; dynamic experiment namespaces never fire
   them.
 - A domain implied by the screen alone carries no predicate key (e.g.

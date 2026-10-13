@@ -34,7 +34,7 @@
           - reader bounds — persistent reader locks banned; daemon WebSocket tails use short-lived connection snapshots to prevent WAL checkpoint starvation
           - checkpointing — kernel runs PRAGMA wal_checkpoint(PASSIVE) after writes; maintenance ticks run TRUNCATE to bound WAL size < 100MB
           - writers — serialized atomic transactions via busy-timeout queue
-          - lifespan law — write locks held during atomic commits only, never across agent execution; user-space transactions strictly <15ms; kernel revision swaps carry their own <20ms bound
+          - lifespan law — write locks held during atomic commits only, never across agent execution; user-space transactions strictly <15ms; kernel migration swaps carry their own <20ms bound
           - checkpoint guarantee — no transaction outlives its commit, so write-lock starvation of WAL checkpoints is impossible by construction
           - network isolation — network calls never execute inside transactions: see action.md#Interior-rules
           - tier partition — concurrency splits into macro lease (claims), meso fence (state_fence), and micro lock (SQLite): see physics.md#Distributed-concurrency-laws
@@ -52,7 +52,7 @@
         - version control
           - tracking — committed to git
           - diffs — readable schema change history
-        - snapshot automation — deterministic DDL and seed dump generated locally on revision; synced directly to object storage
+        - snapshot automation — deterministic DDL and seed dump generated locally on migration; synced directly to object storage
         - disaster recovery
           - restoration — sys recover: see recovery.md#Restore-path
       - object snapshots — binary VACUUM INTO backups in object store: see recovery.md#Snapshots
@@ -185,7 +185,7 @@
         - triggers — trig: expands to kernel-compiled trigger
     - Seed data
       - declaration — seed: [...] array in table definition
-      - execution — executed inside revision DDL transaction; audited with seed_rows count
+      - execution — executed inside migration DDL transaction; audited with seed_rows count
       - volume cap — max 50 rows per table to prevent draft bulk loading
       - row volume bounds — ceiling: see artifacts/governance.yaml#schema.world
     - Enforcement split
@@ -205,19 +205,19 @@
         - row immutability — imm_rows denies row mutation
         - audit injection — created_by and modified_by populated by kernel on prov tables
         - system protection — sys: true denies agent writes
-  - Schema evolution
-    - Four-phase state revision pipeline
+  - Schema migration
+    - Four-phase state migration pipeline
       - 1. Expand phase — additive, non-breaking DDL (nullable columns, new tables); execution SLA < 10ms
-      - 2. Align phase — user-space pinned routine (revisions/NNNN/align.py); bounded chunks (max 500 rows/txn); yields cleanly on quota/fuel (exit 6)
-      - 3. Contract phase — kernel revision.rs executes destructive DDL via trigger-replicated shadow table; final swap holds exclusive write lock strictly <20ms
+      - 2. Align phase — user-space pinned routine (migrations/NNNN/align.py); bounded chunks (max 500 rows/txn); yields cleanly on quota/fuel (exit 6)
+      - 3. Contract phase — kernel migrate.rs executes destructive DDL via trigger-replicated shadow table; final swap holds exclusive write lock strictly <20ms
       - 4. Pin phase — verifies live PRAGMA matches schema.yaml; updates root hash in capcli.lock
-    - Online schema evolution mechanics
+    - Online schema migration mechanics
       - kernel responsibility — Rust kernel creates shadow table _shadow_<table>, attaches delta replication triggers, copies base rows in 500-row chunks
       - delta triggers — AFTER INSERT, AFTER UPDATE, AFTER DELETE on the live table replicate in-flight mutations to the shadow table
       - zero-lag swap — BEGIN IMMEDIATE once replication lag reaches zero; drops triggers, renames shadow to live, drops old table
       - lock duration — exclusive write lock held only during trigger detach and table rename
-    - Revision lifecycle commands
-      - planning — rule plan --name <slug> generates revisions/NNNN_<slug>/ bundle
+    - Migration lifecycle commands
+      - planning — rule plan --name <slug> generates migrations/NNNN_<slug>/ bundle
       - rehearsal — rule prove <id> --env sim validates FK integrity, lock timing, and alignment fuel
       - application — rule apply <id> [-m "<intent>"] executes phased cutover
     - Agent denial rules
@@ -229,10 +229,10 @@
       - system schema manipulation
         - target — system-schema.yaml
         - decision — denied: see artifacts/governance.yaml#schema.system
-      - unmerged production revisions
+      - unmerged production migrations
         - condition — cross-world DDL without git merge
         - decision — denied: see artifacts/policy.yaml#env.prod
-    - Revision invariants
+    - Migration invariants
       - forward only — rollbacks execute strictly via forward revert bundles
       - user vs kernel separation — state population runs in user space routines; structural rebuilds run in kernel
       - snapshot pairing — cold VACUUM snapshot created prior to Expand phase for disaster-only recovery
@@ -265,7 +265,7 @@
       - destination isolation — template unpacks strictly into dev worktree; prod direct-init denied
       - validation sequence — rule validate checks min_kernel_version, policy_version, py_compile, AST complexity ≤10, schema.yaml syntax (Sub-check 1), bundle semantics (Sub-check 2) before disk write
       - parameter validation — capcli template scaffold validates -p against manifest inputs at stamping
-      - dry-run revision — revision-safety rehearsal executes on temporary snapshot: see world.md#Revision-safety
+      - dry-run migration — migration-safety rehearsal executes on temporary snapshot: see world.md#Migration-safety
       - seed constraints — table seed arrays capped at 50 rows per table
     - Audit and provenance
       - event type — env.init_from_template (world) or routine.draft (routine)
@@ -305,10 +305,10 @@
     - detection — PRAGMA scans compare live tables against compiled YAML
     - condition — undeclared columns or tables trigger refusal
     - failure code — throws exit 3
-  - Revision safety
+  - Migration safety
     - status — offline lifecycle step, not a runtime gate: see interface.md#Governance-path:-rule-noun
     - execution — rehearsal runs on masked sim snapshot; checks PRAGMA foreign_key_check
-    - pinned routine safety — simulated rehearsal of ALL pinned routines against revised schema; any query break or column drop aborts cutover with exit 2
+    - pinned routine safety — simulated rehearsal of ALL pinned routines against migrated schema; any query break or column drop aborts cutover with exit 2
     - online cutover check — verifies shadow table delta lag reaches zero before executing the atomic swap
     - state alignment safety — validates alignment routine terminates cleanly within session fuel bounds
     - failure code — aborts cutover, discards rehearsal state, returns exit 2 or 3

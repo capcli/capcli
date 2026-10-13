@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_01_yaml_syntax_gate1_refusal"
+case_id: "sm_01_yaml_syntax_gate1_refusal"
 title: "Malformed schema.yaml (TAB indentation) is refused by Sub-check 1 with a structured diagnostic, exit 3"
 domain: "schema_evolution"
 target_tier: "unit"
@@ -7,7 +7,7 @@ target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/world.md#Sub-check-1:-Syntax"
   statement: "Sub-check 1 runs at parse-time on file load: YAML must be valid syntax without duplicate keys; a schema.yaml containing TAB characters or broken indentation halts with a structured refusal (exit 3), never a parser panic."
-  blast_radius_if_breached: "A silently-tolerated malformed schema compiles undefined shorthand expansions into live DDL; every environment built from the template inherits structurally ambiguous schema and revisions become unprovable."
+  blast_radius_if_breached: "A silently-tolerated malformed schema compiles undefined shorthand expansions into live DDL; every environment built from the template inherits structurally ambiguous schema and migrations become unprovable."
 confusion_matrix:
   quadrant: "true_negative"
   slop_risk: "Agent lets the underlying YAML parser panic (unwind into a crash or exit 4/5) instead of asserting the kernel's structured Sub-check 1 refusal envelope - the test then passes on a crash rather than a typed denial."

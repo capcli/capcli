@@ -39,7 +39,7 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli db snapshot -m \"pre-revision safety point\"",
+      "command": "capcli db snapshot -m \"pre-migration safety point\"",
       "intent": "Point-in-time snapshot committed",
       "risk": "mutating",
       "requires_intent": true

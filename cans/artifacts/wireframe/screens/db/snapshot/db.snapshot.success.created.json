@@ -2,7 +2,7 @@
   "$schema": "wireframe/v2",
   "id": "db.snapshot.success.created",
   "target": "db://",
-  "command": "capcli db snapshot -m \"pre-revision safety point\"",
+  "command": "capcli db snapshot -m \"pre-migration safety point\"",
   "elapsed_ms": 2457,
   "context": {
     "env": "dev",

@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_14_config_proposal_lifecycle"
+case_id: "sm_14_config_proposal_lifecycle"
 title: "Agent YAML edit flows author -> gates -> PWA approval -> daemon lockfile recompile and git auto-commit"
 domain: "schema_evolution"
 target_tier: "e2e"

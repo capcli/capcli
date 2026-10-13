@@ -372,8 +372,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `rule.validate.refusal.compat` | refusal | 3 | policy.template | compat | min_kernel_version or policy version mismatch |
 | `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Sub-check 1 YAML syntax failure |
 | `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Sub-check 2 circular dependency detected |
-| `rule.plan.success.planned` | success | 0 | — | planned | Revision bundle generated (plan.json, align stub) |
-| `rule.prove.success.proven` | success | 0 | — | proven | Four-phase revision rehearsed in sim (expand/align/contract/pin); pinned routines rehearsed |
+| `rule.plan.success.planned` | success | 0 | — | planned | Migration bundle generated (plan.json, align stub) |
+| `rule.prove.success.proven` | success | 0 | — | proven | Four-phase migration rehearsed in sim (expand/align/contract/pin); pinned routines rehearsed |
 
 ### 4.8 `env/` (7 verbs → 19 screens)
 
@@ -391,7 +391,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `env.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Schema divergence detected |
 | `env.merge.success.merged` | success | 0 | — | merged | DDL forwarded to production |
 | `env.merge.denial.trust` | denial | 2 | policy.trust | unreviewed | Production merge requires reviewed |
-| `env.merge.refusal.plan_conflict` | refusal | 3 | compile | conflict | Target schema revision plan conflict blocks DDL |
+| `env.merge.refusal.plan_conflict` | refusal | 3 | compile | conflict | Target schema migration plan conflict blocks DDL |
 | `env.merge.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile out of sync |
 | `env.merge.refusal.unmerged` | refusal | 3 | compile | unmerged | Git branch conflict blocks DDL forwarding |
 | `env.remove.success.removed` | success | 0 | — | removed | Environment dismantled |
@@ -850,13 +850,13 @@ Fixture (`wireframe/v2`):
     "layer": "kernel",
     "culprit": "raw DDL (ALTER TABLE orders) issued via capcli sql by a reviewed principal",
     "measured": "trust: reviewed",
-    "remedy": "raw ALTER/DROP/CREATE TABLE is denied for draft and reviewed principals, exit 2; the kernel 4-phase revision pipeline (rule plan -> rule prove in sim -> rule apply) is the sole legal DDL path"
+    "remedy": "raw ALTER/DROP/CREATE TABLE is denied for draft and reviewed principals, exit 2; the kernel 4-phase migration pipeline (rule plan -> rule prove in sim -> rule apply) is the sole legal DDL path"
   },
   "affordances": [
     {
       "rel": "next",
       "command": "capcli rule plan --name \"add_order_priority\" -m \"rush shipping priority flag\"",
-      "intent": "Start the kernel revision pipeline instead of raw DDL",
+      "intent": "Start the kernel migration pipeline instead of raw DDL",
       "risk": "safe",
       "requires_intent": false
     }
@@ -875,7 +875,7 @@ Rendered output:
   culprit:  raw DDL (ALTER TABLE orders) issued via capcli sql by a reviewed principal
   measured: trust: reviewed
   remedy:   raw ALTER/DROP/CREATE TABLE is denied for draft and reviewed principals, exit 2;
-            the kernel 4-phase revision pipeline (rule plan -> rule prove in sim -> rule apply)
+            the kernel 4-phase migration pipeline (rule plan -> rule prove in sim -> rule apply)
             is the sole legal DDL path
 
   state_modified: false

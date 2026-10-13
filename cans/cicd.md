@@ -306,7 +306,7 @@
       - PR check 2: Semantic acyclic check — petgraph cycle scan over domain tables and routine ctx.call trees: see world.md#Sub-check-2:-Semantics; cycles exit 3
       - PR check 3: AST complexity scan — cyclomatic complexity <= 10 branches on all guest Python/JS/TS files
       - PR check 4: Token cage verification — strict file size envelopes: routine files <= 2000 tokens, search descriptions <= 60 tokens, payload summaries <= 500 tokens
-      - PR check 5: Schema evolution rehearsal — revision rehearsal on transient snapshots with dry-run test suite: see world.md#Revision-safety
+      - PR check 5: Schema migration rehearsal — migration rehearsal on transient snapshots with dry-run test suite: see world.md#Migration-safety
       - PR check 6: Cryptographic lockfile sync — SHA-256 root hash assertion against capcli.lock: see world.md#Sub-check-3:-Manifest-lock
     - token cage ceilings — pointer: policy://cages/token_limits
       - routine file — 2000 tokens max

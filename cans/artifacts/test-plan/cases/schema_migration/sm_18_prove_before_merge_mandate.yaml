@@ -1,0 +1,73 @@
+$schema: "test-plan/case/v1"
+case_id: "sm_18_prove_before_merge_mandate"
+title: "env merge <name> prod without a passing rule prove in sim is refused (exit 2)"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-cli"
+invariant:
+  law_reference: "cans/space.md#Safety-controls"
+  statement: "A migration bundle may merge into prod only after rule prove <id> --env sim has passed; env merge <name> prod with no passing prove record is refused at the merge gate with exit 2 (diagnostic domain policy.migration)."
+  blast_radius_if_breached: "An unproven migration merges into prod: the 4-phase pipeline executes against live data with untested lock timing, unrehearsed align fuel, and unvalidated pinned-routine compatibility - a break that sim rehearsal would have caught becomes a production incident."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs rule prove in dev (not sim) or proves a different migration id, so a prove record exists somewhere and the merge-gate lookup is never tested against the real requirement."
+  anti_slop_mitigation: "AS-01 bans prove records outside --env sim for the migration under test; AS-03 requires the typed exit code 2 with the policy.migration diagnostic citing the missing sim prove; AS-02 proves the prod workspace.db is byte-identical."
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.migrationbot@acme.corp"
+    agent_id: "agt_se_18"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+    migration_bundle: "migrations/0011_orders_purge/ (planned and staged; rule prove never run)"
+    prove_record: "none for mig_0011_orders_purge in sim"
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli env merge migrations_0011 prod"
+  input_params:
+    migration_id: "mig_0011_orders_purge"
+    prove_status: "never run in sim"
+    merge_target: "prod"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.migration"
+    culprit: "migration mig_0011_orders_purge has no passing rule prove record in sim; prod merge requires a passing prove rehearsal before any pipeline phase may execute against prod data"
+    remedy: "Run capcli rule prove mig_0011_orders_purge --env sim; after it passes, re-run capcli env merge migrations_0011 prod."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "env.merge (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "sha256 of envs/prod/workspace.db byte-identical before and after the refused merge; no migrations/0011 bundle files copied into the prod worktree."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.migration', culprit cites the missing sim prove for mig_0011_orders_purge, remedy names the exact rule prove command and retry path."
+  - rule: "AS-01"
+    verification: "Static lint: no prove record for mig_0011_orders_purge may exist in sim, dev, or any fixture; proving a different migration id or proving in dev instead of sim must not satisfy the gate."

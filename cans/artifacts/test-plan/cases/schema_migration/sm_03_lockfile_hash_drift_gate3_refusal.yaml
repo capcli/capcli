@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_03_lockfile_hash_drift_gate3_refusal"
+case_id: "sm_03_lockfile_hash_drift_gate3_refusal"
 title: "On-disk schema.yaml edited without updating capcli.lock refuses prod boot at Sub-check 3 with exit 3"
 domain: "schema_evolution"
 target_tier: "integration"

@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_07_shorthand_expansion_ddl_generation"
+case_id: "sm_07_shorthand_expansion_ddl_generation"
 title: "Shorthand notation compiles deterministically to the exact SQLite DDL dialect and applies cleanly"
 domain: "schema_evolution"
 target_tier: "unit"
@@ -75,7 +75,7 @@ expected_observations:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "rule.apply (allow; schema revision event for v13)"
+    event_emitted: "rule.apply (allow; schema migration event for v13)"
     chain_valid: true
     state_modified_field: true
 anti_slop_assertions:

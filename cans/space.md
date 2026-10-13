@@ -90,7 +90,7 @@
     - Safety controls
       - prod destructive auth: see #World-governance
       - git push gate — prod merge requires verified remote push credentials via git push --dry-run
-      - merge scope — declarative schemas, routines, and revision bundles only; binary database files remain strictly partition-local
-      - merge pipeline — env merge verifies Tier 1 host, runs rule prove in sim, snapshots target DB, then executes phased cutover: see world.md#Revision-safety
+      - merge scope — declarative schemas, routines, and migration bundles only; binary database files remain strictly partition-local
+      - merge pipeline — env merge verifies Tier 1 host, runs rule prove in sim, snapshots target DB, then executes phased cutover: see world.md#Migration-safety
         - rehearsal verbs — rule prove rehearses the four phases in sim: see interface.md#Governance-path:-rule-noun
         - fail-closed — pinned-routine break aborts rehearsal with exit 2

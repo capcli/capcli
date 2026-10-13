@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_10_scoped_view_missing_principal_bind"
+case_id: "sm_10_scoped_view_missing_principal_bind"
 title: "Scoped view whose SQL omits the :principal bind variable is refused by the Sub-check 2 compile check"
 domain: "schema_evolution"
 target_tier: "unit"

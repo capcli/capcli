@@ -92,9 +92,9 @@
     - Governance path: rule noun
       - Inspection — rule show [target=schema]
       - Comparison — rule diff [target=schema] [--git] vs HEAD or live DB PRAGMAs
-      - Planning — rule plan --name <slug> [-m "<why>"] — generates revisions/NNNN_<slug>/ bundle (plan.json, align.py stub): see world.md#Four-phase-state-revision-pipeline
-      - Verification — rule prove <id> [--env sim] — rehearses all four phases on a masked sim snapshot; pinned-routine break aborts with exit 2: see world.md#Revision-safety
-      - Application — rule apply <id> [--dry-run] [-m|--intent "<why>"] — executes expand→align→contract→pin: see world.md#Four-phase-state-revision-pipeline
+      - Planning — rule plan --name <slug> [-m "<why>"] — generates migrations/NNNN_<slug>/ bundle (plan.json, align.py stub): see world.md#Four-phase-state-migration-pipeline
+      - Verification — rule prove <id> [--env sim] — rehearses all four phases on a masked sim snapshot; pinned-routine break aborts with exit 2: see world.md#Migration-safety
+      - Application — rule apply <id> [--dry-run] [-m|--intent "<why>"] — executes expand→align→contract→pin: see world.md#Four-phase-state-migration-pipeline
       - Validation — rule validate [target] — unified syntax, petgraph acyclic, and template bundle linting
     - World path: env noun
       - Provisioning — environments are provisioned empty via `capcli env new <name> [--seed prod]`, or populated from blueprints via `capcli template scaffold tpl://world/<name> <target> [-p k=v]`
@@ -136,7 +136,7 @@
     - Refusals and banned operations
       - matrix denials — env/trust/platform pre-flight denials fail with exit 2: see physics.md#Exit-code-law; pairings: see trust.md#Weakest-link-matrix
       - ssot enforcement — config mutations require git commits; direct `config set` denied (exit 3)
-      - raw DDL via sql — ALTER, DROP, or CREATE TABLE through `capcli sql` outside the revision pipeline denied (exit 2): see world.md#Agent-denial-rules
+      - raw DDL via sql — ALTER, DROP, or CREATE TABLE through `capcli sql` outside the migration pipeline denied (exit 2): see world.md#Agent-denial-rules
       - banned bypass flags — `--force`, `--override-budget`, `--force-prod`, `--verbose` rejected at parser (exit 3)
       - pointer grammar — only scheme://[namespace/]resource[@version][#fragment] pointers parse
         - parse failures (exit 3) — bare filesystem paths; removed schemes: hub://, prompt://, mesh://, apis://, sink://, snap://
@@ -209,7 +209,7 @@
       - Layer 3: Policy & Governance — live policy authorizer rules, lockfile SHA256 integrity, and rate ceilings
       - Layer 4: Audit Spine — live streaming event tail, causal DAG trace explorer, and machine denial decoders
       - Layer 5: Budget & Telemetry — call stack frame trees, fuel consumption meters, wire byte counters, and token-bucket drain gauges
-      - Layer 6: Promotion & Approvals — staged routine promotions, DDL revision previews, and canary veto timers
+      - Layer 6: Promotion & Approvals — staged routine promotions, DDL migration previews, and canary veto timers
       - Layer 7: Human Interaction (Ask) — structured question resolution cards with fail-closed timeout indicators
       - Layer 8: Vault & Biometrics — out-of-band credential injection screen with mobile biometric/FaceID support
       - Federation surfaces

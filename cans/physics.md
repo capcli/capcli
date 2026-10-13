@@ -84,7 +84,7 @@
       - compilation — authorizer table compiled from artifacts/policy.yaml
       - ddl trust floors
         - raw DDL — ALTER/DROP/CREATE TABLE denied at authorizer for draft and reviewed principals; denial exits 2
-        - legal route — kernel revision pipeline is the sole DDL path: see world.md#Four-phase-state-revision-pipeline
+        - legal route — kernel migration pipeline is the sole DDL path: see world.md#Four-phase-state-migration-pipeline
         - vacuum — requires pinned trust; denied unconditionally in prod; executable in dev/sim by pinned callers
     - Layer 1.2: VDBE execution progress & mutation hook
       - engine — sqlite3_update_hook + sqlite3_progress_handler
@@ -152,7 +152,7 @@
       - template syntax error — routine template failing py_compile validation aborts intake (exit 3)
       - missing configuration — policy.yaml or governance.yaml absent
       - lockfile mismatch in prod — compiled capcli.lock SHA256 mismatch aborts boot with exit 3 in prod; dev and sim auto-recompile if syntax and semantics pass
-      - schema drift — un-revised schema drift or system_schema hash mismatch aborts boot with exit 3: see world.md#Schema-evolution
+      - schema drift — un-migrated schema or system_schema hash mismatch aborts boot with exit 3: see world.md#Schema-migration
       - schema integrity — system_schema hash verified at boot: see world.md#Dual-schema
       - driver incompatibility — remote HTTP databases lacking C authorizer refused
     - Runtime refusals
@@ -177,7 +177,7 @@
         - domain policy.authorizer — C-level table/column write denied
         - domain policy.budget — frame fuel exhaustion, session fuel exhaustion, or call nesting > 5: see budget.md#Frames
         - domain policy.quota — provider spend ceiling breach; hard denial, never yield: see budget.md#Quotas
-        - domain policy.revision — offline revision rehearsal breaks the pinned routine contract: see world.md#Revision-safety
+        - domain policy.migration — offline migration rehearsal breaks the pinned routine contract: see world.md#Migration-safety
         - domain policy.platform — --env prod on a tier 2 host fails closed at pre-flight (E045_PROD_TIER1_MANDATE); remedy: use --env sim locally
         - domain policy.trust — draft or reviewed routine in --env prod fails closed at pre-flight (E046_TRUST_VIOLATION); remedy: routine ship <name> pinned
         - domain policy.trust — draft routine resolving vault:// handles fails closed at pre-flight (E047_SECRET_TRUST_FLOOR); runtime authorizer backstop: see agent.md#Secrets

@@ -57,9 +57,9 @@
         - audit/audit.YYYY-MM-DD.jsonl — daily audit mirror holding hashed rows
         - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
         - audit/witness.log — remote KMS witness attestation logs: see effect.md#Event-integrity
-      - revisions/ — compiled revision bundles: see world.md#Schema-evolution
-        - revisions/NNNN_<name>/plan.json — compiled expand/contract DDL phases
-        - revisions/NNNN_<name>/align.py — sandboxed chunked data alignment routine
+      - migrations/ — compiled migration bundles: see world.md#Schema-migration
+        - migrations/NNNN_<name>/plan.json — compiled expand/contract DDL phases
+        - migrations/NNNN_<name>/align.py — sandboxed chunked data alignment routine
       - routines/ — agent-authored procedural guest scripts (.ts, .js, .py): see action.md#Routines
         - routines/overview.py: see action.md#Session-Overview-Primer
         - routines/order_refund.ts — sandboxed multi-step refund script
@@ -151,7 +151,7 @@
       - Subsystem modules
         - connection.rs — rusqlite connection pool in WAL mode: see world.md#SQLite-as-SSOT
         - authorizer.rs — sqlite3_set_authorizer C callback: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - revision.rs — revision engine: see world.md#Schema-evolution
+        - migrate.rs — migration engine: see world.md#Schema-migration
         - bytecode.rs — EXPLAIN opcode parser checking OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
         - snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
         - claims.rs — distributed lease locks via claims: see world.md#claims-lease-lifecycle
@@ -235,7 +235,7 @@
       - Execution gates
         - syntax_gate.rs — validates YAML layout (Sub-check 1): see world.md#Sub-check-1:-Syntax
         - semantic_gate.rs — petgraph verifies graph (Sub-check 2): see world.md#Sub-check-2:-Semantics
-        - migration_gate.rs — test transaction on snapshot (Revision safety): see world.md#Revision-safety
+        - migration_gate.rs — test transaction on snapshot (Migration safety): see world.md#Migration-safety
       - Domain telemetry — tracks YAML AST compilation cycles and lockfile validation time
     - Domain 8: Environment & worktree management (env/)
       - Subsystem modules

@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_02_circular_dependency_gate2_refusal"
+case_id: "sm_02_circular_dependency_gate2_refusal"
 title: "Circular table references are refused by the Sub-check 2 petgraph cycle check with exit 3"
 domain: "schema_evolution"
 target_tier: "unit"

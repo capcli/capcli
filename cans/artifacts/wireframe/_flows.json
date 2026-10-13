@@ -35,7 +35,7 @@
       "color": "#a371f7",
       "entry": "rule.diff.success.populated",
       "terminal": "env.merge.success.merged",
-      "description": "YAML diff vs HEAD -> prove revision in sim (expand/align/contract/pin, pinned routines rehearsed) -> dry-run impact envelope -> apply revision to dev -> pre-merge snapshot checkpoint -> phased cutover of revision into prod"
+      "description": "YAML diff vs HEAD -> prove migration in sim (expand/align/contract/pin, pinned routines rehearsed) -> dry-run impact envelope -> apply migration to dev -> pre-merge snapshot checkpoint -> phased cutover of migration into prod"
     },
     "journey_tamper_forensics": {
       "name": "Tamper Quarantine & Forensic Isolation",
@@ -472,7 +472,7 @@
         "rule.prove.success.proven"
       ],
       "trigger": "prove_in_sim",
-      "label": "capcli rule prove --env sim -m \"prove schema revision (all pinned routines rehearsed)\"",
+      "label": "capcli rule prove --env sim -m \"prove schema migration (all pinned routines rehearsed)\"",
       "arrow_type": "progress"
     },
     {
@@ -517,7 +517,7 @@
         "db.snapshot.success.created"
       ],
       "trigger": "take_snapshot",
-      "label": "capcli db snapshot -m \"pre-revision safety point\"",
+      "label": "capcli db snapshot -m \"pre-migration safety point\"",
       "arrow_type": "progress"
     },
     {
@@ -1671,7 +1671,7 @@
       "to": [
         "env.merge.denial.trust"
       ],
-      "trigger": "merge_draft_revision",
+      "trigger": "merge_draft_migration",
       "label": "capcli env merge dev prod -m \"forward DDL\"",
       "arrow_type": "denial"
     },
@@ -2167,7 +2167,7 @@
         "db.snapshot.success.created"
       ],
       "trigger": "snapshot_dev",
-      "label": "capcli db snapshot -m \"pre-revision safety point\"",
+      "label": "capcli db snapshot -m \"pre-migration safety point\"",
       "arrow_type": "success"
     },
     {
@@ -2197,7 +2197,7 @@
         "db.restore.denial.active_locks"
       ],
       "trigger": "restore_locked_table",
-      "label": "capcli db restore snap_revision_004",
+      "label": "capcli db restore snap_migration_004",
       "arrow_type": "denial"
     },
     {
@@ -2904,7 +2904,7 @@
         "routine.retire.refusal.not_found"
       ],
       "trigger": "retire_unknown_routine",
-      "label": "capcli routine retire legacy_etl_backup --reason \"cleanup after revision\"",
+      "label": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",
       "arrow_type": "denial"
     },
     {
@@ -4209,7 +4209,7 @@
       "to": [
         "rule.plan.success.planned"
       ],
-      "trigger": "plan_revision",
+      "trigger": "plan_migration",
       "label": "capcli rule plan --name \"add_order_priority\" -m \"rush shipping priority flag\"",
       "arrow_type": "progress"
     },

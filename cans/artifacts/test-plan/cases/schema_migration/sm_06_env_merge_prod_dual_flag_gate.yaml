@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_06_env_merge_prod_dual_flag_gate"
+case_id: "sm_06_env_merge_prod_dual_flag_gate"
 title: "Merging dev schema into prod without both --confirm-backup and --confirm-prod is rejected with exit 2"
 domain: "schema_evolution"
 target_tier: "e2e"

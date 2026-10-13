@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_13_git_push_dry_run_merge_gate"
+case_id: "sm_13_git_push_dry_run_merge_gate"
 title: "Prod merge verifies remote push credentials via git push --dry-run before committing physical DDL changes"
 domain: "schema_evolution"
 target_tier: "integration"

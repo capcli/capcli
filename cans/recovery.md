@@ -5,14 +5,14 @@
       - mechanics — db.snapshot.rs executes VACUUM INTO
       - consistency — creates transactionally clean copy during traffic
       - restore — db restore <id> reverses database state atomically; disaster-only recovery
-      - pairing — snapshot taken prior to physical schema revisions as safety net; rollbacks roll forward via revert bundles
+      - pairing — snapshot taken prior to physical schema migrations as safety net; rollbacks roll forward via revert bundles
     - Snapshot catalog
       - listing — sys recover --list displays recovery points
-      - identification — human-readable names (e.g. snap_revision_004)
-      - naming convention — snap_auto_*, snap_revision_*, snap_onboarding_*
-      - trigger bindings — auto-created by schedule or revision gates
+      - identification — human-readable names (e.g. snap_migration_004)
+      - naming convention — snap_auto_*, snap_migration_*, snap_onboarding_*
+      - trigger bindings — auto-created by schedule or migration gates
       - Snapshot lifecycle
-        - trigger automation — snapshots precede revisions: see world.md#Revision-invariants
+        - trigger automation — snapshots precede migrations: see world.md#Migration-invariants
         - retention rules — rolling local retention managed by maintenance: see artifacts/governance.yaml#backup
         - catalog inspection — CLI inspection surface: see interface.md#Storage-path:-db-noun
   - Storage & Backup

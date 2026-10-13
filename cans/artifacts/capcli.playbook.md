@@ -110,7 +110,7 @@ sqlite3 envs/dev/workspace.db "CREATE TABLE products (id INTEGER PRIMARY KEY, sk
 **[Harness Turn 5]**
 ```text
 <thinking>
-Direct database file access blocked. The kernel mandates declarative models via schema.yaml so all revisions compile through Sub-check 1-3 validation, live-drift diagnosis, and revision-safety rehearsal.
+Direct database file access blocked. The kernel mandates declarative models via schema.yaml so all migrations compile through Sub-check 1-3 validation, live-drift diagnosis, and migration-safety rehearsal.
 </thinking>
 ```
 
@@ -237,7 +237,7 @@ capcli apply --dry-run
   gate_1_syntax:    ok (2 tables, 9 columns)
   gate_2_semantics: ok (relational DAG verified: orders.product_id -> products.id)
   fpa_masking:      orders.customer_email (anonymized in sim)
-  snapshot_dryrun:  snap_revision_001_dryrun generated
+  snapshot_dryrun:  snap_migration_001_dryrun generated
   effect:           none (dry-run)
 ```
 
@@ -260,12 +260,12 @@ capcli apply -m "apply initial wholesale coffee erp tables"
 
 **[Capcli Kernel]**
 ```text
-[REVISION_COMMITTED]
+[MIGRATION_COMMITTED]
 STATUS:       SUCCESS (Exit 0)
 ENV:          dev
 EVENT_ID:     op_002
 TRANSACTION:  ISOLATED
-SNAPSHOT_ID:  snap_revision_001
+SNAPSHOT_ID:  snap_migration_001
 TABLES_LIVE:  [products, orders]
 LOCKFILE:     capcli.lock generated (sha256:4a8f9c2d...)
 AUDIT_LOG:    _audit updated [prev:sha256:7f9a1b2c... -> curr:sha256:11e9a4c0...]
@@ -1085,7 +1085,7 @@ capcli env use sim
 ```text
 [PASS] env_switch
   env:           sim
-  workspace:     envs/sim/workspace.db (forked from snap_revision_001)
+  workspace:     envs/sim/workspace.db (forked from snap_migration_001)
   masking:       fpa_active (customer_email -> anon_*@sim.local)
   egress_engine: mock_local (apis/stripe.sim.yaml)
   egress_mode:   isolated (mock_local)

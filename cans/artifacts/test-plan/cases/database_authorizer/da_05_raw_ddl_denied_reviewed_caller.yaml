@@ -1,12 +1,12 @@
 $schema: "test-plan/case/v1"
 case_id: "da_05_raw_ddl_denied_reviewed_caller"
-title: "Raw ALTER TABLE issued by a reviewed-trust caller is denied at the C authorizer (exit 2); the revision pipeline is the sole DDL path"
+title: "Raw ALTER TABLE issued by a reviewed-trust caller is denied at the C authorizer (exit 2); the migration pipeline is the sole DDL path"
 domain: "database_authorizer"
 target_tier: "e2e"
 target_crate: "crates/capcli-cli"
 invariant:
   law_reference: "cans/physics.md#ddl-trust-floors"
-  statement: "Raw DDL (ALTER/DROP/CREATE TABLE) is denied at the C authorizer for draft AND reviewed principals; denial exits 2. Trust cannot purchase raw schema execution - the kernel 4-phase revision pipeline is the sole legal DDL path (see world.md#Four-phase-state-revision-pipeline)."
+  statement: "Raw DDL (ALTER/DROP/CREATE TABLE) is denied at the C authorizer for draft AND reviewed principals; denial exits 2. Trust cannot purchase raw schema execution - the kernel 4-phase migration pipeline is the sole legal DDL path (see world.md#Four-phase-state-migration-pipeline)."
   blast_radius_if_breached: "A reviewed principal landing raw ALTER directly in live tables bypasses the Expand/Align/Contract/Pin pipeline: no lock-timing SLA, no align chunking, no shadow-table delta replication, no PRAGMA pin check - long-lived prepared statements, views, and triggers shaped against the old schema silently read wrong columns at fleet scale."
 confusion_matrix:
   quadrant: "true_negative"
@@ -51,7 +51,7 @@ expected_observations:
   diagnostic:
     domain: "policy.authorizer"
     culprit: "ALTER TABLE orders ADD COLUMN rush boolean issued by trust=reviewed caller; raw DDL denied at the C authorizer for draft and reviewed principals (authorizer.global.alter: deny)"
-    remedy: "Use the kernel revision pipeline: declare the column in schema.yaml, rule plan --name add_rush_flag, rule prove <id> --env sim, then rule apply <id>."
+    remedy: "Use the kernel migration pipeline: declare the column in schema.yaml, rule plan --name add_rush_flag, rule prove <id> --env sim, then rule apply <id>."
   database:
     row_count_delta: 0
     tables_mutated: []
@@ -66,6 +66,6 @@ anti_slop_assertions:
   - rule: "AS-02"
     verification: "SELECT count(*) FROM orders == 500 before and after; PRAGMA table_info(orders) column list identical before and after (no 'rush' column materialized) - schema drift is a state mutation and must be proven absent."
   - rule: "AS-03"
-    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.authorizer', culprit cites the authorizer denial of raw DDL for a reviewed caller, remedy names the revision pipeline path."
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.authorizer', culprit cites the authorizer denial of raw DDL for a reviewed caller, remedy names the migration pipeline path."
   - rule: "AS-01"
     verification: "Static lint: no mock on crates/capcli-core/src/db/authorizer.rs; the session trust rung must be pinned to reviewed in setup and never upgraded mid-test."

@@ -1,5 +1,5 @@
 $schema: "test-plan/case/v1"
-case_id: "se_04_live_pragma_drift_gate4_refusal"
+case_id: "sm_04_live_pragma_drift_gate4_refusal"
 title: "Out-of-band column added to SQLite is detected by the live-drift PRAGMA scan and boot is refused"
 domain: "schema_evolution"
 target_tier: "integration"

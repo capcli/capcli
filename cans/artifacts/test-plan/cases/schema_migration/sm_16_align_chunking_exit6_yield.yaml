@@ -1,12 +1,12 @@
 $schema: "test-plan/case/v1"
-case_id: "se_16_align_chunking_exit6_yield"
+case_id: "sm_16_align_chunking_exit6_yield"
 title: "Align-phase align.py copies rows in <=500-row transactions; on fuel exhaustion it yields cleanly via exit 6 and resumes"
 domain: "schema_evolution"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 invariant:
-  law_reference: "cans/world.md#Four-phase-state-revision-pipeline"
-  statement: "The Align phase runs revisions/NNNN/align.py in bounded chunks (max 500 rows/txn); when its fuel quota is exhausted it yields cleanly with exit 6 (kernel frame yield), and a resumed run continues from the last committed chunk boundary with no row re-processed and no row skipped."
+  law_reference: "cans/world.md#Four-phase-state-migration-pipeline"
+  statement: "The Align phase runs migrations/NNNN/align.py in bounded chunks (max 500 rows/txn); when its fuel quota is exhausted it yields cleanly with exit 6 (kernel frame yield), and a resumed run continues from the last committed chunk boundary with no row re-processed and no row skipped."
   blast_radius_if_breached: "An unchunked or non-yielding align.py burns the whole fuel frame on one long transaction: the Hub watchdog hard-kills it mid-copy, the shadow table holds a partial copy with no recorded chunk boundary, and the resume path re-processes or double-inserts rows."
 confusion_matrix:
   quadrant: "true_positive"
@@ -16,7 +16,7 @@ setup:
   env: "sim"
   platform_tier: "tier_1"
   caller_identity:
-    principal: "harness.revisionbot@acme.corp"
+    principal: "harness.migrationbot@acme.corp"
     agent_id: "agt_se_16"
     trust: "pinned"
   initial_state:
@@ -43,9 +43,9 @@ setup:
     fuel_frame: "sized to exhaust after the second 500-row chunk (exit 6 mid-align)"
 execution:
   trigger: "cli_subcommand"
-  command: "capcli rule apply rev_0009_orders_split --env sim (phase 2 Align: revisions/0009_orders_split/align.py copies orders -> _shadow_orders)"
+  command: "capcli rule apply mig_0009_orders_split --env sim (phase 2 Align: migrations/0009_orders_split/align.py copies orders -> _shadow_orders)"
   input_params:
-    revision_id: "rev_0009_orders_split"
+    migration_id: "mig_0009_orders_split"
     chunk_rows_max: 500
     total_rows: 1200
     expected_chunks: 3
@@ -64,7 +64,7 @@ expected_observations:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "revision.align (decision: yield; chunk boundary recorded)"
+    event_emitted: "migration.align (decision: yield; chunk boundary recorded)"
     chain_valid: true
     state_modified_field: true
   observations:
@@ -72,7 +72,7 @@ expected_observations:
     rows_copied: 1000
     chunk_boundary: "orders.id = 1000"
     yield_code: 6
-    resume_command: "capcli rule apply rev_0009_orders_split --env sim --resume"
+    resume_command: "capcli rule apply mig_0009_orders_split --env sim --resume"
 anti_slop_assertions:
   - rule: "AS-02"
     verification: "After the yield: SELECT count(*) FROM _shadow_orders == 1000 and SELECT max(id) FROM _shadow_orders == 1000; after --resume to completion: _shadow_orders == 1200 with zero duplicate ids (SELECT count(*) == count(DISTINCT id)); chunk boundary id recorded in the audit event."
