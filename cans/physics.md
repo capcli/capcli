@@ -55,7 +55,8 @@
         - collection — captured during Phase 1 on ctx.db.get and ctx.db.view reads
         - verification — re-verified under SQLite lock during Phase 3 commit
         - read drift — drift on rows the frame only read triggers re-read and re-fence; a suspended frame re-fences at most 3 times, then exits 2 (E061_OCC_DRIFT)
-        - write drift — drift on rows the frame wrote or declared in write intent is a write-write conflict: exits 2 (E061_OCC_DRIFT) immediately; zero partial writes; frame purged
+        - write drift — drift on rows the frame wrote or declared in write intent is a write-write conflict: exits 2 (E061_OCC_DRIFT) immediately; zero partial writes
+          - purge releases — daemon purge drops the _suspended_tasks row and releases the frame's Layer-1 claims lease
         - commit backstop — commit-time fence re-verified under the Phase 3 SQLite lock stands final
       - Layer 3 — micro lock
         - mechanism — SQLite BEGIN IMMEDIATE via rusqlite
@@ -222,7 +223,9 @@
       - result delivery — daemon posts completion results to the sensory inbox; harness surfaces them at the next turn-zero overview: see interface.md#CLI-surface
       - preemption yield — worker spot/container SIGTERM maps directly to exit 6; traps execution, flushes cursor checkpoint, parks frame to db://_suspended_tasks: see #Exit-code-law
       - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence and the frame's Layer 1 claims, writes an audit event; the frame never resumes
-      - drift recovery — E061_OCC_DRIFT on a suspended frame aborts the drifted frame (run abort <frame_id>) before re-running the routine; a direct re-run hits the retained claims lease (claim_held)
+      - drift recovery — E061_OCC_DRIFT on a still-suspended frame (read-drift fence exhaustion): abort the drifted frame (run abort <frame_id>) before re-running the routine
+        - direct re-run hits the retained claims lease (claim_held)
+        - write-drift needs no abort — the purge already released the lease; re-plan and re-queue directly
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
       - engine — native terminal diagnostics rendered procedurally via zero-dependency text formatter

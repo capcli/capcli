@@ -1,14 +1,14 @@
 $schema: "test-plan/case/v1"
 case_id: "vs_12_redacted_leak_detection_kill"
-title: "Routine printing a decrypted credential to stdout is killed by the egress leak scanner (kill_and_alert, exit 5) with the secret redacted from every audit record"
+title: "Routine emitting a credential-shaped sequence to stdout is killed by the egress leak scanner (kill_and_alert, exit 5) with the secret redacted from every audit record"
 domain: "vault_secrets"
 target_tier: "integration"
 target_crate: "crates/capcli-core"
 
 invariant:
-  law_reference: "cans/physics.md#leak-prevention-—-secret-exposure-detected-in-output-executes-kill_and_alert"
-  statement: "Secret exposure detected in output executes kill_and_alert: when a routine's stdout, stderr, result envelope, or audit event payload carries the decrypted credential string, the leak scanner kills the frame and tears down the session with exit 5 (kernel.panic), the raw stdout/stderr are discarded at the terminal boundary (canonical JSON outcome hashed exclusively), the session's cryptographic capability token is revoked, in-memory secret buffers are zeroized, and the denial audit record redacts the secret — the plaintext appears in no audit row, mirror file, or machine payload."
-  blast_radius_if_breached: "Live credentials flow unintercepted into subshell stdout: shell transcripts, CI logs, terminal scrollback, and the audit mirror all permanently capture the decrypted key — the layer whose job is to kill the run becomes a passive observer of credential exfiltration."
+  law_reference: "cans/agent.md#Secrets"
+  statement: "Secret exposure detected in output executes kill_and_alert: when a routine's stdout, stderr, result envelope, or audit event payload carries a credential-shaped byte sequence matching an active secret hash, the kernel pattern scan kills the frame and tears down the session with exit 5 (kernel.panic), the raw stdout/stderr are discarded at the terminal boundary (canonical JSON outcome hashed exclusively), the session's cryptographic capability token is revoked, in-memory secret buffers are zeroized, and the denial audit record redacts the secret — the detected sequence appears in no audit row, mirror file, or machine payload in plaintext."
+  blast_radius_if_breached: "Live credentials flow unintercepted into subshell stdout: shell transcripts, CI logs, terminal scrollback, and the audit mirror all permanently capture the credential-shaped bytes — the layer whose job is to kill the run becomes a passive observer of credential exfiltration."
 
 confusion_matrix:
   quadrant: "true_negative"
@@ -43,14 +43,14 @@ execution:
   input_params:
     charge_id: "ch_9d21K"
     amount_cents: 1500
-    leak_vector: "routine return value embeds the decrypted credential string (attempts to print it to stdout); a second attempt writes it to stderr; a third attempt embeds it in a log line destined for an _audit event payload"
+    leak_vector: "routine return value embeds a credential-shaped sequence matching an active secret (attempts to print it to stdout); a second attempt writes it to stderr; a third attempt embeds it in a log line destined for an _audit event payload"
 
 expected_observations:
   exit_code: 5
   state_modified: false
   diagnostic:
     domain: "kernel.panic"
-    culprit: "plaintext credential stripe_secret_key detected in routine stdout; kill_and_alert executed — frame killed, session torn down"
+    culprit: "Credential-shaped sequence matching active secret stripe_secret_key detected in routine stdout by kernel pattern scan; kill_and_alert executed — frame killed, session torn down"
     remedy: "strip the credential from the routine result, rotate stripe_secret_key via the Cockpit vault, then re-prove in sim"
   database:
     row_count_delta: 0
@@ -69,8 +69,8 @@ anti_slop_assertions:
   - rule: "AS-02"
     verification: "Post-kill substrate proof: the routine's frame is dead (SELECT count(*) FROM _budget_frames WHERE outcome='active' AND routine='stripe.refund' returns 0), zero domain rows were mutated by the killed run, and the secrets row is byte-identical to the pre-command read — the kill happened before any commit."
   - rule: "AS-06"
-    verification: "Hardcoded redaction semantics: the decrypted credential's plaintext literal occurs 0 times in the _audit table, the JSONL mirror file, the captured stdout and stderr streams, and the machine envelope; the denial record's payload is redacted per the params_matching ('*secret*') redaction rule using masked representation with a SHA-256 fingerprint — and the machine JSON contains no unicode block glyph characters (████ banned in machine payloads). The audit-payload vector is proven the same way: the attempted log line's payload carries only the redacted marker."
+    verification: "Hardcoded redaction semantics: the detected credential-shaped byte sequence occurs 0 times in plaintext in the _audit table, the JSONL mirror file, the captured stdout and stderr streams, and the machine envelope; the denial record's payload is redacted per the params_matching ('*secret*') redaction rule using masked representation with a SHA-256 fingerprint — and the machine JSON contains no unicode block glyph characters (████ banned in machine payloads). The audit-payload vector is proven the same way: the attempted log line's payload carries only the redacted marker."
   - rule: "AS-07"
     verification: "Session revocation proof: the session's cryptographic capability token for agt_vs_12 is in revoked state after the panic (agent.md#Secrets 'leak protection — session token revocation') — a subsequent authenticated IPC call presenting the pre-panic token is refused, and the session registry shows no active session for the killed frame."
   - rule: "AS-08"
-    verification: "Panic-path zeroization proof: after kill_and_alert completes, scan the kernel proxy's memory for the decrypted credential's plaintext literal — zero matches; the ephemeral decrypted buffers were zeroized during the panic, not merely on normal post-dispatch cleanup (agent.md#Secrets 'zeroization — in-memory secret buffers zeroized')."
+    verification: "Panic-path zeroization proof: after kill_and_alert completes, scan the kernel proxy's memory for the detected credential-shaped byte sequence — zero matches; the ephemeral decrypted buffers were zeroized during the panic, not merely on normal post-dispatch cleanup (agent.md#Secrets 'zeroization — in-memory secret buffers zeroized')."

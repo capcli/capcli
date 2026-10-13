@@ -952,7 +952,7 @@ def process_wholesale_order(sku: Param[str], qty: Param[int], cafe_email: Param[
             
             # 4. Atomic Inventory Decrement Protected by Check Constraint
             ctx.db.execute(
-                "UPDATE products SET stock = stock - :q WHERE id = :p AND stock >= :q LIMIT 1;",
+                "UPDATE products SET stock = stock - :q WHERE id = :p AND stock >= :q;",
                 {"q": qty, "p": product["id"]},
                 intent="decrement stock after order reservation"
             )

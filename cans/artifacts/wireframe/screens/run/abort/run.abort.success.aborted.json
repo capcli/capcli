@@ -11,6 +11,7 @@
           "audit": "frame_aborted event written to _audit",
           "frame": "frame_026",
           "state_fence": "OCC state_fence released",
+          "claims_lease": "frame's Layer-1 claims lease released",
           "suspended_tasks": "resume target purged from _suspended_tasks"
         }
       }

@@ -627,7 +627,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `vs_09_biometric_faceid_cockpit_auth.yaml` | Integration | Cockpit RPC endpoint receives vault injection request; requires valid WebAuthn client signature before encrypting secret. | TP | Allowing vault injection via unauthenticated HTTP POST. |
 | `vs_10_secret_scope_environment_isolation.yaml` | Unit | Secret configured with `scope: prod` cannot be queried or injected when session environment is `sim` or `dev`. | TN | Allowing dev/sim environments to pull production secrets. |
 | `vs_11_secret_rotation_in_memory_eviction.yaml` | Integration | Secret rotated in vault; daemon in-memory decrypted cache evicted instantly; subsequent call uses new credential. | TP | Retaining stale decrypted secrets in daemon process memory. |
-| `vs_12_redacted_leak_detection_kill.yaml` | Integration | Routine printing a decrypted credential to stdout is killed by the egress leak scanner (kill_and_alert, exit 5) with the secret redacted from every audit record | TN | Agent confuses the kill with a routine runtime crash (asserts exit 4 on a generic exception), or lets the leaked string ride into the audit payload |
+| `vs_12_redacted_leak_detection_kill.yaml` | Integration | Routine emitting a credential-shaped sequence to stdout is killed by the egress leak scanner (kill_and_alert, exit 5) with the secret redacted from every audit record | TN | Agent confuses the kill with a routine runtime crash (asserts exit 4 on a generic exception), or lets the leaked string ride into the audit payload |
 
 ### 6.11 SDK & Guest Harness Contract (`cases/sdk_harness/`)
 
