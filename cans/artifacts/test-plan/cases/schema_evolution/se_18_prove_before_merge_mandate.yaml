@@ -5,7 +5,7 @@ domain: "schema_evolution"
 target_tier: "integration"
 target_crate: "crates/capcli-cli"
 invariant:
-  law_reference: "cans/space.md#World-governance"
+  law_reference: "cans/space.md#Safety-controls"
   statement: "A revision bundle may merge into prod only after rule prove <id> --env sim has passed; env merge <name> prod with no passing prove record is refused at the merge gate with exit 2 (diagnostic domain policy.revision)."
   blast_radius_if_breached: "An unproven revision merges into prod: the 4-phase pipeline executes against live data with untested lock timing, unrehearsed align fuel, and unvalidated pinned-routine compatibility - a break that sim rehearsal would have caught becomes a production incident."
 confusion_matrix:
