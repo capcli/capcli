@@ -18,6 +18,7 @@
         "fields": {
           "status": "nominal (witness anchoring pending)",
           "host_tier": "tier_1 (hardened Linux namespaces)",
+   "permitted_envs": "dev, sim, prod",
           "workspace": "envs/prod/workspace.db",
           "ledger_root_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
           "witness_store": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)",
