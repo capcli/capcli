@@ -194,6 +194,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.sql.denial.ast` | denial | 2 | policy.ast | unbounded | Missing `WHERE` or `LIMIT` clause |
 | `run.sql.denial.authorizer` | denial | 2 | policy.authorizer | schema_mod | Blocked `DROP TABLE` or system table write |
 | `run.sql.denial.engine_busy` | denial | 2 | db.engine | timeout | SQLite transaction queue wait timeout |
+| `run.sql.denial.audit_sink` | denial | 2 | audit.sink | stalled | Audit sink stalled: mutating write denied while the 5-minute buffer holds the failed write (fail-closed) |
 | `run.sql.refusal.unparseable` | refusal | 3 | compile | bad_syntax | Malformed SQL string syntax |
 | `run.sql.refusal.missing_intent` | refusal | 3 | missing_param | no_intent | Mutating write missing `-m` / `--intent` |
 | `run.overview.success.populated` | success | 0 | — | populated | Situational KPI briefing (<500 tokens) |
@@ -438,7 +439,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Total media loss: ledger root + WORM checkpoint unreadable; kill_and_alert |
 | `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode |
 | `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
-| `sys.doctor.panic.quarantine`| panic | 5 | kernel.panic | tampered | Row-level chain tamper: sha256 link broken, block quarantined to `audit.quarantine.jsonl`; kernel halts boot (exit 5) until restore + WORM re-anchor |
+| `sys.doctor.panic.quarantine`| panic | 5 | kernel.panic | tampered | Row-level chain tamper: sha256 link broken, leaves quarantined to the quarantine branch (`audit.quarantine.jsonl`); kernel halts boot (exit 5) until restore + WORM re-verification |
 | `sys.doctor.success.quarantine`| success | 0 | — | quarantine | Break-glass read-only quarantine ledger inspection (`CAPCLI_RECOVERY=1`); valid history verified |
 | `sys.doctor.denial.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
 | `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |

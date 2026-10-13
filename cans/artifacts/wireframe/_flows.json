@@ -42,7 +42,7 @@
       "color": "#f0883e",
       "entry": "sys.doctor.panic.quarantine",
       "terminal": "sys.doctor.success.quarantine",
-      "description": "Broken SHA-256 chain detected at boot-check -> kernel.panic (exit 5): corrupted block isolated to audit.quarantine.jsonl, boot refused -> CAPCLI_RECOVERY=1 break-glass read-only quarantine ledger inspection; valid history stays queryable"
+      "description": "Broken SHA-256 chain detected at boot-check -> kernel.panic (exit 5): corrupted leaves isolated to the quarantine branch (audit.quarantine.jsonl), boot refused -> CAPCLI_RECOVERY=1 break-glass read-only quarantine ledger inspection; valid history stays queryable"
     },
     "journey_human_in_the_loop": {
       "name": "Ping Ask Suspension & Resolution",
@@ -63,7 +63,7 @@
       "color": "#d4a72c",
       "entry": "run.inspect.success.routine",
       "terminal": "run.execute.success.resumed",
-      "description": "Composite pre-flight envelope (budget_inheritance min) -> session ops ceiling starves the archive run -> child frame starved by min() cascade -> long runner parks on dry wire quota (exit 6) -> refill epoch auto-resume"
+      "description": "Composite pre-flight envelope (budget_inheritance min) -> session fuel ceiling starves the archive run -> child frame starved by min() cascade -> long runner parks on dry wire quota (exit 6) -> refill epoch auto-resume"
     },
     "journey_network_jail": {
       "name": "Network Jail & Reviewed Egress",

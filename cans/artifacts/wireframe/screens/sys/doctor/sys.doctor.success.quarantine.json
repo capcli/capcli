@@ -28,7 +28,7 @@
       },
       {
         "fields": {
-          "note": "reads stay operable per quarantine law; restore path requires proof bundle review before re-anchor"
+          "note": "reads stay operable per quarantine law; restore path requires proof bundle review before re-verification against the WORM checkpoint"
         }
       }
     ]
