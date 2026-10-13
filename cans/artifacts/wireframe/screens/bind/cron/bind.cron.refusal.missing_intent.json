@@ -11,7 +11,7 @@
   },
   "archetype": "diagnostic",
   "component": {
-    "rule": "missing_param.intent_missing",
+    "rule": "missing_param.no_intent",
     "domain": "missing_param",
     "culprit": "Mutating bind requires an intent declaration. Unattributed triggers are refused.",
     "remedy": "re-run with -m \"why this trigger exists\"",

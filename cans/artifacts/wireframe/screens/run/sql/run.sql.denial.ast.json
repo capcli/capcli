@@ -20,7 +20,7 @@
     "remedy": "add LIMIT, or target specific primary key",
     "span": {
       "source": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
-      "highlight": "sing'"
+      "highlight": "UPDATE orders"
     }
   }
 }

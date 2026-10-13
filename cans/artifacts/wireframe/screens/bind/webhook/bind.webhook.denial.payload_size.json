@@ -19,7 +19,7 @@
     "remedy": "trim provider event payloads or split events; ceiling is fixed at 65536 bytes",
     "span": {
       "source": "FAIL  policy.authorizer.webhook_payload_ceiling",
-      "highlight": "horiz"
+      "highlight": "webhook_payload_ceiling"
     },
     "delivery": "71334 bytes (ceiling: 65536)"
   }

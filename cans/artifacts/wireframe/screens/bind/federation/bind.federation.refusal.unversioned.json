@@ -1,1 +1,25 @@
-{"$schema":"wireframe/v2","archetype":"diagnostic","command":"capcli bind federation crm_todos crm todo.created cap://sync_todos -m \"siphon peer outbox\"","component":{"culprit":"Federated bind target must be a versioned capability (cap://sync_todos@v2). Unversioned targets fail closed.","domain":"compile","layer":"ast","measured":"cap://sync_todos (no @version)","remedy":"pin the capability version: cap://sync_todos@v2","rule":"compile.unversioned_federation_target","span":{"highlight":"horiz","source":"FAIL  compile.unversioned_federation_target"}},"context":{"env":"dev","tier":"tier_1","trust":"pinned"},"elapsed_ms":96,"id":"bind.federation.refusal.unversioned","target":"cap://sync_todos"}
+{
+  "$schema": "wireframe/v2",
+  "archetype": "diagnostic",
+  "command": "capcli bind federation crm_todos crm todo.created cap://sync_todos -m \"siphon peer outbox\"",
+  "component": {
+    "culprit": "Federated bind target must be a versioned capability (cap://sync_todos@v2). Unversioned targets fail closed.",
+    "domain": "compile",
+    "layer": "ast",
+    "measured": "cap://sync_todos (no @version)",
+    "remedy": "pin the capability version: cap://sync_todos@v2",
+    "rule": "compile.unversioned_federation_target",
+    "span": {
+      "highlight": "unversioned_federation_target",
+      "source": "FAIL  compile.unversioned_federation_target"
+    }
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "elapsed_ms": 96,
+  "id": "bind.federation.refusal.unversioned",
+  "target": "cap://sync_todos"
+}

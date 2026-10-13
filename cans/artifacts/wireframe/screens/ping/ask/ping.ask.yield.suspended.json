@@ -1,29 +1,29 @@
 {
   "$schema": "wireframe/v2",
-  "id": "ping.ask.yield.suspended",
-  "target": "user:root",
+  "archetype": "diagnostic",
   "command": "capcli ping ask user:root \"Fraud score 0.83 on ORD-1042. Approve dispatch?\" --options approve,deny --timeout 60m --intent \"fraud gate above dispatch threshold requires human sign-off\"",
-  "elapsed_ms": 1203,
+  "component": {
+    "ask_id": "ask_88a",
+    "asked_by": "agt_7f3k (dispatch_order@4, frame_026)",
+    "cockpit": "http://127.0.0.1:4040/ask/ask_88a",
+    "culprit": "inquiry ask_88a issued to user:root; frame_026 suspended pending human choice — checkpoint and OCC state_fences persisted to _pending_asks; exit 6 is a checkpoint, not an error",
+    "dispatch": "pwa_push -> user:root",
+    "domain": "ping.ask",
+    "options": "approve, deny",
+    "pending_asks": "1 enqueued (ask_88a)",
+    "principal": "user:root",
+    "question": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
+    "remedy": "resolve via 'capcli ping resolve ask_88a --choice approve' (ask predicate re-evaluated against fresh reads; frame auto-resumes after hash re-verification), '--choice deny' to close the inquiry without dispatch, Cockpit one-click at http://127.0.0.1:4040/ask/ask_88a, or let the 60m inquiry expire fail-closed",
+    "rule": "ping.ask_suspended",
+    "suspended_frame": "frame_026",
+    "timeout": "60m (fail-closed on expiry)"
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "archetype": "diagnostic",
-  "component": {
-    "rule": "ping.ask_suspended",
-    "domain": "ping.ask",
-    "culprit": "inquiry issued (ask_88a); frame_026 suspended pending human choice, checkpoint and OCC state_fences persisted to _pending_asks",
-    "remedy": "exit 6 is a suspension, not success; resolve via Cockpit or 'capcli ping resolve ask_88a --choice approve', frame auto-resumes after hash re-verification",
-    "ask_id": "ask_88a",
-    "pending_asks": "1 enqueued (ask_88a)",
-    "suspended_frame": "frame_026",
-    "principal": "user:root",
-    "asked_by": "agt_7f3k (dispatch_order@4, frame_026)",
-    "question": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
-    "options": "approve, deny",
-    "timeout": "60m (fail-closed on expiry)",
-    "cockpit": "http://127.0.0.1:4040/ask/ask_88a",
-    "dispatch": "pwa_push -> user:root"
-  }
+  "elapsed_ms": 1203,
+  "id": "ping.ask.yield.suspended",
+  "target": "user:root"
 }

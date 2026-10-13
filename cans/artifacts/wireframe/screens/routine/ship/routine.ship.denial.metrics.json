@@ -20,7 +20,7 @@
     "remedy": "fix the 3 failing replays, re-run capcli routine prove order_sync --env sim, then re-ship",
     "span": {
       "source": "FAIL  policy.authorizer.promotion.low_success",
-      "highlight": "r.pr"
+      "highlight": "promotion.low_success"
     },
     "routine": "order_sync@1 (target rung: reviewed)",
     "source": "routine_stats (last 26 runs)",

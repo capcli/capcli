@@ -13,13 +13,13 @@
   "component": {
     "rule": "validation.overview.oversized",
     "domain": "validation",
-    "culprit": "Overview payload exceeded the 500-token aggregate ceiling: overview@2 renders 612 tokens (cap: 500). A single-shot KPI aggregate cannot paginate; clipping is banned.",
+    "culprit": "Overview payload exceeded the 500-token aggregate ceiling: overview@2 renders 612 tokens (cap: 500). A single-shot KPI aggregate has no item stream, so count-capped pagination is inapplicable; raw string slicing of the aggregate is banned, and the aggregate is refused instead of clipped.",
     "remedy": "overview@2 refused at the result gate (612 > 500 tokens, exit 3). Ground this turn with scoped queries: capcli sql for domain KPI read views, capcli ping list --pending for open asks, capcli sys doctor for health, capcli run inspect cap://<capability> for session fuel headroom. Durable fix: ship overview@3 with a condensed aggregate under 500 tokens",
     "routine": "overview@2 (draft)",
     "sections": "9 (v1 shipped 5)",
     "aggregate": "single-shot KPI briefing (not a collection)",
     "keyset_pagination": "inapplicable (no item stream to cursor)",
-    "clipping": "banned (raw string slicing prohibited)",
+    "clipping": "banned for non-paginable aggregates (raw string slicing prohibited); item listings use count-capped truncation with next_cursor",
     "lines": [
       "result gate: aggregate payload measured at 612 tokens (cap: 500)"
     ]

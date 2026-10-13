@@ -19,7 +19,7 @@
     "remedy": "raise the interval to 5 minutes or more; tighter reactivity belongs to inbound webhooks",
     "span": {
       "source": "FAIL  policy.authorizer.schedule_min_interval",
-      "highlight": "orizer.sc"
+      "highlight": "schedule_min_interval"
     },
     "cron_expr": "* * * * *"
   }

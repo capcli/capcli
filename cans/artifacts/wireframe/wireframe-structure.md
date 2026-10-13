@@ -21,6 +21,7 @@ cans/artifacts/wireframe/
       overview/
       search/
       inspect/
+      abort/
     db/
       lock/
       unlock/
@@ -45,6 +46,8 @@ cans/artifacts/wireframe/
       stats/
       retire/
       rollback/
+      import/
+      record/
     bind/
       cron/
       webhook/
@@ -56,6 +59,7 @@ cans/artifacts/wireframe/
       resume/
       remove/
       keys/
+      federation/
     ping/
       notify/
       ask/
@@ -67,6 +71,8 @@ cans/artifacts/wireframe/
       diff/
       apply/
       validate/
+      plan/
+      prove/
     env/
       new/
       use/
@@ -93,24 +99,24 @@ cans/artifacts/wireframe/
       exec/
       serve/
       swarm/
+      shim/
     doc/
       read/
       outline/
       inspect/
     template/
+      import/
       new/
-      list/
-      inspect/
-      validate/
       pack/
-      apply/
+      scaffold/
+      sync/
 ```
 
 ### 1.1 Structural Invariants
 * **Active Nouns:** Exactly 11 CLI nouns (`run`, `db`, `routine`, `api`, `bind`, `ping`, `rule`, `env`, `sys`, `doc`, `template`).
 * **Single-Source Law:** Every screen has exactly one `.json` fixture. No `.txt` files are committed. The JSON shape IS the screen; renderers (HTML canvas, Rust test harness) consume it directly.
 * **Depth Ceiling:** File paths relative to `screens/` must remain exactly 3 path components: `{noun}/{verb}/{filename}.json`.
-* **Sibling Invariants:** Min 3, max 17 verb directories per noun branch node.
+* **Sibling Invariants:** Min 3, max 18 verb directories per noun branch node.
 * **Naming Law:** Strict 4-segment token syntax:
   ```
   {noun}.{verb}.{state}.{condition}.json
@@ -158,7 +164,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (6 verbs → 51 screens)
+### 4.1 `run/` (6 verbs → 52 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -227,7 +233,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `db.schema.success.populated` | success | 0 | — | populated | Live DDL schema introspected |
 | `db.schema.success.empty` | success | 0 | — | empty | Empty database state |
 | `db.snapshot.success.created` | success | 0 | — | created | Point-in-time snapshot committed |
-| `db.snapshot.denial.prod_draft` | denial | 2 | policy.trust | forbidden | Draft identity cannot snapshot prod |
+| `db.snapshot.denial.prod_draft` | denial | 2 | policy.trust | unproven | Draft identity cannot snapshot prod; rule `policy.trust.unproven`, `E046_TRUST_VIOLATION` (production floor is pinned) |
 | `db.restore.success.restored` | success | 0 | — | restored | DB state restored from snapshot |
 | `db.restore.refusal.missing_id` | refusal | 3 | missing_param | missing_arg | Target snapshot ID missing |
 | `db.restore.denial.active_locks` | denial | 2 | db.claims | active_locks | Active claims prevent state reversal |
@@ -260,7 +266,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.sweep.success.empty` | success | 0 | — | empty | No duplicate routines detected |
 | `routine.stats.success.populated` | success | 0 | — | populated | Routine p50/p95 execution metrics |
 | `routine.stats.refusal.not_found` | refusal | 3 | validation | not_found | Routine name does not exist |
-| `routine.rollback.success.completed`| success | 0 | — | completed | Reverts pointer to prior version |
+| `routine.rollback.success.completed`| success | 0 | — | completed | Rollback committed as new version v6 restoring v3 state |
 | `routine.rollback.denial.depth` | denial | 2 | policy.governance | depth_limit | Versioning cap on retained history: exceeds max rollback depth of 5 |
 | `routine.rollback.refusal.not_found`| refusal | 3 | validation | not_found | Target version not found in history |
 | `routine.retire.success.completed` | success | 0 | — | completed | Routine retired; bound ingress loudly dismantled (cron paused→dissolved by daemon, endpoint revoked) |
@@ -332,7 +338,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `bind.keys.success.issued` | success | 0 | — | issued | API key stamped for endpoint (90d expiry) |
 | `bind.keys.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 25 keys reached |
 
-### 4.6 `ping/` (5 verbs → 17 screens)
+### 4.6 `ping/` (5 verbs → 18 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -355,7 +361,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `ping.expire.success.completed` | success | 0 | — | completed | Explicit expiration executed |
 | `ping.expire.refusal.not_found` | refusal | 3 | validation | not_found | Target inquiry not found |
 
-### 4.7 `rule/` (6 verbs → 16 screens)
+### 4.7 `rule/` (6 verbs → 15 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -434,12 +440,12 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.doctor.success.nominal` | success | 0 | — | nominal | Host doctor readiness check |
 | `sys.doctor.success.report` | success | 0 | — | report | Full YAML Trust Receipt |
 | `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
-| `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | Host missing python3.11 or supported sandbox provider |
+| `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | All isolation providers failed on tier_1 (bwrap absent; container and microvm fallbacks exhausted) |
 | `sys.doctor.success.clock_drift`| success| 0 | — | clock_skew | Host clock delta >500ms vs NTP (warning only) |
 | `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Total media loss: ledger root + WORM checkpoint unreadable; kill_and_alert |
 | `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode |
 | `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
-| `sys.doctor.panic.quarantine`| panic | 5 | kernel.panic | tampered | Row-level chain tamper: sha256 link broken, leaves quarantined to the quarantine branch (`audit.quarantine.jsonl`); kernel halts boot (exit 5) until restore + WORM re-verification |
+| `sys.doctor.degraded.quarantine`| degraded | 0 | kernel.integrity | tampered | Row-level chain tamper: sha256 link broken at row 8,412; corrupted leaves isolated to the quarantine branch (`audit.quarantine.jsonl`); boot completes degraded (exit 0) — valid history operable, quarantined leaves fail-closed; operator clears with `sys doctor --ack-tamper` after restore + WORM re-verification |
 | `sys.doctor.success.quarantine`| success | 0 | — | quarantine | Break-glass read-only quarantine ledger inspection (`CAPCLI_RECOVERY=1`); valid history verified |
 | `sys.doctor.denial.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
 | `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |

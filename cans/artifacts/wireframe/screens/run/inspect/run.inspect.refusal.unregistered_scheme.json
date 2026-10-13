@@ -1,1 +1,34 @@
-{"$schema":"wireframe/v2","affordances":[{"command":"capcli sys swarm list","intent":"List swarm nodes connected to the Hub endpoint","rel":"next","requires_intent":false,"risk":"safe"}],"archetype":"diagnostic","command":"capcli inspect tcp://100.64.0.1:4040","component":{"culprit":"Unregistered URP scheme 'tcp://': network transports are not URPs.","domain":"missing_param","expected_urp_types":"cap://, ws://, db://, vault://, audit://, ask://, quota://, doc://, tpl://, policy://","layer":"cli","lines":["FATAL  missing_param.unregistered_scheme"],"pointer_format":"scheme 'tcp://' not in the 10-scheme registry","remedy":"run capcli sys swarm list for hub endpoints, or inspect a registered URP","target":"'tcp://100.64.0.1:4040'"},"context":{"env":"dev","tier":"tier_1","trust":"draft"},"elapsed_ms":212,"id":"run.inspect.refusal.unregistered_scheme","target":"tcp://100.64.0.1:4040"}
+{
+  "$schema": "wireframe/v2",
+  "affordances": [
+    {
+      "command": "capcli sys swarm list",
+      "intent": "List swarm nodes connected to the Hub endpoint",
+      "rel": "next",
+      "requires_intent": false,
+      "risk": "safe"
+    }
+  ],
+  "archetype": "diagnostic",
+  "command": "capcli inspect tcp://100.64.0.1:4040",
+  "component": {
+    "culprit": "Unregistered URP scheme 'tcp://': network transports are not URPs.",
+    "domain": "compile",
+    "expected_urp_types": "cap://, ws://, db://, vault://, audit://, ask://, quota://, doc://, tpl://, policy://",
+    "layer": "cli",
+    "lines": [
+      "FATAL  compile.unregistered_scheme"
+    ],
+    "pointer_format": "scheme 'tcp://' not in the 10-scheme registry",
+    "remedy": "run capcli sys swarm list for hub endpoints, or inspect a registered URP",
+    "target": "'tcp://100.64.0.1:4040'"
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "elapsed_ms": 212,
+  "id": "run.inspect.refusal.unregistered_scheme",
+  "target": "tcp://100.64.0.1:4040"
+}

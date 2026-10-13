@@ -18,7 +18,7 @@
     "remedy": "drop or fold the ninth parameter (order notes can ride the request payload), then re-run prove in sim",
     "span": {
       "source": "    dry_run: Param[bool]) -> dict:",
-      "highlight": "n"
+      "highlight": "dry_run"
     },
     "routine": "sync_orders@1 (draft)",
     "params_declared": "9 (ceiling: 8)",

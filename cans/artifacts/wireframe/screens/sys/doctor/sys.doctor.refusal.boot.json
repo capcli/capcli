@@ -1,26 +1,26 @@
 {
   "$schema": "wireframe/v2",
-  "id": "sys.doctor.refusal.boot",
-  "target": "host",
+  "archetype": "diagnostic",
   "command": "capcli sys doctor --boot-check",
-  "elapsed_ms": 54,
+  "component": {
+    "culprit": "no isolation provider available on tier_1: bwrap absent from PATH, automatic fallback to container (rootless OCI: crun/podman) failed, fallback to microvm (gVisor) failed",
+    "domain": "compile",
+    "lines": [
+      "FATAL  kernel.boot.missing_dependency",
+      "Isolation probe failed on tier_1 (linux x86_64): bwrap absent, container fallback failed, microvm fallback failed.",
+      "Boot aborted before workspace mount; no daemon started.",
+      "layer:          boot"
+    ],
+    "measured": "bwrap: absent from PATH (floor: 0.8.0); container: rootless OCI daemon unreachable; microvm: gVisor probe failed",
+    "python3": "3.12.2 ok",
+    "remedy": "install bubblewrap >= 0.8.0, or bring up a container or microvm runner, then re-run 'capcli sys doctor --boot-check'"
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "archetype": "diagnostic",
-  "component": {
-    "domain": "compile",
-    "culprit": "bwrap absent from PATH on tier_1 host (floor: 0.8.0, mandatory on Tier 1)",
-    "remedy": "install bubblewrap >= 0.8.0, then re-run 'capcli sys doctor --boot-check'",
-    "bwrap": "absent from PATH (floor: 0.8.0, mandatory on Tier 1)",
-    "python3": "3.12.2 ok",
-    "lines": [
-      "FATAL  kernel.boot.missing_dependency",
-      "Host dependency probe failed on tier_1 (linux x86_64).",
-      "Boot aborted before workspace mount; no daemon started.",
-      "layer:          boot"
-    ]
-  }
+  "elapsed_ms": 54,
+  "id": "sys.doctor.refusal.boot",
+  "target": "host"
 }
