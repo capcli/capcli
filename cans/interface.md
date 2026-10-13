@@ -80,7 +80,7 @@
         - ingestion — every trigger source verifies then enqueues into _inbox: see action.md#Trigger-types
       - Webhook ingress
         - route verification — external webhooks require valid public --ingress url or active tunnel; raw 127.0.0.1 denied
-      - Management — bind list, inspect <name>, pause <name>, resume <name>, remove <name>
+      - Management — bind list, inspect <id>, pause <id>, resume <id>, remove <id>
       - Credentials — bind keys issue <name> --principal partner:<id>
     - Interaction path: ping noun
       - Notifications — ping notify <principal> <msg> --channel <c> --intent "..."
