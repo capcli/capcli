@@ -68,4 +68,4 @@
       - no ORMs or query builders — raw SQL crosses authorizer directly
       - no runtime policy mutation — policy changes require git commits
       - append-only audit spine — domain tables permit bounded DELETEs; _audit table is strictly append-only
-      - zero generative LLMs — zero LLM generation or probabilistic parsing in kernel; deterministic quantized ONNX embeddings permitted strictly for vector search
+      - zero LLM runtimes — zero neural networks, ONNX runtimes, or probabilistic parsing in kernel; discovery operates strictly via SQLite FTS5 (BM25) and exact/prefix indexes

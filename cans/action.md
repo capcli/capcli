@@ -74,8 +74,8 @@
         - leaf ceiling: see cicd.md#Token-cage-ceilings
         - relevance floor — semantic matches below 0.60 rejected
       - Hybrid discovery engine
-        - kernel search — exact, prefix, FTS5 BM25, and embedded local ONNX vector similarity; zero external API dependency
-        - semantic resilience — synonym queries match capability intent across 1,000+ registered routines without degradation
+        - kernel search — exact, prefix, and SQLite FTS5 BM25 ranked scoring; zero external API dependency
+        - token index — ranked text matching resolves capability intent across 1,000+ registered routines with sub-millisecond execution
       - Analytics and gaps
         - search event anatomy — see effect.md#Audit-spine
         - gap detection — search gaps --since 7d

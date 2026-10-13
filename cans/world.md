@@ -284,8 +284,8 @@
         - reference targets — ref= targets must exist with matching types: see world.md#Shorthand-expansion
         - traversal targets — rel: targets must resolve to real tables: see world.md#Shorthand-expansion
         - index targets — indexed columns must exist in parent table: see world.md#Shorthand-expansion
-        - cycle check — petgraph is_cyclic_directed rejects circular references
-        - call-tree cycles — petgraph cycle in ctx.call graph (A -> B -> A) aborts compilation with exit 3
+        - cycle check — native DFS traversal rejects circular references
+        - call-tree cycles — native DFS cycle detection in ctx.call graph (A -> B -> A) aborts compilation with exit 3
         - graph validation — topological sort establishes table compile order: see world.md#Sub-check-2:-Semantics
       - SQL syntax
         - check constraints — chk: expressions parse as valid SQL WHERE

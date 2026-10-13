@@ -117,7 +117,7 @@
         - harness identity — marker sniffing (PPID/env), token validation, principal check (--as)
         - syntax & AST — SQL/routine parse, binding check; f-strings and interpolation banned
         - complexity ceilings — max 2000 tokens, cyclomatic ≤ 10, max 8 params
-        - graph integrity — petgraph dependency cycle scan; A → B → A banned
+        - graph integrity — native DFS dependency cycle scan; A → B → A banned
         - lockfile & schema — capcli.lock hash match against current schema
         - static budget headroom — can_invoke_now evaluated against session ceiling
         - refusal — any check fails with exit 3; state untouched
@@ -132,7 +132,7 @@
         - layer 1.2 mutation hook — row limits enforced on active VDBE bytecode execution
         - atomic commit — physical transaction executed under SQLite BEGIN IMMEDIATE
         - ledger append — _audit event appended with prev_hash link; outbox synced
-        - policy denial — authorizer block, check constraint, or budget limit exits 2 with miette diagnostic trace
+        - policy denial — authorizer block, check constraint, or budget limit exits 2 with native diagnostic trace
         - kernel panic — ledger disk corruption or plaintext secret leak exits 5; token revocation
         - exit 0 — single deterministic audit record appended to _audit
       - phase map — Layer 2 AST executes in Phase 1; Layers 1, 1.2, and 1.5 execute in Phase 3
@@ -205,7 +205,7 @@
       - frame abort — run abort <frame_id> purges the _suspended_tasks resume target, releases the OCC state_fence and the frame's Layer 1 claims, writes an audit event; the frame never resumes
       - state rollback law — non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug
     - Diagnostic output law
-      - engine — native terminal diagnostics rendered procedurally via `miette` and `codespan`
+      - engine — native terminal diagnostics rendered procedurally via zero-dependency text formatter
       - data contract — all commands return `CliEnvelope<T>`: { context, exit_code, state_modified, data, diagnostic, audit_op }
       - success affordances — typed next actions on exit 0: see interface.md#CLI-surface
       - layout archetypes — human output maps to exactly 4 procedural formats:
@@ -250,8 +250,8 @@
       - bulk minimum — trust >= reviewed: see artifacts/policy.yaml#query
       - human threshold — writes exceeding row caps require confirmation
   - Search ceiling
-    - Hybrid search engine — kernel embeds a local quantized vector model (ONNX tract runtime) combined with SQLite FTS5 for zero-roundtrip semantic discovery
-    - Semantic indexing — queries match synonymous capabilities locally without external LLM ranking calls or keyword saturation walls
+    - Discovery engine — kernel pairs token prefix matching with SQLite FTS5 BM25 ranked search for zero-roundtrip local discovery
+    - Zero external ranking — queries match capabilities locally without external API calls or neural runtimes
   - Harness boundaries
     - Skills (SKILL.md)
       - separation — skills exist in harness; routines exist in capcli

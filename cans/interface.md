@@ -95,7 +95,7 @@
       - Planning — rule plan --name <slug> [-m "<why>"] — generates migrations/NNNN_<slug>/ bundle (plan.json, align.py stub): see world.md#Four-phase-state-migration-pipeline
       - Verification — rule prove <id> [--env sim] — rehearses all four phases on a masked sim snapshot; pinned-routine break aborts with exit 2: see world.md#Migration-safety
       - Application — rule apply <id> [--dry-run] [-m|--intent "<why>"] — executes expand→align→contract→pin: see world.md#Four-phase-state-migration-pipeline
-      - Validation — rule validate [target] — unified syntax, petgraph acyclic, and template bundle linting
+      - Validation — rule validate [target] — unified syntax, DFS acyclic verification, and template bundle linting
     - World path: env noun
       - Provisioning — environments are provisioned empty via `capcli env new <name> [--seed prod]`, or populated from blueprints via `capcli template scaffold tpl://world/<name> <target> [-p k=v]`
       - Switching — env use <name>

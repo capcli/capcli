@@ -93,11 +93,11 @@
         - rpc.rs — streaming JSON-RPC 2.0 lines models: see #Python-runtime-harness-package
     - Core domain engine crate
       - crate identity — crates/capcli-core
-      - configuration — Cargo.toml linking rusqlite bundled, petgraph, sha2, aes-gcm, tract-onnx
+      - configuration — Cargo.toml linking rusqlite bundled, sha2, aes-gcm
       - engine module (crates/capcli-core/src/)
         - db/ — dual rusqlite WAL pool (workspace.db for state, audit.db for ledger) and VDBE mutation hooks
         - parse/ — VDBE explain bytecode and query validation: see physics.md#Layer-1.5:-prepare-time-cross-check
-        - compile/ — YAML AST compilation and petgraph acyclic check: see world.md#Sub-check-2:-Semantics
+        - compile/ — YAML AST compilation and native DFS acyclic check: see world.md#Sub-check-2:-Semantics
         - budget/ — budget frame push/pop and min() cascade: see budget.md#Cascade
         - audit/ — sha256 hash chains and JSONL mirror writer: see effect.md#Storage-hierarchy
         - vault/ — zeroize-protected in-memory secret decryption: see agent.md#Secrets
@@ -228,13 +228,13 @@
     - Domain 7: Governance & rule compilation (rule/)
       - Subsystem modules
         - loader.rs — deserializes YAML configs with serde_yml: see world.md#Pre-flight-Sub-checks
-        - petgraph_check.rs — checks relational cycles and targets: see world.md#Sub-check-2:-Semantics
+        - cycle_check.rs — checks relational cycles and targets via native DFS: see world.md#Sub-check-2:-Semantics
         - template_bundle.rs — validates manifest inputs, enforces governance exclusion, and unpacks bundles: see world.md#World-templates
         - shorthand.rs — expands schema shorthands into SQLite DDL: see world.md#Shorthand-expansion
         - lockfile.rs — verifies compiled root sha256 checksum: see world.md#Pre-flight-Sub-checks
       - Execution gates
         - syntax_gate.rs — validates YAML layout (Sub-check 1): see world.md#Sub-check-1:-Syntax
-        - semantic_gate.rs — petgraph verifies graph (Sub-check 2): see world.md#Sub-check-2:-Semantics
+        - semantic_gate.rs — native DFS verifies graph (Sub-check 2): see world.md#Sub-check-2:-Semantics
         - migration_gate.rs — test transaction on snapshot (Migration safety): see world.md#Migration-safety
       - Domain telemetry — tracks YAML AST compilation cycles and lockfile validation time
     - Domain 8: Environment & worktree management (env/)
@@ -261,7 +261,7 @@
     - Domain 10: Capability execution & discovery (run/)
       - Subsystem modules
         - registry.rs — Universal Resource Pointer dispatcher: see action.md#Global-pointer-registry
-        - search.rs — hybrid discovery engine cascading exact, prefix, FTS5 BM25, and local ONNX vector similarity
+        - search.rs — discovery engine cascading exact, prefix, and SQLite FTS5 BM25 ranking
         - preflight.rs — evaluates static call-tree cost graph to return recursive can_invoke_now verdict: see budget.md#Pre-flight
       - Execution gates
         - preflight_gate.rs — denies call if preflight fails: see budget.md#Pre-flight
@@ -301,7 +301,7 @@
       - test_authorizer.rs — validates SQLite C authorizer callbacks: see physics.md#Layer-1:-sqlite3_set_authorizer
       - test_routine_shape.rs — enforces token, complexity, and param bounds: see artifacts/governance.yaml#routine_shape
       - test_api_quota.rs — validates token bucket calculations: see budget.md#Quotas
-      - test_petgraph.rs — checks relational cycle rejection: see world.md#Sub-check-2:-Semantics
+      - test_cycle_check.rs — checks relational cycle rejection via native DFS: see world.md#Sub-check-2:-Semantics
       - test_hashchain.rs — verifies sha256 link calculations: see effect.md#Event-integrity
       - test_vault.rs — tests zeroize and AES-256-GCM decryption: see agent.md#Secrets
       - test_trinity.rs — pointer validation runner: see cicd.md#Checker-tool-architecture

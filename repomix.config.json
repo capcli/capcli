@@ -31,12 +31,12 @@
       "README.md",
    //   "docs",
    //    "cans/artifacts/wireframe",
-   //   "cans/",
+      "cans/",
   //    "cans/artifacts/capcli.playbook.md",
   //    "cans/artifacts/governance.yaml",
   //    "cans/artifacts/capcli.landing-copy.md"
         
-        "cans/artifacts/wireframe"
+  //      "cans/artifacts/wireframe"
   ],
   "ignore": {
     "useGitignore": true,
@@ -58,9 +58,10 @@
     "cans/artifacts/capcli.hero-copy.md",
     "cans/artifacts/test-plan/cases/",
     "cans/artifacts/test-plan/manifest.yaml",
-  // "cans/artifacts/",
+ "cans/artifacts/",
   //  "cans/artifacts/",
-  //  "cans/assembly.md",
+ //   "cans/assembly.md",
+            "cans/cicd.md",
  //           "cans/artifacts/wireframe/screens",
   //          "cans/artifacts/wireframe/wireframe.html"
 		]
