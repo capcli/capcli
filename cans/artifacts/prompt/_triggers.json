@@ -101,9 +101,9 @@
           "prod"
         ]
       },
-      "prompt": "doc://prompts/evolution/schema_drift#1",
+      "prompt": "doc://prompts/evolution/schema_drift#2",
       "serve": "L1",
-      "reason": "schema drift requires forward migration plan"
+      "reason": "schema drift requires forward revision plan"
     },
     {
       "id": "t_promotion_passed",

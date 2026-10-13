@@ -89,7 +89,7 @@ authorizer:
     detach: deny
     drop: deny
     vacuum: { require_trust: pinned }          # maintenance only
-    alter: { require_trust: reviewed }         # schema ops gated by trust
+    alter: deny                                   # raw DDL denied for all agent principals; kernel revision pipeline is the sole DDL path
     pragma: [query_only, foreign_keys]         # whitelist, never blacklist
     functions:
       allow: [count, sum, min, max, avg, json_extract, date, strftime]

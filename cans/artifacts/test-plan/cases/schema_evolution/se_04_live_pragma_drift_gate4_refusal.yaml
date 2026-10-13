@@ -52,7 +52,7 @@ expected_observations:
   diagnostic:
     domain: "kernel.schema" # NOTE: not located in cans/ specs - family kernel.* per effect.md denial domain classification; Live drift is the kernel's live-vs-declared inspector
     culprit: "PRAGMA table_info(orders) reports undeclared column 'rush' that does not exist in compiled schema.yaml v12 - live drift detected, boot refused (Live drift)"
-    remedy: "Either revert the out-of-band column (restore from snapshot) or declare it properly: edit schema.yaml, pass Sub-checks 1-2, dry-run, human approval, then rule apply --type schema."
+    remedy: "Either revert the out-of-band column (restore from snapshot) or declare it properly: edit schema.yaml, pass Sub-checks 1-2, dry-run, human approval, then rule apply <id>."
   database:
     row_count_delta: 0
     tables_mutated: []

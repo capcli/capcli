@@ -29,7 +29,7 @@ setup:
       db: workspace.db
       tables:
         orders:
-          description: "Backfilled fulfillment orders"
+          description: "Late-arriving fulfillment orders"
           columns:
             id: int pk
             status: text
@@ -43,7 +43,7 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli sql \"INSERT INTO orders (id, status, total) VALUES (1, 'new', 2500)\" -m \"backfill order 1\" && capcli sql \"INSERT INTO orders (id, status, total) VALUES (2, 'paid', 3100)\" -m \"backfill order 2\" && capcli sql \"INSERT INTO orders (id, status, total) VALUES (3, 'shipped', 2800)\" -m \"backfill order 3\""
+  command: "capcli sql \"INSERT INTO orders (id, status, total) VALUES (1, 'new', 2500)\" -m \"insert order 1\" && capcli sql \"INSERT INTO orders (id, status, total) VALUES (2, 'paid', 3100)\" -m \"insert order 2\" && capcli sql \"INSERT INTO orders (id, status, total) VALUES (3, 'shipped', 2800)\" -m \"insert order 3\""
   input_params:
     sequential_writes: 3
     expected_audit_rows_after: 7 # 4 genesis + 3 db.exec events

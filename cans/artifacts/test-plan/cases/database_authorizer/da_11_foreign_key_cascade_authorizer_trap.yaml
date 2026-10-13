@@ -63,7 +63,7 @@ expected_observations:
   diagnostic:
     domain: "policy.authorizer"
     culprit: "cascade from DELETE ON orders (id = 2) would physically delete order_items rows; table order_items is tagged imm_rows: true - authorizer returns SQLITE_DENY and the parent delete rolls back with it"
-    remedy: "Do not cascade into immutable tables; drop the ON DELETE cascade clause via a reviewed forward schema migration, or archive children explicitly with compensating inserts before removing the parent."
+    remedy: "Do not cascade into immutable tables; drop the ON DELETE cascade clause via a forward revision bundle, or archive children explicitly with compensating inserts before removing the parent."
   database:
     row_count_delta: 0
     tables_mutated: []

@@ -7,14 +7,14 @@
       "color": "#58a6ff",
       "entry": "sys.help.success.stub",
       "terminal": "sys.doctor.success.report",
-      "description": "S0 help stub -> doctor verify -> S1 natural-language goal capture (zero-hit search, did_you_mean) -> S2 dev schema proposal via sql --dry-run -> S3 first safe select clips at the result cap -> S4 deliberate unbounded-write denial diagnosed via audit trace --explain -> S5 bounded keyed write commits with causal intent -> S6 snapshot, post-snapshot schema drift caught by env doctor (2 undeclared columns on live orders), restore reverses it and the ledger hash verifies -> S7 search & inspect loop -> S8 routine scaffolded from repeated operations -> S9 sim prove, promotion queue, evidence-based pinned ship -> S10 sys doctor --report trust receipt"
+      "description": "S0 help stub -> doctor verify -> S1 natural-language goal capture (zero-hit search, did_you_mean) -> S2 dev schema proposal: raw DDL denied at the authorizer, exit 2 -> S3 first safe select clips at the result cap -> S4 deliberate unbounded-write denial diagnosed via audit trace --explain -> S5 bounded keyed write commits with causal intent -> S6 snapshot, post-snapshot schema drift caught by env doctor (2 undeclared columns on live orders), restore reverses it and the ledger hash verifies -> S7 search & inspect loop -> S8 routine scaffolded from repeated operations -> S9 sim prove, promotion queue, evidence-based pinned ship -> S10 sys doctor --report trust receipt"
     },
     "journey_harness_onboarding": {
       "name": "H0\u2013H7 Autonomous Harness Machine Onboarding",
       "color": "#79c0ff",
       "entry": "sys.doctor.success.nominal",
       "terminal": "run.overview.success.populated",
-      "description": "H0 parse machine contract (sys doctor --json, nominal host) -> H1 run search discovery (catalog verbs + schema views) -> H2 dry-run rehearsal -> H3 dual probe: sql local state + api catalog remote verbs -> H4 scaffold sync_orders + hybrid prove in sim (composite write + simulated egress) -> H5 feedback: audit trace --explain parses the prove observation and the denial rules -> H6 author the mandatory overview routine -> H7 prove overview in sim -> ship overview reviewed --queue -> run overview after sign-off, grounding future agents in domain state"
+      "description": "H0 parse machine contract (sys doctor --json, nominal host) -> H1 run search discovery (catalog verbs + schema views) -> H2 raw-DDL dry-run denied at the authorizer (exit 2) -> H3 dual probe: sql local state + api catalog remote verbs -> H4 scaffold sync_orders + hybrid prove in sim (composite write + simulated egress) -> H5 feedback: audit trace --explain parses the prove observation and the denial rules -> H6 author the mandatory overview routine -> H7 prove overview in sim -> ship overview reviewed --queue -> run overview after sign-off, grounding future agents in domain state"
     },
     "journey_trust_promotion": {
       "name": "Draft to Pinned Canary Promotion",
@@ -35,7 +35,7 @@
       "color": "#a371f7",
       "entry": "rule.diff.success.populated",
       "terminal": "env.merge.success.merged",
-      "description": "YAML diff vs HEAD -> dry-run impact envelope -> apply DDL to dev -> pre-merge snapshot checkpoint -> atomic forward migration into prod"
+      "description": "YAML diff vs HEAD -> prove revision in sim (expand/align/contract/pin, pinned routines rehearsed) -> dry-run impact envelope -> apply revision to dev -> pre-merge snapshot checkpoint -> phased cutover of revision into prod"
     },
     "journey_tamper_forensics": {
       "name": "Tamper Quarantine & Forensic Isolation",
@@ -140,7 +140,7 @@
       "color": "#64748b",
       "entry": "rule.validate.refusal.syntax",
       "terminal": "rule.apply.success.applied",
-      "description": "Validate gauntlet (syntax errors, then semantic errors, then valid) -> show compiled rules (unknown table refuses, orders compiles) -> diff vs HEAD (lockstep, then one pending orders.priority change) -> apply gates (DDL trust floor, lockfile sync, validation) -> DDL applied to dev"
+      "description": "Validate gauntlet (syntax errors, then semantic errors, then valid) -> show compiled rules (unknown table refuses, orders compiles) -> diff vs HEAD (lockstep, then one pending orders.priority change) -> apply gates (lockfile sync, validation) -> DDL applied to dev"
     },
     "journey_db_operations": {
       "name": "DB Storage Operations: Schema, Lock, Dump, Snapshot, Restore",
@@ -245,7 +245,7 @@
       "color": "#312e81",
       "entry": "run.sql.refusal.unparseable",
       "terminal": "run.sql.success.populated",
-      "description": "Typo SQL refuses to parse -> write without -m intent refuses -> unbounded UPDATE denied at the AST gate -> DROP TABLE denied by the authorizer -> bounded UPDATE denied while the engine is busy -> legal shapes: DDL dry-run, then the bounded keyed write"
+      "description": "Typo SQL refuses to parse -> write without -m intent refuses -> unbounded UPDATE denied at the AST gate -> DROP TABLE denied by the authorizer -> bounded UPDATE denied while the engine is busy -> legal shapes: raw DDL denied at the authorizer (exit 2), then the bounded keyed write"
     },
     "journey_search_discovery": {
       "name": "Search Surface & Gap Sweep",
@@ -461,12 +461,27 @@
       "arrow_type": "success"
     },
     {
-      "id": "t_schema_diff_to_apply_dry",
+      "id": "t_schema_diff_to_prove",
       "journeys": [
         "journey_schema_evolution"
       ],
       "from": [
         "rule.diff.success.populated"
+      ],
+      "to": [
+        "rule.prove.success.proven"
+      ],
+      "trigger": "prove_in_sim",
+      "label": "capcli rule prove --env sim -m \"prove schema revision (all pinned routines rehearsed)\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_schema_diff_to_apply_dry",
+      "journeys": [
+        "journey_schema_evolution"
+      ],
+      "from": [
+        "rule.prove.success.proven"
       ],
       "to": [
         "rule.apply.success.dry_run"
@@ -502,7 +517,7 @@
         "db.snapshot.success.created"
       ],
       "trigger": "take_snapshot",
-      "label": "capcli db snapshot -m \"pre-migration safety point\"",
+      "label": "capcli db snapshot -m \"pre-revision safety point\"",
       "arrow_type": "progress"
     },
     {
@@ -589,11 +604,11 @@
         "run.search.success.populated"
       ],
       "to": [
-        "run.sql.success.dry_run"
+        "run.sql.denial.authorizer_reviewed"
       ],
       "trigger": "h2_rehearsal",
       "label": "capcli sql 'ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0' --dry-run --json",
-      "arrow_type": "progress"
+      "arrow_type": "denial"
     },
     {
       "id": "t_harness_dry_run_to_state_probe",
@@ -601,7 +616,7 @@
         "journey_harness_onboarding"
       ],
       "from": [
-        "run.sql.success.dry_run"
+        "run.sql.denial.authorizer_reviewed"
       ],
       "to": [
         "run.sql.success.truncated"
@@ -1656,7 +1671,7 @@
       "to": [
         "env.merge.denial.trust"
       ],
-      "trigger": "merge_draft_migration",
+      "trigger": "merge_draft_revision",
       "label": "capcli env merge dev prod -m \"forward DDL\"",
       "arrow_type": "denial"
     },
@@ -2036,36 +2051,6 @@
       "arrow_type": "progress"
     },
     {
-      "id": "t_rule_diff_to_apply_trust",
-      "journeys": [
-        "journey_rule_governance"
-      ],
-      "from": [
-        "rule.diff.success.populated"
-      ],
-      "to": [
-        "rule.apply.denial.trust"
-      ],
-      "trigger": "apply_draft_ddl",
-      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_rule_apply_trust_to_lockfile",
-      "journeys": [
-        "journey_rule_governance"
-      ],
-      "from": [
-        "rule.apply.denial.trust"
-      ],
-      "to": [
-        "rule.apply.refusal.lockfile"
-      ],
-      "trigger": "apply_after_drift",
-      "label": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
-      "arrow_type": "denial"
-    },
-    {
       "id": "t_rule_apply_lockfile_to_validation",
       "journeys": [
         "journey_rule_governance"
@@ -2182,7 +2167,7 @@
         "db.snapshot.success.created"
       ],
       "trigger": "snapshot_dev",
-      "label": "capcli db snapshot -m \"pre-migration safety point\"",
+      "label": "capcli db snapshot -m \"pre-revision safety point\"",
       "arrow_type": "success"
     },
     {
@@ -2212,7 +2197,7 @@
         "db.restore.denial.active_locks"
       ],
       "trigger": "restore_locked_table",
-      "label": "capcli db restore snap_migration_004",
+      "label": "capcli db restore snap_revision_004",
       "arrow_type": "denial"
     },
     {
@@ -2919,7 +2904,7 @@
         "routine.retire.refusal.not_found"
       ],
       "trigger": "retire_unknown_routine",
-      "label": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",
+      "label": "capcli routine retire legacy_etl_backup --reason \"cleanup after revision\"",
       "arrow_type": "denial"
     },
     {
@@ -3516,11 +3501,11 @@
         "run.sql.denial.engine_busy"
       ],
       "to": [
-        "run.sql.success.dry_run"
+        "run.sql.denial.authorizer_reviewed"
       ],
       "trigger": "dry_run_ddl",
       "label": "capcli sql \"ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0\" --dry-run -m \"add priority flag for rush shipping\"",
-      "arrow_type": "progress"
+      "arrow_type": "denial"
     },
     {
       "id": "t_sql_dry_run_to_bounded_write",
@@ -3528,7 +3513,7 @@
         "journey_sql_gatekeeper"
       ],
       "from": [
-        "run.sql.success.dry_run"
+        "run.sql.denial.authorizer_reviewed"
       ],
       "to": [
         "run.sql.success.populated"
@@ -3771,11 +3756,11 @@
         "run.search.success.empty"
       ],
       "to": [
-        "run.sql.success.dry_run"
+        "run.sql.denial.authorizer_reviewed"
       ],
       "trigger": "preview_dev_schema",
       "label": "capcli sql \"ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0\" --dry-run -m \"add priority flag for rush shipping\"",
-      "arrow_type": "progress"
+      "arrow_type": "denial"
     },
     {
       "id": "t_human_proposal_to_read",
@@ -3783,7 +3768,7 @@
         "journey_human_onboarding"
       ],
       "from": [
-        "run.sql.success.dry_run"
+        "run.sql.denial.authorizer_reviewed"
       ],
       "to": [
         "run.sql.success.truncated"
@@ -4224,7 +4209,7 @@
       "to": [
         "rule.plan.success.planned"
       ],
-      "trigger": "plan_migration",
+      "trigger": "plan_revision",
       "label": "capcli rule plan --name \"add_order_priority\" -m \"rush shipping priority flag\"",
       "arrow_type": "progress"
     },

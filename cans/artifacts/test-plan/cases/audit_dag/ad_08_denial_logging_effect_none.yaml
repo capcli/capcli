@@ -42,7 +42,7 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli sql \"UPDATE orders SET id = 42 WHERE id = 7 LIMIT 1\" -m \"rekey after migration\""
+  command: "capcli sql \"UPDATE orders SET id = 42 WHERE id = 7 LIMIT 1\" -m \"rekey after revision\""
   input_params:
     target_column: "orders.id (immutable, imm_cols)"
     expected_rule: "deny_columns_write:orders.id" # physics.md#Layer-1 column writes protection

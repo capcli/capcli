@@ -8,7 +8,7 @@ target_crate: "crates/capcli-cli"
 invariant:
   law_reference: "cans/trust.md#bulk-operations-—-unlocks-mass-updates:-see-artifacts/policy.yaml#query.bulk"
   statement: "Bulk operations (mass updates) unlock only at the reviewed rung: query.bulk.require_trust = reviewed is an absolute trust floor that no environment overlay relaxes — the dev trust_overlay loosens draft row ceilings and waives bulk pre-count, but never grants bulk-operation rights to draft callers. A draft routine attempting a bulk update of 25 rows is therefore rejected at the policy gate before any row is touched, in dev exactly as in prod."
-  blast_radius_if_breached: "Unproven draft code executes mass updates over arbitrary row counts: a single buggy backfill rewrites an entire warehouse-status table with no sim proof and no reviewed sign-off — silent data corruption at scale, and in dev the slop would silently graduate to prod on the next env merge."
+  blast_radius_if_breached: "Unproven draft code executes mass updates over arbitrary row counts: a single buggy bulk update rewrites an entire warehouse-status table with no sim proof and no reviewed sign-off — silent data corruption at scale, and in dev the slop would silently graduate to prod on the next env merge."
 
 confusion_matrix:
   quadrant: "true_negative"
@@ -26,7 +26,7 @@ setup:
     schema_yaml: |
       tables:
         inventory:
-          description: "warehouse stock positions awaiting status backfill"
+          description: "warehouse stock positions awaiting status update"
           columns:
             id: pk
             sku: text!
@@ -43,7 +43,7 @@ setup:
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli run cap://inventory_backfill@2 -p batch_size=25 -m \"bulk backfill of warehouse status column\""
+  command: "capcli run cap://inventory_bulk_update@2 -p batch_size=25 -m \"bulk update of warehouse status column\""
   input_params:
     batch_size: 25
     routine_declared_rows: 25
@@ -53,8 +53,8 @@ expected_observations:
   state_modified: false
   diagnostic:
     domain: "policy.trust"
-    culprit: "draft routine inventory_backfill@2 attempting a bulk update classified at 25 rows; bulk operations require reviewed trust (query.bulk.require_trust) and drafts cannot hold it — measured: bulk update of 25 rows from trust rung draft"
-    remedy: "prove in sim ('capcli routine prove inventory_backfill --env sim') and ship to reviewed trust before bulk backfills, or chunk the update into single-row draft writes within the draft row ceiling"
+    culprit: "draft routine inventory_bulk_update@2 attempting a bulk update classified at 25 rows; bulk operations require reviewed trust (query.bulk.require_trust) and drafts cannot hold it — measured: bulk update of 25 rows from trust rung draft"
+    remedy: "prove in sim ('capcli routine prove inventory_bulk_update --env sim') and ship to reviewed trust before bulk updates, or chunk the update into single-row draft writes within the draft row ceiling"
   database:
     row_count_delta: 0
     tables_mutated: []
@@ -68,6 +68,6 @@ expected_observations:
 
 anti_slop_assertions:
   - rule: "AS-02"
-    verification: "Before and after the command on envs/dev/workspace.db: SELECT count(*) FROM inventory returns 25 both times AND SELECT count(*) FROM inventory WHERE status != 'pending_backfill' returns 0 both times — all 25 rows retain their seeded status, proving the gate fired before execution, not mid-transaction."
+    verification: "Before and after the command on envs/dev/workspace.db: SELECT count(*) FROM inventory returns 25 both times AND SELECT count(*) FROM inventory WHERE status != 'pending_update' returns 0 both times — all 25 rows retain their seeded status, proving the gate fired before execution, not mid-transaction."
   - rule: "AS-03"
     verification: "Parse the --json CliEnvelope: exit_code == 2, state_modified == false, diagnostic.domain == 'policy.trust', diagnostic.culprit cites the bulk classification and the reviewed requirement, diagnostic.remedy names the sim-prove path; stdout prefix '[dev:tier_1]' proves the denial fired in the dev environment, where row ceilings are loosened but query.bulk.require_trust is not."

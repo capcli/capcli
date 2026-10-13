@@ -2,7 +2,7 @@
   "$schema": "wireframe/v2",
   "id": "routine.retire.refusal.not_found",
   "target": "legacy_etl_backup",
-  "command": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",
+  "command": "capcli routine retire legacy_etl_backup --reason \"cleanup after revision\"",
   "elapsed_ms": 47,
   "context": {
     "env": "dev",

@@ -50,8 +50,8 @@
     }
   },
   "trailer": {
-    "prompt": "doc://prompts/evolution/schema_drift#1",
-    "reason": "schema drift requires forward migration plan",
+    "prompt": "doc://prompts/evolution/schema_drift#2",
+    "reason": "schema drift requires forward revision plan",
     "serve": "L1"
   },
   "affordances": [

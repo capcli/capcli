@@ -1,0 +1,83 @@
+$schema: "test-plan/case/v1"
+case_id: "se_17_shadow_cutover_zero_loss"
+title: "Concurrent delta writes during Contract phase replicate via AFTER INSERT/UPDATE/DELETE triggers with zero lost rows at swap"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Online-schema-evolution-mechanics"
+  statement: "During the Contract phase the kernel attaches AFTER INSERT, AFTER UPDATE, and AFTER DELETE delta triggers on the live table that replicate in-flight mutations to _shadow_<table>; at the zero-lag swap (trigger detach + table rename) every concurrent write is present in the shadow table - zero lost rows."
+  blast_radius_if_breached: "A lost delta write corrupts the cutover silently: the new live table starts life missing rows that the old table held, and every downstream consumer reads a world where committed writes never happened - with the old table already dropped, there is no re-drive path."
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent pauses all write traffic during the Contract phase (or runs the cutover against a quiescent database), so the trigger replication path is never exercised and zero-loss is asserted vacuously."
+  anti_slop_mitigation: "AS-01 forces a live write workload concurrent with Contract; AS-02 requires a per-row reconciliation of the delta window; AS-06 hardcodes the exact concurrent write count; the swap must occur while writes are in flight."
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.revisionbot@acme.corp"
+    agent_id: "agt_se_17"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+    tables:
+      - name: "orders"
+        row_count: 500
+      - name: "_shadow_orders"
+        row_count: 500
+    vault_secrets: []
+    triggers_attached:
+      - "delta_ins_orders (AFTER INSERT -> _shadow_orders)"
+      - "delta_upd_orders (AFTER UPDATE -> _shadow_orders)"
+      - "delta_del_orders (AFTER DELETE -> _shadow_orders)"
+    concurrent_workload: "50 concurrent writes (30 inserts, 15 updates, 5 deletes) issued against orders while the Contract swap runs"
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli rule apply rev_0010_orders_restructure --env sim (phase 3 Contract: zero-lag swap of _shadow_orders to live while the concurrent workload runs)"
+  input_params:
+    revision_id: "rev_0010_orders_restructure"
+    concurrent_inserts: 30
+    concurrent_updates: 15
+    concurrent_deletes: 5
+expected_observations:
+  exit_code: 0
+  state_modified: true
+  diagnostic:
+    domain: "none"
+    culprit: "none"
+    remedy: "none"
+  database:
+    row_count_delta: 25
+    tables_mutated:
+      - "orders"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "revision.contract (decision: allow; zero-lag swap, delta reconciliation 50/50)"
+    chain_valid: true
+    state_modified_field: true
+  observations:
+    delta_reconciliation: "50/50 concurrent writes present in the new live table"
+    swap_lock_ms: 14
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Reconcile row-by-row: the post-swap orders table must contain all 30 inserted refs, all 15 updated statuses, and all 5 deleted ids must be absent - 50/50 delta writes accounted for; final row count == 525 with no duplicate ids."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 (integer); the audit event must cite the literal delta reconciliation '50/50' and the swap lock duration < 20ms; no lost-row diagnostic may appear."
+  - rule: "AS-01"
+    verification: "Static lint: the three delta triggers must be attached before the swap begins and detached exactly once at swap; the concurrent workload must execute while Contract runs - a quiescent-database fixture fails the test."

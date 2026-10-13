@@ -75,7 +75,7 @@ expected_observations:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "rule.apply (allow; schema migration event for v13)"
+    event_emitted: "rule.apply (allow; schema revision event for v13)"
     chain_valid: true
     state_modified_field: true
 anti_slop_assertions:

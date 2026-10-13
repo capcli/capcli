@@ -50,7 +50,7 @@
       - transport — harness exports CAPCLI_SKILL; unset records null: see artifacts/policy.yaml#skill_origin
     - Concurrency scope
       - concurrency model — serialized write pipeline via SQLite BEGIN IMMEDIATE; writers bound by the lifespan law: see world.md#Lifespan-law
-      - writer priority — interactive agent and webhook mutations preempt bulk migration backfills
+      - writer priority — interactive agent and webhook mutations preempt bulk align backfills
       - application locks — business-level leases in claims table keyed strictly to (session_id, harness_marker, op_sequence): see world.md#Claims-lease-lifecycle; PID-keyed leases banned
       - tier mapping — pipelines hold the macro lease for task ownership, validate read-compute-write via the meso fence, and commit under the micro lock: see physics.md#Distributed-concurrency-laws
       - preemption — SIGTERM maps directly to the exit 6 yield, which preserves Layer 1 claims: see physics.md#Exit-code-law

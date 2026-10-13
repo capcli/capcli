@@ -1,0 +1,82 @@
+$schema: "test-plan/case/v1"
+case_id: "se_15_revision_lock_timing_sla"
+title: "Phase-1 Expand and phase-3 Contract swap hold the SQLite write lock within bound (<10ms expand, <20ms contract)"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Four-phase-state-revision-pipeline"
+  statement: "Expand phase DDL executes with an SLA < 10ms and the Contract phase exclusive write lock is held strictly < 20ms (trigger detach + table rename only); rule prove --env sim rehearses and records lock-timing observations for both phases before any cutover."
+  blast_radius_if_breached: "An unbounded Expand or swap lock freezes every writer on the Hub for the whole fleet: routine executions queue behind the lock, VDBE progress handlers abort mid-flight, and a sim rehearsal that never measured lock timing ships a production cutover blind."
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent stubs the lock-timing probe (or measures only wall-clock of the whole apply command) so phase-level lock durations are never observed, and the SLA assertions pass on aggregate noise."
+  anti_slop_mitigation: "AS-02 requires the phase-level observations from the prove rehearsal report with distinct expand_ms and contract_swap_ms fields; AS-06 hardcodes the <10ms / <20ms ceilings; setup uses a live tier_1 kernel, never a stubbed clock."
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.revisionbot@acme.corp"
+    agent_id: "agt_se_15"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+            rush: boolean
+    tables:
+      - name: "orders"
+        row_count: 500
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli rule prove rev_0008_orders_rush --env sim"
+  input_params:
+    revision_id: "rev_0008_orders_rush"
+    revision_change: "orders gains nullable column rush (Expand); no destructive phase needed for this additive revision"
+    sla_expand_ms: 10
+    sla_contract_swap_ms: 20
+expected_observations:
+  exit_code: 0
+  state_modified: false
+  diagnostic:
+    domain: "none"
+    culprit: "none"
+    remedy: "none"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "rule.prove (decision: allow; lock-timing rehearsal recorded)"
+    chain_valid: true
+    state_modified_field: false
+  observations:
+    expand_phase:
+      ddl: "ALTER TABLE orders ADD COLUMN rush boolean (additive, non-breaking)"
+      write_lock_ms: 4
+      sla_ceiling_ms: 10
+    contract_phase:
+      swap_note: "additive revision has no destructive swap; rehearsal still binds the ceiling for the destructive path"
+      write_lock_ms: 0
+      sla_ceiling_ms: 20
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Parse the prove rehearsal report: expand_phase.write_lock_ms < 10 and contract_phase.write_lock_ms < 20 as literal integer fields; both ceilings bound by the SLA values from input_params, never derived from the measured values."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 (integer) and the audit event rule.prove with decision allow; the observation record must cite both phase timings, never an aggregate apply duration."
+  - rule: "AS-01"
+    verification: "Static lint: no stubbed clock or canned timing fixture in the lock-timing probe path; rehearsal must run against a live tier_1 SQLite engine in sim."

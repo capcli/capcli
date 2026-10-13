@@ -1,0 +1,81 @@
+$schema: "test-plan/case/v1"
+case_id: "se_11_forward_only_revision_invariant"
+title: "Reverse-revision DDL is rejected; backward recovery routes through a forward revert bundle or snapshot restore"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Revision-invariants"
+  statement: "Revisions are forward only: backward revisions execute strictly via forward revert bundles - a hand-written reverse-revision script (e.g. DROP TABLE of a v13-introduced table) is denied at the authorizer (global drop: deny) with exit 2, and recovery routes to a forward revert bundle or db restore <id>."
+  blast_radius_if_breached: "Ad-hoc reverse revisions diverge prod from the declarative schema and the git-tracked world.sql history; forward-only replay and audit forensics can no longer reconstruct what the database actually was."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent implements a reverse-revision SQL execution path in the engine (or grants the test caller drop permission) so the reverse script executes - the invariant under test is deleted instead of verified."
+  anti_slop_mitigation: "AS-01 bans authorizer mocks and any engine reverse-revision path (static lint for DROP-handling code outside the kernel); AS-02 proves both the v13 table and its rows survive; AS-03 requires the typed exit code 2 plus an authorizer diagnostic pointing at the forward revert bundle."
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.rollback-tinkerer@acme.corp"
+    agent_id: "agt_se_11"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            status: text=pending
+        shipping_modes:
+          description: "Carrier shipping modes introduced in v13"
+          columns:
+            id: pk
+            code: text!
+            label: text=standard
+          seed:
+            - { code: "air", label: "air freight" }
+            - { code: "ground", label: "ground" }
+      # v13 applied; snapshot snap_revision_013 exists from the pre-apply pairing
+    tables:
+      - name: "orders"
+        row_count: 500
+      - name: "shipping_modes"
+        row_count: 2
+    vault_secrets: []
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"DROP TABLE shipping_modes\" -m \"reverse v13 back to v12\""
+  input_params:
+    statement_class: "DDL (hand-written reverse-revision script)"
+    authorizer_global_rule: "drop: deny"
+    snapshot_available: "snap_revision_013 (VACUUM INTO taken before v13 DDL)"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "DROP TABLE shipping_modes - hand-written reverse-revision DDL; authorizer global rule drop: deny (forward-only revisions: backward recovery executes strictly via forward revert bundles)"
+    remedy: "Recover via a forward revert bundle (rule plan --name revert_v13_shipping_modes, prove, apply) or snapshot restore: capcli db restore snap_revision_013 (VACUUM INTO point-in-time restore taken before the v13 DDL) - never a hand-written reverse-revision script."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "db.exec (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Static lint: no reverse-revision SQL execution path exists in the engine (no DROP-handling branch reachable from capcli sql beyond the authorizer denial); no mock on crates/capcli-core/src/db/authorizer.rs; the caller holds reviewed trust and is STILL denied - trust cannot purchase schema destruction."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM shipping_modes == 2 AND SELECT count(*) FROM orders == 500 before and after; the v13 table and its seed rows physically survive the denied reverse revision."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the --json CliEnvelope: diagnostic.domain == 'policy.authorizer', culprit cites forward-only, remedy names the forward revert bundle or capcli db restore snap_revision_013."

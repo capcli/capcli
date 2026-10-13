@@ -20,7 +20,7 @@
           "platform": "linux x86_64 (tier_1, hardened namespaces)",
           "python_runtime": "3.12.2 (floor: 3.11)",
           "git_version": "2.43.0 (floor: 2.30; identity: configured)",
-          "git_worktree": "active — .git present; world.sql + migrations tracked (read-only declarations; kernel never auto-commits)",
+          "git_worktree": "active — .git present; world.sql + revisions tracked (read-only declarations; kernel never auto-commits)",
           "engine": "sqlite_3.45.1 (wal_mode: true)",
           "c_authorizer": "active",
           "sandbox_provider": "bwrap (unprivileged userns: supported)",

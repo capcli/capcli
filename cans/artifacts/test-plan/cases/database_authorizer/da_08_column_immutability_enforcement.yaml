@@ -49,7 +49,7 @@ expected_observations:
   diagnostic:
     domain: "policy.authorizer"
     culprit: "UPDATE targets immutable column ledger_entries.amount_cents (int~ write-once); deny_columns_write protection returns SQLITE_DENY at prepare time"
-    remedy: "Immutable columns are never updated in place; append a compensating ledger row, or declare the column without ~ via a reviewed schema migration (forward-only)."
+    remedy: "Immutable columns are never updated in place; append a compensating ledger row, or declare the column without ~ via a forward revision bundle (revision pipeline, forward-only)."
   database:
     row_count_delta: 0
     tables_mutated: []

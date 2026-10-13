@@ -1,0 +1,82 @@
+$schema: "test-plan/case/v1"
+case_id: "se_16_align_chunking_exit6_yield"
+title: "Align-phase align.py copies rows in <=500-row transactions; on fuel exhaustion it yields cleanly via exit 6 and resumes"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Four-phase-state-revision-pipeline"
+  statement: "The Align phase runs revisions/NNNN/align.py in bounded chunks (max 500 rows/txn); when its fuel quota is exhausted it yields cleanly with exit 6 (kernel frame yield), and a resumed run continues from the last committed chunk boundary with no row re-processed and no row skipped."
+  blast_radius_if_breached: "An unchunked or non-yielding align.py burns the whole fuel frame on one long transaction: the Hub watchdog hard-kills it mid-copy, the shadow table holds a partial copy with no recorded chunk boundary, and the resume path re-processes or double-inserts rows."
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent funds the test with an unbounded fuel frame so the yield path is never hit, then asserts exit 0 and calls the chunking logic covered."
+  anti_slop_mitigation: "AS-01 forces the fuel frame small enough to exhaust mid-align; AS-02 requires the exact exit 6 code plus the chunk-boundary resume record; AS-06 hardcodes the 500-row chunk ceiling and the expected chunk count for the row volume."
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.revisionbot@acme.corp"
+    agent_id: "agt_se_16"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+    tables:
+      - name: "orders"
+        row_count: 1200
+      - name: "_shadow_orders"
+        row_count: 0
+    vault_secrets: []
+    fuel_frame: "sized to exhaust after the second 500-row chunk (exit 6 mid-align)"
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli rule apply rev_0009_orders_split --env sim (phase 2 Align: revisions/0009_orders_split/align.py copies orders -> _shadow_orders)"
+  input_params:
+    revision_id: "rev_0009_orders_split"
+    chunk_rows_max: 500
+    total_rows: 1200
+    expected_chunks: 3
+expected_observations:
+  exit_code: 6
+  state_modified: true
+  diagnostic:
+    domain: "none"
+    culprit: "none"
+    remedy: "none"
+  database:
+    row_count_delta: 0
+    tables_mutated:
+      - "_shadow_orders"
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "revision.align (decision: yield; chunk boundary recorded)"
+    chain_valid: true
+    state_modified_field: true
+  observations:
+    chunks_committed: 2
+    rows_copied: 1000
+    chunk_boundary: "orders.id = 1000"
+    yield_code: 6
+    resume_command: "capcli rule apply rev_0009_orders_split --env sim --resume"
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "After the yield: SELECT count(*) FROM _shadow_orders == 1000 and SELECT max(id) FROM _shadow_orders == 1000; after --resume to completion: _shadow_orders == 1200 with zero duplicate ids (SELECT count(*) == count(DISTINCT id)); chunk boundary id recorded in the audit event."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 6 (integer) on the first run - exit 6 is the kernel frame yield, not a failure; the audit event must carry decision yield with the chunk boundary, never a mid-transaction error."
+  - rule: "AS-01"
+    verification: "Static lint: the align.py copy loop must issue explicit per-chunk commits with chunk size <= 500 rows (no single 1200-row transaction); the fuel frame in setup must be provably exhaustible mid-align."

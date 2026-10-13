@@ -1,54 +1,51 @@
 ---
-id: doc://prompts/evolution/schema_drift#1
+id: doc://prompts/evolution/schema_drift#2
 stem: evolution.schema_drift.success.drift
 bank: evolution
 slug: schema_drift
-version: 1
+version: 2
 trust: draft
 vars:
   - name: env
     type: string
     source: kernel.env
 sections:
-  stage_1_diff: 50
-  stage_2_dry_run: 120
-  stage_3_snapshot: 60
-  stage_4_cutover: 60
+  stage_1_expand: 50
+  stage_2_align: 110
+  stage_3_contract: 80
+  stage_4_pin: 50
 slice_max_tokens: 500
-docs:
-  - doc://guides/migration
 status: served
 ---
 
-# ⚡ ONLINE SCHEMA EVOLUTION PROTOCOL (4-PHASE MIGRATION)
+# ⚡ ONLINE SCHEMA EVOLUTION PROTOCOL (4-PHASE REVISION)
 `rule diff` detected structural drift between `schema.yaml` and live SQLite PRAGMAs.
-Direct `ALTER TABLE` execution is denied. Structural mutations ride the dry-run, snapshot, apply pipeline:
+Raw DDL (ALTER/DROP/CREATE TABLE) is denied for draft and reviewed principals — exit 2.
+Structural changes ride the four-phase revision pipeline — see world.md#Schema-evolution.
 
-## section:stage_1_diff
-Inspect structural deltas:
+## section:stage_1_expand
+Inspect structural deltas, then author the revision bundle:
 ```bash
 capcli rule diff schema --git
+capcli rule plan --name <slug>
 ```
-Ensure changes avoid circular foreign key references (Sub-check 2 checks).
+Expand phase is additive non-breaking DDL only (nullable columns, new tables); execution SLA < 10ms.
 
-## section:stage_2_dry_run
-Rehearse the migration against the live schema in dry-run mode:
+## section:stage_2_align
+Align phase runs in user space via `revisions/NNNN_<slug>/align.py`: bounded chunks (max 500 rows/txn), yields cleanly on quota or fuel exhaustion (exit 6).
+Rehearse in sim before prod:
 ```bash
-capcli rule apply schema --dry-run
+capcli rule prove <id> --env sim
 ```
-The rehearsal validates the full mutation set without committing: shadow-table expansion,
-forward non-breaking columns, bounded backfill, obsolete-structure contraction, and live
-PRAGMA parity against `schema.yaml`.
+`rule prove` in sim is mandatory before `env merge <name> prod` — all pinned routines rehearse, any break exits 2.
 
-## section:stage_3_snapshot
-Take a pre-migration safety snapshot:
-```bash
-capcli db snapshot -m "pre-migration safety point"
-```
+## section:stage_3_contract
+Contract phase runs in kernel space (`revision.rs`): creates `_shadow_<table>`, attaches AFTER INSERT/UPDATE/DELETE delta triggers replicating in-flight mutations, copies base rows in 500-row chunks.
+Zero-lag swap: BEGIN IMMEDIATE at zero replication lag, drops triggers, renames shadow to live, drops the old table; exclusive write lock held < 20ms.
 
-## section:stage_4_cutover
-Execute the atomic schema cutover:
+## section:stage_4_pin
+Pin phase verifies live PRAGMA matches `schema.yaml` and updates the root hash in `capcli.lock`.
 ```bash
-capcli rule apply schema -m "Execute atomic table swap"
+capcli rule apply <id> -m "<intent>"
 ```
-Shadow tables are atomically renamed within a single transaction.
+A cold VACUUM snapshot pairs each revision for disaster-only recovery.

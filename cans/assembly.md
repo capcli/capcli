@@ -55,7 +55,7 @@
         - audit/audit.YYYY-MM-DD.jsonl — daily audit mirror holding hashed rows
         - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
         - audit/witness.log — remote KMS witness attestation logs: see effect.md#Event-integrity
-      - migrations/ — compiled migration bundles: see world.md#Schema-evolution
+      - revisions/ — compiled revision bundles: see world.md#Schema-evolution
         - revisions/NNNN_<name>/plan.json — compiled expand/contract DDL phases
         - revisions/NNNN_<name>/align.py — sandboxed chunked data alignment routine
       - routines/ — agent-authored procedural guest scripts (.ts, .js, .py): see action.md#Routines

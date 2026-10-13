@@ -2,7 +2,7 @@
   "$schema": "wireframe/v2",
   "id": "db.restore.denial.active_locks",
   "target": "db://",
-  "command": "capcli db restore snap_migration_004",
+  "command": "capcli db restore snap_revision_004",
   "elapsed_ms": 51,
   "context": {
     "env": "dev",
@@ -17,8 +17,8 @@
     "layer": "claims",
     "culprit": "Active claims prevent state reversal; 1 lease still held on db://orders.",
     "measured": "orders:ORD-10 held by agt_9k2w, claim_c3d4; TTL remaining 187s of 300s",
-    "remedy": "wait for lease expiry or ask the holder to release, then re-run 'capcli db restore snap_migration_004'",
-    "target": "snap_migration_004",
+    "remedy": "wait for lease expiry or ask the holder to release, then re-run 'capcli db restore snap_revision_004'",
+    "target": "snap_revision_004",
     "active": "1 claim on db://orders",
     "lines": [
       "Active claims prevent state reversal; restoring under a live lease would orphan the holder."

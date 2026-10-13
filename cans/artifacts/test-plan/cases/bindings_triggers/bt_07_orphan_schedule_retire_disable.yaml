@@ -8,7 +8,7 @@ target_crate: "crates/capcli-daemon"
 invariant:
   law_reference: "cans/time.md#Cron-governance"
   statement: "Orphan handling: retiring a routine auto-disables its bound schedule (artifacts/governance.yaml#schedule dead_schedule_disable: true). After capcli routine retire, the daemon pauses or dissolves the associated cron binding on its next tick — loudly, with an audit event — so no active cron trigger ever targets a retired routine. Retirement itself never deletes provenance (action.md anti-decisions: no deletion)."
-  blast_radius_if_breached: "A live cron keeps firing a retired routine: kernel principal capcli-cron dispatches executions against a capability whose code and manifest are no longer governed, burning schedule slots (max 20) on dead triggers, executing stale logic against migrated schema, and leaving operators unaware because nothing was announced."
+  blast_radius_if_breached: "A live cron keeps firing a retired routine: kernel principal capcli-cron dispatches executions against a capability whose code and manifest are no longer governed, burning schedule slots (max 20) on dead triggers, executing stale logic against a revised schema, and leaving operators unaware because nothing was announced."
 
 confusion_matrix:
   quadrant: "true_positive"
