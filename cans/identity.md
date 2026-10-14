@@ -88,6 +88,40 @@
       - Config — see artifacts/policy.yaml#identity
       - Malformed markers fall to anonymous
       - Anonymous ceiling enforced
+    - Skill protocol
+      - Bootstrap skill
+        - Teaches harness CLI grammar
+        - Maps to no routine
+        - Carries no Param declarations
+        - Installed via ClawHub
+        - Definition — see marketplace.md#Registry
+      - Capability skill
+        - Generated wrapper for one routine
+        - Frontmatter maps 1:1 to Params
+        - Signature mismatch exits 3
+        - Envelope shape — see interface.md#CLI-surface
+      - Skill result constraint
+        - Computed summaries only
+        - Result envelope under 500 tokens
+        - Definition — see routines.md#Shape-constraints
+      - Skill provenance
+        - Skill name recorded in triggered_by_skill
+        - Field — identity.skill_origin
+        - Contract — see artifacts/policy.yaml#skill_origin
+      - Protocol bans
+        - Unproven shipping forbidden in skills
+        - Raw SQL instruction forbidden
+        - Routine ship within skills forbidden
+        - Reading secrets forbidden
+        - Raw HTTP bypass forbidden
+        - Cross-session caching forbidden
+      - Boundary isolation
+        - Credentials isolation at proxy edge
+        - Egress allowlist via provider catalog
+        - Shell egress trapped via seccomp
+        - Network jail via unshared namespace
+        - Virtualization via microVM multi-tenant
+        - Definition — see sandbox.md#Network-jail
   - Credential binding
     - Capability token
       - Kernel-minted HMAC token
@@ -161,9 +195,10 @@
       - Definition — see world.md#Outbox-inbox
     - Revocation
       - sys agent revoke ends execution
-      - Active tokens invalidated
+      - Active tokens invalidated by kernel
       - Active claims released
       - Active frames aborted
+      - Panic protocol — see kernel.md#Exit-code-law
     - Federated peers
       - ws:<name> identities as agents
       - Principal maps to internal :principal
@@ -251,8 +286,8 @@
       - Definition — see routines.md#Procedure-layer
     - Collision handling
       - Writers queue up to busy_timeout
-      - Default 5000ms
       - Timeout exhaustion exits 2
+      - Canonical window — see world.md#SQLite-as-SSOT
       - Config — see artifacts/governance.yaml
     - Physical arbiter
       - SQLite BEGIN IMMEDIATE serializes writes
@@ -263,7 +298,7 @@
       - Cross-agent routine calls need reviewed rung
       - Federated callers need pinned rung
       - Exit 2 E046 on breach
-      - Reference — see governance.md#Composition-floor
+      - Canonical ladder — see governance.md#The-ladder
     - Session scoping
       - Session id rides every frame
       - Session id rides every claim
@@ -274,6 +309,29 @@
       - Write drift exits 2 E061
       - Fence retries capped at 3
       - Definition — see governor.md#Suspension-registry
+    - World coordination
+      - Claims layer
+        - Distributed lease locks with TTL
+        - Multi-step ops hold lease
+        - Definition — see world.md#Claims-lease
+      - Dependency tracking
+        - Routine dependency graph
+        - Blocks retirement of active deps
+        - Exit 2 on retire attempt
+        - Definition — see lifecycle.md#Decay
+      - Physical arbiter
+        - Shared workspace.db with WAL
+        - Serialized commits via BEGIN IMMEDIATE
+        - Definition — see world.md#SQLite-as-SSOT
+      - Event tailing
+        - Agents observe siblings via audit tail
+        - sys audit tail --follow pattern
+        - Zero cross-agent state leakage
+        - Envelope shape — see interface.md#CLI-surface
+      - Cross-environment isolation
+        - Claims scoped to environment
+        - Sim claims never collide with prod
+        - Definition — see lifecycle.md#Primitive-scoping
   - Intent chain
     - Chain hierarchy
       - Session goal at root
@@ -331,7 +389,7 @@
       - Every harness turn runs overview
       - Injects reality snapshot
       - Snapshot under 60 tokens
-      - Definition — see routines.md#Session-Overview-Primer
+      - Canonical routine — see routines.md#Session-Overview-Primer
     - Scoping
       - Session id rides every frame
       - Session id rides every audit event
@@ -358,7 +416,7 @@
     - Client boundary
       - HTTP/WS daemon for external harnesses
       - JSON-RPC 2.0 protocol
-      - Envelope shape — see interface.md#Client-RPC
+      - Envelope shape — see interface.md#Client-RPC-contract
   - Harness neutrality
     - Uniform actor model
       - Kernel treats all callers uniformly

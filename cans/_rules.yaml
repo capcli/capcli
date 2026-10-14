@@ -51,7 +51,7 @@ vocabulary:
 canonical_homes:
   exit_codes: kernel.md#Exit-code-law
   trust_ladder: governance.md#The-ladder
-  budget_frames: governance.md#Frames
+  budget_frames: governance.md#Budget-frames
   fuel_formula: governance.md#Fuel-formula
   vault: egress.md#Vault-proxy
   wire_scrubber: egress.md#Wire-scrubber
@@ -70,7 +70,7 @@ canonical_homes:
   migration: world.md#Migration
   snapshots: world.md#Snapshots
   denials: effect.md#Denials
-  promotion: governance.md#Gates
+  promotion: governance.md#Promotion-gates
   decay: lifecycle.md#Decay
   environments: lifecycle.md#Environments
   masking: lifecycle.md#Masking
@@ -82,9 +82,9 @@ canonical_homes:
   pack_format: marketplace.md#Packs
   registry: marketplace.md#Registry
   cli_surface: interface.md#CLI-surface
-  client_rpc: interface.md#Client-RPC
+  client_rpc: interface.md#Client-RPC-contract
   onboarding: interface.md#Onboarding
-  monorepo: assembly.md#Layout
+  monorepo: assembly.md#Monorepo-layout
   cicd: assembly.md#CICD
 
 token_budget:

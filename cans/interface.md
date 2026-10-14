@@ -53,12 +53,9 @@
       - Cannot be aliased or extended
       - Enforced at install, exit 3 on breach
     - Projection failure handling
-      - Manifest malformed — canonical fallback
-      - Collision — auto-scope to plugin <id>
-      - Kernel bug — canonical fallback
-      - Fallback form — capcli plugin <id> <verb>
+      - Canonical fallback — capcli plugin <id> <verb>
       - Never a hard install failure
-      - Definition — see plugins.md#CLI-projection
+      - Full rules — see plugins.md#CLI-projection
     - Projection introspection
       - plugin list --surface — shows ownership
       - inspect plugin://<id> — full manifest
@@ -82,8 +79,7 @@
     - Turn-zero contract
       - Harness invokes overview every turn
       - Snapshot under 60 tokens
-      - Active fuel, locks, sensory inbox
-      - Definition — see routines.md#Session-Overview-Primer
+      - Canonical primer — see routines.md#Session-Overview-Primer
     - Aliases
       - capcli sql aliases run sql
       - capcli search aliases run search
@@ -152,10 +148,9 @@
       - Definition — see egress.md#Vault-storage
     - Diagnostics
       - sys doctor [--boot-check] [--json]
-      - Reports host OS and platform tier
-      - Reports permitted environments
-      - sys doctor --ack-tamper clears degraded
-      - Definition — see effect.md#Event-integrity
+      - Machine fields — see sandbox.md#Platform-probes
+      - Tamper ack — see effect.md#Event-integrity
+      - Envelope shape — see #CLI-surface
     - Backup
       - sys backup [--push] — local always
       - sys recover <snapshot-id>
@@ -479,23 +474,39 @@
   - Universal flags
     - Global flags
       - --json — machine-readable output
-      - --as <principal> — target execution principal
+      - --as <principal> — semantic home identity.md
       - --environment <name> — override sticky
-      - -m, --intent — causal motivation
-      - --workspace <path|urp> — project root or remote
-      - --session <token> — cryptographic session handle
+      - -m, --intent — semantic home identity.md
+      - --workspace <path|urp> — semantic home identity.md
+      - --session <token> — cryptographic handle
       - --in <path> — file or stdin payload
       - --out <path> — payload redirection
       - at-symbol — @<path> or @- for stdin
     - Mutating flags
       - --dry-run — plan without applying
-      - --reason "<why>" — threshold justification
-      - --by <agent-id> — acting identity
-      - Definition — see identity.md#Credential-binding
+      - --reason "<why>" — semantic home identity.md
+      - --by <agent-id> — semantic home identity.md
+      - Definitions — see identity.md#Intent-chain
     - Scoped flags
       - --lock <ref> — exclusive claim lease
-      - --tier-waiver — one prod on tier 2
-      - Definition — see sandbox.md#Platform-tiers
+      - --tier-waiver — semantic home sandbox.md
+      - Waiver mechanics — see sandbox.md#Platform-tiers
+    - Network transports
+      - --workspace accepts remote endpoint
+      - Example — tcp://100.64.0.1:4040
+      - Overrides CAPCLI_WORKSPACE
+      - Config — see artifacts/policy.yaml#network.transports
+      - Socket endpoints are not URPs
+      - Definition — see marketplace.md#Registry
+    - Cascade fields in envelope
+      - budget_status block in PreflightEnvelope
+      - Field shapes — see governance.md#Cascade
+      - Refusal rendering — see kernel.md#Diagnostic-output-law
+    - Flag ceiling invariant
+      - Twelve universal flags frozen
+      - Per-verb params grow independently
+      - Never a thirteenth universal flag
+      - Definition — see #CLI-surface
     - Flag ceiling
       - Twelve universal flags frozen
       - Per-verb params grow independently
@@ -535,6 +546,28 @@
       - Budget — inspect quota:// bans budget noun
       - Authoring — direct write bans routine new
       - Blueprints — inspect tpl:// bans template apply
+    - Pointer grammar edge cases
+      - Bare filesystem paths fail parse
+      - Exit 3 with remediation
+      - Removed schemes — hub, prompt, mesh
+      - Removed schemes — apis, sink, snap
+      - Definition — see routines.md#The-ctx-contract
+    - Config SSOT enforcement
+      - Direct config set denied exit 3
+      - All config mutations via git commit
+      - Daemon owns git authority
+      - Definition — see world.md#Configuration-proposals
+    - Override flag inventory
+      - --force rejected at parser
+      - --override-budget rejected
+      - --force-prod rejected
+      - --verbose rejected
+      - Reference — see governance.md#Limits-and-refusals
+    - Alias precedence
+      - Aliases resolve before handler gate
+      - Recovery mode names canonical paths
+      - Alias never bypasses authorization
+      - Definition — see world.md#Ledger-re-initialization
   - Client RPC contract
     - Instantiation
       - Entry — packages/pwa/src/client.ts

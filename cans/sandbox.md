@@ -25,8 +25,10 @@
       - Rung bounds
         - Dev and sim environments only
         - Pinned runs on dev and sim targets
-        - Prod needs --tier-waiver via Cockpit
-        - Waiver binds to one run, not persisted
+        - Waiver grants one run
+        - Full semantics — see interface.md#Universal-flags
+        - Binds to session and routine
+        - Never persisted or defaulted
       - Provider chain
         - Colima microVM on Darwin
         - Lima microVM on Darwin
@@ -43,6 +45,52 @@
       - Reports permitted environments list
       - Machine contract via --json envelope
       - Zero sandbox spawn during probe
+  - Deployment topology
+    - Dual-axis contract
+      - Swarm axis — spokes proxy DB to Hub
+      - Federation axis — sovereign peers
+      - Axes are separate, never merged
+      - Definition — see plugins.md#Federation-transport
+    - Default profile
+      - Single host, no network needed
+      - Hub daemon with local spokes
+      - Transport — unix:///run/capcli/hub.sock
+      - SQLite writer on this host
+      - Claims and system tables local
+      - Scope — no overlay, no orchestrator
+    - Remote profile
+      - Explicit opt-in configuration
+      - Transport — WireGuard with mTLS
+      - Config — see artifacts/policy.yaml#network.transports
+      - Hub admin binds 127.0.0.1:4040
+      - Mesh bind on declared interface
+      - Spokes dial hub at mesh endpoint
+      - SO_PEERCRED applies to local only
+    - Dedicated server
+      - Headless Linux under systemd
+      - Required for 24/7 background triggers
+      - Required for S3 WORM attestations
+      - Reference — see assembly.md#Persistent-daemon-crate
+    - Ephemeral sandbox node
+      - Disposable microVM or container
+      - Zero-disk state, sync ack
+      - Identity — see identity.md#Ephemeral-swarm-identity
+      - Definition — see world.md#Topology-modes
+    - Local workstation
+      - Ephemeral developer environment
+      - Prohibited from prod endpoints
+      - Prohibited from unattended pinned
+      - Reference — see lifecycle.md#Environments
+    - Parity principle
+      - Local state mutation gate
+      - External egress gate
+      - Same severity, no asymmetry
+      - Definition — see kernel.md#The-4-physical-laws
+    - Runtime engines
+      - Local engine — C authorizer at prepare
+      - Egress engine — token buckets and secrets
+      - Sim routing intercepts network calls
+      - Definition — see kernel.md#Layer-1-C-authorizer
   - Tri-Jail engine
     - Purpose
       - Zero-trust process isolation
@@ -141,13 +189,10 @@
       - No length prefix needed
       - Streaming via multiple sequential lines
     - Exit protocol
-      - exit 0 — success, commit staged ops
-      - exit 2 — policy denial, state untouched
-      - exit 3 — syntax refusal, bad input
-      - exit 4 — crash, transaction rolled back
-      - exit 5 — kernel panic, sink loss
-      - exit 6 — proactive yield, checkpoint
-      - Definition — see kernel.md#Exit-code-law
+      - Codes returned to kernel
+      - Full law — see kernel.md#Exit-code-law
+      - Unique to jail boundary — kernel reads code, decides
+      - Envelope shape — see interface.md#CLI-surface
   - Channel B — shared memory ring
     - Purpose
       - High-throughput data plane
@@ -175,11 +220,12 @@
       - Region unmapped on return
       - Zeroized on disposal
   - Sandbox providers
-    - Provider selection
+    - Selection per tier
       - Tier 1 — bwrap, podman, gvisor
       - Tier 2 — colima, lima, wasmtime
       - Rootless OCI on userns-restricted host
       - Aborts boot if all providers fail
+      - Definition — see #Platform-tiers
     - Jail defenses
       - Native FFI bridge for local DB
       - Shared memory ring for DB calls
@@ -190,11 +236,13 @@
       - Wall clock distinct from fuel
       - Response size cap via truncation flag
       - Ops ceiling via governance file
+      - Fuel decoupling — see governor.md#Watchdog-interaction
     - External jail
       - sys exec <cmd> --sandbox
       - One-shot command sandboxing
       - Same Tri-Jail envelope applied
       - Same exit protocol enforced
+      - Definition — see #Tri-Jail-engine
   - Runtime resolution
     - Ladder
       - 1 — routine tag explicit runtime

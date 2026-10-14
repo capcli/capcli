@@ -68,10 +68,10 @@
       - 6 — Result lands in _inbox
       - 7 — Daemon resumes when unblocked
     - Stage 1 detail
-      - Atomic write inside caller transaction
-      - Domain writes and outbox commit together
+      - ctx.emit writes row atomically
+      - Domain writes commit together
       - Zero partial writes on crash
-      - Envelope shape — see world.md#Outbox-inbox
+      - Write path — see world.md#Outbox-inbox
     - Stage 2 detail
       - Proactive yield is a checkpoint
       - Not an error, not a failure
@@ -81,7 +81,7 @@
       - OCC state_fence persisted
       - Variable environment preserved
       - Execution cursor position saved
-      - Row shape — see world.md#Snapshots
+      - Full row shape — see #Suspension-registry
     - Stage 4 detail
       - BEGIN IMMEDIATE closes immediately
       - Zero open SQLite transactions held
@@ -101,31 +101,24 @@
       - Executes pre-compiled guest routine
       - Mechanical resumption, no LLM wake
   - Outbox staging
-    - Write path
-      - ctx.emit(event, payload) writes row
-      - Commits inside caller transaction
-      - Atomic with domain writes
+    - Purpose
+      - Yield path stages outbound work here
+      - Atomic with caller transaction
       - Never a partial domain state
-    - Row shape
-      - provider — federation or plugin id
-      - verb — event name
-      - idempotency_key — kernel-minted
-      - idempotency_header — mirrored for transport
-      - visibility — private or public
-    - Draining
-      - Daemon drains asynchronously
-      - Headless CLI drains synchronously pre-exit
-      - Atomic claim via RETURNING
-      - Reference — see world.md#Outbox-inbox
-    - Federated siphoning
-      - Peer daemons poll visibility=public
-      - Positions tracked in _watch_cursors
-      - Transport — see plugins.md#Federation-transport
-    - Failure recovery
+    - Owner
+      - Table lifecycle — see world.md#Outbox-inbox
+      - Row shape — see world.md#Outbox-inbox
+      - Claim semantics — see world.md#Outbox-inbox
+      - Draining — see world.md#Outbox-inbox
+    - Why yield uses outbox
+      - Egress cannot run inside transaction
+      - Staging defers wire call to daemon
+      - Same atomicity guarantee as fast path
+      - Reference — see #Yield-path
+    - Failure handling
       - Failed rows retry up to 3 times
       - Then move to dead letter queue
-      - Dead letter retention per governance
-      - Config — see artifacts/governance.yaml
+      - Definition — see world.md#Outbox-inbox
   - Suspension registry
     - Row identity
       - frame_id — suspended budget frame
@@ -248,7 +241,7 @@
       - Frame budget deducted at push
       - Unspent fuel reconciles at pop
       - Cascade across suspension boundary
-      - Reference — see governance.md#Frames
+      - Reference — see governance.md#Budget-frames
     - With world
       - Outbox and inbox own queue tables
       - Suspension row shape in world schema

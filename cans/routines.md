@@ -76,7 +76,7 @@
       - Fuel envelope per budget frame
       - Declared at invocation
       - Enforced at frame push
-      - Definition — see governance.md#Frames
+      - Frame fields — see governance.md#Budget-frames
     - Wall clock
       - Decoupled from fuel
       - Watchdog kills past 300s
@@ -180,6 +180,27 @@
       - Reactive breaks transaction boundaries
       - Subscriptions break replay determinism
       - All three break causal chain
+    - Bulk operations
+      - Chunking model
+        - Agent loops bounded chunks via ctx.db.execute
+        - Each chunk independent transaction
+        - Each chunk independent audit event
+        - Execution bounds — see artifacts/policy.yaml#query
+      - Pre-flight checks
+        - sql --count mandatory before mass update
+        - Dev and sim waive pre-count
+        - Rationale — blast radius control
+        - Envelope shape — see interface.md#CLI-surface
+      - Trust thresholds
+        - Prod bulk over 10 rows needs approval
+        - Bulk minimum trust — reviewed rung
+        - Human threshold above row caps
+        - Definition — see governance.md#The-ladder
+      - Chunk ceiling
+        - Rows per chunk — see artifacts/policy.yaml#query
+        - Independent transactions only
+        - Failure isolates to one chunk
+        - Never a partial multi-chunk commit
   - Composition
     - Mechanism
       - Strictly via ctx.call(target, params)
@@ -243,6 +264,45 @@
       - Per-leaf fuel consumption
       - Per-leaf wire byte count
       - Source views — see effect.md#Query-surfaces
+  - Capability record
+    - Purpose
+      - Shape powering search and inspect
+      - Aggregates cost, provenance, boundary
+      - Definition — see interface.md#CLI-surface
+    - Fields per record
+      - kind — routine, API verb, view
+      - name — registry identifier
+      - version — sequential integer
+      - boundary — trust rung and environment
+      - description — search-visible summary
+    - Provenance tracking
+      - code_hash and manifest_hash
+      - provider and spec_hash for API verbs
+      - promoted_through environment array
+      - Reference — see effect.md#Provenance
+    - Inspect output
+      - Single JSON payload on demand
+      - Sections — manifest, cost envelope
+      - Sections — budget state and cadence
+      - Concrete fields — see interface.md#Run-noun
+      - Envelope shape — see interface.md#CLI-surface
+    - Cost envelope dimensions
+      - Resources — fuel only, single currency
+      - Performance — p50 and p95 duration
+      - Performance — concurrency ceiling
+      - Reliability — total runs and success rate
+      - Definition — see governance.md#Fuel-formula
+    - Search surface integration
+      - Exact id match short-circuits
+      - Prefix name completion
+      - Fuzzy edit distance ranking
+      - SQLite FTS5 BM25 on descriptions
+      - Definition — see marketplace.md#Discovery
+    - Registry ceilings
+      - Limits — see artifacts/governance.yaml#registry
+      - Enforcement — routine prove and api import
+      - Creation — filesystem writes ungated
+      - Reference — see marketplace.md#Registry
   - Routine templates
     - Authoring laws
       - Typed template parameters
@@ -267,7 +327,7 @@
     - Trust floor
       - Imported routines land at draft
       - Zero promotional credit inherited
-      - Promotion — see governance.md#Gates
+      - Promotion — see governance.md#Promotion-gates
   - Session Overview Primer
     - Core aim
       - Grounds incoming agents with situational awareness

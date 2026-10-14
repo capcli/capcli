@@ -39,6 +39,35 @@
       - Badge revoked on policy violation
       - Badge not a trust rung, only a signal
       - Trust still governed by governance.md#The-ladder
+    - Registry ceilings
+      - Search result cap
+        - Max 20 results per query
+        - Config — see artifacts/governance.yaml#registry
+        - Envelope shape — see interface.md#CLI-surface
+      - Description cap
+        - Summary under 60 tokens per entry
+        - Enforced at index build
+        - Definition — see routines.md#Shape-constraints
+      - Index size cap
+        - Compiled index under 10MB
+        - Enforced at CI publish
+        - Config — see artifacts/governance.yaml#registry
+      - Enforcement points
+        - routine prove validates shape
+        - api import validates spec size
+        - Creation via filesystem ungated
+        - Definition — see lifecycle.md#Stage-map
+        - Prove semantics — see lifecycle.md#Prove-stage
+      - Cache bounds
+        - Local cache holds last index
+        - Refresh on explicit command
+        - Offline fallback permitted
+        - Envelope shape — see interface.md#CLI-surface
+    - Network transports
+      - Socket endpoints are not URPs
+      - ws://host:port is transport, not pointer
+      - Config — see artifacts/policy.yaml#network.transports
+      - Definition — see interface.md#Universal-flags
   - Publishing
     - Intake PR gate
       - Author PRs require green CI before merge
@@ -303,7 +332,7 @@
     - Cross-agent floor
       - Imported routines callable only at draft
       - Callee must meet or exceed caller rung
-      - Definition — see governance.md#Composition-floor
+      - Definition — see governance.md#The-ladder
     - Pack sub-plugin floor
       - Each sub-plugin reviewed independently
       - Pack trust is weakest member

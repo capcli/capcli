@@ -138,10 +138,26 @@
         - While buffered, business writes denied exit 2
         - Undrainable buffer panics exit 5
       - Genesis sequence
-        - World starts with rule.apply
-        - Then sql query, sql write deny, sql write ok
-        - Re-initialized ledger opens with kernel.genesis.data_loss
-        - Definition — see #Kernel-event-payloads
+        - First event — rule.apply
+        - Second — sql query on empty world
+        - Third — sql write deny (probe)
+        - Fourth — sql write ok (bootstrap)
+        - Re-init ledger opens with kernel.genesis.data_loss
+        - Loss event carries prior root when known
+        - Re-init authority — operator signature plus reason
+        - Only kernel daemon writes genesis
+        - Definition — see world.md#Ledger-re-initialization
+        - Event shape — see #Kernel-event-payloads
+      - Genesis invariants
+        - Sequence is deterministic
+        - Never skipped on first boot
+        - Re-init always precedes fresh chain
+        - Envelope shape — see interface.md#CLI-surface
+      - Genesis authority
+        - Only kernel daemon writes genesis
+        - Operator key signature required for re-init
+        - Typed incident reason recorded
+        - Definition — see world.md#Ledger-re-initialization
       - No synthetic types
         - onboarding.* events denied
         - Fake lifecycle events denied
@@ -166,8 +182,9 @@
       - Exit 5 scope
         - Kernel panic reserved for sink loss
         - Reserved for credential leaks
-        - Row-level corruption degrades, never exits 5
-        - Definition — see kernel.md#Exit-code-law
+        - Row corruption degrades, never 5
+        - Full law — see kernel.md#Exit-code-law
+        - Degraded mode — see #Event-integrity
       - Denial logging
         - Denied operations emit audit events
         - Record effect: none

@@ -154,7 +154,7 @@
       - Pattern mining proposes consolidation
       - Codification into governed routines
       - Trust rung progression via synthetic proof
-      - (see governance.md#Gates)
+      - (see governance.md#Promotion-gates)
     - Autonomous authority
       - Headless execution via policy rungs
       - Frame budget cages replace human sign-offs
@@ -165,3 +165,39 @@
       - No runtime policy mutation
       - Audit table strictly append-only
       - Zero LLM runtimes in kernel
+    - Initialization paths
+      - Guided mission
+        - Subsystem-scale intent declared upfront
+        - Worker agents author domain modules
+        - Human commits schema before execution
+        - Definition — see lifecycle.md#Stage-map
+      - Emergent discovery
+        - Blank world accumulates audit density
+        - Background miner surfaces patterns
+        - Codification path — see lifecycle.md#Learning-loop
+      - Predefined structure
+        - Human commits schema upfront
+        - Agent executes strictly inside bounds
+        - Zero schema drift allowed
+        - Definition — see world.md#Configuration-proposals
+    - Anti-decisions
+      - No YAML procedures
+      - No module imports for authority
+      - No self-promotion past gates
+      - No silent edits to code or config
+      - No immortal routines without decay
+      - No deletion, only retirement
+      - Reference — see routines.md#Invariants
+    - Invariants
+      - Pre-execution validation via gates
+      - Sandbox containment during execution
+      - Leaf effects pass kernel gate
+      - Versions hash-pinned at registration
+      - Manifest drift treated as anomaly
+      - Definition — see kernel.md#The-4-physical-laws
+    - Neutrality law
+      - Kernel matches, dispatches, delivers
+      - Kernel logs, never interprets domain
+      - Zero LLM inference in kernel
+      - Zero probabilistic parsing anywhere
+      - Definition — see kernel.md#Boundary-isolation

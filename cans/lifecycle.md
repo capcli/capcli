@@ -66,6 +66,41 @@
       - env merge <name> [target=prod]
       - env remove <name> — deprovision
       - Envelope shape — see interface.md#CLI-surface
+  - Primitive scoping
+    - Event identity
+      - Leaf events stamped with environment
+      - Leaf events stamped with stage
+      - Sim and prod events distinct namespaces
+      - Denial logging records world context
+      - Definition — see effect.md#Event-anatomy
+    - Idempotency boundaries
+      - Key = f(routine_version, params, environment)
+      - Cross-environment key sharing denied
+      - Sim replay cannot collide with prod keys
+      - Scope enforced at kernel
+      - Definition — see identity.md#Concurrency
+    - Quota isolation
+      - _api_quota tracks usage per environment
+      - Sim rehearsals consume sim quota only
+      - Prod quota untouched by sim
+      - Exhaustion denies at target gate
+      - Definition — see egress.md#Quotas
+    - Composition propagation
+      - Child constraints propagate up call stack
+      - Sim gaps bubble to root preflight
+      - Prod-only children route to sim mocks
+      - Mock schema-validated against upstream
+      - Definition — see #Sim-mode-taxonomy
+    - Data isolation
+      - workspace.db per environment partition
+      - audit.db per environment partition
+      - Cross-environment file access denied
+      - Definition — see world.md#SQLite-as-SSOT
+    - Configuration isolation
+      - policy.yaml resolves per environment
+      - governance.yaml resolves per environment
+      - apis/<provider>.sim.yaml overlays in sim
+      - Definition — see world.md#Configuration-proposals
   - Masking
     - Fork rule
       - sim_seed_masking — enforce
@@ -82,7 +117,7 @@
       - mask=true on text columns
       - mask=true on json columns
       - Other types rejected at compile
-      - Definition — see world.md#Dual-schema
+      - Canonical constraint — see world.md#Dual-schema
     - Data flow
       - Live prod rows read once at seed
       - Synthetic generated per column
@@ -97,7 +132,7 @@
       - sens: true marks table for masking
       - Combined with mask=true for columns
       - Both enforced during seed
-      - Definition — see world.md#Dual-schema
+      - Canonical definition — see world.md#Dual-schema
   - Sim mode taxonomy
     - sandbox mode
       - HTTP routes to provider test endpoint
@@ -139,13 +174,40 @@
       - DB ops — deterministic re-execution
       - External ops — human confirmation required
       - Definition — see effect.md#Replay-invariants
+  - Serve lifecycle split
+    - CLI configuration
+      - bind commands commit to workspace.db
+      - Emit bind.* events to _audit
+      - Reference — see plugins.md#Capabilities
+    - Daemon process
+      - sys serve --start launches persistent axum
+      - Binds 127.0.0.1 only by default
+      - Definition — see assembly.md#Persistent-daemon-crate
+    - Policy parity
+      - HTTP requests pass authorizer gate
+      - HTTP requests pass AST gate
+      - HTTP requests pass budget gate
+      - Zero relaxation for HTTP path
+      - Definition — see kernel.md#Unified-3-phase-engine
+    - Audit trail
+      - HTTP requests emit serve.request
+      - Request carries endpoint and channel
+      - Event shape — see effect.md#Kernel-event-payloads
+    - Endpoint governance
+      - Minimum trust — pinned rung only
+      - Version lock — routine@version explicit
+      - Default writes — deny
+      - Surface limits and payload ceiling
+      - Key rotation days cap
+      - Canonical home — see plugins.md#Capabilities
+      - Config — see artifacts/governance.yaml#serve
   - Drift
     - Manifest drift
       - Runtime fingerprint differs from manifest
       - Kernel detects during Phase 3
       - Emits governance.anomaly event
       - Blocks auto-promotion
-      - Definition — see routines.md#Manifests-and-fingerprints
+      - Canonical home — see routines.md#Manifests-and-fingerprints
     - Environment drift
       - env doctor checks unmerged routines
       - env inspect flags schema drift
@@ -159,9 +221,9 @@
       - Definition — see world.md#Snapshots
     - Spec drift
       - Provider spec_hash change demotes rung
-      - Mock drift demotion pinned → reviewed
+      - Mock drift demotion applies
       - Applies to API verbs only
-      - Definition — see governance.md#The-ladder
+      - Canonical rule — see governance.md#The-ladder
     - Schema drift
       - Un-migrated schema aborts boot
       - system_schema hash mismatch exits 3
@@ -393,7 +455,9 @@
       - Orphan protection atomic dissolve
       - Restart safety max 1 catchup
       - Webhook payload ceiling 64KB
-      - Dead letter queue retains 30 days
+      - Dead letter queue
+        - Retains failed events per world.md policy
+        - Canonical home — see world.md#Outbox-inbox
       - Definition — see world.md#Outbox-inbox
   - Versioning
     - Version record

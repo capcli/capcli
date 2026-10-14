@@ -18,9 +18,9 @@
       - Audit records name, never value
     - Trust floor
       - Draft routines denied secret access
-      - Exit 2 at pre-flight E047_SECRET_TRUST_FLOOR
-      - Definition — see governance.md#The-ladder
-      - Prove runs get bounded secret leases
+      - Exit 2 at pre-flight E047
+      - Full ladder — see governance.md#The-ladder
+      - Prove-run leases — see #Prove-run-secret-leases
   - Vault storage
     - Table layout
       - Name unique per workspace
@@ -48,6 +48,60 @@
       - Ephemeral egress tokens derived per call
       - Kernel rotates bearer tokens transparently
       - Root secret never leaves vault buffer
+    - Provisioning workflow
+      - Detection
+        - Missing secret_ref trips pre-call
+        - Pre-call check before egress dispatch
+        - Exit 3 on missing secret headless
+        - Interactive sessions pause via ask
+      - Auto-refresh
+        - Daemon rotates tokens in memory
+        - Stateless CLI decrypts per run
+        - Rotation commits updated ciphertext
+        - Never logs new value
+      - Environment resolution
+        - Checks CAPCLI_SECRET_<NAME> process env
+        - Resolution precedes suspension
+        - Process env is one source among many
+        - Envelope shape — see interface.md#CLI-surface
+      - Injection channels
+        - Headless CLI — sys vault set
+        - Process env auto-binding
+        - Cockpit PWA out-of-band card
+        - External client RPC
+        - Definition — see interface.md#Administrative-Cockpit-PWA
+      - Suspension semantics
+        - Headless execution exits 3 on missing
+        - Interactive sessions pause via ask
+        - Ask resolves via Cockpit card
+        - Reference — see governor.md#Suspension-registry
+      - Zero knowledge custody
+        - Guest address space receives handles only
+        - Plaintext never reaches guest heap
+        - Plaintext never reaches IPC payloads
+        - Plaintext never reaches _audit
+        - Definition — see kernel.md#Boundary-isolation
+      - Redaction rule
+        - Every lease-scoped byte scrubs
+        - Replacement — [REDACTED_VAULT_TOKEN]
+        - Applies to output and audit
+        - Reference — see #Wire-scrubber
+    - Prove-run secret leases
+      - Minting
+        - routine prove --env sim mints lease
+        - Bound to prove_run_id, session, frame
+        - Auto-revokes at prove run end
+        - Never persisted to secrets table
+      - Resolution
+        - vault:// handles resolve under lease
+        - E047 does not fire under active lease
+        - Sim egress only, never prod
+        - Definition — see governance.md#The-ladder
+      - Custody
+        - Guest receives opaque handles only
+        - Plaintext stays in kernel buffer
+        - Zero leak to IPC or heap
+        - Zero leak to _audit mirror
   - Vault proxy
     - Injection point
       - Kernel edge, between cadence and TLS
@@ -102,9 +156,10 @@
     - Leak panic
       - Raw credential in guest output triggers panic
       - Exit 5 with domain kernel.panic
-      - Session token revoked instantly
-      - Secret buffers zeroized immediately
+      - Token revoked, buffers zeroized
+      - Full protocol — see kernel.md#Exit-code-law
       - Alert appended to audit.db ledger
+      - Ledger append — see effect.md#Audit-spine
     - Detection sources
       - Author-embedded literal in code
       - Fabricated secret-shaped match
@@ -185,7 +240,7 @@
       - Requires contract proof hash
       - Counts call_number and remaining
       - Emits api.first_prod_call event
-      - Promotion gate — see governance.md#Gates
+      - Promotion gate — see governance.md#Promotion-gates
     - Provider drift
       - spec_hash change demotes rung
       - Mock drift demotion

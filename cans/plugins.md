@@ -17,6 +17,7 @@
       - subscribes — causal DAG event patterns
       - provides — native extension surfaces
       - fuel_declared — per-verb fuel envelope
+      - Frame fields — see governance.md#Budget-frames
     - Security declarations
       - permissions.vault — secret names requested
       - permissions.egress — allowed hostnames
@@ -53,6 +54,41 @@
       - Ping channels — human notification sinks
       - Audit sinks — WORM notary adapters
       - Federation transports — peer mesh adapters
+    - Serve lifecycle
+      - CLI configuration
+        - bind endpoint commits to workspace.db
+        - Emits bind.create event to ledger
+        - Reference — see effect.md#Kernel-event-payloads
+      - Daemon serving
+        - Persistent axum process binds 127.0.0.1
+        - HTTP requests pass identical gates
+        - Authorizer, AST, budget all apply
+        - Zero HTTP relaxation of physics
+        - Definition — see kernel.md#Unified-3-phase-engine
+      - Endpoint governance
+        - Minimum trust — pinned rung only
+        - Version lock — routine@version explicit
+        - Default writes — deny
+        - Surface limits — 10 endpoints, 25 keys
+        - Payload ceiling — 64KB response body
+        - Key rotation — days cap per governance
+        - Config — see artifacts/governance.yaml#serve
+      - Endpoint audit
+        - serve.request emits on every inbound
+        - Carries endpoint, channel, trace_id
+        - Carries routine@version and api_key_id
+        - Event shape — see effect.md#Kernel-event-payloads
+      - Channel split
+        - REST and MCP via same axum server
+        - --channel flag selects exposure
+        - Both channels share gate semantics
+        - Envelope shape — see interface.md#CLI-surface
+      - Key management
+        - bind keys issue mints partner key
+        - Hashed at rest, never plaintext
+        - Rotation policy per governance
+        - Revocation immediate
+        - Definition — see identity.md#System-agent-registry
   - CLI projection
     - Surface declaration
       - Manifest block — cli.surface
@@ -125,7 +161,7 @@
       - reviewed — can call reviewed or pinned
       - draft — cannot be a dependency
       - Enforced — pre-flight exit 2 E046
-      - Definition — see governance.md#The-ladder
+      - Canonical ladder — see governance.md#The-ladder
     - Acyclic graph
       - Static — DFS at install, exit 3 on cycle
       - Runtime — call nesting capped at 5
@@ -189,7 +225,7 @@
       - draft — dev only, no prod
       - reviewed — sim and dev eligible
       - pinned — prod eligible
-      - Definition — see governance.md#The-ladder
+      - Canonical ladder — see governance.md#The-ladder
     - Pre-flight preview
       - Vault keys — displayed before write
       - Egress domains — displayed before write

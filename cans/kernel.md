@@ -52,6 +52,23 @@
       - Access forced through scoped views
       - :principal bind variable mandatory
       - ctx.db.mutate asserts row owner
+    - Remote authorizer proxy
+      - Hub executes authorizer on spoke behalf
+      - Spoke ctx.db requests serialize to Hub
+      - Layer 1 evaluated at Hub before write
+      - Zero spoke-side authorizer bypass
+      - Definition — see sandbox.md#Deployment-topology
+    - OCC fence evaluation
+      - Layer 2 state_fence verified at Hub
+      - Spoke computes fence from read rows
+      - Hub re-verifies before physical commit
+      - Drift exits 2 with E061_OCC_DRIFT
+      - Reference — see governor.md#Suspension-registry
+    - Authentication boundary
+      - SO_PEERCRED applies to local IPC
+      - Never crosses network boundary
+      - Remote auth via mTLS over WireGuard
+      - Definition — see plugins.md#Federation-transport
   - Layer 1.2 — VDBE mutation hook
     - Engine
       - sqlite3_update_hook and progress_handler
@@ -120,6 +137,36 @@
       - DELETE without WHERE denied
       - DELETE WHERE NOT EXISTS denied
       - Boolean tautology bypass denied
+  - Policy vs governance split
+    - Policy file
+      - Path — artifacts/policy.yaml
+      - Governs runtime acts (verbs)
+      - Authorizer rules per action
+      - Row ceilings per trust rung
+      - Egress allowlist per provider
+      - Definition — see egress.md#Wire-edge-enforcement
+    - Governance file
+      - Path — artifacts/governance.yaml
+      - Governs artifact shapes (nouns)
+      - Routine token envelope ceiling
+      - Fuel envelope per frame
+      - Schedule and serve ceilings
+      - Definition — see routines.md#Shape-constraints
+    - Compile phase
+      - Both compiled at kernel boot
+      - Compiled into capcli.lock
+      - Runtime mutation denied
+      - Reference — see world.md#Configuration-proposals
+    - Enforcement separation
+      - Policy gates verbs at runtime
+      - Governance gates nouns at authoring
+      - Neither loosens the other
+      - Both compiled machine physics
+    - Boundary
+      - Policy cannot alter SQLite authorizer
+      - Governance cannot alter jail walls
+      - Config layers are declarative only
+      - Kernel core stays compiled C and Rust
   - Unified 3-phase engine
     - Overview
       - Single execution model for every call
@@ -165,13 +212,10 @@
       - Phase 3 policy or governance block
       - state_modified strictly false
       - Domains
-        - policy.authorizer — table or column denied
-        - policy.budget — frame or session fuel zero
-        - policy.quota — spend ceiling breach
-        - policy.trust — E046 trust violation in prod
-        - policy.platform — E045 tier 1 mandate
-        - policy.federation — cycle or unallowlisted
-        - db.engine — check or FK constraint fail
+        - See effect.md#Denials
+        - Full taxonomy owned there
+        - Seven domains, canonical list
+        - Never restated here
       - Pre-flight matrix checks fire before dispatch
       - Denial carries remedy field for agent
     - exit 3 — static refusal
@@ -192,7 +236,11 @@
       - Plaintext credential in guest output
       - Federation transport unreachable
       - Row-level corruption — see effect.md#Audit-spine
-      - Panic protocol — token revoked, secret buffers zeroized
+      - Panic protocol
+        - Session token revoked by kernel
+        - Secret buffers zeroized by kernel
+        - Full protocol — see identity.md#Credential-binding
+        - Secret custody — see egress.md#Vault-storage
     - exit 6 — proactive yield
       - Cadence wait over 2s
       - Upstream 429 with Retry-After
@@ -229,6 +277,18 @@
       - Remote HTTP DB without authorizer refused
       - Missing policy or governance aborts
       - Every boot refusal exits 3
+    - Bootstrap safety checks
+      - Clock drift over 500ms emits warning
+      - Internal chain binds CLOCK_MONOTONIC
+      - SQLite sequence IDs bind as fallback
+      - Warning never blocks boot
+      - Unconfigured git identity auto-fallback
+      - Fallback identity — capcli[bot]
+      - Or abort with exit 3 if disabled
+      - Template syntax error aborts intake
+      - py_compile failure exits 3
+      - min_kernel_version mismatch exits 3
+      - policy_version mismatch exits 3
     - Runtime refusals
       - Unparseable SQL denied
       - Anonymous mutating write denied

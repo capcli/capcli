@@ -27,9 +27,9 @@
       - Row ceilings — per artifacts/policy.yaml#trust
       - WHERE clause — mandatory for draft writes
       - Vault floor — draft denied, reviewed and pinned allowed
+      - Definition — see egress.md#Vault-proxy
       - Egress — draft confined to sandbox socket
       - Blast radius — pinned unlocks full prod
-      - Definition — see egress.md#Vault-proxy
     - Weakest-link matrix
       - Dev environment
         - Rungs — draft, reviewed, pinned
@@ -72,17 +72,16 @@
         - Mutating writes need --by or --session
         - Exit 3 on breach
         - Definition — see identity.md#Harness-markers
-      - Composition floor
+      - Composition and dependency floor
         - Callee matches or exceeds caller rung
         - pinned calls pinned only
         - reviewed calls reviewed or pinned
         - draft cannot be a dependency
-        - Definition — see plugins.md#Composition
-      - Dependency floor
         - Cross-agent callees need reviewed or pinned
         - Federated callers need pinned rung
         - Exit 2 E042_FEDERATION_DENIED on breach
-        - Definition — see plugins.md#Federation-transport
+        - Canonical composition — see plugins.md#Composition
+        - Federation floors — see plugins.md#Federation-transport
       - Demotion priority
         - Demotion executes without gate resistance
         - Automatic demotion is exactly one rung
@@ -126,22 +125,16 @@
       - Pop on outcome
       - Reference — see #Cascade
     - Frame events
-      - budget.frame_push
-        - Payload — frame_id, routine, parent
-        - Payload — kernel session, environment
-        - inherited_remaining — parent min() result
-      - budget.frame_pop
-        - consumed — fuel burned
-        - returned_to_parent — unspent fuel
-      - budget.exhausted
-        - Payload — frame, pillar, attempted_op
-        - exit_code — 2 per exit law
-      - Streaming — live tail via sys audit tail
+      - budget.frame_push — declared and inherited
+      - budget.frame_pop — consumed and returned
+      - budget.exhausted — pillar and attempted_op
+      - Full payloads — see effect.md#Kernel-event-payloads
+      - Streaming — see interface.md#Client-RPC-contract
     - Telemetry streaming
       - Frame lifecycle pushes over WebSocket
       - Consumption updates stream live
       - Denial markers on visual badges
-      - Envelope shape — see interface.md#Client-RPC
+      - Envelope shape — see interface.md#Client-RPC-contract
   - Cascade
     - min() law
       - Child effective fuel formula
@@ -223,8 +216,34 @@
       - Max 5 nested budget frames
       - Sixth nested call exits 2
       - Federated hops count toward cap
-      - Federation hop ceiling binds first at 3
-      - Definition — see plugins.md#Federation-transport
+      - Federation ceiling binds first at 3
+      - Federation ceiling — see plugins.md#Federation-transport
+    - Cascade view in inspect
+      - Pre-flight block
+        - can_invoke_now boolean verdict
+        - blocking_reasons array on deny
+        - sim_gaps array for missing providers
+        - Envelope shape — see interface.md#CLI-surface
+      - Constraint resolution
+        - tightest_constraint names first block
+        - Null while headroom lasts
+        - effective_limits formats min() formula
+        - Order — fuel, session, cadence, ceiling
+      - Budget status block
+        - session_fuel_remaining — integer
+        - cadence_status — leaky bucket headroom
+        - ceiling_status — monthly spend ledger
+        - Composition — see artifacts/governance.yaml
+      - Composition block
+        - max_nesting_depth — 5 by default
+        - child_routines — declared callees
+        - budget_inheritance — min
+        - Reference — see plugins.md#Composition
+      - Refusal rendering
+        - Failing pillar named in remedy
+        - Attempted_op named on exhaustion
+        - Ancestor remaining for context
+        - Envelope shape — see kernel.md#Diagnostic-output-law
     - Distributed swarm arbitration
       - Central atomicity — Hub workspace.db
       - Fuel and rate deductions atomic
@@ -256,8 +275,8 @@
       - Background — yields at 15 token floor
       - Standard — yields at 5 token floor
       - Critical — drains to 0
-      - Definition — see governor.md#Priority-classes
-      - Config — see artifacts/policy.yaml#api.rate_limit
+      - Canonical floors — see governor.md#Priority-classes
+      - Rate config — see artifacts/policy.yaml#api.rate_limit
     - Worked example
       - archive_old_orders@3 hits frame 20/20
       - attempted_op db.exec exits 2 mid-DAG
@@ -268,6 +287,36 @@
       - Zero half-executed side effects
       - Rollback guaranteed
       - Reference — see kernel.md#Unified-3-phase-engine
+    - Fuel-cap forensics
+      - Localization
+        - sys audit trace pinpoints leaf op
+        - Failing leaf named in denial payload
+        - Reference — see effect.md#Failure-forensics
+      - Root cause
+        - Usually policy, rarely routine
+        - Policy ceiling too tight for workload
+        - Fix policy, never bypass routine
+        - Reference — see #Limits-and-refusals
+      - Remediation pattern
+        - Inspect frame consumed vs declared
+        - Tighten routine or raise ceiling
+        - Never add --override flag
+        - Definition — see interface.md#Refusals-and-banned-operations
+      - Citation rendering
+        - Frame id cited in denial
+        - Pillar cited as fuel or ops
+        - Measured and ceiling both printed
+        - Envelope shape — see kernel.md#Diagnostic-output-law
+      - Cross-frame reconciliation
+        - Unspent fuel reconciles to parent
+        - Parent sees exact child burn
+        - Zero silent truncation anywhere
+        - Event shape — see effect.md#Kernel-event-payloads
+      - Ancestor context
+        - Denial cites session remaining
+        - Denial cites parent frame remaining
+        - Never the full frame tree
+        - Envelope shape — see interface.md#CLI-surface
     - Watchdog distinction
       - Wall clock exceeding 300s kills guest
       - Kill exits 4, not 2
@@ -433,11 +482,9 @@
         - Unclassified read/write treated as write
         - Definition — see kernel.md#Fail-closed-stance
     - Trust floor precedence
-      - Vault floor precedes egress dispatch
-      - Egress floor precedes quota check
-      - Quota check precedes fuel deduction
-      - Order invariant, never reordered
-      - Definition — see egress.md#Wire-edge-enforcement
+      - Order is invariant, never reordered
+      - Vault → egress → quota → fuel
+      - Canonical order — see egress.md#Wire-edge-enforcement
     - Pre-flight matrix checks
       - E045 platform tier mandate
       - E046 trust violation in prod
