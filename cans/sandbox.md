@@ -1,6 +1,12 @@
 - Sandbox
 <!-- ref-by: plugins.md, governor.md, egress.md -->
   - Platform tiers
+    - Scope
+      - Kernel's isolation concern
+      - Plugin process runs in Tri-Jail
+      - Kernel never speaks wire directly
+      - Concerns — see kernel.md#The-5-concerns
+      - Laws — see kernel.md#The-4-physical-laws
     - Tier 1 (hardened)
       - Hosts
         - Linux bare-metal and VPS
@@ -46,9 +52,9 @@
   - Tri-Jail engine
     - Purpose
       - Zero-trust process isolation
-      - Native enforcement on every platform
+      - Native enforcement across platforms
       - No WASM, no VMs for tier 1
-      - Kernel-level containment physics
+      - Isolation — see kernel.md#The-5-concerns
     - Linux tier 1
       - bwrap unprivileged namespaces
       - User, mount, IPC, PID, UTS unshared
@@ -73,10 +79,10 @@
       - Degraded isolation warning emitted
   - Network jail
     - Linux network trap
-      - --unshare-net on network namespace
-      - seccomp-bpf traps syscall 42 connect
-      - SIGSYS terminates process on violation
-      - Exit 2 on socket breach attempt
+      - Plugin process holds the only pipe
+      - Kernel dispatches via IPC
+      - Raw connect trapped at Syscall 42
+      - Dispatch — see plugins.md#Kernel-stance
     - macOS network trap
       - Scheme profile denies network*
       - Scheme profile denies system-socket
@@ -185,6 +191,7 @@
       - Shared memory ring for DB calls
       - Daemon transport for async events
       - Path restriction to plugin checkout
+      - Plugin staging — see plugins.md#Installation-lifecycle
     - Execution limits
       - Watchdog kill at 300s wall clock
       - Wall clock distinct from fuel
@@ -238,3 +245,8 @@
       - Banner rendered on stderr
       - Machine field in --json envelope
       - Envelope shape — see interface.md#CLI-surface
+    - Plugin boundary
+      - Plugin process is the socket holder
+      - Kernel never opens raw wire
+      - Plugin writes staged to outbox
+      - Dispatch — see plugins.md#Kernel-stance

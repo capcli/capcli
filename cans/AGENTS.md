@@ -3,23 +3,25 @@
 You are working in a CANS project. Specs live in `cans/`.
 This spec describes **capcli**: a governed agent kernel with a plugin-first architecture.
 
-## The 15 canonical files
+## The 17 canonical files
 
-- overview.md — what capcli is: 5-layer taxonomy, design stance, mental model
-- kernel.md — the 4 physical laws: C authorizer, AST scanner, VDBE hook, SHA-256 DAG, exit codes
-- plugins.md — plugin manifest, verbs, hooks, permissions, generations, CLI projection, composition
-- sandbox.md — Native Tri-Jail across Linux/macOS/Windows, IPC wire protocol, exit protocol
-- egress.md — zero-knowledge vault proxy, wire scrubber, quotas, rate-limit buckets
-- governor.md — fast path, yield path, outbox staging, suspension, daemon resumption
-- routines.md — guest procedural code, ctx contract, decorator, shape, templates, manifests
-- world.md — SQLite SSOT, dual schema, migration, claims, outbox/inbox, snapshots
-- effect.md — audit spine, causal DAG, denials, provenance, replay invariants
-- governance.md — trust ladder, budget frames, min() cascade, promotion, evidence
-- identity.md — principal, agent, session, harness markers, concurrency scope
-- lifecycle.md — environments, masking, drift, stages, learning, decay, consolidation
-- marketplace.md — registry, discovery, publishing, packs (.cap), intake, trust inheritance
-- interface.md — 12-noun CLI, CLI projection mount, client RPC, Cockpit PWA, onboarding
-- assembly.md — monorepo, packages, tests, CICD pipelines, release matrix
+- _rules.yaml — structural constants and canonical homes registry
+- AGENTS.md — agent instructions and ownership table
+- overview.md — 5-concern kernel, 5-layer taxonomy, pack distribution
+- kernel.md — the 5 concerns, 4 laws, SQL physics, exit codes, fail-closed
+- plugins.md — manifest, verbs, CLI noun, ctx namespace, generations, federation, packs
+- sandbox.md — Tri-Jail, platform tiers, IPC wire protocol, exit protocol
+- egress.md — vault proxy, wire scrubber, quotas, rate-limit buckets
+- governor.md — fast path, yield path, outbox, suspension, daemon resumption
+- routines.md — guest code, ctx split, decorator, shape, templates, manifests
+- world.md — SQLite SSOT, dual schema, kernel and plugin tables, migration, snapshots
+- effect.md — audit spine, causal DAG, denials, provenance, replay
+- governance.md — trust ladder, budget frames, min() cascade, promotion
+- identity.md — principal, agent, session, markers, concurrency
+- lifecycle.md — environments, masking, drift, stages, learning, decay
+- marketplace.md — registry, publishing, pack taxonomy, distribution channels
+- interface.md — 9 kernel nouns, plugin nouns, client RPC, PWA, onboarding
+- assembly.md — monorepo, packages, tests, CICD, release
 
 Artifacts live at `artifacts/` (governance.yaml, policy.yaml, system-schema.yaml). Read them, never edit or duplicate them. Cite the artifact path instead.
 
@@ -27,37 +29,40 @@ Artifacts live at `artifacts/` (governance.yaml, policy.yaml, system-schema.yaml
 
 | Concept | Home |
 |---|---|
-| 5-layer taxonomy, design stance, mental model | overview.md |
-| microkernel laws, authorizer, AST, VDBE, DAG, exit codes | kernel.md |
-| plugin manifest, verbs, hooks, permissions | plugins.md |
-| plugin CLI projection, generations, GC, composition | plugins.md |
-| federation transport, plugin dependency DAG | plugins.md |
+| 5-concern kernel, 5-layer taxonomy, pack distribution | overview.md |
+| 5 concerns, 4 laws, SQL physics, exit codes, fail-closed | kernel.md |
+| plugin manifest, verbs, hooks, capabilities | plugins.md |
+| CLI noun registration, ctx namespace registration | plugins.md |
+| plugin schema extension, generations, GC, composition | plugins.md |
+| federation transport, pack taxonomy | plugins.md |
 | Tri-Jail, platform tiers, IPC channels, exit protocol | sandbox.md |
 | vault proxy, secret injection, wire scrubber, quotas | egress.md |
 | fast path, yield path, outbox, suspension, resumption | governor.md |
-| routine anatomy, ctx contract, decorator, shape, templates | routines.md |
-| SQLite SSOT, dual schema, migration, snapshots | world.md |
-| claims lease, outbox/inbox lifecycle, concurrency locks | world.md |
+| routine anatomy, ctx split, decorator, shape, templates | routines.md |
+| SQLite SSOT, dual schema, system schema roster | world.md |
+| kernel tables vs plugin tables, migration, snapshots | world.md |
+| claims lease, outbox/inbox lifecycle | world.md |
 | audit spine, causal DAG, denials, provenance, replay | effect.md |
 | trust ladder, budget frames, cascade, promotion, evidence | governance.md |
 | identity chain, harness markers, concurrency scope | identity.md |
 | environments, masking, drift, stages, learning, decay | lifecycle.md |
-| registry, discovery, publishing, packs, intake laws | marketplace.md |
-| CLI surface, CLI projection mount, client RPC, PWA | interface.md |
+| registry, publishing, packs, distribution, trust inheritance | marketplace.md |
+| 9 kernel nouns, plugin nouns, CLI projection, client RPC | interface.md |
 | monorepo, packages, tests, CICD, release | assembly.md |
 
 If your file needs a concept owned elsewhere: write `- <context>: see <file>.md#<Node>` — ONE hop, never chain. Never duplicate content across files. Never duplicate content that lives in `artifacts/*.yaml` — cite the artifact path instead.
 
 ## Pointer topology
 
-Pointers flow leaf → branch → root only. A root file never points down.
+Pointers flow leaf → branch → root only. Root anchors never point down.
 
-- Root anchors — overview.md, kernel.md. Point to nothing (no `see:` lines).
-- Branch files — plugins.md, sandbox.md, egress.md, governor.md, world.md, effect.md, governance.md, routines.md, identity.md, lifecycle.md, marketplace.md, interface.md. Point up to root, across to siblings.
-- Leaf file — assembly.md. Points to everything; nothing points to it except overview.md.
+- Root anchors — overview.md, kernel.md, AGENTS.md, _rules.yaml
+- Branch files — plugins, sandbox, egress, governor, routines, world,
+  effect, governance, identity, lifecycle, marketplace, interface
+- Leaf file — assembly.md (points to everything, nothing points to it)
 
 Violations to reject:
-- A root file that says `see <branch>.md` — wrong direction.
+- Root file with `see <branch>.md` — wrong direction
 - Any chain: `A → B → C`. Collapse to `A → C`.
 
 ## Vocabulary law
@@ -77,6 +82,8 @@ Correct:
 - `platform tier` / `trust rung` not `tier`
 - `plugin process` / `plugin manifest` / `plugin installation` not `plugin`
 - `plugin verb` / `routine` / `API verb` not `verb`
+- `plugin` must be qualified — plugin process, plugin manifest, plugin installation, plugin verb, plugin table, plugin id, plugin surface
+- `namespace` must be qualified — ctx namespace, CLI noun
 
 ## Reading
 

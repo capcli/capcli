@@ -16,6 +16,17 @@
       - Kernel replaces handle with plaintext
       - Plaintext never returns to caller
       - Audit records name, never value
+    - Kernel role
+      - Kernel owns the socket edge
+      - Plugin calls capcli egress via IPC
+      - Kernel opens TLS on plugin behalf
+      - Injection at socket edge only
+      - Concerns — see kernel.md#The-5-concerns
+    - Plugin surface
+      - api-gateway plugin declares ctx.api namespace
+      - CLI noun capcli api via manifest
+      - Registration — see plugins.md#Ctx-namespace-registration
+      - Noun — see plugins.md#CLI-noun-registration
     - Trust floor
       - Draft routines denied secret access
       - Exit 2 at pre-flight E047_SECRET_TRUST_FLOOR
@@ -23,11 +34,10 @@
       - Prove runs get bounded secret leases
   - Vault storage
     - Table layout
-      - Name unique per workspace
-      - Value encrypted AES-256-GCM
-      - Scope narrows to environment
-      - Expires_at optional TTL
-      - Sens flag marks secret rows
+      - Table lives in kernel system schema
+      - Roster — see world.md#System-schema-roster
+      - Kernel-owned, plugin-cited
+      - Plugin access only via opaque handles
     - Encryption
       - AES-256-GCM at rest
       - Daemon caches in memory for lifetime
@@ -147,7 +157,7 @@
       - Plugin calls as subprocess
       - Kernel proxy performs TLS
       - Vault key resolution transparent
-      - Fuel and quota gated inside kernel
+      - Plugin dispatch — see plugins.md#Kernel-stance
     - Curl-like interface
       - --method GET, POST, PUT, DELETE
       - --auth vault://<name> for secret handle

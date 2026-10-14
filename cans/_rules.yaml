@@ -22,7 +22,7 @@ references:
   canonical_home_registry: true
 
 vocabulary:
-  banned_bare: [env, frame, session, trust, budget, surface, route, tier, plugin, verb]
+  banned_bare: [env, frame, session, trust, budget, surface, route, tier, plugin, verb, namespace]
   required_qualifiers:
     env: [environment, process env, CliEnvelope]
     frame: [budget frame, call frame, federated frame]
@@ -32,8 +32,9 @@ vocabulary:
     surface: [CLI surface, extension surface]
     route: [network route, dispatch route]
     tier: [platform tier, trust rung]
-    plugin: [plugin process, plugin manifest, plugin installation]
+    plugin: [plugin process, plugin manifest, plugin installation, plugin verb, plugin table, plugin id, plugin surface]
     verb: [plugin verb, routine, API verb]
+    namespace: [ctx namespace, CLI noun]
   synonyms:
     - [postgres, postgresql, pg]
     - [auth, authentication, sign-in, signin]
@@ -50,9 +51,15 @@ vocabulary:
 
 canonical_homes:
   exit_codes: kernel.md#Exit-code-law
+  five_concerns: kernel.md#The-5-concerns
+  four_laws: kernel.md#The-4-physical-laws
+  sql_layers: kernel.md#Layer-1-C-authorizer
+  three_phase_engine: kernel.md#Unified-3-phase-engine
+  policy_governance_split: kernel.md#Policy-vs-governance-split
   trust_ladder: governance.md#The-ladder
-  budget_frames: governance.md#Frames
+  budget_frames: governance.md#Budget-frames
   fuel_formula: governance.md#Fuel-formula
+  promotion: governance.md#Promotion-gates
   vault: egress.md#Vault-proxy
   wire_scrubber: egress.md#Wire-scrubber
   platform_tiers: sandbox.md#Platform-tiers
@@ -66,26 +73,34 @@ canonical_homes:
   claims_lease: world.md#Claims-lease
   concurrency: identity.md#Concurrency
   harness_markers: identity.md#Harness-markers
+  env_vars: identity.md#Environment-variables
   dual_schema: world.md#Dual-schema
+  system_schema_roster: world.md#System-schema-roster
+  plugin_schema_namespace: world.md#Plugin-schema-namespace
   migration: world.md#Migration
   snapshots: world.md#Snapshots
   denials: effect.md#Denials
-  promotion: governance.md#Gates
   decay: lifecycle.md#Decay
   environments: lifecycle.md#Environments
   masking: lifecycle.md#Masking
   plugin_manifest: plugins.md#Manifest
   plugin_capabilities: plugins.md#Capabilities
-  cli_projection: plugins.md#CLI-projection
+  cli_noun_registration: plugins.md#CLI-noun-registration
+  ctx_namespace_registration: plugins.md#Ctx-namespace-registration
+  schema_extension: plugins.md#Schema-extension
   generations: plugins.md#Generations
   federation_transport: plugins.md#Federation-transport
+  pack_taxonomy: plugins.md#Pack-taxonomy
   pack_format: marketplace.md#Packs
   registry: marketplace.md#Registry
   cli_surface: interface.md#CLI-surface
-  client_rpc: interface.md#Client-RPC
+  kernel_nouns: interface.md#The-9-kernel-nouns
+  plugin_nouns: interface.md#Plugin-provided-nouns
+  client_rpc: interface.md#Client-RPC-contract
   onboarding: interface.md#Onboarding
-  monorepo: assembly.md#Layout
+  monorepo: assembly.md#Monorepo-layout
   cicd: assembly.md#CICD
+  pack_distribution: overview.md#The-pack-distribution-model
 
 token_budget:
   enabled: true

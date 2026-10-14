@@ -3,12 +3,11 @@
   - Environments
     - World definitions
       - dev environment
-        - Purpose — birthplace for exploratory authoring
+        - Purpose — birthplace for authoring
         - Trust rungs — draft, reviewed, pinned
         - Platform tier — 1 or 2 permitted
         - Live risk — none
-        - Pre-flight — bulk pre-count waived
-        - Definition — see governance.md#The-ladder
+        - Trust — see governance.md#The-ladder
       - sim environment
         - Purpose — proving ground for prod candidates
         - Data — seeded from prod, masked
@@ -22,8 +21,7 @@
         - Trust rungs — pinned only
         - Platform tier — tier 1 only
         - Live risk — real business state
-        - Violation exits 2 E046_TRUST_VIOLATION
-        - Definition — see governance.md#Weakest-link-matrix
+        - Matrix — see governance.md#Weakest-link-matrix
     - Orthogonality
       - Environment bounds data substrate
       - Trust rung bounds capability blast
@@ -130,10 +128,10 @@
       - Mock schema matches upstream contract
       - Exit 2 if no mock fixture
     - Mode selection
-      - Declared per verb in manifest
+      - Declared per plugin verb in manifest
       - Override via environment overlay
       - Config — see artifacts/governance.yaml#api
-      - Cascade propagates upward
+      - Manifest — see plugins.md#Manifest
     - Historical replay
       - Command — sys audit replay --from prod --since 7d
       - DB ops — deterministic re-execution
@@ -158,10 +156,10 @@
       - Pending-push reconciles first
       - Definition — see world.md#Snapshots
     - Spec drift
-      - Provider spec_hash change demotes rung
-      - Mock drift demotion pinned → reviewed
+      - Plugin spec_hash change demotes rung
+      - Mock drift demotion applies
       - Applies to API verbs only
-      - Definition — see governance.md#The-ladder
+      - Trust — see governance.md#The-ladder
     - Schema drift
       - Un-migrated schema aborts boot
       - system_schema hash mismatch exits 3
@@ -264,7 +262,8 @@
         - Definition — see kernel.md#Unified-3-phase-engine
       - Budget frames
         - Each call pushes a budget frame
-        - Definition — see governance.md#Budget-frames
+        - Plugin verbs declare fuel
+        - Frames — see governance.md#Budget-frames
       - Drift monitoring
         - Runtime fingerprint vs manifest continuous
         - Definition — see #Drift
@@ -282,6 +281,12 @@
       - Expiration SLA — queue age over 48h
       - Breach emits promotion.sla_breached
       - Envelope shape — see interface.md#CLI-surface
+    - plugin-pack-stage
+      - Kernel pack install enters at reviewed
+      - Application pack install enters at draft
+      - Community pack install enters at draft
+      - Taxonomy — see plugins.md#Pack-taxonomy
+      - Trust — see governance.md#Promotion-gates
   - Decay
     - Decay thresholds
       - Inactivity — unused for 30 days

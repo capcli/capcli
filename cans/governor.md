@@ -21,6 +21,16 @@
       - Caller never sees path selection
       - Same code runs on both paths
       - Yield is transparent to author
+    - Plugin fuel declaration
+      - Plugin verb declares fuel_declared
+      - Manifest field per verb
+      - Kernel enforces at frame push
+      - Manifest — see plugins.md#Manifest
+    - Plugin dispatch
+      - Routine calls plugin verb via ctx
+      - Kernel routes through budget cascade
+      - Fuel and quota apply at kernel edge
+      - Concerns — see kernel.md#The-5-concerns
   - Fast path
     - Trigger conditions
       - Pure compute and parsing
@@ -101,6 +111,11 @@
       - Executes pre-compiled guest routine
       - Mechanical resumption, no LLM wake
   - Outbox staging
+    - Owner
+      - Table lifecycle — see world.md#Outbox-inbox
+      - Row shape — see world.md#Outbox-inbox
+      - Who writes — plugins and routines
+      - Dispatch — see plugins.md#Kernel-stance
     - Write path
       - ctx.emit(event, payload) writes row
       - Commits inside caller transaction
@@ -163,9 +178,10 @@
       - Ask resolution flips suspended frame
     - Compile-at-yield
       - Daemon compiles guest at yield time
-      - Standalone artifact, no harness needed
+      - Standalone artifact, no harness
       - Runs to completion in sandbox
       - No LLM wake permitted
+      - Isolation — see sandbox.md#Tri-Jail-engine
     - Mechanical execution
       - Kernel loads pre-compiled artifact
       - Runs in same Tri-Jail envelope
