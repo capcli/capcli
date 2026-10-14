@@ -1,19 +1,35 @@
 - Overview
-<!-- ref-by: plugins.md, marketplace.md, interface.md -->
+<!-- ref-by: plugins.md, marketplace.md, interface.md, kernel.md -->
   - What capcli is
     - Core identity
       - Governed perimeter between harness and workspace
-      - Executes effects, enforces physics, logs audit
-      - Cognition lives in harness
-      - Mechanics live in kernel
+      - Five-concern microkernel plus plugins
+      - Cognition in harness, mechanics in kernel
+      - Wire and device access via plugin process
+      - Deterministic physics, never probabilistic
+    - Five-concern kernel
+      - State — SQLite SSOT and schema
+      - Physics — C authorizer, AST, VDBE
+      - Budget — fuel min() cascade
+      - Memory — SHA-256 causal DAG
+      - Isolation — Tri-Jail and IPC wire
+    - Everything else is a plugin
+      - HTTP egress is a plugin
+      - Cron and webhook is a plugin
+      - Chat notification is a plugin
+      - Blob storage is a plugin
+      - Federation transport is a plugin
+      - Vault backend is a plugin
+      - Serve channel is a plugin
+      - Kernel dispatches, plugins execute
     - Harness consumers
       - Agent harness
-        - Autonomous reasoning via open bash subshell
+        - Autonomous reasoning in open shell
         - Claude Code, Hermes, Codex, Swarm
         - Identity via environment markers
-        - Skills invoke capabilities via run
+        - Skills invoke via capcli nouns
       - Human harness
-        - Oversight, authorization, and recovery
+        - Oversight, authorization, recovery
         - Cockpit PWA and CLI surfaces
         - Out-of-band cryptographic approvals
         - Manual Git manipulation prohibited
@@ -27,38 +43,18 @@
         - Reads and queries only
         - Mutating writes refused
         - Explicit --by or --session required
-    - Core abstractions
-      - World
-        - SQLite workspace.db holding domain state
-        - Dual schema: agent and system
-        - WAL mode with serialized writers
-        - Claims table for lease locks
-      - Physics
-        - Compile-time and runtime policy layers
-        - C authorizer, AST, VDBE hook
-        - Tri-Jail process isolation
-        - Fail-closed on every ambiguity
-      - Memory
-        - Append-only SQLite _audit ledger
-        - Mirrored to daily JSONL files
-        - SHA-256 causal DAG chain
-        - WORM checkpoint offsite
-      - Actors
-        - Principal, agent, session, op
-        - Harness markers grant identity
-        - Anonymous callers capped at draft
-        - Cross-agent calls demand reviewed
     - Runtime topology
-      - Single static musl binary
-      - Platform tier 1 on Linux/macOS/Windows
+      - Single static musl binary plus daemon
+      - Tier 1 on Linux, macOS, Windows
       - Cockpit PWA embedded via rust-embed
-      - Persistent daemon on headless hosts
+      - Headless daemon on servers
   - The 5-layer taxonomy
     - Layer 4 — Pack
       - Shipping cartridge, .cap file
-      - Immutable, SHA-256-signed
+      - Kernel, application, or community tier
+      - Atomic multi-layer install
       - Zero execution at rest
-      - Installed atomically or not at all
+      - Install or abort, never partial
     - Layer 3 — Template
       - Recipe blueprint, tpl:// scheme
       - Static scaffolding text
@@ -68,23 +64,55 @@
       - Business logic, cap:// scheme
       - Guest procedural code
       - Never touches raw sockets
-      - Talks to world via ctx contract
+      - Calls plugin verbs via ctx
     - Layer 1 — Plugin
       - Hardware driver, plugin:// scheme
       - Out-of-process native executable
-      - Plugin verbs, hooks, permissions
-      - Zero business logic inside
+      - Owns wire and device access
+      - Registers CLI noun and ctx namespace
     - Layer 0 — Kernel
       - Static Rust musl binary
-      - Authorizer, Tri-Jail, DAG, fuel min()
+      - Five concerns only
+      - Authorizer, Tri-Jail, DAG, min()
       - The unbreakable court
-      - Never reads uncompiled YAML
     - Layer invariants
-      - Kernel is compiled machine physics
-      - Plugin process holds zero business logic
+      - Kernel never speaks wire directly
+      - Plugin holds the socket and device
       - Routine never reaches raw wire
-      - Template has no runtime presence
-      - Pack never executes
+      - Template has zero runtime presence
+      - Pack is cartridge, never execution
+  - The pack distribution model
+    - Kernel packs
+      - Ship once-native modules
+      - capcli.pack.api — api-gateway bundle
+      - capcli.pack.bind — scheduler bundle
+      - capcli.pack.ping — notify bundle
+      - capcli.pack.storage — storage bundle
+      - capcli.pack.federation — mesh bundle
+      - Contents — plugin, schema, routines, noun
+      - Enter at reviewed trust rung
+    - Application packs
+      - Ship business solutions
+      - capcli.pack.shopify — e-commerce
+      - capcli.pack.stripe-billing — payments
+      - Contents — plugins, schemas, routines
+      - Enter at draft trust rung
+    - Community packs
+      - User-published bundles
+      - Third-party integrations
+      - Same trust floor as application
+      - Enter at draft trust rung
+    - Install experience
+      - plugin install capcli.pack.api
+      - Restores old muscle memory
+      - capcli api import works again
+      - ctx.api.call works again
+      - Zero migration for user
+    - Trust inheritance
+      - Every imported routine lands at draft
+      - Zero promotional credit inherited
+      - Promotion via gates only
+      - Pack never elevates rungs
   - Core philosophy
     - Zero-trust agent
       - Intentions are never inherently trusted
@@ -96,6 +124,16 @@
       - Unbounded writes denied structurally
       - Designed denials teach the harness
       - Structured feedback on every refusal
+    - Plugin-first architecture
+      - Kernel is minimal by design
+      - Adding capability adds a plugin
+      - Never bloats the kernel binary
+      - Community extends without forking
+    - UX-first surface
+      - Architecture is plugin-first
+      - CLI and ctx feel noun-first
+      - Users never type plugin://
+      - Muscle memory preserved
     - Governance line
       - Policy governs capability verbs
       - Governance governs artifact shapes
@@ -109,9 +147,9 @@
   - Mental model
     - Three-surface law
       - State in SQLite
-      - Capabilities in guest scripts
+      - Capabilities via plugins and routines
       - Experience in JSONL
-      - All three flow through kernel gates
+      - All flow through kernel gates
     - Storage trinity
       - workspace.db holds domain state
       - audit.db holds append-only ledger
@@ -125,23 +163,22 @@
     - Topology
       - Outbound channels
         - DB mutations
-        - Isolated routines
-        - External HTTP egress
-        - Federation outbox
+        - Plugin dispatches
+        - Federated outbox
       - Inbound triggers
-        - Cron schedules
-        - Webhooks
-        - Endpoint bindings
-        - Federated peer events
+        - Cron via scheduler plugin
+        - Webhooks via scheduler plugin
+        - Endpoints via http-server plugin
+        - Peer events via federation plugin
       - Interactive channels
-        - Human ping inquiries
+        - Human inquiries via notify plugin
         - Sensory inbox loops
         - Cockpit approval cards
         - Chat provider sinks
       - Control plane
         - Kernel daemon IPC socket
         - JSON-RPC 2.0 envelope
-        - Persistent daemon on headless hosts
+        - Persistent daemon on servers
         - Ephemeral CLI sessions
   - Design stance
     - Fail-closed stance
@@ -153,15 +190,45 @@
       - Exploration in dev accumulates telemetry
       - Pattern mining proposes consolidation
       - Codification into governed routines
-      - Trust rung progression via synthetic proof
-      - (see governance.md#Gates)
+      - Trust rung progression via proof
     - Autonomous authority
       - Headless execution via policy rungs
-      - Frame budget cages replace human sign-offs
+      - Frame budget cages replace sign-offs
       - Compiler boundaries gate authoring
       - Interactive escalation on halts
+    - Initialization paths
+      - Guided mission
+        - Subsystem-scale intent declared upfront
+        - Worker agents author domain modules
+        - Human commits schema before execution
+      - Emergent discovery
+        - Blank world accumulates audit density
+        - Background miner surfaces patterns
+        - Codification via learning loop
+      - Predefined structure
+        - Human commits schema upfront
+        - Agent executes strictly inside bounds
+        - Zero schema drift allowed
+    - Anti-decisions
+      - No YAML procedures
+      - No module imports for authority
+      - No self-promotion past gates
+      - No silent edits to code or config
+      - No immortal routines without decay
+      - No deletion, only retirement
+    - Invariants
+      - Pre-execution validation via gates
+      - Sandbox containment during execution
+      - Leaf effects pass kernel gate
+      - Versions hash-pinned at registration
+      - Manifest drift treated as anomaly
     - Refusals
       - No ORMs or query builders
       - No runtime policy mutation
       - Audit table strictly append-only
       - Zero LLM runtimes in kernel
+    - Neutrality law
+      - Kernel matches, dispatches, delivers
+      - Kernel logs, never interprets domain
+      - Zero LLM inference in kernel
+      - Zero probabilistic parsing anywhere
