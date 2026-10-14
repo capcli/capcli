@@ -1,0 +1,240 @@
+- Sandbox
+<!-- ref-by: plugins.md, governor.md, egress.md -->
+  - Platform tiers
+    - Tier 1 (hardened)
+      - Hosts
+        - Linux bare-metal and VPS
+        - Docker with unprivileged userns
+        - WSL2 fallback for Windows dev
+        - Termux fallback for Android
+      - Rung bounds
+        - Every rung permitted here
+        - Prod host class exclusively tier 1
+        - No waiver required for prod
+        - Rung semantics — see governance.md#The-ladder
+      - Provider chain
+        - bwrap unprivileged namespaces primary
+        - Rootless OCI fallback on userns restrict
+        - gVisor option on hardened multi-tenant
+    - Tier 2 (virtualized)
+      - Hosts
+        - macOS Darwin native
+        - Windows native MSVC build
+        - Android Termux Android
+        - Edge containers without userns
+      - Rung bounds
+        - Dev and sim environments only
+        - Pinned runs on dev and sim targets
+        - Prod needs --tier-waiver via Cockpit
+        - Waiver binds to one run, not persisted
+      - Provider chain
+        - Colima microVM on Darwin
+        - Lima microVM on Darwin
+        - Wasmtime sandbox on Termux
+        - Degraded isolation warning emitted
+    - Tier pairing
+      - Dev — tier 1 or 2, all rungs
+      - Sim — tier 1 or 2, reviewed and pinned
+      - Prod — tier 1 only, pinned only
+      - Illegal pairs deny with exit 2
+      - Matrix — see governance.md#The-ladder
+    - Platform probes
+      - sys doctor reports host OS and tier
+      - Reports permitted environments list
+      - Machine contract via --json envelope
+      - Zero sandbox spawn during probe
+  - Tri-Jail engine
+    - Purpose
+      - Zero-trust process isolation
+      - Native enforcement on every platform
+      - No WASM, no VMs for tier 1
+      - Kernel-level containment physics
+    - Linux tier 1
+      - bwrap unprivileged namespaces
+      - User, mount, IPC, PID, UTS unshared
+      - tmpfs root filesystem
+      - Plugin checkout mounted read-only
+      - Read-write state directory only
+    - macOS tier 1
+      - sandbox-exec Seatbelt profiles
+      - Scheme profile compiled per invocation
+      - Plugin subpath read-only mount
+      - State subpath read-write mount
+      - Native Apple Silicon speed retained
+    - Windows tier 1
+      - AppContainer isolation profile
+      - Low-integrity SID token
+      - Network capabilities stripped from SID
+      - Job Objects cap CPU and memory
+    - Tier 2 fallback
+      - MicroVM on Darwin and Windows
+      - Wasmtime on Termux and edge hosts
+      - Unmapped socket capabilities
+      - Degraded isolation warning emitted
+  - Network jail
+    - Linux network trap
+      - --unshare-net on network namespace
+      - seccomp-bpf traps syscall 42 connect
+      - SIGSYS terminates process on violation
+      - Exit 2 on socket breach attempt
+    - macOS network trap
+      - Scheme profile denies network*
+      - Scheme profile denies system-socket
+      - XNU kernel enforces directly
+      - Same exit 2 semantics as Linux
+    - Windows network trap
+      - AppContainer SID strips internetClient
+      - Strips privateNetworkClientServer
+      - WFP blocks outbound connections
+      - Loopback nulled for kernel proxy
+    - Tier 2 network trap
+      - Kernel-enforced socket null-routing
+      - Cooperative host execution denied
+      - No raw connect possible from guest
+      - Same exit 2 semantics as tier 1
+  - Syscall profiles
+    - Purpose
+      - Dynamic per-engine seccomp filters
+      - Allow runtime-specific syscalls only
+      - Deny everything outside allowlist
+      - Compiled at plugin spawn time
+    - profile_python
+      - clone and futex permitted
+      - Basic POSIX signals permitted
+      - No network syscalls permitted
+      - No ptrace or process_vm permitted
+    - profile_bun_node
+      - epoll_create1, epoll_ctl, eventfd2
+      - io_uring_setup permitted
+      - No network syscalls permitted
+      - No raw socket family permitted
+    - profile_binary
+      - clone3, futex, rseq permitted
+      - rt_sigreturn permitted
+      - Minimal runtime surface only
+      - No dynamic loader escape
+    - Breach semantics
+      - SIGSYS raises immediately
+      - Process terminates with exit 2
+      - Audit leaf records attempted syscall
+      - Kernel emits policy denial event
+  - Channel A — stdio control plane
+    - Purpose
+      - Zero-boilerplate plugin communication
+      - Authors read stdin, write stdout
+      - No socket connection code needed
+      - Kernel mediates spawn and pipe
+    - Invocation payload
+      - call_id — unique per invocation
+      - verb — plugin verb name
+      - params — verb arguments map
+      - kernel session — fuel_remaining, environment
+      - context — trace_id for causal DAG
+    - Response payload
+      - call_id — mirrors invocation
+      - status — success, denied, or error
+      - data — plugin verb return payload
+      - diagnostic — remedy on failure
+    - Framing
+      - JSON-Lines delimited
+      - Newline terminates one message
+      - No length prefix needed
+      - Streaming via multiple sequential lines
+    - Exit protocol
+      - exit 0 — success, commit staged ops
+      - exit 2 — policy denial, state untouched
+      - exit 3 — syntax refusal, bad input
+      - exit 4 — crash, transaction rolled back
+      - exit 5 — kernel panic, sink loss
+      - exit 6 — proactive yield, checkpoint
+      - Definition — see kernel.md#Exit-code-law
+  - Channel B — shared memory ring
+    - Purpose
+      - High-throughput data plane
+      - Bypass subprocess pipe serialization
+      - Zero-copy atomic deserialization
+      - For SQLite rows over 100 or blobs
+    - Mechanism
+      - memfd_create on Linux
+      - Named shared segments on macOS
+      - Named shared segments on Windows
+      - Mapped into plugin space pre-exec
+    - Data plane contract
+      - Columnar row layout
+      - Structured metadata header
+      - Plugin reads directly, no copy
+      - Zero JSON serialization latency
+    - Activation
+      - Kernel decides by payload size
+      - Threshold — 100 rows or 1 KB blob
+      - Under threshold — Channel A stdio
+      - Over threshold — ring buffer preferred
+    - Security
+      - Input region mapped read-only
+      - Write region per call invocation
+      - Region unmapped on return
+      - Zeroized on disposal
+  - Sandbox providers
+    - Provider selection
+      - Tier 1 — bwrap, podman, gvisor
+      - Tier 2 — colima, lima, wasmtime
+      - Rootless OCI on userns-restricted host
+      - Aborts boot if all providers fail
+    - Jail defenses
+      - Native FFI bridge for local DB
+      - Shared memory ring for DB calls
+      - Daemon transport for async events
+      - Path restriction to plugin checkout
+    - Execution limits
+      - Watchdog kill at 300s wall clock
+      - Wall clock distinct from fuel
+      - Response size cap via truncation flag
+      - Ops ceiling via governance file
+    - External jail
+      - sys exec <cmd> --sandbox
+      - One-shot command sandboxing
+      - Same Tri-Jail envelope applied
+      - Same exit protocol enforced
+  - Runtime resolution
+    - Ladder
+      - 1 — routine tag explicit runtime
+      - 2 — agent policy whitelist
+      - 3 — environment overlay
+      - 4 — workspace default
+      - Mismatch — exit 2 E050_RUNTIME_DISALLOWED
+    - Runtime declaration
+      - Runtime tag set in decorator
+      - Explicit override of ladder position
+      - Must be in agent whitelist
+      - Failure exits 2 E050
+    - Latency floor
+      - Warm runner recycling
+      - Execution overhead under 50ms
+      - Cold start — once per generation
+      - Pool maintained per runtime
+    - Future runtime
+      - WASM structural sandboxing considered
+      - Async adoption timeline TBD
+      - AOT compile path TBD
+      - Tier 2 edge hosts priority
+  - Boundary alarms
+    - Boot refusal
+      - All providers absent — exit 3
+      - Missing kernel features — exit 3
+      - userns disabled on tier 1 — fallback
+      - userns disabled on tier 2 — warning only
+    - Runtime alarm
+      - Socket breach emits kernel event
+      - Syscall breach emits policy denial
+      - Sandbox escape attempt flagged
+      - Every alarm appends to audit ledger
+    - Doctor probes
+      - Sandbox availability check
+      - Syscall trapping verification
+      - IPC latency over kernel.sock
+      - Tier 2 degraded flag reported
+    - Degraded disclosure
+      - Tier 2 emits host.degraded_isolation
+      - Banner rendered on stderr
+      - Machine field in --json envelope
+      - Envelope shape — see interface.md#CLI-surface

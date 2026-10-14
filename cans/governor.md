@@ -1,0 +1,266 @@
+- Governor
+<!-- ref-by: plugins.md, routines.md, world.md, governance.md -->
+  - Execution Governor
+    - Purpose
+      - Determines execution physics at runtime
+      - Frees authors from queue or polling code
+      - Kernel decides fast vs yield path
+      - Caller never chooses manually
+    - Decision rule
+      - External wire egress demands yield path
+      - Duration over 15ms demands yield path
+      - Pure compute stays on fast path
+      - In-memory transforms stay on fast path
+    - Physics constraints
+      - SQLite micro locks held under 15ms
+      - Zero open transactions during egress
+      - State untouchable on any non-zero exit
+      - Contract — see kernel.md#Exit-code-law
+    - Caller contract
+      - ctx.call returns payload or yields
+      - Caller never sees path selection
+      - Same code runs on both paths
+      - Yield is transparent to author
+  - Fast path
+    - Trigger conditions
+      - Pure compute and parsing
+      - Local AST transformation
+      - Format conversion and validation
+      - In-memory calculation and filtering
+      - Resolves under 15ms wall clock
+    - Behavior
+      - Kernel executes plugin process inline
+      - Pipes input via Channel A stdio
+      - Reads output, deducts fuel
+      - Returns payload to calling routine
+      - Definition — see sandbox.md#Channel-A
+    - Physics guarantees
+      - SQLite BEGIN IMMEDIATE unbroken
+      - Zero context switching
+      - Zero task suspension
+      - Single transaction holds across call
+    - Fuel accounting
+      - Deducted at invocation, not at return
+      - Frame ledger updates synchronously
+      - Formula — see governance.md#Fuel-formula
+    - Failure handling
+      - Plugin crash exits 4, rollback
+      - Policy denial exits 2, state untouched
+      - Caller handles error or compensates
+      - Error domain — see kernel.md#Exit-code-law
+    - Escalation to yield
+      - Egress call forces yield path
+      - Duration over 15ms forces yield
+      - Kernel promotes mid-flight if needed
+      - Caller never observes escalation
+  - Yield path
+    - Trigger conditions
+      - External wire egress required
+      - Operation exceeds 15ms ceiling
+      - Upstream 429 with Retry-After received
+      - Priority-class preemption floor reached
+    - Stage sequence
+      - 1 — Kernel stages record to _outbox_events
+      - 2 — Routine halts with exit 6
+      - 3 — Frame checkpoints to _suspended_tasks
+      - 4 — Layer 3 SQLite locks close
+      - 5 — Plugin executes egress out-of-band
+      - 6 — Result lands in _inbox
+      - 7 — Daemon resumes when unblocked
+    - Stage 1 detail
+      - Atomic write inside caller transaction
+      - Domain writes and outbox commit together
+      - Zero partial writes on crash
+      - Envelope shape — see world.md#Outbox-inbox
+    - Stage 2 detail
+      - Proactive yield is a checkpoint
+      - Not an error, not a failure
+      - Exit 6 semantics
+      - Definition — see kernel.md#Exit-code-law
+    - Stage 3 detail
+      - OCC state_fence persisted
+      - Variable environment preserved
+      - Execution cursor position saved
+      - Row shape — see world.md#Snapshots
+    - Stage 4 detail
+      - BEGIN IMMEDIATE closes immediately
+      - Zero open SQLite transactions held
+      - Writers queue unblocked
+      - Lifespan law satisfied
+    - Stage 5 detail
+      - Plugin executes via kernel egress proxy
+      - Vault injection at socket edge
+      - Injection — see egress.md#Vault-proxy
+      - Quota gates apply normally
+    - Stage 6 detail
+      - Result row enters _inbox
+      - Inbound dispatch claims atomically
+      - Lifecycle — see world.md#Outbox-inbox
+    - Stage 7 detail
+      - Daemon detects unblocked frame
+      - Executes pre-compiled guest routine
+      - Mechanical resumption, no LLM wake
+  - Outbox staging
+    - Write path
+      - ctx.emit(event, payload) writes row
+      - Commits inside caller transaction
+      - Atomic with domain writes
+      - Never a partial domain state
+    - Row shape
+      - provider — federation or plugin id
+      - verb — event name
+      - idempotency_key — kernel-minted
+      - idempotency_header — mirrored for transport
+      - visibility — private or public
+    - Draining
+      - Daemon drains asynchronously
+      - Headless CLI drains synchronously pre-exit
+      - Atomic claim via RETURNING
+      - Reference — see world.md#Outbox-inbox
+    - Federated siphoning
+      - Peer daemons poll visibility=public
+      - Positions tracked in _watch_cursors
+      - Transport — see plugins.md#Federation-transport
+    - Failure recovery
+      - Failed rows retry up to 3 times
+      - Then move to dead letter queue
+      - Dead letter retention per governance
+      - Config — see artifacts/governance.yaml
+  - Suspension registry
+    - Row identity
+      - frame_id — suspended budget frame
+      - routine — pinned routine@version
+      - cursor — execution position saved
+      - state_fence — OCC read versions
+      - resume_after — timestamp or event
+    - Persistence
+      - Stored in _suspended_tasks table
+      - Kernel-managed, agent-readable
+      - System schema — see world.md#Dual-schema
+    - OCC fence fields
+      - Rows read during Phase 1
+      - Declared write intent
+      - Reference — see kernel.md#Exit-code-law
+    - Lease retention
+      - Layer 1 claims retained across yield
+      - Sibling agents cannot steal task
+      - Lease identity — see world.md#Claims-lease
+    - Abort path
+      - capcli run abort <frame_id>
+      - Purges _suspended_tasks resume target
+      - Releases state_fence and claims
+      - Writes audit event, never resumes
+    - Drift recovery
+      - Read drift exhausts fence retries
+      - Exit 2 E061_OCC_DRIFT
+      - Abort drifted frame before re-run
+      - Write drift releases lease, re-plan directly
+  - Daemon resumption
+    - Trigger conditions
+      - Clock reaches reset_at for quota refill
+      - Human 1-click approval via Cockpit
+      - Federation event lands in _inbox
+      - Ask resolution flips suspended frame
+    - Compile-at-yield
+      - Daemon compiles guest at yield time
+      - Standalone artifact, no harness needed
+      - Runs to completion in sandbox
+      - No LLM wake permitted
+    - Mechanical execution
+      - Kernel loads pre-compiled artifact
+      - Runs in same Tri-Jail envelope
+      - Same authorizer and AST gates
+      - Same fuel and quota rules
+    - Waking prohibition
+      - LLM harness never re-prompted
+      - Re-entry is purely mechanical
+      - Prompting would break determinism
+      - Harness sees result at next turn zero
+    - Result delivery
+      - Daemon posts completion to _inbox
+      - Harness surfaces at next overview
+      - Envelope shape — see interface.md#CLI-surface
+    - Verification gates
+      - Lease still active and owned
+      - Fence re-verified under lock
+      - Ask predicate re-evaluated fresh
+      - Predicate drift handling
+        - Predicate holds — approval stands
+        - Read drift outside set — no invalidation
+        - Write-write drift — exit 2 E061
+        - Approval discarded, never applied to changed facts
+  - Priority classes
+    - Background
+      - Lowest fuel and cadence priority
+      - Yields at 15 token floor
+      - For bulk align and backfill
+      - Not for interactive calls
+    - Standard
+      - Default class for interactive agents
+      - Yields at 5 token floor
+      - For routine invocations
+      - For webhook dispatch
+    - Critical
+      - Highest priority, drains to 0
+      - For interactive approve path
+      - For human-triggered ops
+      - Declared in routine manifest
+    - Floor interaction
+      - Preemption floor per class
+      - Definition — see egress.md#Quotas
+      - Config — see artifacts/policy.yaml#api.rate_limit
+    - Writer priority
+      - Interactive preempts bulk align
+      - Webhook preempts align backfill
+      - Enforcement — see identity.md#Concurrency
+  - Watchdog interaction
+    - Wall clock distinct from fuel
+      - Fuel measures compute steps
+      - Watchdog measures wall seconds
+      - Both apply independently
+      - Formula — see governance.md#Fuel-formula
+    - Watchdog kill
+      - 300s wall clock ceiling
+      - Kills guest on breach
+      - Exit 4 with domain routine.runtime
+      - Config — see artifacts/governance.yaml
+    - Yield vs watchdog
+      - Yield is voluntary, pre-empts watchdog
+      - Watchdog is involuntary, force-kill
+      - Yield preserves fence and claims
+      - Watchdog kills, no resume
+    - Sandbox interaction
+      - Watchdog lives in sandbox supervisor
+      - Tri-Jail kills process on expiry
+      - Definition — see sandbox.md#Platform-tiers
+  - Integration points
+    - With sandbox
+      - Exit 6 flows through jail boundary
+      - Checkpoint written before process exit
+      - Channel A carries the yield signal
+      - Reference — see sandbox.md#Channel-A
+    - With egress
+      - Cadence waits under 2s sleep socket
+      - Waits over 2s trigger yield
+      - 429 with Retry-After forces yield
+      - Reference — see egress.md#Wire-edge-enforcement
+    - With governance
+      - Frame budget deducted at push
+      - Unspent fuel reconciles at pop
+      - Cascade across suspension boundary
+      - Reference — see governance.md#Frames
+    - With world
+      - Outbox and inbox own queue tables
+      - Suspension row shape in world schema
+      - Atomic claim via SQL RETURNING
+      - Reference — see world.md#Outbox-inbox
+    - With routines
+      - Author never writes yield code
+      - Author never writes queue code
+      - Same routine runs both paths
+      - Reference — see routines.md#The-ctx-contract
+    - With plugins
+      - Plugin verbs declare fuel envelope
+      - Fast path respects declared envelope
+      - Yield path delegates to plugin daemon
+      - Reference — see plugins.md#Capabilities

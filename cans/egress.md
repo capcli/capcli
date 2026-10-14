@@ -1,0 +1,203 @@
+- Egress
+<!-- ref-by: sandbox.md, governor.md, plugins.md, identity.md -->
+  - Zero-knowledge stance
+    - Guest boundary
+      - Plugin process never holds plaintext keys
+      - Guest address space zero credential bytes
+      - Only opaque vault:// handles cross jail
+      - Socket trap forces all egress to proxy
+    - Proxy invariant
+      - Kernel is the sole TLS opener
+      - Kernel resolves secrets at socket edge
+      - Kernel injects Authorization headers
+      - Guest sees response body only
+    - Handles not values
+      - vault://<name> passes through guest SDK
+      - Kernel replaces handle with plaintext
+      - Plaintext never returns to caller
+      - Audit records name, never value
+    - Trust floor
+      - Draft routines denied secret access
+      - Exit 2 at pre-flight E047_SECRET_TRUST_FLOOR
+      - Definition — see governance.md#The-ladder
+      - Prove runs get bounded secret leases
+  - Vault storage
+    - Table layout
+      - Name unique per workspace
+      - Value encrypted AES-256-GCM
+      - Scope narrows to environment
+      - Expires_at optional TTL
+      - Sens flag marks secret rows
+    - Encryption
+      - AES-256-GCM at rest
+      - Daemon caches in memory for lifetime
+      - Stateless CLI decrypts per run
+      - In-memory buffers zeroize on exit
+    - Ingestion channels
+      - CLI — capcli sys vault set
+      - Process env — CAPCLI_SECRET_<NAME>
+      - Cockpit PWA out-of-band injection
+      - External client RPC
+    - Audit contract
+      - Every mutation emits vault.set
+      - Records name and SHA-256 prefix only
+      - Full hash and plaintext never logged
+      - Envelope shape — see interface.md#CLI-surface
+    - Two-tier model
+      - Root secrets held in vault
+      - Ephemeral egress tokens derived per call
+      - Kernel rotates bearer tokens transparently
+      - Root secret never leaves vault buffer
+  - Vault proxy
+    - Injection point
+      - Kernel edge, between cadence and TLS
+      - vault:// handle resolved exactly here
+      - Zero plaintext to guest heap
+      - Zero plaintext to IPC payload
+    - Auth schemes
+      - Bearer token injection
+      - Basic auth base64 encoding
+      - OAuth2 refresh and rotate
+      - AWS SigV4 canonical hashing
+      - mTLS client certificate binding
+    - Rotation
+      - Daemon rotates expiring tokens in memory
+      - Stateless CLI decrypts root, rotates, commits
+      - Silent refresh on every egress
+      - Caller never observes rotation
+    - Catalog references
+      - Provider spec declares secret_ref
+      - Never declares plaintext value
+      - Import validates handle exists
+      - Missing handle fails pre-call check
+    - Doctor probes
+      - sys vault list shows names
+      - Never shows values or hash prefixes
+      - Health check reports rotation status
+      - Envelope shape — see interface.md#CLI-surface
+  - Wire-edge enforcement
+    - Strict check order
+      - 1 — ceiling check before anything else
+      - 2 — cadence check via token bucket
+      - 3 — auth attach between cadence and TLS
+      - 4 — dispatch and deduct fuel
+      - 5 — auto-tune from response headers
+      - Order is invariant, never reordered
+    - Ceiling gate
+      - Monthly provider spend ledger
+      - Breach denies before socket dispatch
+      - Exit 2 with domain policy.quota
+      - Zero packets and zero TLS handshake
+    - Cadence gate
+      - Leaky token bucket per provider
+      - Waits under 2s sleep the socket in kernel
+      - Waits over 2s yield routine exit 6
+      - Upstream 429 drains bucket to zero
+    - Wire scrubber
+      - Holds active secret hashes in memory
+      - Scans incoming and outgoing bytes
+      - Matches replaced with [REDACTED_VAULT_TOKEN]
+      - Runs before deserialization
+      - Covers headers and body
+    - Leak panic
+      - Raw credential in guest output triggers panic
+      - Exit 5 with domain kernel.panic
+      - Session token revoked instantly
+      - Secret buffers zeroized immediately
+      - Alert appended to audit.db ledger
+    - Detection sources
+      - Author-embedded literal in code
+      - Fabricated secret-shaped match
+      - Vault/proxy zero-knowledge stays intact
+      - Detection model — see effect.md#Denials
+  - Quotas
+    - Cadence dial
+      - Leaky token bucket per provider
+      - State in _api_quota table
+      - Kernel-written, agent-readable
+      - Sim and prod tracked independently
+    - Ceiling dial
+      - Monthly spend ledger per provider
+      - Calls and cost tracked persistently
+      - Breach rejects before dispatch
+      - Fail-closed, never yields
+    - Preemption floors
+      - Background yields at 15 tokens
+      - Standard yields at 5 tokens
+      - Critical drains to 0
+      - Priority class in routine manifest
+    - Header auto-tuning
+      - Reads X-RateLimit-Remaining
+      - Reads X-RateLimit-Reset
+      - Reads Retry-After on 429
+      - Recalibrates local bucket per response
+    - Fallback
+      - Providers without headers use sliding window
+      - Kernel-counted, no upstream signal
+      - Conservative defaults apply
+      - Config — see artifacts/policy.yaml#api.rate_limit
+    - Live quota read
+      - ctx.quota.inspect(verb) returns snapshot
+      - Total, available, priority floors, reset_at
+      - Reads _api_quota row
+      - Zero fuel cost for inspection
+  - Developer bridge
+    - capcli egress utility
+      - Shell-native egress command
+      - Plugin calls as subprocess
+      - Kernel proxy performs TLS
+      - Vault key resolution transparent
+      - Fuel and quota gated inside kernel
+    - Curl-like interface
+      - --method GET, POST, PUT, DELETE
+      - --auth vault://<name> for secret handle
+      - --data for request body
+      - --header for additional headers
+      - --out for response redirection
+    - Python SDK
+      - plugin.egress.post(url, auth, data)
+      - plugin.egress.get(url, auth, params)
+      - Vault handle passed as auth string
+      - Response object mirrors requests library
+    - TypeScript SDK
+      - Same shape as Python SDK
+      - Zero runtime dependencies
+      - Bun and Node 20 both supported
+      - Typed response envelopes
+    - Retry policy
+      - Idempotent verbs auto-retry on 503
+      - GET, PUT, DELETE idempotent by convention
+      - POST without idempotency key fails closed exit 4
+      - POST with idempotency key retries safely
+    - Sim routing
+      - Environment overlay chooses target
+      - Sandbox mode routes to test endpoint
+      - Mock mode replays recorded exchanges
+      - Prod-only verbs route to mock fixtures
+      - Taxonomy — see lifecycle.md#Environments
+  - Boundary cases
+    - Suspended secret access
+      - Headless execution exits 3 on missing secret
+      - Interactive sessions pause via ask
+      - Auto-refresh covers expiring tokens
+      - Provisioning workflow canonical here
+    - First prod call
+      - Requires contract proof hash
+      - Counts call_number and remaining
+      - Emits api.first_prod_call event
+      - Promotion gate — see governance.md#Gates
+    - Provider drift
+      - spec_hash change demotes rung
+      - Mock drift demotion
+      - Definition — see governance.md#The-ladder
+    - Federation egress
+      - Caller never sees callee secrets
+      - Callee plugins use callee vault only
+      - Plaintext secret in params scrubbed at wire
+      - Opaque handles pass through
+      - Envelope shape — see effect.md#Kernel-event-payloads
+    - Doctor surface
+      - sys doctor reports quota health
+      - Reports vault rotation status
+      - Reports scrubber event count
+      - Machine field in --json envelope

@@ -1,274 +1,696 @@
 - Interface
-<!-- ref-by: action.md, assembly.md, budget.md, cicd.md, overview.md, physics.md, recovery.md, time.md, trust.md -->
+<!-- ref-by: overview.md, plugins.md, marketplace.md, assembly.md -->
   - CLI surface
     - Design laws
-      - exit code laws — strict integer contract (0, 2, 3, 4, 5, 6): see physics.md#Exit-code-law
-      - Command shape — capcli <noun> <verb> [target] [--flags]
-      - Subcommand tree — eleven nouns (run, db, routine, api, bind, ping, rule, env, sys, doc, template)
-      - Ergonomic alias — `capcli apply` aliases `capcli rule apply schema`; `capcli sql` aliases `capcli run sql`
-        - gating — the recovery allowlist names canonical paths; aliases resolve before the handler gates: see recovery.md#Emergency-recovery-mode
-      - Help stub — root --help capped at 6 lines pointing to search; dumping full noun trees banned
-      - Registry law — all capabilities resolve through unified registry
-      - Flag conventions — humans receive tables; agents pass --json
-      - Prefix standard — [env:tier] prepended to all output streams; only legal pairings emit ([dev:tier_2], [sim:tier_2], [dev:tier_1], [sim:tier_1], [prod:tier_1]): see trust.md#Weakest-link-matrix
-      - Illegal pairings never emit — [prod:tier_2] cannot occur without a valid --tier-waiver; pre-flight denies it with exit 2 (E045_PROD_TIER1_MANDATE): see physics.md#Exit-code-law
-      - Tier 2 banner — emits host.degraded_isolation warning: see physics.md#Platform-tier-taxonomy
-      - Caller categories
-        - [harness] — safe for autonomous agent execution
-        - [human] — requires interactive human approval
-        - [both] — dual execution permitted depending on flags
-    - Hot path: run noun
-      - Commands
-        - execute — run <capability> [-p k=v]
-        - tier waiver — --tier-waiver grants one --env prod invocation on a tier 2 host: see physics.md#Platform-tier-taxonomy
-        - abort — run abort <frame_id> — cancels a suspended frame; fence release law: see physics.md#Exit-code-law
-        - sql — sql "<query>" [-p k=v] [-m "intent"] [--dry-run] — unified AST-gated query & execution
-        - overview — run overview [--as <principal>] — single-shot domain situational briefing
-        - turn-zero contract — harness invokes run overview at every turn start to ground LLM context (<60 tokens) in active session fuel, locks, and sensory inbox status
-        - search — search <query> [--type <domain>] [--trust X] [--env X]
-        - gap detection — run search gaps --since 7d
-        - inspect — inspect <ptr> — dispatches across the three UrpResolver traits and returns a unified PreflightEnvelope: see action.md#Pointer-taxonomy
-          - masking law — exits 0 on every trust rung; secret material renders as [REDACTED_VAULT_TOKEN]: see agent.md#Secrets
-          - no denial — no authorizer denial fires for inspecting routines that reference secrets
-          - resolution vs description — E047 governs resolution, never description
-      - Aliases — capcli sql, capcli search, capcli inspect
-      - PreflightEnvelope
-        - shape — one envelope per resolver trait; contents vary by resolver class
-        - executables (cap://, ws://) — resource contract fields and the single-response zero-roundtrip can_invoke_now verdict
-        - field: fuel_declared — int; fuel the routine declares for this invocation: see budget.md#Record
-        - field: session_fuel_remaining — int; unspent fuel in the session wallet: see budget.md#Cascade
-        - field: cadence_status — enum; leaky-bucket headroom for the next socket dispatch: see budget.md#Quotas
-        - field: ceiling_status — enum; monthly provider spend ledger position: see budget.md#Quotas
-        - field: can_invoke_now — boolean; true only when fuel and quota checks pass
-        - inspect nesting — the five fields are flat; under inspect output they nest under a budget_status section (addressed budget_status.<field>)
-        - routine_min_fuel — int; minimum session fuel admitting the routine; equal to fuel_declared
-        - refusal law — AST/pre-flight rejects with exit 2 when session_fuel_remaining < routine_min_fuel; the routine is never invoked: see physics.md#Exit-code-law
-        - db entities (db://, vault://, audit://, ask://, quota://) — row schema, check constraints, mask flags, TTL
-        - artifacts (doc://, tpl://, policy://) — token size, node outlines, bundle metadata
-      - Success affordances
-        - exit 0 only — success envelopes carry an `affordances` array; non-zero exits carry remedy instead
-        - entry — { rel, command, intent, risk, requires_intent }; rel names the step (next, abort, inspect)
-        - execution — an agent runs an affordance command verbatim; no command is inferred from prose
-        - optionality — the array is additive and optional; absence changes no exit, state, or payload byte
-    - Storage path: db noun
-      - Locking — db lock <table>:<ref> --ttl <duration> --reason "..."
-      - Lock semantics — db lock claims Layer 1 leases, grants only against an active TTL: see action.md#Database-methods; identity and lifecycle: see world.md#claims-lease-lifecycle
-      - Takeover — db lock <table>:<ref> --takeover acquires a stale claim: see world.md#claims-lease-lifecycle
-      - Abandon — db unlock <target> --abandon releases without acquiring, requires --reason: see world.md#claims-lease-lifecycle
-      - Release — db unlock <target>
-      - Schema — db schema [--table]
-      - Snapshots — db snapshot, restore <id>, dump
-    - Routine path: routine noun
-      - Authoring — direct write in routines/<name>.py or scaffold via `capcli template scaffold tpl://routine/<name> <target> [-p k=v]`
-      - Verification — routine prove <name> [-p k=v] [--env sim]
-      - Promotion — routine ship <name> <reviewed|pinned> [--env X] [--reason "..."]
-        - Monotonic promotion — elevation skips (draft→pinned directly) refused with exit 3: see trust.md#Monotonic-promotion-pipeline
-      - Maintenance — routine sweep [--since 30d]
-      - Profiling — routine stats <name> [--deep]
-      - Recovery — routine rollback <name> [version]
-      - Retirement — routine retire <name> [--reason]
-    - API path: api noun
-      - Import — api import <provider> <path> <method> [--spec <url|file>]
-      - Sync — api sync <provider> <spec_url> [--interval <duration>] — full catalog refresh; cadence: see action.md#Catalog-synchronization
-      - Record — api record <provider.verb> [-p k=v] — captures live response and compiles JSON Schema contract
-      - Drift — api diff <provider>
-      - Catalog — api catalog <provider> [--state <state>]
-      - Verification — api prove <provider.verb> [-p k=v] [--env sim]
-      - Promotion — api ship <provider.verb> <reviewed|pinned> [--reason "..."]
-      - Profiling — api stats <provider> [--deep] [--summary]
-      - Retirement — api retire <provider.verb> [--reason]
-      - History — api rollback <provider.verb> [version]
-    - Trigger path: bind noun
-      - Bindings
-        - bind cron <name> <capability> "<cron_expr>" [-m "<why>"]
-        - bind webhook <name> <provider> <event> <capability> [--ingress <url>|--tunnel] [--verifier <urp>] [-m "<why>"]
-        - bind federation <name> <source_ws> <event> <capability@version> [-m "<why>"] — asynchronous peer outbox siphon
-        - bind endpoint <routine@version> --auth api-key [--rate <r>] [--channel all|rest|mcp]
-        - export — export openapi [--out path], export mcp [--out path]
-        - ingestion — every trigger source verifies then enqueues into _inbox: see action.md#Trigger-types
-      - Webhook ingress
-        - route verification — external webhooks require valid public --ingress url or active tunnel; raw 127.0.0.1 denied
-      - Management — bind list, inspect <id>, pause <id>, resume <id>, remove <id>
-      - Credentials — bind keys issue <name> --principal partner:<id>
-    - Interaction path: ping noun
-      - Notifications — ping notify <principal> <msg> --channel <c> --intent "..."
-      - Inquiries — ping ask <principal> <q> --options <opts> [--timeout <t>] --intent "..."
-      - Listing — ping list [--pending]
-      - Resolution — ping resolve <ask-id> --choice <opt>: flips the ask row, enqueues task resumption in _inbox: see action.md#Trigger-types; exit semantics: see physics.md#Exit-code-law
-      - Expiry — ping expire <ask-id>
-    - Governance path: rule noun
-      - Inspection — rule show [target=schema]
-      - Comparison — rule diff [target=schema] [--git] vs HEAD or live DB PRAGMAs
-      - Planning — rule plan --name <slug> [-m "<why>"] — generates migrations/NNNN_<slug>/ bundle (plan.json, align.py stub): see world.md#Four-phase-state-migration-pipeline
-      - Verification — rule prove <id> [--env sim] — rehearses all four phases on a masked sim snapshot; pinned-routine break aborts with exit 2: see world.md#Migration-safety
-      - Application — rule apply <id> [--dry-run] [-m|--intent "<why>"] — executes expand→align→contract→pin: see world.md#Four-phase-state-migration-pipeline
-      - Validation — rule validate [target] — unified syntax, DFS acyclic verification, and template bundle linting
-    - World path: env noun
-      - Provisioning — environments are provisioned empty via `capcli env new <name> [--seed prod]`, or populated from blueprints via `capcli template scaffold tpl://world/<name> <target> [-p k=v]`
-      - Switching — env use <name>
-      - Audit — env list, inspect, doctor
-      - Promotion — env merge <name> [target=prod] [-m "<why>"]
-      - Deprovisioning — env remove <name>
-    - System path: sys noun
-      - Help stub — sys help (aliases: capcli --help, capcli help) — returns <= 6-line discovery stub
-      - Sensory inbox — sys inbox pop [--channel <name>]: reads _inbox; see world.md#Inbox-lifecycle
-      - Audit tailing — sys audit tail [--follow] [--capability X] [--since 1h]
-      - Causal tracing — sys audit trace <op-id> [--explain]
-      - Mirror queries — sys audit query <sql> [-p k=v]
-      - Log replay — sys audit replay --from <point> [--dry-run]
-      - Identity control — sys agent register, list, revoke
-      - Swarm control — sys swarm list [--active], sys swarm reap
-      - Vault provisioning — sys vault set <key> <val>, sys vault import-env
-      - Diagnostics — sys doctor [--boot-check] [--json]
-        - platform probe — reports host OS, platform tier, and sandbox: see physics.md#Platform-tier-taxonomy
-        - permitted environments — reports the target environments legal for the detected host tier (tier 1: dev, sim, prod; tier 2: dev, sim); no sandbox spawned
-        - machine contract — --json emits platform tier plus the permitted-env list as machine fields
-        - tamper acknowledgement — sys doctor --ack-tamper records review and clears degraded status: see effect.md#Event-integrity
-      - Backups — sys backup [--push] always completes the local snapshot; push is best-effort: see recovery.md#Storage-&-Backup; recover <snapshot-id>
-      - Ledger init — sys init --fresh re-initializes the ledger after total media loss: see recovery.md#Restore-path
-      - Sandboxing — sys exec <cmd> --sandbox
-      - Harness shim — sys shim <target-bin> [--wrap <path>] — deploys native zero-cost wrapper capturing caller marker hashes and scrubbing secrets: see agent.md#Harness-environment-markers
-      - Daemon control — sys serve --start, --stop, --restart, --status
-    - Document path: doc noun
-      - Reading — doc read <ptr> [--max-tokens 100] resolves any doc:// URP; specs and prompt campaigns read identically — `doc read doc://prompts/<campaign>#<leaf>` returns one rendered section
-      - Leaf selection — the pointer fragment #<node> selects exactly one outline node
-      - token cage ceilings: see cicd.md#Token-cage-ceilings
-      - Outline — doc outline <ptr> accepts any doc:// pointer; on a campaign pointer it returns the campaign section index
-      - Reading surface — the doc noun is the single reading surface for documents; no prompt noun exists
-      - Campaign envelope — inspect doc://prompts/<campaign>@<version> returns the campaign envelope
-    - Template path: template noun
-      - New — template new <name> --type routine|world scaffolds blueprint (capcli-template.yaml + starter code) under templates/
-      - Pack — template pack <dir> [--out bundle.cap] freezes blueprint into bundle: see world.md#World-templates
-      - Sync — template sync refreshes local index of official registry repo (index.json)
-      - Import — template import <urp|url|file> [--sha256 <hash>]: see world.md#World-templates
-      - Scaffold — template scaffold <urp> <target-name> [-p k=v] hydrates draft files into routines/ or world envs/
-    - Refusals and banned operations
-      - matrix denials — env/trust/platform pre-flight denials fail with exit 2: see physics.md#Exit-code-law; pairings: see trust.md#Weakest-link-matrix
-      - ssot enforcement — config mutations require git commits; direct `config set` denied (exit 3)
-      - raw DDL via sql — ALTER, DROP, or CREATE TABLE through `capcli sql` outside the migration pipeline denied (exit 2): see world.md#Agent-denial-rules
-      - banned bypass flags — `--force`, `--override-budget`, `--force-prod`, `--verbose` rejected at parser (exit 3)
-      - pointer grammar — only scheme://[namespace/]resource[@version][#fragment] pointers parse
-        - parse failures (exit 3) — bare filesystem paths; removed schemes: hub://, prompt://, mesh://, apis://, sink://, snap://
-      - unified verb aliases — single authoritative paths:
-        - queries/updates — use `capcli sql` (bans `db query`, `db exec`, `db count`)
-        - locks — use `db lock` (bans `claim`)
-        - sandboxing — use `sys exec --sandbox` (bans `jail`)
-        - explanations — use `sys audit trace --explain` (bans `policy explain`)
-        - egress — use `capcli run` or `ctx.api.call` (bans `api call`)
-        - budgets — use `capcli inspect quota://` (bans `budget` noun)
-        - imports — full catalog sync only (bans `api import --pick`)
-        - authoring — use direct write or `capcli template scaffold` (bans `routine new`)
-        - blueprints — use `capcli inspect tpl://`, `search --type tpl`, `rule validate` (bans `template list`, `template inspect`, `template validate`, `template apply`)
+      - Exit codes — strict integer contract
+      - Shape — capcli <noun> <verb> [target] [flags]
+      - Twelve nouns total, no more no less
+      - Registry law — all capabilities resolve via registry
+      - Flag conventions — humans receive text, agents pass --json
+      - Help stub capped at 6 lines pointing to search
+      - Definition — see kernel.md#Exit-code-law
+    - The 12 nouns
+      - run — execution primitive
+      - sys — kernel operations
+      - plugin — lifecycle manager
+      - db — storage path
+      - routine — procedure path
+      - api — external catalog path
+      - bind — trigger path
+      - ping — human interaction path
+      - rule — governance path
+      - environment — namespace path
+      - doc — document reading path
+      - template — blueprint path
+    - Prefix standard
+      - [environment:platform tier] prepended to output
+      - Legal pairs — dev:tier_1, dev:tier_2
+      - Legal pairs — sim:tier_1, sim:tier_2
+      - Legal pair — prod:tier_1 only
+      - Illegal pair — prod:tier_2
+      - Illegal pair never emits without --tier-waiver
+      - Definition — see governance.md#Weakest-link-matrix
+    - Caller categories
+      - [harness] — safe for autonomous execution
+      - [human] — requires interactive approval
+      - [both] — dual execution depending on flags
+      - Category surfaced in help text
+    - Tier 2 banner
+      - host.degraded_isolation warning emitted
+      - Banner rendered on stderr
+      - Machine field in --json envelope
+      - Definition — see sandbox.md#Platform-tiers
+    - CLI projection mount
+      - Purpose — plugin verbs feel native
+      - Source — plugin manifest cli.surface block
+      - Compilation at plugin install
+      - Merge into clap tree at boot
+      - Definition — see plugins.md#CLI-projection
+    - Reserved nouns
+      - run — always execution primitive
+      - sys — always kernel system
+      - plugin — always lifecycle manager
+      - Cannot be aliased or extended
+      - Enforced at install, exit 3 on breach
+    - Projection failure handling
+      - Manifest malformed — canonical fallback
+      - Collision — auto-scope to plugin <id>
+      - Kernel bug — canonical fallback
+      - Fallback form — capcli plugin <id> <verb>
+      - Never a hard install failure
+      - Definition — see plugins.md#CLI-projection
+    - Projection introspection
+      - plugin list --surface — shows ownership
+      - inspect plugin://<id> — full manifest
+      - sys doctor — reports projection health
+      - Displays aliased_as per plugin
+      - Envelope shape — see #CLI-surface
+  - Run noun
+    - Execution commands
+      - run <capability> [-p k=v]
+      - run abort <frame_id> — cancel suspended
+      - run sql "<query>" [-m "intent"]
+      - run overview [--as <principal>]
+      - run search gaps --since 7d
+      - inspect <ptr> — unified resolver
+    - Tier waiver
+      - --tier-waiver grants one prod on tier 2
+      - Interactive TTY only, headless denied
+      - Binds to one session and one run
+      - Never persisted or defaulted
+      - Definition — see sandbox.md#Platform-tiers
+    - Turn-zero contract
+      - Harness invokes overview every turn
+      - Snapshot under 60 tokens
+      - Active fuel, locks, sensory inbox
+      - Definition — see routines.md#Session-Overview-Primer
+    - Aliases
+      - capcli sql aliases run sql
+      - capcli search aliases run search
+      - capcli inspect aliases inspect
+      - Alias resolution precedes handler gate
+    - PreflightEnvelope
+      - One envelope per resolver trait
+      - Contents vary by resolver class
+      - Envelope shape — see #CLI-surface
+      - Executables carry budget_status block
+    - Executable resolver fields
+      - fuel_declared — integer
+      - session_fuel_remaining — integer
+      - cadence_status — enum headroom
+      - ceiling_status — enum ledger position
+      - can_invoke_now — boolean verdict
+      - routine_min_fuel equals fuel_declared
+    - Refusal law
+      - AST pre-flight rejects when fuel short
+      - Exit 2 with domain policy.budget
+      - Routine never invoked on refusal
+      - Definition — see kernel.md#Exit-code-law
+    - DB entity resolver
+      - Row schema, check constraints
+      - Mask flags, TTL per row
+      - Handles db://, vault://, audit://
+      - Handles ask://, quota://
+    - Artifact resolver
+      - Token size and node outlines
+      - Bundle metadata and manifest
+      - Handles doc://, tpl://, policy://
+      - Zero fuel cost for inspection
+    - Success affordances
+      - Exit 0 only, absent on non-zero
+      - Array of rel, command, intent, risk
+      - Agent executes affordance verbatim
+      - Definition — see kernel.md#Diagnostic-output-law
+  - Sys noun
+    - Help stub
+      - sys help returns 6-line discovery stub
+      - Aliases — capcli --help, capcli help
+      - Never dumps full noun tree
+      - Envelope shape — see #CLI-surface
+    - Sensory inbox
+      - sys inbox pop [--channel <name>]
+      - Reads pending _inbox rows
+      - Consumption marking — see world.md#Outbox-inbox
+    - Audit
+      - sys audit tail [--follow]
+      - sys audit trace <op-id> [--explain]
+      - sys audit query <sql>
+      - sys audit replay --from <ts>
+      - Definition — see effect.md#Query-surfaces
+    - Identity
+      - sys agent register — mint agent row
+      - sys agent list — show roster
+      - sys agent revoke — end execution
+      - Definition — see identity.md#System-agent-registry
+    - Swarm
+      - sys swarm list [--active]
+      - sys swarm reap — evict expired
+      - Definition — see identity.md#Ephemeral-swarm-identity
+    - Vault
+      - sys vault set <key> <val>
+      - sys vault import-env
+      - Definition — see egress.md#Vault-storage
+    - Diagnostics
+      - sys doctor [--boot-check] [--json]
+      - Reports host OS and platform tier
+      - Reports permitted environments
+      - sys doctor --ack-tamper clears degraded
+      - Definition — see effect.md#Event-integrity
+    - Backup
+      - sys backup [--push] — local always
+      - sys recover <snapshot-id>
+      - Push best-effort, warning on failure
+      - Definition — see world.md#Snapshots
+    - Ledger
+      - sys init --fresh — re-initialize after loss
+      - Dual confirmation required
+      - Definition — see world.md#Ledger-re-initialization
+    - Sandbox
+      - sys exec <cmd> --sandbox
+      - Same Tri-Jail envelope applied
+      - Definition — see sandbox.md#Sandbox-providers
+    - Harness shim
+      - sys shim <target-bin> [--wrap <path>]
+      - Deploys zero-cost wrapper
+      - Captures caller marker hashes
+      - Scrubs secrets from output
+      - Definition — see identity.md#Harness-markers
+    - Daemon
+      - sys serve --start, --stop, --restart
+      - sys serve --status
+      - Definition — see assembly.md#Persistent-daemon-crate
+  - Plugin noun
+    - Install
+      - plugin install <source>
+      - Source — github, registry alias, pack URL
+      - Flags — --ref, --yes, --environment
+      - Preview before write
+      - Definition — see plugins.md#Installation-lifecycle
+    - Link and unlink
+      - plugin link <path> — dev hot reload
+      - plugin unlink <id> — detach symlink
+      - Link restricted to dev environment
+      - Exit 2 on prod link attempt
+    - List
+      - plugin list [--json] [--enabled-only]
+      - Renders aligned receipt table
+      - Shows ID, version, rung, generation
+      - Shows aliased_as per plugin
+      - Envelope shape — see #CLI-surface
+    - Inspect
+      - plugin inspect <id|urp>
+      - Returns PreflightEnvelope
+      - Manifest commands and permissions
+      - Vault keys, egress domains, hooks
+      - Definition — see #Run-noun
+    - Update
+      - plugin update [id...]
+      - --dry-run and --check flags
+      - Builds new generation, atomic swap
+      - Reference — see plugins.md#Generations
+    - Enable and disable
+      - plugin enable <id> — mount projection
+      - plugin disable <id> — unmount projection
+      - SIGTERM to running plugin daemons
+      - Reference — see plugins.md#Generations
+    - Uninstall
+      - plugin uninstall <id>
+      - --purge-state wipes state directory
+      - Running tasks retain old generation
+      - GC reclaims after lease drop
+      - Reference — see plugins.md#Generations
+    - Search
+      - plugin search <query>
+      - --limit and --json flags
+      - Returns matching IDs and ratings
+      - Definition — see marketplace.md#Discovery
+    - Logs
+      - plugin logs <id> [--follow]
+      - Ring-buffered stdout and stderr
+      - Cap at 64 KiB per plugin
+      - Envelope shape — see #CLI-surface
+    - Doctor
+      - plugin doctor [<id>]
+      - Probes Tri-Jail substrate
+      - Asserts Syscall 42 trapping
+      - Tests IPC latency over kernel.sock
+      - Definition — see sandbox.md#Boundary-alarms
+  - DB noun
+    - Lock
+      - db lock <table>:<ref> --ttl <duration>
+      - Claims Layer 1 lease
+      - --takeover acquires stale claim
+      - Definition — see world.md#Claims-lease
+    - Unlock
+      - db unlock <target>
+      - db unlock <target> --abandon
+      - Abandon requires --reason
+      - Reference — see world.md#Claims-lease
+    - Schema
+      - db schema [--table]
+      - Renders DDL for inspection
+      - Envelope shape — see #CLI-surface
+    - Snapshots
+      - db snapshot — VACUUM INTO
+      - db restore <id> — point-in-time
+      - db dump — deterministic export
+      - Definition — see world.md#Snapshots
+    - Boundary
+      - All SQL routes through run sql
+      - AST and authorizer on every call
+      - Raw DDL outside migration denied
+      - Definition — see kernel.md#Raw-SQL-rules
+  - Routine noun
+    - Authoring
+      - Direct write in routines/<name>.py
+      - Or template scaffold tpl://routine/<name>
+      - Definition — see routines.md#Procedure-layer
+    - Verify
+      - routine prove <name> [-p k=v]
+      - --environment flag, default sim
+      - Definition — see lifecycle.md#Prove-stage
+    - Promote
+      - routine ship <name> reviewed
+      - routine ship <name> pinned
+      - Skip draft to pinned exits 3
+      - Definition — see governance.md#Promotion-gates
+    - Maintenance
+      - routine sweep [--since 30d]
+      - routine stats <name> [--deep]
+      - Definition — see lifecycle.md#Decay
+    - Recovery
+      - routine rollback <name> [version]
+      - Forward-only via revert bundle
+      - Definition — see lifecycle.md#Versioning
+    - Retirement
+      - routine retire <name> [--reason]
+      - Dissolves ingress bindings atomically
+      - Definition — see lifecycle.md#Decay
+  - API noun
+    - Import
+      - api import <provider> <path> <method>
+      - --spec flag for URL or file
+      - Isolated endpoint import
+      - Definition — see egress.md#Vault-storage
+    - Sync
+      - api sync <provider> <spec_url>
+      - --interval for cadence
+      - Definition — see routines.md#Shape-constraints
+    - Record
+      - api record <provider.verb>
+      - Captures live response JSON Schema
+      - Enables contract proof for promotion
+      - Definition — see governance.md#Evidence
+    - Drift
+      - api diff <provider>
+      - Compares spec_hash against remote
+      - Definition — see lifecycle.md#Drift
+    - Catalog
+      - api catalog <provider>
+      - --state filter for active/retired
+      - Envelope shape — see #CLI-surface
+    - Prove
+      - api prove <provider.verb>
+      - --environment flag
+      - Definition — see lifecycle.md#Prove-stage
+    - Promote
+      - api ship <provider.verb> reviewed
+      - api ship <provider.verb> pinned
+      - Definition — see governance.md#Promotion-gates
+    - Stats
+      - api stats <provider> [--summary]
+      - Envelope shape — see #CLI-surface
+    - Retirement
+      - api retire <provider.verb>
+      - api rollback <provider.verb>
+      - Definition — see lifecycle.md#Decay
+  - Bind noun
+    - Cron
+      - bind cron <name> <capability> "<expr>"
+      - -m flag for intent
+      - Definition — see plugins.md#Capabilities
+    - Webhook
+      - bind webhook <name> <provider> <event>
+      - --ingress for public URL
+      - --verifier for signature spec
+      - Definition — see identity.md#Concurrency
+    - Federation
+      - bind federation <name> <source_ws> <event>
+      - Async peer outbox siphon
+      - Definition — see plugins.md#Federation-transport
+    - Endpoint
+      - bind endpoint <routine@version>
+      - --auth api-key, --rate flag
+      - Pinned rung required
+      - Definition — see governance.md#The-ladder
+    - Export
+      - export openapi [--out path]
+      - export mcp [--out path]
+      - Envelope shape — see #CLI-surface
+    - Webhook ingress law
+      - Public --ingress URL required
+      - Or active tunnel required
+      - Raw 127.0.0.1 denied exit 3
+      - Zero unauthenticated ingress
+    - Management
+      - bind list, inspect <id>
+      - bind pause <id>, resume <id>
+      - bind remove <id>
+      - bind keys issue <name> --principal
+      - Envelope shape — see #CLI-surface
+  - Ping noun
+    - Notify
+      - ping notify <principal> <msg>
+      - --channel flag for provider
+      - --intent flag for audit
+      - Definition — see identity.md#Harness-markers
+    - Ask
+      - ping ask <principal> <q>
+      - --options and --timeout flags
+      - Predicate binds to intent
+      - Definition — see governor.md#Suspension-registry
+    - List
+      - ping list [--pending]
+      - Envelope shape — see #CLI-surface
+    - Resolve
+      - ping resolve <ask-id> --choice <opt>
+      - Flips ask row, enqueues resumption
+      - Definition — see world.md#Outbox-inbox
+    - Expire
+      - ping expire <ask-id>
+      - Fail-closed on timeout
+      - Definition — see effect.md#Denials
+  - Rule noun
+    - Inspect
+      - rule show [target=schema]
+      - rule diff [target=schema] [--git]
+      - Envelope shape — see #CLI-surface
+    - Plan
+      - rule plan --name <slug> [-m "why"]
+      - Generates migrations/NNNN/ bundle
+      - Definition — see world.md#Migration
+    - Verify
+      - rule prove <id> --environment sim
+      - Rehearses all four phases on masked
+      - Definition — see world.md#Migration
+    - Apply
+      - rule apply <id> [--dry-run]
+      - Executes expand → align → contract → pin
+      - Definition — see world.md#Migration
+    - Validate
+      - rule validate [target]
+      - Unified syntax and acyclic verification
+      - Envelope shape — see #CLI-surface
+    - Ergonomic alias
+      - capcli apply aliases rule apply schema
+      - Alias resolves before handler gate
+      - Reference — see #Run-noun
+  - Environment noun
+    - Provision
+      - env new <name> [--seed prod]
+      - Or template scaffold tpl://world/<name>
+      - Definition — see lifecycle.md#Environments
+    - Switch
+      - env use <name>
+      - Sets sticky context for CLI
+      - Envelope shape — see #CLI-surface
+    - Audit
+      - env list, inspect, doctor
+      - Flags drift and staleness
+      - Definition — see lifecycle.md#Drift
+    - Merge
+      - env merge <name> [target=prod]
+      - -m flag for intent
+      - Requires tier 1 host and rehearsal
+      - Definition — see governance.md#Promotion-gates
+    - Remove
+      - env remove <name>
+      - Dual confirmation for prod
+      - Definition — see lifecycle.md#Environments
+    - Namespace law
+      - Path — capcli/envs/<name>/
+      - Isolated directory per environment
+      - Definition — see lifecycle.md#Namespace-boundary
+  - Doc noun
+    - Reading
+      - doc read <ptr> [--max-tokens 100]
+      - Resolves any doc:// URP
+      - Specs and prompt campaigns read identically
+      - Definition — see routines.md#Shape-constraints
+    - Outline
+      - doc outline <ptr>
+      - Returns section index
+      - Envelope shape — see #CLI-surface
+    - Leaf selection
+      - Fragment #<node> selects one node
+      - Token cage ceilings apply
+      - Definition — see routines.md#Shape-constraints
+    - Campaign envelope
+      - inspect doc://prompts/<campaign>
+      - Returns vars, sections, caps
+      - Body withheld
+      - Envelope shape — see #CLI-surface
+    - Single reading surface
+      - No prompt noun exists
+      - Prompt campaigns read via doc read
+      - Unified grammar for all doc pointers
+      - Reference — see #Run-noun
+  - Template noun
+    - New
+      - template new <name> --type routine|world
+      - Scaffolds capcli-template.yaml
+      - Envelope shape — see #CLI-surface
+    - Pack
+      - template pack <dir> [--out bundle.cap]
+      - Freezes blueprint into bundle
+      - Definition — see marketplace.md#Packs
+    - Sync
+      - template sync refreshes registry index
+      - Envelope shape — see #CLI-surface
+    - Import
+      - template import <urp|url|file>
+      - --sha256 flag for direct URL
+      - Definition — see marketplace.md#Distribution-channels
+    - Scaffold
+      - template scaffold <urp> <target>
+      - -p flag for typed params
+      - Hydrates draft into routines/ or envs/
+      - Definition — see marketplace.md#Packs
   - Universal flags
     - Global flags
-      - --json — stable machine-readable output
-      - --as <principal> — target execution principal for scoped access
-      - --env <name> — target environment override (defaults to sticky context set by `env use`)
-      - -m, --intent "<why>|@<path>" — causal motivation for mutating actions (short flag supported)
-      - --workspace <path|urp> — project root anchor (runtime home is <root>/capcli) or remote network endpoint (e.g. tcp://100.64.0.1:4040, overrides CAPCLI_WORKSPACE): see artifacts/policy.yaml#network.transports
-      - --session <token> — cryptographic session handle binding principal and frame
-      - --in <path> — file or stdin (@-) source for primary command payload
-      - --out <path> — writes execution payload to disk; returns token-lean summary to stdout
-      - at-symbol expansion — all string arguments (-p, --intent, --reason, query) accept @<path> or @- (stdin)
-      - flag ceiling — the twelve universal flags above are frozen; per-verb command parameters grow independently
+      - --json — machine-readable output
+      - --as <principal> — target execution principal
+      - --environment <name> — override sticky
+      - -m, --intent — causal motivation
+      - --workspace <path|urp> — project root or remote
+      - --session <token> — cryptographic session handle
+      - --in <path> — file or stdin payload
+      - --out <path> — payload redirection
+      - at-symbol — @<path> or @- for stdin
     - Mutating flags
-      - --dry-run — plan execution without applying state changes
-      - --reason "<why>|@<path>" — threshold crossing justification, accepts inline text or file
-      - --by <agent-id> — acting identity verified via process credentials
+      - --dry-run — plan without applying
+      - --reason "<why>" — threshold justification
+      - --by <agent-id> — acting identity
+      - Definition — see identity.md#Credential-binding
     - Scoped flags
-      - --lock <ref> — exclusive claim lease on run
+      - --lock <ref> — exclusive claim lease
+      - --tier-waiver — one prod on tier 2
+      - Definition — see sandbox.md#Platform-tiers
+    - Flag ceiling
+      - Twelve universal flags frozen
+      - Per-verb params grow independently
+      - Never a thirteenth universal flag
+      - Reference — see #CLI-surface
+  - Refusals and banned operations
+    - Matrix denials
+      - Environment and trust and platform pre-flight
+      - Exit 2 with domain policy.trust or platform
+      - Definition — see governance.md#Weakest-link-matrix
+    - SSOT enforcement
+      - Config mutations require git commits
+      - Direct config set denied exit 3
+      - Definition — see world.md#Configuration-proposals
+    - Raw DDL via sql
+      - ALTER, DROP, CREATE outside migration denied
+      - Exit 2 with domain policy.authorizer
+      - Definition — see kernel.md#Raw-SQL-rules
+    - Banned bypass flags
+      - --force rejected at parser exit 3
+      - --override-budget rejected
+      - --force-prod rejected
+      - --verbose rejected
+      - Reference — see governance.md#Limits-and-refusals
+    - Pointer grammar
+      - Only scheme://namespace/resource parses
+      - Bare filesystem paths fail exit 3
+      - Removed schemes — hub, prompt, mesh
+      - Removed schemes — apis, sink, snap
+      - Definition — see routines.md#The-ctx-contract
+    - Unified verb aliases
+      - Queries — capcli sql banned in db
+      - Locks — db lock bans claim noun
+      - Sandbox — sys exec bans jail noun
+      - Explain — sys audit trace bans policy
+      - Egress — run bans api call noun
+      - Budget — inspect quota:// bans budget noun
+      - Authoring — direct write bans routine new
+      - Blueprints — inspect tpl:// bans template apply
   - Client RPC contract
-    - Client instantiation and transport
-      - Connection setup
-        - entry point — in-tree module in packages/pwa/src/client.ts: see assembly.md#administrative-cockpit-package
-        - config parameters — createClient({ endpoint, token, brand }): see interface.md#Client-RPC-contract
-        - transport engine — HTTP POST for RPC; WebSocket / SSE for tail: see action.md#Serve-lifecycle-split
-      - White-label customization
-        - brand schema — custom name string, binary alias, and tagline: see interface.md#Client-RPC-contract
-        - noun aliasing — configurable aliases for surface nouns: see interface.md#CLI-surface
-        - locked nouns — kernel sys noun cannot be aliased: see interface.md#CLI-surface
-        - branding scope — human text output only; JSON never rebranded: see physics.md#Diagnostic-output-law
-      - Invocation method surface
-        - execution — client.run(), client.sql(), client.routine.prove(): see action.md#Unifying-concept
-        - discovery — client.search(), client.inspect(): see action.md#Search-surface
-        - auditing — client.audit.tail(), client.audit.trace(): see effect.md#Query-surfaces
-        - return envelope — { exit: number, json: object, text: string }: see physics.md#Exit-code-law
-        - elapsed time — every return envelope carries `elapsed_ms`: measured wall-clock milliseconds for the execution
-        - fixture values — wireframe fixtures record `elapsed_ms` as illustrative metadata; the golden runner never asserts it
-      - Immutable core contracts
-        - exit codes — strict integer exit code definitions: see physics.md#Exit-code-law
-        - schema models — streaming JSON schemas and system tables: see world.md#Dual-schema
-        - routine contract — routine decorator and ctx surface: see action.md#The-ctx-contract
-  - Administrative cockpit PWA
-    - Architecture & serving
-      - distribution — embedded static bundle served by capcli-daemon at 127.0.0.1:4040
-      - client authority — zero execution logic; serves as exclusive out-of-band human decision broker (WebAuthn / Passkey authenticated)
-      - zero-cli human law — humans interact exclusively via 1-click mobile decision cards in PWA; terminal and raw YAML editing by humans are prohibited
-      - background git synchronization — approving a proposal in Cockpit instructs daemon to recompile capcli.lock, write audit ledger, and commit to Git
-        - signing key custody — daemon holds the approver's Git signing key in the encrypted vault; commits are signed under the caller's key
-      - presentation stance — neutral kernel inspector; renders engine primitives without domain abstractions
-    - Human decision cards
-      - config proposals — renders visual diff of agent-authored YAML changes with Sub-check 1 & 2 verification badge; 1-click [Approve & Apply] recompiles lockfile and resumes task
-      - credential requests — out-of-band vault input field encrypts raw secret directly into daemon memory (AES-256-GCM); zero exposure to agent context or shell logs
-        - persistence — daemon decrypts into memory only; ciphertext persists to the secrets table: see agent.md#Secrets
-      - macro-budget grants — 1-click expansion of session fuel for suspended frames; grants record per-session overrides in _budget_frames, never governance.yaml mutations
-    - Cockpit functional layers
-      - Layer 1: State Inspector — renders schema tables, columns, indexes, and format-preserved masked cells (████)
-      - Layer 2: Capability Inspector — routine catalog, template blueprints via inspect (tpl://), version diffs, OpenAPI verb states, and manifest-vs-fingerprint graphs
-      - Layer 3: Policy & Governance — live policy authorizer rules, lockfile SHA256 integrity, and rate ceilings
-      - Layer 4: Audit Spine — live streaming event tail, causal DAG trace explorer, and machine denial decoders
-      - Layer 5: Budget & Telemetry — call stack frame trees, fuel consumption meters, wire byte counters, and token-bucket drain gauges
-      - Layer 6: Promotion & Approvals — staged routine promotions, DDL migration previews, and canary veto timers
-      - Layer 7: Human Interaction (Ask) — structured question resolution cards with fail-closed timeout indicators
-      - Layer 8: Vault & Biometrics — out-of-band credential injection screen with mobile biometric/FaceID support
-      - Federation surfaces
-        - peer roster — federated workspaces with transport, socket health, and trust floors: see physics.md#Federation-invariants
-        - catalog entries — ws:// routines with version pins and federated preflight checklist: see action.md#Pointer-taxonomy
-        - trace stitching — cross-workspace DAG via child_trace_id and parent_frame_id: see effect.md#Structural-invariants
-        - delegated budgets — caller remaining vs callee burn per federated call: see budget.md#Cascade
-    - Transport streams
-      - rpc endpoint — HTTP POST http://127.0.0.1:4040/rpc
-      - websocket tail — WS ws://127.0.0.1:4040/ws/audit (streams live leaf events and frame transitions)
-    - Interaction primitives
-      - Inspect — drill from causal op -> routine manifest -> budget frame -> audit entry
-      - Authorize — sign off on promotion candidates or resolve ping.ask suspensions
-      - Inject — input raw third-party secrets directly into encrypted in-memory daemon vault
-      - Rollback — trigger snapshot restore with mandatory dual confirmation
-  - Interaction patterns
-    - Browse — read-only drill-down through tables, events, and rules
-    - Approve — gate execution with evidence inspection; one card per decision
-    - Answer — resolve ping.ask cards; resume suspended routine executions
-    - Recover — trigger snapshot restore or code rollback with explicit confirmation
-    - Observe — monitor streaming audit events and resource telemetry
-  - Onboarding journeys
+    - Instantiation
+      - Entry — packages/pwa/src/client.ts
+      - createClient({ endpoint, token, brand })
+      - Transport — HTTP POST for RPC
+      - WebSocket for tail streams
+      - Definition — see assembly.md#Administrative-cockpit-package
+    - White-label
+      - brand schema — name, binary alias, tagline
+      - Noun aliasing for surface nouns
+      - sys noun cannot be aliased
+      - Branding scope — human text output only
+      - JSON never rebranded
+      - Reference — see kernel.md#Diagnostic-output-law
+    - Method surface
+      - client.run(), client.sql()
+      - client.routine.prove()
+      - client.search(), client.inspect()
+      - client.audit.tail(), client.audit.trace()
+      - Envelope shape — see #CLI-surface
+    - Return envelope
+      - { exit, json, text } shape
+      - elapsed_ms — wall clock milliseconds
+      - Fixture metadata — illustrative only
+      - Golden runner never asserts elapsed
+      - Reference — see #CLI-surface
+    - Immutable core contracts
+      - Exit codes — strict integer contract
+      - Schema models — streaming JSON schemas
+      - Routine contract — decorator and ctx
+      - Definition — see kernel.md#Exit-code-law
+    - Streams
+      - RPC endpoint — HTTP POST 127.0.0.1:4040/rpc
+      - WebSocket tail — ws://.../ws/audit
+      - Live leaf events and frame transitions
+      - Definition — see effect.md#Query-surfaces
+    - Envelope shape
+      - context — environment and platform tier
+      - exit_code — integer
+      - state_modified — boolean
+      - data — typed payload
+      - diagnostic — machine-readable remedy
+      - audit_op — operation id for trace
+  - Administrative Cockpit PWA
     - Architecture
-      - sequence — intent declaration precedes environment scaffolding
-      - authority — harness drafts, kernel gates, human approves
-      - pedagogy — designed denial teaches gate constraints before write success
-      - safety order — read → dry-run → denial → write → recovery proof
+      - Embedded static bundle in daemon
+      - Served at 127.0.0.1:4040
+      - Zero execution logic in PWA
+      - WebAuthn and Passkey authenticated
+      - Definition — see assembly.md#Administrative-cockpit-package
+    - Zero-CLI human law
+      - Humans interact via 1-click cards
+      - Terminal and raw YAML editing prohibited
+      - Approved via mobile decision cards
+      - Reference — see world.md#Configuration-proposals
+    - Background git sync
+      - Approval triggers lockfile recompile
+      - Daemon writes audit ledger
+      - Daemon commits to Git
+      - Signing key from encrypted vault
+      - Commits signed under caller's key
+      - Reference — see world.md#Configuration-proposals
+    - Presentation stance
+      - Neutral kernel inspector
+      - Renders engine primitives without domain abstraction
+      - Zero proprietary dashboards
+      - Reference — see kernel.md#Neutrality-law
+    - Human decision cards
+      - Config proposals — visual diff
+      - Credential requests — out-of-band injection
+      - Macro-budget grants — session fuel expansion
+      - Reference — see world.md#Configuration-proposals
+    - Credential card
+      - Encrypts raw secret directly into daemon memory
+      - AES-256-GCM at rest
+      - Zero exposure to agent context
+      - Zero exposure to shell logs
+      - Definition — see egress.md#Vault-storage
+    - Budget grant card
+      - 1-click expansion of session fuel
+      - Records per-session overrides in frames
+      - Never mutates governance.yaml
+      - Reference — see governance.md#Budget-frames
+    - Cockpit functional layers
+      - Layer 1 — State Inspector
+      - Layer 2 — Capability Inspector
+      - Layer 3 — Policy and Governance
+      - Layer 4 — Audit Spine
+      - Layer 5 — Budget and Telemetry
+      - Layer 6 — Promotion and Approvals
+      - Layer 7 — Human Interaction (Ask)
+      - Layer 8 — Vault and Biometrics
+    - Federation surfaces
+      - Peer roster with transport and health
+      - Catalog entries for ws:// routines
+      - Trace stitching across workspaces
+      - Delegated budget display
+      - Definition — see plugins.md#Federation-transport
+    - Interaction primitives
+      - Inspect — drill DAG to manifest
+      - Authorize — sign promotion or ask
+      - Inject — input secrets to vault
+      - Rollback — snapshot restore with dual confirm
+    - Interaction patterns
+      - Browse — read-only drill-down
+      - Approve — gate with evidence inspection
+      - Answer — resolve ask cards
+      - Recover — trigger snapshot restore
+      - Observe — monitor streaming events
+  - Onboarding
+    - Architecture
+      - Intent declaration precedes scaffolding
+      - Harness drafts, kernel gates, human approves
+      - Designed denial teaches gate constraints
+      - Safety order — read, dry-run, denial, write, recovery
+      - Definition — see kernel.md#Fail-closed-stance
     - Human journey stages
-      - S0 help & verify — root help stub redirects to search; doctor check probes host profile
-      - S1 intent — natural language goal capture
-      - S2 proposal — preview dev schema via dry-run
-      - S3 read — initial safe select query
-      - S4 denial — deliberate unbounded write denial citing require_where
-      - S5 write — successful bounded write with causal intent
-      - S6 recovery — snapshot mutation and restore verification
-      - S7 discovery — search and inspect loop
-      - S8 routine — scaffold routine from repeated operations
-      - S9 promotion — sim prove followed by evidence-based promotion
-      - S10 receipt — sys doctor --report verification receipt
+      - S0 — help stub and doctor check
+      - S1 — intent capture in natural language
+      - S2 — proposal preview via dry-run
+      - S3 — initial safe select query
+      - S4 — deliberate unbounded write denial
+      - S5 — successful bounded write with intent
+      - S6 — snapshot mutation and restore
+      - S7 — search and inspect loop
+      - S8 — scaffold routine from repeated ops
+      - S9 — sim prove then evidence promotion
+      - S10 — sys doctor --report receipt
+    - Human denial pedagogy
+      - S4 denial cites require_where rule
+      - Remediation printed with carets
+      - Learns gate before write success
+      - Reference — see effect.md#Denials
     - Harness journey stages
-      - H0 contract — bootstrap via installed capcli skill; parse sys doctor --json or 6-line root help
-      - H1 discovery — inspect catalog verbs and existing schema views via run search
-      - H2 rehearsal — execute plan with run --dry-run
-      - H3 dual probe — query local state via sql and inspect remote verbs via api catalog
-      - H4 hybrid rehearsal — test composite write and simulated egress via routine prove
-      - H5 feedback — parse denial rules via sys audit trace --explain
-      - H6 codification — author mandatory overview routine to ground future agents in domain state
-      - H7 proving — execute routine prove --env sim
+      - H0 — bootstrap via installed skill
+      - H0 — parse sys doctor --json or help stub
+      - H1 — discover via run search
+      - H1 — inspect catalog verbs and views
+      - H2 — rehearsal with run --dry-run
+      - H3 — dual probe local state and remote verbs
+      - H4 — hybrid rehearsal with routine prove
+      - H5 — parse denials via sys audit trace
+      - H6 — author overview routine
+      - H7 — prove with routine prove --env sim
+    - Harness context grounding
+      - Turn-zero overview every turn
+      - Snapshot under 60 tokens
+      - Active fuel, locks, sensory inbox
+      - Definition — see routines.md#Session-Overview-Primer
     - Anti-decisions
-      - no blank templates or static tours
-      - no kernel-generated schemas
-      - no synthetic onboarding event types
-      - no direct writes to production during onboarding
+      - No blank templates or static tours
+      - No kernel-generated schemas
+      - No synthetic onboarding events
+      - No direct prod writes during onboarding
+      - Reference — see effect.md#Event-integrity
+    - Receipt verification
+      - sys doctor --report produces trust receipt
+      - Cites ledger root and WORM checkpoint
+      - Definition — see effect.md#Provenance

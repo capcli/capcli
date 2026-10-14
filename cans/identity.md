@@ -1,0 +1,403 @@
+- Identity
+<!-- ref-by: governor.md, effect.md, governance.md, world.md -->
+  - Identity chain
+    - Hierarchy
+      - principal — human or root authority
+      - agent — registered harness instance
+      - subagent — thread or worker sharing PID
+      - kernel session — temporary engagement scope
+      - op — single leaf in causal DAG
+      - Federated caller — ws:<name> external identity
+    - Principal
+      - Examples — user:root, partner:idp
+      - Root authority holder
+      - Bound to domain rows via :principal
+      - Tenant scoping — see world.md#Dual-schema
+    - Agent
+      - Registered in agents system table
+      - Format — agt_<hex>
+      - Kernel-minted, self-declaration denied
+      - Immutable id and principal columns
+    - Subagent
+      - Thread or event-loop worker
+      - Shares parent PID
+      - Tracked via harness markers
+      - Definition — see #Harness-markers
+    - Kernel session
+      - Format — ses_<hex>
+      - Bound to one environment per scope
+      - Rides every budget frame
+      - Rides every audit event
+      - Rides every claim lease
+    - Federated caller
+      - Format — ws:<name>
+      - Registered as agent row
+      - Principal maps to internal :principal
+      - Allowlist is active ws: agent rows
+      - Definition — see plugins.md#Federation-transport
+    - Identity generation
+      - Tokens and ids kernel-issued
+      - Self-declaration denied
+      - HMAC binding to budget frame
+      - Session token carries signature
+    - Workspace anchoring
+      - CAPCLI_WORKSPACE env var
+      - Or --workspace flag
+      - Runtime state in <project>/capcli
+      - cd reliance banned
+  - Harness markers
+    - Marker sniffing
+      - Phase 1 reads process env
+      - Reads /proc/$PPID/environ on Linux
+      - PID-only trust banned
+      - Definition — see kernel.md#Unified-3-phase-engine
+    - Identity markers
+      - CLAUDE_CODE_SESSION_ID
+      - CODEX_THREAD_ID
+      - CODEX_SESSION_ID
+      - CODEX_CONVERSATION_ID
+      - ANTIGRAVITY_CONVERSATION_ID
+      - HERMES_SESSION_KEY
+    - Presence markers
+      - CLAUDECODE — Claude Code harness
+      - GEMINI_CLI — Gemini CLI harness
+      - CURSOR_AGENT — Cursor harness
+      - OPENCLAW_SHELL — OpenClaw harness
+    - Attribution fallback
+      - Presence-only markers map to agt_anon_<session>
+      - Missing markers map to agt_anon_<session>
+      - Anonymous callers capped at draft
+      - Mutating writes denied for anonymous
+      - Reference — see governance.md#The-ladder
+    - Provenance capture
+      - identity.skill_origin captured on leaf
+      - harness_marker_hash sha256 on leaf
+      - Event shape — see effect.md#Event-anatomy
+      - Field — triggered_by_skill
+    - Skill origin transport
+      - Harness exports CAPCLI_SKILL
+      - Unset records null
+      - Contract — see artifacts/policy.yaml#skill_origin
+    - Authority limit
+      - Marker is metadata only
+      - Never grants power
+      - Trust rung governs authority
+      - Definition — see governance.md#The-ladder
+    - Validation
+      - Format constraints per policy
+      - Config — see artifacts/policy.yaml#identity
+      - Malformed markers fall to anonymous
+      - Anonymous ceiling enforced
+  - Credential binding
+    - Capability token
+      - Kernel-minted HMAC token
+      - Bound to active budget frame
+      - Session-scoped, environment-scoped
+      - Definition — see governance.md#Budget-frames
+    - Workspace pinning
+      - Active session pinned to workspace.db
+      - Path — capcli/envs/<name>/workspace.db
+      - Cross-environment token rejected
+      - Definition — see world.md#SQLite-as-SSOT
+    - Session fork
+      - Child agents inherit scoped parent token
+      - Divergent marker under same PID forces fork
+      - Reason — thread cannot share session
+      - Emits fork event to audit
+    - Acting identity
+      - --by declares machine agent identity
+      - Verified against process credentials
+      - Recorded on every audit leaf
+      - Validation — see artifacts/policy.yaml#identity
+    - Beneficiary identity
+      - --as declares target principal
+      - Bound to SQLite :principal
+      - Row-level security enforcement
+      - Definition — see world.md#Dual-schema
+    - Principal typing
+      - :principal resolves to domain row key
+      - Kernel maps --as identity string to key
+      - Mapping precedes view binding
+      - Mismatch exits 3
+    - Implicit fork rule
+      - Same PID with divergent marker forks
+      - Fork inherits scoped parent token
+      - Fork has new kernel session id
+      - Prevents cross-thread token bleed
+    - Token validation
+      - Signature verified before dispatch
+      - Expiry checked at frame push
+      - Revocation checked against registry
+      - Failure exits 3
+    - Rotation
+      - Daemon rotates active tokens
+      - Stateless CLI decrypts per run
+      - Rotation transparent to caller
+      - Definition — see egress.md#Vault-proxy
+  - System agent registry
+    - Storage
+      - Table — agents in workspace.db
+      - System schema — see world.md#Dual-schema
+    - Row shape
+      - id — primary key, agt_<hex>
+      - name — unique display string
+      - harness — origin harness name
+      - principal — bound principal
+      - status — active, revoked, expired
+    - Immutability
+      - id and principal in imm_cols
+      - Cannot be UPDATEd after insert
+      - Enforcement — see kernel.md#Layer-1-C-authorizer
+    - Management commands
+      - sys agent register — mint agent
+      - sys agent list — show roster
+      - sys agent revoke — end execution instantly
+      - Envelope shape — see interface.md#CLI-surface
+    - Kernel principals
+      - capcli-cron owns time triggers
+      - capcli-watch owns webhook dispatches
+      - capcli-serve owns endpoint requests
+      - Execution token per _inbox task execution
+      - Definition — see world.md#Outbox-inbox
+    - Revocation
+      - sys agent revoke ends execution
+      - Active tokens invalidated
+      - Active claims released
+      - Active frames aborted
+    - Federated peers
+      - ws:<name> identities as agents
+      - Principal maps to internal :principal
+      - Status must be active for allowlist
+      - Revoked or expired peers denied
+      - Exit 2 E042_FEDERATION_DENIED
+    - Peer allowlist
+      - E042 allowlist is active ws: agents
+      - Empty allowlist denies all peers
+      - Adding peer requires operator action
+      - Removal is immediate
+  - Ephemeral swarm identity
+    - Node prefix
+      - Disposable containers mint agt_tmp_<uuid8>
+      - Prefix marks ephemeral scope
+      - Distinguishes from persistent agents
+      - Format enforces prefix
+    - Heartbeat loop
+      - Spokes ping Hub every 5s
+      - Updates heartbeat_at in agents table
+      - Missing heartbeat marks stale
+      - Config — see artifacts/governance.yaml#topology
+    - Reaper eviction
+      - Hub reaps nodes exceeding lease_ttl
+      - Marks status expired
+      - Purges active leases
+      - Emits swarm.node_reap event
+      - Event shape — see effect.md#Kernel-event-payloads
+    - Preemption yield
+      - SIGTERM maps directly to exit 6
+      - Yield preserves Layer 1 claims
+      - Yield checkpoint cursor to _suspended_tasks
+      - Reference — see governor.md#Yield-path
+    - Zero-disk credentials
+      - Spokes negotiate HMAC token in memory
+      - Via CAPCLI_AGENT_TOKEN env var
+      - Zero filesystem key storage
+      - Zeroized on process exit
+    - Ephemeral state law
+      - spoke-ephemeral cannot create workspace.db
+      - State resides in Hub RAM or SSD
+      - Zero local disk footprint
+      - Definition — see world.md#Topology-modes
+    - Swarm identity lifecycle
+      - Node mints on join
+      - Heartbeat while active
+      - Reaper on expiry
+      - Cleanup on graceful SIGTERM
+    - Coordination
+      - Hub is single writer
+      - Spokes proxy writes via RPC
+      - Central atomicity for fuel and rate
+      - Definition — see governance.md#Cascade
+  - Concurrency
+    - Concurrency model
+      - Serialized write pipeline via SQLite
+      - BEGIN IMMEDIATE for physical writes
+      - Writers bound by lifespan law
+      - Definition — see world.md#SQLite-as-SSOT
+    - Writer priority
+      - Interactive agent preempts bulk
+      - Webhook dispatch preempts backfill
+      - Priority class carried per routine
+      - Definition — see governor.md#Priority-classes
+    - Application locks
+      - Business leases in claims table
+      - Keyed to (session_id, harness_marker, op_sequence)
+      - PID-keyed leases banned
+      - Identity and lifecycle — see world.md#Claims-lease
+    - Three-tier locking
+      - Macro lease — claims, minutes
+      - Meso fence — OCC state_fence
+      - Micro lock — SQLite BEGIN IMMEDIATE
+      - All three non-overlapping
+      - Definition — see kernel.md#Unified-3-phase-engine
+    - Preemption
+      - SIGTERM maps to exit 6 yield
+      - Yield preserves Layer 1 claims
+      - Resume verifies ownership
+      - Reference — see governor.md#Suspension-registry
+    - Authoring mutex
+      - Filesystem lock on routines/<name>.py
+      - Concurrent edits exit 2
+      - Locked for the duration of authoring
+      - Definition — see routines.md#Procedure-layer
+    - Collision handling
+      - Writers queue up to busy_timeout
+      - Default 5000ms
+      - Timeout exhaustion exits 2
+      - Config — see artifacts/governance.yaml
+    - Physical arbiter
+      - SQLite BEGIN IMMEDIATE serializes writes
+      - Only kernel daemon writes
+      - Guest never touches file directly
+      - Definition — see world.md#Access-perimeter
+    - Callee floor
+      - Cross-agent routine calls need reviewed rung
+      - Federated callers need pinned rung
+      - Exit 2 E046 on breach
+      - Reference — see governance.md#Composition-floor
+    - Session scoping
+      - Session id rides every frame
+      - Session id rides every claim
+      - Session id rides every audit leaf
+      - Cross-session access denied
+    - OCC fence interaction
+      - Read drift triggers re-read
+      - Write drift exits 2 E061
+      - Fence retries capped at 3
+      - Definition — see governor.md#Suspension-registry
+  - Intent chain
+    - Chain hierarchy
+      - Session goal at root
+      - Routine intent in middle
+      - Op intent at leaf
+      - Full chain on every leaf event
+    - Intent propagation
+      - Parent intent inherited by child
+      - Child may narrow, never widen
+      - intent_chain field preserves history
+      - Event shape — see effect.md#Event-anatomy
+    - Write mandate
+      - Mutating writes require --intent
+      - Missing intent exits 3
+      - Empty intent exits 3
+      - Enforced at AST parse
+      - Definition — see kernel.md#Layer-2-AST-scanner
+    - Blast-radius validation
+      - Intent target matches AST write tables
+      - Divergence triggers exit 2
+      - Undeclared table writes rejected
+      - Enforced per statement
+    - Threshold justification
+      - High-impact writes need --reason
+      - Threshold — see artifacts/policy.yaml#query
+      - Reason recorded on leaf event
+      - Missing reason exits 3
+    - Intent binding to ask predicate
+      - Ask binds to intent at suspension
+      - Predicate captures read rows
+      - Resolution re-evaluates predicate
+      - Definition — see governor.md#Suspension-registry
+  - Session boundaries
+    - Dual-session architecture
+      - Harness session — cognitive transcript
+      - Kernel session — cryptographic scope
+      - Strictly decoupled
+      - Neither one implies the other
+    - Harness session
+      - Owned entirely by LLM runner
+      - Claude Code, Cursor, Codex
+      - Context window and memory
+      - Not tracked by kernel
+    - Kernel session
+      - Owned entirely by kernel
+      - Budget frame and claim holder
+      - Causal DAG boundary
+      - Format — ses_<hex>
+    - Session slaving
+      - Kernel auto-binds to harness markers
+      - Phase 1 sniffing authoritative
+      - Manual session tracking prohibited
+      - Reference — see #Harness-markers
+    - Turn-zero orientation
+      - Every harness turn runs overview
+      - Injects reality snapshot
+      - Snapshot under 60 tokens
+      - Definition — see routines.md#Session-Overview-Primer
+    - Scoping
+      - Session id rides every frame
+      - Session id rides every audit event
+      - Session id rides every claim
+      - Envelope shape — see effect.md#Event-anatomy
+    - Tracking
+      - Session counters govern fuel
+      - Wire, row, rate costs convert to fuel
+      - Reference — see governance.md#Fuel-formula
+    - Harness execution boundary
+      - Bash subshell isolated via IPC
+      - Direct workspace.db access blocked
+      - Stateless CLI invocation
+      - Definition — see sandbox.md#Channel-A
+    - Session persistence
+      - CAPCLI_SESSION env var override
+      - Or workspace active context
+      - Phase 1 sniffing authoritative
+      - Override only for non-standard harnesses
+    - Exit contract
+      - Process exit codes return to subshell
+      - Codes 0, 2, 3, 4, 5, 6
+      - Definition — see kernel.md#Exit-code-law
+    - Client boundary
+      - HTTP/WS daemon for external harnesses
+      - JSON-RPC 2.0 protocol
+      - Envelope shape — see interface.md#Client-RPC
+  - Harness neutrality
+    - Uniform actor model
+      - Kernel treats all callers uniformly
+      - Discriminator — harness marker hash
+      - Discriminator — principal, agent, session
+      - PID is context, never trust axis
+    - Kernel role
+      - Mechanical policy enforcement
+      - Mechanical dispatch
+      - Mechanical audit logging
+      - Zero semantic judgment
+    - Cross-harness compatibility
+      - Claude Code, Cursor, Codex
+      - Hermes, Gemini CLI, OpenClaw
+      - Custom LangChain loops
+      - Naked curl with --session or --by
+    - Anonymous ceiling
+      - Presence-only callers capped at draft
+      - Marker-less callers capped at draft
+      - Reads and queries permitted
+      - Mutating writes refused exit 3
+    - Skill provenance
+      - triggered_by_skill recorded on leaf
+      - Null when unset
+      - Contract — see artifacts/policy.yaml#skill_origin
+      - Field — identity.skill_origin
+    - Skill boundary
+      - Skills exist in harness
+      - Routines exist in capcli
+      - Skills call capabilities via run
+      - Raw SQL within skills banned
+      - Definition — see routines.md#Procedure-layer
+    - Replay interaction
+      - Replay uses current policy
+      - Identity re-verified at replay
+      - Historical identity recorded on leaf
+      - Reference — see effect.md#Replay-invariants
+    - Federation identity
+      - Peers authenticate via SO_PEERCRED
+      - Or via mTLS over WireGuard
+      - Peer identity maps to ws:<name>
+      - Definition — see plugins.md#Federation-transport

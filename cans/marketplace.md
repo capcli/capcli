@@ -1,0 +1,367 @@
+- Marketplace
+<!-- ref-by: interface.md, plugins.md, assembly.md -->
+  - Registry
+    - Substrate
+      - Central GitHub repository hosts PR flow
+      - Repo path — see artifacts/governance.yaml#template.registry_repo
+      - PR-driven marketplace, no proprietary server
+      - Immutable static JSON index on GitHub Pages
+      - Index path — https://registry.capcli.dev/v1/plugins.json
+    - Index mechanism
+      - GitHub crawler runs every 30 minutes
+      - Tags — capcli-plugin topic on public repos
+      - Valid manifest required for indexing
+      - Entry appended on merged PR only
+    - Entry schema
+      - urp — canonical plugin identifier
+      - version — semver of entry
+      - sha256 — bundle content hash
+      - bundle_url — immutable download URL
+      - min_kernel_version — semver floor
+      - policy_version — policy contract version
+    - Zero artifact hosting
+      - CLI downloads directly from source
+      - GitHub Releases as bundle host
+      - Registry hosts index only
+      - No CDN or artifact store in path
+    - Cached index
+      - Local cache under workspace home
+      - Refresh command — capcli plugin search --refresh
+      - Fallback — last cached index used offline
+      - Envelope shape — see interface.md#CLI-surface
+    - Search surface
+      - capcli plugin search <query>
+      - Returns IDs, ratings, verified badges
+      - Summary under 60 tokens per entry
+      - Results cap — see artifacts/governance.yaml#registry
+    - Verified publisher
+      - Badge granted on repeated green CI
+      - Badge revoked on policy violation
+      - Badge not a trust rung, only a signal
+      - Trust still governed by governance.md#The-ladder
+  - Publishing
+    - Intake PR gate
+      - Author PRs require green CI before merge
+      - rule validate on capcli-template.yaml
+      - Shape law — tokens <= 2000 hard
+      - Shape law — complexity and params lint only
+      - Headless sandbox test simulation
+      - Frozen .cap bundle via template pack
+      - SHA-256 computed on bundle bytes
+      - Definition — see routines.md#Shape-constraints
+    - CI gate steps
+      - 1 — YAML parse and schema validation
+      - 2 — AST complexity scan
+      - 3 — Sandbox test simulation
+      - 4 — Bundle build and hash compute
+      - 5 — Index entry append on merge
+      - Pipeline — see assembly.md#CICD
+    - Distribution
+      - Merged PR triggers release workflow
+      - Publishes immutable bundle.cap asset
+      - Appends entry to index.json
+      - Version pinned, never overwritten
+      - Rollback via new version, never tag rewrite
+    - Immutable versioning
+      - Tag write-once per version
+      - Retagging requires new version number
+      - Bundle hash published with tag
+      - Old bundles remain downloadable
+      - Index retains historical entries
+    - Provenance
+      - author_agent — publishing harness identity
+      - author_principal — human approver
+      - PR merge commit sha
+      - Signature over bundle hash
+      - Field shapes — see effect.md#Event-anatomy
+    - Publishing events
+      - plugin.published — new bundle indexed
+      - plugin.updated — new version indexed
+      - plugin.deprecated — upstream flag
+      - plugin.retired — uncallable marker
+      - Event shape — see effect.md#Kernel-event-payloads
+  - Packs
+    - Purpose
+      - Atomic multi-layer infrastructure cartridge
+      - Replaces generic bundle terminology
+      - Contains plugins, schemas, routines, bindings
+      - Installs all-or-nothing
+    - File identity
+      - Extension — .cap
+      - Format — signed archive
+      - Manifest — capcli-pack.yaml at root
+      - Hash — SHA-256 computed on write
+    - Manifest shape
+      - id — reverse-DNS pack identifier
+      - name — human display string
+      - version — semver
+      - min_kernel_version — semver floor
+      - Layer fields — plugins, schema, routines, bindings
+    - Plugin layer
+      - Each entry has id and source
+      - Source pinned to git tag or release URL
+      - binary_sha256 per entry
+      - Sub-dependency resolution at install
+      - Definition — see plugins.md#Manifest
+    - Schema layer
+      - tables — declarative column model
+      - imm_cols — column immutability
+      - prov — provenance column injection
+      - Shorthand expansion — see world.md#Dual-schema
+    - Routine layer
+      - src — relative path inside pack
+      - trust — declared rung on import
+      - Imported at draft regardless of declaration
+      - Definition — see routines.md#Procedure-layer
+    - Binding layer
+      - type — webhook, cron, endpoint
+      - provider — vendor signature driver
+      - event — provider event name
+      - capability — target routine reference
+      - Definition — see plugins.md#Capabilities
+    - Iron law 1 — atomic intake
+      - Pack installs 100% or aborts
+      - Any sub-plugin checksum mismatch rolls back
+      - state_modified: false on failure
+      - Exit 3 on abort
+      - Reference — see kernel.md#Exit-code-law
+    - Iron law 2 — trust floor
+      - Every entry imports at draft rung
+      - Zero promotional credit inherited
+      - prod install refused outright
+      - Exit 2 E045 on prod attempt
+      - Reference — see governance.md#The-ladder
+    - Iron law 3 — no lifecycle scripts
+      - postinstall.sh banned
+      - pre-compile hooks banned
+      - Dynamic network downloads banned
+      - Static AST expansion only
+      - Exit 3 on any script detected
+    - Intake pipeline
+      - 1 — Download to tmpfs /scratch
+      - 2 — Stream cap at 5MB
+      - 3 — SHA-256 verify against index
+      - 4 — Archive extraction
+      - 5 — rule validate on manifest
+      - 6 — Sub-check 1 and 2 on schema
+      - 7 — py_compile on routines
+      - 8 — AST complexity scan
+      - 9 — Register into dev worktree
+    - Install preview
+      - Vault keys displayed before write
+      - Egress domains displayed before write
+      - Shell commands displayed before write
+      - Operator confirmation required
+      - Envelope shape — see interface.md#CLI-surface
+    - Pack command surface
+      - template new <name> --type world scaffolds
+      - template pack <dir> [--out bundle.cap]
+      - template sync refreshes registry index
+      - template import <urp|url|file>
+      - template scaffold <urp> <target>
+      - Envelope shape — see interface.md#CLI-surface
+  - Distribution channels
+    - Source types
+      - GitHub repo — github.com/org/repo
+      - GitHub release — release URL with tag
+      - Registry alias — tpl://registry/world/<name>
+      - Direct URL — pinned with #sha256=<hex>
+      - Local file — local path with .cap suffix
+    - Pointer resolution
+      - tpl://registry/world/<name>@<ver> resolves
+      - SHA-256 checked against local index
+      - Direct URL requires pinned sha256
+      - Mutable branch pulls denied exit 3
+      - Definition — see interface.md#CLI-surface
+    - Wire sandbox
+      - Downloads stream to /scratch tmpfs
+      - Streams over 5MB aborted
+      - Zero execution during unpack
+      - Static AST analysis only
+      - Definition — see sandbox.md#Channel-A
+    - Cryptographic gate
+      - Kernel verifies stream SHA-256
+      - Verify against index or --sha256 flag
+      - Mismatch exits 3 refuse intake
+      - Zero partial writes on mismatch
+    - Zero execution rule
+      - Unpack is pure text handling
+      - No shell hooks fired
+      - No network egress during unpack
+      - No binary execution until install
+      - Reference — see #Iron-law-3
+    - Trust containment
+      - All remote templates at draft v1
+      - Zero promotional credit inherited
+      - prod intake refused
+      - Reference — see #Iron-law-2
+    - Bundle laws
+      - Manifest mandate — capcli-template.yaml required
+      - Governance exclusion — cannot alter policy
+      - Governance exclusion — cannot alter governance.yaml
+      - Host compiler overrides all bundled config
+      - Zero lifecycle hooks anywhere
+      - Definition — see world.md#Configuration-proposals
+    - Bundle size ceilings
+      - World template — 5MB max
+      - Routine template — 1MB max
+      - Exceed exits 3 refuse intake
+      - Config — see artifacts/governance.yaml#template
+    - Provenance stamping
+      - source_uri recorded on install
+      - bundle_sha256 on install event
+      - schema_version on install event
+      - Event shape — see effect.md#Kernel-event-payloads
+  - Discovery
+    - Search command
+      - capcli plugin search <query>
+      - Queries cached index.json
+      - Returns matching IDs and summaries
+      - Sub-60-token summaries per entry
+      - Envelope shape — see interface.md#CLI-surface
+    - Filters
+      - --trust <rung> filters by trust floor
+      - --env <name> filters by environment
+      - --type <plugin|pack|template>
+      - Config — see interface.md#Universal-flags
+    - Result shape
+      - id, version, summary, ratings
+      - verified_publisher badge
+      - bundle_url and sha256
+      - min_kernel_version floor
+    - did-you-mean
+      - Nearest candidates on zero hits
+      - Levenshtein distance over names
+      - Never invents new candidates
+      - Envelope shape — see interface.md#CLI-surface
+    - Gap detection
+      - capcli plugin search gaps --since 7d
+      - Zero-result queries ranked first
+      - Signals missing capabilities
+      - Learning input — see lifecycle.md#Learning-loop
+    - Conversion audit
+      - Low invoke rate signals poor description
+      - Aggregated via search events
+      - Event shape — see effect.md#Kernel-event-payloads
+    - Discovery boundaries
+      - Never returns raw blobs
+      - Returns pointers and summaries
+      - Payload under 60 tokens per entry
+      - Reference — see routines.md#Shape-constraints
+    - Discovery engine
+      - Exact id match short-circuits
+      - Prefix name completion
+      - Fuzzy edit distance
+      - SQLite FTS5 BM25 ranking
+      - Zero external API dependency
+      - Definition — see kernel.md#Neutrality-law
+  - Ratings and signals
+    - Ratings
+      - Aggregated from installed workspaces
+      - Opt-in only, zero telemetry by default
+      - Synthetic ratings rejected at index
+      - Config — see artifacts/governance.yaml#registry
+    - Verified publisher
+      - Badge on repeated green CI
+      - Revoked on policy violation
+      - Signal, not a trust rung
+      - Reference — see governance.md#The-ladder
+    - Download signals
+      - Raw counts from GitHub Releases
+      - Never a ranking input
+      - Purely informational display
+      - Config — see artifacts/governance.yaml#registry
+    - Deprecation signal
+      - Upstream flag on entry
+      - Does not remove from index
+      - Renders warning on install
+      - Reference — see #Publishing-events
+    - Retirement signal
+      - Uncallable marker on entry
+      - Historical provenance retained
+      - Definition — see lifecycle.md#Decay
+    - Signal boundaries
+      - Zero proprietary ranking algorithm
+      - Zero hidden promotion of entries
+      - Zero paid placement surfaces
+      - Reference — see kernel.md#Neutrality-law
+    - Audit
+      - Every install emits plugin.installed
+      - Every update emits plugin.updated
+      - Event shape — see effect.md#Kernel-event-payloads
+      - Envelope shape — see interface.md#CLI-surface
+  - Trust inheritance
+    - Import floor
+      - All remote templates land at draft
+      - Zero promotional credit inherited
+      - Reference — see governance.md#The-ladder
+    - Promotional path
+      - Promote via routine ship after prove
+      - Definition — see governance.md#Promotion-gates
+      - Imported routines cannot skip gates
+      - No fast-track promotion
+    - Cross-agent floor
+      - Imported routines callable only at draft
+      - Callee must meet or exceed caller rung
+      - Definition — see governance.md#Composition-floor
+    - Pack sub-plugin floor
+      - Each sub-plugin reviewed independently
+      - Pack trust is weakest member
+      - Import at weakest rung
+      - Reference — see governance.md#The-ladder
+    - Environment gate
+      - dev import always permitted
+      - sim import requires reviewed pack
+      - prod import refused outright
+      - Exit 2 E045 on prod attempt
+      - Reference — see lifecycle.md#Environments
+    - Trust receipt
+      - Install emits receipt with hashes
+      - Includes sha256 per sub-plugin
+      - Envelope shape — see interface.md#CLI-surface
+      - Computed from index entry
+    - Trust boundary
+      - Marker from publishing is metadata
+      - Never grants authority at install
+      - Authority governed by rung only
+      - Definition — see identity.md#Harness-markers
+  - Pack lifecycle
+    - Install flow
+      - fetch → preview → confirm → extract
+      - Rule validate at extraction
+      - Register into dev worktree
+      - Emit env.init_from_template event
+      - Event shape — see effect.md#Kernel-event-payloads
+    - Update flow
+      - Check remote tag against local
+      - Fetch new bundle, verify hash
+      - Build new generation directory
+      - Atomic pointer swap
+      - Reference — see plugins.md#Generations
+    - Uninstall flow
+      - Unregister from plugins.json
+      - Mark generation for GC
+      - Retain until leases drop
+      - Reference — see plugins.md#Generations
+    - Migration path
+      - Schema migrations bundled with pack
+      - rule plan generates migrations/
+      - rule apply executes cutover
+      - Definition — see world.md#Migration
+    - Rollback flow
+      - Forward-only via revert bundles
+      - Never delete historical generations
+      - Reference — see lifecycle.md#Versioning
+    - Deprecation handling
+      - Upstream flag renders warning
+      - No auto-uninstall on deprecate
+      - Operator action required
+      - Envelope shape — see interface.md#CLI-surface
+    - Retirement handling
+      - Retired entry stays in index
+      - Install refused with clear remedy
+      - Reference — see lifecycle.md#Retirement-semantics
+    - Audit trail
+      - Every lifecycle step emits event
+      - Chain preserves install provenance
+      - Definition — see effect.md#Provenance

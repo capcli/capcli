@@ -1,71 +1,167 @@
 - Overview
-<!-- ref-by: action.md, assembly.md, budget.md, interface.md, time.md -->
+<!-- ref-by: plugins.md, marketplace.md, interface.md -->
   - What capcli is
-    - Architecture role
-      - gateway — governed perimeter between agent harness and workspace
-      - nervous system — executes effects, enforces physics, and logs audit
-      - separation — cognition lives in harness; mechanics live in kernel
-    - Core abstractions
-      - world — SQLite workspace.db holding state and system tables
-      - physics — two-layer compile-time and runtime policy enforcement
-      - memory — append-only SQLite _audit table mirrored to JSONL
+    - Core identity
+      - Governed perimeter between harness and workspace
+      - Executes effects, enforces physics, logs audit
+      - Cognition lives in harness
+      - Mechanics live in kernel
     - Harness consumers
-      - agent harness — autonomous reasoning via open bash subshell: see interface.md#CLI-surface
-      - human harness — oversight, authorization, and recovery via CLI or external clients
-      - client boundary — external tools consume kernel JSON-RPC daemon over HTTP/WS: see interface.md#client-rpc-contract
-      - execution separation — harness reasons while kernel enforces: see physics.md#Fail-closed-stance
+      - Agent harness
+        - Autonomous reasoning via open bash subshell
+        - Claude Code, Hermes, Codex, Swarm
+        - Identity via environment markers
+        - Skills invoke capabilities via run
+      - Human harness
+        - Oversight, authorization, and recovery
+        - Cockpit PWA and CLI surfaces
+        - Out-of-band cryptographic approvals
+        - Manual Git manipulation prohibited
+      - Client boundary
+        - JSON-RPC 2.0 daemon over HTTP/WS
+        - External tools and orchestrators
+        - Zero-authority PWA frontend
+        - WebSocket audit tail streams
+      - Anonymous callers
+        - Marker-less callers classified anonymous
+        - Reads and queries only
+        - Mutating writes refused
+        - Explicit --by or --session required
+    - Core abstractions
+      - World
+        - SQLite workspace.db holding domain state
+        - Dual schema: agent and system
+        - WAL mode with serialized writers
+        - Claims table for lease locks
+      - Physics
+        - Compile-time and runtime policy layers
+        - C authorizer, AST, VDBE hook
+        - Tri-Jail process isolation
+        - Fail-closed on every ambiguity
+      - Memory
+        - Append-only SQLite _audit ledger
+        - Mirrored to daily JSONL files
+        - SHA-256 causal DAG chain
+        - WORM checkpoint offsite
+      - Actors
+        - Principal, agent, session, op
+        - Harness markers grant identity
+        - Anonymous callers capped at draft
+        - Cross-agent calls demand reviewed
+    - Runtime topology
+      - Single static musl binary
+      - Platform tier 1 on Linux/macOS/Windows
+      - Cockpit PWA embedded via rust-embed
+      - Persistent daemon on headless hosts
+  - The 5-layer taxonomy
+    - Layer 4 — Pack
+      - Shipping cartridge, .cap file
+      - Immutable, SHA-256-signed
+      - Zero execution at rest
+      - Installed atomically or not at all
+    - Layer 3 — Template
+      - Recipe blueprint, tpl:// scheme
+      - Static scaffolding text
+      - Dissolves on hydration
+      - Zero runtime presence
+    - Layer 2 — Routine
+      - Business logic, cap:// scheme
+      - Guest procedural code
+      - Never touches raw sockets
+      - Talks to world via ctx contract
+    - Layer 1 — Plugin
+      - Hardware driver, plugin:// scheme
+      - Out-of-process native executable
+      - Plugin verbs, hooks, permissions
+      - Zero business logic inside
+    - Layer 0 — Kernel
+      - Static Rust musl binary
+      - Authorizer, Tri-Jail, DAG, fuel min()
+      - The unbreakable court
+      - Never reads uncompiled YAML
+    - Layer invariants
+      - Kernel is compiled machine physics
+      - Plugin process holds zero business logic
+      - Routine never reaches raw wire
+      - Template has no runtime presence
+      - Pack never executes
   - Core philosophy
-    - Zero trust agent
-      - premise — agent intentions are never inherently trusted
-      - enforcement — constraints enforced via SQLite C authorizer and OS jails
-      - policy anchor — default: deny across all capability vectors
+    - Zero-trust agent
+      - Intentions are never inherently trusted
+      - Constraints via SQLite C authorizer
+      - Constraints via OS jails and seccomp
+      - Default deny across all vectors
     - Physics over rules
-      - dual store recovery — hot state in workspace.db; point-in-time binary snapshots synced directly to object store
-      - mechanism — impossible paths preferred over prompt instructions
-      - unbounded writes — denied structurally via AST and authorizer
-      - failure modes — designed denials teach harness through structured feedback
-      - Initialization paths
-        - guided mission — subsystem-scale intent directs worker agents to author domain modules
-        - emergent discovery — blank world accumulates audit density before log-analysis codification
-        - predefined structure — human-committed schema governs immediate execution inside bounds
+      - Impossible paths preferred over prompts
+      - Unbounded writes denied structurally
+      - Designed denials teach the harness
+      - Structured feedback on every refusal
     - Governance line
-      - behavioral policy — policy.yaml governs runtime acts (verbs)
-      - structural governance — governance.yaml governs artifact shapes (nouns)
-      - compilation — compiled together into capcli.lock at startup; live engine never reads uncompiled YAML text
-      - configuration mutation — agents author YAML modifications freely on disk as staged proposals; proposals activate only upon cryptographic human approval via Cockpit PWA
-      - daemon git authority — human approvals in Cockpit trigger capcli-daemon to recompile capcli.lock and commit changes to Git automatically; manual human Git manipulation is prohibited
+      - Policy governs capability verbs
+      - Governance governs artifact shapes
+      - Compiled into capcli.lock at boot
+      - Engine never reads uncompiled YAML
+    - Configuration mutation
+      - Agents author YAML proposals on disk
+      - Proposals activate on human approval
+      - Daemon recompiles lock and commits
+      - Manual Git manipulation prohibited
   - Mental model
-    - three-surface law — state in SQLite, capabilities in guest scripts, experience in JSONL
+    - Three-surface law
+      - State in SQLite
+      - Capabilities in guest scripts
+      - Experience in JSONL
+      - All three flow through kernel gates
     - Storage trinity
-      - state — SQLite workspace.db: see world.md#SQLite-as-SSOT
-      - capabilities — operational muscle memory served over REST and MCP: see action.md#Routines
-      - experience — append-only _audit mirrored to JSONL: see effect.md#Audit-spine
+      - workspace.db holds domain state
+      - audit.db holds append-only ledger
+      - JSONL holds cold mirror export
+      - Object store holds WORM checkpoints
     - Language law
-      - format axiom — YAML declares, guest runtime executes, JSONL records
-      - procedural boundary — control flow isolated to sandboxed routines
-      - YAML — declarative state schema and governance boundaries
-      - Guest Code — procedural control flow and atomic domain execution
-      - JSONL — immutable linear historical record of world mutations
+      - YAML declares
+      - Guest runtime executes
+      - JSONL records
+      - Kernel dispatches and enforces
     - Topology
-      - outbound channels — db mutations, isolated routines, external HTTP egress
-      - inbound triggers — cron schedules, webhooks, and endpoint bindings
-      - interactive channels — human ping inquiries and sensory inbox loops: see action.md#The-ctx-contract
+      - Outbound channels
+        - DB mutations
+        - Isolated routines
+        - External HTTP egress
+        - Federation outbox
+      - Inbound triggers
+        - Cron schedules
+        - Webhooks
+        - Endpoint bindings
+        - Federated peer events
+      - Interactive channels
+        - Human ping inquiries
+        - Sensory inbox loops
+        - Cockpit approval cards
+        - Chat provider sinks
+      - Control plane
+        - Kernel daemon IPC socket
+        - JSON-RPC 2.0 envelope
+        - Persistent daemon on headless hosts
+        - Ephemeral CLI sessions
   - Design stance
     - Fail-closed stance
-      - startup — invalid configuration or version mismatch aborts boot
-      - runtime — unparseable SQL, missing principals, or quota breaches deny
-      - recovery — emergency break-glass restricts verbs to audit-only: see recovery.md#Restore-path
+      - Boot — invalid config aborts
+      - Runtime — unparseable SQL denies
+      - Recovery — read-only, audit-only verbs
+      - Every non-zero exit keeps state untouched
     - Capability lifecycle
-      - exploration — raw bounded SQL mutations and imported API calls accumulate telemetry in dev
-      - sufficiency — optional pattern mining for consolidation: see time.md#Discovery-arc
-      - codification — repeated DB and API call sequences compiled into governed routines
-      - trust progression — earned autonomy moves routines from draft to reviewed to pinned via synthetic proof
+      - Exploration in dev accumulates telemetry
+      - Pattern mining proposes consolidation
+      - Codification into governed routines
+      - Trust rung progression via synthetic proof
+      - (see governance.md#Gates)
     - Autonomous authority
-      - headless execution — policy rungs and budget cages replace human sign-offs: see trust.md#The-ladder
-      - compiler boundaries — structural validation gates authoring: see world.md#Pre-flight-Sub-checks
-      - escalation path — interactive ping prompts reserved for unresolvable halts: see action.md#The-ctx-contract
+      - Headless execution via policy rungs
+      - Frame budget cages replace human sign-offs
+      - Compiler boundaries gate authoring
+      - Interactive escalation on halts
     - Refusals
-      - no ORMs or query builders — raw SQL crosses authorizer directly
-      - no runtime policy mutation — policy changes require git commits
-      - append-only audit spine — domain tables permit bounded DELETEs; _audit table is strictly append-only
-      - zero LLM runtimes — zero neural networks, ONNX runtimes, or probabilistic parsing in kernel; discovery operates strictly via SQLite FTS5 (BM25) and exact/prefix indexes
+      - No ORMs or query builders
+      - No runtime policy mutation
+      - Audit table strictly append-only
+      - Zero LLM runtimes in kernel

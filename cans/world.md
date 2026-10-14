@@ -1,334 +1,425 @@
 - World
-<!-- ref-by: action.md, assembly.md, budget.md, cicd.md, effect.md, interface.md, overview.md, physics.md, recovery.md, space.md -->
+<!-- ref-by: routines.md, governor.md, identity.md, lifecycle.md -->
   - SQLite as SSOT
     - Storage trinity
-      - workspace.db
-        - ssot role — dedicated source of truth for domain tables, claims, and local state
-      - Topology modes
-        - local mode — embedded single-process SQLite; host holds both engine and sandbox
-        - hub mode — persistent daemon node; holds live workspace.db, audit.db, and executes incoming spoke RPCs
-        - spoke-thin mode — stateless client node; delegates both guest compute and database execution to Hub
-        - spoke-fat mode — compute-local worker; runs guest routines in local sandbox, proxies ctx.db calls to Hub via RPC
-        - spoke-ephemeral mode — stateless disposable node; in-memory buffer only, zero local disk footprint: see agent.md#Ephemeral-swarm-identity
-        - replica mode — read-only local replica; local reads served from LibSQL cache, all writes forwarded to Hub: see physics.md#Distributed-concurrency-laws
-      - Distributed consensus and swarm coordination
-        - writer serialization — Hub serializes physical writes via SQLite BEGIN IMMEDIATE; spokes queue via busy_timeout
-        - lease arbitration — cross-spoke resource locks mediated through claims table: see artifacts/system-schema.yaml#claims
-        - network drop cleanup — socket disconnect immediately rolls back active spoke transactions and drops holder claims
-        - ephemeral identity and reaper mechanics: see agent.md#Ephemeral-swarm-identity
-      - audit.db
-        - ssot role — isolated, append-only SQLite database for _audit ledger to eliminate WAL lock contention
-        - independence — independent SQLite database physically partitioned from workspace.db; WAL checkpoint contention eliminated by partition: see effect.md#Audit-spine
-        - process — capcli kernel-managed
-        - permissions — chmod 600
-        - engine substrate
-            - sqlite local — standalone local embedded database
-            - libsql replica — embedded replica syncing from the Hub (LibSQL cache)
-            - remote refusal — pure HTTP databases without C authorizer denied
-        - tracking
-          - git status — the capcli/ runtime home is machine-managed and gitignored; declarative blueprints live in the repository artifacts/
-          - persistence — partitioned at capcli/envs/<name>/workspace.db; binary snapshots synced to object store
-        - concurrency
-          - journal mode — WAL mode enabled
-          - readers — concurrent non-blocking reads
-          - reader bounds — persistent reader locks banned; daemon WebSocket tails use short-lived connection snapshots to prevent WAL checkpoint starvation
-          - checkpointing — kernel runs PRAGMA wal_checkpoint(PASSIVE) after writes; maintenance ticks run TRUNCATE to bound WAL size < 100MB
-          - writers — serialized atomic transactions via busy-timeout queue
-          - lifespan law — write locks held during atomic commits only, never across agent execution; user-space transactions strictly <15ms; kernel migration swaps carry their own <20ms bound
-          - checkpoint guarantee — no transaction outlives its commit, so write-lock starvation of WAL checkpoints is impossible by construction
-          - network isolation — network calls never execute inside transactions: see action.md#Interior-rules
-          - tier partition — concurrency splits into macro lease (claims), meso fence (state_fence), and micro lock (SQLite): see physics.md#Distributed-concurrency-laws
-        - access perimeter
-          - direct sockets — agent connection denied
-          - direct db file — workspace.db isolated behind daemon IPC socket; raw subshell access denied
-          - spoke transport — spokes connect via unix socket, WireGuard mesh (Tailscale), or mTLS: see cans/artifacts/governance.yaml#topology
-          - zero-disk ephemeral rule — spoke-ephemeral nodes prohibited from creating workspace.db; state resides strictly in Hub RAM/SSD
-          - workspace files — open read and write for schemas, routines, and scripts
-          - sole gateway — kernel daemon mediation mandatory
-      - world.sql
-        - format
-          - structure — deterministic DDL and seed dump
-          - byte reproducibility — identical world yields identical bytes
-        - version control
-          - tracking — committed to git
-          - diffs — readable schema change history
-        - snapshot automation — deterministic DDL and seed dump generated locally on migration; synced directly to object storage
-        - disaster recovery
-          - restoration — sys recover: see recovery.md#Restore-path
-      - object snapshots — binary VACUUM INTO backups in object store: see recovery.md#Snapshots
+      - workspace.db — domain state source of truth
+      - audit.db — append-only ledger, isolated file
+      - JSONL mirror — cold daily export view
+      - Object store — WORM checkpoint offsite
+      - Flow — workspace → audit → JSONL → object
+    - workspace.db role
+      - Holds domain tables and claims
+      - Holds system tables per schema
+      - WAL mode with concurrent readers
+      - chmod 600 filesystem permission
+      - Path — capcli/envs/<name>/workspace.db
+    - audit.db role
+      - Isolated from workspace.db physically
+      - Append-only _audit ledger
+      - Eliminates WAL checkpoint contention
+      - Definition — see effect.md#Audit-spine
+    - world.sql role
+      - Deterministic DDL and seed dump
+      - Byte-reproducible across instances
+      - Committed to git for schema history
+      - Regenerated on every migration
+    - object snapshots
+      - Binary VACUUM INTO backups
+      - Synced to object store on push
+      - WORM retention offsite
+      - Retention — see #Snapshots
+    - Storage engine substrate
+      - sqlite local — standalone embedded
+      - libsql replica — embedded replica sync
+      - remote refusal — HTTP DB without authorizer
+      - Kernel daemon is sole gateway
+    - Topology modes
+      - local mode — embedded single process
+      - hub mode — persistent daemon, holds live db
+      - spoke-thin — stateless client, delegates to hub
+      - spoke-fat — local compute, proxied DB
+      - spoke-ephemeral — in-memory only, zero disk
+      - replica — read-only cache, writes to hub
+    - Writer serialization
+      - Hub serializes physical writes
+      - BEGIN IMMEDIATE across writers
+      - Spokes queue via busy_timeout
+      - Timeout exhaustion exits 2
+    - Lifetime law
+      - Write locks held only during commit
+      - Never held across agent execution
+      - User-space transactions under 15ms
+      - Kernel migration swaps under 20ms
+    - Network isolation
+      - Zero network calls inside transactions
+      - ctx.api.call inside ctx.txn denied
+      - Contract — see routines.md#Interior-rules
+    - Access perimeter
+      - Agent socket connection denied
+      - Direct workspace.db file blocked
+      - Spoke transport via unix or mTLS
+      - Ephemeral nodes cannot create local db
+      - Workspace files open for schemas and scripts
+      - Kernel daemon mediation mandatory
+    - Checkpointing
+      - PRAGMA wal_checkpoint(PASSIVE) post-write
+      - TRUNCATE on maintenance ticks
+      - WAL size bounded under 100MB
+      - Readers use short-lived snapshots
     - Mutation pipeline
-      - execution flow
-        - step 1 — causal intent declaration
-        - step 2 — kernel gate intake
-        - step 3 — AST structural pre-parse and target validation
-        - step 4 — C-level authorizer (sqlite3_set_authorizer) & VDBE mutation hooks (sqlite3_update_hook)
-        - step 5 — physical SQLite commit
-        - step 6 — asynchronous audit emission to audit.db and JSONL
-      - perimeter enforcement
-        - direct driver paths — denied
-        - external ORM sockets — denied
-        - verification mechanics — see physics.md#Two-layer-enforcement
-    - Schema introspection
-      - compilation — declarative YAML translates to physical DDL
-      - PRAGMA checks — live database schema compared against declaration
-      - command surface — capcli rule show --type schema
+      - 1 — causal intent declaration
+      - 2 — kernel gate intake
+      - 3 — AST structural pre-parse
+      - 4 — C authorizer and VDBE hooks
+      - 5 — physical SQLite commit
+      - 6 — asynchronous audit emission
+      - Definition — see kernel.md#Unified-3-phase-engine
   - Dual schema
     - File partition
-      - agent-owned file — schema.yaml
-      - kernel-owned file — system-schema.yaml
-      - physical compilation — single unified DDL in workspace.db
-      - boundary invariant — manual SQL DDL editing prohibited
-  - Configuration proposal lifecycle
-    - authoring freedom — agents edit schema.yaml, policy.yaml, and governance.yaml directly on disk using standard tools
-    - proposal isolation — raw disk edits do not affect running engine state; daemon enforces active compiled capcli.lock until cutover
-    - gate intake — saving edits triggers Sub-check 1 (syntax) and Sub-check 2 (semantics) validation:
-      - invalid syntax — fails closed with exit 3 to the agent without notifying human
-      - valid syntax — creates staged proposal, generates diff hash, and yields calling frame (exit 6)
-      - file watch — daemon watches staged YAML paths; saving edits triggers gate intake and validation
-    - human resolution — Cockpit PWA presents structured 1-click diff card to human operator
-    - atomic cutover — human approval triggers capcli-daemon to:
-      - recompile capcli.lock with updated root hash
-      - atomically reload in-memory authorizer and governance limits
-      - record rule.config_committed in _audit
-      - auto-commit staged file diff and capcli.lock to Git
-      - wake suspended task for immediate execution
-    - schema.yaml
-      - ownership
-        - author — agent harness in dev worktree
-        - permissions — agent-writable in dev: see artifacts/governance.yaml#schema
-      - dimension ceilings
-        - limits — see artifacts/governance.yaml#schema.world
-        - enforcement — validated at compile time
-      - component declarations
-        - domain tables — data models, constraints, and indexes
-        - read views — pre-defined queries serving as SSOT for routines (ctx.db.view); encapsulates joins and aggregates outside routine code
-        - triggers — policy-vetted SQLite triggers
-      - view governance
-        - exposed tables
-          - declaration — exposes: [...] list mandatory
-          - validation — compile-checked against known tables
-          - tenant isolation — tables tagged tenant: true can only be read through scoped: principal views
-        - principal scoping
-          - declaration — scoped: principal
-          - parameter — requires :principal bind variable
-          - compile check — Sub-check 2 fails if scoped view omits :principal
-          - call check — authorizer denies scoped execution without --as
-          - enforcement — authorizer denies execution without --as
-    - system-schema.yaml
-      - ownership
-        - author — kernel maintainers only
-        - permissions — agent read-only: see artifacts/governance.yaml#schema.system
-        - upgrades — release binaries only: see artifacts/governance.yaml#schema.system
-      - integrity verification
-        - hash verification — mandatory at boot: see artifacts/governance.yaml#schema.system
-        - mismatch behavior — refuse boot: see artifacts/policy.yaml#fail_closed
-      - managed surfaces — 15 kernel tables defined in artifacts/system-schema.yaml
-        - roster — _audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, _outbox_events, _inbox, routine_stats, _suspended_tasks, _templates, _bindings
+      - Agent file — schema.yaml
+      - Kernel file — system-schema.yaml
+      - Physical compilation — single unified DDL
+      - Manual SQL DDL editing prohibited
+    - schema.yaml ownership
+      - Authored by agent harness
+      - Agent-writable in dev worktree
+      - Limits — see artifacts/governance.yaml#schema.world
+      - Validated at compile time
+    - system-schema.yaml ownership
+      - Authored by kernel maintainers only
+      - Agent read-only
+      - Upgrades via release binaries only
+      - Hash verified at boot
+      - Mismatch refuses boot
+    - Component declarations
+      - Domain tables — data models and constraints
+      - Read views — pre-defined SSOT queries
+      - Triggers — policy-vetted SQLite triggers
+      - Seed arrays — bounded initial rows
+    - View governance
+      - exposes — mandatory table list
+      - scoped — principal-bound view marker
+      - :principal bind variable mandatory
+      - Compile check rejects missing bind
+      - Authorizer denies without --as
     - Shorthand expansion
-      - column shorthands
-        - primary key
-          - integer — pk expands to integer autoincrement primary key
-          - text — text pk expands to text primary key
-        - uniqueness — text! expands to text unique
-        - defaults — text=val expands to text default 'val'
-        - immutability — int~ expands to integer immutable write-once
-        - tenant key — tenant: true tags table as multi-tenant; mandates :principal-bound views; enforcement: see physics.md#Two-layer-enforcement
-        - foreign relations — int ref=table.col expands to foreign key
-          - blob reference — blob ref=storage expands to object metadata json
-        - redaction — mask=true marks column; masking mechanics: see space.md#Data-masking
-      - table shorthands
-        - provenance
-          - tag — prov: true
-          - added columns — created_by, modified_by
-        - sensitivity
-          - tag — sens: true
-          - fork rule — sensitive data masked in sim: see artifacts/governance.yaml#env
-        - audit grant
-          - tag — sys: true
-          - permissions — read-only grant for agents
-        - row locking
-          - tag — imm_rows: true
-          - authorizer effect — UPDATE and DELETE denied physically
-      - concurrency & outbox
-        - claims lease lifecycle — canonical home of lease identity and lifecycle
-          - lease identity — each lease keys strictly to the tuple (session_id, harness_marker, op_sequence)
-          - expiry reaping — background daemon reaps claims whose ttl has elapsed since created_at
-          - claim binding — ctx.db.lock binds directly to this lifecycle: see action.md#Database-methods
-          - yield interplay — exit 6 interaction: see physics.md#Exit-code-law
-          - heartbeat — live holders heartbeat their claim every 30s via claims.heartbeat_at
-          - stale marking — no heartbeat within 60s grace marks the claim stale
-          - takeover — db lock <table>:<ref> --takeover acquires a stale claim; appends claim.stolen naming the previous holder and its last heartbeat
-          - abandon — db unlock <target> --abandon releases without acquiring; requires --reason; denied while the holder heartbeat is fresh; appends claim.abandoned naming the previous holder and operator identity
-          - ttl ceiling — TTL reaping stays the hard ceiling regardless of heartbeats
-        - outbox atomic claim
-          - claim statement — UPDATE _outbox_events SET status = 'in_flight', locked_by = :worker WHERE id = (...) RETURNING *
-          - initial status — new events enter as 'pending'; the atomic claim flips status to 'in_flight'
-          - emit mapping — ctx.emit(event, payload) writes provider='federation', verb=event, kernel-minted idempotency_key mirrored to idempotency_header
-          - lease semantics — locked_by records claiming worker or federated subscriber daemon; atomic RETURNING claim guarantees single-worker dispatch
-          - federated siphoning — peer daemons poll or stream events with visibility='public' from _outbox_events via socket, tracking positions in _watch_cursors
-          - draining — daemon drains _outbox_events asynchronously; headless subshell CLI drains pending calls synchronously prior to exit 0
-        - inbox lifecycle
-          - table — _inbox durable inbound dispatch queue in workspace.db; verified stimuli queue here before any routine spawns
-          - lifecycle — pending → in_flight → completed; crash (Exit 4) or budget exhaustion (Exit 2) rolls the row to failed
-          - claim statement — UPDATE _inbox SET status = 'in_flight', locked_by = :worker
-          - claim filter — WHERE id = (SELECT id FROM _inbox WHERE status = 'pending' AND (scheduled_at IS NULL OR scheduled_at <= strftime('%s', 'now'))
-          - claim order — ORDER BY priority DESC, id ASC LIMIT 1) RETURNING *
-          - retries — rows exceeding 3 failed attempts move to the dead letter queue
-          - dead letter queue — FIFO retention, 30-day expiry, 1,000-item cap
-          - single-worker — the atomic RETURNING claim guarantees exactly-once dispatch across workers
-          - sensory read — sys inbox pop reads _inbox rows; consumption marking: TBD
-        - column locking
-          - tag — imm_cols: [...]
-          - authorizer effect — UPDATE denied on targeted columns
-      - indexing shorthands
-        - single index — idx: [col] expands to indexes: [{on: [col]}]
-        - composite index — idx: [[col_a, col_b]] expands to composite index
-      - relation shorthands
-        - traversal edges — rel: maps semantic graph for search index
-      - constraint shorthands
-        - checks — chk: expands to physical SQLite CHECK array
-        - triggers — trig: expands to kernel-compiled trigger
-    - Seed data
-      - declaration — seed: [...] array in table definition
-      - execution — executed inside migration DDL transaction; audited with seed_rows count
-      - volume cap — max 50 rows per table to prevent draft bulk loading
-      - row volume bounds — ceiling: see artifacts/governance.yaml#schema.world
+      - Column shorthands
+        - text pk — text primary key
+        - int! — integer unique constraint
+        - int=0 — integer with default
+        - int~ — integer immutable write-once
+        - int ref=x.y — foreign key expansion
+        - blob ref=storage — object metadata
+        - mask=true — column masking flag
+      - Table shorthands
+        - prov: true — adds created_by and modified_by
+        - sens: true — masked in sim environments
+        - sys: true — read-only grant for agents
+        - imm_rows: true — UPDATE/DELETE denied
+        - tenant: true — multi-tenant tag
+      - Index shorthands
+        - idx: [col] — single-column index
+        - idx: [[a, b]] — composite index
+      - Constraint shorthands
+        - chk: — physical SQLite CHECK array
+        - trig: — kernel-compiled trigger
     - Enforcement split
       - SQLite engine layer
-        - type affinity
-          - integer types
-          - text types
-          - blob types
-        - table constraints
-          - primary keys
-          - foreign key cascades
-          - unique constraints
-          - check constraints
+        - Type affinity and constraints
+        - Primary, foreign, unique keys
+        - Check constraint evaluation
+        - Cascading behavior
       - Kernel authorizer layer
-        - column immutability — ~ syntax denies column update
-        - access control — authorizer permits/denies read; kernel serializer redacts mask=true columns
-        - row immutability — imm_rows denies row mutation
-        - audit injection — created_by and modified_by populated by kernel on prov tables
-        - system protection — sys: true denies agent writes
-  - Schema migration
-    - Four-phase state migration pipeline
-      - 1. Expand phase — additive, non-breaking DDL (nullable columns, new tables); execution SLA < 10ms
-      - 2. Align phase — user-space pinned routine (migrations/NNNN/align.py); bounded chunks (max 500 rows/txn); yields cleanly on quota/fuel (exit 6)
-      - 3. Contract phase — kernel migrate.rs executes destructive DDL via trigger-replicated shadow table; final swap holds exclusive write lock strictly <20ms
-      - 4. Pin phase — verifies live PRAGMA matches schema.yaml; updates root hash in capcli.lock
-    - Online schema migration mechanics
-      - kernel responsibility — Rust kernel creates shadow table _shadow_<table>, attaches delta replication triggers, copies base rows in 500-row chunks
-      - delta triggers — AFTER INSERT, AFTER UPDATE, AFTER DELETE on the live table replicate in-flight mutations to the shadow table
-      - zero-lag swap — BEGIN IMMEDIATE once replication lag reaches zero; drops triggers, renames shadow to live, drops old table
-      - lock duration — exclusive write lock held only during trigger detach and table rename
-    - Migration lifecycle commands
-      - planning — rule plan --name <slug> generates migrations/NNNN_<slug>/ bundle
-      - rehearsal — rule prove <id> --env sim validates FK integrity, lock timing, and alignment fuel
-      - application — rule apply <id> [-m "<intent>"] executes phased cutover
+        - Column immutability via ~ syntax
+        - Row immutability via imm_rows
+        - Audit column injection on prov
+        - System table write denial on sys
+        - Mask flag redaction on read
+        - Definitions — see kernel.md#Layer-1-C-authorizer
+  - Claims lease
+    - Lease identity
+      - Tuple — (session_id, harness_marker, op_sequence)
+      - OS PID binding banned
+      - Reason — PID recycling breaks identity
+      - Marker hash authoritative
+    - Lease acquisition
+      - ctx.db.lock(target, ttl) acquires
+      - Row written to claims table
+      - TTL recorded at created_at
+      - Reason field optional
+    - Heartbeat
+      - Live holders ping every 30s
+      - Heartbeat_at column updated
+      - No heartbeat in 60s — stale
+      - Grace window permits recovery
+    - Expiry reaping
+      - Daemon timer reaps expired claims
+      - TTL ceiling is hard limit
+      - Heartbeats do not extend TTL
+      - Reap emits claim.expired event
+    - Takeover
+      - db lock <target> --takeover acquires stale
+      - Appends claim.stolen event
+      - Records previous holder and heartbeat
+      - Only valid on stale claims
+    - Abandon
+      - db unlock <target> --abandon
+      - Releases without acquiring
+      - Requires --reason flag
+      - Denied while holder heartbeat fresh
+      - Appends claim.abandoned event
+    - Yield interplay
+      - Layer 1 claims retained across yield
+      - Sibling agents cannot steal task
+      - Resumption verifies ownership
+      - Definition — see governor.md#Suspension-registry
+    - Command surface
+      - db lock <table>:<ref> --ttl <duration>
+      - db unlock <target>
+      - db unlock <target> --abandon --reason
+      - Envelope shape — see interface.md#CLI-surface
+  - Outbox-inbox
+    - Outbox write path
+      - ctx.emit(event, payload) writes row
+      - Commits inside caller transaction
+      - Atomic with domain writes
+      - Never a partial domain state
+    - Outbox row shape
+      - provider — federation or plugin id
+      - verb — event name
+      - idempotency_key — kernel-minted
+      - idempotency_header — mirrored for transport
+      - visibility — private or public
+      - status — pending, in_flight, delivered
+    - Outbox claim
+      - UPDATE status to in_flight
+      - WHERE id matches subselect
+      - RETURNING * guarantees single worker
+      - Atomic at SQLite level
+    - Outbox draining
+      - Daemon drains asynchronously
+      - Headless CLI drains synchronously pre-exit
+      - Locked_by records claiming worker
+      - Federation siphon uses _watch_cursors
+    - Federated siphoning
+      - Peer daemons poll visibility=public
+      - Positions in _watch_cursors table
+      - Transport — see plugins.md#Federation-transport
+      - Failures retry with backoff
+    - Inbox lifecycle
+      - States — pending, in_flight, completed
+      - Crash rolls row to failed
+      - Budget exhaustion rolls row to failed
+      - Dead letter after 3 failed attempts
+    - Inbox claim
+      - UPDATE status to in_flight
+      - WHERE scheduled_at null or past
+      - ORDER BY priority DESC, id ASC
+      - RETURNING * guarantees single dispatch
+    - Inbox delivery
+      - Kernel spawns bound routine
+      - Execution token minted per task
+      - System principal per executing task
+      - Definition — see identity.md#Concurrency
+    - Dead letter queue
+      - FIFO retention order
+      - 30-day expiry
+      - 1,000-item cap
+      - Config — see artifacts/governance.yaml
+    - Sensory read
+      - sys inbox pop reads pending rows
+      - Consumption marking TBD
+      - Envelope shape — see interface.md#CLI-surface
+  - Migration
+    - Four-phase pipeline
+      - 1 — expand additive DDL under 10ms
+      - 2 — align user-space routine bounded
+      - 3 — contract via shadow table swap
+      - 4 — pin verifies PRAGMA matches schema
+    - Expand phase
+      - Add nullable columns and new tables
+      - Non-breaking, rollback safe
+      - Execution target under 10ms
+      - Snapshot taken before phase
+    - Align phase
+      - User-space pinned routine fills data
+      - Bounded chunks 500 rows per txn
+      - Yields cleanly on quota or fuel
+      - File — migrations/NNNN/align.py
+    - Contract phase
+      - Kernel creates shadow table
+      - Delta triggers replicate live mutations
+      - Zero-lag swap under BEGIN IMMEDIATE
+      - Exclusive lock strictly under 20ms
+    - Pin phase
+      - Verifies live PRAGMA matches schema
+      - Updates root hash in capcli.lock
+      - Emits migration.completed event
+      - Reference — see effect.md#Kernel-event-payloads
+    - Online mechanics
+      - Shadow table — _shadow_<table>
+      - AFTER INSERT/UPDATE/DELETE triggers
+      - Chunk copy 500 rows per txn
+      - Replication lag monitored to zero
+      - Trigger detach and rename atomic
+    - Command surface
+      - rule plan --name <slug> generates bundle
+      - rule prove <id> --env sim validates
+      - rule apply <id> executes cutover
+      - Envelope shape — see interface.md#CLI-surface
+    - Invariants
+      - Forward only, never backward
+      - Rollback via forward revert bundles
+      - Snapshot pairing prior to expand
+      - Lockfile check at boot
     - Agent denial rules
-      - raw DDL execution — raw ALTER TABLE or DROP TABLE queries denied unconditionally (exit 2)
-      - table recreate scripts — manual SQLite table rebuild scripts written by agents rejected at AST gate
-      - direct database edits
-        - target — workspace.db
-        - decision — denied via filesystem permissions (chmod 600)
-      - system schema manipulation
-        - target — system-schema.yaml
-        - decision — denied: see artifacts/governance.yaml#schema.system
-      - unmerged production migrations
-        - condition — cross-world DDL without git merge
-        - decision — denied: see artifacts/policy.yaml#env.prod
-    - Migration invariants
-      - forward only — rollbacks execute strictly via forward revert bundles; every rollback commits a new version and the active pointer moves forward to it, never backward
-      - user vs kernel separation — state population runs in user space routines; structural rebuilds run in kernel
-      - snapshot pairing — cold VACUUM snapshot created prior to Expand phase for disaster-only recovery
-      - lockfile check — capcli.lock verification at boot: see physics.md#Fail-closed-stance
-  - World templates
-    - Registry marketplace architecture
-      - substrate — dedicated central GitHub repository (governance.yaml#template.registry_repo) serving as PR-driven marketplace
-      - intake PR gate — author PRs require 100% green CI before merge:
-        - runs rule validate on capcli-template.yaml
-        - asserts shape law (tokens <= 2000 hard; complexity and params lint advisories): see action.md#Shape-constraints
-        - executes headless sandbox test simulation
-        - builds frozen .cap bundle via template pack and computes SHA-256
-      - distribution index — merged PRs trigger release workflow publishing immutable bundle.cap asset and appending entry to index.json:
-        - entry schema — { urp, version, sha256, bundle_url, min_kernel_version, policy_version }
-    - Remote ingestion & wire physics
-      - pointer resolution — tpl://registry/world/<name>@<ver> and tpl://registry/routine/<name>@<ver> resolve URL and SHA-256 against local cached index.json
-      - direct URL imports — raw GitHub URLs permitted strictly if pinned: https://github.com/<org>/<repo>/releases/download/<tag>/<file>.cap#sha256=<hex>; mutable branch pulls (@main) denied
-      - wire sandbox — downloads stream into isolated tmpfs /scratch; streams exceeding 5MB aborted immediately
-      - cryptographic gate — kernel verifies stream SHA-256 against index or --sha256 flag before archive extraction; mismatch exits with code 3 (refuse intake)
-      - zero execution — bundle unpacks purely as declarative text and AST-analyzed code; post-install scripts and shell hooks banned
-      - trust containment — all remote templates register strictly at draft trust (v1) in dev; prod intake denied
-    - Invariant bundle laws
-      - manifest mandate — bundles must include capcli-template.yaml declaring typed inputs, provides map, and min_kernel_version
-      - governance exclusion — templates cannot bundle or alter policy.yaml or governance.yaml; host governance compiler overrides all
-      - zero trust inheritance — all imported routines, views, and verbs register strictly at draft trust (v1) with zero promotional credit
-      - no lifecycle hooks — post-install scripts and dynamic execution during unpack strictly banned; static AST expansion only
-    - Intake pipeline
-      - provisioning — environments are provisioned empty via capcli env new, or populated via capcli template scaffold tpl://registry/world/<name>@<ver> <target> [-p k=v]
-      - packaging — capcli template pack <dir> [--out bundle.cap] freezes blueprint into immutable SHA-256-signed bundle; world template bundles enforce 5MB ceiling
-      - destination isolation — template unpacks strictly into dev worktree; prod direct-init denied
-      - validation sequence — rule validate checks min_kernel_version, policy_version, py_compile, AST complexity ≤10, schema.yaml syntax (Sub-check 1), bundle semantics (Sub-check 2) before disk write
-      - parameter validation — capcli template scaffold validates -p against manifest inputs at stamping
-      - dry-run migration — migration-safety rehearsal executes on temporary snapshot: see world.md#Migration-safety
-      - seed constraints — table seed arrays capped at 50 rows per table
-    - Audit and provenance
-      - event type — env.init_from_template (world) or routine.draft (routine)
-  - Pre-flight Sub-checks
-    - scope — static compile-time checks of Phase 1 of the Unified 3-Phase Execution Engine: see physics.md#Unified-3-phase-execution-engine
-    - Sub-check 1: Syntax
-      - timing — parse-time on file load
-      - checks
-        - YAML formatting — valid syntax without duplicate keys
-        - shorthand expansion — all shorthands expand cleanly
-        - required roots — version, engine, db present
-      - failure code — throws exit 3
-    - Sub-check 2: Semantics
-      - timing — compile-time before statement generation
-      - relational integrity
-        - reference targets — ref= targets must exist with matching types: see world.md#Shorthand-expansion
-        - traversal targets — rel: targets must resolve to real tables: see world.md#Shorthand-expansion
-        - index targets — indexed columns must exist in parent table: see world.md#Shorthand-expansion
-        - cycle check — native DFS traversal rejects circular references
-        - call-tree cycles — native DFS cycle detection in ctx.call graph (A -> B -> A) aborts compilation with exit 3
-        - graph validation — topological sort establishes table compile order: see world.md#Sub-check-2:-Semantics
-      - SQL syntax
-        - check constraints — chk: expressions parse as valid SQL WHERE
-        - triggers — trig: bodies compile without syntax errors
-        - view exposures — views touch exposes: tables exclusively
-        - principal binds — scoped: principal views contain :principal
-      - data types
-        - masking targets — mask=true restricted to text and json
-        - immutable targets — imm_cols exist in target table
-      - failure code — throws exit 3
-    - Sub-check 3: Manifest lock
-      - timing — boot-time check on engine initialization
-      - prod enforcement — hash mismatch against capcli.lock aborts boot immediately with exit 3: see cicd.md#Integrity-and-containment-gates
-      - dev/sim reconciliation — if Sub-check 1 and Sub-check 2 pass, engine auto-recompiles capcli.lock and logs [WARN] lockfile.auto_recompiled
-  - Live drift
-    - status — diagnostic check, not a runtime gate: see interface.md#Diagnostics
-    - detection — PRAGMA scans compare live tables against compiled YAML
-    - condition — undeclared columns or tables trigger refusal
-    - failure code — throws exit 3
-  - Migration safety
-    - status — offline lifecycle step, not a runtime gate: see interface.md#Governance-path:-rule-noun
-    - execution — rehearsal runs on masked sim snapshot; checks PRAGMA foreign_key_check
-    - pinned routine safety — simulated rehearsal of ALL pinned routines against migrated schema; any query break or column drop aborts cutover with exit 2
-    - online cutover check — verifies shadow table delta lag reaches zero before executing the atomic swap
-    - state alignment safety — validates alignment routine terminates cleanly within session fuel bounds
-    - failure code — aborts cutover, discards rehearsal state, returns exit 2 or 3
-  - Command surface db
+      - Raw ALTER or DROP exits 2
+      - Manual table rebuild rejected at AST
+      - Direct workspace.db edit denied
+      - System schema edit denied
+      - Unmerged cross-environment DDL denied
+      - Migration pipeline is sole DDL path
+  - Snapshots
+    - Local point-in-time
+      - db.snapshot.rs executes VACUUM INTO
+      - Transactionally clean copy under traffic
+      - Atomic restore reverses state
+      - Disaster-only recovery semantics
+    - Naming convention
+      - snap_auto_* — scheduled triggers
+      - snap_migration_* — pre-migration
+      - snap_onboarding_* — initial setup
+      - Human-readable suffixes permitted
+    - Snapshot catalog
+      - sys recover --list displays points
+      - Envelope shape — see interface.md#CLI-surface
+      - Retention managed by maintenance
+      - Config — see artifacts/governance.yaml#backup
+    - Restore path
+      - db restore <id> — instant local rollback
+      - sys recover <commit> — git reconstruction
+      - Offsite archive — object store pull
+      - Envelope shape — see interface.md#CLI-surface
+    - Backup persistence
+      - Local VACUUM always completes first
+      - --push attempts git and object upload
+      - Push failure exits 0, warns pending
+      - Reconciliation retries next push
+      - Pending state visible in list
+    - Hash chains
+      - Ledger tamper-evidence canonical in effect
+      - Boot gate verifies system schema hash
+      - Replay gate verifies code_hash
+      - DR restore verifies ledger chain walk
+      - Reference — see effect.md#Audit-spine
+    - Ledger re-initialization
+      - sys init --fresh after total media loss
+      - Dual confirmation required
+      - Operator key signature plus typed reason
+      - Opens with kernel.genesis.data_loss event
+      - Sole write path out of total loss
+    - Emergency recovery mode
+      - CAPCLI_RECOVERY=1 enables mode
+      - Loads schema and audit sink only
+      - Policy disabled in recovery mode
+      - Read-only SQL only, exit 2 on write
+      - Allowlist — run sql, db dump, sys recover
+      - Logs recovery_mode_entered on startup
+    - Destruction as transition
+      - Retirement marks uncallable
+      - Historical provenance preserved
+      - Rollback un-retires by pointer reinstatement
+      - Offboarding order — preserve, revoke, teardown
+  - Configuration proposals
+    - Authoring freedom
+      - Agents edit schema, policy, governance YAML
+      - Standard filesystem tools apply
+      - Edits do not affect running engine
+      - Active capcli.lock enforced until cutover
+    - Proposal isolation
+      - Raw disk edits staged only
+      - Daemon watches staged YAML paths
+      - Save triggers Sub-check 1 and 2
+      - Invalid syntax exits 3 without notify
+      - Valid syntax creates proposal and yields
+    - Human resolution
+      - Cockpit presents 1-click diff card
+      - Cryptographic human approval required
+      - Approval triggers daemon recompile
+      - Lockfile root hash updated atomically
+    - Atomic cutover
+      - Recompile capcli.lock
+      - Reload in-memory authorizer
+      - Reload governance limits
+      - Emit rule.config_committed event
+      - Auto-commit staged diff and lockfile
+      - Wake suspended task for execution
+    - Git authority
+      - Daemon owns git commits for config
+      - Manual human git manipulation prohibited
+      - Signing key from encrypted vault
+      - Commits signed under caller's key
+  - Pre-flight sub-checks
+    - Sub-check 1 — syntax
+      - Runs at parse time on file load
+      - Valid YAML without duplicate keys
+      - All shorthands expand cleanly
+      - Required roots — version, engine, db
+      - Failure exits 3
+    - Sub-check 2 — semantics
+      - Runs at compile before statement generation
+      - Reference targets exist with matching types
+      - Traversal targets resolve to real tables
+      - Index targets exist in parent table
+      - Native DFS rejects circular references
+      - Call-tree cycles exit 3
+      - Topological sort establishes compile order
+    - Sub-check 2 SQL syntax
+      - chk: expressions parse as valid SQL
+      - trig: bodies compile without errors
+      - View exposures touch exposes: only
+      - Principal binds present in scoped views
+    - Sub-check 2 data types
+      - mask=true only on text and json
+      - imm_cols exist in target table
+      - FK types match referenced column
+      - Failure exits 3
+    - Sub-check 3 — manifest lock
+      - Runs at boot on engine init
+      - Prod hash mismatch exits 3
+      - Dev and sim auto-recompile on pass
+      - Emits lockfile.auto_recompiled warning
+    - Live drift
+      - Diagnostic check, not runtime gate
+      - PRAGMA scans compare live vs compiled
+      - Undeclared columns or tables flagged
+      - Failure exits 3
+    - Migration safety
+      - Offline lifecycle step, not runtime gate
+      - Rehearsal on masked sim snapshot
+      - Pinned routine safety check
+      - Any query break aborts with exit 2
+      - Reference — see lifecycle.md#Environments
+  - Command surface
     - Unified SQL execution
-      - syntax — capcli run sql "<statement>" (root alias: capcli sql "<statement>") [-p k=v] [-m "<intent>"] [--dry-run]
-      - read dispatch — SELECT statements execute read-only without intent requirement
-      - write dispatch — INSERT/UPDATE/DELETE enforce AST bounds and require intent
+      - capcli run sql "<statement>"
+      - Root alias — capcli sql
+      - Read dispatch without intent
+      - Write dispatch requires intent and bounds
+      - Definition — see kernel.md#Layer-2-AST-scanner
     - Concurrency commands
-      - acquisition — db lock <table>:<ref> --ttl <duration> --reason "..."
-      - release — db unlock <target>
-      - lifecycle — lease identity, heartbeats, takeover, abandonment: see #claims-lease-lifecycle
+      - db lock <table>:<ref> --ttl
+      - db unlock <target>
+      - db unlock <target> --abandon
+      - Lifecycle — see #Claims-lease
     - Introspection commands
-      - ddl display — db schema [--table]
-      - state management — db snapshot, db restore <id>, db dump
+      - db schema [--table] — DDL display
+      - db snapshot — VACUUM INTO
+      - db restore <id> — point-in-time restore
+      - db dump — deterministic export
+      - Envelope shape — see interface.md#CLI-surface
     - Boundary laws
-      - command routing — all SQL routes exclusively through `capcli run sql` (alias `capcli sql`): see interface.md#Refusals-and-banned-operations
-      - enforcement depth — all statements cross AST and C-authorizer layers before engine evaluation
+      - All SQL routes through capcli run sql
+      - AST and C authorizer run on every call
+      - Raw DDL outside migration denied
+      - Definition — see kernel.md#Raw-SQL-rules

@@ -1,133 +1,387 @@
 - Effect
-<!-- ref-by: action.md, assembly.md, budget.md, interface.md, overview.md, recovery.md, space.md, world.md -->
+<!-- ref-by: governor.md, routines.md, world.md, governance.md, interface.md -->
   - Audit spine
     - Storage hierarchy
-      - audit.db (Tier 1 — hot SSOT)
-        - role — isolated transactional source of truth for all events
-        - location — independent system database capcli/envs/<name>/audit.db
-        - access — chmod 600, WAL mode, zero connection pooling with workspace.db; concurrent writes bypass domain locks
-      - audit/*.jsonl (Tier 2 — cold mirror)
-        - role — secondary read-only export view streamed from _audit table
-        - persistence — daily append-only capcli/audit/YYYY-MM-DD.jsonl files, flushed to disk for offline diffing and cold recovery
-        - sync freshness — mirror lag hard SLA capped at 5 minutes
-      - remote anchor (Tier 3)
-        - anchor — S3 Object Lock (WORM) checkpoint and KMS notary signatures: see #Event-integrity
-      - flow — unidirectional Tier 1 → Tier 2 → Tier 3
+      - Tier 1 — hot SSOT
+        - File — capcli/envs/<name>/audit.db
+        - Isolated from workspace.db physically
+        - WAL mode, chmod 600 permissions
+        - Zero connection pooling with workspace
+        - Concurrent writes bypass domain locks
+      - Tier 2 — cold mirror
+        - Daily append-only JSONL files
+        - Path — capcli/audit/YYYY-MM-DD.jsonl
+        - Flushed to disk for offline diffing
+        - Read-only export view
+      - Tier 3 — remote anchor
+        - S3 Object Lock WORM checkpoint
+        - KMS notary signatures
+        - Periodic witness attestation
+        - Definition — see #Event-integrity
+      - Flow direction
+        - Unidirectional — Tier 1 to Tier 2 to Tier 3
+        - Never reverse, never skip
+        - Mirror lag capped at 5 minutes
+        - Lag breach emits alert event
     - Event anatomy
-      - identity — event, ts, env, stage, channel, trace_id
-      - actor — agent, session, principal, harness_marker_hash (sha256): see agent.md#Harness-environment-markers
-      - causality — caused_by, intent, intent_chain
-      - payload — capability, sql, params (recorded verbatim for replay)
-      - policy — decision (allow/denied), rules_matched
-      - outcome — rows_affected, result_hash, duration_ms, exit_code
-      - terminal boundary — raw stdout/stderr discarded; canonical JSON outcome hashed exclusively
+      - Identity fields
+        - event — typed event name
+        - ts — monotonic timestamp
+        - environment — dev, sim, or prod
+        - stage — authoring or live
+        - channel — control or data plane
+        - trace_id — W3C traceparent when inbound
+      - Actor fields
+        - agent — registered harness instance
+        - kernel session — bound session id
+        - principal — human or root authority
+        - harness_marker_hash — sha256 marker
+        - Definition — see identity.md#Harness-markers
+      - Causality fields
+        - caused_by — parent operation id
+        - intent — declared causal motivation
+        - intent_chain — full goal trace
+      - Payload fields
+        - capability — verb or routine name
+        - sql — statement when applicable
+        - params — recorded verbatim for replay
+      - Policy fields
+        - decision — allow or denied
+        - rules_matched — array of rule ids
+        - layer — authorizer, AST, governance, budget
+      - Outcome fields
+        - rows_affected — integer or null
+        - result_hash — sha256 of canonical result
+        - duration_ms — wall clock
+        - exit_code — integer per exit law
+      - Terminal boundary
+        - Raw stdout and stderr discarded
+        - Canonical JSON outcome hashed
+        - No unscrubbed bytes cross boundary
+        - Definition — see kernel.md#Exit-code-law
     - Kernel event payloads
-      - bind.create/delete — target_urp, trigger_type, schedule_or_source: see action.md#Bindings
-      - vault.set — secret_name, secret_hash_prefix, action: injected; prefix is the truncated SHA-256 fingerprint, full hash and plaintext never recorded: see agent.md#Secrets
-      - env.switch/merge — source_env, target_env, git_commit, ddl_status: see space.md#Environment-axis
-      - sys.agent.register/revoke — agent_id, principal, token_hash: see agent.md#System-agent-registry
-      - capability.search — query, results_count, resolution_stage: see action.md#Search-surface
-      - db.exec — sql, params, vdbe_inspect, rules_matched, rows_affected, result_hash
-      - routine.run — routine, version, hashes, triggered_by, outcome: see action.md#Routines
-      - federation.call_out — target_ws, target_urp, params, params_hash, child_trace_id, call_chain, budget_delegated
-      - federation.call_in — source_ws, caller_principal, parent_frame_id, caused_by_op, outcome
-      - saga.execute — egress_verb, compensate_verb, db_mutation, outcome
-      - saga.compensate — parent_op, compensate_verb, reason: db_abort, status
-      - swarm.node_join — agent, topology_mode, endpoint, ephemeral_flag: see artifacts/governance.yaml#topology
-      - swarm.node_reap — agent, reason (ttl_expired|sigterm|evicted), claims_released_count — sigterm preemption yield retains claims; reaper-initiated kill releases them
-      - swarm.preemption_yield — agent, frame_id, checkpoint_cursor: see physics.md#Distributed-concurrency-laws
-      - kernel.panic.secret_leak — culprit: kill_and_alert, decision: denied, effect: none; row shape follows #Event-anatomy: see physics.md#Exit-code-law
-      - routine.draft — template_source, template_hash, trust, version: see action.md#Routine-templates
-      - rule.config_proposed — file, diff_hash, agent, gate_status: see world.md#Configuration-proposal-lifecycle
-      - rule.config_committed — file, approver_principal, git_commit, lockfile_hash: see interface.md#Administrative-cockpit-pwa
-      - env.init_from_template — source_uri, bundle_sha256, schema_version, seed_tables_count: see world.md#World-templates
-      - api.sync — provider, added, removed, changed, unchanged: see action.md#Catalog-synchronization
-      - api.token_refresh — provider, token_type, expires_in, refresh_outcome
-      - api.call sim — sim_mode, http_called, fixture_used: see space.md#Sim-mode-taxonomy
-      - api.first_prod_call — call_number, calls_remaining, contract_proof_hash: see trust.md#Simulation-gaps
-      - budget.frame_push/pop — declared, consumed, remaining: see budget.md#Frames
-      - serve.request — endpoint, channel (rest|mcp), trace_id, routine@version, api_key_id, status
-      - promotion.sla_breached — queue age beyond SLA threshold; see time.md#decay-and-subtraction
-      - kernel.genesis.data_loss — prior root hash (when known), loss scope, operator principal, confirmation receipts; opens every re-initialized ledger: see recovery.md#Restore-path
+      - Bind events
+        - bind.create — target_urp, trigger_type
+        - bind.delete — binding id, reason
+        - bind.pause, bind.resume — operator action
+      - Vault events
+        - vault.set — name, hash_prefix, action
+        - Records injected prefix only
+        - Full hash and plaintext never logged
+        - Definition — see egress.md#Vault-proxy
+      - Environment events
+        - env.switch — source_env, target_env
+        - env.merge — source, target, git_commit, ddl_status
+        - env.init_from_template — source, sha256
+      - Identity events
+        - sys.agent.register — agent, principal
+        - sys.agent.revoke — agent, reason
+        - Reference — see identity.md#Concurrency
+      - Capability events
+        - capability.search — query, results_count
+        - routine.run — routine, version, hashes
+        - routine.draft — template_source, template_hash
+        - routine.auto_promoted — metric record
+        - routine.rollback — target version
+      - Database events
+        - db.exec — sql, params, rows, result_hash
+        - db.snapshot, db.restore — id, mode
+        - db.lock, db.unlock — target, holder
+        - claim.stolen, claim.abandoned, claim.expired
+      - Federation events
+        - federation.call_out — target, params, child_trace
+        - federation.call_in — source, caller, outcome
+        - Reference — see plugins.md#Federation-transport
+      - Saga events
+        - saga.execute — egress, compensate, mutation
+        - saga.compensate — parent_op, reason, status
+      - Swarm events
+        - swarm.node_join — agent, topology, endpoint
+        - swarm.node_reap — agent, reason
+        - swarm.preemption_yield — agent, frame, cursor
+      - Kernel events
+        - kernel.panic.secret_leak — culprit, decision
+        - kernel.genesis.data_loss — prior root, operator
+        - kernel.panic.sink_loss — sink id
+      - Rule events
+        - rule.config_proposed — file, diff_hash, gate
+        - rule.config_committed — approver, commit, hash
+      - API events
+        - api.sync — provider, added, removed, changed
+        - api.token_refresh — provider, expires_in
+        - api.first_prod_call — call_number, proof_hash
+      - Budget events
+        - budget.frame_push — declared, inherited
+        - budget.frame_pop — consumed, returned
+        - budget.exhausted — frame, pillar, attempted_op
+      - Serve events
+        - serve.request — endpoint, channel, trace_id
+        - serve.response — status, bytes, routine
+      - Promotion events
+        - promotion.sla_breached — queue age, threshold
+        - promotion.canary_veto — pinned to reviewed
     - Event integrity
-      - zero ghost actions — 100% of CLI verbs, bindings, and environment transitions advance the hash chain
-      - template instantiation — capcli template scaffold emits exactly one event: routine.draft (routine kind) or env.init_from_template (world kind)
-      - fail-closed sink law — No Audit = No Execution: a workspace.db business transaction cannot commit without staging its audit leaf event
-        - stall — sink stall triggers out-of-band spooling and alerts; failed audit writes held in a 5-minute in-memory buffer
-        - buffering — while buffered, all new mutating business writes are denied (exit 2)
-        - exhaustion — undrainable buffer → kernel panic (exit 5)
-      - genesis sequence — world starts with rule.apply, sql query, sql write deny, sql write ok; a re-initialized ledger opens with kernel.genesis.data_loss first: see #Kernel-event-payloads
-      - no synthetic types — onboarding.* and fake lifecycle events denied
-      - tamper quarantine — broken sha256 links isolate corrupted leaves to a quarantine branch; corruption never aborts boot; valid historical blocks remain operable; critical security alert emitted
-      - boot verification — kernel validates the last 1,000 blocks against the chain at boot; failed blocks route to quarantine; boot completes in degraded mode
-      - degraded mode — status flag degraded: tamper_evidence; kernel serves all tables except quarantined data; quarantined leaves stay fail-closed; tamper alerts repeat until acknowledgement
-      - operator acknowledgement — sys doctor --ack-tamper records review and clears degraded status; the acknowledgement appends a kernel event to the chain
-      - exit 5 scope — kernel panic reserved for sink loss and credential leaks; row-level corruption exits 0 with degraded status, never 5
-      - denial logging — denied operations emit audit events with effect: none
-      - tamper detection — per-row sha256 chain verified against root ledger hash
-      - line linking — each _audit row carries prev_hash; row_hash = sha256(prev_hash || canonical_event_json); chain mirrored to JSONL
-      - mirror secrecy — no unscrubbed credential bytes in _audit or the JSONL mirrors; secret-keyed params mask per artifacts/masking.yaml#json_secret, wire echoes scrub: see agent.md#Secrets
-      - receipt anchoring — receipts cite ledger root hash and object store WORM checkpoint; git commit hashes act as ephemeral metadata
-      - external attestation — ledger root hash checkpointed to S3 Object Lock (WORM) storage with KMS signatures
-      - notary witness — periodic KMS signature stamped to witness.log
-      - verification — scheduled chain walk: see artifacts/governance.yaml#maintenance
+      - Zero ghost actions
+        - Every CLI verb advances chain
+        - Every binding fire advances chain
+        - Every environment transition advances chain
+        - Every kernel decision advances chain
+      - Template instantiation
+        - One event per scaffold
+        - routine.draft for routines
+        - env.init_from_template for worlds
+      - Fail-closed sink law
+        - No audit — no execution invariant
+        - Business write requires staged audit leaf
+        - Sink stall triggers out-of-band spooling
+        - Buffered writes hold 5-minute window
+        - While buffered, business writes denied exit 2
+        - Undrainable buffer panics exit 5
+      - Genesis sequence
+        - World starts with rule.apply
+        - Then sql query, sql write deny, sql write ok
+        - Re-initialized ledger opens with kernel.genesis.data_loss
+        - Definition — see #Kernel-event-payloads
+      - No synthetic types
+        - onboarding.* events denied
+        - Fake lifecycle events denied
+        - Every event traces to real operation
+        - Envelope shape — see #Event-anatomy
+      - Tamper quarantine
+        - Broken sha256 links isolate to quarantine
+        - Corruption never aborts boot
+        - Valid historical blocks remain operable
+        - Critical security alert emitted
+        - Envelope shape — see #Event-integrity
+      - Boot verification
+        - Kernel validates last 1000 blocks
+        - Failed blocks route to quarantine
+        - Boot completes in degraded status
+        - Degraded flag — degraded: tamper_evidence
+      - Degraded mode
+        - Serves all tables except quarantined
+        - Quarantined leaves stay fail-closed
+        - Tamper alerts repeat until acknowledged
+        - sys doctor --ack-tamper records review
+      - Exit 5 scope
+        - Kernel panic reserved for sink loss
+        - Reserved for credential leaks
+        - Row-level corruption degrades, never exits 5
+        - Definition — see kernel.md#Exit-code-law
+      - Denial logging
+        - Denied operations emit audit events
+        - Record effect: none
+        - Record state_modified: false
+        - Envelope shape — see #Denials
+    - Line linking
+      - Row structure
+        - Each _audit row carries prev_hash
+        - row_hash = sha256(prev_hash || canonical_json)
+        - Chain mirrored to JSONL
+        - Roots checkpointed to object store
+      - Mirror secrecy
+        - No unscrubbed credential bytes in mirror
+        - Secret-keyed params mask per artifacts/masking.yaml
+        - Wire echoes scrub at socket edge
+        - Reference — see egress.md#Wire-scrubber
+      - Receipt anchoring
+        - Receipts cite ledger root hash
+        - Cite object store WORM checkpoint
+        - Git commit hashes are ephemeral metadata
+        - Never the authoritative root
+      - External attestation
+        - Root hash checkpointed to S3 Object Lock
+        - KMS signatures stamped
+        - Notary witness in witness.log
+        - Config — see artifacts/governance.yaml#maintenance
+      - Verification
+        - Scheduled chain walk cron
+        - Boot-time last-1000 verification
+        - Replay re-verifies code_hash before run
+        - DR restore re-verifies chain walk
     - Query surfaces
-      - tail — sys audit tail [--follow] [--capability X] [--since 1h]
-      - trace — sys audit trace <op-id> [--explain]
-      - query — sys audit query <sql> [-p k=v]
-      - replay — sys audit replay --from <ts> [--dry-run]
+      - Tail — sys audit tail [--follow]
+      - Trace — sys audit trace <op-id> [--explain]
+      - Query — sys audit query <sql>
+      - Replay — sys audit replay --from <ts>
+      - Envelope shape — see interface.md#CLI-surface
   - Causal DAG
     - Linkage model
-      - parent pointer — caused_by references parent operation id
-      - hierarchy — op → routine → session goal
-      - context stamping — env and stage stamped on every leaf event
+      - Parent pointer — caused_by references parent op
+      - Hierarchy — op to routine to session goal
+      - Context stamping — environment and stage on leaf
+      - Federated links — child_trace_id and parent_frame_id
     - Trace traversal
-      - inspection — sys audit trace <op-id> walks DAG to root intent
-      - forensics — corruption traced to specific routine, world, agent, and version
-      - explain — --explain flag prints exact policy rules and remediation
+      - Inspection — sys audit trace <op-id>
+      - Walks DAG from leaf to root intent
+      - Forensics — locate routine, world, agent, version
+      - Explain flag prints exact rules and remedy
     - Structural invariants
-      - distributed tracing — incoming W3C traceparent captured in trace_id links external caller and federated peer (ws://) to root DAG
-      - linearity — sequential routine interiors guarantee acyclic DAG
-      - frame integration — budget frames bind via parent_frame
-      - http integration — inbound HTTP requests bind via serve.request
+      - Distributed tracing — W3C traceparent captured
+      - Linear — sequential routine interiors acyclic
+      - Frame integration — budget frames bind via parent_frame
+      - HTTP integration — inbound requests bind serve.request
+    - Replay invariants
+      - Deterministic inputs — same state on replay
+      - ctx.now() bound to frame start
+      - ctx.uuid() uses HMAC(session_token, op_seq)
+      - Policy enforcement uses current rules
+      - Definition — see routines.md#The-ctx-contract
+    - Replay gates
+      - External API calls flagged replay: manual
+      - Auto-replay strictly forbidden
+      - Idempotency keys prevent duplicate execution
+      - Environment-scoped keys
+      - Scope — see identity.md#Concurrency
+    - Replay integration
+      - Deterministic DB re-execution on fork
+      - External ops require human confirmation
+      - Policy runs under current rules
+      - Result hash compared to original
+    - Forensics
+      - sys audit trace pinpoints failing leaf
+      - Partial execution halts at first leaf
+      - Distinguishes code vs policy cap breach
+      - Definition — see #Denials
   - Denials
     - Denial event structure
-      - domain classification — routine.runtime, db.engine, policy.*, api.upstream, kernel.*
-      - violation — rule id (e.g. policy.query.update_delete.require_where)
-      - layer — authorizer, AST, governance, or budget
-      - measured value — observed count vs ceiling (e.g. token envelope over the 2,000-token cap)
-      - remediation — explicit fix instructions printed
-      - state_modified — strictly boolean false on non-zero exit
-      - canonical error payload
-        - domain: string — exact fault layer
-        - culprit: string — failing line, constraint, rule, or provider
-        - remedy: string — actionable resolution path for agent or human
+      - Domain classification
+        - routine.runtime — guest crash and exceptions
+        - db.engine — check and FK constraint fails
+        - policy.authorizer — table or column denied
+        - policy.budget — frame or session fuel zero
+        - policy.quota — spend ceiling breach
+        - policy.trust — E046 trust violation
+        - policy.platform — E045 tier 1 mandate
+        - policy.federation — cycle or unallowlisted
+        - api.upstream — provider failure
+        - kernel.panic — sink loss or leak
+      - Violation fields
+        - rule_id — e.g. policy.query.update.require_where
+        - layer — authorizer, AST, governance, budget
+        - measured — observed count
+        - ceiling — cap value
+        - state_modified — strictly false
+      - Remediation
+        - Explicit fix instructions printed
+        - Envelope shape — see interface.md#CLI-surface
+        - Machine-readable remedy field
+        - Agent executes remedy verbatim
+    - Canonical error payload
+      - domain — exact fault layer string
+      - culprit — failing line or constraint
+      - remedy — actionable resolution path
+      - Shape — CliEnvelope.diagnostic
+      - Definition — see kernel.md#Diagnostic-output-law
     - Learning and alerting
-      - telemetry feed — denial streams route to diagnosis: see cans/assembly.md#Core-domain-subsystems
-      - thrashing detector — 20 sustained denials triggers agent thrashing alert
-      - canonical error payload — machine diagnostic and fix suggestions: see physics.md#Diagnostic-output-law
-      - training data — denial patterns inform harness prompt and code adjustments
-      - thrashing alert — threshold: see artifacts/policy.yaml#rate
-    - Denial remediation — machine diagnostic and fix suggestions: see physics.md#Diagnostic-output-law
-  - Failure forensics
-    - Leaf-level localization
-      - trace diagnostics — sys audit trace pinpoints exact failing leaf in DAG
-      - partial execution — execution halts immediately at first failing leaf
-      - separation — distinguishes between code failures and policy cap breaches
-    - Forensic mirror views
-      - diagnostic trace — causal tree walk for failures: see #Query-surfaces
-      - primitive_failures — aggregates failures by version, leaf seq, and capability
-      - primitive_cost — aggregates duration, fuel, and wire payload bytes per leaf primitive
-    - Forensic quarantine — prevents auto-retry on unhandled runtime faults: see physics.md#Exit-code-law
+      - Telemetry feed — denial streams route to diagnosis
+      - Thrashing detector — 20 sustained denials
+      - Alert fires at threshold
+      - Config — see artifacts/policy.yaml#rate
+      - Training data — denial patterns inform prompts
+      - Feed — see lifecycle.md#Decay
+    - Denial fidelity
+      - Denial cites frame and pillar
+      - Budget exhaustion cites ancestors
+      - Budget exhaustion cites attempted_op
+      - Format — "routine B (frame_004) exhausted fuel: 20/20"
+    - Recovery context
+      - Denial events immutable
+      - Cannot be deleted, only superseded
+      - Superseded by later success
+      - Chain preserves both
   - Provenance
     - Artifact lineage
-      - version stamp — code_hash, manifest_hash, created_by, promoted_by
-      - environment journey — promoted_through records [dev, sim, prod] progression
-      - merge lineage — consolidated_from preserves origins of merged routines
-      - retention bounds — versions kept: see artifacts/governance.yaml#routine_shape
-    - Replay invariants
-      - integrity anchoring — ledger roots checkpointed offsite: see #Event-integrity
-      - deterministic inputs — replay recreates identical state; ctx.now() bound to frame start; ctx.uuid() uses PRNG seeded by HMAC-SHA256(session_token, op_sequence)
-      - policy enforcement — replay executes under current policy, not historical
-      - external effects — external API calls flagged replay: manual; auto-replay strictly forbidden
-      - idempotency — environment-scoped idempotency keys prevent duplicate execution
+      - Version stamp — code_hash, manifest_hash
+      - Attribution — created_by, promoted_by
+      - Environment journey — promoted_through
+      - Merge lineage — consolidated_from
+      - Retention bounds — see artifacts/governance.yaml#routine_shape
+    - Trust receipt
+      - Command — sys doctor --report
+      - Computed from _audit mirror
+      - Cites ledger root hash
+      - Cites WORM checkpoint
+      - Envelope shape — see interface.md#CLI-surface
+    - Receipt lines
+      - Deployment topology — dedicated_daemon or local_workstation
+      - Host execution tier — tier_1 or tier_2
+      - Sandbox provider — bwrap, podman, gvisor, wasm
+      - Audited events — total count
+      - Policy denials — pre-execution count
+      - Unaudited writes — must be exactly zero
+      - Simulation proofs — successful sim run count
+      - Promotion transitions — validated gate crossings
+      - Secret exposure — verified zero plaintext leaks
+      - Backup verification — last push age and hash
+      - Recovery testing — last drill status
+      - Definition — see interface.md#CLI-surface
+  - Failure forensics
+    - Leaf-level localization
+      - sys audit trace pinpoints failing leaf
+      - Execution halts at first failing leaf
+      - Separation of code vs policy breach
+      - Envelope shape — see #Denials
+    - Forensic mirror views
+      - diagnostic_trace — causal tree walk
+      - primitive_failures — aggregates by version
+      - primitive_cost — duration, fuel, wire bytes
+      - op_frequency — atomic op call counts
+      - Definition — see #Query-surfaces
+    - Forensic quarantine
+      - Prevents auto-retry on runtime faults
+      - Faults never retried blindly
+      - Operator reviews quarantine
+      - Envelope shape — see #Denials
+    - Recovery context
+      - Ground zero — capcli run overview
+      - Safe next step — dry-run or audit verify
+      - Context reinstatement pattern
+      - Definition — see routines.md#Session-Overview-Primer
+  - Mirror maintenance
+    - Sync cadence
+      - Max lag — see artifacts/governance.yaml
+      - Hash chain audit — scheduled cron
+      - Root checkpoint cadence
+      - Config — see artifacts/governance.yaml#maintenance
+    - JSONL rotation
+      - Daily file boundary at UTC midnight
+      - Append-only, never rewritten
+      - Cold storage after 30 days
+      - Object store retention WORM
+    - Attestation cadence
+      - KMS signature periodic
+      - S3 WORM checkpoint on every flush
+      - Witness log entries chained
+      - Definition — see #Event-integrity
+    - Verification
+      - Chain walk scheduled
+      - Boot validation last-1000
+      - Replay gate re-verifies
+      - Alarm on any break
+      - Envelope shape — see #Denials
+  - Audit boundary
+    - What is audited
+      - Every CLI verb entry
+      - Every binding fire
+      - Every kernel decision
+      - Every environment transition
+      - Every plugin install or update
+      - Every CLI projection mount
+    - What is not audited
+      - Raw stdout and stderr buffers
+      - Guest heap contents
+      - Secret plaintext bytes
+      - Transport layer packets
+      - Buffer isolation law enforced
+    - Kernel neutrality
+      - Kernel logs, never judges semantics
+      - Kernel matches, dispatches, records
+      - Zero LLM inference in audit path
+      - Zero probabilistic parsing in chain
+      - Definition — see kernel.md#Boundary-isolation
+    - Boundary isolation
+      - Unlogged buffers never re-enter chain
+      - Only canonical JSON outcome hashed
+      - Result hash derived from outcome
+      - Envelope shape — see #Event-anatomy

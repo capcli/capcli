@@ -1,340 +1,625 @@
 - Assembly
-<!-- ref-by: action.md, budget.md, cicd.md, effect.md, interface.md, physics.md, recovery.md -->
-  - Monorepo root layout
-    - Workspace configuration files
-      - Cargo.toml — defines workspace members, musl targets, and release profiles
-      - rust-toolchain.toml — pins MSRV 1.85+ with rustfmt and clippy components
-      - Cargo.lock — deterministic dependency lockfile across all workspace crates
-      - .gitignore — ignores capcli/ runtime directories, *.snap.db, target/, dist/, and tmpfs scratch
-      - repomix.config.json — context packing configuration for LLM code review
-    - Host system dependencies
-      - git binary — host git >= 2.30 for read-only declarative repo tracking
-      - python runtime — host python >= 3.11 for sandboxed routines: see action.md#Routines
-      - javascript runtime — host bun >= 1.1 or node >= 20 for polyglot execution
-      - sandbox backends: see physics.md#Platform-tier-taxonomy
-      - target toolchains — musl (Linux Tier 1), apple-darwin (macOS Tier 2), android (Termux Tier 2), msvc (Windows Tier 2)
-    - Root management commands
-      - compile development — cargo build --workspace: see physics.md#Exit-code-law
-      - compile static release — cargo build --release --target x86_64-unknown-linux-musl
-      - compile termux release — cargo build --release --target aarch64-linux-android
-      - run test suite — cargo test --workspace --all-targets: see #Monorepo-test-architecture
-      - run linter checks — cargo clippy --workspace -- -D warnings
-      - build cockpit assets — bun run --cwd packages/pwa build: see interface.md#Administrative-cockpit-pwa
-  - Declarative artifacts directory
-    - Path and target definitions
-      - artifacts/ — repository declarative blueprints: see overview.md#Governance-line
-      - artifacts/wireframe/ — offline golden test fixtures and edgeless canvas assets; excluded from runtime binary: see wireframe-structure.md
-      - artifacts/test-plan/ — behavioral acceptance cases, schema test-plan/case/v1; each case binds one physical invariant to one cans law node, 1:1 with crate tests: see test-plan-structure.md
-      - lockfile compiler target — capcli.lock compiled SSOT: see world.md#Pre-flight-Sub-checks
-      - static template immutability — uneditable at runtime: see overview.md#Governance-line
-    - Schema specifications
-      - schema.yaml — domain models, columns, constraints, and views: see world.md#Dual-schema
-      - system-schema.yaml — kernel-managed system surfaces: see world.md#Dual-schema
-      - world.sql — deterministic DDL export for fresh instances: see world.md#SQLite-as-SSOT
-    - Governance specifications
-      - governance.yaml — structural limits, token caps, and fuel caps: see artifacts/governance.yaml
-      - policy.yaml — behavioral authorizer and AST rules: see physics.md#Two-layer-enforcement
-      - sealing.rules — cross-domain boundaries and sealing laws: see cans/_rules.yaml
-  - Instance runtime home
-    - location — <workspace>/capcli holds all runtime state; the workspace root holds user artifacts only
-    - version control — capcli/ is machine-managed and gitignored; declarative blueprints live in the repository artifacts/: see #Declarative-artifacts-directory
-    - Static configuration files
-      - capcli.lock — root hash SSOT of compiled configs: see world.md#Pre-flight-Sub-checks
-      - world.sql — deterministic DDL schema snapshot: see world.md#SQLite-as-SSOT
-      - schema.yaml — active workspace schema copy: see world.md#Dual-schema
-      - system-schema.yaml — read-only system schema copy: see world.md#Dual-schema
-      - policy.yaml — active runtime behavioral policy: see physics.md#Two-layer-enforcement
-      - governance.yaml — active runtime structural boundaries: see artifacts/governance.yaml
-    - Live transactional databases
-      - workspace.db — live SQLite in WAL mode (chmod 600): see world.md#SQLite-as-SSOT
-      - audit.db — dedicated append-only ledger SQLite database (chmod 600): see effect.md#Audit-spine
-      - workspace.db-wal — write-ahead log for serializing commits: see agent.md#Coordination
-      - workspace.db-shm — shared-memory index for concurrent readers: see world.md#SQLite-as-SSOT
-    - Functional data directories
-      - docs/ — version-controlled markdown specifications and playbooks
-      - storage/ — local blob storage namespace: see artifacts/governance.yaml#storage
-      - audit/ — append-only historical JSONL export files: see effect.md#Audit-spine
-        - audit/audit.YYYY-MM-DD.jsonl — daily audit mirror holding hashed rows
-        - audit/checkpoint.sig — external notary attestation: see effect.md#Event-integrity
-        - audit/witness.log — remote KMS witness attestation logs: see effect.md#Event-integrity
-      - migrations/ — compiled migration bundles: see world.md#Schema-migration
-        - migrations/NNNN_<name>/plan.json — compiled expand/contract DDL phases
-        - migrations/NNNN_<name>/align.py — sandboxed chunked data alignment routine
-      - routines/ — agent-authored procedural guest scripts (.ts, .js, .py): see action.md#Routines
-        - routines/overview.py: see action.md#Session-Overview-Primer
-        - routines/order_refund.ts — sandboxed multi-step refund script
-        - routines/inventory_sync.py — legacy or data-heavy Python script
-      - apis/ — imported OpenAPI catalogs and simulation mocks: see action.md#External-APIs
-        - apis/stripe.yaml — compiled OpenAPI provider verbs: see action.md#Catalog-synchronization
-        - apis/stripe.sim.yaml — simulation base URL overlays: see space.md#Policy-overlays
-        - apis/stripe.mock.yaml — offline canned simulation fixtures: see space.md#Sim-mode-taxonomy
-      - federation/ — federated ws:// call replay cassettes: see space.md#Sim-mode-taxonomy
-        - federation/cassettes/<target_ws>.<routine>.jsonl — recorded peer responses auto-replayed when peer socket is absent or running in sim/CI
-      - envs/ — isolated directory namespaces and partition roots: see space.md#Environment-axis
-        - envs/dev/ — local development world with isolated DB: see space.md#World-definitions
-        - envs/sim/ — simulation replay world with masked see space.md#World-definitions
-        - envs/prod/ — live production world for pinned trust: see space.md#World-definitions
-    - External to the runtime home
-      - /run/capcli/kernel.sock — daemon IPC socket: see agent.md#Harness-execution-boundary
-      - /run/capcli/<ws>.sock — federated workspace peer sockets: see physics.md#Federation-invariants
-      - /scratch — tmpfs registry-download sandbox: see world.md#Remote-ingestion-&-wire-physics
-  - Rust workspace packages layout
-    - Shared contracts crate
-      - crate identity — crates/capcli-types (@capcli/types)
-      - configuration — Cargo.toml with serde, valibot-free zero runtime bloat
-      - models module (crates/capcli-types/src/)
-        - exit.rs — strict integer exit codes (0, 2, 3, 4, 5, 6): see physics.md#Exit-code-law
-        - error.rs — typed ErrorDomain enum (Routine, DbEngine, Policy, ApiUpstream, Kernel) and diagnostic envelope
-        - capability.rs — Universal Resource Pointer models: see action.md#Global-pointer-registry
-        - audit.rs — causal event anatomy and hash chain links: see effect.md#Event-anatomy
-        - template.rs — template manifest, compatibility headers, and bundle models: see world.md#World-templates
-        - schema.rs — shorthand AST definitions and table models: see world.md#Shorthand-expansion
-        - governance.rs — routine shape and budget limits: see artifacts/governance.yaml
-        - rpc.rs — streaming JSON-RPC 2.0 lines models: see #Python-runtime-harness-package
-    - Core domain engine crate
-      - crate identity — crates/capcli-core
-      - configuration — Cargo.toml linking rusqlite bundled, sha2, aes-gcm
-      - engine module (crates/capcli-core/src/)
-        - db/ — dual rusqlite WAL pool (workspace.db for state, audit.db for ledger) and VDBE mutation hooks
-        - parse/ — VDBE explain bytecode and query validation: see physics.md#Layer-1.5:-prepare-time-cross-check
-        - compile/ — YAML AST compilation and native DFS acyclic check: see world.md#Sub-check-2:-Semantics
-        - budget/ — budget frame push/pop and min() cascade: see budget.md#Cascade
-        - audit/ — sha256 hash chains and JSONL mirror writer: see effect.md#Storage-hierarchy
-        - vault/ — zeroize-protected in-memory secret decryption: see agent.md#Secrets
-    - CLI executable crate
-      - crate identity — crates/capcli-cli
-      - configuration — Cargo.toml linking clap derive, tokio, capcli-core, capcli-types
-      - command surface (crates/capcli-cli/src/)
-        - main.rs — entrypoint routing subcommands and exit codes: see interface.md#CLI-surface
-        - transport/ — spoke RPC client dispatcher (unix_socket, wireguard_mesh, mtls) for remote Hub routing
-        - commands/ — clap subcommand handlers for the CLI nouns: see interface.md#CLI-surface
-        - terminal/ — procedural renderers for the 3 visual archetypes (Diagnostic, Tree, Receipt) over CliEnvelope<T>: see physics.md#Diagnostic-output-law
-    - Persistent daemon crate
-      - crate identity — crates/capcli-daemon (targets systemd service on headless Linux servers for 24/7 background automation)
-      - configuration — Cargo.toml linking axum, tower, croner, rust-embed, capcli-core, capcli-types
-      - daemon surface (crates/capcli-daemon/src/)
-        - server.rs — axum HTTP/WS server on 127.0.0.1:4040: see interface.md#Administrative-cockpit-pwa
-        - hub_rpc.rs — JSON-RPC 2.0 handler evaluating spoke ctx.db requests through local Layer 1 C-Authorizer
-        - reaper.rs — background timer evaluating spoke heartbeats; purges dead claims leases and expires agents
-        - yield_queue.rs — evaluates _suspended_tasks and re-dispatches tasks on quota refill
-        - ipc.rs — tokio Unix domain socket listener on kernel.sock: see action.md#Sandbox-execution
-        - cron.rs — croner schedule evaluator daemon: see time.md#schedule-maintenance
-        - webhook.rs — inbound HMAC signature verification: see action.md#Bindings
-        - assets.rs — rust-embed static bundle serving administrative cockpit: see interface.md#Administrative-cockpit-pwa
-  - TypeScript runtime harness package
-    - Package identity and layout
-      - package root — packages/ts (published locally as @capcli/sdk)
-      - package.json — zero runtime dependencies, exports routine, Param, ctx
-    - TypeScript SDK modules (packages/ts/src/)
-      - routine.ts — routine() wrapper emitting JSON-RPC manifest over IPC
-      - param.ts — Param<T> type definitions for runtime validation
-      - ctx.ts — ctx.db (view, get, query, mutate), ctx.txn, ctx.now, ctx.uuid, ctx.cursor, ctx.api, ctx.call
-      - ipc.ts — streaming JSON-RPC client over /run/capcli/kernel.sock
-  - Python runtime harness package
-    - Package identity and layout
-      - package root — packages/py (published locally as capcli-py): see action.md#Routines
-      - pyproject.toml — zero-dependency Python packaging standard targeting >= 3.11
-      - setup.py — minimal wheel distribution setup exposing capcli package
-      - capcli/__init__.py — exports @routine, Param, ctx: see action.md#Sandbox-execution
-    - Python SDK modules (packages/py/capcli/)
-      - routine.py — @routine decorator storing manifests: see action.md#Anatomy-and-decorator
-      - param.py — Param[T] generic typing for input schemas: see action.md#Anatomy-and-decorator
-      - context_db.py — ctx.db view, get, query, mutate, txn, lock wrappers: see action.md#The-ctx-contract
-      - context_api.py — ctx.api call, verify, and poll_until IPC bridge: see action.md#The-ctx-contract
-      - context_runtime.py — ctx.now, ctx.uuid, ctx.cursor, and ctx.call runtime wrappers
-      - context_quota.py — ctx.quota inspect SDK wrapper
-      - context_storage.py — ctx.storage put, get, and url wrappers: see action.md#The-ctx-contract
-      - context_ping.py — ctx.ping notify and ask suspension handlers: see action.md#The-ctx-contract
-      - native_bridge.py — in-process FFI bridge (`capcli_native.so`) using shared memory for zero-copy DB and Authorizer calls; socket client used exclusively for background daemon RPC
-  - Core domain subsystems (crates/capcli-core/src/)
-    - Domain 1: Database & storage engine (db/)
-      - Subsystem modules
-        - connection.rs — rusqlite connection pool in WAL mode: see world.md#SQLite-as-SSOT
-        - authorizer.rs — sqlite3_set_authorizer C callback: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - migrate.rs — migration engine: see world.md#Schema-migration
-        - bytecode.rs — EXPLAIN opcode parser checking OpenWrite: see physics.md#Layer-1.5:-prepare-time-cross-check
-        - snapshot.rs — VACUUM INTO physical snapshot backup: see recovery.md#Snapshots
-        - claims.rs — distributed lease locks via claims: see world.md#claims-lease-lifecycle
-      - Execution gates
-        - authorizer_gate.rs — table and column write allowlists: see physics.md#Layer-1:-sqlite3_set_authorizer
-        - write_gate.rs — mandates primary-key-targeted or bounded WHERE: see physics.md#Raw-SQL-rules
-        - isolation_gate.rs — denies ctx.api.call inside txn: see physics.md#Layer-2:-SQL-AST-check
-      - Domain telemetry — tracks VDBE opcode analysis counts and connection lease durations
-    - Domain 2: Routine engine & sandboxing (routine/)
-      - Subsystem modules
-        - runner.rs — multi-runtime process supervisor (bun, python3, native)
-        - jail.rs — sandbox manager: see physics.md#Platform-tier-taxonomy
-        - shape_gate.rs — enforces <= 2,000 tokens envelope; complexity and params emit lint advisories: see action.md#Shape-constraints
-        - saga.rs — dual-write coordinator; handles compensation rollbacks on DB commit failure
-        - scaffold.rs — string template generator and file validator: see action.md#Routine-templates
-        - manifest.rs — receives declared manifests via runner IPC: see action.md#manifests-fingerprints
-        - fingerprint.rs — aggregates leaf sequences from _audit: see action.md#runtime-fingerprint
-        - ipc_socket.rs — cross-platform IPC (UDS on POSIX/Termux, Named Pipes on Windows): see action.md#Sandbox-execution
-      - Execution gates
-        - shape_gate.rs — checks token, complexity, and param limits: see artifacts/governance.yaml#routine_shape
-        - trust_gate.rs — denies draft writes in prod worktree: see trust.md#The-ladder
-        - drift_gate.rs — catches manifest and fingerprint divergence: see space.md#Manifest-drift
-      - Domain telemetry — tracks runner spin-up latencies and memory high-water marks
-    - Domain 3: Blob storage subsystem (storage/)
-      - Subsystem modules
-        - local.rs — local filesystem uploads under storage/ namespace
-        - s3.rs — AWS S3 and Cloudflare R2 object dispatcher: see artifacts/governance.yaml#storage
-        - signer.rs — mints HMAC-signed temporary access URLs: see action.md#The-ctx-contract
-        - metadata.rs — validates SHA256 and MIME headers: see artifacts/governance.yaml#storage
-      - Execution gates
-        - mime_gate.rs — denies unlisted MIME types per allowlist: see artifacts/governance.yaml#storage
-        - size_gate.rs — blocks uploads exceeding 10MB ceiling: see artifacts/governance.yaml#storage
-        - trust_gate.rs — gates blob writes by caller trust rung: see trust.md#The-ladder
-      - Domain telemetry — monitors upload throughput, presigned link counts, and storage caps
-    - Domain 4: External API gateway (api/)
-      - Subsystem modules
-        - catalog.rs — manages OpenAPI YAML specs in apis/: see action.md#Catalog-synchronization
-        - auth_schemes.rs — executes SigV4 canonical hashing, OAuth2 token rotations, and mTLS client cert binding
-        - projector.rs — streams JSONPath wire filtering to discard oversized payloads before sandbox intake
-        - contract_validator.rs — live response JSON Schema validator and shadow canary engine for external APIs
-        - outbox.rs — stages mutating API calls alongside DB transactions; verifies upstream idempotency header mapping and rejects unmapped routes with exit 3
-        - quota.rs — dual-window token bucket and rolling window accounting in _api_quota: see budget.md#Quotas
-        - header_parser.rs — dynamically resolves rate-limit header names from doc://specs/<provider>#rate_limit (IETF RFC fallback): see artifacts/policy.yaml#api.rate_limit
-        - egress.rs — reqwest HTTP proxy with secret injection: see agent.md#Egress-injection
-        - sim_mock.rs — serves canned fixtures from apis/*.mock.yaml: see space.md#Sim-mode-taxonomy
-        - refresh.rs — auto-rotates ephemeral bearer tokens: see artifacts/governance.yaml#api
-      - Execution gates
-        - quota_gate.rs — fails closed if bucket tokens < 1: see budget.md#Quotas
-        - fuel_gate.rs — enforces session fuel and wire payload caps: see artifacts/policy.yaml#api.fuel
-        - sim_gate.rs — denies prod-only verbs in dev and sim: see space.md#Policy-overlays
-      - Domain telemetry — tracks rate bucket token drain, wire egress bytes, fuel consumption, and retry counts
-    - Domain 5: Event & schedule bindings (bind/)
-      - Subsystem modules
-        - cron.rs — evaluates cron patterns via croner crate: see time.md#schedule-maintenance
-        - webhook.rs — vendor signature drivers (Stripe, GitHub, Slack, Shopify, Twilio, RFC): see action.md#Bindings
-        - endpoint.rs — routes pinned HTTP calls via axum: see action.md#Serve-lifecycle-split
-        - keys.rs — hashes and validates partner API keys: see artifacts/governance.yaml#serve
-      - Execution gates
-        - trust_gate.rs — mandates pinned trust for endpoints: see artifacts/governance.yaml#serve
-        - signature_gate.rs — rejects unsigned webhook payloads: see artifacts/policy.yaml#watch
-        - rate_gate.rs — throttles incoming requests per minute: see artifacts/governance.yaml#watch
-      - Domain telemetry — monitors trigger lag, cron schedule drift, and webhook arrival rates
-    - Domain 6: Human interaction & inquiry (ping/)
-      - Subsystem modules
-        - notify.rs — formats alerts to configured channels: see artifacts/governance.yaml#notify
-        - ask.rs — records suspensions to _pending_asks: see artifacts/system-schema.yaml#_pending_asks
-        - timeout.rs — manages timeout timers and fail-closed: see artifacts/policy.yaml#notify
-      - Execution gates
-        - option_gate.rs — limits question choices to max 5: see artifacts/governance.yaml#notify
-        - length_gate.rs — enforces question token caps: see artifacts/governance.yaml#notify
-        - fail_closed_gate.rs — fails suspended routine on timeout: see artifacts/policy.yaml#notify
-        - occ_fence_gate.rs — verifies dependency state_fences on resume; denies stale resumptions with exit 2
-      - Domain telemetry — tracks ask response latencies, pending queues, and expiry counts
-    - Domain 7: Governance & rule compilation (rule/)
-      - Subsystem modules
-        - loader.rs — deserializes YAML configs with serde_yml: see world.md#Pre-flight-Sub-checks
-        - cycle_check.rs — checks relational cycles and targets via native DFS: see world.md#Sub-check-2:-Semantics
-        - template_bundle.rs — validates manifest inputs, enforces governance exclusion, and unpacks bundles: see world.md#World-templates
-        - shorthand.rs — expands schema shorthands into SQLite DDL: see world.md#Shorthand-expansion
-        - lockfile.rs — verifies compiled root sha256 checksum: see world.md#Pre-flight-Sub-checks
-      - Execution gates
-        - syntax_gate.rs — validates YAML layout (Sub-check 1): see world.md#Sub-check-1:-Syntax
-        - semantic_gate.rs — native DFS verifies graph (Sub-check 2): see world.md#Sub-check-2:-Semantics
-        - migration_gate.rs — test transaction on snapshot (Migration safety): see world.md#Migration-safety
-      - Domain telemetry — tracks YAML AST compilation cycles and lockfile validation time
-    - Domain 8: Environment & worktree management (env/)
-      - Subsystem modules
-        - namespace.rs — provisions and manages environment directory partitions: see space.md#Environment-axis
-        - masking.rs — executes format-preserving anonymization: see space.md#Data-masking
-        - drift.rs — checks schema and data staleness vs prod: see space.md#Environment-drift
-      - Execution gates
-        - prod_protect_gate.rs — verifies out-of-band cryptographic challenge signatures: see space.md#World-governance
-        - merge_gate.rs — verifies rehearsal proof before merge: see space.md#Safety-controls
-      - Domain telemetry — measures worktree creation overhead and anonymization durations
-    - Domain 9: System, audit & diagnostics (sys/)
-      - Subsystem modules
-        - audit.rs — append-only transactional writes to _audit: see effect.md#Storage-hierarchy
-        - mirror.rs — streams rows to daily JSONL export files: see effect.md#Storage-hierarchy
-        - hashchain.rs — calculates sha256 links with sha2 crate: see effect.md#Event-integrity
-        - witness.rs — checkpoints root hash to KMS or S3 WORM: see effect.md#Event-integrity
-        - doctor.rs — probes host runtimes, tier status, and receipts: see physics.md#Platform-tier-taxonomy
-        - recover.rs — coordinates snapshot or commit rollbacks: see recovery.md#Restore-path
-      - Execution gates
-        - sink_gate.rs — denies writes if audit write fails (exit 5): see physics.md#Fail-closed-stance
-        - boot_gate.rs — aborts on missing runtimes, drift, or lock mismatch: see physics.md#Boot-refusals
-      - Domain telemetry — records sink buffer flush lag, root ledger drift, and drill status
-    - Domain 10: Capability execution & discovery (run/)
-      - Subsystem modules
-        - registry.rs — Universal Resource Pointer dispatcher: see action.md#Global-pointer-registry
-        - search.rs — discovery engine cascading exact, prefix, and SQLite FTS5 BM25 ranking
-        - preflight.rs — evaluates static call-tree cost graph to return recursive can_invoke_now verdict: see budget.md#Pre-flight
-      - Execution gates
-        - preflight_gate.rs — denies call if preflight fails: see budget.md#Pre-flight
-        - trust_floor_gate.rs — blocks caller lacking rung authority: see trust.md#The-ladder
-      - Domain telemetry — monitors query resolution time, cache hit ratios, and gap frequencies
-    - Domain 11: Identity & process security (identity/)
-      - Subsystem modules
-        - process.rs — verifies host OS UID against --by flag: see agent.md#Credential-binding
-        - vault.rs — zeroize-protected AES-256-GCM memory decryption: see agent.md#Secrets
-        - session.rs — binds HMAC capability token to session: see agent.md#Credential-binding
-      - Execution gates
-        - process_gate.rs — denies call if OS UID mismatches: see agent.md#Credential-binding
-        - revocation_gate.rs — aborts calls from revoked agents: see agent.md#System-agent-registry
-      - Domain telemetry — tracks vault zeroize events, active sessions, and HMAC verifications
-  - Administrative cockpit package (packages/pwa)
-    - Purpose — zero-authority administrative frontend for human oversight, vault injection, and audit inspection
-    - Build configuration
-      - package.json — React 19, Tailwind CSS 4, Vite 6, TanStack Query 5
-      - bundle target — compiled static SPA embedded into capcli-daemon via rust-embed
-    - Telemetry views (packages/pwa/src/views/)
-      - state.tsx — raw relational schema inspector, masked cell renderer, and table row counts
-      - capability.tsx — routine version inspector, template blueprint browser (tpl://), static manifest diffs, and dynamic leaf fingerprints
-      - audit.tsx — live virtualized audit tail, causal DAG breadcrumbs, and denial explanation dialogs
-      - budget.tsx — session frame cascade tree, fuel gauges, wire byte meters, and live proactive token-bucket meters
-      - approvals.tsx — human promotion queue, canary veto timers, and interactive ping.ask dialogs
-      - vault.tsx — out-of-band credential injection with mobile biometric/FaceID authorization
-      - recovery.tsx — VACUUM snapshot catalog and point-in-time rollback trigger
-    - Architecture constraints
-      - zero domain awareness — no business logic, custom dashboards, or e-commerce widgets
-      - read boundary — operates exclusively over daemon JSON-RPC 2.0 and WebSocket streams
-
-
-  - Monorepo test architecture
-    - Unit test tier (crates/capcli-core/tests/unit/)
-      - test_template.rs — validates template bundle intake, AST rewrites, and size ceilings: see world.md#World-templates
-      - test_bytecode.rs — verifies EXPLAIN OpenWrite detection: see physics.md#Layer-1.5:-prepare-time-cross-check
-      - test_authorizer.rs — validates SQLite C authorizer callbacks: see physics.md#Layer-1:-sqlite3_set_authorizer
-      - test_routine_shape.rs — enforces token, complexity, and param bounds: see artifacts/governance.yaml#routine_shape
-      - test_api_quota.rs — validates token bucket calculations: see budget.md#Quotas
-      - test_cycle_check.rs — checks relational cycle rejection via native DFS: see world.md#Sub-check-2:-Semantics
-      - test_hashchain.rs — verifies sha256 link calculations: see effect.md#Event-integrity
-      - test_vault.rs — tests zeroize and AES-256-GCM decryption: see agent.md#Secrets
-      - test_trinity.rs — pointer validation runner: see cicd.md#Checker-tool-architecture
-    - Integration test tier (crates/capcli-core/tests/integration/)
-      - test_bwrap.rs — verifies bwrap network isolation and scratch wipe: see action.md#Sandbox-execution
-      - test_ipc_socket.rs — tests JSON-Lines over /run/capcli/kernel.sock: see #Python-runtime-harness-package
-      - test_storage_s3.rs — tests object uploads and HMAC presigned URLs: see action.md#The-ctx-contract
-      - test_api_proxy.rs — tests header reconciliation and secret injection: see agent.md#Egress-injection
-      - test_webhook.rs — verifies HMAC signature check gates: see artifacts/policy.yaml#watch
-      - test_ping_timeout.rs — validates fail-closed inquiry timeouts: see artifacts/policy.yaml#notify
-      - test_mirror.rs — tests transactional JSONL stream flushing: see effect.md#Storage-hierarchy
-    - End-to-end test tier (crates/capcli-cli/tests/e2e/)
-      - test_wireframe_fixtures.rs — golden-file engine asserting CLI stdout/exit codes against all screen fixtures: see wireframe-structure.md#62-rust-integration-test-runner
-      - test_onboarding_human.rs — validates human S0 to S10 sequence: see interface.md#Human-journey-stages
-      - test_onboarding_harness.rs — validates agent H0 to H7 sequence: see interface.md#Harness-journey-stages
-      - test_budget_cascade.rs — tests min() pool inheritance down call stack: see budget.md#Cascade
-      - test_recovery_drill.rs — tests VACUUM snapshot restore flows: see recovery.md#Restore-path
-      - test_api_lifecycle.rs — tests OpenAPI spec sync through shipping: see action.md#State-machine
-      - test_env_worktree.rs — tests dev worktree fork to prod merge: see space.md#Environment-axis
-    - Test fixtures and mock catalogs (crates/capcli-core/tests/fixtures/)
-      - schema.fixture.yaml — test schema declaring tables and checks: see world.md#Dual-schema
-      - policy.fixture.yaml — test policy declaring authorizer rules: see physics.md#Two-layer-enforcement
-      - governance.fixture.yaml — test governance limits and shape bounds: see artifacts/governance.yaml
-  - Build outputs & runtime contracts
-    - Distribution build artifacts
-      - kernel binary — single musl binary at /usr/local/bin/capcli: see physics.md#Fail-closed-stance
-      - python sdk wheel — packages/py/dist/capcli.whl for sandboxed routines: see action.md#Routines
-    - Binary composition & linkage
-      - target architecture — static compilation for x86_64 and aarch64 musl: see #Host-system-dependencies
-      - static linkage — links libc, bundled SQLite C engine, and axum: see world.md#SQLite-as-SSOT
-      - zero template bundling — wireframe screens excluded from binary; CLI renders output procedurally
-      - runtime dependencies — kernel binary ships zero host npm, Bun, or node_modules; guest routine engines: see #Host-system-dependencies
-    - Inter-crate dependency flow
-      - types package — capcli-types imported across core, cli, and daemon: see #Shared-contracts-crate
-      - core engine — capcli-core imported exclusively by cli and daemon: see #Core-domain-engine-crate
-      - runtime boundary — Python subprocess mediated solely via kernel.sock: see action.md#Sandbox-execution
+<!-- ref-by: overview.md -->
+  - Monorepo layout
+    - Workspace files
+      - Cargo.toml — workspace members and profiles
+      - rust-toolchain.toml — MSRV 1.85 with rustfmt
+      - Cargo.lock — deterministic dependency lockfile
+      - .gitignore — runtime directories ignored
+      - repomix.config.json — LLM review packing
+    - Host dependencies
+      - git binary >= 2.30
+      - python runtime >= 3.11
+      - bun >= 1.1 or node >= 20
+      - Target toolchains for cross-compile
+      - Definition — see sandbox.md#Platform-tiers
+    - Root commands
+      - cargo build --workspace — dev build
+      - cargo build --release --target musl
+      - cargo test --workspace --all-targets
+      - cargo clippy --workspace -- -D warnings
+      - bun run --cwd packages/pwa build
+    - Declarative artifacts
+      - Path — artifacts/
+      - schema.yaml — domain model
+      - system-schema.yaml — kernel tables
+      - policy.yaml — behavioral rules
+      - governance.yaml — structural limits
+      - world.sql — deterministic DDL dump
+      - Definition — see world.md#Dual-schema
+    - Instance runtime home
+      - Path — <workspace>/capcli/
+      - Machine-managed, gitignored
+      - workspace.db — live transactional
+      - audit.db — append-only ledger
+      - capcli.lock — compiled config SSOT
+      - Definition — see world.md#SQLite-as-SSOT
+    - Functional directories
+      - routines/ — agent-authored scripts
+      - apis/ — imported provider catalogs
+      - migrations/ — compiled migration bundles
+      - federation/ — peer replay cassettes
+      - envs/ — environment partitions
+      - audit/ — daily JSONL exports
+      - storage/ — local blob namespace
+    - External runtime paths
+      - /run/capcli/kernel.sock — daemon IPC
+      - /run/capcli/<ws>.sock — federated peer sockets
+      - /scratch — tmpfs download sandbox
+  - Rust workspace crates
+    - capcli-types
+      - Identity — crates/capcli-types
+      - Purpose — shared contracts
+      - exit.rs — strict integer exit codes
+      - error.rs — typed ErrorDomain enum
+      - capability.rs — URP models
+      - audit.rs — event anatomy and hash links
+      - schema.rs — shorthand AST definitions
+      - governance.rs — shape and budget limits
+      - rpc.rs — streaming JSON-RPC 2.0 lines
+      - Definition — see kernel.md#Exit-code-law
+    - capcli-core
+      - Identity — crates/capcli-core
+      - Purpose — domain engine
+      - db/ — dual rusqlite WAL pool
+      - parse/ — VDBE and query validation
+      - compile/ — YAML AST compilation
+      - budget/ — frame push and cascade
+      - audit/ — hash chains and JSONL mirror
+      - vault/ — AES-256-GCM decryption
+      - plugin/ — manifest parse and CLI projection
+      - Definition — see kernel.md#Layer-1-C-authorizer
+    - capcli-cli
+      - Identity — crates/capcli-cli
+      - Purpose — CLI executable
+      - main.rs — entrypoint routing subcommands
+      - transport/ — spoke RPC client dispatcher
+      - commands/ — clap subcommand handlers
+      - terminal/ — procedural renderers
+      - Definition — see interface.md#CLI-surface
+    - capcli-daemon
+      - Identity — crates/capcli-daemon
+      - Purpose — persistent daemon
+      - server.rs — axum HTTP/WS on 127.0.0.1:4040
+      - hub_rpc.rs — spoke JSON-RPC handler
+      - ipc.rs — Unix domain socket listener
+      - cron.rs — croner schedule evaluator
+      - webhook.rs — inbound HMAC verification
+      - reaper.rs — swarm heartbeat evaluator
+      - yield_queue.rs — suspended task re-dispatch
+      - projection.rs — CLI projection mount/unmount
+      - assets.rs — rust-embed Cockpit bundle
+      - Definition — see interface.md#Administrative-Cockpit-PWA
+    - Inter-crate flow
+      - types — imported by core, cli, daemon
+      - core — imported by cli and daemon only
+      - daemon — spawns cli, never the reverse
+      - Polyglot boundary — python via kernel.sock
+  - Core subsystems
+    - Domain 1 — database engine (db/)
+      - connection.rs — rusqlite WAL pool
+      - authorizer.rs — C authorizer callback
+      - migrate.rs — four-phase migration
+      - bytecode.rs — EXPLAIN opcode parser
+      - snapshot.rs — VACUUM INTO backups
+      - claims.rs — Layer 1 lease locks
+      - Definition — see world.md#Claims-lease
+    - Domain 2 — routine engine (routine/)
+      - runner.rs — multi-runtime supervisor
+      - jail.rs — sandbox manager
+      - shape_gate.rs — token and complexity
+      - saga.rs — dual-write coordinator
+      - scaffold.rs — template generator
+      - manifest.rs — declared manifest receiver
+      - fingerprint.rs — leaf sequence aggregation
+      - ipc_socket.rs — cross-platform IPC
+      - Definition — see routines.md#Procedure-layer
+    - Domain 3 — blob storage (storage/)
+      - local.rs — filesystem uploads
+      - s3.rs — S3 and R2 dispatcher
+      - signer.rs — HMAC-signed URLs
+      - metadata.rs — SHA256 and MIME headers
+      - Definition — see egress.md#Developer-bridge
+    - Domain 4 — external API gateway (api/)
+      - catalog.rs — OpenAPI YAML specs
+      - auth_schemes.rs — SigV4, OAuth2, mTLS
+      - projector.rs — JSONPath filtering
+      - contract_validator.rs — live JSON Schema
+      - outbox.rs — atomic staging for mutating calls
+      - quota.rs — dual-window token bucket
+      - header_parser.rs — rate-limit header resolution
+      - egress.rs — reqwest HTTP proxy
+      - sim_mock.rs — canned fixture replay
+      - refresh.rs — ephemeral token rotation
+      - Definition — see egress.md#Vault-proxy
+    - Domain 5 — event bindings (bind/)
+      - cron.rs — croner pattern evaluation
+      - webhook.rs — vendor signature drivers
+      - endpoint.rs — axum HTTP routing
+      - keys.rs — partner API key hashing
+      - Definition — see plugins.md#Capabilities
+    - Domain 6 — human interaction (ping/)
+      - notify.rs — alert formatting
+      - ask.rs — suspension records
+      - timeout.rs — fail-closed timers
+      - Definition — see governor.md#Suspension-registry
+    - Domain 7 — governance compilation (rule/)
+      - loader.rs — YAML deserialization
+      - cycle_check.rs — native DFS cycle scan
+      - template_bundle.rs — bundle validation
+      - shorthand.rs — DDL expansion
+      - lockfile.rs — root hash verification
+      - Definition — see world.md#Pre-flight-sub-checks
+    - Domain 8 — environment management (env/)
+      - namespace.rs — directory partition provisioning
+      - masking.rs — format-preserving anonymization
+      - drift.rs — schema and staleness checks
+      - Definition — see lifecycle.md#Environments
+    - Domain 9 — system and audit (sys/)
+      - audit.rs — transactional _audit writes
+      - mirror.rs — daily JSONL export
+      - hashchain.rs — sha256 link calculation
+      - witness.rs — KMS and S3 WORM checkpoints
+      - doctor.rs — host probes and receipts
+      - recover.rs — snapshot or commit rollback
+      - Definition — see effect.md#Audit-spine
+    - Domain 10 — capability run (run/)
+      - registry.rs — URP dispatcher
+      - search.rs — cascade discovery engine
+      - preflight.rs — recursive can_invoke_now
+      - Definition — see routines.md#Procedure-layer
+    - Domain 11 — identity (identity/)
+      - process.rs — host UID verification
+      - vault.rs — zeroize-protected decryption
+      - session.rs — HMAC token binding
+      - Definition — see identity.md#Credential-binding
+    - Domain 12 — plugin lifecycle (plugin/)
+      - generation.rs — generation directory manager
+      - projection.rs — CLI surface merge
+      - projection_check.rs — collision detection
+      - lease.rs — shared flock lease manager
+      - gc.rs — safe-reclaim reclamation
+      - verify.rs — binary sha256 vs lockfile
+      - Definition — see plugins.md#Generations
+  - Polyglot packages
+    - TypeScript runtime (packages/ts)
+      - Identity — @capcli/sdk
+      - Zero runtime dependencies
+      - routine.ts — decorator wrapper
+      - param.ts — Param<T> type definitions
+      - ctx.ts — db, txn, api, call methods
+      - ipc.ts — JSON-RPC client over UDS
+      - cli.ts — plugin CLI surface builder
+      - Definition — see routines.md#The-ctx-contract
+    - Python runtime (packages/py)
+      - Identity — capcli-py
+      - Target >= 3.11
+      - routine.py — @routine decorator
+      - param.py — Param[T] typing
+      - context_db.py — db method wrappers
+      - context_api.py — egress IPC bridge
+      - context_runtime.py — now, uuid, cursor
+      - context_quota.py — quota inspection
+      - context_storage.py — blob wrappers
+      - context_ping.py — ask and notify handlers
+      - native_bridge.py — FFI and shared memory
+      - cli.py — plugin CLI surface builder
+      - Definition — see routines.md#The-ctx-contract
+    - Distribution
+      - npm publish on release tag
+      - maturin wheel linking capcli_native.so
+      - PyPI via OIDC trusted publishing
+      - Bundle — see marketplace.md#Publishing
+    - Plugin SDK
+      - Purpose — plugin author toolkit
+      - TS and Python builds share shape
+      - Declares manifest and CLI surface
+      - Routes egress via capcli binary
+      - Definition — see plugins.md#Manifest
+  - Cockpit package
+    - Identity — packages/pwa
+    - Purpose — zero-authority admin frontend
+    - Build — React 19, Tailwind 4, Vite 6
+    - Bundle — static SPA embedded via rust-embed
+    - Views
+      - state.tsx — schema inspector
+      - capability.tsx — routine inspector
+      - audit.tsx — live tail and DAG
+      - budget.tsx — frame cascade tree
+      - approvals.tsx — promotion queue
+      - vault.tsx — credential injection
+      - recovery.tsx — snapshot catalog
+    - Constraints
+      - Zero domain awareness
+      - No business dashboards
+      - Read via daemon JSON-RPC only
+      - Never embeds secrets
+      - Definition — see interface.md#Administrative-Cockpit-PWA
+  - Test architecture
+    - Unit tier (crates/capcli-core/tests/unit/)
+      - test_template.rs — bundle intake
+      - test_bytecode.rs — OpenWrite detection
+      - test_authorizer.rs — C callbacks
+      - test_routine_shape.rs — token and complexity
+      - test_api_quota.rs — token bucket math
+      - test_cycle_check.rs — DFS rejection
+      - test_hashchain.rs — sha256 links
+      - test_vault.rs — zeroize and AES
+      - test_projection.rs — CLI collision rules
+      - Definition — see kernel.md#Unified-3-phase-engine
+    - Integration tier (tests/integration/)
+      - test_bwrap.rs — network isolation
+      - test_ipc_socket.rs — JSON-Lines over UDS
+      - test_storage_s3.rs — uploads and URLs
+      - test_api_proxy.rs — header reconciliation
+      - test_webhook.rs — HMAC signatures
+      - test_ping_timeout.rs — fail-closed timers
+      - test_mirror.rs — JSONL stream flushing
+      - test_trijail_macos.rs — Seatbelt profile
+      - test_trijail_windows.rs — AppContainer token
+      - Definition — see sandbox.md#Tri-Jail-engine
+    - End-to-end tier (tests/e2e/)
+      - test_wireframe_fixtures.rs — golden CLI output
+      - test_onboarding_human.rs — S0 to S10 flow
+      - test_onboarding_harness.rs — H0 to H7 flow
+      - test_budget_cascade.rs — min() inheritance
+      - test_recovery_drill.rs — VACUUM restore
+      - test_api_lifecycle.rs — spec sync to ship
+      - test_env_worktree.rs — fork to merge
+      - test_plugin_lifecycle.rs — install to GC
+      - test_projection_swap.rs — generation CLI change
+      - Definition — see interface.md#Onboarding
+    - Fixtures
+      - schema.fixture.yaml — test tables
+      - policy.fixture.yaml — test authorizer
+      - governance.fixture.yaml — test limits
+      - plugin.fixture.yaml — test manifest
+      - Definition — see world.md#Dual-schema
+  - Build outputs
+    - Kernel binary
+      - Target — /usr/local/bin/capcli
+      - Static musl for x86_64 and aarch64
+      - Bundled SQLite and axum linked
+      - Zero host npm or node_modules
+      - Definition — see kernel.md#Fail-closed-stance
+    - Daemon binary
+      - Target — capcli-daemon
+      - Same musl static linkage
+      - Embeds Cockpit PWA via rust-embed
+      - Definition — see interface.md#Administrative-Cockpit-PWA
+    - SDK wheels
+      - packages/py/dist/capcli.whl
+      - Links capcli_native.so FFI
+      - Definition — see routines.md#Procedure-layer
+    - npm packages
+      - @capcli/sdk on npm registry
+      - Zero runtime dependencies
+      - Definition — see marketplace.md#Publishing
+    - Binary composition
+      - Static x86_64 and aarch64 musl
+      - libc and SQLite bundled
+      - No dynamic host library dependency
+      - Zero template bundling in binary
+      - CLI renders output procedurally
+  - CICD
+    - Monorepo topology
+      - Sequencing invariants
+        - PWA compiles before daemon crate
+        - Missing web dist fails daemon build
+        - rust-embed links static assets
+        - Definition — see interface.md#Administrative-Cockpit-PWA
+      - Declarative sync
+        - schema and policy verified vs lock
+        - Uncommitted hash drift exits 3
+        - Dev and sim auto-recompile
+        - CI enforces diff on lockfile
+        - Definition — see world.md#Pre-flight-sub-checks
+      - Subsystem order
+        - types crate baseline for all
+        - FFI bridge before maturin build
+        - Astro docs independent of Trinity
+        - Order enforced by Cargo dependencies
+    - Workspace graph
+      - types foundations
+        - serde models for capabilities
+        - Exit codes shared integer contract
+        - Consumed by core, cli, daemon
+        - Definition — see kernel.md#Exit-code-law
+      - core engine
+        - Links rusqlite, petgraph, aes-gcm
+        - Compiles C authorizer callback
+        - Consumed by cli, daemon, py bridge
+        - Definition — see kernel.md#Layer-1-C-authorizer
+      - Binary heads
+        - cli routes clap subcommands
+        - daemon hosts Cockpit PWA
+        - py bridge exposes SQLite FFI
+        - Definition — see routines.md#Procedure-layer
+    - Path filtering
+      - PR compute containment
+        - dorny/paths-filter gates execution
+        - Docs-only edits bypass Rust matrix
+        - Cost bounds on GitHub Actions
+        - Config — see artifacts/cicd.yaml#cost_controls
+      - Package boundaries
+        - packages/pwa changes trigger build-pwa
+        - packages/py triggers maturin and pytest
+        - packages/ts triggers bun test
+        - Config — see artifacts/cicd.yaml
+      - Core boundaries
+        - crates changes trigger clippy and tests
+        - artifacts and lock changes trigger Trinity
+        - docs changes trigger Astro build
+        - Config — see artifacts/cicd.yaml#trinity
+    - Trinity integrity
+      - Wireframe ground truth
+        - Golden fixtures define CLI layouts
+        - Screen JSON records exit codes
+        - Trailer maps to trigger rule
+        - Definition — see interface.md#CLI-surface
+      - Prompt campaign bank
+        - doc://prompts serves triggers
+        - Trigger schema coordinates associations
+        - Screen id follows noun.verb descriptor
+        - Definition — see interface.md#Doc-noun
+      - Documentation root
+        - doc:// maps to markdown specs
+        - Astro and Bun build docs site
+        - Anchor slugs resolve to headers
+        - Definition — see interface.md#Doc-noun
+      - Token cage ceilings
+        - L1 trailer capped at 30 tokens
+        - L2 envelope capped at 150 tokens
+        - L3 leaf capped at 500 tokens
+        - Breach aborts verification with exit 1
+        - Config — see artifacts/cicd.yaml#trinity
+    - Checker tool
+      - Tool identity — tools/check-trinity.py
+      - Zero third-party dependencies
+      - Identical local and CI execution
+      - Exit 0 intact, exit 1 breach
+      - Fixture resolution for every screen
+      - Doc URI resolution to markdown
+      - Anchor slug verification
+      - Token estimation via 3.5 char ratio
+      - Config — see artifacts/cicd.yaml#trinity
+    - Local developer loop
+      - Justfile runner
+        - Local tasks mirror CI PR gate
+        - Inner loop target under 15 seconds
+        - Config — see artifacts/cicd.yaml#sla
+      - Fast targets
+        - check — fmt, clippy, trinity, pwa
+        - check-trinity — pointer validation
+        - check-docs — Astro build verify
+        - Envelope shape — see interface.md#CLI-surface
+      - Engine targets
+        - validate — rule validate and diff
+        - test-sdks — bun test and pytest
+        - test-sandbox — bwrap integration
+        - Envelope shape — see interface.md#CLI-surface
+      - Pre-push chaining
+        - check then validate then docs
+        - Fail-closed on any subtask
+        - Full run under 45 seconds
+        - Config — see artifacts/cicd.yaml#sla
+      - Hygiene checks
+        - cargo fmt --all --check
+        - clippy -D warnings workspace-wide
+        - ruff for Python SDK code
+        - Envelope shape — see interface.md#CLI-surface
+      - State clean
+        - git diff --exit-code capcli.lock
+        - Dirty tree refuses push
+        - Test isolation via .gitignore
+        - Definition — see world.md#SQLite-as-SSOT
+      - Platform tier parity
+        - Linux runs bwrap integration
+        - Userns check via sysctl probe
+        - Tier 2 relies on Linux CI
+        - Definition — see sandbox.md#Platform-tiers
+      - Diagnostics alignment
+        - Doctor parity with CI boot
+        - CliEnvelope fidelity preserved
+        - Same diagnostic caret rendering
+        - Definition — see kernel.md#Diagnostic-output-law
+    - PR gate
+      - Trigger rules
+        - Config — .github/workflows/pr-gate.yml
+        - Root README changes skip CI
+        - docs triggers Astro and Trinity
+        - Envelope shape — see interface.md#CLI-surface
+      - Concurrency controls
+        - Group scoped to workflow and ref
+        - cancel-in-progress true
+        - Saves GitHub Actions minutes
+        - Config — see artifacts/cicd.yaml
+      - Execution budget
+        - PR gate SLA under 4 minutes
+        - Fail-closed on first failure
+        - Runs on PR and main push
+        - Config — see artifacts/cicd.yaml#sla
+      - Static analysis
+        - PWA build job
+          - bun install --frozen-lockfile
+          - bun run build to packages/pwa/dist
+          - Uploads pwa-dist artifact
+          - Definition — see interface.md#Administrative-Cockpit-PWA
+        - Astro docs job
+          - bun install --frozen-lockfile
+          - bun run build validates markdown
+          - Broken frontmatter halts gate
+          - Definition — see interface.md#Doc-noun
+        - Trinity job
+          - Python 3.11 on ubuntu-latest
+          - check-trinity.py runs
+          - L1 L2 L3 cages asserted
+          - Definition — see #Checker-tool
+      - Core engine testing
+        - Rust init
+          - Toolchain 1.85.0 pinned
+          - rust-cache caches artifacts
+          - pwa-dist downloaded before compile
+          - Definition — see #Rust-workspace-crates
+        - Static quality
+          - cargo fmt workspace-wide
+          - clippy -D warnings
+          - rule validate AST
+          - Definition — see world.md#Pre-flight-sub-checks
+        - Schema lock
+          - git diff --exit-code capcli.lock
+          - Uncommitted schema exits 3
+          - cargo test --workspace --lib
+          - Definition — see world.md#Pre-flight-sub-checks
+      - SDK verification
+        - TS SDK job
+          - setup-bun on ubuntu-latest
+          - bun install --frozen-lockfile
+          - bun test packages/ts
+          - Definition — see #Polyglot-packages
+        - Python SDK job
+          - setup-python 3.11
+          - ruff, pytest, maturin install
+          - maturin develop for FFI
+          - Definition — see #Polyglot-packages
+        - Job coordination
+          - test-py and test-rust depend on build
+          - Syntax errors block PR approval
+          - Gate success unlocks deep test
+          - Config — see artifacts/cicd.yaml
+    - Deep test
+      - Trigger context
+        - Config — .github/workflows/deep-test.yml
+        - Runs on push to main branch
+        - SLA under 20 minutes
+        - Config — see artifacts/cicd.yaml#cost_controls
+      - Supply chain
+        - cargo-deny audits Rust dependencies
+        - Scans RustSec advisory database
+        - Denies non-compliant licenses
+        - Config — see artifacts/cicd.yaml
+      - Multi-OS strategy
+        - fail-fast disabled across matrix
+        - Ubuntu, macOS, Windows hosts
+        - rust-cache keys by target OS
+        - Definition — see sandbox.md#Platform-tiers
+      - Tier 1 Linux
+        - Kernel config
+          - AppArmor restrict flag set
+          - unprivileged_userns_clone enabled
+          - bwrap and libseccomp installed
+          - Definition — see sandbox.md#Tri-Jail-engine
+        - Isolation checks
+          - test_bwrap asserts tmpfs wipe
+          - Raw socket trapping verified
+          - Syscall enforcement verified
+          - Definition — see sandbox.md#Network-jail
+        - PWA prep
+          - setup-bun installs runtime
+          - bun run build compiles Cockpit
+          - rust-embed links assets
+          - Definition — see interface.md#Administrative-Cockpit-PWA
+      - Tier 2 matrix
+        - Darwin validation
+          - Tier 2 virtualization rules
+          - host.degraded_isolation warning
+          - Unit, parser, AST tests only
+          - Definition — see sandbox.md#Platform-tiers
+        - Windows validation
+          - Tier 2 native Windows
+          - Named pipe IPC test
+          - Path separator assertions
+          - Definition — see sandbox.md#Channel-A
+        - E2E suite
+          - cargo test --workspace --tests
+          - Wireframe fixtures validated
+          - Recovery drill tested
+          - Definition — see #End-to-end-tier
+    - Release pipeline
+      - Triggers
+        - Config — .github/workflows/release.yml
+        - Tag pattern v[0-9]+.[0-9]+.[0-9]+*
+        - Tags write-once per version
+        - Definition — see marketplace.md#Immutable-versioning
+      - Token permissions
+        - contents write for tags and assets
+        - packages write for binary and containers
+        - id-token write for OIDC PyPI
+        - Config — see artifacts/cicd.yaml
+      - PWA prerequisite
+        - bun run build with Vite 6
+        - Upload pwa-dist artifact
+        - Embed in release daemon binary
+        - Definition — see interface.md#Administrative-Cockpit-PWA
+      - Binary matrix
+        - Linux musl
+          - cargo-zigbuild for musl
+          - x86_64 target compiled
+          - aarch64 target cross-compiled
+          - Definition — see #Build-outputs
+        - Darwin
+          - x86_64 Intel release binary
+          - aarch64 Apple Silicon binary
+          - Static system library linkage
+          - Definition — see #Build-outputs
+        - Windows
+          - x86_64 MSVC target
+          - .exe extension applied
+          - Artifacts staged in dist/
+          - Definition — see #Build-outputs
+      - SDK publishing
+        - npm publishes @capcli/sdk
+        - maturin wheel builds FFI
+        - PyPI via OIDC trusted publishing
+        - Definition — see marketplace.md#Publishing
+      - Attestation
+        - download-artifact consolidates binaries
+        - SHA256SUMS.txt generated
+        - Root anchored in release notes
+        - Definition — see effect.md#Event-integrity
+      - GitHub release
+        - softprops/action-gh-release attaches
+        - Auto-generates release notes
+        - Public and permanent, no draft
+        - Definition — see marketplace.md#Publishing
+      - Skill publish
+        - skills/*/SKILL.md frontmatter lint
+        - CAPCLI_SKILL export documented
+        - Ships to ClawHub with SDK
+        - Definition — see identity.md#Harness-markers
+    - Verification checklist
+      - Pre-build
+        - CI check 0 — workspace diff
+        - dorny/paths-filter evaluates tree
+        - Skips redundant jobs
+        - Config — see artifacts/cicd.yaml
+      - Compile
+        - CI check 1 — schema AST syntax
+        - CI check 2 — relational semantics
+        - Native DFS cycle rejection
+        - Definition — see world.md#Pre-flight-sub-checks
+      - Integrity
+        - CI check 3 — lockfile integrity
+        - CI check 4 — Trinity integrity
+        - CI check 5 — UI asset compilation
+        - Definition — see #Trinity-integrity
+      - Runtime
+        - CI check 6 — platform sandboxing
+        - test_bwrap exercises jail
+        - Release check — binary distribution
+        - Release check — polyglot distribution
+        - Definition — see sandbox.md#Tri-Jail-engine
+      - PR check sequence
+        - PR check 1 — syntax and expansion
+        - PR check 2 — semantic acyclic
+        - PR check 3 — AST complexity lint
+        - PR check 4 — token cage verification
+        - PR check 5 — migration rehearsal
+        - PR check 6 — cryptographic lockfile sync
+        - Definition — see world.md#Pre-flight-sub-checks
+      - Token cage ceilings
+        - Routine file — 2000 tokens max
+        - Output payload — 500 tokens max
+        - Leaf prompt slice — 500 tokens max
+        - Search description — 60 tokens max
+        - Definition — see routines.md#Shape-constraints

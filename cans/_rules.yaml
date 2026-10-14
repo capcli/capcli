@@ -1,7 +1,7 @@
 structure:
-  node_length: { min: 3, max: 120 }   
-  siblings: { min: 3, max: 12 }
-  depth: { min: 5, max: 7 }
+  node_length: { min: 5, max: 95 }
+  siblings: { min: 4, max: 10 }
+  depth: { min: 5, max: 18 }
   single_child_collapse: true
   empty_nodes: false
 
@@ -18,13 +18,22 @@ references:
   back_pointers: true
   orphan_check: true
   duplicate_home_check: true
+  max_pointer_hop: 1
+  canonical_home_registry: true
 
-redundancy:
-  enabled: true
-  word_frequency_threshold: 12
-  phrase_overlap_threshold: 0.7
-  cross_file_threshold: 2
-  stopwords: [the, a, an, of, to, in, for, and, or, with, must, shall, requires, capcli, kernel, agent, agents, routine, routines, policy, governance, audit, capability, capabilities, budget, trust, world, frame, frames, env, environment, prod, sim, stage, gate, gates, spec, session, intent, human, yaml, schema, write, writes, read, reads, node, nodes, file, files]
+vocabulary:
+  banned_bare: [env, frame, session, trust, budget, surface, route, tier, plugin, verb]
+  required_qualifiers:
+    env: [environment, process env, CliEnvelope]
+    frame: [budget frame, call frame, federated frame]
+    session: [harness session, kernel session]
+    trust: [trust rung, trust receipt, trust floor]
+    budget: [fuel budget, spend ceiling, frame budget]
+    surface: [CLI surface, extension surface]
+    route: [network route, dispatch route]
+    tier: [platform tier, trust rung]
+    plugin: [plugin process, plugin manifest, plugin installation]
+    verb: [plugin verb, routine, API verb]
   synonyms:
     - [postgres, postgresql, pg]
     - [auth, authentication, sign-in, signin]
@@ -35,28 +44,48 @@ redundancy:
     - [environment, env, world]
     - [routine, procedure, script]
     - [spec, cans, outline]
-    - [write, writes, writing, written]
-    - [read, reads, reading]
-    - [list, lists, listed, listing]
-    - [appear, appears, appeared]
-    - [queue, queues, queued]
-    - [revert, reverts, reverted]
-    - [populate, populates, populated]
-    - [preserve, preserves, preserved]
-    - [draft, drafts, drafted]
-    - [stay, stays, stayed]
-    - [grant, grants, granted]
-    - [scaffold, scaffolds, scaffolded]
-    - [cost, costs, costed]
-    - [fork, forks, forked]
-    - [mark, marks, marked]
-    - [end, ends, ending, ended]
-    - [feed, feeds, feeding]
-    - [sync, syncs, synced]
-    - [promote, promotes, promoted]
-    - [deny, denies, denied]
-    - [allow, allows, allowed]
-    - [trust, trusted, trusting]
+    - [trust rung, trust level, trust tier]
+    - [platform tier, OS tier]
+    - [execution governor, budget governor]
+
+canonical_homes:
+  exit_codes: kernel.md#Exit-code-law
+  trust_ladder: governance.md#The-ladder
+  budget_frames: governance.md#Frames
+  fuel_formula: governance.md#Fuel-formula
+  vault: egress.md#Vault-proxy
+  wire_scrubber: egress.md#Wire-scrubber
+  platform_tiers: sandbox.md#Platform-tiers
+  ipc_stdio: sandbox.md#Channel-A
+  ipc_ring: sandbox.md#Channel-B
+  fast_path: governor.md#Fast-path
+  yield_path: governor.md#Yield-path
+  outbox_inbox: world.md#Outbox-inbox
+  causal_dag: effect.md#Causal-DAG
+  audit_spine: effect.md#Audit-spine
+  claims_lease: world.md#Claims-lease
+  concurrency: identity.md#Concurrency
+  harness_markers: identity.md#Harness-markers
+  dual_schema: world.md#Dual-schema
+  migration: world.md#Migration
+  snapshots: world.md#Snapshots
+  denials: effect.md#Denials
+  promotion: governance.md#Gates
+  decay: lifecycle.md#Decay
+  environments: lifecycle.md#Environments
+  masking: lifecycle.md#Masking
+  plugin_manifest: plugins.md#Manifest
+  plugin_capabilities: plugins.md#Capabilities
+  cli_projection: plugins.md#CLI-projection
+  generations: plugins.md#Generations
+  federation_transport: plugins.md#Federation-transport
+  pack_format: marketplace.md#Packs
+  registry: marketplace.md#Registry
+  cli_surface: interface.md#CLI-surface
+  client_rpc: interface.md#Client-RPC
+  onboarding: interface.md#Onboarding
+  monorepo: assembly.md#Layout
+  cicd: assembly.md#CICD
 
 token_budget:
   enabled: true
@@ -65,5 +94,5 @@ token_budget:
   warn_threshold: 0.8
 
 overflow:
-  max_node_chars: 200
+  max_node_chars: 95
   force_file_for: [code_block, table, diagram]

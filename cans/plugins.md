@@ -1,0 +1,197 @@
+- Plugins
+<!-- ref-by: interface.md, governor.md, sandbox.md, egress.md, marketplace.md -->
+  - Manifest
+    - File identity
+      - Name — capcli-plugin.yaml
+      - Location — plugin root directory
+      - Format — YAML, validated at install
+      - Digest — SHA-256 computed on write
+    - Required fields
+      - id — reverse-DNS unique identifier
+      - name — human-readable display string
+      - version — semver, immutable once published
+      - min_kernel_version — semver floor
+      - entrypoint — executable path array
+    - Capability declarations
+      - verbs — callable operations with params
+      - subscribes — causal DAG event patterns
+      - provides — native extension surfaces
+      - fuel_declared — per-verb fuel envelope
+    - Security declarations
+      - permissions.vault — secret names requested
+      - permissions.egress — allowed hostnames
+      - permissions.max_fuel_per_op — integer ceiling
+      - permissions.storage_access — boolean flag
+    - Dependency declarations
+      - dependencies — semver-keyed plugin map
+      - resolution — flattened into capcli.lock
+      - cycle check — DFS at install, exit 3
+      - definition — see marketplace.md#Packs
+  - Capabilities
+    - Plugin verbs
+      - Declaration — name, description, params
+      - Invocation — JSON on stdin, JSON on stdout
+      - Exit protocol — integer contract
+      - Fuel declaration — integer per verb
+      - Param typing — integer, string, boolean
+      - Default values — optional fallback
+    - Hooks
+      - Pattern — db.exec:orders, saga.compensate
+      - Delivery — kernel to plugin stdin
+      - Retry — none, fire-and-forget
+      - Failure — logged to _audit, never blocks
+    - Permissions
+      - Vault — secret names declared upfront
+      - Egress — hostname allowlist
+      - Storage — boolean gate on ctx.storage
+      - Enforcement — see sandbox.md#Platform-tiers
+    - Extension points
+      - URP schemes — custom pointer resolvers
+      - Trigger drivers — inbound stimulus sources
+      - Vault backends — external KMS adapters
+      - Storage drivers — object store adapters
+      - Ping channels — human notification sinks
+      - Audit sinks — WORM notary adapters
+      - Federation transports — peer mesh adapters
+  - CLI projection
+    - Surface declaration
+      - Manifest block — cli.surface
+      - Entry shape — noun, verb, args, flags, help
+      - Extends mode — merges into existing noun
+      - Owned mode — plugin-owned new noun
+      - Reserved — run, sys, plugin cannot alias
+    - Resolution rules
+      - Extends — merge iff verb slot is free
+      - Native wins — kernel verb beats plugin verb
+      - Collision fallback — auto-scope to plugin <id>
+      - Owned noun — allowed iff no kernel collision
+      - Exclusivity — one plugin per (noun, verb) pair
+    - Compilation
+      - Install time — validate, check collisions
+      - Write — plugins.json.cli_projection
+      - Boot — merge with native clap tree
+      - Update — new generation carries new projection
+      - Disable — projection unmounts immediately
+    - Rendering fidelity
+      - Help — merged into same noun list
+      - Error — same Diagnostic archetype
+      - Completion — generated from merged tree
+      - JSON — identical output shape
+      - Typography — same tree chars and dividers
+    - Generation-aware swap
+      - Running invocation — retains old CLI
+      - New invocation — resolves to new CLI
+      - Lease — .in-use flock governs retention
+      - No special case — same as code generations
+    - Canonical fallback
+      - Form — capcli plugin <id> <verb>
+      - Always available — projection failure escape
+      - Correctness — fallback is never a compromise
+      - Documentation — help lists both forms
+    - Introspection
+      - List — plugin list --surface
+      - Inspect — inspect plugin://<id>
+      - Doctor — sys doctor reports projection health
+      - Collisions — surfaced at install and in list
+  - Generations
+    - Directory layout
+      - Path — plugins/installations/<slug>/<pid>-<gen>
+      - Contents — immutable checkout, compiled binary
+      - State — plugins/state/<slug>/ read-write
+      - Lock — plugins/.locks/<slug>.lock mutex
+    - Lease protocol
+      - Shared — running process holds shared flock
+      - File — .in-use in generation directory
+      - Release — on process completion
+      - Retention — GC skips leased generations
+    - Atomic swap
+      - Build — new <pid>-<gen+1> directory
+      - Verify — binary sha256 vs capcli.lock
+      - Swap — pointer flip in plugins.json
+      - Lockfile — recompile capcli.lock atomically
+    - GC reclaim
+      - Trigger — background daemon timer
+      - Attempt — exclusive flock on .in-use
+      - Skip — running processes hold shared lock
+      - Delete — never while mapped in memory
+  - Composition
+    - Hub-mediated law
+      - Rule — no direct P2P sockets between plugins
+      - Rule — every call routes through kernel
+      - Reason — fuel metering, authorizer, audit
+      - Path — ctx.call dispatches via kernel
+    - Trust floor
+      - pinned — can call pinned only
+      - reviewed — can call reviewed or pinned
+      - draft — cannot be a dependency
+      - Enforced — pre-flight exit 2 E046
+      - Definition — see governance.md#The-ladder
+    - Acyclic graph
+      - Static — DFS at install, exit 3 on cycle
+      - Runtime — call nesting capped at 5
+      - 6th nested call — exit 2
+      - Resolution — flattened into capcli.lock
+    - Fuel cascade
+      - Formula — min(caller_remaining, child_max, ceiling)
+      - Child burns from caller's allocation
+      - Child exhaustion — exit 2, no parent impact
+      - Unspent fuel — reconciles to parent
+      - Definition — see governance.md#Fuel-formula
+    - Lockfile SSOT
+      - Path — capcli.lock in workspace home
+      - Contents — resolved plugin DAG
+      - Hash — binary_sha256 per plugin
+      - Tamper — daemon halts boot with exit 3
+  - Federation transport
+    - Sovereignty axiom
+      - Rule — peers export routines, never plugins
+      - Refusal — ws://plugin:stripe/charge exits 3
+      - Reason — plugin is private hardware driver
+      - Contract — routine is the boundary
+    - Socket authentication
+      - Local — SO_PEERCRED at accept
+      - Remote — mTLS over WireGuard mesh
+      - UID mismatch — connection dropped
+      - Peer identity — ws:<name> agent row
+    - Bounded re-entry
+      - Rule — workspace enters call tree once
+      - Re-entry — idempotent replay only
+      - Third entry — exit 2 E041_FEDERATION_CYCLE
+      - Fresh key re-entry — same refusal
+    - Hop ceiling
+      - Maximum — 3 cross-workspace hops
+      - Third hop — legal only as re-entry
+      - Breach — exit 2
+      - Nesting — hops count toward depth 5 cap
+    - Dial budget
+      - Default — 10s total
+      - Backoff — exponential against peer cold start
+      - Exhaustion — exit 4 E055_FEDERATION_UNREACHABLE
+      - Config — see artifacts/policy.yaml#network.dial
+    - Transport adapters
+      - wireguard — default Linux mesh driver
+      - tailscale — zero-config corporate networks
+      - nats — high-throughput message brokers
+      - Custom — plugin-provided transport adapters
+  - Installation lifecycle
+    - States
+      - installed — registered, active, verbs mounted
+      - disabled — projection unmounted, hooks skipped
+      - uninstalled — pending GC reclamation
+      - linked — dev-only, hot-reload enabled
+    - Commands
+      - install — fetch, preview, build, register
+      - link — dev symlink for hot reload
+      - update — new generation, atomic swap
+      - disable — unmount without uninstall
+      - uninstall — unregister and mark for GC
+    - Trust rungs
+      - draft — dev only, no prod
+      - reviewed — sim and dev eligible
+      - pinned — prod eligible
+      - Definition — see governance.md#The-ladder
+    - Pre-flight preview
+      - Vault keys — displayed before write
+      - Egress domains — displayed before write
+      - Shell commands — displayed before write
+      - Confirmation — explicit operator approval

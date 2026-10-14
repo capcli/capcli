@@ -1,0 +1,452 @@
+- Governance
+<!-- ref-by: plugins.md, routines.md, governor.md, interface.md, marketplace.md -->
+  - Trust ladder
+    - Rungs
+      - draft
+        - Status — unproven exploratory state
+        - Row ceiling per artifacts/policy.yaml
+        - require_where true
+        - Egress — sandboxed socket only
+        - Vault access denied
+        - Prohibited in prod environments
+      - reviewed
+        - Status — proven via simulation
+        - Higher row ceiling permitted
+        - Bulk operations unlocked
+        - Bulk definition — see artifacts/policy.yaml#query.bulk
+        - Vault access granted with trust floor check
+        - Eligible for sim and dev environments
+      - pinned
+        - Status — hardened production baseline
+        - Highest row ceiling
+        - Tier 1 required for prod target
+        - Vault access unrestricted
+        - Prod eligible when tier 1 satisfied
+        - Headless schedules permitted
+    - Rung bounds
+      - Row ceilings — per artifacts/policy.yaml#trust
+      - WHERE clause — mandatory for draft writes
+      - Vault floor — draft denied, reviewed and pinned allowed
+      - Egress — draft confined to sandbox socket
+      - Blast radius — pinned unlocks full prod
+      - Definition — see egress.md#Vault-proxy
+    - Weakest-link matrix
+      - Dev environment
+        - Rungs — draft, reviewed, pinned
+        - Platform tier — 1 or 2
+        - Live risk — none
+      - Sim environment
+        - Rungs — reviewed, pinned
+        - Draft strictly under routine prove
+        - Platform tier — 1 or 2
+        - Live risk — none
+      - Prod environment
+        - Rungs — pinned only
+        - Platform tier — 1 only
+        - Live risk — real state
+      - Iron invariant 1
+        - Prod needs tier 1 plus pinned
+        - Missing condition exits 2 pre-flight
+        - Codes — E045_PROD_TIER1_MANDATE
+        - Code — E046_TRUST_VIOLATION
+      - Iron invariant 2
+        - Tier 2 confined to dev and sim
+        - --env prod from tier 2 refuses
+        - Definition — see sandbox.md#Platform-tiers
+      - Iron invariant 3
+        - Pinned runs on tier 2 in dev or sim
+        - Tier 1 requirement scoped to prod
+        - Environment bounds data, trust bounds capability
+    - Ladder laws
+      - Monotonic ascent
+        - Draft to reviewed to pinned only
+        - Skip draft to pinned exits 3
+        - No inline elevation
+      - Template floor
+        - Imported routines land at draft
+        - Zero promotional credit inherited
+        - Definition — see marketplace.md#Packs
+      - Anonymous ceiling
+        - Marker-less callers capped at draft
+        - Reviewed and pinned runs need identity
+        - Mutating writes need --by or --session
+        - Exit 3 on breach
+        - Definition — see identity.md#Harness-markers
+      - Composition floor
+        - Callee matches or exceeds caller rung
+        - pinned calls pinned only
+        - reviewed calls reviewed or pinned
+        - draft cannot be a dependency
+        - Definition — see plugins.md#Composition
+      - Dependency floor
+        - Cross-agent callees need reviewed or pinned
+        - Federated callers need pinned rung
+        - Exit 2 E042_FEDERATION_DENIED on breach
+        - Definition — see plugins.md#Federation-transport
+      - Demotion priority
+        - Demotion executes without gate resistance
+        - Automatic demotion is exactly one rung
+        - Multi-rung demotion denied
+        - Every automatic demotion emits alert
+        - Reference — see lifecycle.md#Decay
+  - Budget frames
+    - Table identity
+      - Table — _budget_frames
+      - Kernel-managed, agent-readable
+      - Writes restricted to kernel core
+      - Mirror streamed to JSONL
+      - Definition — see effect.md#Audit-spine
+    - Row identity
+      - frame_id — unique per invocation
+      - routine — pinned routine@version
+      - parent_frame — null at session root
+      - kernel session — scoped frame owner
+      - environment — dev, sim, or prod
+      - subagent_scope — harness marker if any
+    - Declared limits
+      - declared_max_ops — primitive ceiling
+      - declared_max_duration_ms — wall clock
+      - Defaults from artifacts/governance.yaml#routine_shape
+      - Invocation may tighten, never loosen
+    - Consumed counters
+      - consumed_fuel — single internal counter
+      - Every cost converts to fuel
+      - Formula — see #Fuel-formula
+      - Turn-zero exemption up to 60 tokens
+    - Bookkeeping
+      - created_at, closed_at — timestamps
+      - yield_until — scheduled re-entry timestamp
+      - outcome — active, success, exhausted, denied
+      - outcome — error, yielded
+      - Indexes — session+environment, routine+version
+    - Frame lifecycle
+      - Push on routine invocation
+      - Link to parent via parent_frame
+      - Run with carved slice
+      - Pop on outcome
+      - Reference — see #Cascade
+    - Frame events
+      - budget.frame_push
+        - Payload — frame_id, routine, parent
+        - Payload — kernel session, environment
+        - inherited_remaining — parent min() result
+      - budget.frame_pop
+        - consumed — fuel burned
+        - returned_to_parent — unspent fuel
+      - budget.exhausted
+        - Payload — frame, pillar, attempted_op
+        - exit_code — 2 per exit law
+      - Streaming — live tail via sys audit tail
+    - Telemetry streaming
+      - Frame lifecycle pushes over WebSocket
+      - Consumption updates stream live
+      - Denial markers on visual badges
+      - Envelope shape — see interface.md#Client-RPC
+  - Cascade
+    - min() law
+      - Child effective fuel formula
+      - min(declared, parent_remaining)
+      - min(session_remaining, governance_max)
+      - Kernel enforces tightest constraint
+      - Cage tightens, never widens
+    - Scope
+      - Local and nested calls use this formula
+      - Federated calls use delegated formula
+      - Caller kernel session never crosses boundary
+      - Definition — see plugins.md#Federation-transport
+    - Federated cascade
+      - callee_effective_limit = min(caller_remaining)
+      - min(callee_policy_ceiling, callee_governance_ceiling)
+      - Callee exhaustion aborts callee only
+      - Caller frame untouched on callee deny
+      - Reference — see #Exhaustion
+    - Frame push mechanics
+      - Kernel carves child slice from parent
+      - Parent available balance decrements
+      - Child burns only its own slice
+      - Pop reconciles unspent fuel
+    - Frame exhaustion
+      - Child fuel hitting zero aborts child
+      - Exit 2 with domain policy.budget
+      - Parent retains remaining balance
+      - No partial side effects survive
+    - Static call-graph evaluation
+      - Kernel inspects declared dependency tree
+      - Runs before root frame push
+      - Worst-case leaf path funding check
+      - Rejection if parent cannot satisfy
+    - Pre-flight verdict
+      - can_invoke_now boolean returned
+      - False when headroom insufficient
+      - Carries blocking_reasons array
+      - Envelope shape — see interface.md#CLI-surface
+    - Fuel floor denial
+      - Session fuel below routine minimum
+      - Denies with exit 2 before push
+      - routine_min_fuel equals declared
+      - Refusal at AST pre-flight
+    - Subagent cage inheritance
+      - In-process workers share PID
+      - Inherit parent frame limits
+      - Thread spawning cannot escape ceiling
+      - Definition — see identity.md#Concurrency
+    - Implicit fork
+      - Divergent harness marker under same PID
+      - Forces kernel session fork
+      - Inherits scoped parent token
+      - Reference — see identity.md#Harness-markers
+    - Splitting is not escaping
+      - Session fuel never resets via composition
+      - 100-fuel routine into 10x10 sub-routines
+      - Still hits session fuel ceiling
+      - Session ceiling per artifacts/governance.yaml
+    - Fuel formula
+      - Single internal currency
+      - Integer fuel only, never fractional
+      - 1 primitive step = 1 fuel
+      - 10 DB rows read = 1 fuel, round up
+      - 1 DB row written = 10 fuel
+      - 1 KB wire egress = 5 fuel
+      - Wall clock is not fuel
+    - Composition flags
+      - budget_inheritance — min
+      - ops_cascade — true
+      - duration_cascade — true
+      - fuel_scope — session
+      - rate_scope — session
+      - rows_scope — trust_session
+      - result_tokens_scope — routine
+      - max_nesting_depth — 5
+      - call_preflight — cycle check before dispatch
+      - Config — see artifacts/governance.yaml
+    - Nesting ceiling
+      - Max 5 nested budget frames
+      - Sixth nested call exits 2
+      - Federated hops count toward cap
+      - Federation hop ceiling binds first at 3
+      - Definition — see plugins.md#Federation-transport
+    - Distributed swarm arbitration
+      - Central atomicity — Hub workspace.db
+      - Fuel and rate deductions atomic
+      - Optimistic spoke allocation
+      - Spokes pre-reserve fuel blocks via RPC
+      - Fuel starvation halts spokes exit 2
+      - Preemption floor triggers exit 6
+      - Reference — see governor.md#Priority-classes
+  - Exhaustion
+    - Exhaustion event
+      - Payload — frame_id, routine, blocking_level
+      - Payload — pillar, declared, consumed
+      - attempted_op names crossing primitive
+      - exit_code — 2 per exit law
+      - Reference — see kernel.md#Exit-code-law
+    - Citation format
+      - "routine B (frame_004) exhausted fuel: 20/20"
+      - Cites exact frame and pillar
+      - Cites remaining at blocking level
+      - Cites ancestor remaining for context
+      - "session remaining: 488 fuel"
+    - Denial semantics
+      - budget_exhaustion — yield_or_deny
+      - Governed by priority class
+      - Exit 6 — preemption floors, cadence waits
+      - Exit 2 — empty tanks, ceiling breach
+      - Never silent truncation
+    - Policy by priority
+      - Background — yields at 15 token floor
+      - Standard — yields at 5 token floor
+      - Critical — drains to 0
+      - Definition — see governor.md#Priority-classes
+      - Config — see artifacts/policy.yaml#api.rate_limit
+    - Worked example
+      - archive_old_orders@3 hits frame 20/20
+      - attempted_op db.exec exits 2 mid-DAG
+      - Session had 488 fuel remaining
+      - Routine frame was tightest constraint
+    - No partial execution
+      - Routine fails cleanly on exhaustion
+      - Zero half-executed side effects
+      - Rollback guaranteed
+      - Reference — see kernel.md#Unified-3-phase-engine
+    - Watchdog distinction
+      - Wall clock exceeding 300s kills guest
+      - Kill exits 4, not 2
+      - Watchdog is involuntary, yield is voluntary
+      - Definition — see governor.md#Watchdog-interaction
+    - Pre-flight prevention
+      - can_invoke_now returns false
+      - blocking_reasons carries detail
+      - Caller should not call when false
+      - Prevents mid-flight decapitation
+    - Banned overrides
+      - No budget override flag exists
+      - No --override-budget accepted
+      - Parser rejects at exit 3
+      - Precedence cannot be loosened
+  - Promotion gates
+    - Monotonic pipeline
+      - draft → reviewed → pinned only
+      - Skip attempts exit 3
+      - Each gate has distinct criteria
+      - No inline elevation anywhere
+    - draft → reviewed
+      - Token envelope under 2000
+      - Complexity and params emit lint only
+      - Offline cassette tests pass
+      - Cassette fixtures under apis/*.cassette.jsonl
+      - Prove-run secret leases valid
+      - Definition — see egress.md#Vault-proxy
+    - reviewed → pinned
+      - 100% sim replay on masked data
+      - Zero policy denials during replay
+      - Live contract schema verification
+      - Applies to external API verbs
+      - Human or tier 1 CI sign-off
+      - Definition — see lifecycle.md#Environments
+    - Elevation skips
+      - draft to pinned direct exits 3
+      - No bypass argument accepted
+      - No inline elevation via call
+      - No fast-track promotion
+    - Auto-promotion (draft to reviewed)
+      - invariant_suite_passed — true
+      - reliability — success_rate >= 0.95
+      - manifest_subset_match — true
+      - policy_denials — exactly 0
+      - fingerprint_drift_events — exactly 0
+      - p95_duration — <= 0.70 * declared
+    - Conjunction rule
+      - Failure of one metric blocks promotion
+      - Candidate remains draft
+      - Re-evaluated at next cycle
+      - Zero partial promotion
+    - Promotion audit
+      - Emits routine.auto_promoted event
+      - Records 5-point metric
+      - Event shape — see effect.md#Kernel-event-payloads
+    - Retroactive control
+      - Human veto via rollback --to-trust draft
+      - Veto is privileged operation
+      - Logs to audit ledger
+      - Reference — see #Demotion-priority
+    - Pinned promotion
+      - Autonomous when criteria hold
+      - Boundary safety via hard-coded fuel caps
+      - Schema migrations governed by caps
+      - Caps — see artifacts/governance.yaml#routine_shape
+    - Canary veto window
+      - Newly pinned routines face 1-hour observation
+      - Error rate over 1% demotes pinned to reviewed
+      - Exactly one rung, never multi
+      - Kernel freezes traffic on demotion
+      - Cockpit alert fires and operator paged
+      - Re-promotion requires explicit operator action
+      - Autonomous re-promotion during freeze denied
+    - Established pinned scope
+      - 30% failure over 20 runs circuit breaker
+      - Demotes pinned to reviewed
+      - Suspends active crons
+      - Alerts Cockpit PWA
+      - Definition — see lifecycle.md#Decay
+    - Human intervention boundary
+      - Risk-flagged ops require approval
+      - Threshold — >50k rows, destructive migrations
+      - Configuration proposals via Cockpit
+      - Definition — see world.md#Configuration-proposals
+      - Routine promotion is fully autonomous
+  - Evidence
+    - Manifest evidence
+      - Delta review
+        - Single-line behavioral change format
+        - Human reviews manifest diff not code
+        - Undeclared leaf additions flagged
+        - Reference — see routines.md#Manifests-and-fingerprints
+      - Match calculation
+        - Executed leaves divided by declared leaves
+        - Fractional score format — 3/4 = 0.75
+        - Subset invariant — executed <= declared
+        - Early returns skip branches cleanly
+    - Simulation gaps
+      - Disclosure format
+        - Prod-only verbs resolve to mock fixtures
+        - Mock pass satisfies conjunction metrics
+        - Zero policy denials across run
+        - Taxonomy — see lifecycle.md#Environments
+      - Fallback handling
+        - Un-simulated verbs resolve to mock fixtures
+        - Schema-validated fixtures only
+        - Fixture shape matches upstream contract
+        - Definition — see egress.md#Vault-proxy
+      - Contract verification
+        - Target — all external HTTP egress
+        - Live contract proof via OpenAPI schemas
+        - Safe routes via read-only shadow canary
+        - Call-count graduation banned
+        - Reference — see #Promotion-gates
+    - Cost evidence
+      - Profiling metrics
+        - latency — p50 and p95 per leaf
+        - fuel — integer compute per primitive
+        - wire_bytes — socket bytes per primitive
+        - Reference — see effect.md#Query-surfaces
+      - Parameter sampling
+        - Source — real historical values
+        - Command — capcli sys audit sample
+        - Synthetic fixtures banned for evidence
+        - Contract — see artifacts/governance.yaml
+    - Provenance evidence
+      - Version pinning — code_hash and manifest_hash
+      - Linked permanently per version
+      - Edit prohibition — code edits force new version
+      - Silent edits banned
+      - Reference — see effect.md#Provenance
+    - Trust receipt
+      - Command — sys doctor --report
+      - Computed from _audit mirror
+      - Cites ledger root and WORM checkpoint
+      - Envelope shape — see interface.md#CLI-surface
+  - Limits and refusals
+    - Precedence calculation
+      - Cages tighten downward only
+      - Config cannot loosen SQLite authorizer
+      - Config cannot loosen jail walls
+      - Child frames inherit parent bounds
+      - Definition — see kernel.md#Layer-1-C-authorizer
+    - Banned override flags
+      - --force rejected at parser exit 3
+      - --override-budget rejected
+      - --force-prod rejected
+      - --verbose rejected
+      - Reference — see interface.md#Refusals-and-banned-operations
+    - Invariant enforcement
+      - Authorizer immutability
+        - Rules cannot loosen C authorizer
+        - Kernel is compiled machine physics
+        - Rule changes require new build
+        - Definition — see kernel.md#Layer-1-C-authorizer
+      - Jail perimeter
+        - Execution containment at OS level
+        - Sandbox unshared namespace
+        - Definition — see sandbox.md#Tri-Jail-engine
+      - Gate integrity
+        - Policy checks fail closed on ambiguity
+        - Unclassified read/write treated as write
+        - Definition — see kernel.md#Fail-closed-stance
+    - Trust floor precedence
+      - Vault floor precedes egress dispatch
+      - Egress floor precedes quota check
+      - Quota check precedes fuel deduction
+      - Order invariant, never reordered
+      - Definition — see egress.md#Wire-edge-enforcement
+    - Pre-flight matrix checks
+      - E045 platform tier mandate
+      - E046 trust violation in prod
+      - E047 secret trust floor
+      - All fire before dispatch
+      - Denial carries exit 2, state untouched
+    - Lint tier separation
+      - Advisory findings exit 0
+      - Findings carried under lint_findings
+      - Lint never denies, never blocks promotion
+      - Lint informs author only
+      - Definition — see kernel.md#Exit-code-law

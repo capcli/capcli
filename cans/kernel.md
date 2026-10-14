@@ -1,0 +1,308 @@
+- Kernel
+<!-- ref-by: sandbox.md, governor.md, effect.md, governance.md -->
+  - The 4 physical laws
+    - Law 1 — database floor
+      - Native C sqlite3_set_authorizer intercept
+      - AST scanner enforces WHERE and LIMIT bounds
+      - VDBE mutation hook caps physical row writes
+      - Unbounded writes die at prepare-time, exit 2
+    - Law 2 — wire floor
+      - Tri-Jail unshares network namespace
+      - seccomp-bpf traps raw socket connect
+      - Egress routes only through kernel proxy
+      - Quota-dry frames park cleanly, exit 6
+    - Law 3 — budget cage
+      - Downward min() cascade across frames
+      - Op over declared ceiling aborts frame
+      - No half-executed side effects survive
+      - Exit 2 at frame boundary
+    - Law 4 — memory spine
+      - Append-only SHA-256 causal DAG
+      - Broken link isolates to quarantine branch
+      - Row corruption degrades, never exits 5
+      - Sink loss fails closed, exit 5
+    - Law interaction
+      - Every invocation runs all four
+      - No law overrides another
+      - Denial at any law keeps state untouched
+      - state_modified: false guaranteed
+  - Layer 1 — C authorizer
+    - Engine
+      - sqlite3_set_authorizer inside sqlite3_prepare_v2
+      - Native Rust closure passed to rusqlite
+      - Fires per statement at prepare time
+      - Cannot be bypassed from guest
+    - Intercepted actions
+      - Table mutations — read, insert, update, delete
+      - Column writes — deny_columns_write protection
+      - Schema ops — drop, alter, vacuum restrictions
+      - Engine safety — attach and detach denied
+    - Function allowlist
+      - count, sum, min, max, avg allowed
+      - json_extract and date allowed
+      - load_extension denied
+      - writefile and readfile denied
+    - Trust floors
+      - Raw DDL denied for draft and reviewed
+      - ALTER, DROP, CREATE TABLE exit 2
+      - Migration pipeline is the sole DDL path
+      - VACUUM requires pinned, denied in prod
+    - Tenant isolation
+      - Direct tenant table access blocked
+      - Access forced through scoped views
+      - :principal bind variable mandatory
+      - ctx.db.mutate asserts row owner
+  - Layer 1.2 — VDBE mutation hook
+    - Engine
+      - sqlite3_update_hook and progress_handler
+      - Counts B-Tree row mutations
+      - Counts VDBE byte-code steps
+      - Aborts mid-flight on breach
+    - Caps
+      - Mutated row count per statement
+      - Independent of WHERE clause shape
+      - Complements AST static bounds
+      - Runtime backstop for AST bypass
+    - Abort behavior
+      - Transaction rolls back instantly
+      - Exit 2 with policy.budget domain
+      - No partial commit survives
+      - Audit leaf records attempted op
+    - Failure attribution
+      - Denial cites measured vs ceiling
+      - Denial cites failing statement
+      - Denial cites AST classification
+      - Remediation suggests bound tightening
+  - Layer 1.5 — prepare-time cross-check
+    - Engine
+      - sqlite3_prepare_v2 dry-run in test transaction
+      - Compares AST classification vs EXPLAIN
+      - Detects OpenWrite on read-classified SQL
+      - Denies on classification mismatch
+    - Opcode trap
+      - OpenWrite on read statement denies
+      - OpenWrite on unclassified denies
+      - OpenRead expected on SELECT only
+      - Discrepancy carries exit 2
+    - Scope
+      - Runs on every raw SQL statement
+      - Runs inside Phase 3 arbiter
+      - Skipped for named view reads
+      - Skipped for structured ctx.db.get
+  - Layer 2 — AST scanner
+    - Engine
+      - sqlparser crate pre-check
+      - Runs in Phase 1 pre-flight
+      - Structural classification only
+      - Backed by Layer 1.2 at runtime
+    - Parameterization
+      - Bound parameters mandatory
+      - String interpolation banned
+      - f-strings fail compilation, exit 3
+      - Concatenation fails compilation, exit 3
+    - Transaction isolation
+      - ctx.api.call inside ctx.db.txn denied
+      - ctx.call ws:// inside ctx.db.txn denied
+      - Compile-time refusal, exit 3
+      - E034_TXN_EXTERNAL_CALL
+    - Structural checks
+      - Multi-statement raw strings denied
+      - Unparseable SQL denied
+      - Schema bypass sequences denied
+      - Intent mandatory on writes
+    - Row bounds
+      - SELECT max 10000 rows
+      - INSERT max 500 rows
+      - UPDATE and DELETE max 100 rows
+      - OFFSET > 50 denied at prepare
+    - Deny patterns
+      - UPDATE WHERE 1=1 denied
+      - DELETE without WHERE denied
+      - DELETE WHERE NOT EXISTS denied
+      - Boolean tautology bypass denied
+  - Unified 3-phase engine
+    - Overview
+      - Single execution model for every call
+      - capcli run, capcli sql, worker tasks
+      - Phases never interleave
+      - Each phase has strict entry conditions
+    - Phase 1 — static pre-flight
+      - Host-side, memory-only
+      - Zero DB writes, zero network calls
+      - Identity, syntax, AST, cycle, lockfile
+      - Budget headroom via can_invoke_now
+      - Any failure exits 3, state untouched
+    - Phase 2 — sandboxed guest
+      - Isolated runner in Tri-Jail
+      - Zero socket access inside guest
+      - Zero credential plaintext inside guest
+      - Sequence — Gather, Compute, Commit
+      - Crash exits 4 with full rollback
+      - Yield exits 6 as checkpoint
+    - Phase 3 — kernel commit arbiter
+      - Layer 1 authorizer evaluates writes
+      - Layer 1.2 caps physical mutations
+      - BEGIN IMMEDIATE atomic commit
+      - Audit leaf appended with prev_hash
+      - Outbox synced in same transaction
+    - Phase map
+      - Layer 2 AST — Phase 1
+      - Layers 1, 1.2, 1.5 — Phase 3
+      - Tri-Jail — Phase 2
+      - Ledger append — Phase 3
+  - Exit code law
+    - Scope
+      - Binds every capcli command returning CliEnvelope
+      - External tooling defines its own contract
+      - Exit codes are machines' lingua franca
+      - Never print ambiguous success on failure
+    - exit 0 — success
+      - Single deterministic audit record appended
+      - Upstream HTTP failures handled in envelope
+      - Affordances array present on envelope
+      - state_modified may be true or false
+    - exit 2 — policy denial
+      - Phase 3 policy or governance block
+      - state_modified strictly false
+      - Domains
+        - policy.authorizer — table or column denied
+        - policy.budget — frame or session fuel zero
+        - policy.quota — spend ceiling breach
+        - policy.trust — E046 trust violation in prod
+        - policy.platform — E045 tier 1 mandate
+        - policy.federation — cycle or unallowlisted
+        - db.engine — check or FK constraint fail
+      - Pre-flight matrix checks fire before dispatch
+      - Denial carries remedy field for agent
+    - exit 3 — static refusal
+      - Phase 1 pre-flight refusal
+      - Token envelope over 2000
+      - AST cycle detected
+      - String interpolation present
+      - Statically-declared unpaginated payload
+      - Missing or invalid intent
+      - Lockfile or schema hash mismatch
+    - exit 4 — guest crash
+      - Phase 2 unhandled runtime exception
+      - Type crash or missing dependency
+      - Transaction cleanly rolled back
+      - Domain routine.runtime
+    - exit 5 — kernel panic
+      - Sink loss — audit cannot commit
+      - Plaintext credential in guest output
+      - Federation transport unreachable
+      - Row-level corruption — see effect.md#Audit-spine
+      - Panic protocol — token revoked, secret buffers zeroized
+    - exit 6 — proactive yield
+      - Cadence wait over 2s
+      - Upstream 429 with Retry-After
+      - Priority-class preemption floors
+      - Not an error — a checkpoint
+    - Yield protocol
+      - Layer 3 transactions close immediately
+      - Zero open SQLite transactions permitted
+      - Layer 2 state_fence persists to _suspended_tasks
+      - Layer 1 claims retained for task ownership
+    - Mechanical resumption
+      - Daemon detects unblocked frame
+      - Daemon executes pre-compiled guest routine
+      - Waking LLM harness prohibited
+      - Result posts to sensory inbox
+    - Rollback law
+      - Non-zero exits guarantee state_modified: false
+      - Partial commit is a critical kernel bug
+      - state_modified asserted on every envelope
+      - Envelope is the machine contract
+  - Fail-closed stance
+    - Anchor principle
+      - Default: deny
+      - Compiled from artifacts/policy.yaml
+      - Ambiguity treated as denial
+      - Unclassified read/write treated as write
+    - Boot refusals
+      - Missing python >= 3.11 aborts boot
+      - Missing git >= 2.30 aborts boot
+      - All sandbox providers absent aborts boot
+      - Lockfile mismatch in prod aborts boot
+      - Schema drift aborts boot
+      - Template version mismatch aborts intake
+      - Remote HTTP DB without authorizer refused
+      - Missing policy or governance aborts
+      - Every boot refusal exits 3
+    - Runtime refusals
+      - Unparseable SQL denied
+      - Anonymous mutating write denied
+      - Missing session token denied
+      - Missing principal on scoped view denied
+      - Standalone invocation outside runner denied
+      - Audit sink write failure denies business write
+      - Every runtime refusal exits 2 or 3
+    - Degraded mode
+      - Tampered ledger routes to quarantine
+      - Boot completes in degraded status
+      - Serves all tables except quarantined
+      - Quarantined leaves stay fail-closed
+      - Tamper alerts repeat until acknowledged
+    - Break-glass paths
+      - Recovery shell via CAPCLI_RECOVERY=1
+      - Read-only SQL only in recovery
+      - sys doctor --boot-check verifies without daemon
+      - rule validate runs in CI prior to commit
+  - Diagnostic output law
+    - Data contract
+      - All commands return CliEnvelope<T>
+      - Envelope shape — context, exit_code, state_modified
+      - Plus data, diagnostic, audit_op
+      - --json returns raw serialized envelope
+    - Human archetypes
+      - Archetype A — diagnostic, exits 2 through 6
+      - Archetype B — tree, hierarchical DAGs
+      - Archetype C — receipt, aligned key-value
+      - Archetype D — document, sliced outputs
+    - Archetype A structure
+      - Header line with exit domain
+      - Failing span with caret markers
+      - Indented metadata block
+      - Remedy line for agent fix
+    - Archetype B structure
+      - Unicode branches — ├──, └──, │
+      - Nested causal chain
+      - Budget frames and call trees
+      - Trace traversal to root intent
+    - Archetype C structure
+      - Aligned key-value pairs
+      - Divider lines ──────────
+      - Exit 0 success records
+      - Trust receipt rendering
+    - Archetype D structure
+      - Divider-separated body slices
+      - Pagination cursor state
+      - Token-lean summary header
+      - Full payload via --out redirection
+    - Typography rules
+      - Table pipes banned
+      - Tree chars locked to ├── └── │
+      - Divider locked to ─
+      - Buffer isolation — stdout/stderr unlogged
+    - Success affordances
+      - Present only on exit 0
+      - Array of { rel, command, intent, risk }
+      - Agent executes affordance verbatim
+      - Absence changes no exit or payload byte
+  - Boundary isolation
+    - Perimeter layers
+      - Credentials isolation at socket edge
+      - Egress allowlist via provider catalog
+      - Shell egress trap via seccomp-bpf
+      - Network jail via unshared namespace
+      - Virtualization via microVM for multi-tenant
+    - Neutrality law
+      - Kernel matches, dispatches, delivers, logs
+      - Kernel executes deterministic AST verification
+      - Zero LLM inference inside kernel
+      - Zero probabilistic parsing inside kernel
+    - Boundary alarms
+      - sys doctor halts boot on compromise
+      - Tier 2 emits degraded_isolation warning
+      - Illegal env/tier pairings emit denial
+      - Every alarm appends kernel event to ledger

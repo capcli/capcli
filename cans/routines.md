@@ -1,0 +1,299 @@
+- Routines
+<!-- ref-by: governor.md, plugins.md, interface.md, governance.md -->
+  - Procedure layer
+    - Substrate
+      - Python .py files — first class
+      - JavaScript .js files — second class
+      - TypeScript .ts files — third class
+      - Declared binaries — native executables
+      - Location — routines/ directory
+    - Purpose
+      - Branching and retries
+      - Multi-step composition
+      - Encapsulated iteration loops
+      - Business logic isolation
+    - Execution pipeline
+      - Strictly 3 non-interleaved phases
+      - Gather reads
+      - Compute pure logic
+      - Commit atomic effects
+      - Definition — see kernel.md#Unified-3-phase-engine
+    - Evolution
+      - Raw exploration becomes governed routine
+      - Repeated sequences trigger pattern mining
+      - Codification path — see lifecycle.md#Decay
+    - Granularity
+      - Op — single atomic capability call
+      - Effect — state change in world
+      - Event — immutable audit log record
+      - Routine — learned composition with version
+  - Anatomy and decorator
+    - Decorator shape
+      - @routine(name, trust, idempotent)
+      - description required string
+      - limits — declared caps map
+      - Param typing on every argument
+    - Decorator fields
+      - name — registry id, validated
+      - trust — ladder rung declared
+      - idempotent — boolean for retries
+      - description — search-visible summary
+      - limits — fuel_declared integer
+    - Call pattern
+      - Input typing — Param[str], Param[int]
+      - API read via ctx.api.call
+      - DB read via ctx.db.query
+      - API write with pre-call fuel check
+      - DB write inside ctx.txn block
+      - Return value — summary-sized map
+    - Typing rules
+      - Every param has Param annotation
+      - Param types validated at pre-flight
+      - Mismatch exits 3 at registration
+      - Param descriptions mandatory for search
+    - Idempotency
+      - Kernel mints idempotency key
+      - Key = f(routine_version, params, environment)
+      - Retries reuse same key
+      - Key isolates per environment
+      - Scope — see identity.md#Concurrency
+  - Shape constraints
+    - Token envelope
+      - Max 2000 tokens per routine file
+      - Whitespace and comments unpenalized
+      - LOC unrestricted
+      - Enforced in Phase 1 pre-flight
+    - Complexity
+      - Cyclomatic beyond ceiling emits lint
+      - Lint never blocks promotion
+      - Advisory only, exit 0 retained
+      - Ceiling — see artifacts/governance.yaml#routine_shape
+    - Signatures
+      - Param count beyond ceiling emits lint
+      - Advisory only, exit 0 retained
+      - Ceiling — see artifacts/governance.yaml#routine_shape
+    - Execution caps
+      - Fuel envelope per budget frame
+      - Declared at invocation
+      - Enforced at frame push
+      - Definition — see governance.md#Frames
+    - Wall clock
+      - Decoupled from fuel
+      - Watchdog kills past 300s
+      - Definition — see governor.md#Watchdog-interaction
+    - Pagination posture
+      - Routine encapsulates iteration internally
+      - Multi-turn LLM pagination banned
+      - LLM pagination breaks determinism
+      - Kernel-driven cursor instead
+    - Output envelope
+      - Max 500 result tokens
+      - Raw string slicing banned
+      - Oversized returns keyset schema
+      - Schema shape — items, pagination
+      - Pagination carries has_more and next_cursor
+      - Breach exits 3 at pre-flight
+  - The ctx contract
+    - Database methods
+      - ctx.db.view(name, params) — named view read
+      - ctx.db.get(table, id) — structured lookup
+      - ctx.db.query(sql, params) — parameterized SQL
+      - ctx.db.mutate(table, id, set) — single-row write
+      - ctx.txn(egress, write) — saga context
+      - ctx.call(target, params) — composition
+      - ctx.emit(event, payload) — outbox write
+      - ctx.db.lock(target, ttl) — Layer 1 lease
+    - OCC fence capture
+      - ctx.db.get hashes row into state_fence
+      - ctx.db.view captures read versions
+      - Fence re-verified at Phase 3
+      - Drift handling — see governor.md#Suspension-registry
+    - Deterministic inputs
+      - ctx.now() — logical timestamp at frame start
+      - ctx.uuid() — HMAC(session_token, op_seq)
+      - Both reproducible across replay
+      - Non-deterministic sources banned
+    - External API methods
+      - ctx.api.call(verb, params, intent)
+      - ctx.api.poll_until(verb, params, condition)
+      - ctx.api.verify(verb, key) — key validation
+      - Egress gates apply normally
+      - Definition — see egress.md#Wire-edge-enforcement
+    - Quota method
+      - ctx.quota.inspect(verb) returns snapshot
+      - Total, available, floors, reset_at
+      - Reads _api_quota row
+      - Zero fuel cost for read
+      - Reference — see egress.md#Quotas
+    - Blob storage methods
+      - ctx.storage.put(name, data, mime)
+      - ctx.storage.get(key) returns stream
+      - ctx.storage.url(key, ttl) mints signed link
+      - Size and MIME gates apply
+      - Config — see artifacts/governance.yaml#storage
+    - Cursor methods
+      - ctx.cursor.load(name, default)
+      - ctx.cursor.save_and_yield(name, next)
+      - ctx.cursor.reset(name) — clear sequence
+      - Persistence — see world.md#Outbox-inbox
+    - Bind declarations
+      - ctx.bind.cron — time trigger
+      - ctx.bind.webhook — event subscription
+      - ctx.bind.federation — peer event siphon
+      - ctx.bind.endpoint — sync HTTP exposure
+    - Human IO methods
+      - ctx.ping.notify(principal, msg, channel)
+      - ctx.ping.ask(principal, q, options)
+      - Ask predicate binds to intent
+      - Predicate drift — see governor.md#Suspension-registry
+    - Utility methods
+      - ctx.log(msg) — audited log entry
+      - ctx.params — validated input map
+  - Interior rules
+    - Execution model
+      - Strictly sequential
+      - Zero concurrent branches
+      - Zero reactive listeners
+      - Architecture law — events start routines
+    - Transaction integrity
+      - ctx.api.call inside ctx.txn denied
+      - Exit 3 E034_TXN_EXTERNAL_CALL
+      - ctx.call ws:// inside ctx.txn denied
+      - Same exit 3 code
+    - Lock fence rule
+      - ctx.call ws:// with Layer 1 claims denied
+      - Exit 3 E035_LOCK_FENCE_BREACH
+      - Prevents cross-workspace deadlock
+      - Reference — see world.md#Claims-lease
+    - Transient polling
+      - ctx.api.poll_until permitted
+      - Raw time.sleep loops rejected
+      - Exit 3 at AST parse
+      - Kernel-owned sleep in Rust runtime
+    - Banned patterns
+      - ctx.on listeners rejected
+      - Reactive streams rejected
+      - Subscriptions rejected
+      - All exit 3 at AST parse
+    - Failure modes
+      - Callbacks break DAG linearity
+      - Reactive breaks transaction boundaries
+      - Subscriptions break replay determinism
+      - All three break causal chain
+  - Composition
+    - Mechanism
+      - Strictly via ctx.call(target, params)
+      - Direct module imports banned
+      - Only kernel-mediated calls allowed
+      - Reason — audit, fuel, cycle check
+    - Federated calls
+      - Target — ws://<workspace>/<routine>@<version>
+      - Version mandatory, unversioned exits 3
+      - Preflight verifies peer socket and perms
+      - Definition — see plugins.md#Federation-transport
+    - Static call-tree preflight
+      - Worst-case depth fully funded check
+      - Runs at root invocation
+      - Fails closed on insufficient headroom
+      - Exit 2 with domain policy.budget
+    - Trust floor
+      - Callee must match or exceed caller rung
+      - pinned calls pinned only
+      - reviewed calls reviewed or pinned
+      - draft callees strictly banned
+      - Definition — see governance.md#The-ladder
+    - Nesting ceiling
+      - Max 5 nested budget frames
+      - 6th nested call exits 2
+      - Federated hops count toward cap
+      - Federation ceiling binds first at 3
+    - Import ceiling
+      - Counts distinct ctx.call targets per routine
+      - Ceiling — see artifacts/governance.yaml#routine_shape
+      - Cross-agent dedup forces merge or fork
+    - Constraint direction
+      - Cages tighten downward only
+      - Child never widens parent
+      - Formula — see governance.md#Fuel-formula
+  - Manifests and fingerprints
+    - Declared manifest
+      - Extracted from decorator at prove
+      - Call sequence — provider.verb pairs
+      - DB targets with access mode
+      - Txn wrappers — ordered leaf list
+      - Cost class — declared fuel envelope
+      - manifest_hash — sha256 of declaration
+    - Runtime fingerprint
+      - Aggregated from _audit leaf events
+      - Aggregation view — routine_fingerprints
+      - Source table — see effect.md#Audit-spine
+      - Dynamic proof of executed path
+    - Comparison
+      - Executed leaves must be manifest subset
+      - Executed <= declared invariant
+      - Early returns skip unexecuted branches
+      - Unexecuted branches pass without penalty
+    - Drift handling
+      - Undeclared leaf triggers governance.anomaly
+      - Anomaly event shape — see effect.md#Kernel-event-payloads
+      - Review blocks auto-promotion
+      - Drift detection — see lifecycle.md#Decay
+    - Cost attribution
+      - Leaf-level p50 and p95 duration
+      - Per-leaf fuel consumption
+      - Per-leaf wire byte count
+      - Source views — see effect.md#Query-surfaces
+  - Routine templates
+    - Authoring laws
+      - Typed template parameters
+      - Blind regex and sed substitutions banned
+      - Intake contract — see marketplace.md#Packs
+      - Zero trust inheritance at import
+    - Scaffold taxonomy
+      - tpl://routine/webhook_receiver
+      - tpl://routine/idempotent_action
+      - tpl://routine/chunked_batch
+      - tpl://routine/saga_compensate
+    - Scaffolding pipeline
+      - Author — capcli template new
+      - Pack — capcli template pack creates bundle
+      - Instantiate — template scaffold <target>
+      - Intake — see marketplace.md#Packs
+    - Audit payload
+      - Emits routine.draft event
+      - Records template_source and template_hash
+      - Event shape — see effect.md#Kernel-event-payloads
+      - Trust lands at draft rung
+    - Trust floor
+      - Imported routines land at draft
+      - Zero promotional credit inherited
+      - Promotion — see governance.md#Gates
+  - Session Overview Primer
+    - Core aim
+      - Grounds incoming agents with situational awareness
+      - Prevents blind schema exploration
+      - Canonical domain KPI snapshot
+      - Dense output under 60 tokens
+    - Standard contract
+      - File — routines/overview.py
+      - Registered name — overview
+      - Decorator — @routine(name="overview")
+      - Idempotent — true
+      - Output envelope follows shape law
+    - Prompt cache economics
+      - Mounts at volatile turn leaves
+      - Never mounted in system prompt
+      - Preserves KV cache across turns
+      - Cache preservation is the rule
+    - Assembly pattern
+      - Domain KPIs from schema read views
+      - Pending asks count and age
+      - Sensory inbox queued events
+      - Active claims and locks
+      - Budget headroom remaining
+      - System health and drift alarms
+    - Invocation trigger
+      - Zero-step executed at session boot
+      - Turn-zero orientation contract
+      - Envelope shape — see interface.md#CLI-surface
+      - Budget-exempt up to 60 tokens
