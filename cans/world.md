@@ -375,7 +375,7 @@
       - Opens with kernel.genesis.data_loss event
       - Sole write path out of total loss
     - Emergency recovery mode
-      - CAPCLI_RECOVERY=1 enables mode
+      - Env flag enables mode — see identity.md#Environment-variables
       - Loads schema and audit sink only
       - Policy disabled in recovery mode
       - Read-only SQL only, exit 2 on write

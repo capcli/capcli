@@ -45,7 +45,7 @@
       - In-memory buffers zeroize on exit
     - Ingestion channels
       - CLI — capcli sys vault set
-      - Process env — CAPCLI_SECRET_<NAME>
+      - Process env — see identity.md#Environment-variables
       - Cockpit PWA out-of-band injection
       - External client RPC
     - Audit contract
@@ -70,7 +70,7 @@
         - Rotation commits updated ciphertext
         - Never logs new value
       - Environment resolution
-        - Checks CAPCLI_SECRET_<NAME> process env
+        - Process env check — see identity.md#Environment-variables
         - Resolution precedes suspension
         - Process env is one source among many
         - Envelope shape — see interface.md#CLI-surface

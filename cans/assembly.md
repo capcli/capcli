@@ -368,12 +368,7 @@
         - Astro and Bun build docs site
         - Anchor slugs resolve to headers
         - Doc — see interface.md#Doc-noun
-      - Token cage ceilings
-        - L1 trailer capped at 30 tokens
-        - L2 envelope capped at 150 tokens
-        - L3 leaf capped at 500 tokens
-        - Breach aborts with exit 1
-        - Config — see artifacts/cicd.yaml#trinity
+      - Token cage ceilings — see interface.md#Doc-noun
     - Checker tool
       - Tool identity — tools/check-trinity.py
       - Zero third-party dependencies
@@ -585,7 +580,7 @@
         - Definition — see marketplace.md#Publishing
       - Skill publish
         - skills/*/SKILL.md frontmatter lint
-        - CAPCLI_SKILL export documented
+        - Skill export — see identity.md#Environment-variables
         - Ships to ClawHub with SDK
         - Definition — see identity.md#Harness-markers
     - Verification checklist

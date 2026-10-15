@@ -365,6 +365,12 @@
       - Fragment #<node> selects one node
       - Token cage ceilings apply
       - Shape — see routines.md#Shape-constraints
+    - Token cage ceilings
+      - L1 trailer capped at 30 tokens
+      - L2 envelope capped at 150 tokens
+      - L3 leaf capped at 500 tokens
+      - Breach aborts with exit 1
+      - Config — see artifacts/cicd.yaml#trinity
     - Campaign envelope
       - inspect doc://prompts/<campaign>
       - Returns vars, sections, caps
@@ -467,7 +473,7 @@
     - Network transports
       - --workspace accepts remote endpoint
       - Example — tcp://100.64.0.1:4040
-      - Overrides CAPCLI_WORKSPACE
+      - Overrides workspace env var — see identity.md#Environment-variables
       - Config — see artifacts/policy.yaml#network.transports
       - Socket endpoints are not URPs
       - Definition — see marketplace.md#Registry

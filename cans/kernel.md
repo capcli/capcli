@@ -304,7 +304,7 @@
       - Quarantined leaves stay fail-closed
       - Tamper alerts repeat until acknowledged
     - Break-glass paths
-      - Recovery shell via CAPCLI_RECOVERY=1
+      - Recovery shell via env flag — see identity.md#Environment-variables
       - Read-only SQL only in recovery
       - sys doctor --boot-check verifies without daemon
       - rule validate runs in CI prior to commit
