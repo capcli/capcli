@@ -62,15 +62,12 @@
       - Whitespace and comments unpenalized
       - LOC unrestricted
       - Enforced in Phase 1 pre-flight
-    - Complexity
-      - Cyclomatic beyond ceiling emits lint
-      - Lint never blocks promotion
+    - Lint tier
+      - Complexity and param ceilings emit lint
       - Advisory only, exit 0 retained
-      - Ceiling — see artifacts/governance.yaml#routine_shape
-    - Signatures
-      - Param count beyond ceiling emits lint
-      - Advisory only, exit 0 retained
-      - Ceiling — see artifacts/governance.yaml#routine_shape
+      - Never blocks promotion
+      - Ceilings — see artifacts/governance.yaml#routine_shape
+      - Separation — see governance.md#Lint-tier-separation
     - Execution caps
       - Fuel envelope per budget frame
       - Declared at invocation
@@ -175,11 +172,11 @@
       - Reactive streams rejected
       - Subscriptions rejected
       - All exit 3 at AST parse
-    - Failure modes
-      - Callbacks break DAG linearity
-      - Reactive breaks transaction boundaries
-      - Subscriptions break replay determinism
-      - All three break causal chain
+    - Banned rationale
+      - Break DAG linearity and tx boundaries
+      - Break replay determinism
+      - Break causal chain integrity
+      - Causal DAG — see effect.md#Causal-DAG
     - Bulk operations
       - Chunking model
         - Agent loops bounded chunks via ctx.db.execute
@@ -218,11 +215,10 @@
       - Fails closed on insufficient headroom
       - Exit 2 with domain policy.budget
     - Trust floor
-      - Callee must match or exceed caller rung
-      - pinned calls pinned only
-      - reviewed calls reviewed or pinned
-      - draft callees strictly banned
-      - Definition — see governance.md#The-ladder
+      - Floor matrix — see governance.md#Composition-and-dependency-floor
+      - Draft callees strictly banned
+      - Enforcement — pre-flight exit 2 E046
+      - Cross-agent — see governance.md#Ladder-laws
     - Nesting ceiling
       - Max 5 nested budget frames
       - 6th nested call exits 2
@@ -334,26 +330,14 @@
       - Prevents blind schema exploration
       - Canonical domain KPI snapshot
       - Dense output under 60 tokens
-    - Standard contract
+    - Contract and trigger
       - File — routines/overview.py
-      - Registered name — overview
-      - Decorator — @routine(name="overview")
-      - Idempotent — true
-      - Output envelope follows shape law
-    - Prompt cache economics
-      - Mounts at volatile turn leaves
-      - Never mounted in system prompt
+      - Fires at every turn boot
+      - Budget-exempt up to 60 tokens
+      - Turn-zero — see identity.md#Turn-zero-orientation
+      - Command — see interface.md#Run-noun
+    - Assembly
+      - KPIs, asks, inbox, claims, fuel, drift
+      - Mounted at volatile turn leaves
       - Preserves KV cache across turns
       - Cache preservation is the rule
-    - Assembly pattern
-      - Domain KPIs from schema read views
-      - Pending asks count and age
-      - Sensory inbox queued events
-      - Active claims and locks
-      - Budget headroom remaining
-      - System health and drift alarms
-    - Invocation trigger
-      - Zero-step executed at session boot
-      - Turn-zero orientation contract
-      - Envelope shape — see interface.md#CLI-surface
-      - Budget-exempt up to 60 tokens

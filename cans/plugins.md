@@ -109,11 +109,11 @@
       - Update — new generation carries new projection
       - Disable — projection unmounts immediately
     - Rendering fidelity
-      - Help — merged into same noun list
-      - Error — same Diagnostic archetype
+      - Merges into kernel help tree
+      - Same diagnostic and JSON shapes
+      - Typography — see interface.md#CLI-surface
       - Completion — generated from merged tree
-      - JSON — identical output shape
-      - Typography — same tree chars and dividers
+      - Error archetype — see kernel.md#Diagnostic-output-law
     - Generation-aware swap
       - Running invocation — retains old CLI
       - New invocation — resolves to new CLI
@@ -125,10 +125,10 @@
       - Correctness — fallback is never a compromise
       - Documentation — help lists both forms
     - Introspection
-      - List — plugin list --surface
-      - Inspect — inspect plugin://<id>
-      - Doctor — sys doctor reports projection health
-      - Collisions — surfaced at install and in list
+      - Commands — see interface.md#Plugin-noun
+      - Health — sys doctor reports status
+      - Collisions surfaced at install
+      - Full surface — see interface.md#Projection-introspection
   - Generations
     - Directory layout
       - Path — plugins/installations/<slug>/<pid>-<gen>
@@ -157,22 +157,20 @@
       - Reason — fuel metering, authorizer, audit
       - Path — ctx.call dispatches via kernel
     - Trust floor
-      - pinned — can call pinned only
-      - reviewed — can call reviewed or pinned
-      - draft — cannot be a dependency
-      - Enforced — pre-flight exit 2 E046
-      - Canonical ladder — see governance.md#The-ladder
+      - Callee must meet or exceed caller rung
+      - Draft callees strictly banned
+      - Enforcement — pre-flight exit 2 E046
+      - Full ladder — see governance.md#Composition-and-dependency-floor
     - Acyclic graph
       - Static — DFS at install, exit 3 on cycle
       - Runtime — call nesting capped at 5
       - 6th nested call — exit 2
       - Resolution — flattened into capcli.lock
     - Fuel cascade
-      - Formula — min(caller_remaining, child_max, ceiling)
-      - Child burns from caller's allocation
-      - Child exhaustion — exit 2, no parent impact
-      - Unspent fuel — reconciles to parent
-      - Definition — see governance.md#Fuel-formula
+      - Cascade formula — see governance.md#Fuel-formula
+      - Child burns from caller allocation
+      - Exhaustion exits 2, no parent impact
+      - Reconciliation — see governance.md#Cross-frame-reconciliation
     - Lockfile SSOT
       - Path — capcli.lock in workspace home
       - Contents — resolved plugin DAG
@@ -222,10 +220,10 @@
       - disable — unmount without uninstall
       - uninstall — unregister and mark for GC
     - Trust rungs
-      - draft — dev only, no prod
-      - reviewed — sim and dev eligible
-      - pinned — prod eligible
-      - Canonical ladder — see governance.md#The-ladder
+      - Rung semantics — see governance.md#Trust-ladder
+      - Install enters at declared rung
+      - Kernel enforces floor at install
+      - Same ladder applies to plugin verb
     - Pre-flight preview
       - Vault keys — displayed before write
       - Egress domains — displayed before write

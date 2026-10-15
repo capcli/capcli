@@ -284,19 +284,19 @@
       - Writers bound by lifespan law
       - Definition — see world.md#SQLite-as-SSOT
     - Writer priority
-      - Interactive agent preempts bulk
-      - Webhook dispatch preempts backfill
-      - Priority class carried per routine
-      - Definition — see governor.md#Priority-classes
+      - Classes — see governor.md#Priority-classes
+      - Interactive preempts bulk align
+      - Webhook preempts backfill
+      - Enforcement via priority floor
     - Application locks
       - Business leases in claims table
       - Keyed to (session_id, harness_marker, op_sequence)
       - PID-keyed leases banned
       - Identity and lifecycle — see world.md#Claims-lease
     - Three-tier locking
-      - Macro — claims lease, see world.md#Claims-lease
-      - Meso — OCC state_fence
-      - Micro — BEGIN IMMEDIATE, see world.md#Lifetime-law
+      - Macro — see world.md#Claims-lease
+      - Meso — OCC fence, see governor.md#Suspension-registry
+      - Micro — see world.md#Lifetime-law
       - Non-overlapping by design
     - Preemption
       - SIGTERM maps to exit 6 yield
@@ -315,8 +315,9 @@
       - Config — see artifacts/governance.yaml
     - Physical arbiter
       - Shared workspace.db with WAL
-      - Serialized commits via BEGIN IMMEDIATE
+      - Serialized via BEGIN IMMEDIATE
       - Storage — see world.md#SQLite-as-SSOT
+      - Arbiter details — see world.md#Writer-serialization
     - Callee floor
       - Cross-agent routine calls need reviewed rung
       - Federated callers need pinned rung
@@ -419,10 +420,10 @@
       - Budget-exempt up to 60 tokens
       - Scope — kernel session, not harness session
     - Scoping
-      - Session id rides every frame
-      - Session id rides every audit event
-      - Session id rides every claim
+      - Session id rides frame, audit, claim
+      - Cross-session access denied
       - Envelope shape — see effect.md#Event-anatomy
+      - Binding — see governance.md#Budget-frames
     - Tracking
       - Session counters govern fuel
       - Wire, row, rate costs convert to fuel
@@ -483,7 +484,7 @@
       - Historical identity recorded on leaf
       - Reference — see effect.md#Replay-invariants
     - Federation identity
-      - Peers authenticate via SO_PEERCRED
-      - Or via mTLS over WireGuard
+      - Auth mechanisms — see plugins.md#Socket-authentication
       - Peer identity maps to ws:<name>
-      - Definition — see plugins.md#Federation-transport
+      - Allowlist enforcement — see #Federated-peers
+      - Transport adapters — see plugins.md#Federation-transport

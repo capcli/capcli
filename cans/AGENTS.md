@@ -27,29 +27,7 @@ Artifacts live at `artifacts/` (governance.yaml, policy.yaml, system-schema.yaml
 
 ## Ownership — one canonical home per concept
 
-| Concept | Home |
-|---|---|
-| 5-concern kernel, 5-layer taxonomy, pack distribution | overview.md |
-| 5 concerns, 4 laws, SQL physics, exit codes, fail-closed | kernel.md |
-| plugin manifest, verbs, hooks, capabilities | plugins.md |
-| CLI noun registration, ctx namespace registration | plugins.md |
-| plugin schema extension, generations, GC, composition | plugins.md |
-| federation transport, pack taxonomy | plugins.md |
-| Tri-Jail, platform tiers, IPC channels, exit protocol | sandbox.md |
-| vault proxy, secret injection, wire scrubber, quotas | egress.md |
-| fast path, yield path, outbox, suspension, resumption | governor.md |
-| routine anatomy, ctx split, decorator, shape, templates | routines.md |
-| SQLite SSOT, dual schema, system schema roster | world.md |
-| kernel tables vs plugin tables, migration, snapshots | world.md |
-| claims lease, outbox/inbox lifecycle | world.md |
-| audit spine, causal DAG, denials, provenance, replay | effect.md |
-| trust ladder, budget frames, cascade, promotion, evidence | governance.md |
-| identity chain, harness markers, concurrency scope | identity.md |
-| environments, masking, drift, stages, learning, decay | lifecycle.md |
-| registry, publishing, packs, distribution, trust inheritance | marketplace.md |
-| 9 kernel nouns, plugin nouns, CLI projection, client RPC | interface.md |
-| monorepo, packages, tests, CICD, release | assembly.md |
-
+Registry — see _rules.yaml#canonical_homes
 If your file needs a concept owned elsewhere: write `- <context>: see <file>.md#<Node>` — ONE hop, never chain. Never duplicate content across files. Never duplicate content that lives in `artifacts/*.yaml` — cite the artifact path instead.
 
 ## Pointer topology
@@ -67,23 +45,9 @@ Violations to reject:
 
 ## Vocabulary law
 
-Never use bare ambiguous words. Always qualify per `_rules.yaml#vocabulary.required_qualifiers`.
-
-Banned bare: `env`, `frame`, `session`, `trust`, `budget`, `surface`, `route`, `tier`, `plugin`, `verb`.
-
-Correct:
-- `environment` not `env` (except `process env`, `CliEnvelope`)
-- `budget frame` / `call frame` / `federated frame` not `frame`
-- `harness session` / `kernel session` not `session`
-- `trust rung` / `trust receipt` / `trust floor` not `trust`
-- `fuel budget` / `spend ceiling` / `frame budget` not `budget`
-- `CLI surface` / `extension surface` not `surface`
-- `network route` / `dispatch route` not `route`
-- `platform tier` / `trust rung` not `tier`
-- `plugin process` / `plugin manifest` / `plugin installation` not `plugin`
-- `plugin verb` / `routine` / `API verb` not `verb`
-- `plugin` must be qualified — plugin process, plugin manifest, plugin installation, plugin verb, plugin table, plugin id, plugin surface
-- `namespace` must be qualified — ctx namespace, CLI noun
+Qualifiers — see _rules.yaml#vocabulary.required_qualifiers
+Banned bare — see _rules.yaml#vocabulary.banned_bare
+Never use bare ambiguous words. Always qualify.
 
 ## Reading
 

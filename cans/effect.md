@@ -2,22 +2,11 @@
 <!-- ref-by: governor.md, routines.md, world.md, governance.md, interface.md -->
   - Audit spine
     - Storage hierarchy
-      - Tier 1 — hot SSOT
-        - File — capcli/envs/<name>/audit.db
-        - Isolated from workspace.db physically
-        - WAL mode, chmod 600 permissions
-        - Zero connection pooling with workspace
-        - Concurrent writes bypass domain locks
-      - Tier 2 — cold mirror
-        - Daily append-only JSONL files
-        - Path — capcli/audit/YYYY-MM-DD.jsonl
-        - Flushed to disk for offline diffing
-        - Read-only export view
-      - Tier 3 — remote anchor
-        - S3 Object Lock WORM checkpoint
-        - KMS notary signatures
-        - Periodic witness attestation
-        - Definition — see #Event-integrity
+      - Tiers — see world.md#Storage-trinity
+      - Flow — workspace → audit → JSONL → object
+      - Lag capped at 5 minutes
+      - Breach emits alert event
+      - Integrity — see #Event-integrity
       - Flow direction
         - Unidirectional — Tier 1 to Tier 2 to Tier 3
         - Never reverse, never skip
@@ -60,76 +49,34 @@
         - No unscrubbed bytes cross boundary
         - Definition — see kernel.md#Exit-code-law
     - Kernel event payloads
-      - Bind events
-        - bind.create — target_urp, trigger_type
-        - bind.delete — binding id, reason
-        - bind.pause, bind.resume — operator action
-      - Vault events
-        - vault.set — name, hash_prefix, action
-        - Records injected prefix only
-        - Full hash and plaintext never logged
-        - Vault — see egress.md#Vault-proxy
-      - Plugin events
-        - plugin.installed — id, version, sha256
-        - plugin.updated — id, new_generation
-        - plugin.enabled, plugin.disabled
-        - plugin.uninstalled — id, reason
-        - plugin.schema_created — table list
-        - plugin.schema_dropped — table list
-        - plugin.cli_noun_registered — noun
-        - plugin.ctx_namespace_registered — ns
-        - Lifecycle — see plugins.md#Installation-lifecycle
-      - Environment events
-        - env.switch — source_env, target_env
-        - env.merge — source, target, git_commit, ddl_status
-        - env.init_from_template — source, sha256
-      - Identity events
-        - sys.agent.register — agent, principal
-        - sys.agent.revoke — agent, reason
-        - Reference — see identity.md#Concurrency
-      - Capability events
-        - capability.search — query, results_count
-        - routine.run — routine, version, hashes
-        - routine.draft — template_source, template_hash
-        - routine.auto_promoted — metric record
-        - routine.rollback — target version
-      - Database events
-        - db.exec — sql, params, rows, result_hash
-        - db.snapshot, db.restore — id, mode
-        - db.lock, db.unlock — target, holder
-        - claim.stolen, claim.abandoned, claim.expired
-      - Federation events
-        - federation.call_out — target, params, child_trace
-        - federation.call_in — source, caller, outcome
-        - Reference — see plugins.md#Federation-transport
-      - Saga events
-        - saga.execute — egress, compensate, mutation
-        - saga.compensate — parent_op, reason, status
-      - Swarm events
-        - swarm.node_join — agent, topology, endpoint
-        - swarm.node_reap — agent, reason
-        - swarm.preemption_yield — agent, frame, cursor
-      - Kernel events
-        - kernel.panic.secret_leak — culprit, decision
-        - kernel.genesis.data_loss — prior root, operator
-        - kernel.panic.sink_loss — sink id
-      - Rule events
-        - rule.config_proposed — file, diff_hash, gate
-        - rule.config_committed — approver, commit, hash
-      - API events
-        - api.sync — provider, added, removed, changed
-        - api.token_refresh — provider, expires_in
-        - api.first_prod_call — call_number, proof_hash
-      - Budget events
-        - budget.frame_push — declared, inherited
-        - budget.frame_pop — consumed, returned
-        - budget.exhausted — frame, pillar, attempted_op
-      - Serve events
-        - serve.request — endpoint, channel, trace_id
-        - serve.response — status, bytes, routine
-      - Promotion events
-        - promotion.sla_breached — queue age, threshold
-        - promotion.canary_veto — pinned to reviewed
+      - Categories
+        - Bind — create, delete, pause, resume
+        - Vault — set (prefix only, never plaintext)
+        - Plugin — installed, updated, enabled, disabled, uninstalled, schema, noun, namespace
+        - Environment — switch, merge, init_from_template
+        - Identity — agent register, agent revoke
+        - Capability — search, run, draft, auto_promoted, rollback
+        - Database — exec, snapshot, restore, lock, unlock, claim stolen/abandoned/expired
+        - Federation — call_out, call_in
+        - Saga — execute, compensate
+        - Swarm — node_join, node_reap, preemption_yield
+        - Kernel — panic secret_leak, genesis data_loss, panic sink_loss
+        - Rule — config_proposed, config_committed
+        - API — sync, token_refresh, first_prod_call
+        - Budget — frame_push, frame_pop, exhausted
+        - Serve — request, response
+        - Promotion — sla_breached, canary_veto
+      - Representative shape
+        - event — typed name string
+        - payload — domain-specific fields
+        - Canonical anatomy — see #Event-anatomy
+      - References
+        - Vault events — see egress.md#Vault-storage
+        - Plugin events — see plugins.md#Installation-lifecycle
+        - Federation events — see plugins.md#Federation-transport
+        - Identity events — see identity.md#System-agent-registry
+        - Budget events — see governance.md#Budget-frames
+        - Genesis events — see #Genesis-sequence
     - Event integrity
       - Zero ghost actions
         - Every CLI verb advances chain
@@ -205,18 +152,18 @@
       - Row structure
         - Each _audit row carries prev_hash
         - row_hash = sha256(prev_hash || canonical_json)
-        - Chain mirrored to JSONL
-        - Roots checkpointed to object store
+        - Mirroring — see world.md#Hash-chains
+        - Checkpointing — see world.md#Snapshots
       - Mirror secrecy
         - No unscrubbed credential bytes in mirror
         - Secret-keyed params mask per artifacts/masking.yaml
         - Wire echoes scrub at socket edge
         - Reference — see egress.md#Wire-scrubber
       - Receipt anchoring
-        - Receipts cite ledger root hash
-        - Cite object store WORM checkpoint
-        - Git commit hashes are ephemeral metadata
-        - Never the authoritative root
+        - Citations — see #Trust-receipt
+        - Root authority — see world.md#Hash-chains
+        - Git hashes are ephemeral metadata
+        - Ledger root is authoritative
       - External attestation
         - Root hash checkpointed to S3 Object Lock
         - KMS signatures stamped

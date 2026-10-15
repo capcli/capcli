@@ -53,11 +53,10 @@
       - :principal bind variable mandatory
       - ctx.db.mutate asserts row owner
     - Remote authorizer proxy
-      - Hub executes authorizer on spoke behalf
-      - Spoke ctx.db requests serialize to Hub
-      - Layer 1 evaluated at Hub before write
+      - Canonical home — see world.md#Remote-authorizer-proxy
+      - Spoke writes serialize to Hub for eval
       - Zero spoke-side authorizer bypass
-      - Definition — see sandbox.md#Deployment-topology
+      - Topology — see sandbox.md#Deployment-topology
     - OCC fence evaluation
       - Layer 2 state_fence verified at Hub
       - Spoke computes fence from read rows
@@ -246,16 +245,9 @@
       - Upstream 429 with Retry-After
       - Priority-class preemption floors
       - Not an error — a checkpoint
-    - Yield protocol
-      - Layer 3 transactions close immediately
-      - Zero open SQLite transactions permitted
-      - Layer 2 state_fence persists to _suspended_tasks
-      - Layer 1 claims retained for task ownership
-    - Mechanical resumption
-      - Daemon detects unblocked frame
-      - Daemon executes pre-compiled guest routine
-      - Waking LLM harness prohibited
-      - Result posts to sensory inbox
+    - Full yield protocol — see governor.md#Yield-path
+    - Mechanical resumption — see governor.md#Daemon-resumption
+    - Proactive yield semantics — see governor.md#Yield-path
     - Rollback law
       - Non-zero exits guarantee state_modified: false
       - Partial commit is a critical kernel bug

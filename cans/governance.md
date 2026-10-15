@@ -55,15 +55,15 @@
         - Skip draft to pinned exits 3
         - No inline elevation
       - Template floor
-        - Imported routines land at draft
-        - Zero promotional credit inherited
-        - Definition — see marketplace.md#Packs
+        - Import floor — see marketplace.md#Trust-inheritance
+        - Credit inheritance — zero
+        - Canonical home — see marketplace.md#Iron-law-2
       - Anonymous ceiling
+        - Ceiling enforcement — see identity.md#Anonymous-ceiling
         - Marker-less callers capped at draft
-        - Reviewed and pinned need identity
-        - Mutating writes need --by or --session
-        - Exit 3 on breach
-        - Definition — see identity.md#Harness-markers
+        - Identity required above draft
+        - Breach exits 3
+        - Markers — see identity.md#Harness-markers
       - Composition and dependency floor
         - Callee matches or exceeds caller rung
         - pinned calls pinned only
@@ -98,12 +98,12 @@
       - Mirror streamed to JSONL
       - Reference — see effect.md#Audit-spine
     - Row identity
-      - frame_id — unique per invocation
-      - routine — pinned routine@version
-      - parent_frame — null at session root
-      - kernel session — scoped frame owner
-      - environment — dev, sim, or prod
-      - subagent_scope — harness marker if any
+      - Fields — frame_id, routine, parent_frame
+      - Scope — kernel session, environment, subagent
+      - Parent null at session root
+      - Schema — see world.md#System-schema-roster
+      - Lifecycle — see #Frame-lifecycle
+      - Events — see #Frame-events
     - Declared limits
       - declared_max_ops — primitive ceiling
       - declared_max_duration_ms — wall clock
@@ -430,16 +430,11 @@
         - Subset invariant — executed <= declared
         - Early returns skip branches cleanly
     - Simulation gaps
-      - Disclosure format
-        - Prod-only verbs resolve to mocks
-        - Mock pass satisfies conjunction metrics
-        - Zero policy denials across run
-        - Environments — see lifecycle.md#Environments
-      - Fallback handling
-        - Un-simulated verbs resolve to mocks
-        - Schema-validated fixtures only
-        - Fixture shape matches upstream
-        - Vault — see egress.md#Vault-proxy
+      - Taxonomy — see lifecycle.md#Sim-mode-taxonomy
+      - Mock resolution satisfies metrics
+      - Fixtures schema-validated
+      - Disclosure — see lifecycle.md#Masking
+      - Vault fallback — see egress.md#Prove-run-secret-leases
       - Contract verification
         - Target — all external egress verbs
         - Live contract proof via schemas

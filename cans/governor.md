@@ -49,9 +49,10 @@
       - Zero task suspension
       - Single transaction holds across call
     - Fuel accounting
-      - Deducted at invocation, not at return
-      - Frame ledger updates synchronously
-      - Formula — see governance.md#Fuel-formula
+      - Deducted at push, reconciled at pop
+      - Cascade formula — see governance.md#Fuel-formula
+      - Ledger updates synchronously
+      - Budget frames — see governance.md#Budget-frames
     - Failure handling
       - Plugin crash exits 4, rollback
       - Policy denial exits 2, state untouched
@@ -114,22 +115,15 @@
       - Yield path stages outbound work here
       - Atomic with caller transaction
       - Never a partial domain state
-    - Owner
-      - Table lifecycle — see world.md#Outbox-inbox
-      - Row shape — see world.md#Outbox-inbox
-      - Claim semantics — see world.md#Outbox-inbox
-      - Draining — see world.md#Outbox-inbox
-      - Who writes — plugins and routines
-      - Dispatch — see plugins.md#Kernel-stance
+    - Table and row shape — see world.md#Outbox-inbox
+    - Claim and drain — see world.md#Outbox-inbox
+    - Dead letter queue — see world.md#Dead-letter-queue
+    - Writers — plugins and routines via ctx.emit
     - Why yield uses outbox
       - Egress cannot run inside transaction
       - Staging defers wire call to daemon
       - Same atomicity guarantee as fast path
       - Reference — see #Yield-path
-    - Failure handling
-      - Failed rows retry up to 3 times
-      - Then move to dead letter queue
-      - Definition — see world.md#Outbox-inbox
   - Suspension registry
     - Row identity
       - frame_id — suspended budget frame
@@ -146,9 +140,10 @@
       - Declared write intent
       - Reference — see kernel.md#Exit-code-law
     - Lease retention
-      - Layer 1 claims retained across yield
-      - Sibling agents cannot steal task
-      - Lease identity — see world.md#Claims-lease
+      - Claims survive yield boundary
+      - Identity tuple — see world.md#Claims-lease
+      - Sibling theft denied by design
+      - Verification — see #Verification-gates
     - Abort path
       - capcli run abort <frame_id>
       - Purges _suspended_tasks resume target

@@ -11,8 +11,8 @@
     - Two-tier noun model
       - Kernel nouns — compiled, always present
       - Plugin nouns — dynamic, installed at runtime
-      - Both appear identical in help
-      - Users never type plugin://
+      - Resolution — see plugins.md#Resolution-rules
+      - Identical surface in help output
       - Registration — see plugins.md#CLI-noun-registration
     - The 9 kernel nouns
       - run — dispatch any URP
@@ -395,37 +395,18 @@
       - Hydrates draft into routines/ or envs/
       - Packs — see marketplace.md#Packs
   - Plugin-provided nouns
-    - api noun
-      - Provided by api-gateway plugin pack
-      - Verbs — import, sync, record, prove, ship
-      - Verbs — catalog, drift, stats, retire
-      - capcli api import stripe
-      - Noun registration — see plugins.md#CLI-noun-registration
-    - bind noun
-      - Provided by scheduler plugin pack
-      - Verbs — cron, webhook, endpoint
-      - Verbs — federation, list, inspect
-      - Verbs — pause, resume, remove, keys
-      - Registration — see plugins.md#CLI-noun-registration
-    - ping noun
-      - Provided by notify plugin pack
-      - Verbs — notify, ask, list, resolve
-      - Verbs — expire
-      - capcli ping ask user:root "Approve?"
-      - Registration — see plugins.md#CLI-noun-registration
-    - serve noun
-      - Provided by http-server plugin pack
-      - Verbs — start, stop, restart, status
-      - Verbs — export openapi, export mcp
-      - Registration — see plugins.md#CLI-noun-registration
-    - storage noun
-      - Provided by storage plugin pack
-      - Verbs — put, get, url, list, remove
-      - Registration — see plugins.md#CLI-noun-registration
-    - ws noun
-      - Provided by federation plugin pack
-      - Verbs — peers, dial, status, cassettes
-      - Registration — see plugins.md#CLI-noun-registration
+    - Pack nouns
+      - api — api-gateway pack (import, sync, record, prove, ship, catalog, drift, stats, retire)
+      - bind — scheduler pack (cron, webhook, endpoint, federation, list, inspect, pause, resume, remove, keys)
+      - ping — notify pack (notify, ask, list, resolve, expire)
+      - serve — http-server pack (start, stop, restart, status, export)
+      - storage — storage pack (put, get, url, list, remove)
+      - ws — federation pack (peers, dial, status, cassettes)
+    - Mechanics
+      - Registered at install via cli.surface manifest
+      - Removed at uninstall
+      - Full resolution — see plugins.md#CLI-projection
+      - Pack taxonomy — see marketplace.md#Pack-taxonomy
     - Collision behavior
       - First-install wins the noun
       - Later plugin auto-scopes
@@ -639,28 +620,19 @@
       - Designed denial teaches gate constraints
       - Safety order — read, dry-run, denial, write
       - Fail-closed — see kernel.md#Fail-closed-stance
-    - Human journey — S0 to S10
-      - Read → dry-run → denial → bounded write → prove → receipt
-      - Denial pedagogy at S4, see effect.md#Denials
-      - Pack install at S7, see marketplace.md#Pack-taxonomy
-      - Receipt at S10 — sys doctor --report
-    - Harness journey — H0 to H7
-      - Bootstrap → discover → rehearse → prove → orient
+    - Journey stages
+      - Human — read, dry-run, denial, bounded write, prove, receipt
+      - Harness — bootstrap, discover, rehearse, prove, orient
       - Context grounding — see routines.md#Session-Overview-Primer
-      - Orient at H6 — author overview routine
-      - Prove at H7 — routine prove --env sim
-    - Harness context grounding
-      - Orientation — see routines.md#Session-Overview-Primer
-      - Fires at every turn boot
-      - Budget-exempt, under 60 tokens
-      - Plugin discovery via plugin list --nouns
+      - Pedagogical denials — see effect.md#Denials
+      - Pack install — see marketplace.md#Pack-taxonomy
+      - Receipt verification — sys doctor --report
     - Anti-decisions
       - No blank templates or static tours
       - No kernel-generated schemas
       - No synthetic onboarding events
       - No direct prod writes during onboarding
       - Integrity — see effect.md#Event-integrity
-    - Receipt verification
-      - sys doctor --report produces receipt
-      - Cites ledger root and WORM checkpoint
-      - Provenance — see effect.md#Provenance
+    - Receipt
+      - Produced via sys doctor --report
+      - Provenance — see effect.md#Trust-receipt

@@ -108,12 +108,11 @@
       - Manifest — capcli-pack.yaml at root
       - Hash — SHA-256 computed on write
     - Manifest shape
-      - id — reverse-DNS pack identifier
-      - name — human display string
-      - version — semver
-      - min_kernel_version — semver floor
-      - pack_tier — kernel, application, community
+      - Core fields — see plugins.md#Manifest
+      - Pack-specific — pack_tier, layer fields
+      - Tier values — kernel, application, community
       - Layer fields — plugins, schema, routines
+      - Validation — see #Iron-law-1
     - Plugin layer
       - Each entry has id and source
       - Source pinned to git tag or release
@@ -156,11 +155,11 @@
       - Exit 3 on abort
       - Exit law — see kernel.md#Exit-code-law
     - Iron law 2 — trust floor
-      - Every entry imports at draft
-      - Zero promotional credit inherited
+      - Import floor — see governance.md#Template-floor
       - Prod install refused outright
       - Exit 2 E045 on prod attempt
-      - Trust — see governance.md#The-ladder
+      - Promotion path — see governance.md#Promotion-gates
+      - Cross-agent floor — see governance.md#Composition-and-dependency-floor
     - Iron law 3 — no lifecycle scripts
       - postinstall.sh banned
       - pre-compile hooks banned
@@ -251,11 +250,11 @@
       - Mutable branch pulls denied exit 3
       - Envelope — see interface.md#CLI-surface
     - Wire sandbox
-      - Downloads stream to /scratch tmpfs
-      - Streams over 5MB aborted
+      - Stream target — /scratch tmpfs
+      - Size ceiling — 5MB abort
       - Zero execution during unpack
       - Static AST analysis only
-      - Sandbox — see sandbox.md#Channel-A
+      - Channel — see sandbox.md#Channel-A
     - Cryptographic gate
       - Kernel verifies stream SHA-256
       - Verify against index or --sha256
@@ -268,10 +267,10 @@
       - No binary execution until install
       - Reference — see #Iron-law-3
     - Trust containment
-      - All remote templates at draft v1
-      - Zero promotional credit inherited
-      - Prod intake refused
+      - Floor enforced at import
       - Reference — see #Iron-law-2
+      - Containment — see governance.md#Template-floor
+      - Prod intake refused outright
     - Bundle laws
       - Manifest mandate — capcli-pack.yaml
       - Governance exclusion — cannot alter policy
@@ -365,41 +364,15 @@
       - Event — see effect.md#Kernel-event-payloads
       - Envelope — see interface.md#CLI-surface
   - Trust inheritance
-    - Import floor
-      - All remote templates land at draft
-      - Zero promotional credit inherited
-      - Trust — see governance.md#The-ladder
-    - Promotional path
-      - Promote via routine ship after prove
-      - Promotion — see governance.md#Promotion-gates
-      - Imported routines cannot skip gates
-      - No fast-track promotion
-    - Cross-agent floor
-      - Imported routines callable only at draft
-      - Callee must meet or exceed caller rung
-      - Definition — see governance.md#The-ladder
-      - Composition — see plugins.md#Composition
-    - Pack sub-plugin floor
-      - Each sub-plugin reviewed independently
-      - Pack trust is weakest member
-      - Import at weakest rung
-      - Trust — see governance.md#The-ladder
-    - Environment gate
-      - dev import always permitted
-      - sim import requires reviewed pack
-      - prod import refused outright
-      - Exit 2 E045 on prod attempt
-      - Environments — see lifecycle.md#Environments
-    - Trust receipt
-      - Install emits receipt with hashes
-      - Includes sha256 per sub-plugin
-      - Envelope — see interface.md#CLI-surface
-      - Computed from index entry
-    - Trust boundary
-      - Marker from publishing is metadata
-      - Never grants authority at install
-      - Authority governed by rung only
-      - Markers — see identity.md#Harness-markers
+    - Import floor — see governance.md#Template-floor
+    - Promotional path — see governance.md#Promotion-gates
+    - Cross-agent floor — see governance.md#Composition-and-dependency-floor
+    - Pack weakest-link — see governance.md#Weakest-link-matrix
+    - Environment gate — see lifecycle.md#Environments
+    - Trust receipt — see governance.md#Trust-receipt
+    - Trust boundary — see identity.md#Authority-limit
+    - No fast-track promotion anywhere
+    - Markers are metadata, never authority
   - Pack lifecycle
     - Install flow
       - fetch → preview → confirm → extract

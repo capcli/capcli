@@ -168,33 +168,13 @@
       - DB ops — deterministic re-execution
       - External ops — human confirmation required
       - Definition — see effect.md#Replay-invariants
-  - Serve lifecycle split
-    - CLI configuration
-      - bind commands commit to workspace.db
-      - Emit bind.* events to _audit
-      - Reference — see plugins.md#Capabilities
-    - Daemon process
-      - sys serve --start launches persistent axum
-      - Binds 127.0.0.1 only by default
-      - Definition — see assembly.md#Persistent-daemon-crate
-    - Policy parity
-      - HTTP requests pass authorizer gate
-      - HTTP requests pass AST gate
-      - HTTP requests pass budget gate
-      - Zero relaxation for HTTP path
-      - Definition — see kernel.md#Unified-3-phase-engine
-    - Audit trail
-      - HTTP requests emit serve.request
-      - Request carries endpoint and channel
-      - Event shape — see effect.md#Kernel-event-payloads
-    - Endpoint governance
-      - Minimum trust — pinned rung only
-      - Version lock — routine@version explicit
-      - Default writes — deny
-      - Surface limits and payload ceiling
-      - Key rotation days cap
-      - Canonical home — see plugins.md#Capabilities
-      - Config — see artifacts/governance.yaml#serve
+  - Serve lifecycle
+    - Canonical home — see plugins.md#Serve-lifecycle
+    - Daemon process — see assembly.md#Daemon-binary
+    - Policy parity — see kernel.md#Unified-3-phase-engine
+    - Audit trail — see effect.md#Kernel-event-payloads
+    - Governance — see plugins.md#Endpoint-governance
+    - No duplication here; all mechanics in plugins.md
   - Drift
     - Manifest drift
       - Runtime fingerprint differs from manifest
@@ -235,10 +215,10 @@
       - monitor — passive metrics observation
       - subtraction — sweep, rollback, retire
     - Rung framing
-      - draft, reviewed, pinned are promotion rungs
-      - Rungs govern trust and authorization
-      - Rungs are not runtime engine stages
-      - Definition — see governance.md#The-ladder
+      - Rungs govern trust, not engine stages
+      - Ladder semantics — see governance.md#Trust-ladder
+      - Monotonic ascent — see governance.md#Ladder-laws
+      - Runtime engine — see kernel.md#Unified-3-phase-engine
     - Runtime engine
       - Every invocation runs 3-phase engine
       - Pre-flight, Sandbox, Commit
@@ -345,6 +325,16 @@
       - Community pack install enters at draft
       - Taxonomy — see plugins.md#Pack-taxonomy
       - Trust — see governance.md#Promotion-gates
+      - Stage detail pointers
+        - Draft — file lock, scaffolding, near-dup scan
+        - Prove — shape, sandbox, manifest, trust floor
+        - Ship — authority, metrics, production promotion
+        - Live — invocation, budget frames, drift, auto-promotion
+        - Full gates — see governance.md#Promotion-gates
+        - Commands — see interface.md#Routine-noun
+        - Shapes — see routines.md#Shape-constraints
+        - Manifests — see routines.md#Manifests-and-fingerprints
+        - Queue — see governance.md#Promotion-gates
   - Decay
     - Decay thresholds
       - Inactivity — unused for 30 days

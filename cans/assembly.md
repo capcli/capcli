@@ -47,115 +47,39 @@
       - /run/capcli/<ws>.sock — federated peer sockets
       - /scratch — tmpfs download sandbox
   - Rust workspace crates
-    - capcli-types
-      - Identity — crates/capcli-types
-      - Purpose — shared contracts
-      - exit.rs — strict integer exit codes
-      - error.rs — typed ErrorDomain enum
-      - capability.rs — URP models
-      - audit.rs — event anatomy and hash links
-      - schema.rs — shorthand AST definitions
-      - governance.rs — shape and budget limits
-      - rpc.rs — streaming JSON-RPC 2.0 lines
-      - Definition — see kernel.md#Exit-code-law
-    - capcli-core
-      - Identity — crates/capcli-core
-      - Purpose — domain engine
-      - db/ — dual rusqlite WAL pool
-      - parse/ — VDBE and query validation
-      - compile/ — YAML AST compilation
-      - budget/ — frame push and cascade
-      - audit/ — hash chains and JSONL mirror
-      - vault/ — AES-256-GCM decryption
-      - plugin/ — manifest parse and noun registry
-      - Concerns — see kernel.md#The-5-concerns
-    - capcli-cli
-      - Identity — crates/capcli-cli
-      - Purpose — CLI executable
-      - main.rs — entrypoint routing subcommands
-      - transport/ — spoke RPC client dispatcher
-      - commands/ — clap subcommand handlers
-      - terminal/ — procedural renderers
-      - Definition — see interface.md#CLI-surface
-    - capcli-daemon
-      - Identity — crates/capcli-daemon
-      - Purpose — persistent daemon
-      - server.rs — axum HTTP/WS on 127.0.0.1
-      - hub_rpc.rs — spoke JSON-RPC handler
-      - ipc.rs — Unix domain socket listener
-      - cron.rs — croner schedule evaluator
-      - webhook.rs — inbound HMAC verification
-      - reaper.rs — swarm heartbeat evaluator
-      - yield_queue.rs — suspended task re-dispatch
-      - plugin_registry.rs — CLI noun and ctx map
-      - assets.rs — rust-embed Cockpit bundle
+    - Crates
+      - capcli-types — shared contracts (exit, error, URP, audit, schema, rpc)
+      - capcli-core — domain engine (db, parse, compile, budget, audit, vault, plugin)
+      - capcli-cli — CLI executable (main, transport, commands, terminal)
+      - capcli-daemon — persistent daemon (server, hub_rpc, ipc, cron, webhook, reaper, yield, registry, assets)
+    - Flow
+      - types imported by all
+      - core imported by cli and daemon
+      - daemon spawns cli, never reverse
+      - Polyglot boundary via kernel.sock
+    - References
+      - Types — see kernel.md#Exit-code-law
+      - Core — see kernel.md#The-5-concerns
+      - CLI — see interface.md#CLI-surface
       - Daemon — see interface.md#Administrative-Cockpit-PWA
-    - Inter-crate flow
-      - types — imported by core, cli, daemon
-      - core — imported by cli and daemon only
-      - daemon — spawns cli, never the reverse
-      - Polyglot boundary — python via kernel.sock
   - Core subsystems
-    - Domain 1 — database engine (db/)
-      - Scope — pool, authorizer, migrate, bytecode, claims
-      - Definition — see world.md#Claims-lease
-      - Location — crates/capcli-core/src/db/
-      - Layers — see kernel.md#Layer-1-C-authorizer
-    - Domain 2 — routine engine (routine/)
-      - Scope — runner, jail, shape, saga, scaffold, manifest, fingerprint, IPC
-      - Definition — see routines.md#Procedure-layer
-      - Location — crates/capcli-core/src/routine/
-      - Count — 8 modules
-    - Domain 3 — blob storage (storage/)
-      - Scope — uploads, S3/R2, signing, metadata
-      - Definition — see egress.md#Developer-bridge
-      - Location — crates/capcli-core/src/storage/
-      - Count — 4 modules
-    - Domain 4 — external API gateway (api/)
-      - Scope — catalog, auth, projection, contracts, outbox, quota, headers, egress, mocks, refresh
-      - Definition — see egress.md#Vault-proxy
-      - Location — crates/capcli-core/src/api/
-      - Count — 10 modules
-    - Domain 5 — event bindings (bind/)
-      - Scope — cron, webhooks, routing, key hashing
-      - Definition — see plugins.md#Capabilities
-      - Location — crates/capcli-core/src/bind/
-      - Count — 4 modules
-    - Domain 6 — human interaction (ping/)
-      - Scope — notify, ask, timeouts
-      - Definition — see governor.md#Suspension-registry
-      - Location — crates/capcli-core/src/ping/
-      - Count — 3 modules
-    - Domain 7 — governance compilation (rule/)
-      - Scope — loading, cycle scan, bundles, shorthand, lockfile
-      - Definition — see world.md#Pre-flight-sub-checks
-      - Location — crates/capcli-core/src/rule/
-      - Count — 5 modules
-    - Domain 8 — environment management (env/)
-      - Scope — namespaces, masking, drift
-      - Definition — see lifecycle.md#Environments
-      - Location — crates/capcli-core/src/env/
-      - Count — 3 modules
-    - Domain 9 — system and audit (sys/)
-      - Scope — audit, mirror, hashchain, witness, doctor, recover
-      - Definition — see effect.md#Audit-spine
-      - Location — crates/capcli-core/src/sys/
-      - Count — 6 modules
-    - Domain 10 — capability run (run/)
-      - Scope — dispatch, search, preflight
-      - Definition — see routines.md#Procedure-layer
-      - Location — crates/capcli-core/src/run/
-      - Count — 3 modules
-    - Domain 11 — identity (identity/)
-      - Scope — process, vault, session
-      - Definition — see identity.md#Credential-binding
-      - Location — crates/capcli-core/src/identity/
-      - Count — 3 modules
-    - Domain 12 — plugin lifecycle (plugin/)
-      - Scope — generations, registries, schema, leases, GC, verify
-      - Lifecycle — see plugins.md#Installation-lifecycle
-      - Location — crates/capcli-core/src/plugin/
-      - Count — 7 modules
+    - Domains
+      - db — pool, authorizer, migrate, bytecode, claims (see world.md#Claims-lease)
+      - routine — runner, jail, shape, saga, scaffold, manifest, fingerprint, IPC (see routines.md#Procedure-layer)
+      - storage — uploads, S3/R2, signing, metadata (see egress.md#Developer-bridge)
+      - api — catalog, auth, projection, contracts, outbox, quota, headers, egress, mocks, refresh (see egress.md#Vault-proxy)
+      - bind — cron, webhooks, routing, key hashing (see plugins.md#Capabilities)
+      - ping — notify, ask, timeouts (see governor.md#Suspension-registry)
+      - rule — loading, cycle scan, bundles, shorthand, lockfile (see world.md#Pre-flight-sub-checks)
+      - env — namespaces, masking, drift (see lifecycle.md#Environments)
+      - sys — audit, mirror, hashchain, witness, doctor, recover (see effect.md#Audit-spine)
+      - run — dispatch, search, preflight (see routines.md#Procedure-layer)
+      - identity — process, vault, session (see identity.md#Credential-binding)
+      - plugin — generations, registries, schema, leases, GC, verify (see plugins.md#Installation-lifecycle)
+    - Location
+      - All under crates/capcli-core/src/<domain>/
+      - Module counts governed by scope
+      - No cross-domain imports without core mediation
   - Polyglot packages
     - TypeScript runtime (packages/ts)
       - Identity — @capcli/sdk

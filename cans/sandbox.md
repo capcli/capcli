@@ -14,10 +14,10 @@
         - WSL2 fallback for Windows dev
         - Termux fallback for Android
       - Rung bounds
-        - Every rung permitted here
-        - Prod host class exclusively tier 1
-        - No waiver required for prod
-        - Rung semantics — see governance.md#The-ladder
+        - Matrix — see governance.md#Weakest-link-matrix
+        - Prod exclusively tier 1
+        - No waiver required
+        - Semantics — see governance.md#Trust-ladder
       - Provider chain
         - bwrap unprivileged namespaces primary
         - Rootless OCI fallback on userns restrict
@@ -29,10 +29,9 @@
         - Android Termux Android
         - Edge containers without userns
       - Rung bounds
-        - Dev and sim environments only
-        - Pinned runs on dev and sim targets
-        - Waiver grants one run
-        - Full semantics — see interface.md#Universal-flags
+        - Matrix — see governance.md#Weakest-link-matrix
+        - Waiver mechanic — see interface.md#Run-noun
+        - Dev and sim only
         - Binds to session and routine
         - Never persisted or defaulted
       - Provider chain
@@ -55,7 +54,9 @@
       - Swarm axis — spokes proxy DB to Hub
       - Federation axis — sovereign peers
       - Axes are separate, never merged
-      - Definition — see plugins.md#Federation-transport
+      - Federation — see plugins.md#Federation-transport
+      - Swarm — see identity.md#Ephemeral-swarm-identity
+      - Topology modes — see world.md#Topology-modes
     - Default profile
       - Single host, no network needed
       - Hub daemon with local spokes
@@ -70,7 +71,7 @@
       - Hub admin binds 127.0.0.1:4040
       - Mesh bind on declared interface
       - Spokes dial hub at mesh endpoint
-      - SO_PEERCRED applies to local only
+      - Auth scope — see plugins.md#Socket-authentication
     - Dedicated server
       - Headless Linux under systemd
       - Required for 24/7 background triggers
@@ -151,21 +152,14 @@
       - Allow runtime-specific syscalls only
       - Deny everything outside allowlist
       - Compiled at plugin spawn time
-    - profile_python
-      - clone and futex permitted
-      - Basic POSIX signals permitted
-      - No network syscalls permitted
-      - No ptrace or process_vm permitted
-    - profile_bun_node
-      - epoll_create1, epoll_ctl, eventfd2
-      - io_uring_setup permitted
-      - No network syscalls permitted
-      - No raw socket family permitted
-    - profile_binary
-      - clone3, futex, rseq permitted
-      - rt_sigreturn permitted
-      - Minimal runtime surface only
-      - No dynamic loader escape
+    - Profiles
+      - python — clone, futex, POSIX signals; no network, no ptrace
+      - bun_node — epoll, io_uring; no network, no raw sockets
+      - binary — clone3, futex, rseq, rt_sigreturn; minimal surface
+    - Common constraint
+      - All profiles deny network syscalls
+      - All profiles deny dynamic loader escape
+      - Compiled at spawn, immutable post-boot
     - Breach semantics
       - SIGSYS raises immediately
       - Process terminates with exit 2

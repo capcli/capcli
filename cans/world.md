@@ -40,22 +40,12 @@
       - spoke-fat — local compute, proxied DB
       - spoke-ephemeral — in-memory only, zero disk
       - replica — read-only cache, writes to hub
-    - Remote authorizer proxy
-      - Hub executes authorizer on spoke behalf
-      - Spoke ctx.db requests serialize to Hub
-      - Layer 1 evaluated at Hub before write
+    - Remote topology
+      - Authorizer proxy — see kernel.md#Remote-authorizer-proxy
+      - OCC fence — see governor.md#Suspension-registry
+      - Auth scope — see plugins.md#Socket-authentication
+      - Hub evaluates all spoke writes
       - Zero spoke-side bypass possible
-      - Reference — see kernel.md#Remote-authorizer-proxy
-    - Remote OCC fence
-      - Spoke computes state_fence from read rows
-      - Hub re-verifies before physical commit
-      - Drift exits 2 with E061_OCC_DRIFT
-      - Definition — see governor.md#Suspension-registry
-    - Authentication scope
-      - SO_PEERCRED applies to local IPC only
-      - Remote auth via mTLS over WireGuard
-      - Session never crosses workspace boundary
-      - Definition — see plugins.md#Federation-transport
     - Writer serialization
       - Hub serializes physical writes
       - BEGIN IMMEDIATE across writers
@@ -155,39 +145,16 @@
         - Mask flag redaction on read
         - Definitions — see kernel.md#Layer-1-C-authorizer
     - System schema roster
-      - Audit spine
-        - _audit — append-only ledger table
-        - Definition — see effect.md#Audit-spine
-      - Budget and quota
-        - _budget_frames — hierarchical wallets
-        - _api_quota — provider rate ledger
-        - Definition — see governance.md#Budget-frames
-      - Catalog and secret
-        - _api_catalog — imported provider verbs
-        - secrets — encrypted credentials
-        - Definition — see egress.md#Vault-storage
-      - Identity and lease
-        - agents — registered harness instances
-        - claims — Layer 1 lease locks
-        - Definition — see identity.md#System-agent-registry
-      - Human interaction
-        - _pending_asks — suspended inquiries
-        - Definition — see governor.md#Suspension-registry
-      - Trigger state
-        - _watch_cursors — siphon positions
-        - _bindings — cron and webhook rows
-        - Definition — see plugins.md#Capabilities
-      - Queue and dispatch
-        - _outbox_events — atomic outbound staging
-        - _inbox — durable inbound dispatch
-        - Definition — see #Outbox-inbox
-      - Execution state
-        - _suspended_tasks — yielded frames
-        - _templates — installed blueprints
-        - Definition — see governor.md#Suspension-registry
-      - Metrics
-        - routine_stats — success rates per version
-        - Definition — see lifecycle.md#Stage-map
+      - Categories
+        - Audit — _audit (see effect.md#Audit-spine)
+        - Budget — _budget_frames, _api_quota (see governance.md#Budget-frames)
+        - Catalog — _api_catalog, secrets (see egress.md#Vault-storage)
+        - Identity — agents, claims (see identity.md#System-agent-registry)
+        - Interaction — _pending_asks (see governor.md#Suspension-registry)
+        - Triggers — _watch_cursors, _bindings (see plugins.md#Capabilities)
+        - Queues — _outbox_events, _inbox (see #Outbox-inbox)
+        - State — _suspended_tasks, _templates (see governor.md#Suspension-registry)
+        - Metrics — routine_stats (see lifecycle.md#Stage-map)
       - Roster invariant
         - Fifteen kernel tables total
         - Every table owned by one file

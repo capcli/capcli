@@ -92,10 +92,10 @@
       - ctx.api.call works again
       - Zero migration for user
     - Trust inheritance
-      - Every imported routine lands at draft
-      - Zero promotional credit inherited
-      - Promotion via gates only
+      - Import floor — see marketplace.md#Iron-law-2
+      - Promotion — see governance.md#Promotion-gates
       - Pack never elevates rungs
+      - Credit inheritance — zero
   - Core philosophy
     - Zero-trust agent
       - Intentions are never inherently trusted
@@ -196,18 +196,20 @@
         - Agent executes strictly inside bounds
         - Zero schema drift allowed
     - Anti-decisions
-      - No YAML procedures
-      - No module imports for authority
-      - No self-promotion past gates
-      - No silent edits to code or config
-      - No immortal routines without decay
-      - No deletion, only retirement
+      - Decisions
+        - Gates govern promotion — see governance.md#Promotion-gates
+        - Decay governs lifespan — see lifecycle.md#Decay
+        - Overrides banned — see governance.md#Limits-and-refusals
+        - Edits force versions — see lifecycle.md#Versioning
+        - Retirement over deletion — see lifecycle.md#Retirement-semantics
+        - Imports over inline auth — see plugins.md#Composition
     - Invariants
-      - Pre-execution validation via gates
-      - Sandbox containment during execution
-      - Leaf effects pass kernel gate
-      - Versions hash-pinned at registration
-      - Manifest drift treated as anomaly
+      - Physics
+        - Validation — see kernel.md#Unified-3-phase-engine
+        - Containment — see sandbox.md#Tri-Jail-engine
+        - Pinning — see lifecycle.md#Versioning
+        - Drift — see lifecycle.md#Drift
+        - Fail-closed — see kernel.md#Fail-closed-stance
     - Refusals
       - No ORMs or query builders
       - No runtime policy mutation
