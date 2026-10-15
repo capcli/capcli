@@ -330,6 +330,7 @@
       - Kill exits 4, involuntary
       - Yield exits 6, voluntary
       - Wall clock distinct from fuel
+      - 300s ceiling
     - Pre-flight prevention
       - can_invoke_now returns false
       - blocking_reasons carries detail

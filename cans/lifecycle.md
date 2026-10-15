@@ -6,6 +6,7 @@
         - Purpose — birthplace for authoring
         - Live risk — none
         - Matrix — see governance.md#Weakest-link-matrix
+        - Worktree — see #Worktree-convention
       - sim environment
         - Purpose — proving ground for prod candidates
         - Data — seeded from prod, masked
@@ -16,6 +17,7 @@
         - Purpose — live operational destination
         - Live risk — real business state
         - Matrix — see governance.md#Weakest-link-matrix
+        - Protection — see #Prod-protection
     - Orthogonality
       - Environment bounds data substrate
       - Trust rung bounds capability blast

@@ -24,8 +24,7 @@
       - rule — schema compilation path
       - doc — document reading path
       - template — blueprint path
-      - Nine reserved, cannot alias or extend
-      - Enforced at install, exit 3 on breach
+      - Nine reserved — cannot alias or extend, exit 3 on breach at install
     - Plugin nouns (dynamic)
       - cli_noun declared in plugin manifest
       - Registered at plugin install
@@ -644,9 +643,12 @@
       - Read → dry-run → denial → bounded write → prove → receipt
       - Denial pedagogy at S4, see effect.md#Denials
       - Pack install at S7, see marketplace.md#Pack-taxonomy
+      - Receipt at S10 — sys doctor --report
     - Harness journey — H0 to H7
       - Bootstrap → discover → rehearse → prove → orient
       - Context grounding — see routines.md#Session-Overview-Primer
+      - Orient at H6 — author overview routine
+      - Prove at H7 — routine prove --env sim
     - Harness context grounding
       - Orientation — see routines.md#Session-Overview-Primer
       - Fires at every turn boot

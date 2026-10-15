@@ -97,91 +97,65 @@
       - Polyglot boundary — python via kernel.sock
   - Core subsystems
     - Domain 1 — database engine (db/)
-      - connection.rs — rusqlite WAL pool
-      - authorizer.rs — C authorizer callback
-      - migrate.rs — four-phase migration
-      - bytecode.rs — EXPLAIN opcode parser
-      - snapshot.rs — VACUUM INTO backups
-      - claims.rs — Layer 1 lease locks
+      - Scope — pool, authorizer, migrate, bytecode, claims
       - Definition — see world.md#Claims-lease
+      - Location — crates/capcli-core/src/db/
+      - Layers — see kernel.md#Layer-1-C-authorizer
     - Domain 2 — routine engine (routine/)
-      - runner.rs — multi-runtime supervisor
-      - jail.rs — sandbox manager
-      - shape_gate.rs — token and complexity
-      - saga.rs — dual-write coordinator
-      - scaffold.rs — template generator
-      - manifest.rs — declared manifest receiver
-      - fingerprint.rs — leaf sequence aggregation
-      - ipc_socket.rs — cross-platform IPC
+      - Scope — runner, jail, shape, saga, scaffold, manifest, fingerprint, IPC
       - Definition — see routines.md#Procedure-layer
+      - Location — crates/capcli-core/src/routine/
+      - Count — 8 modules
     - Domain 3 — blob storage (storage/)
-      - local.rs — filesystem uploads
-      - s3.rs — S3 and R2 dispatcher
-      - signer.rs — HMAC-signed URLs
-      - metadata.rs — SHA256 and MIME headers
+      - Scope — uploads, S3/R2, signing, metadata
       - Definition — see egress.md#Developer-bridge
+      - Location — crates/capcli-core/src/storage/
+      - Count — 4 modules
     - Domain 4 — external API gateway (api/)
-      - catalog.rs — OpenAPI YAML specs
-      - auth_schemes.rs — SigV4, OAuth2, mTLS
-      - projector.rs — JSONPath filtering
-      - contract_validator.rs — live JSON Schema
-      - outbox.rs — atomic staging for mutating calls
-      - quota.rs — dual-window token bucket
-      - header_parser.rs — rate-limit header resolution
-      - egress.rs — reqwest HTTP proxy
-      - sim_mock.rs — canned fixture replay
-      - refresh.rs — ephemeral token rotation
+      - Scope — catalog, auth, projection, contracts, outbox, quota, headers, egress, mocks, refresh
       - Definition — see egress.md#Vault-proxy
+      - Location — crates/capcli-core/src/api/
+      - Count — 10 modules
     - Domain 5 — event bindings (bind/)
-      - cron.rs — croner pattern evaluation
-      - webhook.rs — vendor signature drivers
-      - endpoint.rs — axum HTTP routing
-      - keys.rs — partner API key hashing
+      - Scope — cron, webhooks, routing, key hashing
       - Definition — see plugins.md#Capabilities
+      - Location — crates/capcli-core/src/bind/
+      - Count — 4 modules
     - Domain 6 — human interaction (ping/)
-      - notify.rs — alert formatting
-      - ask.rs — suspension records
-      - timeout.rs — fail-closed timers
+      - Scope — notify, ask, timeouts
       - Definition — see governor.md#Suspension-registry
+      - Location — crates/capcli-core/src/ping/
+      - Count — 3 modules
     - Domain 7 — governance compilation (rule/)
-      - loader.rs — YAML deserialization
-      - cycle_check.rs — native DFS cycle scan
-      - template_bundle.rs — bundle validation
-      - shorthand.rs — DDL expansion
-      - lockfile.rs — root hash verification
+      - Scope — loading, cycle scan, bundles, shorthand, lockfile
       - Definition — see world.md#Pre-flight-sub-checks
+      - Location — crates/capcli-core/src/rule/
+      - Count — 5 modules
     - Domain 8 — environment management (env/)
-      - namespace.rs — directory partition provisioning
-      - masking.rs — format-preserving anonymization
-      - drift.rs — schema and staleness checks
+      - Scope — namespaces, masking, drift
       - Definition — see lifecycle.md#Environments
+      - Location — crates/capcli-core/src/env/
+      - Count — 3 modules
     - Domain 9 — system and audit (sys/)
-      - audit.rs — transactional _audit writes
-      - mirror.rs — daily JSONL export
-      - hashchain.rs — sha256 link calculation
-      - witness.rs — KMS and S3 WORM checkpoints
-      - doctor.rs — host probes and receipts
-      - recover.rs — snapshot or commit rollback
+      - Scope — audit, mirror, hashchain, witness, doctor, recover
       - Definition — see effect.md#Audit-spine
+      - Location — crates/capcli-core/src/sys/
+      - Count — 6 modules
     - Domain 10 — capability run (run/)
-      - registry.rs — URP dispatcher
-      - search.rs — cascade discovery engine
-      - preflight.rs — recursive can_invoke_now
+      - Scope — dispatch, search, preflight
       - Definition — see routines.md#Procedure-layer
+      - Location — crates/capcli-core/src/run/
+      - Count — 3 modules
     - Domain 11 — identity (identity/)
-      - process.rs — host UID verification
-      - vault.rs — zeroize-protected decryption
-      - session.rs — HMAC token binding
+      - Scope — process, vault, session
       - Definition — see identity.md#Credential-binding
+      - Location — crates/capcli-core/src/identity/
+      - Count — 3 modules
     - Domain 12 — plugin lifecycle (plugin/)
-      - generation.rs — generation directory manager
-      - noun_registry.rs — CLI noun registration
-      - namespace_registry.rs — ctx namespace registry
-      - schema_extension.rs — plugin table install
-      - lease.rs — shared flock lease manager
-      - gc.rs — safe-reclaim reclamation
-      - verify.rs — binary sha256 vs lockfile
+      - Scope — generations, registries, schema, leases, GC, verify
       - Lifecycle — see plugins.md#Installation-lifecycle
+      - Location — crates/capcli-core/src/plugin/
+      - Count — 7 modules
   - Polyglot packages
     - TypeScript runtime (packages/ts)
       - Identity — @capcli/sdk

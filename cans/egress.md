@@ -95,6 +95,7 @@
         - Applies to output and audit
         - Leak panic exits 5
         - Buffers zeroized post-dispatch
+        - Replacement — [REDACTED_VAULT_TOKEN]
     - Prove-run secret leases
       - Minting
         - routine prove --env sim mints lease
@@ -244,6 +245,7 @@
       - Headless exits 3, interactive pauses
       - Auto-refresh covers expiring tokens
       - Resolution precedes suspension
+      - Ask resolves via Cockpit card
     - First prod call
       - Requires contract proof hash
       - Counts call_number and remaining
