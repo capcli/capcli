@@ -115,7 +115,7 @@ cans/artifacts/test-plan/
       tl_02_tier2_weakest_link_matrix.yaml
       tl_03_auto_promotion_conjunction_pass.yaml
       tl_04_canary_telemetry_auto_demote.yaml
-      tl_05_unproven_template_draft_floor.yaml
+      tl_05_unproven_pack_draft_floor.yaml
       tl_06_training_wheels_call_graduation.yaml
       tl_07_bulk_operations_reviewed_floor.yaml
       tl_08_cross_agent_callee_reviewed_floor.yaml
@@ -212,7 +212,7 @@ cans/artifacts/test-plan/
       sh_13_ws_call_under_claim_lock_exit3.yaml
     urp/
       ur_01_inspect_db_table_envelope.yaml
-      ur_02_inspect_tpl_envelope.yaml
+      ur_02_inspect_pack_envelope.yaml
       ur_03_preflight_envelope_per_class_shape.yaml
       ur_04_bare_path_parse_exit3.yaml
       ur_05_removed_scheme_hub_exit3.yaml
@@ -531,7 +531,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `tl_02_tier2_weakest_link_matrix.yaml` | E2E | Tier 2 host: pinned routine targeting `prod` denied with `exit 2` (`E045_PROD_TIER1_MANDATE`); identical pinned invocation targeting `sim` executes (exit 0). | TN | Testing only one target environment, or asserting denial without the typed code. |
 | `tl_03_auto_promotion_conjunction_pass.yaml` | Integration | Routine meets all 5 auto-promotion metrics in sim (100% replay pass, zero denials, zero drift); promotes to `reviewed`. | TP | Promoting routine when 4 of 5 metrics pass and 1 fails. |
 | `tl_04_canary_telemetry_auto_demote.yaml` | Integration | Promoted routine experiences error spike during 1-hour canary window; autonomous watchdog auto-demotes trust to `draft`. | TN | Leaving failing routine in `pinned` state awaiting manual human intervention. |
-| `tl_05_unproven_template_draft_floor.yaml` | Unit | Newly imported routine template enters system; kernel forces trust rung to `draft` regardless of bundle claim. | TN | Trusting template manifest declaration of "pinned". |
+| `tl_05_unproven_pack_draft_floor.yaml` | Unit | Newly imported routine pack enters system; kernel forces trust rung to `draft` regardless of bundle claim. | TN | Trusting pack manifest declaration of "pinned". |
 | `tl_06_training_wheels_call_graduation.yaml` | Integration | Unsimulated prod-only API verb executes calls 1-3 under synthetic contract proof and graduates to standard governance exactly on call 4 | TP | Agent advances the call counter non-deterministically (sleeps between calls), asserts graduation happened by re-reading the counter the engine itself |
 | `tl_07_bulk_operations_reviewed_floor.yaml` | E2E | Routine at draft trust attempts bulk update (>10 rows); rejected at policy gate (`bulk_operations` requires `reviewed`). | TN | Allowing draft routines to execute bulk updates in development environments. |
 | `tl_08_cross_agent_callee_reviewed_floor.yaml` | Unit | Routine authored by Agent A calls Routine authored by Agent B; call rejected because callee is currently in `draft`. | TN | Permitting draft routines to be cross-imported between autonomous agents. |
@@ -652,7 +652,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | Case ID | Target Tier | Invariant & Scenario Narrative | Matrix | Banned Slop Pattern |
 |---|---|---|---|---|
 | `ur_01_inspect_db_table_envelope.yaml` | E2E | Inspect on db://orders#status returns the DbEntityResolver envelope with row schema, check constraints, mask flags, and TTL | TP | An AI agent fakes this test by asserting only exit 0 of the inspect command while ignoring the envelope payload — a resolver returning the wrong |
-| `ur_02_inspect_tpl_envelope.yaml` | E2E | Inspect on tpl://registry/routine/sync_orders@5 returns the ArtifactResolver envelope with token size, node outlines, and bundle metadata | TP | An AI agent fakes this test by asserting only exit 0 while the resolver returns a generic envelope — the class-specific payload (token size, node |
+| `ur_02_inspect_pack_envelope.yaml` | E2E | Inspect on pack://registry/routine/sync_orders@5 returns the ArtifactResolver envelope with token size, node outlines, and bundle metadata | TP | An AI agent fakes this test by asserting only exit 0 while the resolver returns a generic envelope — the class-specific payload (token size, node |
 | `ur_03_preflight_envelope_per_class_shape.yaml` | E2E | Inspect dispatches uniformly across the three UrpResolver traits while each class returns its own PreflightEnvelope payload shape | TP | An AI agent fakes this test by running the three inspects and asserting only that all exit 0 — the uniform-dispatch claim holds trivially while the |
 | `ur_04_bare_path_parse_exit3.yaml` | E2E | Bare filesystem path passed to a pointer-accepting verb fails CLI parse with exit 3 before any kernel dispatch | TN | An AI agent fakes this test by asserting exit 3 from a mocked parser — the real CLI binary is never invoked, so a regression that lets bare paths |
 | `ur_05_removed_scheme_hub_exit3.yaml` | E2E | Removed hub:// scheme fails CLI parse with exit 3; hub endpoints are network transports, not URPs | TN | An AI agent fakes this test by asserting exit 3 on a string match of the input — the real parser grammar (which must reject the scheme token) is |

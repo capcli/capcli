@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "template.new.success.created",
+  "id": "pack.new.success.created",
   "target": "webhook_receiver",
-  "command": "capcli template new webhook_receiver --type routine",
+  "command": "capcli pack new webhook_receiver --type routine",
   "elapsed_ms": 235,
   "context": {
     "env": "dev",
@@ -15,10 +15,10 @@
     "groups": [
       {
         "fields": {
-          "template": "tpl://routine/webhook_receiver",
+          "pack": "pack://routine/webhook_receiver",
           "type": "routine",
-          "path": "templates/webhook_receiver",
-          "files": "capcli-template.yaml, webhook_receiver.py (starter)",
+          "path": "pack/webhook_receiver",
+          "files": "capcli-pack.yaml, webhook_receiver.py (starter)",
           "policy_version": "5",
           "trust": "draft"
         }

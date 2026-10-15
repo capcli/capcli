@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
   "id": "run.inspect.refusal.not_found",
-  "target": "tpl://routine/ghost_hook",
-  "command": "capcli inspect tpl://routine/ghost_hook",
+  "target": "pack://routine/ghost_hook",
+  "command": "capcli inspect pack://routine/ghost_hook",
   "elapsed_ms": 118,
   "context": {
     "env": "dev",
@@ -11,15 +11,15 @@
   },
   "archetype": "diagnostic",
   "component": {
-    "rule": "validation.template.not_found",
+    "rule": "validation.pack.not_found",
     "domain": "validation",
-    "culprit": "Template URP 'tpl://routine/ghost_hook' does not resolve to a registered blueprint.",
-    "remedy": "run capcli search --type tpl and retry with an exact tpl:// URP",
-    "template": "tpl://routine/ghost_hook",
-    "registered": "4 templates (routine: 3, world: 1)",
+    "culprit": "Pack URP 'pack://routine/ghost_hook' does not resolve to a registered blueprint.",
+    "remedy": "run capcli search --type tpl and retry with an exact pack:// URP",
+    "pack": "pack://routine/ghost_hook",
+    "registered": "4 packs (routine: 3, world: 1)",
     "lines": [
-      "FATAL  validation.template.not_found",
-      "Template URP does not resolve."
+      "FATAL  validation.pack.not_found",
+      "Pack URP does not resolve."
     ]
   }
 }

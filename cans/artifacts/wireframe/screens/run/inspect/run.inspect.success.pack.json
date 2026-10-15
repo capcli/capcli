@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "run.inspect.success.template",
-  "target": "tpl://routine/webhook_receiver",
-  "command": "capcli inspect tpl://routine/webhook_receiver",
+  "id": "run.inspect.success.pack",
+  "target": "pack://routine/webhook_receiver",
+  "command": "capcli inspect pack://routine/webhook_receiver",
   "elapsed_ms": 1630,
   "context": {
     "env": "dev",
@@ -16,7 +16,7 @@
     "groups": [
       {
         "fields": {
-          "template": "tpl://routine/webhook_receiver",
+          "pack": "pack://routine/webhook_receiver",
           "kind": "routine",
           "policy_version": "5",
           "min_kernel_version": "2.1",

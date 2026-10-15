@@ -7,7 +7,7 @@ target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/world.md#Sub-check-2:-Semantics"
   statement: "Sub-check 2 runs compile-time before statement generation: reference targets (ref=) must exist with matching types, and the petgraph is_cyclic_directed check rejects circular references - a schema where Table A references Table B and Table B references Table A aborts with exit 3, never reaching DDL creation."
-  blast_radius_if_breached: "A cyclic schema reaches SQLite DDL generation with unresolvable foreign keys; table compile order is undefined, bootstrapping deadlocks, and every environment provisioned from the template is stillborn."
+  blast_radius_if_breached: "A cyclic schema reaches SQLite DDL generation with unresolvable foreign keys; table compile order is undefined, bootstrapping deadlocks, and every environment provisioned from the pack is stillborn."
 confusion_matrix:
   quadrant: "true_negative"
   slop_risk: "Agent attempts DDL creation and relies on a SQLite runtime error (or skips DDL entirely and only asserts the YAML parses) - the petgraph cycle detection itself is never exercised."

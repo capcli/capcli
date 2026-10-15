@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
   "id": "rule.validate.refusal.compat",
-  "target": "templates/order_sync",
-  "command": "capcli rule validate templates/order_sync",
+  "target": "pack/order_sync",
+  "command": "capcli rule validate packs/order_sync",
   "elapsed_ms": 242,
   "context": {
     "env": "dev",
@@ -11,18 +11,18 @@
   },
   "archetype": "diagnostic",
   "component": {
-    "rule": "policy.template.compat_fail",
-    "domain": "policy.template",
-    "culprit": "Template compat failure: template requires min_kernel_version 2.4 and policy_version 6; workspace runs kernel 2.1 and policy_version 5.",
+    "rule": "policy.pack.compat_fail",
+    "domain": "policy.pack",
+    "culprit": "Pack compat failure: pack requires min_kernel_version 2.4 and policy_version 6; workspace runs kernel 2.1 and policy_version 5.",
     "remedy": "upgrade the workspace kernel and policy_version, or pick a blueprint compiled against kernel 2.1 and policy_version 5",
-    "template": "templates/order_sync",
+    "pack": "pack/order_sync",
     "min_kernel_version_required": "2.4",
     "min_kernel_version_workspace": "2.1",
     "policy_version_required": "6",
     "policy_version_workspace": "5",
     "lines": [
-      "FATAL  policy.template.compat_fail",
-      "Template requires kernel 2.4 and policy_version 6.",
+      "FATAL  policy.pack.compat_fail",
+      "Pack requires kernel 2.4 and policy_version 6.",
       "Workspace runs kernel 2.1 and policy_version 5."
     ]
   }

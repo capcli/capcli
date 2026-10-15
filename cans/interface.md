@@ -270,7 +270,7 @@
   - Routine noun
     - Authoring
       - Direct write in routines/<name>.py
-      - Or template scaffold tpl://routine/<name>
+      - Or pack scaffold pack://routine/<name>
       - Procedure — see routines.md#Procedure-layer
     - Verify
       - routine prove <name> [-p k=v]
@@ -296,7 +296,7 @@
   - Environment noun
     - Provision
       - env new <name> [--seed prod]
-      - Or template scaffold tpl://world/<name>
+      - Or pack scaffold pack://world/<name>
       - Environments — see lifecycle.md#Environments
     - Switch
       - env use <name>
@@ -637,7 +637,7 @@
       - Pack install — see marketplace.md#Pack-taxonomy
       - Receipt verification — sys doctor --report
     - Anti-decisions
-      - No blank templates or static tours
+      - No blank packs or static tours
       - No kernel-generated schemas
       - No synthetic onboarding events
       - No direct prod writes during onboarding

@@ -1,0 +1,25 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "pack.new.refusal.name_taken",
+  "target": "webhook_receiver",
+  "command": "capcli pack new webhook_receiver --type routine",
+  "elapsed_ms": 77,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "validation.pack.name_taken",
+    "domain": "validation",
+    "culprit": "Pack name 'webhook_receiver' already registered at pack://routine/webhook_receiver.",
+    "remedy": "pick a distinct name or inspect the existing blueprint via capcli inspect pack://routine/webhook_receiver",
+    "pack": "pack://routine/webhook_receiver",
+    "existing": "pack/webhook_receiver (routine, policy_version 5)",
+    "lines": [
+      "FATAL  validation.pack.name_taken",
+      "Pack name already registered."
+    ]
+  }
+}

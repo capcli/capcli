@@ -17,28 +17,28 @@ confusion_matrix:
   anti_slop_mitigation: "AS-05 pins the literal 64-zero anchor and the row-1-to-row-2 hash link; AS-06 hardcodes the genesis event order and counts as immutable literals; AS-03 parses the provisioning envelope payload."
 
 setup:
-  env: "dev" # templates unpack strictly into the dev worktree
+  env: "dev" # packs unpack strictly into the dev worktree
   platform_tier: "tier_1"
   caller_identity:
     principal: "human.maintainer@acme.corp"
     agent_id: "agt_ad_10"
     trust: "reviewed"
   initial_state:
-    schema_yaml: null # fresh world provisioned from template below
+    schema_yaml: null # fresh world provisioned from pack below
     tables:
       - name: "orders"
-        row_count: 0 # seeded by template after provisioning
+        row_count: 0 # seeded by pack after provisioning
       - name: "_audit"
         row_count: 0 # empty ledger until provisioning writes the genesis sequence
     vault_secrets: []
 
 execution:
   trigger: "cli_subcommand"
-  command: "capcli template scaffold tpl://world/shop shop"
+  command: "capcli pack scaffold pack://world/shop shop"
   input_params:
-    template: "tpl://world/shop (valid schema.yaml + starter configuration; passes Sub-check 1 and Sub-check 2 before disk write)"
+    pack: "pack://world/shop (valid schema.yaml + starter configuration; passes Sub-check 1 and Sub-check 2 before disk write)"
     expected_genesis_order: ["rule.apply", "sql query", "sql write deny", "sql write ok"]
-    expected_audit_rows_after: 5 # genesis x4 + env.init_from_template
+    expected_audit_rows_after: 5 # genesis x4 + env.init_from_pack
 
 expected_observations:
   exit_code: 0
@@ -48,13 +48,13 @@ expected_observations:
     culprit: "none — world provisioned into the dev worktree with a fully anchored genesis chain"
     remedy: "n/a — success; genesis anchor verified by the assertions below"
   database:
-    row_count_delta: 5 # _audit 0 -> 5 (genesis x4 + env.init_from_template); orders seeded 0 -> 3 by the template
+    row_count_delta: 5 # _audit 0 -> 5 (genesis x4 + env.init_from_pack); orders seeded 0 -> 3 by the pack
     tables_mutated: ["_audit", "orders"]
   wire:
     packets_transmitted: 0
     syscall_42_trapped: false
   audit:
-    event_emitted: "rule.apply (genesis seq 1, prev_hash = 64-zero anchor) -> sql query -> sql write deny -> sql write ok -> env.init_from_template"
+    event_emitted: "rule.apply (genesis seq 1, prev_hash = 64-zero anchor) -> sql query -> sql write deny -> sql write ok -> env.init_from_pack"
     chain_valid: true
     state_modified_field: true
 
@@ -64,4 +64,4 @@ anti_slop_assertions:
   - rule: "AS-06"
     verification: "Immutable literals hardcoded: genesis event order [rule.apply, sql query, sql write deny, sql write ok], _audit row count 5, orders seed count 3 — never derived from the provisioning output; any deviation in order or count fails."
   - rule: "AS-03"
-    verification: "Parse the CliEnvelope: exit_code == 0, state_modified == true, and the env.init_from_template payload carries source_uri, bundle_sha256, schema_version, and seed_tables_count as structured fields — not scraped from human-readable output."
+    verification: "Parse the CliEnvelope: exit_code == 0, state_modified == true, and the env.init_from_pack payload carries source_uri, bundle_sha256, schema_version, and seed_tables_count as structured fields — not scraped from human-readable output."

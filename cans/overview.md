@@ -74,7 +74,6 @@
       - Kernel never speaks wire directly
       - Plugin holds the socket and device
       - Routine never reaches raw wire
-      - Template has zero runtime presence
       - Pack is blueprint and cartridge
   - The pack distribution model
     - Pack inventory — see marketplace.md#Pack-taxonomy

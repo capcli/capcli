@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "template.scaffold.success.world",
+  "id": "pack.scaffold.success.world",
   "target": "lab2",
-  "command": "capcli template scaffold tpl://world/atlas_world lab2",
+  "command": "capcli pack scaffold pack://world/atlas_world lab2",
   "elapsed_ms": 357,
   "context": {
     "env": "dev",
@@ -18,13 +18,13 @@
           "env": "envs/lab2",
           "trust": "draft",
           "version": "1",
-          "template_source": "tpl://world/atlas_world",
-          "template_hash": "sha256:b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1"
+          "pack.source": "pack://world/atlas_world",
+          "pack.hash": "sha256:b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1"
         }
       },
       {
         "fields": {
-          "audit": "op_template_scaffold_02 (env.init_from_template from tpl://world/atlas_world)"
+          "audit": "op_pack_scaffold_02 (env.init_from_pack from pack://world/atlas_world)"
         }
       }
     ]

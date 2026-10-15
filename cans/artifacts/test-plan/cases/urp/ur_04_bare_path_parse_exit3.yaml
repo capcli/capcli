@@ -41,7 +41,7 @@ expected_observations:
   diagnostic:
     domain: "cli.parse"
     culprit: "pointer grammar violation: 'orders/sync.py' carries no scheme prefix — only scheme://[namespace/]resource[@version][#fragment] pointers parse"
-    remedy: "address the resource with a registered scheme (cap://, db://, doc://, tpl://, …); bare filesystem paths never parse"
+    remedy: "address the resource with a registered scheme (cap://, db://, doc://, pack://, …); bare filesystem paths never parse"
   database:
     row_count_delta: 0
     tables_mutated: []

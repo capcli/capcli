@@ -7,13 +7,13 @@ This spec describes **capcli**: a governed agent kernel with a plugin-first arch
 
 - _rules.yaml — structural constants and canonical homes registry
 - AGENTS.md — agent instructions and ownership table
-- overview.md — 5-concern kernel, 5-layer taxonomy, pack distribution
+- overview.md — 5-concern kernel, 4-layer taxonomy, pack distribution
 - kernel.md — the 5 concerns, 4 laws, SQL physics, exit codes, fail-closed
 - plugins.md — manifest, verbs, CLI noun, ctx namespace, generations, federation, packs
 - sandbox.md — Tri-Jail, platform tiers, IPC wire protocol, exit protocol
 - egress.md — vault proxy, wire scrubber, quotas, rate-limit buckets
 - governor.md — fast path, yield path, outbox, suspension, daemon resumption
-- routines.md — guest code, ctx split, decorator, shape, templates, manifests
+- routines.md — guest code, ctx split, decorator, shape, manifests
 - world.md — SQLite SSOT, dual schema, kernel and plugin tables, migration, snapshots
 - effect.md — audit spine, causal DAG, denials, provenance, replay
 - governance.md — trust ladder, budget frames, min() cascade, promotion

@@ -1,0 +1,27 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "pack.bundle.denial.size_limit",
+  "target": "pack/atlas_world",
+  "command": "capcli pack bundle packs/atlas_world",
+  "elapsed_ms": 304,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.pack.size_limit",
+    "domain": "policy.pack",
+    "layer": "authorizer",
+    "culprit": "World pack bundle measures 7.2MB, over the 5MB ceiling.",
+    "measured": "bundle: 7.2MB (ceiling: 5MB)",
+    "remedy": "prune assets under 5MB or split the bundle, then re-run capcli pack bundle packs/atlas_world",
+    "pack": "pack://world/atlas_world",
+    "kind": "world",
+    "lines": [
+      "bundle: 7.2MB (ceiling: 5MB)",
+      "World pack bundle exceeds the size ceiling."
+    ]
+  }
+}

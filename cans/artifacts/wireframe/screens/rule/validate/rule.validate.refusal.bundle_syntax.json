@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
   "id": "rule.validate.refusal.bundle_syntax",
-  "target": "templates/broken_hook",
-  "command": "capcli rule validate templates/broken_hook",
+  "target": "pack/broken_hook",
+  "command": "capcli rule validate packs/broken_hook",
   "elapsed_ms": 257,
   "context": {
     "env": "dev",
@@ -11,14 +11,14 @@
   },
   "archetype": "diagnostic",
   "component": {
-    "rule": "compile.template.bad_syntax",
+    "rule": "compile.pack.bad_syntax",
     "domain": "compile",
-    "culprit": "Sub-check 1 syntax failure in templates/broken_hook/capcli-template.yaml:14:3: mapping values are not allowed here.",
-    "remedy": "fix the YAML or Python syntax at the cited line, then re-run capcli rule validate templates/broken_hook",
-    "file": "templates/broken_hook/capcli-template.yaml",
+    "culprit": "Sub-check 1 syntax failure in packs/broken_hook/capcli-pack.yaml:14:3: mapping values are not allowed here.",
+    "remedy": "fix the YAML or Python syntax at the cited line, then re-run capcli rule validate packs/broken_hook",
+    "file": "pack/broken_hook/capcli-pack.yaml",
     "error": "mapping values are not allowed here",
     "lines": [
-      "--> templates/broken_hook/capcli-template.yaml:14:3",
+      "--> packs/broken_hook/capcli-pack.yaml:14:3",
       "inputs: endpoint_url: string",
       "       ^ mapping values are not allowed here"
     ]

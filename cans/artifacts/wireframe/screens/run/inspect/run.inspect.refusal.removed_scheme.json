@@ -5,7 +5,7 @@
   "component": {
     "culprit": "URP scheme 'hub://' is not in the registry; hub endpoints are network transports, not URPs. hub://, prompt://, mesh://, apis://, sink://, snap:// all fail parse the same way (exit 3).",
     "domain": "compile",
-    "expected_urp_types": "cap://, ws://, db://, vault://, audit://, ask://, quota://, doc://, tpl://, policy://",
+    "expected_urp_types": "cap://, ws://, db://, vault://, audit://, ask://, quota://, doc://, pack://, policy://",
     "layer": "cli",
     "lines": [
       "FATAL  compile.removed_scheme"

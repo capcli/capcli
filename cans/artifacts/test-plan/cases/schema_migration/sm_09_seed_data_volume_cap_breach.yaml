@@ -7,7 +7,7 @@ target_crate: "crates/capcli-core"
 invariant:
   law_reference: "cans/world.md#Seed-data"
   statement: "Seed data is declared as a seed: [...] array executed inside the migration DDL transaction with a volume cap of max 50 rows per table to prevent draft bulk loading (governance.yaml template.world.max_seed_rows_per_table: 50); 51 rows refuses the schema at the shorthand compiler gate with exit 3."
-  blast_radius_if_breached: "Large datasets bypass every migration gate disguised as seed data: a draft template ships a 100k-row 'seed' straight into prod through the intake pipeline, dodging chunking, pre-counts, and blast-radius caps."
+  blast_radius_if_breached: "Large datasets bypass every migration gate disguised as seed data: a draft pack ships a 100k-row 'seed' straight into prod through the intake pipeline, dodging chunking, pre-counts, and blast-radius caps."
 confusion_matrix:
   quadrant: "true_negative"
   slop_risk: "Agent allows the oversized seed array through by splitting it across two tables of 26+26 rows (or 51 single-row INSERT statements) in the fixture - the per-table cap is never actually evaluated against the declared array."
@@ -16,7 +16,7 @@ setup:
   env: "dev"
   platform_tier: "tier_1"
   caller_identity:
-    principal: "harness.template-author@acme.corp"
+    principal: "harness.pack-author@acme.corp"
     agent_id: "agt_se_09"
     trust: "draft"
   initial_state:
@@ -26,7 +26,7 @@ setup:
       db: workspace.db
       tables:
         fixture_table:
-          description: "Template starter lookup data"
+          description: "Pack starter lookup data"
           columns:
             id: pk
             tag: text!

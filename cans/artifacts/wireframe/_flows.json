@@ -126,7 +126,7 @@
       "color": "#166534",
       "entry": "env.new.success.created",
       "terminal": "env.remove.success.removed",
-      "description": "Seed staging from prod -> provisioning gates (name taken, template pack size limit, namespace cap) -> switch & audit namespaces (list, inspect) -> env doctor drift then healthy -> merge gauntlet to prod (unmerged, lockfile, plan conflict, trust) -> forward merge lands -> deprovision gauntlet (crypto sig, unverified final backup, unknown id) -> experiment_2 removed"
+      "description": "Seed staging from prod -> provisioning gates (name taken, pack bundle size limit, namespace cap) -> switch & audit namespaces (list, inspect) -> env doctor drift then healthy -> merge gauntlet to prod (unmerged, lockfile, plan conflict, trust) -> forward merge lands -> deprovision gauntlet (crypto sig, unverified final backup, unknown id) -> experiment_2 removed"
     },
     "journey_ping_lifecycle": {
       "name": "Ping: Notifications, Inquiries & Fail-Closed Expiry",
@@ -159,9 +159,9 @@
     "journey_routine_lifecycle": {
       "name": "Routine Lifecycle: Author, Prove, Ship, Queue",
       "color": "#6366f1",
-      "entry": "template.scaffold.success.applied",
+      "entry": "pack.scaffold.success.applied",
       "terminal": "routine.pending.success.empty",
-      "description": "Draft instantiated via template scaffold -> prove gauntlet (exit-3 compiler refusals: syntax, param cap, missing docstring, oversized output; then exit-2 gates: shape, sandbox escape, forbidden leaf op) -> sim prove passes -> two promotion routes: the review path (enqueue via ship --queue, supervisor pending inspection, human batch sign-off ships) beside the direct ship ladder (reason required, trust floor, replay metrics) -> order_sync pinned ship -> canary rolled back -> promotion queue drained empty"
+      "description": "Draft instantiated via pack scaffold -> prove gauntlet (exit-3 compiler refusals: syntax, param cap, missing docstring, oversized output; then exit-2 gates: shape, sandbox escape, forbidden leaf op) -> sim prove passes -> two promotion routes: the review path (enqueue via ship --queue, supervisor pending inspection, human batch sign-off ships) beside the direct ship ladder (reason required, trust floor, replay metrics) -> order_sync pinned ship -> canary rolled back -> promotion queue drained empty"
     },
     "journey_routine_maintenance": {
       "name": "Routine Fleet Maintenance: Sweep, Stats, Rollback, Retire",
@@ -266,7 +266,7 @@
       "color": "#86efac",
       "entry": "run.inspect.refusal.missing_ptr",
       "terminal": "run.inspect.success.routine",
-      "description": "Bare pointer refuses to resolve -> draft cap://refund_and_archive@1 denied by the trust gate -> tpl://routine/webhook_receiver blueprint via capcli inspect -> quota://threads budget envelope -> pinned cap://dispatch_order@4 routine envelope"
+      "description": "Bare pointer refuses to resolve -> draft cap://refund_and_archive@1 denied by the trust gate -> pack://routine/webhook_receiver blueprint via capcli inspect -> quota://threads budget envelope -> pinned cap://dispatch_order@4 routine envelope"
     },
     "journey_large_result_delivery": {
       "name": "Large Result Delivery: Clip or Redirect",
@@ -275,12 +275,12 @@
       "terminal": "run.execute.success.redirected",
       "description": "Big payloads: the orders export SELECT clips at the result cap -> same query lands clean via --out -> the quarterly report run clips -> same run redirects to disk with a token-lean summary"
     },
-    "journey_template_lifecycle": {
-      "name": "Template Lifecycle: Author, Validate, Pack, Sync, Import, Scaffold, Prove",
+    "journey_pack_lifecycle": {
+      "name": "Pack Lifecycle: Author, Validate, Pack, Sync, Import, Scaffold, Prove",
       "color": "#f59e0b",
-      "entry": "template.new.success.created",
+      "entry": "pack.new.success.created",
       "terminal": "routine.prove.success.passed",
-      "description": "Blueprint authored via template new -> bundle lint via rule validate -> bundle compiled via template pack -> registry index refreshed via template sync -> bundle registered via template import -> draft routine instantiated via template scaffold -> sim prove via routine prove"
+      "description": "Blueprint authored via pack new -> bundle lint via rule validate -> bundle compiled via pack bundle -> registry index refreshed via pack sync -> bundle registered via pack import -> draft routine instantiated via pack scaffold -> sim prove via routine prove"
     }
   },
   "transitions": [
@@ -649,10 +649,10 @@
         "api.catalog.success.populated"
       ],
       "to": [
-        "template.scaffold.success.applied"
+        "pack.scaffold.success.applied"
       ],
       "trigger": "h4_scaffold",
-      "label": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+      "label": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "arrow_type": "progress"
     },
     {
@@ -661,7 +661,7 @@
         "journey_harness_onboarding"
       ],
       "from": [
-        "template.scaffold.success.applied"
+        "pack.scaffold.success.applied"
       ],
       "to": [
         "routine.prove.success.passed"
@@ -679,10 +679,10 @@
         "sys.trace.success.denial_trail"
       ],
       "to": [
-        "template.scaffold.success.overview"
+        "pack.scaffold.success.overview"
       ],
       "trigger": "h6_codify",
-      "label": "capcli template scaffold tpl://routine/overview overview",
+      "label": "capcli pack scaffold pack://routine/overview overview",
       "arrow_type": "progress"
     },
     {
@@ -691,7 +691,7 @@
         "journey_harness_onboarding"
       ],
       "from": [
-        "template.scaffold.success.overview"
+        "pack.scaffold.success.overview"
       ],
       "to": [
         "routine.prove.success.overview"
@@ -1481,7 +1481,7 @@
       "arrow_type": "denial"
     },
     {
-      "id": "t_env_name_to_template_pack",
+      "id": "t_env_name_to_pack_bundle",
       "journeys": [
         "journey_env_lifecycle"
       ],
@@ -1489,19 +1489,19 @@
         "env.new.refusal.name_taken"
       ],
       "to": [
-        "template.pack.denial.size_limit"
+        "pack.bundle.denial.size_limit"
       ],
-      "trigger": "pack_world_template",
-      "label": "capcli template pack templates/atlas_world",
+      "trigger": "pack_world_pack",
+      "label": "capcli pack bundle packs/atlas_world",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_pack_to_env_cap",
+      "id": "t_pack_bundle_to_env_cap",
       "journeys": [
         "journey_env_lifecycle"
       ],
       "from": [
-        "template.pack.denial.size_limit"
+        "pack.bundle.denial.size_limit"
       ],
       "to": [
         "env.new.denial.cap"
@@ -2536,7 +2536,7 @@
         "journey_routine_lifecycle"
       ],
       "from": [
-        "template.scaffold.success.applied"
+        "pack.scaffold.success.applied"
       ],
       "to": [
         "routine.prove.refusal.syntax"
@@ -3598,7 +3598,7 @@
       "arrow_type": "denial"
     },
     {
-      "id": "t_inspect_trust_to_template",
+      "id": "t_inspect_trust_to_pack",
       "journeys": [
         "journey_inspect_preflight"
       ],
@@ -3606,19 +3606,19 @@
         "run.inspect.success.masked"
       ],
       "to": [
-        "run.inspect.success.template"
+        "run.inspect.success.pack"
       ],
-      "trigger": "inspect_template_blueprint",
-      "label": "capcli inspect tpl://routine/webhook_receiver",
+      "trigger": "inspect_pack_blueprint",
+      "label": "capcli inspect pack://routine/webhook_receiver",
       "arrow_type": "progress"
     },
     {
-      "id": "t_inspect_template_to_quota",
+      "id": "t_inspect_pack_to_quota",
       "journeys": [
         "journey_inspect_preflight"
       ],
       "from": [
-        "run.inspect.success.template"
+        "run.inspect.success.pack"
       ],
       "to": [
         "run.inspect.success.quota"
@@ -3801,10 +3801,10 @@
         "run.inspect.success.routine"
       ],
       "to": [
-        "template.scaffold.success.applied"
+        "pack.scaffold.success.applied"
       ],
       "trigger": "scaffold_routine",
-      "label": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+      "label": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "arrow_type": "progress"
     },
     {
@@ -3813,7 +3813,7 @@
         "journey_human_onboarding"
       ],
       "from": [
-        "template.scaffold.success.applied"
+        "pack.scaffold.success.applied"
       ],
       "to": [
         "routine.prove.success.passed"
@@ -3958,57 +3958,57 @@
       "arrow_type": "success"
     },
     {
-      "id": "t_template_new_to_validate",
+      "id": "t_pack_new_to_validate",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.new.success.created"
+        "pack.new.success.created"
       ],
       "to": [
         "rule.validate.success.valid"
       ],
       "trigger": "validate_blueprint",
-      "label": "capcli rule validate templates/webhook_receiver",
+      "label": "capcli rule validate packs/webhook_receiver",
       "arrow_type": "progress"
     },
     {
-      "id": "t_template_validate_to_pack",
+      "id": "t_pack_validate_to_bundle",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
         "rule.validate.success.valid"
       ],
       "to": [
-        "template.pack.success.packed"
+        "pack.bundle.success.packed"
       ],
       "trigger": "pack_bundle",
-      "label": "capcli template pack templates/webhook_receiver",
+      "label": "capcli pack bundle packs/webhook_receiver",
       "arrow_type": "progress"
     },
     {
-      "id": "t_template_pack_to_sync",
+      "id": "t_pack_bundle_to_sync",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.pack.success.packed"
+        "pack.bundle.success.packed"
       ],
       "to": [
-        "template.sync.success.synced"
+        "pack.sync.success.synced"
       ],
       "trigger": "sync_registry",
-      "label": "capcli template sync",
+      "label": "capcli pack sync",
       "arrow_type": "success"
     },
     {
-      "id": "t_template_scaffold_to_prove",
+      "id": "t_pack_scaffold_to_prove",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.scaffold.success.applied"
+        "pack.scaffold.success.applied"
       ],
       "to": [
         "routine.prove.success.passed"
@@ -4018,70 +4018,70 @@
       "arrow_type": "success"
     },
     {
-      "id": "t_template_new_to_name_taken",
+      "id": "t_pack_new_to_name_taken",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.new.success.created"
+        "pack.new.success.created"
       ],
       "to": [
-        "template.new.refusal.name_taken"
+        "pack.new.refusal.name_taken"
       ],
       "trigger": "recreate_blueprint",
-      "label": "capcli template new webhook_receiver --type routine",
+      "label": "capcli pack new webhook_receiver --type routine",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_name_taken_to_inspect",
+      "id": "t_pack_name_taken_to_inspect",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.new.refusal.name_taken"
+        "pack.new.refusal.name_taken"
       ],
       "to": [
-        "run.inspect.success.template"
+        "run.inspect.success.pack"
       ],
       "trigger": "inspect_blueprint",
-      "label": "capcli inspect tpl://routine/webhook_receiver",
+      "label": "capcli inspect pack://routine/webhook_receiver",
       "arrow_type": "progress"
     },
     {
-      "id": "t_template_inspect_to_not_found",
+      "id": "t_pack_inspect_to_not_found",
       "journeys": [
-        "journey_template_lifecycle",
+        "journey_pack_lifecycle",
         "journey_inspect_preflight"
       ],
       "from": [
-        "run.inspect.success.template"
+        "run.inspect.success.pack"
       ],
       "to": [
         "run.inspect.refusal.not_found"
       ],
       "trigger": "inspect_unknown_blueprint",
-      "label": "capcli inspect tpl://routine/ghost_hook",
+      "label": "capcli inspect pack://routine/ghost_hook",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_new_to_shape",
+      "id": "t_pack_new_to_shape",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.new.success.created"
+        "pack.new.success.created"
       ],
       "to": [
-        "template.new.refusal.shape_violation"
+        "pack.new.refusal.shape_violation"
       ],
       "trigger": "scaffold_oversized_starter",
-      "label": "capcli template new chunked_batch --type routine",
+      "label": "capcli pack new chunked_batch --type routine",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_validate_to_syntax",
+      "id": "t_pack_validate_to_syntax",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
         "rule.validate.success.valid"
@@ -4090,43 +4090,43 @@
         "rule.validate.refusal.bundle_syntax"
       ],
       "trigger": "validate_broken_blueprint",
-      "label": "capcli rule validate templates/broken_hook",
+      "label": "capcli rule validate packs/broken_hook",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_scaffold_to_missing_param",
+      "id": "t_pack_scaffold_to_missing_param",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.scaffold.success.applied"
+        "pack.scaffold.success.applied"
       ],
       "to": [
-        "template.scaffold.refusal.missing_param"
+        "pack.scaffold.refusal.missing_param"
       ],
       "trigger": "apply_without_params",
-      "label": "capcli template scaffold tpl://routine/webhook_receiver sync_orders",
+      "label": "capcli pack scaffold pack://routine/webhook_receiver sync_orders",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_missing_to_target_exists_scaffold",
+      "id": "t_pack_missing_to_target_exists_scaffold",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.scaffold.refusal.missing_param"
+        "pack.scaffold.refusal.missing_param"
       ],
       "to": [
-        "template.scaffold.denial.target_exists"
+        "pack.scaffold.denial.target_exists"
       ],
       "trigger": "scaffold_world_target_taken",
-      "label": "capcli template scaffold tpl://world/atlas_world lab",
+      "label": "capcli pack scaffold pack://world/atlas_world lab",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_validate_to_compat",
+      "id": "t_pack_validate_to_compat",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
         "rule.validate.success.valid"
@@ -4135,22 +4135,22 @@
         "rule.validate.refusal.compat"
       ],
       "trigger": "validate_incompatible_blueprint",
-      "label": "capcli rule validate templates/order_sync",
+      "label": "capcli rule validate packs/order_sync",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_pack_to_size_limit",
+      "id": "t_pack_bundle_to_size_limit",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.pack.success.packed"
+        "pack.bundle.success.packed"
       ],
       "to": [
-        "template.pack.denial.size_limit"
+        "pack.bundle.denial.size_limit"
       ],
       "trigger": "pack_oversized_world",
-      "label": "capcli template pack templates/atlas_world",
+      "label": "capcli pack bundle packs/atlas_world",
       "arrow_type": "denial"
     },
     {
@@ -4274,78 +4274,78 @@
       "arrow_type": "progress"
     },
     {
-      "id": "t_template_sync_to_import",
+      "id": "t_pack_sync_to_import",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.sync.success.synced"
+        "pack.sync.success.synced"
       ],
       "to": [
-        "template.import.success.imported"
+        "pack.import.success.imported"
       ],
       "trigger": "import_registry_bundle",
-      "label": "capcli template import tpl://registry/routine/webhook_receiver@1",
+      "label": "capcli pack import pack://registry/routine/webhook_receiver@1",
       "arrow_type": "progress"
     },
     {
-      "id": "t_template_import_to_scaffold",
+      "id": "t_pack_import_to_scaffold",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.import.success.imported"
+        "pack.import.success.imported"
       ],
       "to": [
-        "template.scaffold.success.applied"
+        "pack.scaffold.success.applied"
       ],
       "trigger": "scaffold_blueprint",
-      "label": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+      "label": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "arrow_type": "success"
     },
     {
-      "id": "t_template_import_to_scaffold_world",
+      "id": "t_pack_import_to_scaffold_world",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.import.success.imported"
+        "pack.import.success.imported"
       ],
       "to": [
-        "template.scaffold.success.world"
+        "pack.scaffold.success.world"
       ],
       "trigger": "scaffold_world_blueprint",
-      "label": "capcli template scaffold tpl://world/atlas_world lab2",
+      "label": "capcli pack scaffold pack://world/atlas_world lab2",
       "arrow_type": "success"
     },
     {
-      "id": "t_template_import_to_checksum",
+      "id": "t_pack_import_to_checksum",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.import.success.imported"
+        "pack.import.success.imported"
       ],
       "to": [
-        "template.import.refusal.checksum"
+        "pack.import.refusal.checksum"
       ],
       "trigger": "import_checksum_mismatch",
-      "label": "capcli template import https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap --sha256 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+      "label": "capcli pack import https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap --sha256 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
       "arrow_type": "denial"
     },
     {
-      "id": "t_template_scaffold_to_checksum",
+      "id": "t_pack_scaffold_to_checksum",
       "journeys": [
-        "journey_template_lifecycle"
+        "journey_pack_lifecycle"
       ],
       "from": [
-        "template.scaffold.success.applied"
+        "pack.scaffold.success.applied"
       ],
       "to": [
-        "template.scaffold.refusal.checksum"
+        "pack.scaffold.refusal.checksum"
       ],
       "trigger": "scaffold_checksum_mismatch",
-      "label": "capcli template scaffold tpl://registry/routine/webhook_receiver@1 sync_orders",
+      "label": "capcli pack scaffold pack://registry/routine/webhook_receiver@1 sync_orders",
       "arrow_type": "denial"
     }
   ]

@@ -104,7 +104,7 @@ cans/artifacts/wireframe/
       read/
       outline/
       inspect/
-    template/
+    pack/
       import/
       new/
       pack/
@@ -113,7 +113,7 @@ cans/artifacts/wireframe/
 ```
 
 ### 1.1 Structural Invariants
-* **Active Nouns:** Exactly 11 CLI nouns (`run`, `db`, `routine`, `api`, `bind`, `ping`, `rule`, `env`, `sys`, `doc`, `template`).
+* **Active Nouns:** Exactly 11 CLI nouns (`run`, `db`, `routine`, `api`, `bind`, `ping`, `rule`, `env`, `sys`, `doc`, `pack`).
 * **Single-Source Law:** Every screen has exactly one `.json` fixture. No `.txt` files are committed. The JSON shape IS the screen; renderers (HTML canvas, Rust test harness) consume it directly.
 * **Depth Ceiling:** File paths relative to `screens/` must remain exactly 3 path components: `{noun}/{verb}/{filename}.json`.
 * **Sibling Invariants:** Min 3, max 18 verb directories per noun branch node.
@@ -142,7 +142,7 @@ Naming convention, both artifact directories (`wireframe/`, `prompt/`): a leadin
 
 Canonical file: `_states.json` (same directory). It is the single home of the state taxonomy: exit code → label, exit → legal domains, exit → required diagnostic fields. Not reproduced here by design.
 
-The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6 (cans/physics.md#Exit-code-law). The screen-ID state slot takes exactly these labels; severity and lifecycle words (`warning`, `tamper`, `suspended`, `rolled_back`) live in the condition slot. A domain determines its exit: two domains are dual-registered — `api.quota` (exit 2 Critical, exit 6 Background) and `policy.template` (exit 2 denial on pack-time invariant breach, exit 3 refusal on intake validation). Exit 6 covers both quota yields and `ping.ask` frame suspensions (cans/action.md suspension contract).
+The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6 (cans/physics.md#Exit-code-law). The screen-ID state slot takes exactly these labels; severity and lifecycle words (`warning`, `tamper`, `suspended`, `rolled_back`) live in the condition slot. A domain determines its exit: two domains are dual-registered — `api.quota` (exit 2 Critical, exit 6 Background) and `policy.pack` (exit 2 denial on pack-time invariant breach, exit 3 refusal on intake validation). Exit 6 covers both quota yields and `ping.ask` frame suspensions (cans/action.md suspension contract).
 
 ---
 
@@ -211,10 +211,10 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.success.routine` | success | 0 | — | populated | Pre-flight envelope with `can_invoke_now` |
 | `run.inspect.success.quota` | success | 0 | — | populated | Headroom breakdown on `quota://` URP |
 | `run.inspect.success.prompt` | success | 0 | — | populated | Artifact preflight envelope: token size, node outlines, bundle metadata for doc://prompts/ inspect |
-| `run.inspect.success.template` | success | 0 | — | populated | tpl:// blueprint pre-flight envelope via capcli inspect |
+| `run.inspect.success.pack` | success | 0 | — | populated | pack:// blueprint pre-flight envelope via capcli inspect |
 | `run.inspect.refusal.unregistered_scheme` | refusal | 3 | missing_param | unregistered_scheme | tcp:// transport endpoint refused: not a registered URP scheme; remedy capcli sys swarm list |
 | `run.inspect.success.ws` | success | 0 | — | populated | ws:// federated routine pre-flight envelope via capcli inspect |
-| `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Template URP does not resolve |
+| `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Pack URP does not resolve |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.refusal.removed_scheme` | refusal | 3 | missing_param | removed_scheme | hub:// removed scheme refused at parse with exit 3 |
 | `run.inspect.success.masked` | success | 0 | policy.trust | redacted | Secret references rendered as [REDACTED_VAULT_TOKEN]; inspect exits 0 on all rungs |
@@ -374,8 +374,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `rule.apply.refusal.validation` | refusal | 3 | validation | rejected | Sub-check 2 semantic check fails |
 | `rule.apply.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
 | `rule.validate.success.valid` | success | 0 | — | valid | Declarations pass Sub-checks 1 & 2 |
-| `rule.validate.refusal.bundle_syntax` | refusal | 3 | compile | syntax | Malformed template bundle YAML or Python syntax |
-| `rule.validate.refusal.compat` | refusal | 3 | policy.template | compat | min_kernel_version or policy version mismatch |
+| `rule.validate.refusal.bundle_syntax` | refusal | 3 | compile | syntax | Malformed pack bundle YAML or Python syntax |
+| `rule.validate.refusal.compat` | refusal | 3 | policy.pack | compat | min_kernel_version or policy version mismatch |
 | `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Sub-check 1 YAML syntax failure |
 | `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Sub-check 2 circular dependency detected |
 | `rule.plan.success.planned` | success | 0 | — | planned | Migration bundle generated (plan.json, align stub) |
@@ -474,24 +474,24 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `doc.outline.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
 | `doc.inspect.success.populated` | success | 0 | — | populated | Document metadata, tokens, and node count |
 
-### 4.11 `template/` (5 verbs → 14 screens)
+### 4.11 `pack/` (5 verbs → 14 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
-| `template.new.success.created` | success | 0 | — | created | Blueprint scaffold committed to templates/ |
-| `template.new.refusal.name_taken` | refusal | 3 | validation | name_taken | Template name already registered |
-| `template.new.refusal.shape_violation` | refusal | 3 | validation | shape_violation | Scaffold violates complexity or parameter bounds |
-| `template.pack.success.packed` | success | 0 | — | packed | Bundle compiled to SHA-256 .cap archive |
-| `template.pack.denial.size_limit` | denial | 2 | policy.template | size_limit | World template bundle exceeds 5MB ceiling |
-| `template.sync.success.synced` | success | 0 | — | synced | Registry index refreshed from capcli/registry |
-| `template.import.success.imported` | success | 0 | — | imported | Pinned bundle registered in local _templates at draft trust |
-| `template.import.refusal.checksum` | refusal | 3 | policy.template | checksum | Bundle SHA-256 mismatch against pinned hash (wire gate) |
-| `template.scaffold.success.applied` | success | 0 | — | applied | Draft routine scaffolded from tpl:// blueprint |
-| `template.scaffold.success.world` | success | 0 | — | applied | Dev environment scaffolded from tpl:// world blueprint |
-| `template.scaffold.success.overview` | success | 0 | — | applied | Mandatory overview routine scaffolded (harness H6) |
-| `template.scaffold.refusal.missing_param` | refusal | 3 | missing_param | missing_param | Required template parameter -p omitted |
-| `template.scaffold.refusal.checksum` | refusal | 3 | policy.template | checksum | Bundle SHA-256 mismatch against registry index |
-| `template.scaffold.denial.target_exists` | denial | 2 | policy.authoring | target_exists | Target file or environment already exists |
+| `pack.new.success.created` | success | 0 | — | created | Blueprint scaffold committed to packs/ |
+| `pack.new.refusal.name_taken` | refusal | 3 | validation | name_taken | Pack name already registered |
+| `pack.new.refusal.shape_violation` | refusal | 3 | validation | shape_violation | Scaffold violates complexity or parameter bounds |
+| `pack.bundle.success.packed` | success | 0 | — | packed | Bundle compiled to SHA-256 .cap archive |
+| `pack.bundle.denial.size_limit` | denial | 2 | policy.pack | size_limit | World pack bundle exceeds 5MB ceiling |
+| `pack.sync.success.synced` | success | 0 | — | synced | Registry index refreshed from capcli/registry |
+| `pack.import.success.imported` | success | 0 | — | imported | Pinned bundle registered in local _packs at draft trust |
+| `pack.import.refusal.checksum` | refusal | 3 | policy.pack | checksum | Bundle SHA-256 mismatch against pinned hash (wire gate) |
+| `pack.scaffold.success.applied` | success | 0 | — | applied | Draft routine scaffolded from pack:// blueprint |
+| `pack.scaffold.success.world` | success | 0 | — | applied | Dev environment scaffolded from pack:// world blueprint |
+| `pack.scaffold.success.overview` | success | 0 | — | applied | Mandatory overview routine scaffolded (harness H6) |
+| `pack.scaffold.refusal.missing_param` | refusal | 3 | missing_param | missing_param | Required pack parameter -p omitted |
+| `pack.scaffold.refusal.checksum` | refusal | 3 | policy.pack | checksum | Bundle SHA-256 mismatch against registry index |
+| `pack.scaffold.denial.target_exists` | denial | 2 | policy.authoring | target_exists | Target file or environment already exists |
 
 ---
 
@@ -784,7 +784,7 @@ Fixture (`wireframe/v2`):
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+      "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "intent": "Routine scaffold committed",
       "risk": "mutating",
       "requires_intent": true

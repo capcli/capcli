@@ -14,7 +14,7 @@
   "component": {
     "culprit": "Unregistered URP scheme 'tcp://': network transports are not URPs.",
     "domain": "compile",
-    "expected_urp_types": "cap://, ws://, db://, vault://, audit://, ask://, quota://, doc://, tpl://, policy://",
+    "expected_urp_types": "cap://, ws://, db://, vault://, audit://, ask://, quota://, doc://, pack://, policy://",
     "layer": "cli",
     "lines": [
       "FATAL  compile.unregistered_scheme"

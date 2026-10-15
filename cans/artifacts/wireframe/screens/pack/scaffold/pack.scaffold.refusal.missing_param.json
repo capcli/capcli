@@ -1,0 +1,26 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "pack.scaffold.refusal.missing_param",
+  "target": "sync_orders",
+  "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders",
+  "elapsed_ms": 170,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "missing_param.pack.required_param",
+    "domain": "missing_param",
+    "culprit": "Required pack parameter 'endpoint_url' omitted.",
+    "remedy": "supply -p endpoint_url=<value>, e.g. capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://example.com/hook",
+    "pack": "pack://routine/webhook_receiver",
+    "missing_param": "endpoint_url",
+    "required_params": "endpoint_url: string",
+    "lines": [
+      "FATAL  missing_param.pack.required_param",
+      "Required parameter endpoint_url omitted."
+    ]
+  }
+}

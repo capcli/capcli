@@ -155,7 +155,7 @@
       - Exit 3 on abort
       - Exit law — see kernel.md#Exit-code-law
     - Iron law 2 — trust floor
-      - Import floor — see governance.md#Template-floor
+      - Import floor — see governance.md#Import-floor
       - Prod install refused outright
       - Exit 2 E045 on prod attempt
       - Promotion path — see governance.md#Promotion-gates
@@ -197,7 +197,7 @@
       - Shape law — tokens <= 2000 hard
       - Shape law — complexity and params lint
       - Headless sandbox test simulation
-      - Frozen .cap bundle via template pack
+      - Frozen .cap bundle via pack bundle
       - SHA-256 computed on bundle bytes
       - Shape — see routines.md#Shape-constraints
     - CI gate steps
@@ -269,7 +269,7 @@
     - Trust containment
       - Floor enforced at import
       - Reference — see #Iron-law-2
-      - Containment — see governance.md#Template-floor
+      - Containment — see governance.md#Import-floor
       - Prod intake refused outright
     - Bundle laws
       - Manifest mandate — capcli-pack.yaml
@@ -279,8 +279,8 @@
       - Zero lifecycle hooks anywhere
       - Proposals — see world.md#Configuration-proposals
     - Bundle size ceilings
-      - World template — 5MB max
-      - Routine template — 1MB max
+      - World pack — 5MB max
+      - Routine pack — 1MB max
       - Exceed exits 3 refuse intake
       - Config — see artifacts/governance.yaml#template
     - Provenance stamping
@@ -299,7 +299,7 @@
       - --tier <kernel|application|community>
       - --trust <rung> filters by floor
       - --environment <name> filters
-      - --type <plugin|pack|template>
+      - --type <plugin|pack>
       - Flags — see interface.md#Universal-flags
     - Result shape
       - id, version, summary, ratings
@@ -364,7 +364,7 @@
       - Event — see effect.md#Kernel-event-payloads
       - Envelope — see interface.md#CLI-surface
   - Trust inheritance
-    - Import floor — see governance.md#Template-floor
+    - Import floor — see governance.md#Import-floor
     - Promotional path — see governance.md#Promotion-gates
     - Cross-agent floor — see governance.md#Composition-and-dependency-floor
     - Pack weakest-link — see governance.md#Weakest-link-matrix
@@ -378,7 +378,7 @@
       - fetch → preview → confirm → extract
       - Rule validate at extraction
       - Register into dev worktree
-      - Emit env.init_from_template event
+      - Emit env.init_from_pack event
       - Event — see effect.md#Kernel-event-payloads
     - Update flow
       - Check remote tag against local

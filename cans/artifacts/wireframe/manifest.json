@@ -9,7 +9,7 @@
   "compiled_at": "2026-10-09T09:28:10Z",
   "nouns": [
     "run", "db", "routine", "api", "bind",
-    "ping", "rule", "env", "sys", "doc", "template"
+    "ping", "rule", "env", "sys", "doc", "pack"
   ],
   "state_axes": {
     "exit_code": [0, 2, 3, 4, 5, 6],
@@ -25,7 +25,7 @@
     "law": "env new provisions arbitrary lowercase namespace slugs; state_axes.env lists the kernel-reserved roots only"
   },
   "output_contract": {
-    "pointer_schemes": ["doc://", "tpl://", "cap://", "db://"],
+    "pointer_schemes": ["doc://", "pack://", "cap://", "db://"],
     "prefix": "[{env}:{tier}]",
     "human_format": "rustc-style diagnostic with atomic blocks, source spans, and indented key-values",
     "machine_format": "--json structured envelope",

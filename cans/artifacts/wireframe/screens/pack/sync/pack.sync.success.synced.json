@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "template.sync.success.synced",
+  "id": "pack.sync.success.synced",
   "target": "capcli/registry",
-  "command": "capcli template sync",
+  "command": "capcli pack sync",
   "elapsed_ms": 774,
   "context": {
     "env": "dev",
@@ -23,7 +23,7 @@
       },
       {
         "fields": {
-          "audit": "op_template_sync_01 (registry index refreshed)"
+          "audit": "op_pack_sync_01 (registry index refreshed)"
         }
       }
     ]
@@ -31,7 +31,7 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli template import tpl://registry/routine/webhook_receiver@1",
+      "command": "capcli pack import pack://registry/routine/webhook_receiver@1",
       "intent": "Register the pinned registry bundle locally",
       "risk": "mutating",
       "requires_intent": true

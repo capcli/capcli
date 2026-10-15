@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "template.scaffold.success.applied",
+  "id": "pack.scaffold.success.applied",
   "target": "sync_orders",
-  "command": "capcli template scaffold tpl://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+  "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
   "elapsed_ms": 2161,
   "context": {
     "env": "dev",
@@ -18,13 +18,13 @@
           "routine": "routines/sync_orders.py",
           "trust": "draft",
           "version": "1",
-          "template_source": "tpl://routine/webhook_receiver",
-          "template_hash": "sha256:a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4"
+          "pack.source": "pack://routine/webhook_receiver",
+          "pack.hash": "sha256:a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4"
         }
       },
       {
         "fields": {
-          "audit": "op_template_scaffold_01 (routine draft instantiated from tpl://routine/webhook_receiver)"
+          "audit": "op_pack_scaffold_01 (routine draft instantiated from pack://routine/webhook_receiver)"
         }
       }
     ]
