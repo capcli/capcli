@@ -56,5 +56,7 @@ expected_observations:
 anti_slop_assertions:
   - rule: "AS-02"
     verification: "SELECT consumed_ms FROM _budget_frames WHERE frame_id='parent' returns 300; no row exceeds declared_max_duration_ms."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 AND diagnostic.culprit cites the parent frame id and 300/300 ms exhaustion during child_2."
   - rule: "AS-04"
     verification: "Elapsed time advances via MockClock ticks only; the harness runs in under 50ms real time."

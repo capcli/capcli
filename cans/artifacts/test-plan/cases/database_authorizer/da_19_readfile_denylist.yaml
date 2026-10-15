@@ -55,5 +55,7 @@ expected_observations:
 anti_slop_assertions:
   - rule: "AS-01"
     verification: "The authorizer callback is the real C implementation; no mockall or trait replacement."
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders returns 1; SELECT name FROM sqlite_master WHERE type='table' returns only orders — the denied prepare mutated nothing."
   - rule: "AS-03"
     verification: "Assert exit_code == 2 AND diagnostic.culprit cites the function name readfile."
