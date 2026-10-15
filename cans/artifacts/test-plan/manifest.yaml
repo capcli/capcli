@@ -18,62 +18,62 @@ domains:
     prefix: "kp"
     case_count: 23
     description: "Kernel physics — dual-engine enforcement, platform tier taxonomy, seccomp-bpf jails, tmpfs scratch isolation, NTP drift halt, audit-sink fail-closed host integrity probes."
-    spec_sources: ["cans/physics.md", "cans/world.md", "cans/effect.md"]
+
   database_authorizer:
     prefix: "da"
     case_count: 15
     description: "Database floor & C-authorizer — unbounded UPDATE/DELETE AST kills, WHERE tautology traps, system table write denial, column/table immutability, row ceilings."
-    spec_sources: ["cans/physics.md", "cans/world.md"]
+
   wire_egress:
     prefix: "we"
     case_count: 14
     description: "Wire floor & quota brokerage — proactive token buckets, JSONPath quota header sync, priority yield floors, vaulted bearer injection, egress byte caps, sim mock fallback."
-    spec_sources: ["cans/physics.md", "cans/action.md", "cans/budget.md", "cans/space.md"]
+
   budget_cascade:
     prefix: "bc"
     case_count: 20
     description: "Budget cage & frame cascade — downward min inheritance, session ops ceilings, fuel pools, earmark ringfence and TTL sweep, watchdogs, suspended-task refill."
-    spec_sources: ["cans/budget.md", "artifacts/governance.yaml", "artifacts/policy.yaml", "cans/time.md"]
+
   audit_dag:
     prefix: "ad"
     case_count: 15
     description: "Memory spine & causal DAG — SHA-256 prev-hash linking, genesis anchors, tamper root-worm walks, FPA redaction, W3C traceparent, JSONL mirror SLA, KMS witness."
-    spec_sources: ["cans/effect.md", "cans/space.md"]
+
   trust_ladder:
     prefix: "tl"
     case_count: 18
     description: "Trust ladder & promotion — draft/reviewed/pinned floors, monotonic ascent, auto-promotion conjunction, canary telemetry demotion, human veto, circuit breaker."
-    spec_sources: ["cans/trust.md", "cans/physics.md"]
+
   schema_migration:
     prefix: "se"
     case_count: 18
     description: "Schema migration & compile checks — Sub-check 1..3 refusals (YAML syntax, cycles, lockfile drift), live-drift refusal, migration-safety rehearsal, forward-only migration, worktree isolation."
-    spec_sources: ["cans/world.md", "cans/recovery.md", "cans/space.md"]
+
   coordination_claims:
     prefix: "cc"
     case_count: 16
     description: "Coordination & claims — exclusive leases with TTL, contested claim rejection, WAL BEGIN IMMEDIATE serialization, authoring mutex, orphan cleanup, cross-agent event tailing."
-    spec_sources: ["cans/agent.md"]
+
   bindings_triggers:
     prefix: "bt"
     case_count: 13
     description: "Bindings & inbound triggers — cron min-interval and catchup limits, webhook HMAC/ceiling/rate gates, endpoint pinned-trust floor, ctx.ping.ask fail-closed timeouts."
-    spec_sources: ["cans/action.md", "cans/time.md"]
+
   vault_secrets:
     prefix: "vs"
     case_count: 12
     description: "Vault & zero-knowledge secrets — AES-256-GCM ciphertext at rest, scope isolation, env auto-binding, rotation eviction, redacted leak kill, Cockpit WebAuthn injection."
-    spec_sources: ["cans/agent.md", "cans/interface.md", "cans/effect.md"]
+
   sdk_harness:
     prefix: "sh"
     case_count: 13
     description: "SDK & guest harness contract — frame token traps, ctx.api/ctx.db rules, manifest reflection over IPC, poll_until aggregate accounting, storage HMAC URLs, claims locks."
-    spec_sources: ["cans/action.md", "cans/agent.md"]
+
   urp:
     prefix: "ur"
     case_count: 11
     description: "URP resolver engine — 3-class dispatch (executable, db-entity, artifact), universal pointer grammar parse law, exit-3 refusals for bare paths and removed schemes, prompts-are-documents read equivalence."
-    spec_sources: ["cans/action.md", "cans/interface.md"]
+
 cases:
   # ── kernel_physics (kp) — 23 cases ─────────────────────────
   - case_id: "kp_01_syscall_seccomp_trap"

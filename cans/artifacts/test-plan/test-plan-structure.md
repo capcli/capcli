@@ -352,7 +352,7 @@ target_tier: "unit | integration | e2e"
 target_crate: "crates/capcli-core | crates/capcli-cli | crates/capcli-daemon"
 
 invariant:
-  law_reference: "string (e.g. cans/physics.md#Layer-2:-SQL-AST-check)"
+  law_reference: "string (e.g. kernel.md#Layer-2-AST-scanner)"
   statement: "string (the physical invariant being guaranteed)"
   blast_radius_if_breached: "string (worst-case enterprise fallout if broken)"
 

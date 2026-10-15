@@ -62,6 +62,7 @@ canonical_homes:
   promotion: governance.md#Promotion-gates
   vault: egress.md#Vault-proxy
   wire_scrubber: egress.md#Wire-scrubber
+  quota: egress.md#Quotas
   platform_tiers: sandbox.md#Platform-tiers
   ipc_stdio: sandbox.md#Channel-A
   ipc_ring: sandbox.md#Channel-B
@@ -101,6 +102,10 @@ canonical_homes:
   monorepo: assembly.md#Monorepo-layout
   cicd: assembly.md#CICD
   pack_distribution: overview.md#The-pack-distribution-model
+  test_plan: artifacts/test-plan/manifest.yaml
+  test_plan_laws: artifacts/test-plan/matrix.yaml#anti_slop_laws
+  test_plan_matrix: artifacts/test-plan/matrix.yaml#confusion_matrix
+  test_plan_schema: artifacts/test-plan/test-plan-structure.md
 
 token_budget:
   enabled: true

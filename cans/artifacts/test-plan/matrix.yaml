@@ -45,14 +45,8 @@ tier_taxonomy:
     scope: "Black-box static binary invocation (capcli <noun> <verb>); process subshell boundary: exit codes (0, 2, 3, 4, 5, 6); golden wireframe CLI transcript validation."
     location: "crates/capcli-cli/tests/e2e/"
 
-exit_code_law:
-  "0": "success with audit event recorded; upstream HTTP failures handled gracefully in envelope"
-  "2": "invariant or governance block; state untouched (state_modified: false) — domains db.engine, policy.authorizer, policy.budget, policy.trust"
-  "3": "compile-time refusal, validation failure, prod boot lockfile mismatch, or missing parameter"
-  "4": "domain routine.runtime; uncaught Python sandbox exception or type crash; transaction cleanly rolled back"
-  "5": "domain kernel.panic; audit sink unreachable or host resource failure; execution refused"
-  "6": "domain api.quota; proactive rate yield; task suspended until yield_until timestamp"
-  state_rollback_law: "non-zero exits guarantee state_modified: false; any partial commit is a critical kernel bug"
+exit_code_law: "see kernel.md#Exit-code-law"
+exit_code_domains: "see effect.md#Denials"
 
 anti_slop_laws:
   AS-01:

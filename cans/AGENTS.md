@@ -23,7 +23,7 @@ This spec describes **capcli**: a governed agent kernel with a plugin-first arch
 - interface.md — 9 kernel nouns, plugin nouns, client RPC, PWA, onboarding
 - assembly.md — monorepo, packages, tests, CICD, release
 
-Artifacts live at `artifacts/` (governance.yaml, policy.yaml, system-schema.yaml). Read them, never edit or duplicate them. Cite the artifact path instead.
+Artifacts live at `artifacts/` (governance.yaml, policy.yaml, system-schema.yaml, test-plan/). Read them, never edit or duplicate them. Cite the artifact path instead.
 
 ## Ownership — one canonical home per concept
 
@@ -53,6 +53,7 @@ Never use bare ambiguous words. Always qualify.
 
 Find concept → consult `_rules.yaml#canonical_homes` → read canonical home → follow `see:` ONE hop maximum. Never chain.
 Read the parent chain for context, not just the leaf.
+Authoring a test → read its case in `artifacts/test-plan/manifest.yaml` first.
 
 ## Writing
 

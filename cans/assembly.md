@@ -156,6 +156,9 @@
       - Never embeds secrets
       - Definition — see interface.md#Administrative-Cockpit-PWA
   - Test architecture
+    - Case binding
+      - Every test cites #[test_case("case_id")]
+      - Index — artifacts/test-plan/manifest.yaml
     - Unit tier
       - Location — crates/capcli-core/tests/unit/
       - Count — 11 modules
