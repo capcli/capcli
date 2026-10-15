@@ -3,7 +3,7 @@
   - Registry
     - Substrate
       - Central GitHub repo hosts PR flow
-      - Repo path — see artifacts/governance.yaml#template.registry_repo
+      - Repo path — see artifacts/governance.yaml#pack.registry_repo
       - PR-driven, no proprietary server
       - Immutable static JSON on GitHub Pages
       - Path — https://registry.capcli.dev/v1/plugins.json
@@ -282,7 +282,7 @@
       - World pack — 5MB max
       - Routine pack — 1MB max
       - Exceed exits 3 refuse intake
-      - Config — see artifacts/governance.yaml#template
+      - Config — see artifacts/governance.yaml#pack
     - Provenance stamping
       - source_uri recorded on install
       - bundle_sha256 on install event

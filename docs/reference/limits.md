@@ -129,8 +129,8 @@ Enforced by AST parsing and native SQLite `sqlite3_set_authorizer`:
 | **Active Environments** | Max isolated worktrees | 5 (`dev`, `sim`, `prod` + 2 custom) |
 | **Blob Upload Size** | Max per file | 10 MB (10,485,760 bytes) |
 | **Blob MIME Allowlist** | Allowed formats | `application/pdf`, `image/*`, `text/*`, `application/json` |
-| **Template Bundle Size**| Max package size | 5 MB |
-| **Template Seed Rows** | Max per table | 50 rows (anti-bulk data injection) |
+| **Pack Bundle Size**| Max package size | 5 MB |
+| **Pack Seed Rows** | Max per table | 50 rows (anti-bulk data injection) |
 
 ---
 
@@ -143,7 +143,7 @@ To stop runaway agent loops from burning resources:
 | **Capability Invocations**| Max 300 calls / minute | `exit 2` |
 | **Routine Drafts per Agent**| Max 30 concurrent drafts | `exit 2` on creation |
 | **Routine Creation Velocity**| Max 10 created / hour | `exit 2` (anti-flooding) |
-| **Template Promotions** | Max 5 promotions / day | `exit 2` |
+| **Pack Promotions** | Max 5 promotions / day | `exit 2` |
 | **Agent Thrashing Threshold**| 20 sustained denials in 5 min| Fires `agent.thrashing` alarm |
 | **Backup Auto-Commit** | Every 15 minutes | Auto-commits state to Git |
 | **Backup Drift Alarm** | Drift > 30 minutes | `sys doctor` emits warning |

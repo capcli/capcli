@@ -28,9 +28,9 @@ capcli routine <verb> [args] [--flags]
 A routine enters the registry by one of two routes:
 
 - **Direct write.** Author the file straight into `routines/<name>.py`. The intake shape gate measures it before registration.
-- **Blueprint scaffold.** Pre-flight the blueprint with `capcli inspect tpl://routine/<name>`, then stamp a draft routine with `capcli template scaffold tpl://routine/<name> <target> [-p k=v]`.
+- **Blueprint scaffold.** Pre-flight the blueprint with `capcli inspect pack://routine/<name>`, then stamp a draft routine with `capcli pack scaffold pack://routine/<name> <target> [-p k=v]`.
 
-Either route registers the result at draft trust, version 1, with zero promotional credit. The full template lifecycle, including registry-sourced blueprints, lives in [World](../understand/world.md#templates-and-the-registry).
+Either route registers the result at draft trust, version 1, with zero promotional credit. The full pack lifecycle, including registry-sourced blueprints, lives in [World](../understand/world.md#packs-and-the-registry).
 
 ## The Shape Police (Governance Bounds)
 
@@ -155,7 +155,7 @@ $ capcli routine rollback dispatch_order --to-version 3 \
 
 ## Banned Operations
 
-* **There is no `routine new` verb, and no `template list`, `template inspect`, `template validate`, or `template apply` verb.** The parser rejects each at intake. Authoring runs through direct write or `capcli template scaffold`; blueprint pre-flight runs through `capcli inspect tpl://`; bundle lint runs through `capcli rule validate [target]`.
+* **There is no `routine new` verb, and no `pack list`, `pack inspect`, `pack validate`, or `pack apply` verb.** The parser rejects each at intake. Authoring runs through direct write or `capcli pack scaffold`; blueprint pre-flight runs through `capcli inspect pack://`; bundle lint runs through `capcli rule validate [target]`.
 * **`--force` is banned:** Passing `--force` to `routine ship` is an immediate syntax error.
 * **Direct filesystem tampering:** Editing a versioned file directly in `routines/` without bumping the version or running through intake triggers an instant lockfile mismatch (`exit 3`).
 * **Self-Promotion:** A running routine cannot invoke `routine ship` on itself. Trust escalation requires human or CI principal authority.

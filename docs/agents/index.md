@@ -26,7 +26,7 @@ Every agent interaction follows one path:
 DISCOVER → INSPECT → INVOKE → OBSERVE
 ```
 
-1. **Discover.** `capcli search "<intent>"` queries the unified registry. Results arrive as typed pointers: `cap://` for routines and API verbs, `db://` for tables, `doc://` for human documents, `prompt://` for agent campaign banks, `tpl://` for blueprints.
+1. **Discover.** `capcli search "<intent>"` queries the unified registry. Results arrive as typed pointers: `cap://` for routines and API verbs, `db://` for tables, `doc://` for human documents, `prompt://` for agent campaign banks, `pack://` for blueprints.
 2. **Inspect.** `capcli inspect <ptr>` returns a single pre-flight envelope: parameters, limits, trust rung, budget headroom, and a boolean `can_invoke_now` verdict. One call, zero roundtrips.
 3. **Invoke.** `capcli run <capability> [-p k=v]` executes inside a budget frame. Mutating work carries a causal intent (`-m "<why>"`).
 4. **Observe.** `capcli sys audit tail` and `capcli sys audit trace <op-id>` expose the recorded result, including the denial anatomy for refused work.

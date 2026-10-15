@@ -47,22 +47,22 @@ topology:
     memory_buffer_mb: 16              # RAM buffer for spoke→hub audit replication only; distinct from the 5-minute local fail-closed stall buffer: see cans/effect.md#Event-integrity
 
 # ───────────────────────────────────────────────────────────────
-# 1.5 TEMPLATES — blueprints are unproven proposals
+# 1.5 PACKS — blueprints are unproven proposals
 # ───────────────────────────────────────────────────────────────
-template:
-  max_templates: 100                  # registry capacity ceiling for blueprints
+pack:
+  max_packs: 100                      # registry capacity ceiling for blueprints
   max_bundle_size_mb: 5               # bundle transfer ceiling
   registry_repo: "capcli/registry"    # PR-driven marketplace SSOT repo
   registry_index_url: "https://raw.githubusercontent.com/capcli/registry/main/index.json"
   allow_unpinned_urls: false          # bans raw branch URLs (@main); requires releases + sha256
-  require_kernel_compat: true         # refuses outdated templates at boot
-  require_policy_match: true          # template policy_version == runtime policy_version
+  require_kernel_compat: true         # refuses outdated packs at boot
+  require_policy_match: true          # pack policy_version == runtime policy_version
   world:
     mandatory_files: ["schema.yaml"]
-    max_seed_rows_per_table: 50       # prevent bulk data injection via template
+    max_seed_rows_per_table: 50       # prevent bulk data injection via pack
   routine:
     ast_rewrite_name: true            # AST-level routine naming; string-replace banned
-    enforce_shape_on_intake: true     # fails intake if template violates routine_shape
+    enforce_shape_on_intake: true     # fails intake if pack violates routine_shape
 
 # ───────────────────────────────────────────────────────────────
 # 2. ROUTINE SHAPE — defaults every file must satisfy

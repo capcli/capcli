@@ -156,7 +156,7 @@
         - Interaction — _pending_asks (see governor.md#Suspension-registry)
         - Triggers — _watch_cursors, _bindings (see plugins.md#Capabilities)
         - Queues — _outbox_events, _inbox (see #Outbox-inbox)
-        - State — _suspended_tasks, _templates (see governor.md#Suspension-registry)
+        - State — _suspended_tasks, _packs (see governor.md#Suspension-registry)
         - Metrics — routine_stats (see lifecycle.md#Stage-map)
       - Roster invariant
         - Fifteen kernel tables total

@@ -64,7 +64,7 @@ Every single refusal, denial, yield, and crash condition across all 11 CLI nouns
 
 | ID | Screen ID | Exit | Domain | Condition | Line 1 ACTION | Diagnostic Needle / Remedy Text |
 |---|---|---|---|---|---|---|
-| R17 | `template.new.refusal.shape_violation` | 3 | `validation` | `bad_shape` | `ACTION: capcli template new <name> --type routine` | `remedy: routine exceeds limits: 2,000-token envelope (LOC unrestricted), cyclomatic complexity 10, 8 params; split the scaffold into composed routines` |
+| R17 | `pack.new.refusal.shape_violation` | 3 | `validation` | `bad_shape` | `ACTION: capcli pack new <name> --type routine` | `remedy: routine exceeds limits: 2,000-token envelope (LOC unrestricted), cyclomatic complexity 10, 8 params; split the scaffold into composed routines` |
 | R18 | `routine.prove.denial.policy` | 2 | `policy.authorizer` | `illegal_leaf` | `ACTION: capcli inspect cap://<name>` | `remedy: forbidden leaf: external API calls banned in db.txn` |
 | R19 | `routine.ship.denial.trust` | 2 | `policy.trust` | `tier2_refusal` | `ACTION: capcli run <cap> --env sim` | `remedy: E045 pinned trust forbidden on Tier 2 macOS/Win` |
 | R20 | `routine.ship.success.rolled_back` | 0 | `policy.authorizer` | `rolled_back` | `ACTION: capcli routine prove <name> --env sim` | `remedy: canary telemetry spike triggered auto-rollback` |
@@ -122,7 +122,7 @@ Every single refusal, denial, yield, and crash condition across all 11 CLI nouns
 | ID | Screen ID | Exit | Domain | Condition | Line 1 ACTION | Diagnostic Needle / Remedy Text |
 |---|---|---|---|---|---|---|
 | R39 | `env.new.denial.cap` | 2 | `policy.authorizer` | `cap_exceeded` | `ACTION: capcli env list` | `remedy: maximum 5 environments reached; remove stale worktrees` |
-| R40 | `template.pack.denial.size_limit` | 2 | `policy.template` | `size_limit`| `ACTION: capcli template pack <dir>` | `remedy: world template bundle exceeds 5MB ceiling; prune assets or split the bundle` |
+| R40 | `pack.bundle.denial.size_limit` | 2 | `policy.pack` | `size_limit`| `ACTION: capcli pack bundle <dir>` | `remedy: world pack bundle exceeds 5MB ceiling; prune assets or split the bundle` |
 | R41 | `env.remove.denial.crypto_sig` | 2 | `policy.authorizer` | `confirmation` | `ACTION: open http://127.0.0.1:4040/admin` | `remedy: production teardown requires hardware challenge signature` |
 | R42 | `env.merge.refusal.plan_conflict` | 3 | `compile` | `conflict` | `ACTION: git pull origin main` | `remedy: target schema migration plan conflict; rebase worktree` |
 

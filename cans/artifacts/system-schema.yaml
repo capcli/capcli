@@ -276,13 +276,13 @@ tables:
       - [[status, resume_at]]
       - [frame_id]
 
-  _templates:
-    description: "Imported blueprints and scaffolds backing tpl:// URP resolution"
+  _packs:
+    description: "Imported blueprints and scaffolds backing pack:// URP resolution"
     sys: true
     imm_cols: [urp, bundle_hash]
     columns:
       id: pk
-      urp: text! unique                # tpl://routine/webhook_receiver
+      urp: text! unique                # pack://routine/webhook_receiver
       kind: text!                      # world | routine
       bundle_hash: text!               # sha256 checksum of bundle
       min_kernel_version: text!        # compatibility floor

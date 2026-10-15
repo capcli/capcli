@@ -14,7 +14,7 @@ Trust concepts for human readers live in [The Trust Engine](../understand/trust-
 | **reviewed** | Proven in simulation, signed off | Bulk operations unlocked, promoted-by identity recorded |
 | **pinned** | Hardened production baseline | Tier 1 host required, unattended schedules permitted, summary audit |
 
-Imported routines and world templates enter at draft with zero promotional credit. Blueprints confer nothing; evidence confers everything.
+Imported routines and world packs enter at draft with zero promotional credit. Blueprints confer nothing; evidence confers everything.
 
 ---
 

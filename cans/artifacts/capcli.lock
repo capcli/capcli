@@ -13,6 +13,6 @@ components:
   schema: "sha256:7c8b2a...03"
   storage: "sha256:2d1e9f...64"
   masking: "sha256:4a3b7c...11"
-  templates: "sha256:9e8d7c...22"
+  packs: "sha256:9e8d7c...22"
   campaigns: "sha256:6f5e4d...33"
   client: "sha256:0a1b2c...44"

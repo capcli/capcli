@@ -23,7 +23,7 @@ Think of trust as security clearances for code. Every routine, query, and API ve
 ---
 
 ### 1. Draft: Toddler Mode
-Every newly written routine, imported template, or freshly synced API verb starts here. Zero exceptions.
+Every newly written routine, imported pack, or freshly synced API verb starts here. Zero exceptions.
 
 * **Max rows affected:** 10 (Dev allows 100 so you can seed test data without crying).
 * **Secrets:** Completely invisible. Try to `SELECT value FROM secrets` and the C authorizer laughs in your face (`exit 2`).
