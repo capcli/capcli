@@ -4,22 +4,16 @@
     - World definitions
       - dev environment
         - Purpose — birthplace for authoring
-        - Trust rungs — draft, reviewed, pinned
-        - Platform tier — 1 or 2 permitted
         - Live risk — none
-        - Trust — see governance.md#The-ladder
+        - Matrix — see governance.md#Weakest-link-matrix
       - sim environment
         - Purpose — proving ground for prod candidates
         - Data — seeded from prod, masked
-        - Trust rungs — reviewed, pinned
-        - Draft only under routine prove
-        - Platform tier — 1 or 2 permitted
         - Live risk — none
-        - Definition — see routines.md#Procedure-layer
+        - Draft prove exception — see governance.md#Weakest-link-matrix
+        - Matrix — see governance.md#Weakest-link-matrix
       - prod environment
         - Purpose — live operational destination
-        - Trust rungs — pinned only
-        - Platform tier — tier 1 only
         - Live risk — real business state
         - Matrix — see governance.md#Weakest-link-matrix
     - Orthogonality
@@ -357,12 +351,10 @@
       - Deprecated APIs — spec removal
       - Definition — see #Circuit-breaker
     - Circuit breaker
-      - Failure rate breach triggers demotion
-      - Demotes pinned to reviewed
-      - Exactly one rung, never multi
+      - Trigger — see governance.md#Promotion-gates
+      - Demotes pinned to reviewed, one rung
       - Suspends active crons
       - Alerts Cockpit PWA
-      - Definition — see governance.md#The-ladder
     - Version retention
       - Window — see artifacts/governance.yaml#routine_shape
       - Rollback reaches any version in window

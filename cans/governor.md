@@ -12,9 +12,9 @@
       - Pure compute stays on fast path
       - In-memory transforms stay on fast path
     - Physics constraints
-      - SQLite micro locks held under 15ms
+      - Micro lock ceiling — see world.md#Lifetime-law
       - Zero open transactions during egress
-      - State untouchable on any non-zero exit
+      - State untouchable on non-zero exit
       - Contract — see kernel.md#Exit-code-law
     - Caller contract
       - ctx.call returns payload or yields
@@ -33,10 +33,9 @@
       - Concerns — see kernel.md#The-5-concerns
   - Fast path
     - Trigger conditions
-      - Pure compute and parsing
-      - Local AST transformation
-      - Format conversion and validation
-      - In-memory calculation and filtering
+      - Non-I/O compute and transforms
+      - No wire egress required
+      - No disk mutation required
       - Resolves under 15ms wall clock
     - Behavior
       - Kernel executes plugin process inline

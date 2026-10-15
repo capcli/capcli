@@ -41,11 +41,10 @@
         - Wasmtime sandbox on Termux
         - Degraded isolation warning emitted
     - Tier pairing
-      - Dev — tier 1 or 2, all rungs
-      - Sim — tier 1 or 2, reviewed and pinned
-      - Prod — tier 1 only, pinned only
-      - Illegal pairs deny with exit 2
-      - Matrix — see governance.md#The-ladder
+      - Legal and illegal pairs — see governance.md#Weakest-link-matrix
+      - Breach exits 2 at pre-flight
+      - Waiver mechanic — see interface.md#Run-noun
+      - Enforcement — see kernel.md#Exit-code-law
     - Platform probes
       - sys doctor reports host OS and tier
       - Reports permitted environments list
@@ -239,11 +238,10 @@
       - Path restriction to plugin checkout
       - Plugin staging — see plugins.md#Installation-lifecycle
     - Execution limits
-      - Watchdog kill at 300s wall clock
-      - Wall clock distinct from fuel
-      - Response size cap via truncation flag
+      - Watchdog — see governor.md#Watchdog-interaction
+      - 300s wall clock ceiling, exit 4
+      - Response cap via truncation flag
       - Ops ceiling via governance file
-      - Fuel decoupling — see governor.md#Watchdog-interaction
     - External jail
       - sys exec <cmd> --sandbox
       - One-shot command sandboxing

@@ -44,18 +44,10 @@
         - Rungs — pinned only
         - Platform tier — 1 only
         - Live risk — real business state
-      - Iron invariant 1
-        - Prod needs tier 1 plus pinned
-        - Missing condition exits 2 pre-flight
-        - Codes — E045_PROD_TIER1_MANDATE
-        - Code — E046_TRUST_VIOLATION
-      - Iron invariant 2
-        - Tier 2 confined to dev and sim
-        - --env prod from tier 2 refuses
-        - Platform — see sandbox.md#Platform-tiers
-      - Iron invariant 3
-        - Pinned runs on tier 2 in dev or sim
-        - Tier 1 requirement scoped to prod
+      - Breach semantics
+        - E045_PROD_TIER1_MANDATE on prod tier 2
+        - E046_TRUST_VIOLATION on rung breach
+        - Exit 2 pre-flight, state untouched
         - Environment bounds data, trust bounds capability
     - Ladder laws
       - Monotonic ascent
@@ -268,32 +260,7 @@
       - Fuel starvation halts spokes exit 2
       - Preemption floor triggers exit 6
       - Priority classes — see governor.md#Priority-classes
-    - Cascade view in inspect
-      - Pre-flight block
-        - can_invoke_now boolean verdict
-        - blocking_reasons array on deny
-        - sim_gaps array for missing providers
-        - Envelope shape — see interface.md#CLI-surface
-      - Constraint resolution
-        - tightest_constraint names first block
-        - Null while headroom lasts
-        - effective_limits formats min() formula
-        - Order — fuel, session, cadence, ceiling
-      - Budget status block
-        - session_fuel_remaining — integer
-        - cadence_status — quota headroom
-        - ceiling_status — spend ledger
-        - Composition — see artifacts/governance.yaml
-      - Composition block
-        - max_nesting_depth — 5 by default
-        - child_routines — declared callees
-        - budget_inheritance — min
-        - Reference — see plugins.md#Composition
-      - Refusal rendering
-        - Failing pillar named in remedy
-        - Attempted_op named on exhaustion
-        - Ancestor remaining for context
-        - Envelope — see kernel.md#Diagnostic-output-law
+    - Cascade view — see #Fuel-formula
   - Exhaustion
     - Exhaustion event
       - Payload — frame_id, routine, blocking_level
@@ -359,11 +326,10 @@
         - Denial cites parent frame remaining
         - Never the full frame tree
         - Envelope shape — see interface.md#CLI-surface
-    - Watchdog distinction
-      - Wall clock over 300s kills guest
-      - Kill exits 4, not 2
-      - Watchdog involuntary, yield voluntary
-      - Definition — see governor.md#Watchdog-interaction
+    - Watchdog — see governor.md#Watchdog-interaction
+      - Kill exits 4, involuntary
+      - Yield exits 6, voluntary
+      - Wall clock distinct from fuel
     - Pre-flight prevention
       - can_invoke_now returns false
       - blocking_reasons carries detail
@@ -374,26 +340,6 @@
       - No --override-budget accepted
       - Parser rejects at exit 3
       - Precedence cannot be loosened
-    - Fuel-cap forensics
-      - Localization
-        - sys audit trace pinpoints leaf op
-        - Failing leaf named in denial payload
-        - Forensics — see effect.md#Failure-forensics
-      - Root cause
-        - Usually policy, rarely routine
-        - Policy ceiling too tight for workload
-        - Fix policy, never bypass routine
-        - Reference — see #Limits-and-refusals
-      - Remediation pattern
-        - Inspect frame consumed vs declared
-        - Tighten routine or raise ceiling
-        - Never add override flag
-        - Interface — see interface.md#Refusals-and-banned-operations
-      - Cross-frame reconciliation
-        - Unspent fuel reconciles to parent
-        - Parent sees exact child burn
-        - Zero silent truncation anywhere
-        - Event — see effect.md#Kernel-event-payloads
   - Promotion gates
     - Monotonic pipeline
       - draft → reviewed → pinned only

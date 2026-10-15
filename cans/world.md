@@ -64,8 +64,10 @@
     - Lifetime law
       - Write locks held only during commit
       - Never held across agent execution
-      - User-space transactions under 15ms
-      - Kernel migration swaps under 20ms
+      - User-space txn ceiling — 15ms
+      - Migration swap ceiling — 20ms
+      - Breach exits 2, rollback instant
+      - Egress never inside open txn
     - Network isolation
       - Zero network calls inside transactions
       - ctx.api.call inside ctx.txn denied

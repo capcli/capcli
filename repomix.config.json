@@ -28,7 +28,6 @@
     }
   },
   "include": [
-      "README.md",
    //   "docs",
    //    "cans/artifacts/wireframe",
       "cans/",
@@ -43,6 +42,7 @@
     "useDotIgnore": true,
     "useDefaultPatterns": true,
     "customPatterns": [
+	"README.md",
 	".git/",
 	"repomix.md",
 	"cans/_adr",

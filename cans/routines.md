@@ -2,9 +2,8 @@
 <!-- ref-by: governor.md, plugins.md, interface.md, governance.md -->
   - Procedure layer
     - Substrate
-      - Python .py files — first class
-      - JavaScript .js files — second class
-      - TypeScript .ts files — third class
+      - Python .py — primary runtime
+      - JS .js and TS .ts — secondary
       - Declared binaries — native executables
       - Location — routines/ directory
     - Purpose
@@ -79,8 +78,9 @@
       - Frame fields — see governance.md#Budget-frames
     - Wall clock
       - Decoupled from fuel
-      - Watchdog kills past 300s
-      - Definition — see governor.md#Watchdog-interaction
+      - 300s ceiling, exit 4 on breach
+      - Kill mechanics — see governor.md#Watchdog-interaction
+      - Voluntary yield exits 6, not 4
     - Pagination posture
       - Routine encapsulates iteration internally
       - Multi-turn LLM pagination banned

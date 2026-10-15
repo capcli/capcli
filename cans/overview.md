@@ -82,26 +82,9 @@
       - Template has zero runtime presence
       - Pack is cartridge, never execution
   - The pack distribution model
-    - Kernel packs
-      - Ship once-native modules
-      - capcli.pack.api — api-gateway bundle
-      - capcli.pack.bind — scheduler bundle
-      - capcli.pack.ping — notify bundle
-      - capcli.pack.storage — storage bundle
-      - capcli.pack.federation — mesh bundle
-      - Contents — plugin, schema, routines, noun
-      - Enter at reviewed trust rung
-    - Application packs
-      - Ship business solutions
-      - capcli.pack.shopify — e-commerce
-      - capcli.pack.stripe-billing — payments
-      - Contents — plugins, schemas, routines
-      - Enter at draft trust rung
-    - Community packs
-      - User-published bundles
-      - Third-party integrations
-      - Same trust floor as application
-      - Enter at draft trust rung
+    - Pack inventory — see marketplace.md#Pack-taxonomy
+    - Tier declaration — kernel, application, community
+    - Entry rungs — reviewed, draft, draft
     - Install experience
       - plugin install capcli.pack.api
       - Restores old muscle memory

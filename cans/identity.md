@@ -294,11 +294,10 @@
       - PID-keyed leases banned
       - Identity and lifecycle — see world.md#Claims-lease
     - Three-tier locking
-      - Macro lease — claims, minutes
-      - Meso fence — OCC state_fence
-      - Micro lock — SQLite BEGIN IMMEDIATE
-      - All three non-overlapping
-      - Definition — see kernel.md#Unified-3-phase-engine
+      - Macro — claims lease, see world.md#Claims-lease
+      - Meso — OCC state_fence
+      - Micro — BEGIN IMMEDIATE, see world.md#Lifetime-law
+      - Non-overlapping by design
     - Preemption
       - SIGTERM maps to exit 6 yield
       - Yield preserves Layer 1 claims
@@ -415,10 +414,10 @@
       - Manual session tracking prohibited
       - Reference — see #Harness-markers
     - Turn-zero orientation
-      - Every harness turn runs overview
-      - Injects reality snapshot
-      - Snapshot under 60 tokens
-      - Canonical routine — see routines.md#Session-Overview-Primer
+      - Contract — see routines.md#Session-Overview-Primer
+      - Trigger — every harness turn boot
+      - Budget-exempt up to 60 tokens
+      - Scope — kernel session, not harness session
     - Scoping
       - Session id rides every frame
       - Session id rides every audit event

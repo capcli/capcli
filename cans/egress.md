@@ -91,11 +91,10 @@
         - Plaintext never reaches IPC payloads
         - Plaintext never reaches _audit
         - Definition — see kernel.md#Boundary-isolation
-      - Redaction rule
-        - Every lease-scoped byte scrubs
-        - Replacement — [REDACTED_VAULT_TOKEN]
+      - Redaction rule — see #Wire-scrubber
         - Applies to output and audit
-        - Reference — see #Wire-scrubber
+        - Leak panic exits 5
+        - Buffers zeroized post-dispatch
     - Prove-run secret leases
       - Minting
         - routine prove --env sim mints lease
@@ -241,11 +240,10 @@
       - Prod-only verbs route to mock fixtures
       - Taxonomy — see lifecycle.md#Environments
   - Boundary cases
-    - Suspended secret access
-      - Headless execution exits 3 on missing secret
-      - Interactive sessions pause via ask
+    - Suspended secret access — see #Provisioning-workflow
+      - Headless exits 3, interactive pauses
       - Auto-refresh covers expiring tokens
-      - Provisioning workflow canonical here
+      - Resolution precedes suspension
     - First prod call
       - Requires contract proof hash
       - Counts call_number and remaining

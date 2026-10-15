@@ -24,7 +24,8 @@
       - rule — schema compilation path
       - doc — document reading path
       - template — blueprint path
-      - Nine reserved, plugin cannot claim
+      - Nine reserved, cannot alias or extend
+      - Enforced at install, exit 3 on breach
     - Plugin nouns (dynamic)
       - cli_noun declared in plugin manifest
       - Registered at plugin install
@@ -33,11 +34,9 @@
       - Registration — see plugins.md#CLI-noun-registration
     - Prefix standard
       - [environment:platform tier] prepended to output
-      - Legal pairs — dev:tier_1, dev:tier_2
-      - Legal pairs — sim:tier_1, sim:tier_2
-      - Legal pair — prod:tier_1 only
-      - Illegal pair — prod:tier_2
-      - Matrix — see governance.md#Weakest-link-matrix
+      - Legal pairs — see governance.md#Weakest-link-matrix
+      - Illegal pair denial exits 2
+      - Banner on tier 2 — see #Tier-2-banner
     - Caller categories
       - [harness] — safe for autonomous run
       - [human] — requires interactive approval
@@ -48,14 +47,7 @@
       - Banner rendered on stderr
       - Machine field in --json envelope
       - Platform — see sandbox.md#Platform-tiers
-    - Reserved nouns
-      - run — dispatch primitive
-      - sys — kernel operations
-      - plugin — lifecycle manager
-      - db, routine, environment
-      - rule, doc, template
-      - Cannot be aliased or extended
-      - Enforced at install, exit 3 on breach
+    - Reserved nouns — see #The-9-kernel-nouns
     - Projection failure handling
       - Canonical fallback — capcli plugin <id> <verb>
       - Manifest malformed — fallback
@@ -91,10 +83,10 @@
       - Never persisted or defaulted
       - Platform — see sandbox.md#Platform-tiers
     - Turn-zero contract
-      - Harness invokes overview every turn
-      - Snapshot under 60 tokens
-      - Snapshot carries active fuel, locks, sensory inbox
-      - Canonical primer — see routines.md#Session-Overview-Primer
+      - Primer — see routines.md#Session-Overview-Primer
+      - Trigger — every harness turn
+      - Budget-exempt, under 60 tokens
+      - Locks and sensory inbox included
     - Aliases
       - capcli sql aliases run sql
       - capcli search aliases run search
@@ -250,9 +242,10 @@
   - DB noun
     - Lock
       - db lock <table>:<ref> --ttl <duration>
-      - Claims Layer 1 lease
+      - Acquires Layer 1 lease
+      - Flags — see world.md#Claims-lease
       - --takeover acquires stale claim
-      - Claims — see world.md#Claims-lease
+      - --abandon releases with --reason
     - Unlock
       - db unlock <target>
       - db unlock <target> --abandon
@@ -647,49 +640,18 @@
       - Designed denial teaches gate constraints
       - Safety order — read, dry-run, denial, write
       - Fail-closed — see kernel.md#Fail-closed-stance
-    - Human journey stages
-      - S0 — help stub and doctor check
-      - S1 — intent capture in natural language
-      - S2 — proposal preview via dry-run
-      - S3 — initial safe select query
-      - S4 — deliberate unbounded write denial
-      - S5 — successful bounded write with intent
-      - S6 — snapshot mutation and restore
-      - S7 — search and inspect loop
-      - S8 — scaffold routine from repeated ops
-      - S9 — sim prove then evidence promotion
-      - S10 — sys doctor --report receipt
-    - Human denial pedagogy
-      - S4 denial cites require_where rule
-      - Remediation printed with carets
-      - Learns gate before write success
-      - Denials — see effect.md#Denials
-    - Human kernel pack install
-      - Install capcli.pack.api in S7
-      - capcli api import works after
-      - Muscle memory restored
-      - Packs — see marketplace.md#Pack-taxonomy
-    - Harness journey stages
-      - H0 — bootstrap via installed skill
-      - H0 — parse sys doctor --json or help
-      - H1 — discover via run search
-      - H1 — inspect catalog verbs and views
-      - H2 — rehearsal with run --dry-run
-      - H3 — dual probe local state and plugin
-      - H4 — hybrid rehearsal with routine prove
-      - H5 — parse denials via sys audit trace
-      - H6 — author overview routine
-      - H7 — prove with routine prove --env sim
+    - Human journey — S0 to S10
+      - Read → dry-run → denial → bounded write → prove → receipt
+      - Denial pedagogy at S4, see effect.md#Denials
+      - Pack install at S7, see marketplace.md#Pack-taxonomy
+    - Harness journey — H0 to H7
+      - Bootstrap → discover → rehearse → prove → orient
+      - Context grounding — see routines.md#Session-Overview-Primer
     - Harness context grounding
-      - Turn-zero overview every turn
-      - Snapshot under 60 tokens
-      - Active fuel, locks, sensory inbox
-      - Overview — see routines.md#Session-Overview-Primer
-    - Harness plugin discovery
-      - H1 lists plugin nouns available
-      - Inspect plugin://<id> shows surface
-      - Missing namespace error names pack
-      - Plugin list --nouns shows registry
+      - Orientation — see routines.md#Session-Overview-Primer
+      - Fires at every turn boot
+      - Budget-exempt, under 60 tokens
+      - Plugin discovery via plugin list --nouns
     - Anti-decisions
       - No blank templates or static tours
       - No kernel-generated schemas

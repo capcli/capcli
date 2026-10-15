@@ -235,40 +235,19 @@
       - Definition — see interface.md#Administrative-Cockpit-PWA
   - Test architecture
     - Unit tier (crates/capcli-core/tests/unit/)
-      - test_template.rs — bundle intake
-      - test_bytecode.rs — OpenWrite detection
-      - test_authorizer.rs — C callbacks
-      - test_routine_shape.rs — token and complexity
-      - test_api_quota.rs — token bucket math
-      - test_cycle_check.rs — DFS rejection
-      - test_hashchain.rs — sha256 links
-      - test_vault.rs — zeroize and AES
-      - test_noun_registry.rs — CLI noun collision
-      - test_namespace_registry.rs — ctx proxy
-      - test_schema_extension.rs — plugin tables
+      - Scope — authorizer, bytecode, shape, vault, registry
+      - Count — 11 modules
       - Engine — see kernel.md#Unified-3-phase-engine
+      - Location — crates/capcli-core/tests/unit/
     - Integration tier (tests/integration/)
-      - test_bwrap.rs — network isolation
-      - test_ipc_socket.rs — JSON-Lines over UDS
-      - test_storage_s3.rs — uploads and URLs
-      - test_api_proxy.rs — header reconciliation
-      - test_webhook.rs — HMAC signatures
-      - test_ping_timeout.rs — fail-closed timers
-      - test_mirror.rs — JSONL stream flushing
-      - test_trijail_macos.rs — Seatbelt profile
-      - test_trijail_windows.rs — AppContainer token
+      - Scope — jail, IPC, storage, webhook, mirror
+      - Count — 9 modules
+      - Cross-platform — Linux, macOS, Windows
       - Definition — see sandbox.md#Tri-Jail-engine
     - End-to-end tier (tests/e2e/)
-      - test_wireframe_fixtures.rs — golden CLI
-      - test_onboarding_human.rs — S0 to S10
-      - test_onboarding_harness.rs — H0 to H7
-      - test_budget_cascade.rs — min() inheritance
-      - test_recovery_drill.rs — VACUUM restore
-      - test_env_worktree.rs — fork to merge
-      - test_plugin_lifecycle.rs — install to GC
-      - test_kernel_pack.rs — capcli.pack.api round trip
-      - test_noun_swap.rs — generation CLI change
-      - test_namespace_swap.rs — ctx swap atomic
+      - Scope — onboarding, cascade, recovery, lifecycle
+      - Count — 10 modules
+      - Golden fixtures validate CLI surface
       - Onboarding — see interface.md#Onboarding
     - Fixtures
       - schema.fixture.yaml — test tables
@@ -420,202 +399,34 @@
         - Same diagnostic caret rendering
         - Definition — see kernel.md#Diagnostic-output-law
     - PR gate
-      - Trigger rules
-        - Config — .github/workflows/pr-gate.yml
-        - Root README changes skip CI
-        - docs triggers Astro and Trinity
-        - Envelope shape — see interface.md#CLI-surface
-      - Concurrency controls
-        - Group scoped to workflow and ref
-        - cancel-in-progress true
-        - Saves GitHub Actions minutes
-        - Config — see artifacts/cicd.yaml
-      - Execution budget
-        - PR gate SLA under 4 minutes
-        - Fail-closed on first failure
-        - Runs on PR and main push
-        - Config — see artifacts/cicd.yaml#sla
-      - Static analysis
-        - PWA build job
-          - bun install --frozen-lockfile
-          - bun run build to packages/pwa/dist
-          - Uploads pwa-dist artifact
-          - Definition — see interface.md#Administrative-Cockpit-PWA
-        - Astro docs job
-          - bun install --frozen-lockfile
-          - bun run build validates markdown
-          - Broken frontmatter halts gate
-          - Definition — see interface.md#Doc-noun
-        - Trinity job
-          - Python 3.11 on ubuntu-latest
-          - check-trinity.py runs
-          - L1 L2 L3 cages asserted
-          - Definition — see #Checker-tool
-      - Core engine testing
-        - Rust init
-          - Toolchain 1.85.0 pinned
-          - rust-cache caches artifacts
-          - pwa-dist downloaded before compile
-          - Definition — see #Rust-workspace-crates
-        - Static quality
-          - cargo fmt workspace-wide
-          - clippy -D warnings
-          - rule validate AST
-          - Definition — see world.md#Pre-flight-sub-checks
-        - Schema lock
-          - git diff --exit-code capcli.lock
-          - Uncommitted schema exits 3
-          - cargo test --workspace --lib
-          - Definition — see world.md#Pre-flight-sub-checks
-      - SDK verification
-        - TS SDK job
-          - setup-bun on ubuntu-latest
-          - bun install --frozen-lockfile
-          - bun test packages/ts
-          - Definition — see #Polyglot-packages
-        - Python SDK job
-          - setup-python 3.11
-          - ruff, pytest, maturin install
-          - maturin develop for FFI
-          - Definition — see #Polyglot-packages
-        - Job coordination
-          - test-py and test-rust depend on build
-          - Syntax errors block PR approval
-          - Gate success unlocks deep test
-          - Config — see artifacts/cicd.yaml
+      - Workflow — .github/workflows/pr-gate.yml
+      - SLA — under 4 minutes, fail-closed
+      - Jobs — PWA, Astro, Trinity, Rust, TS, Python
+      - Config — see artifacts/cicd.yaml#sla
+      - Concurrency — cancel-in-progress per ref
     - Deep test
-      - Trigger context
-        - Config — .github/workflows/deep-test.yml
-        - Runs on push to main branch
-        - SLA under 20 minutes
-        - Config — see artifacts/cicd.yaml#cost_controls
-      - Supply chain
-        - cargo-deny audits Rust dependencies
-        - Scans RustSec advisory database
-        - Denies non-compliant licenses
-        - Config — see artifacts/cicd.yaml
-      - Multi-OS strategy
-        - fail-fast disabled across matrix
-        - Ubuntu, macOS, Windows hosts
-        - rust-cache keys by target OS
-        - Definition — see sandbox.md#Platform-tiers
-      - Tier 1 Linux
-        - Kernel config
-          - AppArmor restrict flag set
-          - unprivileged_userns_clone enabled
-          - bwrap and libseccomp installed
-          - Definition — see sandbox.md#Tri-Jail-engine
-        - Isolation checks
-          - test_bwrap asserts tmpfs wipe
-          - Raw socket trapping verified
-          - Syscall enforcement verified
-          - Definition — see sandbox.md#Network-jail
-        - PWA prep
-          - setup-bun installs runtime
-          - bun run build compiles Cockpit
-          - rust-embed links assets
-          - Definition — see interface.md#Administrative-Cockpit-PWA
-      - Tier 2 matrix
-        - Darwin validation
-          - Tier 2 virtualization rules
-          - host.degraded_isolation warning
-          - Unit, parser, AST tests only
-          - Definition — see sandbox.md#Platform-tiers
-        - Windows validation
-          - Tier 2 native Windows
-          - Named pipe IPC test
-          - Path separator assertions
-          - Definition — see sandbox.md#Channel-A
-        - E2E suite
-          - cargo test --workspace --tests
-          - Wireframe fixtures validated
-          - Recovery drill tested
-          - Definition — see #End-to-end-tier
+      - Workflow — .github/workflows/deep-test.yml
+      - Trigger — push to main, SLA under 20 min
+      - Matrix — Ubuntu, macOS, Windows
+      - Supply chain — cargo-deny, RustSec audit
+      - Config — see artifacts/cicd.yaml#cost_controls
+      - Tiers — see sandbox.md#Platform-tiers
     - Release pipeline
-      - Triggers
-        - Config — .github/workflows/release.yml
-        - Tag pattern v[0-9]+.[0-9]+.[0-9]+*
-        - Tags write-once per version
-        - Definition — see marketplace.md#Immutable-versioning
-      - Token permissions
-        - contents write for tags and assets
-        - packages write for binary and containers
-        - id-token write for OIDC PyPI
-        - Config — see artifacts/cicd.yaml
-      - PWA prerequisite
-        - bun run build with Vite 6
-        - Upload pwa-dist artifact
-        - Embed in release daemon binary
-        - Definition — see interface.md#Administrative-Cockpit-PWA
-      - Binary matrix
-        - Linux musl
-          - cargo-zigbuild for musl
-          - x86_64 target compiled
-          - aarch64 target cross-compiled
-          - Definition — see #Build-outputs
-        - Darwin
-          - x86_64 Intel release binary
-          - aarch64 Apple Silicon binary
-          - Static system library linkage
-          - Definition — see #Build-outputs
-        - Windows
-          - x86_64 MSVC target
-          - .exe extension applied
-          - Artifacts staged in dist/
-          - Definition — see #Build-outputs
-      - SDK publishing
-        - npm publishes @capcli/sdk
-        - maturin wheel builds FFI
-        - PyPI via OIDC trusted publishing
-        - Definition — see marketplace.md#Publishing
-      - Attestation
-        - download-artifact consolidates binaries
-        - SHA256SUMS.txt generated
-        - Root anchored in release notes
-        - Definition — see effect.md#Event-integrity
-      - GitHub release
-        - softprops/action-gh-release attaches
-        - Auto-generates release notes
-        - Public and permanent, no draft
-        - Definition — see marketplace.md#Publishing
+      - Workflow — .github/workflows/release.yml
+      - Trigger — tag v*.*.*, write-once
+      - Targets — Linux musl, Darwin, Windows MSVC
+      - SDK — npm, PyPI OIDC, maturin wheel
+      - Attestation — SHA256SUMS anchored in notes
+      - Definition — see marketplace.md#Publishing
       - Skill publish
         - skills/*/SKILL.md frontmatter lint
         - Skill export — see identity.md#Environment-variables
         - Ships to ClawHub with SDK
         - Definition — see identity.md#Harness-markers
     - Verification checklist
-      - Pre-build
-        - CI check 0 — workspace diff
-        - dorny/paths-filter evaluates tree
-        - Skips redundant jobs
-        - Config — see artifacts/cicd.yaml
-      - Compile
-        - CI check 1 — schema AST syntax
-        - CI check 2 — relational semantics
-        - Native DFS cycle rejection
-        - Definition — see world.md#Pre-flight-sub-checks
-      - Integrity
-        - CI check 3 — lockfile integrity
-        - CI check 4 — Trinity integrity
-        - CI check 5 — UI asset compilation
-        - Definition — see #Trinity-integrity
-      - Runtime
-        - CI check 6 — platform sandboxing
-        - test_bwrap exercises jail
-        - Release check — binary distribution
-        - Release check — polyglot distribution
-        - Sandbox — see sandbox.md#Tri-Jail-engine
-      - PR check sequence
-        - PR check 1 — syntax and expansion
-        - PR check 2 — semantic acyclic
-        - PR check 3 — AST complexity lint
-        - PR check 4 — token cage verification
-        - PR check 5 — migration rehearsal
-        - PR check 6 — cryptographic lockfile sync
-        - Checks — see world.md#Pre-flight-sub-checks
-      - Token cage ceilings
-        - Routine file — 2000 tokens max
-        - Output payload — 500 tokens max
-        - Leaf prompt slice — 500 tokens max
-        - Search description — 60 tokens max
-        - Definition — see routines.md#Shape-constraints
+      - Pre-build — workspace diff, path filter
+      - Compile — AST syntax, semantics, DFS
+      - Integrity — lockfile, Trinity, UI assets
+      - Runtime — sandbox, binary, polyglot
+      - Token ceilings — see routines.md#Shape-constraints
+      - Config — see artifacts/cicd.yaml
