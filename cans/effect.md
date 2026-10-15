@@ -62,7 +62,7 @@
         - Swarm — node_join, node_reap, preemption_yield
         - Kernel — panic secret_leak, genesis data_loss, panic sink_loss
         - Rule — config_proposed, config_committed
-        - API — sync, token_refresh, first_prod_call
+        - API — sync, token_refresh, first_prod_call, call_sim
         - Budget — frame_push, frame_pop, exhausted
         - Serve — request, response
         - Promotion — sla_breached, canary_veto

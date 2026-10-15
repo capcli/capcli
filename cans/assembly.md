@@ -26,6 +26,8 @@
       - policy.yaml — behavioral rules
       - governance.yaml — structural limits
       - world.sql — deterministic DDL dump
+      - artifacts/wireframe/ — golden CLI fixtures, edgeless canvas
+      - artifacts/test-plan/ — behavioural cases, 1:1 with crate tests
       - Definition — see world.md#Dual-schema
     - Instance runtime home
       - Path — <workspace>/capcli/
@@ -42,6 +44,7 @@
       - envs/ — environment partitions
       - audit/ — daily JSONL exports
       - storage/ — local blob namespace
+      - docs/ — version-controlled markdown specs and playbooks
     - External runtime paths
       - /run/capcli/kernel.sock — daemon IPC
       - /run/capcli/<ws>.sock — federated peer sockets
@@ -99,6 +102,8 @@
       - context_runtime.py — now, uuid, cursor
       - context_proxy.py — plugin namespace proxy
       - native_bridge.py — FFI and shared memory
+      - context_api.py, context_quota.py — egress and quota wrappers
+      - context_storage.py, context_ping.py — blob and ask wrappers
       - cli.py — plugin CLI surface builder
       - Ctx contract — see routines.md#The-ctx-contract
     - Distribution
@@ -306,7 +311,7 @@
       - Workflow — .github/workflows/deep-test.yml
       - Trigger — push to main, SLA under 20 min
       - Matrix — Ubuntu, macOS, Windows
-      - Supply chain — cargo-deny, RustSec audit
+      - Supply chain — cargo-deny, RustSec audit — license policy enforced
       - Config — see artifacts/cicd.yaml#cost_controls
       - Tiers — see sandbox.md#Platform-tiers
     - Release pipeline
@@ -322,9 +327,9 @@
         - Ships to ClawHub with SDK
         - Definition — see identity.md#Harness-markers
     - Verification checklist
-      - Pre-build — workspace diff, path filter
-      - Compile — AST syntax, semantics, DFS
-      - Integrity — lockfile, Trinity, UI assets
-      - Runtime — sandbox, binary, polyglot
+      - 1 Pre-build — workspace diff, path filter
+      - 2 Compile — AST syntax, semantics, DFS
+      - 3 Integrity — lockfile, Trinity, UI assets
+      - 4 Runtime — sandbox, binary, polyglot
       - Token ceilings — see routines.md#Shape-constraints
       - Config — see artifacts/cicd.yaml

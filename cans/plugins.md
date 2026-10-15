@@ -54,6 +54,11 @@
       - Ping channels — human notification sinks
       - Audit sinks — WORM notary adapters
       - Federation transports — peer mesh adapters
+      - Standard plugin contracts
+        - API catalog — state machine and provider profile: see egress.md#Vault-proxy
+        - Scheduler — binding address and signature verification: see lifecycle.md#Schedule
+        - Notify — ask caps and lint advisory: see governance.md#Limits-and-refusals
+        - Storage, serve, federation — each pack spec owns its specifics
     - Serve lifecycle
       - CLI configuration
         - bind endpoint commits to workspace.db
@@ -199,6 +204,9 @@
       - Nesting — hops count toward depth 5 cap
     - Dial budget
       - Default — 10s total
+      - Chain transport — call_chain carries (workspace, idempotency_key) per hop
+      - Session isolation — caller session never crosses workspace boundary
+      - Network partition — lost Hub connection aborts exit 5
       - Backoff — exponential against peer cold start
       - Exhaustion — exit 4 E055_FEDERATION_UNREACHABLE
       - Config — see artifacts/policy.yaml#network.dial

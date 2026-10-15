@@ -70,6 +70,8 @@
       - inspect <ptr> — unified resolver
     - URP dispatch
       - cap://routine@version — local routine
+      - vault://, audit://, ask://, quota:// — DB entity pointers
+      - tpl://, policy:// — artifact pointers
       - plugin://<id>/<verb> — plugin verb
       - ws://workspace/routine@version — federated
       - db://table — DB entity inspection
@@ -621,8 +623,11 @@
       - Safety order — read, dry-run, denial, write
       - Fail-closed — see kernel.md#Fail-closed-stance
     - Journey stages
-      - Human — read, dry-run, denial, bounded write, prove, receipt
-      - Harness — bootstrap, discover, rehearse, prove, orient
+      - Harness S0 bootstrap, S1 discover, S2 rehearse
+      - Harness S3 prove, S4 orient, S5 draft
+      - Harness S6 simulate, S7 ship, S8 live, S9 monitor, S10 retire
+      - Human H0 read, H1 dry-run, H2 denial, H3 bounded write
+      - Human H4 prove, H5 receipt, H6 approve, H7 recover
       - Context grounding — see routines.md#Session-Overview-Primer
       - Pedagogical denials — see effect.md#Denials
       - Pack install — see marketplace.md#Pack-taxonomy

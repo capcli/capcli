@@ -40,6 +40,8 @@
       - Definition — see sandbox.md#Platform-tiers
     - Prod protection
       - Operations need cryptographic challenge
+      - git push --dry-run gate precedes any prod merge
+      - Merge scope — declarative schemas, routines, bundles only
       - WebAuthn or Passkey accepted
       - GPG or SSH key accepted
       - CLI flag bypass rejected exit 3
@@ -58,6 +60,7 @@
       - env use <name> — activate sticky context
       - env list, inspect, doctor — audit views
       - env merge <name> [target=prod]
+      - Rehearsal cycle — env use sim → run → sys audit tail → env use prod
       - env remove <name> — deprovision
       - Envelope shape — see interface.md#CLI-surface
   - Primitive scoping

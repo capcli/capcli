@@ -104,6 +104,7 @@
       - Read views — pre-defined SSOT queries
       - Triggers — policy-vetted SQLite triggers
       - Seed arrays — bounded initial rows
+      - Seed data — seed array, DDL-transactional, 50-row per-table cap
     - View governance
       - exposes — mandatory table list
       - scoped — principal-bound view marker
@@ -317,6 +318,7 @@
       - Human-readable suffixes permitted
     - Snapshot catalog
       - sys recover --list displays points
+      - Local cache retention — rolling 30-day disk window
       - Envelope shape — see interface.md#CLI-surface
       - Retention managed by maintenance
       - Config — see artifacts/governance.yaml#backup
@@ -348,7 +350,8 @@
       - Loads schema and audit sink only
       - Policy disabled in recovery mode
       - Read-only SQL only, exit 2 on write
-      - Allowlist — run sql, db dump, sys recover
+      - Allowlist — run sql, db dump, sys audit tail, sys backup, sys recover
+      - Alias parser — capcli sql rewrites to run sql before gating
       - Logs recovery_mode_entered on startup
     - Destruction as transition
       - Retirement marks uncallable

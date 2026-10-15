@@ -108,6 +108,12 @@ token_budget:
   estimate_chars_per_token: 3.5
   warn_threshold: 0.8
 
+redundancy:
+  word_frequency_threshold: 12
+  phrase_overlap_threshold: 0.7
+  cross_file_threshold: 2
+  stopwords: [the, a, an, of, to, in, for, and, or, with, must, shall, requires, capcli, kernel, agent, agents, routine, routines, policy, governance, audit, capability, capabilities, budget, trust, world, frame, frames, env, environment, prod, sim, stage, gate, gates, spec, session, intent, human, yaml, schema, write, writes, read, reads, node, nodes, file, files]
+
 overflow:
   max_node_chars: 95
   force_file_for: [code_block, table, diagram]

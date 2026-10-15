@@ -145,6 +145,15 @@
       - Predicate drift — see governor.md#Suspension-registry
     - Utility methods
       - ctx.log(msg) — audited log entry
+      - Execution guards
+        - Kernel-mediated egress; auth engines resolved at socket edge
+        - Pre-call quota; kernel-minted idempotency key persisted
+        - poll_until sleeps in Rust runtime; no Python busy-wait
+      - Data protection
+        - Raw records stay inside sandbox; egress truncation at token cap
+        - System columns created_by, modified_by populated by kernel
+      - System introspection
+        - Read-only on _audit, _api_quota, _budget_frames
       - ctx.params — validated input map
   - Interior rules
     - Execution model
@@ -174,6 +183,10 @@
       - All exit 3 at AST parse
     - Banned rationale
       - Break DAG linearity and tx boundaries
+      - Invariants and anti-decisions
+        - No YAML procedures; no module imports for authority
+        - No self-promotion; no silent edits; no deletion
+        - Pre-execution validation, sandbox isolation, hash-pinned versions
       - Break replay determinism
       - Break causal chain integrity
       - Causal DAG — see effect.md#Causal-DAG
@@ -259,6 +272,9 @@
       - Leaf-level p50 and p95 duration
       - Per-leaf fuel consumption
       - Per-leaf wire byte count
+      - Architectural purpose
+        - Mirror views — shared_subsequences, primitive_cost, primitive_failures
+        - Consolidation input; regression tracking; cost attribution
       - Source views — see effect.md#Query-surfaces
   - Capability record
     - Purpose

@@ -214,6 +214,7 @@
       - Envelope shape — see interface.md#CLI-surface
     - Kernel principals
       - capcli-cron owns time triggers
+      - Execution token — ephemeral HMAC bound per _inbox task dispatch
       - capcli-watch owns webhook dispatches
       - capcli-serve owns endpoint requests
       - All provided by plugin packs

@@ -70,6 +70,7 @@
         - reviewed calls reviewed or pinned
         - draft cannot be a dependency
         - Cross-agent callees need reviewed or pinned
+        - Federated initiation floor — outbound ws:// calls need reviewed+
         - Federated callers need pinned rung
         - Exit 2 E042_FEDERATION_DENIED on breach
         - Canonical composition — see plugins.md#Composition
@@ -356,6 +357,9 @@
       - Vault — see egress.md#Prove-run-secret-leases
     - reviewed → pinned
       - 100% sim replay on masked data
+      - Ship gate — branch merged into prod worktree
+      - Ship gate — sim success rate >= 0.90
+      - Rehearsal mandate — templated routines pass contract suite in sim
       - Zero policy denials during replay
       - Live contract schema verification
       - Human or tier 1 CI sign-off
