@@ -67,8 +67,8 @@
       - budget/ — frame push and cascade
       - audit/ — hash chains and JSONL mirror
       - vault/ — AES-256-GCM decryption
-      - plugin/ — manifest parse and CLI projection
-      - Definition — see kernel.md#Layer-1-C-authorizer
+      - plugin/ — manifest parse and noun registry
+      - Concerns — see kernel.md#The-5-concerns
     - capcli-cli
       - Identity — crates/capcli-cli
       - Purpose — CLI executable
@@ -80,16 +80,16 @@
     - capcli-daemon
       - Identity — crates/capcli-daemon
       - Purpose — persistent daemon
-      - server.rs — axum HTTP/WS on 127.0.0.1:4040
+      - server.rs — axum HTTP/WS on 127.0.0.1
       - hub_rpc.rs — spoke JSON-RPC handler
       - ipc.rs — Unix domain socket listener
       - cron.rs — croner schedule evaluator
       - webhook.rs — inbound HMAC verification
       - reaper.rs — swarm heartbeat evaluator
       - yield_queue.rs — suspended task re-dispatch
-      - projection.rs — CLI projection mount/unmount
+      - plugin_registry.rs — CLI noun and ctx map
       - assets.rs — rust-embed Cockpit bundle
-      - Definition — see interface.md#Administrative-Cockpit-PWA
+      - Daemon — see interface.md#Administrative-Cockpit-PWA
     - Inter-crate flow
       - types — imported by core, cli, daemon
       - core — imported by cli and daemon only
@@ -175,36 +175,34 @@
       - Definition — see identity.md#Credential-binding
     - Domain 12 — plugin lifecycle (plugin/)
       - generation.rs — generation directory manager
-      - projection.rs — CLI surface merge
-      - projection_check.rs — collision detection
+      - noun_registry.rs — CLI noun registration
+      - namespace_registry.rs — ctx namespace registry
+      - schema_extension.rs — plugin table install
       - lease.rs — shared flock lease manager
       - gc.rs — safe-reclaim reclamation
       - verify.rs — binary sha256 vs lockfile
-      - Definition — see plugins.md#Generations
+      - Lifecycle — see plugins.md#Installation-lifecycle
   - Polyglot packages
     - TypeScript runtime (packages/ts)
       - Identity — @capcli/sdk
       - Zero runtime dependencies
       - routine.ts — decorator wrapper
       - param.ts — Param<T> type definitions
-      - ctx.ts — db, txn, api, call methods
+      - ctx.ts — kernel namespaces and proxy
       - ipc.ts — JSON-RPC client over UDS
       - cli.ts — plugin CLI surface builder
-      - Definition — see routines.md#The-ctx-contract
+      - Ctx contract — see routines.md#The-ctx-contract
     - Python runtime (packages/py)
       - Identity — capcli-py
       - Target >= 3.11
       - routine.py — @routine decorator
       - param.py — Param[T] typing
       - context_db.py — db method wrappers
-      - context_api.py — egress IPC bridge
       - context_runtime.py — now, uuid, cursor
-      - context_quota.py — quota inspection
-      - context_storage.py — blob wrappers
-      - context_ping.py — ask and notify handlers
+      - context_proxy.py — plugin namespace proxy
       - native_bridge.py — FFI and shared memory
       - cli.py — plugin CLI surface builder
-      - Definition — see routines.md#The-ctx-contract
+      - Ctx contract — see routines.md#The-ctx-contract
     - Distribution
       - npm publish on release tag
       - maturin wheel linking capcli_native.so
@@ -245,8 +243,10 @@
       - test_cycle_check.rs — DFS rejection
       - test_hashchain.rs — sha256 links
       - test_vault.rs — zeroize and AES
-      - test_projection.rs — CLI collision rules
-      - Definition — see kernel.md#Unified-3-phase-engine
+      - test_noun_registry.rs — CLI noun collision
+      - test_namespace_registry.rs — ctx proxy
+      - test_schema_extension.rs — plugin tables
+      - Engine — see kernel.md#Unified-3-phase-engine
     - Integration tier (tests/integration/)
       - test_bwrap.rs — network isolation
       - test_ipc_socket.rs — JSON-Lines over UDS
@@ -259,16 +259,17 @@
       - test_trijail_windows.rs — AppContainer token
       - Definition — see sandbox.md#Tri-Jail-engine
     - End-to-end tier (tests/e2e/)
-      - test_wireframe_fixtures.rs — golden CLI output
-      - test_onboarding_human.rs — S0 to S10 flow
-      - test_onboarding_harness.rs — H0 to H7 flow
+      - test_wireframe_fixtures.rs — golden CLI
+      - test_onboarding_human.rs — S0 to S10
+      - test_onboarding_harness.rs — H0 to H7
       - test_budget_cascade.rs — min() inheritance
       - test_recovery_drill.rs — VACUUM restore
-      - test_api_lifecycle.rs — spec sync to ship
       - test_env_worktree.rs — fork to merge
       - test_plugin_lifecycle.rs — install to GC
-      - test_projection_swap.rs — generation CLI change
-      - Definition — see interface.md#Onboarding
+      - test_kernel_pack.rs — capcli.pack.api round trip
+      - test_noun_swap.rs — generation CLI change
+      - test_namespace_swap.rs — ctx swap atomic
+      - Onboarding — see interface.md#Onboarding
     - Fixtures
       - schema.fixture.yaml — test tables
       - policy.fixture.yaml — test authorizer
@@ -356,22 +357,22 @@
         - Golden fixtures define CLI layouts
         - Screen JSON records exit codes
         - Trailer maps to trigger rule
-        - Definition — see interface.md#CLI-surface
+        - Surface — see interface.md#CLI-surface
       - Prompt campaign bank
         - doc://prompts serves triggers
-        - Trigger schema coordinates associations
-        - Screen id follows noun.verb descriptor
-        - Definition — see interface.md#Doc-noun
+        - Trigger schema coordinates
+        - Screen id follows noun.verb form
+        - Doc — see interface.md#Doc-noun
       - Documentation root
         - doc:// maps to markdown specs
         - Astro and Bun build docs site
         - Anchor slugs resolve to headers
-        - Definition — see interface.md#Doc-noun
+        - Doc — see interface.md#Doc-noun
       - Token cage ceilings
         - L1 trailer capped at 30 tokens
         - L2 envelope capped at 150 tokens
         - L3 leaf capped at 500 tokens
-        - Breach aborts verification with exit 1
+        - Breach aborts with exit 1
         - Config — see artifacts/cicd.yaml#trinity
     - Checker tool
       - Tool identity — tools/check-trinity.py
@@ -608,7 +609,7 @@
         - test_bwrap exercises jail
         - Release check — binary distribution
         - Release check — polyglot distribution
-        - Definition — see sandbox.md#Tri-Jail-engine
+        - Sandbox — see sandbox.md#Tri-Jail-engine
       - PR check sequence
         - PR check 1 — syntax and expansion
         - PR check 2 — semantic acyclic
@@ -616,7 +617,7 @@
         - PR check 4 — token cage verification
         - PR check 5 — migration rehearsal
         - PR check 6 — cryptographic lockfile sync
-        - Definition — see world.md#Pre-flight-sub-checks
+        - Checks — see world.md#Pre-flight-sub-checks
       - Token cage ceilings
         - Routine file — 2000 tokens max
         - Output payload — 500 tokens max

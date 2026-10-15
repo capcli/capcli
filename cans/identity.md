@@ -52,17 +52,9 @@
       - PID-only trust banned
       - Definition — see kernel.md#Unified-3-phase-engine
     - Identity markers
-      - CLAUDE_CODE_SESSION_ID
-      - CODEX_THREAD_ID
-      - CODEX_SESSION_ID
-      - CODEX_CONVERSATION_ID
-      - ANTIGRAVITY_CONVERSATION_ID
-      - HERMES_SESSION_KEY
+      - Registry — see #Environment-variables
     - Presence markers
-      - CLAUDECODE — Claude Code harness
-      - GEMINI_CLI — Gemini CLI harness
-      - CURSOR_AGENT — Cursor harness
-      - OPENCLAW_SHELL — OpenClaw harness
+      - Registry — see #Environment-variables
     - Attribution fallback
       - Presence-only markers map to agt_anon_<session>
       - Missing markers map to agt_anon_<session>
@@ -122,12 +114,45 @@
         - Network jail via unshared namespace
         - Virtualization via microVM multi-tenant
         - Definition — see sandbox.md#Network-jail
+    - Environment variables
+      - Harness markers (read)
+        - CLAUDE_CODE_SESSION_ID
+        - CODEX_THREAD_ID
+        - CODEX_SESSION_ID
+        - CODEX_CONVERSATION_ID
+        - ANTIGRAVITY_CONVERSATION_ID
+        - HERMES_SESSION_KEY
+        - CLAUDECODE, GEMINI_CLI, CURSOR_AGENT
+        - OPENCLAW_SHELL
+      - Kernel overrides (read)
+        - CAPCLI_SESSION — non-standard session id
+        - CAPCLI_WORKSPACE — project root anchor
+        - CAPCLI_RECOVERY — break-glass mode flag
+        - CAPCLI_AGENT_TOKEN — spoke HMAC token
+        - CAPCLI_SKILL — triggering skill name
+      - Secret ingestion (read)
+        - CAPCLI_SECRET_<NAME> — provision secret
+        - Precedence — process env over vault
+      - Kernel-set (write)
+        - CAPCLI_FRAME_ID — active frame id
+        - CAPCLI_ENVIRONMENT — active environment
+        - CAPCLI_TIER — detected platform tier
+      - Naming law
+        - Harness keys — vendor-prefixed, uppercase
+        - Kernel keys — CAPCLI_ prefix, uppercase
+        - Never overlap namespaces
+        - Never env-var secrets outside CAPCLI_SECRET_*
+      - Registration
+        - New kernel env var requires ADR
+        - New harness marker requires identity review
+        - Canonical home — this node
+        - Agents cite this section, never restate
   - Credential binding
     - Capability token
       - Kernel-minted HMAC token
       - Bound to active budget frame
       - Session-scoped, environment-scoped
-      - Definition — see governance.md#Budget-frames
+      - Frames — see governance.md#Budget-frames
     - Workspace pinning
       - Active session pinned to workspace.db
       - Path — capcli/envs/<name>/workspace.db
@@ -191,8 +216,8 @@
       - capcli-cron owns time triggers
       - capcli-watch owns webhook dispatches
       - capcli-serve owns endpoint requests
-      - Execution token per _inbox task execution
-      - Definition — see world.md#Outbox-inbox
+      - All provided by plugin packs
+      - Pack taxonomy — see plugins.md#Pack-taxonomy
     - Revocation
       - sys agent revoke ends execution
       - Active tokens invalidated by kernel
@@ -290,10 +315,9 @@
       - Canonical window — see world.md#SQLite-as-SSOT
       - Config — see artifacts/governance.yaml
     - Physical arbiter
-      - SQLite BEGIN IMMEDIATE serializes writes
-      - Only kernel daemon writes
-      - Guest never touches file directly
-      - Definition — see world.md#Access-perimeter
+      - Shared workspace.db with WAL
+      - Serialized commits via BEGIN IMMEDIATE
+      - Storage — see world.md#SQLite-as-SSOT
     - Callee floor
       - Cross-agent routine calls need reviewed rung
       - Federated callers need pinned rung
@@ -332,6 +356,11 @@
         - Claims scoped to environment
         - Sim claims never collide with prod
         - Definition — see lifecycle.md#Primitive-scoping
+    - Plugin dispatch concurrency
+      - Plugin call is a child budget frame
+      - Inherits parent session and claims
+      - Composition floor applies
+      - Composition — see plugins.md#Composition
   - Intent chain
     - Chain hierarchy
       - Session goal at root

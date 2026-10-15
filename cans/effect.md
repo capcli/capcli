@@ -36,7 +36,7 @@
         - kernel session — bound session id
         - principal — human or root authority
         - harness_marker_hash — sha256 marker
-        - Definition — see identity.md#Harness-markers
+        - Markers — see identity.md#Harness-markers
       - Causality fields
         - caused_by — parent operation id
         - intent — declared causal motivation
@@ -68,7 +68,17 @@
         - vault.set — name, hash_prefix, action
         - Records injected prefix only
         - Full hash and plaintext never logged
-        - Definition — see egress.md#Vault-proxy
+        - Vault — see egress.md#Vault-proxy
+      - Plugin events
+        - plugin.installed — id, version, sha256
+        - plugin.updated — id, new_generation
+        - plugin.enabled, plugin.disabled
+        - plugin.uninstalled — id, reason
+        - plugin.schema_created — table list
+        - plugin.schema_dropped — table list
+        - plugin.cli_noun_registered — noun
+        - plugin.ctx_namespace_registered — ns
+        - Lifecycle — see plugins.md#Installation-lifecycle
       - Environment events
         - env.switch — source_env, target_env
         - env.merge — source, target, git_commit, ddl_status
@@ -123,9 +133,10 @@
     - Event integrity
       - Zero ghost actions
         - Every CLI verb advances chain
+        - Every plugin install advances chain
         - Every binding fire advances chain
         - Every environment transition advances chain
-        - Every kernel decision advances chain
+        - Lifecycle — see plugins.md#Installation-lifecycle
       - Template instantiation
         - One event per scaffold
         - routine.draft for routines
@@ -273,6 +284,10 @@
         - policy.federation — cycle or unallowlisted
         - api.upstream — provider failure
         - kernel.panic — sink loss or leak
+        - policy.plugin — plugin manifest invalid
+        - policy.namespace — ctx namespace missing
+        - policy.cli_noun — reserved noun collision
+        - Namespace — see plugins.md#Ctx-namespace-registration
       - Violation fields
         - rule_id — e.g. policy.query.update.require_where
         - layer — authorizer, AST, governance, budget
