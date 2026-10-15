@@ -54,8 +54,8 @@
         - draft → reviewed → pinned only
         - Skip draft to pinned exits 3
         - No inline elevation
-      - Template floor
-        - Import floor — see marketplace.md#Trust-inheritance
+      - Import floor
+        - Rule — see marketplace.md#Trust-inheritance
         - Credit inheritance — zero
         - Canonical home — see marketplace.md#Iron-law-2
       - Anonymous ceiling
@@ -359,7 +359,7 @@
       - 100% sim replay on masked data
       - Ship gate — branch merged into prod worktree
       - Ship gate — sim success rate >= 0.90
-      - Rehearsal mandate — templated routines pass contract suite in sim
+      - Rehearsal mandate — imported routines pass contract suite in sim
       - Zero policy denials during replay
       - Live contract schema verification
       - Human or tier 1 CI sign-off

@@ -265,7 +265,7 @@
       - All sandbox providers absent aborts boot
       - Lockfile mismatch in prod aborts boot
       - Schema drift aborts boot
-      - Template version mismatch aborts intake
+      - Pack version mismatch aborts intake
       - Remote HTTP DB without authorizer refused
       - Missing policy or governance aborts
       - Every boot refusal exits 3
@@ -277,7 +277,7 @@
       - Unconfigured git identity auto-fallback
       - Fallback identity — capcli[bot]
       - Or abort with exit 3 if disabled
-      - Template syntax error aborts intake
+      - Pack syntax error aborts intake
       - py_compile failure exits 3
       - min_kernel_version mismatch exits 3
       - policy_version mismatch exits 3

@@ -246,7 +246,7 @@
         - Envelope shape — see interface.md#CLI-surface
       - Scaffolding
         - Direct creation in routines/
-        - Or template scaffold tpl://routine/<name>
+        - Or pack scaffold pack://routine/<name>
         - Definition — see marketplace.md#Packs
       - Near-duplicate scan
         - Levenshtein distance similarity

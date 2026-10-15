@@ -211,7 +211,7 @@
       - Static x86_64 and aarch64 musl
       - libc and SQLite bundled
       - No dynamic host library dependency
-      - Zero template bundling in binary
+      - Zero pack bundling in binary
       - CLI renders output procedurally
   - CICD
     - Monorepo topology

@@ -53,7 +53,7 @@
         - Bind — create, delete, pause, resume
         - Vault — set (prefix only, never plaintext)
         - Plugin — installed, updated, enabled, disabled, uninstalled, schema, noun, namespace
-        - Environment — switch, merge, init_from_template
+        - Environment — switch, merge, init_from_pack
         - Identity — agent register, agent revoke
         - Capability — search, run, draft, auto_promoted, rollback
         - Database — exec, snapshot, restore, lock, unlock, claim stolen/abandoned/expired
@@ -102,10 +102,10 @@
         - Every binding fire advances chain
         - Every environment transition advances chain
         - Lifecycle — see plugins.md#Installation-lifecycle
-      - Template instantiation
+      - Pack instantiation
         - One event per scaffold
         - routine.draft for routines
-        - env.init_from_template for worlds
+        - env.init_from_pack for worlds
       - Fail-closed sink law
         - No audit — no execution invariant
         - Business write requires staged audit leaf

@@ -184,11 +184,11 @@
       - Schema tables displayed before write
       - Operator confirmation required
     - Pack command surface
-      - template new <name> --type world
-      - template pack <dir> [--out bundle.cap]
-      - template sync refreshes registry index
-      - template import <urp|url|file>
-      - template scaffold <urp> <target>
+      - pack new <name> --type world
+      - pack bundle <dir> [--out bundle.cap]
+      - pack sync refreshes registry index
+      - pack import <urp|url|file>
+      - pack scaffold <urp> <target>
       - Envelope — see interface.md#CLI-surface
   - Publishing
     - Intake PR gate
@@ -240,7 +240,7 @@
     - Source types
       - GitHub repo — github.com/org/repo
       - GitHub release — release URL with tag
-      - Registry alias — tpl://registry/<tier>/<name>
+      - Registry alias — pack://registry/<tier>/<name>
       - Direct URL — pinned with #sha256=<hex>
       - Local file — local path with .cap
     - Pointer resolution

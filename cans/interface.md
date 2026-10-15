@@ -23,7 +23,7 @@
       - environment — namespace path
       - rule — schema compilation path
       - doc — document reading path
-      - template — blueprint path
+      - pack — blueprint and cartridge path
       - Nine reserved — cannot alias or extend, exit 3 on breach at install
     - Plugin nouns (dynamic)
       - cli_noun declared in plugin manifest
@@ -71,7 +71,7 @@
     - URP dispatch
       - cap://routine@version — local routine
       - vault://, audit://, ask://, quota:// — DB entity pointers
-      - tpl://, policy:// — artifact pointers
+      - pack://, policy:// — artifact pointers
       - plugin://<id>/<verb> — plugin verb
       - ws://workspace/routine@version — federated
       - db://table — DB entity inspection
@@ -118,7 +118,7 @@
     - Artifact resolver
       - Token size and node outlines
       - Bundle metadata and manifest
-      - Handles doc://, tpl://, policy://
+      - Handles doc://, pack://, policy://
       - Zero fuel cost for inspection
     - Success affordances
       - Exit 0 only, absent on non-zero
@@ -375,24 +375,24 @@
       - Prompt campaigns read via doc read
       - Unified grammar for doc pointers
       - Aliases — see #Run-noun
-  - Template noun
+  - Pack noun
     - New
-      - template new <name> --type routine|world
+      - pack new <name> --type routine|world
       - Scaffolds capcli-pack.yaml
       - Envelope — see #CLI-surface
-    - Pack
-      - template pack <dir> [--out bundle.cap]
+    - Bundle
+      - pack bundle <dir> [--out bundle.cap]
       - Freezes blueprint into bundle
       - Packs — see marketplace.md#Packs
     - Sync
-      - template sync refreshes registry index
+      - pack sync refreshes registry index
       - Envelope — see #CLI-surface
     - Import
-      - template import <urp|url|file>
+      - pack import <urp|url|file>
       - --sha256 flag for direct URL
       - Channels — see marketplace.md#Distribution-channels
     - Scaffold
-      - template scaffold <urp> <target>
+      - pack scaffold <urp> <target>
       - -p flag for typed params
       - Hydrates draft into routines/ or envs/
       - Packs — see marketplace.md#Packs
@@ -499,7 +499,7 @@
       - Egress — run bans api call noun
       - Budget — inspect quota:// bans budget noun
       - Authoring — direct write bans routine new
-      - Blueprints — inspect tpl:// bans template apply
+      - Blueprints — inspect pack:// bans pack apply
     - Alias precedence
       - Aliases resolve before handler gate
       - Recovery mode names canonical paths

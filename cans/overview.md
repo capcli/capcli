@@ -48,18 +48,13 @@
       - Tier 1 on Linux, macOS, Windows
       - Cockpit PWA embedded via rust-embed
       - Headless daemon on servers
-  - The 5-layer taxonomy
-    - Layer 4 — Pack
+  - The 4-layer taxonomy
+    - Layer 3 — Pack
       - Shipping cartridge, .cap file
       - Kernel, application, or community tier
       - Atomic multi-layer install
       - Zero execution at rest
       - Install or abort, never partial
-    - Layer 3 — Template
-      - Recipe blueprint, tpl:// scheme
-      - Static scaffolding text
-      - Dissolves on hydration
-      - Zero runtime presence
     - Layer 2 — Routine
       - Business logic, cap:// scheme
       - Guest procedural code
@@ -80,7 +75,7 @@
       - Plugin holds the socket and device
       - Routine never reaches raw wire
       - Template has zero runtime presence
-      - Pack is cartridge, never execution
+      - Pack is blueprint and cartridge
   - The pack distribution model
     - Pack inventory — see marketplace.md#Pack-taxonomy
     - Tier declaration — kernel, application, community
