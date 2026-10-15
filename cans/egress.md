@@ -121,6 +121,7 @@
     - Auth schemes
       - Bearer token injection
       - Basic auth base64 encoding
+      - Non-RFC header names resolved via doc://specs
       - OAuth2 refresh and rotate
       - AWS SigV4 canonical hashing
       - mTLS client certificate binding
@@ -146,6 +147,8 @@
     - Strict check order
       - 1 — ceiling check before anything else
       - 2 — cadence check via token bucket
+      - Raw-IP targets denied at allowlist gate
+      - Outbound payload capped at 65536 bytes
       - 3 — auth attach between cadence and TLS
       - 4 — dispatch and deduct fuel
       - 5 — auto-tune from response headers
@@ -212,6 +215,7 @@
   - Developer bridge
     - capcli egress utility
       - Shell-native egress command
+      - Dormant OpenAPI verbs require explicit activation
       - Plugin calls as subprocess
       - Kernel proxy performs TLS
       - Vault key resolution transparent
@@ -252,6 +256,7 @@
     - First prod call
       - Requires contract proof hash
       - Counts call_number and remaining
+      - Graduation to standard governance on call 4
       - Emits api.first_prod_call event
       - Promotion gate — see governance.md#Promotion-gates
     - Provider drift

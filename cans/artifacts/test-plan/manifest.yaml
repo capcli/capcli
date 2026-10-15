@@ -6,7 +6,7 @@ plan:
   name: "capcli canonical test plan"
   structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
   matrix_doc: "cans/artifacts/test-plan/matrix.yaml"
-  total_cases: 192
+  total_cases: 202
   domains: 12
   crate_tier_convention:
     unit: "crates/capcli-core"
@@ -16,12 +16,12 @@ plan:
 domains:
   kernel_physics:
     prefix: "kp"
-    case_count: 23
+    case_count: 24
     description: "Kernel physics — dual-engine enforcement, platform tier taxonomy, seccomp-bpf jails, tmpfs scratch isolation, NTP drift halt, audit-sink fail-closed host integrity probes."
 
   database_authorizer:
     prefix: "da"
-    case_count: 15
+    case_count: 20
     description: "Database floor & C-authorizer — unbounded UPDATE/DELETE AST kills, WHERE tautology traps, system table write denial, column/table immutability, row ceilings."
 
   wire_egress:
@@ -31,7 +31,7 @@ domains:
 
   budget_cascade:
     prefix: "bc"
-    case_count: 20
+    case_count: 22
     description: "Budget cage & frame cascade — downward min inheritance, session ops ceilings, fuel pools, earmark ringfence and TTL sweep, watchdogs, suspended-task refill."
 
   audit_dag:
@@ -45,7 +45,7 @@ domains:
     description: "Trust ladder & promotion — draft/reviewed/pinned floors, monotonic ascent, auto-promotion conjunction, canary telemetry demotion, human veto, circuit breaker."
 
   schema_migration:
-    prefix: "se"
+    prefix: "sm"
     case_count: 18
     description: "Schema migration & compile checks — Sub-check 1..3 refusals (YAML syntax, cycles, lockfile drift), live-drift refusal, migration-safety rehearsal, forward-only migration, worktree isolation."
 
@@ -56,17 +56,17 @@ domains:
 
   bindings_triggers:
     prefix: "bt"
-    case_count: 13
+    case_count: 17
     description: "Bindings & inbound triggers — cron min-interval and catchup limits, webhook HMAC/ceiling/rate gates, endpoint pinned-trust floor, ctx.ping.ask fail-closed timeouts."
 
   vault_secrets:
     prefix: "vs"
-    case_count: 12
+    case_count: 13
     description: "Vault & zero-knowledge secrets — AES-256-GCM ciphertext at rest, scope isolation, env auto-binding, rotation eviction, redacted leak kill, Cockpit WebAuthn injection."
 
   sdk_harness:
     prefix: "sh"
-    case_count: 13
+    case_count: 14
     description: "SDK & guest harness contract — frame token traps, ctx.api/ctx.db rules, manifest reflection over IPC, poll_until aggregate accounting, storage HMAC URLs, claims locks."
 
   urp:
@@ -75,7 +75,7 @@ domains:
     description: "URP resolver engine — 3-class dispatch (executable, db-entity, artifact), universal pointer grammar parse law, exit-3 refusals for bare paths and removed schemes, prompts-are-documents read equivalence."
 
 cases:
-  # ── kernel_physics (kp) — 23 cases ─────────────────────────
+  # ── kernel_physics (kp) — 24 cases ─────────────────────────
   - case_id: "kp_01_syscall_seccomp_trap"
     file: "cases/kernel_physics/kp_01_syscall_seccomp_trap.yaml"
     domain: "kernel_physics"
@@ -110,14 +110,14 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
-    title: "Boot halts with exit 3 when host clock drifts beyond 500ms of NTP"
+    title: "Clock drift beyond 500ms of NTP emits warning; boot proceeds with degraded flag"
   - case_id: "kp_06_tamper_hashchain_panic"
     file: "cases/kernel_physics/kp_06_tamper_hashchain_panic.yaml"
     domain: "kernel_physics"
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
-    title: "Out-of-band _audit payload tamper breaks SHA-256 chain and panics next boot"
+    title: "Out-of-band _audit tamper quarantines span; boot completes in degraded status"
   - case_id: "kp_07_secret_leak_memory_zeroize"
     file: "cases/kernel_physics/kp_07_secret_leak_memory_zeroize.yaml"
     domain: "kernel_physics"
@@ -131,7 +131,7 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
-    title: "Tier 1 Linux host missing bwrap aborts boot with exit 3, never degrades silently"
+    title: "Missing bwrap falls back to rootless OCI; all providers absent aborts exit 3"
   - case_id: "kp_09_broken_tmpfs_scratch_isolation"
     file: "cases/kernel_physics/kp_09_broken_tmpfs_scratch_isolation.yaml"
     domain: "kernel_physics"
@@ -166,7 +166,7 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
-    title: "Docker host without unprivileged user namespaces refused at boot with clean diagnostics"
+    title: "Docker host without userns routes to gVisor microVM fallback"
   - case_id: "kp_14_dynamic_seccomp_profile_switch"
     file: "cases/kernel_physics/kp_14_dynamic_seccomp_profile_switch.yaml"
     domain: "kernel_physics"
@@ -194,7 +194,7 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
-    title: "Federated call whose call_chain already contains the workspace fails closed with exit 2 (E041_FEDERATION_CYCLE)"
+    title: "Third re-entry of workspace in call_chain fails closed with exit 2 (E041_FEDERATION_CYCLE)"
   - case_id: "kp_18_federation_hop_ceiling_exit2"
     file: "cases/kernel_physics/kp_18_federation_hop_ceiling_exit2.yaml"
     domain: "kernel_physics"
@@ -222,7 +222,7 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
-    title: "Missing peer socket exhausts the 1500ms poll and exits 4 (E055_FEDERATION_UNREACHABLE)"
+    title: "Missing peer socket exhausts the 10s dial budget and exits 4 (E055_FEDERATION_UNREACHABLE)"
   - case_id: "kp_22_exit6_yield_claims_retained"
     file: "cases/kernel_physics/kp_22_exit6_yield_claims_retained.yaml"
     domain: "kernel_physics"
@@ -237,7 +237,14 @@ cases:
     target_crate: "crates/capcli-daemon"
     quadrant: "true_positive"
     title: "Exit-6 yield parks cursor, 64-hex state_fence, and checkpoint_ts on the _suspended_tasks row"
-  # ── database_authorizer (da) — 15 cases ────────────────────
+  - case_id: "kp_24_lockfile_plugin_binary_tamper"
+    file: "cases/kernel_physics/kp_24_lockfile_plugin_binary_tamper.yaml"
+    domain: "kernel_physics"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Tampered plugin binary_sha256 in capcli.lock halts boot with exit 3"
+  # ── database_authorizer (da) — 20 cases ────────────────────
   - case_id: "da_01_unbounded_update_ast_kill"
     file: "cases/database_authorizer/da_01_unbounded_update_ast_kill.yaml"
     domain: "database_authorizer"
@@ -343,6 +350,41 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
     title: "Row tampered between Phase-1 read and Phase-3 commit aborts with exit 2 (E061_OCC_DRIFT), zero partial writes"
+  - case_id: "da_16_occ_read_drift_retry_exhaustion"
+    file: "cases/database_authorizer/da_16_occ_read_drift_retry_exhaustion.yaml"
+    domain: "database_authorizer"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "OCC read drift exhausts fence retries and aborts with E061_OCC_DRIFT"
+  - case_id: "da_17_drop_table_denied_reviewed"
+    file: "cases/database_authorizer/da_17_drop_table_denied_reviewed.yaml"
+    domain: "database_authorizer"
+    target_tier: "e2e"
+    target_crate: "crates/capcli-cli"
+    quadrant: "true_negative"
+    title: "Raw DROP TABLE issued by a reviewed caller is denied at the C authorizer"
+  - case_id: "da_18_vacuum_denied_pinned_prod"
+    file: "cases/database_authorizer/da_18_vacuum_denied_pinned_prod.yaml"
+    domain: "database_authorizer"
+    target_tier: "e2e"
+    target_crate: "crates/capcli-cli"
+    quadrant: "true_negative"
+    title: "VACUUM issued by pinned caller in prod is denied at the C authorizer"
+  - case_id: "da_19_readfile_denylist"
+    file: "cases/database_authorizer/da_19_readfile_denylist.yaml"
+    domain: "database_authorizer"
+    target_tier: "unit"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "readfile SQLite function invocation is denied by the authorizer function denylist"
+  - case_id: "da_20_scoped_view_principal_runtime_deny"
+    file: "cases/database_authorizer/da_20_scoped_view_principal_runtime_deny.yaml"
+    domain: "database_authorizer"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Scoped view read without --as is denied at runtime by the authorizer"
   # ── wire_egress (we) — 13 cases ────────────────────────────
   - case_id: "we_01_proactive_bucket_exhaustion"
     file: "cases/wire_egress/we_01_proactive_bucket_exhaustion.yaml"
@@ -392,7 +434,7 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
-    title: "Kernel proxy retries HTTP 429 with exponential backoff and full jitter before surfacing the provider denial"
+    title: "429 with Retry-After forces yield path; frame parks in _suspended_tasks for refill"
   - case_id: "we_08_standard_priority_yield_floor"
     file: "cases/wire_egress/we_08_standard_priority_yield_floor.yaml"
     domain: "wire_egress"
@@ -442,7 +484,7 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
     title: "Upstream 401 echoing the credential in its JSON error body is scrubbed to [REDACTED_VAULT_TOKEN] at the wire edge before deserialization"
-  # ── budget_cascade (bc) — 20 cases ─────────────────────────
+  # ── budget_cascade (bc) — 22 cases ─────────────────────────
   - case_id: "bc_01_downward_min_inheritance"
     file: "cases/budget_cascade/bc_01_downward_min_inheritance.yaml"
     domain: "budget_cascade"
@@ -583,6 +625,20 @@ cases:
     target_crate: "crates/capcli-daemon"
     quadrant: "true_negative"
     title: "Resume with an expired Layer 1 lease aborts with exit 2 even when the state_fence matches"
+  - case_id: "bc_21_duration_cascade_cross_frame"
+    file: "cases/budget_cascade/bc_21_duration_cascade_cross_frame.yaml"
+    domain: "budget_cascade"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Child frame duration consumes parent wall-clock budget via duration_cascade"
+  - case_id: "bc_22_result_tokens_cascade_nested"
+    file: "cases/budget_cascade/bc_22_result_tokens_cascade_nested.yaml"
+    domain: "budget_cascade"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Nested routine result tokens consume parent envelope via result_tokens_scope"
   # ── audit_dag (ad) — 15 cases ──────────────────────────────
   - case_id: "ad_01_sha256_prev_hash_linking"
     file: "cases/audit_dag/ad_01_sha256_prev_hash_linking.yaml"
@@ -717,7 +773,7 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
-    title: "Error spike during the 1-hour post-promotion canary window triggers the autonomous watchdog circuit-breaker rollback to draft, and the demoted routine is refused in prod"
+    title: "Canary window error spike demotes one rung to reviewed; routine refused in prod"
   - case_id: "tl_05_unproven_pack_draft_floor"
     file: "cases/trust_ladder/tl_05_unproven_pack_draft_floor.yaml"
     domain: "trust_ladder"
@@ -780,7 +836,7 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
-    title: "20-run success rate 0.60 below the 0.70 decay floor trips the autonomous circuit-breaker demotion to draft, and the demoted routine is refused in prod"
+    title: "20-run success rate below decay floor demotes pinned to reviewed; refused in prod"
   - case_id: "tl_14_federated_caller_floor_pinned"
     file: "cases/trust_ladder/tl_14_federated_caller_floor_pinned.yaml"
     domain: "trust_ladder"
@@ -808,7 +864,7 @@ cases:
     target_tier: "integration"
     target_crate: "crates/capcli-daemon"
     quadrant: "true_negative"
-    title: "Newly pinned routine exceeding 1% error in the first hour is rolled back to draft with a Cockpit PWA alert"
+    title: "Newly pinned routine exceeding 1% error demotes to reviewed with Cockpit alert"
   - case_id: "tl_18_reviewed_prod_execution_denial"
     file: "cases/trust_ladder/tl_18_reviewed_prod_execution_denial.yaml"
     domain: "trust_ladder"
@@ -1148,7 +1204,7 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_positive"
     title: "bind federation creates a peer outbox siphon with cursor tracked in _watch_cursors"
-  # ── vault_secrets (vs) — 12 cases ──────────────────────────
+  # ── vault_secrets (vs) — 13 cases ──────────────────────────
   - case_id: "vs_01_missing_secret_cockpit_url_refusal"
     file: "cases/vault_secrets/vs_01_missing_secret_cockpit_url_refusal.yaml"
     domain: "vault_secrets"
@@ -1233,7 +1289,14 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
     title: "Routine printing a decrypted credential to stdout is killed by the egress leak scanner (kill_and_alert, exit 5) with the secret redacted from every audit record"
-  # ── sdk_harness (sh) — 13 cases ────────────────────────────
+  - case_id: "vs_13_audit_mirror_credential_leak"
+    file: "cases/vault_secrets/vs_13_audit_mirror_credential_leak.yaml"
+    domain: "vault_secrets"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Plaintext credential echoed into _audit mirror bytes triggers exit 5 panic"
+  # ── sdk_harness (sh) — 14 cases ────────────────────────────
   - case_id: "sh_01_missing_frame_token_trap"
     file: "cases/sdk_harness/sh_01_missing_frame_token_trap.yaml"
     domain: "sdk_harness"
@@ -1325,6 +1388,13 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
     title: "ctx.call to a ws:// target while holding a local Layer 1 claim is rejected at compile time with exit 3"
+  - case_id: "sh_14_ctx_api_call_txn_runtime_bypass"
+    file: "cases/sdk_harness/sh_14_ctx_api_call_txn_runtime_bypass.yaml"
+    domain: "sdk_harness"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Runtime ctx.api.call inside open ctx.db.txn is rejected as defense-in-depth"
   # ── urp (ur) — 11 cases ────────────────────────────────────
   - case_id: "ur_01_inspect_db_table_envelope"
     file: "cases/urp/ur_01_inspect_db_table_envelope.yaml"

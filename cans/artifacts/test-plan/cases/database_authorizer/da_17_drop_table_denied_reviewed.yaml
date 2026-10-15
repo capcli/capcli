@@ -1,0 +1,59 @@
+$schema: "test-plan/case/v1"
+case_id: "da_17_drop_table_denied_reviewed"
+title: "Raw DROP TABLE issued by a reviewed caller is denied at the C authorizer"
+domain: "database_authorizer"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "kernel.md#Layer-1-C-authorizer"
+  statement: "DROP TABLE requires pinned trust and never runs outside the migration pipeline; reviewed and draft callers are denied at prepare time."
+  blast_radius_if_breached: "A reviewed routine drops a production table, silently destroying domain state that has no rollback path."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent grants pinned trust in the fixture so the DROP succeeds, or asserts exit 2 without proving the table survived."
+  anti_slop_mitigation: "AS-02 requires PRAGMA table_info('orders') post-execution to confirm the table still exists with the original column count."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:test"
+    agent_id: "agt_test_17"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: "orders(id int pk, status text)"
+    tables:
+      - name: "orders"
+        row_count: 5
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"DROP TABLE orders\" -m \"cleanup test\""
+  input_params: {}
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "DROP TABLE denied for trust rung reviewed"
+    remedy: "Route DDL through rule plan and rule apply; reviewed and draft cannot issue raw DDL."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "policy.authorizer_denied"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "PRAGMA table_info('orders') returns 2 columns; SELECT count(*) FROM orders returns 5."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 AND diagnostic.domain == policy.authorizer AND remedy cites rule plan."

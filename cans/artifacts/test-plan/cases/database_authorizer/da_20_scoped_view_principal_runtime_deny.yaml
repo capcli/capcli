@@ -1,0 +1,59 @@
+$schema: "test-plan/case/v1"
+case_id: "da_20_scoped_view_principal_runtime_deny"
+title: "Scoped view read without --as is denied at runtime by the authorizer"
+domain: "database_authorizer"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "kernel.md#Tenant-isolation"
+  statement: "Scoped views require the :principal bind variable; without --as the kernel refuses the statement at prepare time, not at query execution."
+  blast_radius_if_breached: "A missing --as silently returns cross-tenant rows, breaking tenant isolation across every scoped view in the workspace."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent passes --as with a fabricated principal and asserts denial, proving only that an invalid principal is rejected — never that a missing principal is caught."
+  anti_slop_mitigation: "AS-02 requires the test to omit --as entirely and prove zero rows are returned via direct scoped-view count."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:test"
+    agent_id: "agt_test_20"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: "orders(id int pk, tenant text, status text); view orders_scoped as SELECT * FROM orders WHERE tenant = :principal"
+    tables:
+      - name: "orders"
+        row_count: 10
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"SELECT * FROM orders_scoped\" -m \"tenant read\""
+  input_params: {}
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "scoped view orders_scoped requires :principal bind; --as missing"
+    remedy: "Re-issue with --as <principal> so the kernel binds :principal before prepare."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "policy.authorizer_denied"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders_scoped with a :principal binding returns 0 in this test's namespace; the unanswered variant returns nothing."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 AND diagnostic.culprit cites :principal AND remedy cites --as."

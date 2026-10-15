@@ -1,0 +1,60 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_24_lockfile_plugin_binary_tamper"
+title: "Tampered plugin binary_sha256 in capcli.lock halts boot with exit 3"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "plugins.md#Lockfile-SSOT"
+  statement: "capcli.lock binds each installed plugin to its binary_sha256; divergence between the on-disk binary and the lockfile hash is fatal at daemon boot."
+  blast_radius_if_breached: "A tampered plugin binary executes with kernel-granted egress and vault privileges under a manifest the lockfile no longer vouches for."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts exit 3 on an untampered lockfile, or deletes the binary and credits the missing-file error as a hash mismatch."
+  anti_slop_mitigation: "AS-02 requires the test to overwrite one byte in the installed binary, recompute sha256, prove divergence from capcli.lock, then observe boot refusal."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:operator"
+    agent_id: "agt_test_24"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: null
+    tables: []
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sys serve --start"
+  input_params:
+    plugin_id: "capcli.pack.api"
+    tamper_offset: 64
+    tamper_bytes: "0xff"
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "policy.plugin"
+    culprit: "binary_sha256 mismatch for capcli.pack.api"
+    remedy: "Reinstall the plugin via plugin install or restore the binary from the release bundle."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "kernel.boot_refused"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "sha256(binary_on_disk) != lockfile.binary_sha256 AND count(*) FROM _packs WHERE id='capcli.pack.api' unchanged."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 AND diagnostic.domain == policy.plugin AND diagnostic.culprit cites binary_sha256."

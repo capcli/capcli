@@ -1,0 +1,60 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_22_result_tokens_cascade_nested"
+title: "Nested routine result tokens consume parent envelope via result_tokens_scope"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "governance.md#Composition-flags"
+  statement: "result_tokens_scope: routine means each routine has a 500-token result envelope; a parent calling five nested routines consumes 2500 tokens from its own envelope budget."
+  blast_radius_if_breached: "Deeply nested routines blow past the harness's turn envelope, silently truncating output mid-structure."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts truncation on a single top-level routine (already covered by sh_05) without any nested call, proving nothing about cascade."
+  anti_slop_mitigation: "AS-02 requires the parent envelope's consumed count to equal the sum of child tokens; AS-03 requires the abort to cite result_tokens_scope."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:test"
+    agent_id: "agt_test_22"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: null
+    tables: []
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "parent() calls child_1..child_5; each child returns 150 tokens; parent attempts to return 600 tokens"
+  input_params:
+    parent_result_cap: 500
+    child_tokens: 150
+    child_count: 5
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "parent result envelope 600 + 750 nested > 500 result_tokens_scope"
+    remedy: "Return a summary from parent, or raise result_tokens_scope; nested calls consume the parent's envelope."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT consumed_result_tokens FROM _budget_frames WHERE frame_id='parent' equals 1500; declared_result_tokens equals 500."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 AND diagnostic.culprit cites result_tokens_scope."

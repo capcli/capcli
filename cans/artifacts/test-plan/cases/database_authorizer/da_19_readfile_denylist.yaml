@@ -1,0 +1,59 @@
+$schema: "test-plan/case/v1"
+case_id: "da_19_readfile_denylist"
+title: "readfile SQLite function invocation is denied by the authorizer function denylist"
+domain: "database_authorizer"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "kernel.md#Layer-1-C-authorizer"
+  statement: "The SQLite function allowlist permits count, sum, min, max, avg, json_extract, and date; readfile, writefile, and load_extension are denied at prepare time."
+  blast_radius_if_breached: "A guest routine reads /etc/passwd, workspace.db ciphertext, or vault key material through SQL and exfiltrates it via the response body."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent only exercises load_extension (already covered by da_12) and asserts the denylist proven without calling readfile."
+  anti_slop_mitigation: "AS-01 forbids mocking the authorizer; the test must invoke the real SQLite prepare path with readfile in the SQL text."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:test"
+    agent_id: "agt_test_19"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: "orders(id int pk, status text)"
+    tables:
+      - name: "orders"
+        row_count: 1
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "db.prepare(\"SELECT readfile('/etc/passwd') FROM orders\")"
+  input_params: {}
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "SQLite function readfile denied by allowlist"
+    remedy: "Use json_extract or date; file I/O from SQL is not permitted."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "policy.authorizer_denied"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "The authorizer callback is the real C implementation; no mockall or trait replacement."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 AND diagnostic.culprit cites the function name readfile."

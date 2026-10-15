@@ -234,6 +234,7 @@
     - Execution limits
       - Watchdog — see governor.md#Watchdog-interaction
       - 300s wall clock ceiling, exit 4
+      - /scratch tmpfs wiped on every routine exit
       - Response cap via truncation flag
       - Ops ceiling via governance file
     - External jail

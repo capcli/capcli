@@ -115,6 +115,7 @@
         - Undrainable buffer panics exit 5
       - Genesis sequence
         - First event — rule.apply
+        - prev_hash anchored to 64-zero sha256
         - Second — sql query on empty world
         - Third — sql write deny (probe)
         - Fourth — sql write ok (bootstrap)

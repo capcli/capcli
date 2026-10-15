@@ -56,6 +56,7 @@
     - Lifetime law
       - Write locks held only during commit
       - Never held across agent execution
+      - Host SIGKILL rolls back via WAL recovery
       - User-space txn ceiling — 15ms
       - Migration swap ceiling — 20ms
       - Breach exits 2, rollback instant
@@ -246,6 +247,7 @@
     - Inbox delivery
       - Kernel spawns bound routine
       - Execution token minted per task
+      - source field — cron, webhook, ping, federation
       - System principal per executing task
       - Definition — see identity.md#Concurrency
     - Dead letter queue

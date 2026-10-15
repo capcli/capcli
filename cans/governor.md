@@ -158,6 +158,8 @@
     - Trigger conditions
       - Clock reaches reset_at for quota refill
       - Human 1-click approval via Cockpit
+      - Ask question capped at 100 tokens
+      - Ask options capped at 5 choices
       - Federation event lands in _inbox
       - Ask resolution flips suspended frame
     - Compile-at-yield

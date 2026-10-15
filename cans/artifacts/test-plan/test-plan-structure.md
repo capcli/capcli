@@ -42,6 +42,7 @@ cans/artifacts/test-plan/
       kp_21_federation_transport_retry_exit4.yaml
       kp_22_exit6_yield_claims_retained.yaml
       kp_23_suspended_tasks_yield_capture.yaml
+      kp_24_lockfile_plugin_binary_tamper.yaml
     database_authorizer/
       da_01_unbounded_update_ast_kill.yaml
       da_02_where_tautology_bypass_kill.yaml
@@ -58,6 +59,11 @@ cans/artifacts/test-plan/
       da_13_row_ceiling_transaction_overflow.yaml
       da_14_txn_lifespan_bound_violation_exit2.yaml
       da_15_commit_time_fence_drift_exit2.yaml
+      da_16_occ_read_drift_retry_exhaustion.yaml
+      da_17_drop_table_denied_reviewed.yaml
+      da_18_vacuum_denied_pinned_prod.yaml
+      da_19_readfile_denylist.yaml
+      da_20_scoped_view_principal_runtime_deny.yaml
     wire_egress/
       we_01_proactive_bucket_exhaustion.yaml
       we_02_dynamic_header_calibration_sync.yaml
@@ -94,6 +100,8 @@ cans/artifacts/test-plan/
       bc_18_mechanical_daemon_resume_completion.yaml
       bc_19_occ_drift_resume_abort_exit2.yaml
       bc_20_resume_lease_ownership_exit2.yaml
+      bc_21_duration_cascade_cross_frame.yaml
+      bc_22_result_tokens_cascade_nested.yaml
     audit_dag/
       ad_01_sha256_prev_hash_linking.yaml
       ad_02_sink_failure_kernel_panic.yaml
@@ -196,6 +204,7 @@ cans/artifacts/test-plan/
       vs_10_secret_scope_environment_isolation.yaml
       vs_11_secret_rotation_in_memory_eviction.yaml
       vs_12_redacted_leak_detection_kill.yaml
+      vs_13_audit_mirror_credential_leak.yaml
     sdk_harness/
       sh_01_missing_frame_token_trap.yaml
       sh_02_api_call_inside_db_txn_prohibition.yaml
@@ -210,6 +219,7 @@ cans/artifacts/test-plan/
       sh_11_non_serializable_result_exit4.yaml
       sh_12_ctx_db_lock_distributed_lease.yaml
       sh_13_ws_call_under_claim_lock_exit3.yaml
+      sh_14_ctx_api_call_txn_runtime_bypass.yaml
     urp/
       ur_01_inspect_db_table_envelope.yaml
       ur_02_inspect_pack_envelope.yaml
@@ -409,42 +419,43 @@ anti_slop_assertions:
 
 ## 6. Master Test Plan Bible & Case Catalog
 
-This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–16 cases per domain, 188 cases total).
+This catalog is the definitive index of physical laws, edge cases, and failure modes across `capcli`. Every case below is codified in its respective atomic YAML file in `cases/` (minimum 12–20 cases per domain, 202 cases total).
 
 ### 6.1 Kernel Physics (`cases/kernel_physics/`)
 
 | Case ID | Target Tier | Invariant & Scenario Narrative | Matrix | Banned Slop Pattern |
 |---|---|---|---|---|
 | `kp_01_syscall_seccomp_trap.yaml` | Integration | Guest routine attempts raw `connect()` via socket syscall 42; `seccomp-bpf` traps and kills execution with `exit 2`. | TN | Mocking the guest process or skipping the actual kernel jail harness. |
-| `kp_02_platform_tier2_degraded_boot.yaml` | Integration | Tier 2 boot degrades sandbox to broker with visible WARN and denies pinned execution | TN | Agent swallows the [WARN] host.degraded_isolation line (never parses boot output), asserts only that the daemon started, or runs the case on the CI |
+| `kp_02_platform_tier2_degraded_boot.yaml` | Integration | Tier 2 boot degrades sandbox to broker with visible WARN; pinned dev-target execution proceeds | TP | Agent swallows the [WARN] host.degraded_isolation line (never parses boot output), asserts only that the daemon started, or runs the case on the CI |
 | `kp_03_authorizer_prepare_time_abort.yaml` | Unit | Statement with unpermitted column access is blocked inside `sqlite3_set_authorizer` during `prepare_v2` before single byte executes. | TN | Catching error at execution time instead of at prepare time. |
 | `kp_04_bytecode_openwrite_discrepancy.yaml` | Unit | Statement masquerading as read (SELECT invoking mutating function) triggers `OpenWrite` VDBE opcode; Layer 1.5 traps and kills. | TN | Relying only on regex or simple keyword matching for "SELECT". |
-| `kp_05_ntp_clock_drift_halt.yaml` | Integration | Boot halts with exit 3 when host clock drifts beyond 500ms of NTP | TN | Agent uses the real system clock with sleep calls to wait for drift to accumulate (nondeterministic flakes), or skips the boot-time check by calling |
-| `kp_06_tamper_hashchain_panic.yaml` | Integration | Out-of-band _audit payload tamper breaks SHA-256 chain and panics next boot | TN | Agent asserts a panic by matching generic strings like panic or error in output instead of recomputing the SHA-256 chain link, or verifies only the |
+| `kp_05_ntp_clock_drift_halt.yaml` | Integration | Clock drift beyond 500ms of NTP emits warning; boot proceeds with degraded flag | TN | Agent uses the real system clock with sleep calls to wait for drift to accumulate (nondeterministic flakes), or skips the boot-time check by calling |
+| `kp_06_tamper_hashchain_panic.yaml` | Integration | Out-of-band _audit tamper quarantines span; boot completes in degraded status | TN | Agent asserts a panic by matching generic strings like panic or error in output instead of recomputing the SHA-256 chain link, or verifies only the |
 | `kp_07_secret_leak_memory_zeroize.yaml` | Unit | Subshell CLI completes execution; in-memory decrypted AES-256 vault buffer is overwritten with zeroes via `zeroize`. | TP | Asserting variable scope drop without reading raw pointer memory to verify zeroization. |
-| `kp_08_missing_bwrap_tier1_abort.yaml` | Integration | Tier 1 Linux host missing bwrap aborts boot with exit 3, never degrades silently | TN | Agent runs the boot on a machine where bwrap happens to be installed (the test never removes it), or accepts a degraded-but-successful boot because |
+| `kp_08_missing_bwrap_tier1_abort.yaml` | Integration | Missing bwrap falls back to rootless OCI; all providers absent aborts exit 3 | TN | Agent runs the boot on a machine where bwrap happens to be installed (the test never removes it), or accepts a degraded-but-successful boot because |
 | `kp_09_broken_tmpfs_scratch_isolation.yaml` | Integration | Guest routine writes temporary files to `/scratch`; post-execution probe verifies host directory was cleanly wiped. | TP | Asserting process success without asserting scratch directory removal on host. |
 | `kp_10_posix_locking_compliance_probe.yaml` | Unit | Kernel checks SQLite WAL POSIX advisory lock support on target volume; non-compliant network mounts (NFS/CIFS) rejected. | TN | Allowing DB creation on network filesystems lacking advisory lock support. |
 | `kp_11_audit_sink_error_fail_closed.yaml` | Integration | Audit sink write failure fails closed — kernel panics with exit 5, mutation refused | TN | Agent lets the business logic continue (or catches the sink error and returns a warning), uses a real wall-clock sleep to wait out the 5-minute |
 | `kp_12_sigkill_subshell_transaction_rollback.yaml` | Integration | Subprocess running guest routine receives SIGKILL; kernel WAL supervisor detects dead PID and rolls back uncommitted transaction. | TN | Leaving dangling locks in `claims` or leaving SQLite WAL in busy uncommitted state. |
-| `kp_13_unprivileged_userns_docker_check.yaml` | Integration | Host running inside Docker without unprivileged user namespaces automatically falls over to gVisor or microVM isolation without security degradation. | TP | Refusing boot inside containers instead of routing to supported containerized isolation providers. |
+| `kp_13_unprivileged_userns_docker_check.yaml` | Integration | Docker host without userns routes to gVisor microVM fallback | TN | Refusing boot inside containers instead of routing to supported containerized isolation providers. |
 | `kp_14_dynamic_seccomp_profile_switch.yaml` | Unit | Jail runner applies distinct dynamic seccomp profiles per runtime (`profile_python` vs `profile_bun_node` vs `profile_binary`). | TP | Applying universal permissive seccomp profile across all language runtimes. |
 | `kp_15_sigterm_preemption_exit6_checkpoint.yaml` | Integration | Host SIGTERM hits a disposable worker mid-frame; trap flushes cursor checkpoint, retains claims, parks frame in `_suspended_tasks` with `exit 6`, emits `swarm.preemption_yield`. | TN | Asserting exit 6 without proving the parked frame, checkpoint cursor, and retained claims. |
 | `kp_16_network_partition_sync_audit_exit5.yaml` | Integration | Spoke-Hub connection lost during sync audit delivery; ephemeral spoke aborts immediately with `exit 5`, no local spool, no exit 0 without central audit receipt. | TN | Buffering the audit event to local disk and completing locally — the fail-open ghost path. |
-| `kp_17_federation_cycle_call_chain_exit2.yaml` | Integration | Federated call whose `call_chain` already contains the workspace fails closed with `exit 2` (E041_FEDERATION_CYCLE) before any socket write. | TN | Testing a direct self-call instead of a genuine 2-hop cycle, or asserting after the IPC write already happened. |
+| `kp_17_federation_cycle_call_chain_exit2.yaml` | Integration | Third re-entry of workspace in `call_chain` fails closed with exit 2 (E041_FEDERATION_CYCLE) | TN | Testing a direct self-call instead of a genuine 2-hop cycle, or asserting after the IPC write already happened. |
 | `kp_18_federation_hop_ceiling_exit2.yaml` | Integration | 3rd cross-workspace hop breaches the hop ceiling (inbound chain of 2) and exits 2; the hop ceiling binds before nesting > 5. | TN | Testing with a 1-hop chain (legal) and asserting denial, or conflating the hop ceiling with the nesting ceiling. |
 | `kp_19_federation_unversioned_ws_ast_exit3.yaml` | Integration | Unversioned `ws://` call target fails at AST compile with `exit 3` — no socket opened, no frame pushed. | TN | Letting the call reach the socket layer and asserting on the transport error instead of the compile gate. |
 | `kp_20_federation_txn_isolation_exit3.yaml` | Integration | `ctx.call` to a `ws://` target inside a `ctx.db.txn` block is rejected at compile time with `exit 3`; the routine never compiles, no transaction opens. | TN | Issuing the call outside the txn block, or testing `ctx.api.call` instead of the federation-specific gate. |
-| `kp_21_federation_transport_retry_exit4.yaml` | Integration | Missing peer socket exhausts the 1500ms poll (3 ticks @ 500ms, MockClock-stepped) and exits 4 (E055_FEDERATION_UNREACHABLE). | TN | Using a real 1500ms sleep, or asserting exit 2 instead of the exit 4 transport failure. |
+| `kp_21_federation_transport_retry_exit4.yaml` | Integration | Missing peer socket exhausts the 10s dial budget and exits 4 (E055_FEDERATION_UNREACHABLE) | TN | Using a real 1500ms sleep, or asserting exit 2 instead of the exit 4 transport failure. |
 | `kp_22_exit6_yield_claims_retained.yaml` | Integration | SIGTERM preemption yield closes the SQLite transaction and parks the frame with the Layer 1 claim row intact (claims 1 -> 1, holder and identity tuple unchanged). | TP | Yielding a frame that never held a claim, or dropping and re-inserting the claim row behind the final count. |
 | `kp_23_suspended_tasks_yield_capture.yaml` | Integration | Yielded frame's `_suspended_tasks` row carries a non-null json cursor, a 64-hex `state_fence`, and an integer `checkpoint_ts` inside the yield window. | TP | Asserting column presence without validating the 64-hex fence shape, or parking a null cursor. |
+| `kp_24_lockfile_plugin_binary_tamper.yaml` | Integration | Tampered plugin binary_sha256 in capcli.lock halts boot with exit 3 | TN | Agent asserts exit 3 on an untampered lockfile, or deletes the binary and credits the missing-file error as a hash mismatch. |
 
 ### 6.2 Database Floor & C-Authorizer (`cases/database_authorizer/`)
 
 | Case ID | Target Tier | Invariant & Scenario Narrative | Matrix | Banned Slop Pattern |
 |---|---|---|---|---|
 | `da_01_unbounded_update_ast_kill.yaml` | E2E | `UPDATE orders SET status = 'shipped'` without `WHERE` or `LIMIT` dies immediately with `exit 2`; zero rows touched. | TN | Asserting exit 2 without verifying with `SELECT count(*)` that zero rows were changed. |
-| `da_02_where_tautology_bypass_kill.yaml` | Unit | Malicious query `UPDATE users SET role = 'admin' WHERE id = '1' OR 1=1` is trapped mid-flight by VDBE mutation hook on row 2. | TN | Relying on AST pattern matching rather than physical VDBE update hook row counters. |
+| `da_02_where_tautology_bypass_kill.yaml` | Unit | WHERE-clause tautology (OR 1=1) escalation killed at AST gate before prepare | TN | Relying on AST pattern matching rather than physical VDBE update hook row counters. |
 | `da_03_multi_statement_injection.yaml` | Unit | Input `SELECT 1; DROP TABLE users;` passed to query engine is rejected by AST multi-statement parser rule. | TN | Splitting statements with string `.split(';')` rather than AST tokenizer validation. |
 | `da_04_system_table_write_denial.yaml` | Integration | Agent issues `INSERT INTO _budget_frames VALUES (...)`; C-authorizer on `workspace.db` rejects write to system table with `SQLITE_DENY`. | TN | Granting agent write permissions to system tables in test fixture setup. |
 | `da_05_raw_ddl_denied_reviewed_caller.yaml` | E2E | Reviewed caller runs raw `ALTER TABLE orders ADD COLUMN rush boolean`; denied at the C authorizer with `exit 2` (raw DDL denied for draft and reviewed alike; the migration pipeline is the sole DDL path). | TN | Running test in `dev` with `pinned` trust pre-configured so the ALTER succeeds. |
@@ -458,6 +469,11 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `da_13_row_ceiling_transaction_overflow.yaml` | Integration | Transaction inserting 501 rows in single batch exceeds 500-row insert ceiling; aborted cleanly with `exit 2`. | TN | Truncating input array silently instead of aborting transaction. |
 | `da_14_txn_lifespan_bound_violation_exit2.yaml` | Integration | Writer holding the SQLite write lock 40ms past the 15ms lifespan bound aborts with `exit 2`; the transaction rolls back, nothing commits. | TN | Committing inside 15ms while asserting the abort, or asserting exit 2 on a normally committed transaction. |
 | `da_15_commit_time_fence_drift_exit2.yaml` | Integration | Row tampered between Phase-1 read and Phase-3 commit trips the OCC fence at commit time; aborts with `exit 2` (`E061_OCC_DRIFT`), zero partial writes. | TN | Drifting a row the fence never covered, or drifting after the commit already landed. |
+| `da_16_occ_read_drift_retry_exhaustion.yaml` | Integration | OCC read drift exhausts fence retries and aborts with E061_OCC_DRIFT | TN | Agent drifts a table the fence never covered, or drifts after the commit already landed, and credits the abort to the fence. |
+| `da_17_drop_table_denied_reviewed.yaml` | E2E | Raw DROP TABLE issued by a reviewed caller is denied at the C authorizer | TN | Agent grants pinned trust in the fixture so the DROP succeeds, or asserts exit 2 without proving the table survived. |
+| `da_18_vacuum_denied_pinned_prod.yaml` | E2E | VACUUM issued by pinned caller in prod is denied at the C authorizer | TN | Agent runs the case in dev where VACUUM is permitted, then asserts the prod denial from the dev result. |
+| `da_19_readfile_denylist.yaml` | Unit | readfile SQLite function invocation is denied by the authorizer function denylist | TN | Agent only exercises load_extension and asserts the denylist proven without calling readfile. |
+| `da_20_scoped_view_principal_runtime_deny.yaml` | Integration | Scoped view read without --as is denied at runtime by the authorizer | TN | Agent passes --as with a fabricated principal and asserts denial, proving only that an invalid principal is rejected. |
 
 ### 6.3 Wire Floor & Quota Brokerage (`cases/wire_egress/`)
 
@@ -468,8 +484,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `we_03_background_priority_yield_exit6.yaml` | E2E | Background task hits quota floor (<15 tokens); frame is suspended, committed to `_suspended_tasks`, returns `exit 6`. | TN | Killing task as hard failure (`exit 2`) instead of graceful yield (`exit 6`). |
 | `we_04_vault_bearer_egress_injection.yaml` | Integration | Routine calls `ctx.api.call("stripe.charges")`; kernel proxy injects vaulted Authorization header; secret never enters guest memory. | TP | Inspecting guest runtime memory and finding the secret in plaintext. |
 | `we_05_unregistered_ip_outbound_block.yaml` | Integration | Outbound HTTP request targets raw IP address (`192.168.1.50`); kernel egress proxy rejects call (domain allowlist only). | TN | Permitting raw IP connection in test harness environment. |
-| `we_06_sim_mode_mock_fallback.yaml` | Integration | Verb in `sim` environment has `sim_mode: mock`; kernel serves fixture from `apis/<provider>.mock.yaml` without touching wire. | TP | Allowing packet to leak to external test server during simulation run. |
-| `we_07_429_backoff_jitter_retry.yaml` | Integration | Kernel proxy retries HTTP 429 with exponential backoff and full jitter before surfacing the provider denial | TN | An AI agent fakes this test by asserting the surfaced error without measuring timing — instant tight-loop retries (or a single sleep-then-fail) pass |
+| `we_06_sim_mode_mock_fallback.yaml` | Integration | Verb in `sim` environment has `sim_mode: mock`; kernel serves fixture from `apis/<provider>.cassette.jsonl` without touching wire. | TP | Allowing packet to leak to external test server during simulation run. |
+| `we_07_429_backoff_jitter_retry.yaml` | Integration | 429 with Retry-After forces yield path; frame parks in _suspended_tasks for refill | TN | An AI agent fakes this test by asserting the surfaced error without measuring timing — instant tight-loop retries (or a single sleep-then-fail) pass |
 | `we_08_standard_priority_yield_floor.yaml` | Unit | Standard priority task checks quota; available tokens equal 5; task yields cleanly with `exit 6`. | TN | Allowing standard task to drain bucket down to 0 like a critical task. |
 | `we_09_critical_priority_pool_drain.yaml` | Unit | Critical priority task checks quota; available tokens equal 3; task permitted to consume down to 0 tokens. | TP | Blocking critical task at background threshold (15 tokens). |
 | `we_10_wire_payload_byte_cap_breach.yaml` | Integration | Egress proxy detects outbound POST payload size exceeding 65,536 bytes; blocks call before socket transmission. | TN | Streaming oversized request to physical server before checking limit. |
@@ -483,7 +499,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | Case ID | Target Tier | Invariant & Scenario Narrative | Matrix | Banned Slop Pattern |
 |---|---|---|---|---|
 | `bc_01_downward_min_inheritance.yaml` | Unit | Parent frame (ops=20) inspects child routine (declared ops=50); pre-flight static analysis detects child starvation and returns `can_invoke_now: false`. | TP | Permitting invocation when declared child branch exceeds available parent headroom. |
-| `bc_02_session_ops_ceiling_starvation.yaml` | Integration | Ten child routines burn 5 fuel each; the 100000-fuel session pool saturates; 11th call dies with `exit 2`. | TN | Resetting session fuel counters across child frame pushes. |
+| `bc_02_session_ops_ceiling_starvation.yaml` | Integration | Ten child routines burn 10000 fuel each; the 100000-fuel session pool saturates; 11th call exits 2 | TN | Resetting session fuel counters across child frame pushes. |
 | `bc_03_leaf_op_51_hard_kill.yaml` | E2E | Routine without declared custom limit attempts op #51; kernel watchdog halts frame with `exit 2` at boundary. | TN | Allowing half-executed state mutations on the 51st operation. |
 | `bc_04_duration_watchdog_cleanup.yaml` | Integration | Guest routine enters infinite loop; watchdog timer trips at 300s (simulated); process killed, transaction rolled back. | TN | Leaking orphaned child processes or zombie threads after kill. |
 | `bc_05_fuel_pool_depletion_exit2.yaml` | Unit | Routine exceeds session fuel allocation (100,000 units); kernel denies subsequent primitive invocation. | TN | Continuing execution with negative fuel balance. |
@@ -502,6 +518,8 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `bc_18_mechanical_daemon_resume_completion.yaml` | Integration | Frame yielded (`exit 6`) unblocked by clock refill; `capcli-daemon` executes the pre-compiled guest routine in the sandbox to completion; harness wake count is exactly 0. | TP | Re-invoking the LLM harness on resume and asserting completion, or resuming via a manual test command. |
 | `bc_19_occ_drift_resume_abort_exit2.yaml` | Integration | Yielded frame's OCC `state_fence` mismatches live row state at resume; daemon aborts immediately with `exit 2` (`E061_OCC_DRIFT`); frame purged, nothing committed. | TN | Drifting a table the fence never covered, or letting the frame resume and commit against drifted rows. |
 | `bc_20_resume_lease_ownership_exit2.yaml` | Integration | Resume attempt on a frame whose Layer 1 lease expired aborts with `exit 2` even though the `state_fence` still matches; frame purged, nothing resumes. | TN | Drifting the fenced row too (so the fence check, not the lease check, fires), or testing a still-active lease. |
+| `bc_21_duration_cascade_cross_frame.yaml` | Integration | Child frame duration consumes parent wall-clock budget via duration_cascade | TN | Agent asserts the parent's declared_max_duration_ms directly without any child frame in play. |
+| `bc_22_result_tokens_cascade_nested.yaml` | Integration | Nested routine result tokens consume parent envelope via result_tokens_scope | TN | Agent asserts truncation on a single top-level routine without any nested call, proving nothing about cascade. |
 
 ### 6.5 Memory Spine & Causal DAG (`cases/audit_dag/`)
 
@@ -521,7 +539,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `ad_12_audit_query_parameterization.yaml` | E2E | `sys audit query` command rejects raw string concatenation; requires `-p key=val` parameter bindings. | TN | Permitting raw unparameterized SQL against system audit mirror. |
 | `ad_13_kms_witness_signature_checkpoint.yaml` | Integration | Kernel witness worker periodically signs current ledger root hash with KMS key and appends to `witness.log`. | TP | Stamping checkpoints without cryptographic digital signature. |
 | `ad_14_federation_call_events_trace.yaml` | Integration | `federation.call_out`/`call_in` pair emitted with `child_trace_id` linkage; W3C traceparent stitches the peer DAG to the root chain; `call_chain` rides the envelope. | TP | Asserting only the caller-side event, or faking the trace linkage by string-matching instead of walking both hash chains. |
-| `ad_15_boot_chain_walk_quarantine.yaml` | Integration | Boot-time walk validates the last 1,000 `_audit` blocks; a broken link quarantines the corrupted span, emits a critical security alert, and halts with exit 5. | TN | Asserting boot health from daemon startup alone without recomputing the chain. |
+| `ad_15_boot_chain_walk_quarantine.yaml` | Integration | Boot-time walk validates last 1,000 blocks; broken link quarantines span, alerts, boot completes degraded | TN | Asserting boot health from daemon startup alone without recomputing the chain. |
 
 ### 6.6 Trust Ladder & Promotion (`cases/trust_ladder/`)
 
@@ -530,7 +548,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `tl_01_draft_write_to_prod_denial.yaml` | E2E | Caller with `draft` trust attempts mutating write in `prod` environment; denied with `exit 2` (`draft_writes: deny`). | TN | Permitting draft writes in prod when `--intent` is provided. |
 | `tl_02_tier2_weakest_link_matrix.yaml` | E2E | Tier 2 host: pinned routine targeting `prod` denied with `exit 2` (`E045_PROD_TIER1_MANDATE`); identical pinned invocation targeting `sim` executes (exit 0). | TN | Testing only one target environment, or asserting denial without the typed code. |
 | `tl_03_auto_promotion_conjunction_pass.yaml` | Integration | Routine meets all 5 auto-promotion metrics in sim (100% replay pass, zero denials, zero drift); promotes to `reviewed`. | TP | Promoting routine when 4 of 5 metrics pass and 1 fails. |
-| `tl_04_canary_telemetry_auto_demote.yaml` | Integration | Promoted routine experiences error spike during 1-hour canary window; autonomous watchdog auto-demotes trust to `draft`. | TN | Leaving failing routine in `pinned` state awaiting manual human intervention. |
+| `tl_04_canary_telemetry_auto_demote.yaml` | Integration | Promoted routine error spike in 1-hour canary window demotes one rung pinned → reviewed | TN | Leaving failing routine in `pinned` state awaiting manual human intervention. |
 | `tl_05_unproven_pack_draft_floor.yaml` | Unit | Newly imported routine pack enters system; kernel forces trust rung to `draft` regardless of bundle claim. | TN | Trusting pack manifest declaration of "pinned". |
 | `tl_06_training_wheels_call_graduation.yaml` | Integration | Unsimulated prod-only API verb executes calls 1-3 under synthetic contract proof and graduates to standard governance exactly on call 4 | TP | Agent advances the call counter non-deterministically (sleeps between calls), asserts graduation happened by re-reading the counter the engine itself |
 | `tl_07_bulk_operations_reviewed_floor.yaml` | E2E | Routine at draft trust attempts bulk update (>10 rows); rejected at policy gate (`bulk_operations` requires `reviewed`). | TN | Allowing draft routines to execute bulk updates in development environments. |
@@ -539,11 +557,11 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `tl_10_demotion_zero_resistance_pass.yaml` | Unit | Demotion command (`routine rollback --to-trust draft`) executes immediately without waiting for gate metrics or confirmation. | TP | Adding artificial friction or approval queues to demotion paths. |
 | `tl_11_promotion_queue_sla_breach_alert.yaml` | Integration | Routine resides in human review queue for 49 hours; `sys doctor` raises `promotion.sla_breached` alarm (threshold: 48h). | TN | Silently letting routines languish in pending review queues indefinitely. |
 | `tl_12_human_veto_rollback_trust.yaml` | Integration | Human inspector vetoes promoted routine during canary window; routine immediately rolled back to `draft` and unpinned. | TP | Requiring a code rebuild or new version bump to execute human veto rollback. |
-| `tl_13_circuit_breaker_demotion_streak.yaml` | Integration | Routine has 20 consecutive runs with success rate <0.70; autonomous circuit-breaker demotes routine to `draft`. | TN | Allowing a broken pinned routine to repeatedly fail in production without auto-demotion. |
+| `tl_13_circuit_breaker_demotion_streak.yaml` | Integration | 20-run success rate below 0.70 decay floor demotes pinned → reviewed | TN | Allowing a broken pinned routine to repeatedly fail in production without auto-demotion. |
 | `tl_14_federated_caller_floor_pinned.yaml` | Integration | `ws://` call targeting a draft routine fails closed with `exit 2` (E042_FEDERATION_DENIED) despite allowlist and SO_PEERCRED passing. | TN | Targeting a pinned routine and asserting denial, or letting the call execute past the trust gate. |
 | `tl_15_federated_initiation_floor.yaml` | Integration | Draft routine initiating a `ws://` call is denied (trust >= reviewed required); callee is pinned to isolate the caller-side floor. | TN | Conflating with the inbound caller floor (tl_14) by targeting a draft callee instead of a draft caller. |
 | `tl_16_autonomous_pinned_promotion.yaml` | Integration | Reviewed routine passes 100% sim replay invariants, zero policy denials, live contract schema verification, p95 <= 70% of timeout ceiling; kernel promotes reviewed -> pinned with zero human approvals. | TP | Promoting via a human approval in the fixture, or promoting on 4-of-5 proof metrics. |
-| `tl_17_canary_veto_rollback_draft.yaml` | Integration | Newly pinned routine (40min into the 1-hour window) posts 1.2% error (> 1% threshold); daemon watchdog demotes pinned -> draft and alerts Cockpit PWA. | TN | Hand-demoting in the fixture instead of exercising the autonomous veto, or asserting no rollback at a below-threshold error rate. |
+| `tl_17_canary_veto_rollback_draft.yaml` | Integration | Newly pinned routine 40min into canary posts 1.2% error; demotes pinned → reviewed, alerts Cockpit | TN | Hand-demoting in the fixture instead of exercising the autonomous veto, or asserting no rollback at a below-threshold error rate. |
 | `tl_18_reviewed_prod_execution_denial.yaml` | E2E | `reviewed`-trust routine invoked with `--env prod`; denied with `exit 2` (`E046_TRUST_VIOLATION`). | TN | Pre-promoting the fixture to pinned, or asserting denial without the typed code. |
 
 ### 6.7 Schema Migration & Compile Checks (`cases/schema_migration/`)
@@ -628,6 +646,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `vs_10_secret_scope_environment_isolation.yaml` | Unit | Secret configured with `scope: prod` cannot be queried or injected when session environment is `sim` or `dev`. | TN | Allowing dev/sim environments to pull production secrets. |
 | `vs_11_secret_rotation_in_memory_eviction.yaml` | Integration | Secret rotated in vault; daemon in-memory decrypted cache evicted instantly; subsequent call uses new credential. | TP | Retaining stale decrypted secrets in daemon process memory. |
 | `vs_12_redacted_leak_detection_kill.yaml` | Integration | Routine emitting a credential-shaped sequence to stdout is killed by the egress leak scanner (kill_and_alert, exit 5) with the secret redacted from every audit record | TN | Agent confuses the kill with a routine runtime crash (asserts exit 4 on a generic exception), or lets the leaked string ride into the audit payload |
+| `vs_13_audit_mirror_credential_leak.yaml` | Integration | Plaintext credential echoed into _audit mirror bytes triggers exit 5 panic | TN | Agent asserts stdout scrubbing and never inspects the JSONL mirror file, so a mirror-only leak passes. |
 
 ### 6.11 SDK & Guest Harness Contract (`cases/sdk_harness/`)
 
@@ -646,6 +665,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `sh_11_non_serializable_result_exit4.yaml` | Unit | Routine attempts to return a non-JSON serializable object (e.g., active file descriptor); SDK traps and exits 4 cleanly. | TN | Raising raw unhandled runtime exception without standard CLI diagnostic envelope. |
 | `sh_12_ctx_db_lock_distributed_lease.yaml` | Integration | Routine acquires lock via `ctx.db.lock("inventory:10")`; verifies lock is recorded in `claims` and auto-cleared on exit. | TP | Managing locks exclusively in memory without persisting to system claims table. |
 | `sh_13_ws_call_under_claim_lock_exit3.yaml` | Integration | `ctx.call` to a `ws://` target while holding a local Layer 1 claim is rejected at AST compile with `exit 3`; no socket opens, the claim row is untouched. | TN | Issuing the ws:// call without holding a claim, or letting the call reach the socket layer and asserting on transport. |
+| `sh_14_ctx_api_call_txn_runtime_bypass.yaml` | Integration | Runtime ctx.api.call inside open ctx.db.txn is rejected as defense-in-depth | TN | Agent constructs the routine normally so the AST scanner catches it first, and credits the compile path with the runtime defense. |
 
 ### 6.12 URP Resolver Engine (`cases/urp/`)
 

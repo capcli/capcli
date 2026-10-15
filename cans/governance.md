@@ -113,6 +113,8 @@
     - Consumed counters
       - consumed_fuel — single internal counter
       - Every cost converts to fuel
+      - Earmark ring-fences quota, dissolves on TTL
+      - Earmark sweeper restores unused tokens
       - Formula — see #Fuel-formula
       - Turn-zero exemption up to 60 tokens
     - Bookkeeping
@@ -218,6 +220,7 @@
       - rate_scope — session
       - rows_scope — trust_session
       - result_tokens_scope — routine
+      - wire_bytes_scope — session, default 4MB
       - max_nesting_depth — 5
       - call_preflight — cycle check before dispatch
       - Config — see artifacts/governance.yaml

@@ -1,0 +1,59 @@
+$schema: "test-plan/case/v1"
+case_id: "da_18_vacuum_denied_pinned_prod"
+title: "VACUUM issued by pinned caller in prod is denied at the C authorizer"
+domain: "database_authorizer"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "kernel.md#Layer-1-C-authorizer"
+  statement: "VACUUM is denied in prod regardless of trust rung; disk maintenance runs only via the kernel's scheduled WAL checkpoint."
+  blast_radius_if_breached: "A routine-triggered VACUUM rewrites the entire SQLite file under traffic, invalidating every open WAL reader and breaking the 15ms write-lock ceiling."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the case in dev where VACUUM is permitted, then asserts the prod denial from the dev result."
+  anti_slop_mitigation: "AS-02 requires the test to boot with --env prod and prove the file mtime of workspace.db is unchanged post-execution."
+
+setup:
+  env: "prod"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:operator"
+    agent_id: "agt_test_18"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: "orders(id int pk, status text)"
+    tables:
+      - name: "orders"
+        row_count: 100
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"VACUUM\" -m \"defrag workspace\""
+  input_params: {}
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "VACUUM denied in prod environment"
+    remedy: "Disk maintenance runs via the kernel's scheduled WAL checkpoint; do not issue raw VACUUM."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "policy.authorizer_denied"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "stat(workspace.db).mtime_ns is identical before and after; no VACUUM journal file is created."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 AND diagnostic.domain == policy.authorizer AND remedy cites the kernel WAL checkpoint."

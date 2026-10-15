@@ -1,0 +1,63 @@
+$schema: "test-plan/case/v1"
+case_id: "sh_14_ctx_api_call_txn_runtime_bypass"
+title: "Runtime ctx.api.call inside open ctx.db.txn is rejected as defense-in-depth"
+domain: "sdk_harness"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "kernel.md#Layer-2-AST-scanner"
+  statement: "sh_02 proves the AST scanner rejects ctx.api.call inside ctx.db.txn at compile time; this case proves the SDK's runtime _txn_open flag catches any bypass of the AST pass."
+  blast_radius_if_breached: "A dynamic-dispatch bypass of the AST scan would allow wire latency inside an open SQLite transaction, holding the write lock past the 15ms lifespan bound."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent constructs the routine normally so the AST scanner catches it first, and credits the compile path with the runtime defense."
+  anti_slop_mitigation: "AS-02 requires the routine to be pre-compiled with a monkey-patched ctx object; AS-03 requires the runtime guard, not the AST, to raise the exit-3 diagnostic."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:test"
+    agent_id: "agt_test_14"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: "orders(id int pk, status text)"
+    tables:
+      - name: "orders"
+        row_count: 1
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "runner.execute_precompiled('txn_bypass_attempt', sandbox_bypass=true)"
+  input_params:
+    routine_body: |
+      with ctx.db.txn():
+          ctx.db.query("UPDATE orders SET status='held' WHERE id=:id", {"id": 1})
+          getattr(ctx, 'api').call("stripe.charges", {"amount": 100})
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "runtime guard: ctx.api.call inside open ctx.db.txn"
+    remedy: "Move egress outside ctx.txn; stage via ctx.emit for daemon dispatch post-commit."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "policy.txn_external_call_denied"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT status FROM orders WHERE id=1 returns the pre-execution value; the UPDATE never committed."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 AND diagnostic.culprit cites the runtime guard, not the AST scanner."

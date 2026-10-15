@@ -433,6 +433,7 @@
     - Cron governance
       - Active schedule ceiling per environment
       - Minimum interval floor
+      - Floor — 5 minutes between fires
       - Catchup max 1 execution per boot
       - Orphan handling binds dissolve with routine
       - Definition — see plugins.md#Capabilities
@@ -446,6 +447,8 @@
     - Schedule defenses
       - Orphan protection atomic dissolve
       - Restart safety max 1 catchup
+      - Webhook ingress capped at 100 events/minute
+      - Loopback ingress URL without tunnel denied
       - Webhook payload ceiling 64KB
       - Dead letter queue
         - Retains failed events per world.md policy

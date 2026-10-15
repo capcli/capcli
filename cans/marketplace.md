@@ -239,6 +239,7 @@
   - Distribution channels
     - Source types
       - GitHub repo — github.com/org/repo
+      - Registry alias — pack://registry/<tier>/<name>@<ver>
       - GitHub release — release URL with tag
       - Registry alias — pack://registry/<tier>/<name>
       - Direct URL — pinned with #sha256=<hex>

@@ -309,6 +309,8 @@
     - Merge
       - env merge <name> [target=prod]
       - -m flag for intent
+      - --confirm-backup required for prod target
+      - --confirm-prod required for prod target
       - Requires tier 1 host and rehearsal
       - Promotion — see governance.md#Promotion-gates
     - Remove

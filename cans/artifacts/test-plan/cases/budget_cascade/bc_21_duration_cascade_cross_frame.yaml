@@ -1,0 +1,60 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_21_duration_cascade_cross_frame"
+title: "Child frame duration consumes parent wall-clock budget via duration_cascade"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "governance.md#Composition-flags"
+  statement: "duration_cascade: true means a child frame's wall clock subtracts from the parent's declared_max_duration_ms; the tightest constraint aborts the frame."
+  blast_radius_if_breached: "A parent with 300ms remaining invokes three children at 200ms each; without cascade the parent runs 600ms, breaching the watchdog ceiling invisibly."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts the parent's declared_max_duration_ms directly without any child frame in play, proving nothing about the cascade."
+  anti_slop_mitigation: "AS-04 requires MockClock ticks to advance the child; AS-03 requires the abort to cite the parent frame id, not the child."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:test"
+    agent_id: "agt_test_21"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: null
+    tables: []
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "push_frame(parent, declared_max_duration_ms=300); push_frame(child_1, 200); tick(200); pop(child_1); push_frame(child_2, 200); tick(150)"
+  input_params:
+    parent_budget_ms: 300
+    child_1_ms: 200
+    child_2_ms: 150
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "parent frame duration exhausted at 300/300 ms during child_2"
+    remedy: "Shorten child durations or raise parent declared_max_duration_ms; cascade is min(), never additive."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT consumed_ms FROM _budget_frames WHERE frame_id='parent' returns 300; no row exceeds declared_max_duration_ms."
+  - rule: "AS-04"
+    verification: "Elapsed time advances via MockClock ticks only; the harness runs in under 50ms real time."

@@ -35,6 +35,7 @@
     - Intercepted actions
       - Table mutations — read, insert, update, delete
       - Column writes — deny_columns_write protection
+      - FK cascade blocked when child has imm_rows
       - Schema ops — drop, alter, vacuum restrictions
       - Engine safety — attach and detach denied
     - Function allowlist
@@ -175,6 +176,7 @@
     - Phase 1 — static pre-flight
       - Host-side, memory-only
       - Zero DB writes, zero network calls
+      - Pointer grammar violations exit 3 pre-dispatch
       - Identity, syntax, AST, cycle, lockfile
       - Budget headroom via can_invoke_now
       - Any failure exits 3, state untouched

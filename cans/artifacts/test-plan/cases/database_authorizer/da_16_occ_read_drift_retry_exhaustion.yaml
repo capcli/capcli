@@ -1,0 +1,63 @@
+$schema: "test-plan/case/v1"
+case_id: "da_16_occ_read_drift_retry_exhaustion"
+title: "OCC read drift exhausts fence retries and aborts with E061_OCC_DRIFT"
+domain: "database_authorizer"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "governor.md#Drift-recovery"
+  statement: "A Phase 3 commit whose read rows drift from the Phase 1 state_fence retries up to three times; exhaustion aborts with exit 2 and zero partial writes."
+  blast_radius_if_breached: "Stale reads commit against mutated rows, producing lost updates and cross-agent state corruption."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent drifts a table the fence never covered, or drifts after the commit already landed, and credits the abort to the fence."
+  anti_slop_mitigation: "AS-02 requires a before/after row-count proof; AS-04 requires MockClock-stepped retries, never wall-clock sleep."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:test"
+    agent_id: "agt_test_16"
+    trust: "pinned"
+  initial_state:
+    schema_yaml: "inventory(sku text pk, qty int)"
+    tables:
+      - name: "inventory"
+        row_count: 1
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "phase_1_read('inventory','SKU-1'); drift_row('SKU-1', qty=99) x4; phase_3_commit()"
+  input_params:
+    retry_count: 4
+    fence_retry_cap: 3
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "state_fence drift on inventory:SKU-1 exceeded 3 retries"
+    remedy: "Reduce concurrent writers on the fenced row or hold a Layer 1 claim across the read/write window."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "policy.occ_drift_exhausted"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT qty FROM inventory WHERE sku='SKU-1' returns the original value; drifted 99 never committed."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 AND diagnostic.culprit cites E061_OCC_DRIFT."
+  - rule: "AS-04"
+    verification: "Retries use MockClock epoch ticks, not tokio::time::sleep."
