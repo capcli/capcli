@@ -178,6 +178,7 @@
       - Kernel maps --as identity string to key
       - Mapping precedes view binding
       - Mismatch exits 3
+    - Tenant authorizer — see kernel.md#Layer-1-C-authorizer
     - Implicit fork rule
       - Same PID with divergent marker forks
       - Fork inherits scoped parent token

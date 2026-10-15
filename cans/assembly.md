@@ -19,6 +19,7 @@
       - cargo test --workspace --all-targets
       - cargo clippy --workspace -- -D warnings
       - bun run --cwd packages/pwa build
+      - cargo build --release --target aarch64-linux-android — Termux
     - Declarative artifacts
       - Path — artifacts/
       - schema.yaml — domain model
@@ -67,18 +68,36 @@
       - Daemon — see interface.md#Administrative-Cockpit-PWA
   - Core subsystems
     - Domains
-      - db — pool, authorizer, migrate, bytecode, claims (see world.md#Claims-lease)
-      - routine — runner, jail, shape, saga, scaffold, manifest, fingerprint, IPC (see routines.md#Procedure-layer)
-      - storage — uploads, S3/R2, signing, metadata (see egress.md#Developer-bridge)
-      - api — catalog, auth, projection, contracts, outbox, quota, headers, egress, mocks, refresh (see egress.md#Vault-proxy)
-      - bind — cron, webhooks, routing, key hashing (see plugins.md#Capabilities)
-      - ping — notify, ask, timeouts (see governor.md#Suspension-registry)
-      - rule — loading, cycle scan, bundles, shorthand, lockfile (see world.md#Pre-flight-sub-checks)
-      - env — namespaces, masking, drift (see lifecycle.md#Environments)
-      - sys — audit, mirror, hashchain, witness, doctor, recover (see effect.md#Audit-spine)
-      - run — dispatch, search, preflight (see routines.md#Procedure-layer)
-      - identity — process, vault, session (see identity.md#Credential-binding)
-      - plugin — generations, registries, schema, leases, GC, verify (see plugins.md#Installation-lifecycle)
+      - db — connection.rs, authorizer.rs, migrate.rs, bytecode.rs
+      - db — snapshot.rs, claims.rs
+      - db — see world.md#Claims-lease
+      - routine — runner.rs, jail.rs, shape_gate.rs, saga.rs
+      - routine — scaffold.rs, manifest.rs, fingerprint.rs, ipc_socket.rs
+      - routine — see routines.md#Procedure-layer
+      - storage — local.rs, s3.rs, signer.rs, metadata.rs
+      - storage — see egress.md#Developer-bridge
+      - api — catalog.rs, auth_schemes.rs, projector.rs
+      - api — contract_validator.rs, outbox.rs, quota.rs
+      - api — header_parser.rs, egress.rs, sim_mock.rs, refresh.rs
+      - api — see egress.md#Vault-proxy
+      - bind — cron.rs, webhook.rs, endpoint.rs, keys.rs
+      - bind — see plugins.md#Capabilities
+      - ping — notify.rs, ask.rs, timeout.rs
+      - ping — see governor.md#Suspension-registry
+      - rule — loader.rs, cycle_check.rs, template_bundle.rs
+      - rule — shorthand.rs, lockfile.rs
+      - rule — see world.md#Pre-flight-sub-checks
+      - env — namespace.rs, masking.rs, drift.rs
+      - env — see lifecycle.md#Environments
+      - sys — audit.rs, mirror.rs, hashchain.rs, witness.rs
+      - sys — doctor.rs, recover.rs
+      - sys — see effect.md#Audit-spine
+      - run — registry.rs, search.rs, preflight.rs
+      - run — see routines.md#Procedure-layer
+      - identity — process.rs, vault.rs, session.rs
+      - identity — see identity.md#Credential-binding
+      - plugin — generations, registries, schema, leases, GC, verify
+      - plugin — see plugins.md#Installation-lifecycle
     - Location
       - All under crates/capcli-core/src/<domain>/
       - Module counts governed by scope
@@ -137,19 +156,29 @@
       - Never embeds secrets
       - Definition — see interface.md#Administrative-Cockpit-PWA
   - Test architecture
-    - Unit tier (crates/capcli-core/tests/unit/)
-      - Scope — authorizer, bytecode, shape, vault, registry
-      - Count — 11 modules
-      - Engine — see kernel.md#Unified-3-phase-engine
+    - Unit tier
       - Location — crates/capcli-core/tests/unit/
-    - Integration tier (tests/integration/)
-      - Scope — jail, IPC, storage, webhook, mirror
+      - Count — 11 modules
+      - Modules — test_authorizer, test_bytecode
+      - Modules — test_routine_shape, test_api_quota
+      - Modules — test_cycle_check, test_hashchain
+      - Modules — test_vault, test_trinity, test_template
+      - Engine — see kernel.md#Unified-3-phase-engine
+    - Integration tier
+      - Location — tests/integration/
       - Count — 9 modules
+      - Modules — test_bwrap, test_ipc_socket, test_mirror
+      - Modules — test_storage_s3, test_api_proxy
+      - Modules — test_webhook, test_ping_timeout
       - Cross-platform — Linux, macOS, Windows
       - Definition — see sandbox.md#Tri-Jail-engine
-    - End-to-end tier (tests/e2e/)
-      - Scope — onboarding, cascade, recovery, lifecycle
+    - End-to-end tier
+      - Location — tests/e2e/
       - Count — 10 modules
+      - Modules — test_wireframe_fixtures
+      - Modules — test_onboarding_human, test_onboarding_harness
+      - Modules — test_budget_cascade, test_recovery_drill
+      - Modules — test_api_lifecycle, test_env_worktree
       - Golden fixtures validate CLI surface
       - Onboarding — see interface.md#Onboarding
     - Fixtures

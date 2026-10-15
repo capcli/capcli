@@ -95,9 +95,9 @@
       - ctx.db.view(name, params) — named view read
       - ctx.db.get(table, id) — structured lookup
       - ctx.db.query(sql, params) — parameterized SQL
-      - ctx.db.mutate(table, id, set) — single-row write
+      - ctx.db.mutate(table, id, set, intent) — single-row write
       - ctx.txn(egress, write) — saga context
-      - ctx.call(target, params) — composition
+      - ctx.call(target, params, timeout_s, compensate) — composition
       - ctx.emit(event, payload) — outbox write
       - ctx.db.lock(target, ttl) — Layer 1 lease
     - OCC fence capture
@@ -111,8 +111,8 @@
       - Both reproducible across replay
       - Non-deterministic sources banned
     - External API methods
-      - ctx.api.call(verb, params, intent)
-      - ctx.api.poll_until(verb, params, condition)
+      - ctx.api.call(verb, params, intent) — gated egress
+      - ctx.api.poll_until(verb, params, condition, timeout_s, interval_s)
       - ctx.api.verify(verb, key) — key validation
       - Egress gates apply normally
       - Definition — see egress.md#Wire-edge-enforcement

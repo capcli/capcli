@@ -46,6 +46,8 @@
       - Auth scope — see plugins.md#Socket-authentication
       - Hub evaluates all spoke writes
       - Zero spoke-side bypass possible
+      - Disconnect law — socket drop rolls back spoke transaction
+      - Disconnect law — drops holder claims without reaper wait
     - Writer serialization
       - Hub serializes physical writes
       - BEGIN IMMEDIATE across writers

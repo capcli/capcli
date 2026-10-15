@@ -130,7 +130,10 @@
       - Silent refresh on every egress
       - Caller never observes rotation
     - Catalog references
-      - Provider spec declares secret_ref
+      - Provider spec declares secret_ref, base_url
+      - Provider spec declares auth_scheme, rate_limit headers
+      - Provider spec declares idempotency mapping
+      - Provider spec declares webhook verification spec
       - Never declares plaintext value
       - Import validates handle exists
       - Missing handle fails pre-call check

@@ -281,7 +281,7 @@
       - IPC latency over kernel.sock
       - Tier 2 degraded flag reported
     - Degraded disclosure
-      - Tier 2 emits host.degraded_isolation
+      - Tier 2 emits platform.degraded_isolation
       - Banner rendered on stderr
       - Machine field in --json envelope
       - Envelope shape — see interface.md#CLI-surface

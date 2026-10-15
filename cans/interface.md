@@ -138,7 +138,7 @@
     - Audit
       - sys audit tail [--follow]
       - sys audit trace <op-id> [--explain]
-      - sys audit query <sql>
+      - sys audit query <sql> [-p k=v]
       - sys audit replay --from <ts>
       - Query — see effect.md#Query-surfaces
     - Identity
@@ -398,8 +398,12 @@
       - Packs — see marketplace.md#Packs
   - Plugin-provided nouns
     - Pack nouns
-      - api — api-gateway pack (import, sync, record, prove, ship, catalog, drift, stats, retire)
-      - bind — scheduler pack (cron, webhook, endpoint, federation, list, inspect, pause, resume, remove, keys)
+      - api — api-gateway pack
+        - Verbs — import, sync, record, prove, ship
+        - Verbs — catalog, drift, stats, rollback, retire
+      - bind — scheduler pack
+        - Verbs — cron, webhook, endpoint, federation
+        - Verbs — list, inspect, pause, resume, remove, keys
       - ping — notify pack (notify, ask, list, resolve, expire)
       - serve — http-server pack (start, stop, restart, status, export)
       - storage — storage pack (put, get, url, list, remove)

@@ -411,7 +411,7 @@
       - Decay — see lifecycle.md#Decay
     - Human intervention boundary
       - Risk-flagged ops require approval
-      - Threshold — high row counts, migrations
+      - Threshold — 50k rows, destructive migrations
       - Configuration proposals via Cockpit
       - Proposals — see world.md#Configuration-proposals
       - Routine promotion is fully autonomous

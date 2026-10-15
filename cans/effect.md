@@ -66,6 +66,24 @@
         - Budget — frame_push, frame_pop, exhausted
         - Serve — request, response
         - Promotion — sla_breached, canary_veto
+        - Platform — waiver_granted, degraded_isolation
+      - Payload contracts
+        - federation.call_out — target_ws, target_urp, params_hash
+        - federation.call_out — child_trace_id, call_chain
+        - federation.call_out — budget_delegated
+        - federation.call_in — source_ws, caller_principal
+        - federation.call_in — parent_frame_id, caused_by_op, outcome
+        - swarm.node_reap — agent, reason, claims_released_count
+        - swarm.preemption_yield — agent, frame_id, checkpoint_cursor
+        - kernel.panic.secret_leak — culprit, decision, effect
+        - rule.config_proposed — file, diff_hash, agent, gate_status
+        - rule.config_committed — file, approver, git_commit, lockfile_hash
+        - api.first_prod_call — call_number, calls_remaining, proof_hash
+        - budget.frame_push — frame_id, routine, declared, inherited
+        - budget.frame_pop — consumed, returned_to_parent
+        - serve.request — endpoint, channel, trace_id, api_key_id
+        - promotion.sla_breached — queue age beyond SLA threshold
+        - platform.waiver_granted — operator, session, routine, run
       - Representative shape
         - event — typed name string
         - payload — domain-specific fields
