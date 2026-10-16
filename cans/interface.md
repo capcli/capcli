@@ -8,29 +8,31 @@
       - Flag conventions — humans text, agents --json
       - Help stub capped at 6 lines pointing to search
       - Exit law — see kernel.md#Exit-code-law
-    - Two-tier noun model
-      - Kernel nouns — compiled, always present
-      - Plugin nouns — dynamic, installed at runtime
-      - Resolution — see plugins.md#Resolution-rules
-      - Identical surface in help output
-      - Registration — see plugins.md#CLI-noun-registration
-    - The 9 kernel nouns
-      - run — dispatch any URP
-      - sys — kernel operations
-      - plugin — lifecycle manager
-      - db — SQLite storage path
-      - routine — guest code path
-      - env — namespace path
-      - rule — schema compilation path
-      - doc — document reading path
-      - pack — blueprint and cartridge path
-      - Nine reserved — cannot alias or extend, exit 3 on breach at install
-    - Plugin nouns (dynamic)
-      - cli_noun declared in plugin manifest
-      - Registered at plugin install
-      - Removed at plugin uninstall
-      - capcli stripe, capcli s3, capcli api
-      - Registration — see plugins.md#CLI-noun-registration
+    - Noun model
+      - Two-tier noun model
+        - Kernel nouns — compiled, always present
+        - Plugin nouns — dynamic, installed at runtime
+        - Resolution — see plugins.md#Resolution-rules
+        - Identical surface in help output
+        - Registration — see plugins.md#CLI-noun-registration
+      - The 9 kernel nouns
+        - run — dispatch any URP
+        - sys — kernel operations
+        - plugin — lifecycle manager
+        - db — SQLite storage path
+        - routine — guest code path
+        - env — namespace path
+        - rule — schema compilation path
+        - doc — document reading path
+        - pack — blueprint and cartridge path
+        - Nine reserved — cannot alias or extend, exit 3 on breach at install
+      - Plugin nouns (dynamic)
+        - cli_noun declared in plugin manifest
+        - Registered at plugin install
+        - Removed at plugin uninstall
+        - capcli stripe, capcli s3, capcli api
+        - Registration — see plugins.md#CLI-noun-registration
+      - Reserved nouns — see #The-9-kernel-nouns
     - Prefix standard
       - [environment:platform tier] prepended to output
       - Legal pairs — see governance.md#Weakest-link-matrix
@@ -46,7 +48,6 @@
       - Banner rendered on stderr
       - Machine field in --json envelope
       - Platform — see sandbox.md#Platform-tiers
-    - Reserved nouns — see #The-9-kernel-nouns
     - Projection failure handling
       - Canonical fallback — capcli plugin <id> <verb>
       - Manifest malformed — fallback
@@ -116,15 +117,33 @@
       - run overview [--as <principal>]
       - run search gaps --since 7d
       - inspect <ptr> — unified resolver
-    - URP dispatch
-      - cap://routine@version — local routine
-      - vault://, audit://, ask://, quota:// — DB entity pointers
-      - pack://, policy:// — artifact pointers
-      - plugin://<id>/<verb> — plugin verb
-      - ws://workspace/routine@version — federated
-      - db://table — DB entity inspection
-      - doc://path — document reading
-      - Bare plugin:// is escape hatch, not daily
+    - Resolvers
+      - URP dispatch
+        - cap://routine@version — local routine
+        - vault://, audit://, ask://, quota:// — DB entity pointers
+        - pack://, policy:// — artifact pointers
+        - plugin://<id>/<verb> — plugin verb
+        - ws://workspace/routine@version — federated
+        - db://table — DB entity inspection
+        - doc://path — document reading
+        - Bare plugin:// is escape hatch, not daily
+      - Executable resolver fields
+        - fuel_declared — integer
+        - session_fuel_remaining — integer
+        - cadence_status — enum headroom
+        - ceiling_status — enum ledger position
+        - can_invoke_now — boolean verdict
+        - routine_min_fuel equals fuel_declared
+      - DB entity resolver
+        - Row schema, check constraints
+        - Mask flags, TTL per row
+        - Handles db://, vault://, audit://
+        - Handles ask://, quota://
+      - Artifact resolver
+        - Token size and node outlines
+        - Bundle metadata and manifest
+        - Handles doc://, pack://, policy://
+        - Zero fuel cost for inspection
     - Tier waiver
       - --tier-waiver grants one prod on tier 2
       - Interactive TTY only, headless denied
@@ -146,28 +165,11 @@
       - Contents vary by resolver class
       - Envelope — see #CLI-surface
       - Executables carry budget_status block
-    - Executable resolver fields
-      - fuel_declared — integer
-      - session_fuel_remaining — integer
-      - cadence_status — enum headroom
-      - ceiling_status — enum ledger position
-      - can_invoke_now — boolean verdict
-      - routine_min_fuel equals fuel_declared
     - Refusal law
       - AST pre-flight rejects when fuel short
       - Exit 2 with domain policy.budget
       - Routine never invoked on refusal
       - Exit law — see kernel.md#Exit-code-law
-    - DB entity resolver
-      - Row schema, check constraints
-      - Mask flags, TTL per row
-      - Handles db://, vault://, audit://
-      - Handles ask://, quota://
-    - Artifact resolver
-      - Token size and node outlines
-      - Bundle metadata and manifest
-      - Handles doc://, pack://, policy://
-      - Zero fuel cost for inspection
     - Success affordances
       - Exit 0 only, absent on non-zero
       - Array of rel, command, intent, risk
@@ -194,10 +196,6 @@
       - sys agent list — show roster
       - sys agent revoke — end execution
       - Registry — see identity.md#System-agent-registry
-    - Swarm
-      - sys swarm list [--active]
-      - sys swarm reap — evict expired
-      - Swarm — see identity.md#Ephemeral-swarm-identity
     - Vault
       - sys vault set <key> <val>
       - sys vault import-env
@@ -216,20 +214,25 @@
       - sys init --fresh — re-init after loss
       - Dual confirmation required
       - Ledger — see world.md#Ledger-re-initialization
-    - Sandbox
-      - sys exec <cmd> --sandbox
-      - Same Tri-Jail envelope applied
-      - Providers — see sandbox.md#Sandbox-providers
-    - Harness shim
-      - sys shim <target-bin> [--wrap <path>]
-      - Deploys zero-cost wrapper
-      - Captures caller marker hashes
-      - Scrubs secrets from output
-      - Markers — see identity.md#Harness-markers
-    - Daemon
-      - sys serve --start, --stop, --restart
-      - sys serve --status
-      - Daemon — see assembly.md#Persistent-daemon-crate
+    - Execution
+      - Swarm
+        - sys swarm list [--active]
+        - sys swarm reap — evict expired
+        - Swarm — see identity.md#Ephemeral-swarm-identity
+      - Sandbox
+        - sys exec <cmd> --sandbox
+        - Same Tri-Jail envelope applied
+        - Providers — see sandbox.md#Sandbox-providers
+      - Harness shim
+        - sys shim <target-bin> [--wrap <path>]
+        - Deploys zero-cost wrapper
+        - Captures caller marker hashes
+        - Scrubs secrets from output
+        - Markers — see identity.md#Harness-markers
+      - Daemon
+        - sys serve --start, --stop, --restart
+        - sys serve --status
+        - Daemon — see assembly.md#Persistent-daemon-crate
   - Plugin noun
     - Install
       - plugin install <source>

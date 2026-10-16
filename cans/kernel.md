@@ -1,5 +1,4 @@
 - Kernel
-<!-- ref-by: sandbox.md, governor.md, effect.md, governance.md -->
   - The 5 concerns
     - State — see world.md#SQLite-as-SSOT
     - Physics — see #The-4-physical-laws
@@ -32,117 +31,118 @@
       - No law overrides another
       - Denial at any law keeps state untouched
       - state_modified: false guaranteed
-  - Layer 1 — C authorizer
-    - Engine
-      - sqlite3_set_authorizer inside sqlite3_prepare_v2
-      - Native Rust closure passed to rusqlite
-      - Fires per statement at prepare time
-      - Cannot be bypassed from guest
-    - Intercepted actions
-      - Table mutations — read, insert, update, delete
-      - Column writes — deny_columns_write protection
-      - FK cascade blocked when child has imm_rows
-      - Schema ops — drop, alter, vacuum restrictions
-      - Engine safety — attach and detach denied
-    - Function allowlist
-      - count, sum, min, max, avg allowed
-      - json_extract and date allowed
-      - load_extension denied
-      - writefile and readfile denied
-    - Trust floors
-      - Raw DDL denied for draft and reviewed
-      - ALTER, DROP, CREATE TABLE exit 2
-      - Migration pipeline is the sole DDL path
-      - VACUUM requires pinned, denied in prod
-    - Tenant isolation
-      - Direct tenant table access blocked
-      - Access forced through scoped views
-      - :principal bind variable mandatory
-      - ctx.db.mutate asserts row owner
-    - Remote authorizer proxy
-      - Canonical home — see world.md#Remote-authorizer-proxy
-      - Spoke writes serialize to Hub for eval
-      - Zero spoke-side authorizer bypass
-      - Topology — see sandbox.md#Deployment-topology
-    - OCC fence evaluation
-      - Layer 2 state_fence verified at Hub
-      - Spoke computes fence from read rows
-      - Hub re-verifies before physical commit
-      - Drift exits 2 with E061_OCC_DRIFT
-      - Reference — see governor.md#Suspension-registry
-    - Authentication boundary
-      - SO_PEERCRED applies to local IPC
-      - Never crosses network boundary
-      - Remote auth via mTLS over WireGuard
-      - Definition — see plugins.md#Federation-transport
-  - Layer 1.2 — VDBE mutation hook
-    - Engine
-      - sqlite3_update_hook and progress_handler
-      - Counts B-Tree row mutations
-      - Counts VDBE byte-code steps
-      - Aborts mid-flight on breach
-    - Caps
-      - Mutated row count per statement
-      - Independent of WHERE clause shape
-      - Complements AST static bounds
-      - Runtime backstop for AST bypass
-    - Abort behavior
-      - Transaction rolls back instantly
-      - Exit 2 with policy.budget domain
-      - No partial commit survives
-      - Audit leaf records attempted op
-    - Failure attribution
-      - Denial cites measured vs ceiling
-      - Denial cites failing statement
-      - Denial cites AST classification
-      - Remediation suggests bound tightening
-  - Layer 1.5 — prepare-time cross-check
-    - Engine
-      - sqlite3_prepare_v2 dry-run in test transaction
-      - Compares AST classification vs EXPLAIN
-      - Detects OpenWrite on read-classified SQL
-      - Denies on classification mismatch
-    - Opcode trap
-      - OpenWrite on read statement denies
-      - OpenWrite on unclassified denies
-      - OpenRead expected on SELECT only
-      - Discrepancy carries exit 2
-    - Scope
-      - Runs on every raw SQL statement
-      - Runs inside Phase 3 arbiter
-      - Skipped for named view reads
-      - Skipped for structured ctx.db.get
-  - Layer 2 — AST scanner
-    - Engine
-      - sqlparser crate pre-check
-      - Runs in Phase 1 pre-flight
-      - Structural classification only
-      - Backed by Layer 1.2 at runtime
-    - Parameterization
-      - Bound parameters mandatory
-      - String interpolation banned
-      - f-strings fail compilation, exit 3
-      - Concatenation fails compilation, exit 3
-    - Transaction isolation
-      - ctx.api.call inside ctx.db.txn denied
-      - ctx.call ws:// inside ctx.db.txn denied
-      - Compile-time refusal, exit 3
-      - E034_TXN_EXTERNAL_CALL
-    - Structural checks
-      - Multi-statement raw strings denied
-      - Unparseable SQL denied
-      - Schema bypass sequences denied
-      - Intent mandatory on writes
-    - Row bounds
-      - SELECT max 10000 rows
-      - INSERT max 500 rows
-      - UPDATE and DELETE max 100 rows
-      - OFFSET > 50 denied at prepare
-    - Deny patterns
-      - UPDATE WHERE 1=1 denied
-      - DELETE without WHERE denied
-      - DELETE WHERE NOT EXISTS denied
-      - Boolean tautology bypass denied
+  - SQL layers
+    - Layer 1 — C authorizer
+      - Engine
+        - sqlite3_set_authorizer inside sqlite3_prepare_v2
+        - Native Rust closure passed to rusqlite
+        - Fires per statement at prepare time
+        - Cannot be bypassed from guest
+      - Intercepted actions
+        - Table mutations — read, insert, update, delete
+        - Column writes — deny_columns_write protection
+        - FK cascade blocked when child has imm_rows
+        - Schema ops — drop, alter, vacuum restrictions
+        - Engine safety — attach and detach denied
+      - Function allowlist
+        - count, sum, min, max, avg allowed
+        - json_extract and date allowed
+        - load_extension denied
+        - writefile and readfile denied
+      - Trust floors
+        - Raw DDL denied for draft and reviewed
+        - ALTER, DROP, CREATE TABLE exit 2
+        - Migration pipeline is the sole DDL path
+        - VACUUM requires pinned, denied in prod
+      - Tenant isolation
+        - Direct tenant table access blocked
+        - Access forced through scoped views
+        - :principal bind variable mandatory
+        - ctx.db.mutate asserts row owner
+      - Remote authorizer proxy
+        - Canonical home — see world.md#Remote-authorizer-proxy
+        - Spoke writes serialize to Hub for eval
+        - Zero spoke-side authorizer bypass
+        - Topology — see sandbox.md#Deployment-topology
+      - OCC fence evaluation
+        - Layer 2 state_fence verified at Hub
+        - Spoke computes fence from read rows
+        - Hub re-verifies before physical commit
+        - Drift exits 2 with E061_OCC_DRIFT
+        - Reference — see governor.md#Suspension-registry
+      - Authentication boundary
+        - SO_PEERCRED applies to local IPC
+        - Never crosses network boundary
+        - Remote auth via mTLS over WireGuard
+        - Definition — see plugins.md#Federation-transport
+    - Layer 1.2 — VDBE mutation hook
+      - Engine
+        - sqlite3_update_hook and progress_handler
+        - Counts B-Tree row mutations
+        - Counts VDBE byte-code steps
+        - Aborts mid-flight on breach
+      - Caps
+        - Mutated row count per statement
+        - Independent of WHERE clause shape
+        - Complements AST static bounds
+        - Runtime backstop for AST bypass
+      - Abort behavior
+        - Transaction rolls back instantly
+        - Exit 2 with policy.budget domain
+        - No partial commit survives
+        - Audit leaf records attempted op
+      - Failure attribution
+        - Denial cites measured vs ceiling
+        - Denial cites failing statement
+        - Denial cites AST classification
+        - Remediation suggests bound tightening
+    - Layer 1.5 — prepare-time cross-check
+      - Engine
+        - sqlite3_prepare_v2 dry-run in test transaction
+        - Compares AST classification vs EXPLAIN
+        - Detects OpenWrite on read-classified SQL
+        - Denies on classification mismatch
+      - Opcode trap
+        - OpenWrite on read statement denies
+        - OpenWrite on unclassified denies
+        - OpenRead expected on SELECT only
+        - Discrepancy carries exit 2
+      - Scope
+        - Runs on every raw SQL statement
+        - Runs inside Phase 3 arbiter
+        - Skipped for named view reads
+        - Skipped for structured ctx.db.get
+    - Layer 2 — AST scanner
+      - Engine
+        - sqlparser crate pre-check
+        - Runs in Phase 1 pre-flight
+        - Structural classification only
+        - Backed by Layer 1.2 at runtime
+      - Parameterization
+        - Bound parameters mandatory
+        - String interpolation banned
+        - f-strings fail compilation, exit 3
+        - Concatenation fails compilation, exit 3
+      - Transaction isolation
+        - ctx.api.call inside ctx.db.txn denied
+        - ctx.call ws:// inside ctx.db.txn denied
+        - Compile-time refusal, exit 3
+        - E034_TXN_EXTERNAL_CALL
+      - Structural checks
+        - Multi-statement raw strings denied
+        - Unparseable SQL denied
+        - Schema bypass sequences denied
+        - Intent mandatory on writes
+      - Row bounds
+        - SELECT max 10000 rows
+        - INSERT max 500 rows
+        - UPDATE and DELETE max 100 rows
+        - OFFSET > 50 denied at prepare
+      - Deny patterns
+        - UPDATE WHERE 1=1 denied
+        - DELETE without WHERE denied
+        - DELETE WHERE NOT EXISTS denied
+        - Boolean tautology bypass denied
   - Policy vs governance split
     - Policy file
       - Path — artifacts/policy.yaml
