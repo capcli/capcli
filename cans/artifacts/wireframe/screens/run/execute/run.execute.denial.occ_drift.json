@@ -1,1 +1,32 @@
-{"$schema": "wireframe/v2", "archetype": "diagnostic", "command": "capcli run cap://sync_inventory@3 -p region=eu-west -m \"nightly stock reconciliation\"", "component": {"culprit": "E061_OCC_DRIFT: read drift on inventory row INV-2201 (v88 \\u2192 v91) while frame_024 was suspended; frame remains parked", "domain": "db.engine", "layer": "engine", "lines": ["Daemon resume verification failed: OCC state_fence drifted during suspension.", "E061_OCC_DRIFT: read drift during suspension; resumption refused with exit 2.", "Mechanical resumption is unsafe against moved state; the frame was never resumed."], "measured": "1 fenced row drifted during suspension (recorded v88, live v91)", "remedy": "run 'capcli run abort frame_024' first — it purges the _suspended_tasks resume target and releases the frame's claims lease; then re-run 'capcli run cap://sync_inventory@3' against current state; the drifted frame never resumes", "rule": "db.engine.occ_fence", "suspended_frame": "frame_024"}, "context": {"env": "dev", "tier": "tier_1", "trust": "pinned"}, "elapsed_ms": 214, "id": "run.execute.denial.occ_drift", "target": "cap://sync_inventory@3"}
+{
+  "$schema": "wireframe/v2",
+  "archetype": "diagnostic",
+  "command": "capcli run cap://sync_inventory@3 -p region=eu-west -m \"nightly stock reconciliation\"",
+  "component": {
+    "culprit": "E061_OCC_DRIFT: read drift on inventory row INV-2201 (v88 \\u2192 v91) while frame_024 was suspended; frame remains parked",
+    "domain": "db.engine",
+    "layer": "engine",
+    "lines": [
+      "Daemon resume verification failed: OCC state_fence drifted during suspension.",
+      "E061_OCC_DRIFT: read drift during suspension; resumption refused with exit 2.",
+      "Mechanical resumption is unsafe against moved state; the frame was never resumed."
+    ],
+    "measured": "1 fenced row drifted during suspension (recorded v88, live v91)",
+    "remedy": "run 'capcli run abort frame_024' first \u2014 it purges the _suspended_tasks resume target and releases the frame's claims lease; then re-run 'capcli run cap://sync_inventory@3' against current state; the drifted frame never resumes",
+    "rule": "db.engine.occ_fence",
+    "suspended_frame": "frame_024"
+  },
+  "trailer": {
+    "prompt": "doc://prompts/budget/occ_drift#1",
+    "reason": "suspended frame resumed with drifted read set",
+    "serve": "L1"
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "elapsed_ms": 214,
+  "id": "run.execute.denial.occ_drift",
+  "target": "cap://sync_inventory@3"
+}

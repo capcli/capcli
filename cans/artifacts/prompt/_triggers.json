@@ -131,6 +131,46 @@
       "prompt": "doc://prompts/federation/remediation#1",
       "serve": "L1",
       "reason": "federated call refused: allowlist, cycle, or transport"
+    },
+    {
+      "id": "t_authoring_static_refusal",
+      "screen_id": "run.execute.refusal.static",
+      "predicate": {},
+      "prompt": "doc://prompts/authoring/static_refusal#1",
+      "serve": "L1",
+      "reason": "pre-flight refused dispatch before guest ran"
+    },
+    {
+      "id": "t_authoring_trust_floor",
+      "screen_id": "run.execute.denial.trust",
+      "predicate": {},
+      "prompt": "doc://prompts/authoring/trust_floor#1",
+      "serve": "L1",
+      "reason": "trust floor breached: platform tier or composition rung"
+    },
+    {
+      "id": "t_budget_occ_drift",
+      "screen_id": "run.execute.denial.occ_drift",
+      "predicate": {},
+      "prompt": "doc://prompts/budget/occ_drift#1",
+      "serve": "L1",
+      "reason": "suspended frame resumed with drifted read set"
+    },
+    {
+      "id": "t_federation_outbound",
+      "screen_id": "ws.peers.success.empty",
+      "predicate": {},
+      "prompt": "doc://prompts/federation/outbound#1",
+      "serve": "L1",
+      "reason": "no active federated peers registered"
+    },
+    {
+      "id": "t_authoring_binding_setup",
+      "screen_id": "bind.list.success.empty",
+      "predicate": {},
+      "prompt": "doc://prompts/authoring/binding_setup#1",
+      "serve": "L1",
+      "reason": "no bindings configured in active environment"
     }
   ],
   "registry": "Sole trigger registry: screen, predicate, pointer, serve level, reason. Bank frontmatter carries no trigger facts."

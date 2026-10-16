@@ -78,6 +78,36 @@
       "bank": "federation",
       "file": "banks/federation/federation.remediation.denial.denied.md",
       "status": "served"
+    },
+    {
+      "stem": "authoring.static_refusal.denial.refused",
+      "bank": "authoring",
+      "file": "banks/authoring/authoring.static_refusal.denial.refused.md",
+      "status": "served"
+    },
+    {
+      "stem": "authoring.trust_floor.denial.denied",
+      "bank": "authoring",
+      "file": "banks/authoring/authoring.trust_floor.denial.denied.md",
+      "status": "served"
+    },
+    {
+      "stem": "budget.occ_drift.denial.drifted",
+      "bank": "budget",
+      "file": "banks/budget/budget.occ_drift.denial.drifted.md",
+      "status": "served"
+    },
+    {
+      "stem": "federation.outbound.success.empty",
+      "bank": "federation",
+      "file": "banks/federation/federation.outbound.success.empty.md",
+      "status": "served"
+    },
+    {
+      "stem": "authoring.binding_setup.success.empty",
+      "bank": "authoring",
+      "file": "banks/authoring/authoring.binding_setup.success.empty.md",
+      "status": "served"
     }
   ],
   "note": "Campaign inventory compiled from bank frontmatter. Trigger facts live only in _triggers.json."

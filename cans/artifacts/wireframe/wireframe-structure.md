@@ -203,6 +203,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.execute.refusal.missing_secret`| refusal| 3 | policy.secrets | missing_key | Missing credential redirects to Cockpit URL |
 | `run.execute.yield.ask` | yield | 6 | ping.ask | suspended | Routine hit `ctx.ping.ask`; frame checkpointed to `_pending_asks`, exits 6 until human resolves |
 | `run.execute.yield.quota` | yield | 6 | api.quota | rate_limit | Suspends task; sets `yield_until` timestamp |
+| `run.execute.refusal.static` | refusal | 3 | compile | bad_syntax | Pre-flight compile check failed; no guest ran |
 | `run.execute.denial.quota` | denial | 2 | api.quota | hard_deny | Critical-priority task drained provider pool to 0; hard-denied, never yielded |
 | `run.execute.success.resumed` | success | 0 | — | resumed | Daemon re-dispatches task on token refill |
 | `run.execute.denial.occ_drift` | denial | 2 | db.engine | occ_fence | `E061_OCC_DRIFT`: OCC state_fence drifted during suspension; daemon frame resume aborted |
@@ -231,6 +232,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.success.pack` | success | 0 | — | populated | pack:// blueprint pre-flight envelope via capcli inspect |
 | `run.inspect.refusal.unregistered_scheme` | refusal | 3 | missing_param | unregistered_scheme | tcp:// transport endpoint refused: not a registered URP scheme; remedy capcli sys swarm list |
 | `run.inspect.success.ws` | success | 0 | — | populated | ws:// federated routine pre-flight envelope via capcli inspect |
+| `ws.peers.success.empty` | success | 0 | — | empty | Zero federated peers registered |
 | `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Pack URP does not resolve |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.refusal.removed_scheme` | refusal | 3 | missing_param | removed_scheme | hub:// removed scheme refused at parse with exit 3 |

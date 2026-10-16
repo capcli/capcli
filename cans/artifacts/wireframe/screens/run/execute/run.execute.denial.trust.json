@@ -23,5 +23,10 @@
       "Draft routines cannot execute in production.",
       "Prove in sim first, then ship to pinned."
     ]
+  },
+  "trailer": {
+    "prompt": "doc://prompts/authoring/trust_floor#1",
+    "reason": "trust floor breached: platform tier or composition rung",
+    "serve": "L1"
   }
 }

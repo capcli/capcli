@@ -1,0 +1,29 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "run.execute.refusal.static",
+  "target": "cap://broken_calc",
+  "command": "capcli run cap://broken_calc -p x=1 -m \"smoke test\"",
+  "elapsed_ms": 41,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "domain": "compile",
+    "layer": "preflight",
+    "culprit": "SyntaxError in routines/broken_calc.py line 12: unterminated string literal.",
+    "lines": [
+      "pre-flight compile check failed before dispatch (exit 3)",
+      "no guest code ran; state untouched"
+    ],
+    "remedy": "Fix the syntax error and re-dispatch the exact command.",
+    "capability": "cap://broken_calc"
+  },
+  "trailer": {
+    "prompt": "doc://prompts/authoring/static_refusal#1",
+    "reason": "pre-flight refused dispatch before guest ran",
+    "serve": "L1"
+  }
+}

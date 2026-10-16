@@ -25,5 +25,10 @@
         ]
       }
     ]
+  },
+  "trailer": {
+    "prompt": "doc://prompts/authoring/binding_setup#1",
+    "reason": "no bindings configured in active environment",
+    "serve": "L1"
   }
 }

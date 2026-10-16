@@ -1,0 +1,34 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "ws.peers.success.empty",
+  "target": "peers",
+  "command": "capcli ws peers",
+  "elapsed_ms": 88,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed",
+    "data_shape": "empty"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "peers": "0 active"
+        }
+      },
+      {
+        "lines": [
+          "No federated peers registered. Register a peer before dialing ws:// targets."
+        ]
+      }
+    ]
+  },
+  "trailer": {
+    "prompt": "doc://prompts/federation/outbound#1",
+    "reason": "no active federated peers registered",
+    "serve": "L1"
+  }
+}
