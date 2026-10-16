@@ -166,8 +166,9 @@
         - Queues — _outbox_events, _inbox (see #Outbox-inbox)
         - State — _suspended_tasks, _packs (see governor.md#Suspension-registry)
         - Metrics — routine_stats (see lifecycle.md#Stage-map)
+        - Attention — _attention_cursors (see kernel.md#Diagnostic-output-law)
       - Roster invariant
-        - Fifteen kernel tables total
+        - Sixteen kernel tables total
         - Every table owned by one file
         - Cross-file citation not allowed
         - Definition — see kernel.md#Layer-1-C-authorizer

@@ -1,0 +1,48 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.inbox.success.suppressed",
+  "target": "webhook",
+  "command": "capcli sys inbox pop --channel webhook",
+  "elapsed_ms": 1004,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "populated"
+  },
+  "archetype": "tree",
+  "component": {
+    "title": "popped",
+    "root": "events:",
+    "nodes": [],
+    "footer": {
+      "channel": "webhook",
+      "popped": "0 events",
+      "remaining": "1 held under active claim",
+      "note": "claim orders:ORD-10 held by agt_9k2w; held rows stay invisible until release"
+    }
+  },
+  "attention": {
+    "cursor": "att_a992f_043",
+    "counts": {
+      "critical": 0,
+      "standard": 0,
+      "background": 0
+    },
+    "top": [],
+    "suppressed": [
+      {
+        "id": "evt_ord_901",
+        "class": "standard",
+        "source": "_inbox",
+        "summary": "Held under active Layer 1 claim orders:ORD-10 (holder agt_9k2w)",
+        "affordance": {
+          "rel": "inspect",
+          "command": "capcli sys audit trace op_9f2c --explain",
+          "intent": "Inspect the holding operation",
+          "risk": "safe"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "run.execute.success.attention",
+  "target": "cap://dispatch_order@4",
+  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+  "elapsed_ms": 361,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned",
+    "data_shape": "populated"
+  },
+  "audit_op": "op_9f2c",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "routine": "dispatch_order@4 (pinned)",
+          "session": "ses_a992f",
+          "intent": "\"fulfill urgent pending orders\"",
+          "frame": "frame_021 (3/8 ops · 358ms)"
+        }
+      },
+      {
+        "fields": {
+          "order_id": "ORD-1042",
+          "carrier": "fedex",
+          "tracking": "794644790133",
+          "status": "shipped (1 row committed)"
+        },
+        "lines": [
+          "result:"
+        ]
+      },
+      {
+        "fields": {
+          "result_hash": "sha256:9c41e7b0d2a8f513c6ee"
+        }
+      }
+    ]
+  },
+  "attention": {
+    "cursor": "att_a992f_042",
+    "counts": {
+      "critical": 1,
+      "standard": 1,
+      "background": 0
+    },
+    "top": [
+      {
+        "id": "ask_88a",
+        "class": "critical",
+        "source": "ping.ask",
+        "summary": "Human approval requested: refund ORD-1042 (charge ch_1N2x)",
+        "affordance": {
+          "rel": "next",
+          "command": "capcli ping resolve ask_88a --choice approve",
+          "intent": "Resolve the pending approval ask",
+          "risk": "safe"
+        }
+      },
+      {
+        "id": "evt_ord_903",
+        "class": "standard",
+        "source": "_inbox",
+        "summary": "Refund request queued via shopify_refunds intake",
+        "affordance": {
+          "rel": "next",
+          "command": "capcli sys inbox pop --channel webhook",
+          "intent": "Drain the queued sensory events",
+          "risk": "safe"
+        }
+      }
+    ],
+    "suppressed": []
+  }
+}

@@ -357,6 +357,17 @@
       - Array of { rel, command, intent, risk }
       - Agent executes affordance verbatim
       - Absence changes no exit or payload byte
+    - Attention block
+      - Envelope field alongside diagnostic and audit_op
+      - Present when counts nonzero or suppression active
+      - Absent when zero unacked and no suppression
+      - Fields — cursor, counts, top, suppressed
+      - Never alters exit_code or state_modified
+      - Item shape — id, class, source, summary, affordance
+      - Class enum — see governor.md#Priority-classes
+      - Affordance shape — see #Success-affordances
+      - Cursor table — _attention_cursors, key (session, environment)
+      - Cursor advance — on every envelope render
     - Fixture law
       - Screen is a wireframe/v2 fixture JSON
       - Schema — see artifacts/wireframe/wireframe-structure.md

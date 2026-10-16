@@ -77,6 +77,74 @@
       },
       "position": "exit-0 envelopes only; additive --json envelope key, never a human output line",
       "effect": "rendering only: exit code, state_modified, and every other output byte of the host screen are unchanged"
+    },
+    "attention": {
+      "machine_field": "attention",
+      "machine_schema": {
+        "type": "object",
+        "required": ["cursor", "counts", "top", "suppressed"],
+        "properties": {
+          "cursor": { "type": "string" },
+          "counts": {
+            "type": "object",
+            "required": ["critical", "standard", "background"],
+            "properties": {
+              "critical": { "type": "integer" },
+              "standard": { "type": "integer" },
+              "background": { "type": "integer" }
+            }
+          },
+          "top": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "class", "source", "summary", "affordance"],
+              "properties": {
+                "id": { "type": "string" },
+                "class": { "type": "string", "enum": ["critical", "standard", "background"] },
+                "source": { "type": "string" },
+                "summary": { "type": "string" },
+                "affordance": {
+                  "type": "object",
+                  "required": ["rel", "command", "intent", "risk"],
+                  "properties": {
+                    "rel": { "type": "string", "enum": ["next", "abort", "inspect"] },
+                    "command": { "type": "string" },
+                    "intent": { "type": "string" },
+                    "risk": { "type": "string", "enum": ["safe", "mutating"] }
+                  }
+                }
+              }
+            }
+          },
+          "suppressed": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "class", "source", "summary", "affordance"],
+              "properties": {
+                "id": { "type": "string" },
+                "class": { "type": "string", "enum": ["critical", "standard", "background"] },
+                "source": { "type": "string" },
+                "summary": { "type": "string" },
+                "affordance": {
+                  "type": "object",
+                  "required": ["rel", "command", "intent", "risk"],
+                  "properties": {
+                    "rel": { "type": "string", "enum": ["next", "abort", "inspect"] },
+                    "command": { "type": "string" },
+                    "intent": { "type": "string" },
+                    "risk": { "type": "string", "enum": ["safe", "mutating"] }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "position": "any exit; additive --json envelope key beside diagnostic and audit_op, never a human output line",
+      "presence": "present when counts nonzero or suppression active; absent when zero unacked and no suppression",
+      "effect": "rendering only: exit code, state_modified, and every other output byte of the host screen are unchanged"
     }
   }
 }

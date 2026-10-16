@@ -181,7 +181,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (6 verbs → 52 screens)
+### 4.1 `run/` (6 verbs → 53 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -238,6 +238,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.refusal.removed_scheme` | refusal | 3 | missing_param | removed_scheme | hub:// removed scheme refused at parse with exit 3 |
 | `run.inspect.success.masked` | success | 0 | — | redacted | Secret references rendered as [REDACTED_VAULT_TOKEN]; inspect exits 0 on all rungs |
 | `run.abort.success.aborted` | success | 0 | — | aborted | Suspended frame purged; OCC fence released |
+| `run.execute.success.attention` | success | 0 | — | attention | Commit landed with nonzero attention; `top` carries the pending ask and inbox rows |
 | `run.abort.refusal.unknown_frame` | refusal | 3 | missing_param | unknown_frame | Abort target frame not suspended |
 
 ### 4.2 `db/` (6 verbs → 14 screens)
@@ -419,12 +420,13 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (18 verbs → 53 screens)
+### 4.9 `sys/` (18 verbs → 54 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `sys.help.success.stub` | success | 0 | — | stub | Minimalist help stub redirecting to search; host line cap in `manifest.json` `output_contract` |
 | `sys.inbox.success.populated` | success | 0 | — | populated | Sensory events popped from the intake queue (cron/webhook sources; durable store TBD) |
+| `sys.inbox.success.suppressed` | success | 0 | — | suppressed | Pop suppressed by an active Layer 1 claim; `suppressed` carries the held row |
 | `sys.inbox.success.empty` | success | 0 | — | empty | No stimulus queued; exits clean (sensory grounding) |
 | `sys.tail.success.populated` | success | 0 | — | populated | Live streaming audit records |
 | `sys.tail.success.empty` | success | 0 | — | empty | No audit events within window |
@@ -534,7 +536,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 
 ## 5. Canonical Screen Fixtures
 
-Every fixture is a `wireframe/v2` root in `CliEnvelope` shape (envelope law: kernel.md#Diagnostic-output-law): `$schema`, `id`, `command`, `context {env, tier, trust}`, optional `audit_op`, `archetype`, `component`. Exactly one component per screen:
+Every fixture is a `wireframe/v2` root in `CliEnvelope` shape (envelope law: kernel.md#Diagnostic-output-law): `$schema`, `id`, `command`, `context {env, tier, trust}`, optional `audit_op`, optional `attention`, `archetype`, `component`. Exactly one component per screen:
 
 - `diagnostic` — states denial, refusal, crash, panic, yield (exits 2, 3, 4, 5, 6)
 - `tree` — hierarchies, causal DAGs, inspection envelopes
@@ -1327,6 +1329,190 @@ Capabilities are discovered dynamically, not listed in static help.
 
 ---
 
+### 5.13 Commit With Nonzero Attention (`screens/run/execute/run.execute.success.attention.json`)
+
+The commit receipt renders exactly as the zero-attention screen; the
+`attention` key is machine-only and adds no human line. Cursor value is
+illustrative: the cursor advances on every envelope render and the golden
+runner never asserts it.
+
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "run.execute.success.attention",
+  "target": "cap://dispatch_order@4",
+  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned",
+    "data_shape": "populated"
+  },
+  "audit_op": "op_9f2c",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "routine": "dispatch_order@4 (pinned)",
+          "session": "ses_a992f",
+          "intent": "\"fulfill urgent pending orders\"",
+          "frame": "frame_021 (3/8 ops · 358ms)"
+        }
+      },
+      {
+        "fields": {
+          "order_id": "ORD-1042",
+          "carrier": "fedex",
+          "tracking": "794644790133",
+          "status": "shipped (1 row committed)"
+        },
+        "lines": [
+          "result:"
+        ]
+      },
+      {
+        "fields": {
+          "result_hash": "sha256:9c41e7b0d2a8f513c6ee"
+        }
+      }
+    ]
+  },
+  "attention": {
+    "cursor": "att_a992f_042",
+    "counts": {
+      "critical": 1,
+      "standard": 1,
+      "background": 0
+    },
+    "top": [
+      {
+        "id": "ask_88a",
+        "class": "critical",
+        "source": "ping.ask",
+        "summary": "Human approval requested: refund ORD-1042 (charge ch_1N2x)",
+        "affordance": {
+          "rel": "next",
+          "command": "capcli ping resolve ask_88a --choice approve",
+          "intent": "Resolve the pending approval ask",
+          "risk": "safe"
+        }
+      },
+      {
+        "id": "evt_ord_903",
+        "class": "standard",
+        "source": "_inbox",
+        "summary": "Refund request queued via shopify_refunds intake",
+        "affordance": {
+          "rel": "next",
+          "command": "capcli sys inbox pop --channel webhook",
+          "intent": "Drain the queued sensory events",
+          "risk": "safe"
+        }
+      }
+    ],
+    "suppressed": []
+  }
+}
+```
+
+Rendered output (identical to the zero-attention receipt; no attention line):
+
+```text
+[dev:tier_1]  capcli run cap://dispatch_order@4
+
+  routine:   dispatch_order@4 (pinned)
+  session:   ses_a992f
+  intent:    "fulfill urgent pending orders"
+  frame:     frame_021 (3/8 ops · 358ms)
+
+  result:
+    order_id:  ORD-1042
+    carrier:   fedex
+    tracking:  794644790133
+    status:    shipped (1 row committed)
+
+  result_hash: sha256:9c41e7b0d2a8f513c6ee
+```
+
+---
+
+### 5.14 Claim-Suppressed Inbox Pop (`screens/sys/inbox/sys.inbox.success.suppressed.json`)
+
+Zero counts, yet the key is present: suppression is active. The held row
+waits on the Layer 1 claim release, which is also its dismiss path — no
+per-item ack exists.
+
+Fixture (`wireframe/v2`):
+
+```json
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.inbox.success.suppressed",
+  "target": "webhook",
+  "command": "capcli sys inbox pop --channel webhook",
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "populated"
+  },
+  "archetype": "tree",
+  "component": {
+    "title": "popped",
+    "root": "events:",
+    "nodes": [],
+    "footer": {
+      "channel": "webhook",
+      "popped": "0 events",
+      "remaining": "1 held under active claim",
+      "note": "claim orders:ORD-10 held by agt_9k2w; held rows stay invisible until release"
+    }
+  },
+  "attention": {
+    "cursor": "att_a992f_043",
+    "counts": {
+      "critical": 0,
+      "standard": 0,
+      "background": 0
+    },
+    "top": [],
+    "suppressed": [
+      {
+        "id": "evt_ord_901",
+        "class": "standard",
+        "source": "_inbox",
+        "summary": "Held under active Layer 1 claim orders:ORD-10 (holder agt_9k2w)",
+        "affordance": {
+          "rel": "inspect",
+          "command": "capcli sys audit trace op_9f2c --explain",
+          "intent": "Inspect the holding operation",
+          "risk": "safe"
+        }
+      }
+    ]
+  }
+}
+```
+
+Rendered output (tree with an empty walk; no attention line):
+
+```text
+[dev:tier_1]  popped
+
+  events:
+
+  channel:   webhook
+  popped:    0 events
+  remaining: 1 held under active claim
+  note:      claim orders:ORD-10 held by agt_9k2w; held rows stay invisible until release
+```
+
+---
+
 ## 6. Fixture Schema & Rust Test Runner Contract
 
 ### 6.1 Screen Fixture Schema (`screens/run/sql/run.sql.denial.ast.json`)
@@ -1370,6 +1556,7 @@ Root field law:
 - `archetype` is exactly one of `diagnostic`, `tree`, `receipt`, `document` (archetype law: kernel.md#Diagnostic-output-law). `component` carries that archetype's payload and nothing else.
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
 - `affordances` is an optional root key on exit-0 fixtures only (state segment `success`; archetype `receipt`, `tree`, or `document`). Each entry is `{ rel, command, intent, risk }` (cans/interface.md#Run-noun Success affordances); `command` is the target screen's fixture `command` string verbatim, sourced from `_flows.json` transitions, and `risk` takes `safe` or `mutating`. It is a machine envelope key: renderers never emit it as a human output line, and its presence or absence changes no exit, state, or payload byte. Shape: `output_contract.affordances.machine_schema` in `manifest.json`.
+- `attention` is an optional root key on any exit (envelope law: kernel.md#Diagnostic-output-law). It carries `{ cursor, counts, top, suppressed }`; each `top` and `suppressed` entry is `{ id, class, source, summary, affordance }` with `class` mirroring governor.md#Priority-classes and `affordance` shaped as an `affordances` entry. Present when counts are nonzero or suppression is active; absent when zero unacked and no suppression. It is a machine envelope key: renderers never emit it as a human output line, and its presence or absence changes no exit, state, or payload byte. `cursor` advances on every envelope render and is illustrative in fixtures, never byte-asserted. Shape: `output_contract.attention.machine_schema` in `manifest.json`.
 
 Derived-state law:
 
@@ -1572,6 +1759,30 @@ struct Affordance {
     risk: String,
 }
 
+/// Attention item (envelope law: kernel.md#Diagnostic-output-law).
+/// `class` mirrors governor.md#Priority-classes.
+#[derive(Deserialize)]
+struct AttentionItem {
+    id: String,
+    class: String,
+    source: String,
+    summary: String,
+    affordance: Affordance,
+}
+
+/// Attention envelope block (§6.1 root field law). Machine-only: the
+/// golden renderer consumes the component alone and never emits this
+/// key as a human output line. `cursor` advances on every envelope
+/// render, so fixture cursor values are illustrative and never asserted.
+#[derive(Deserialize)]
+struct Attention {
+    cursor: String,
+    counts: std::collections::HashMap<String, i32>,
+    top: Vec<AttentionItem>,
+    #[serde(default)]
+    suppressed: Vec<AttentionItem>,
+}
+
 /// Root fixture: a serialized CliEnvelope payload (§6.1).
 /// Exit code and state_modified are derived, never stored.
 #[derive(Deserialize)]
@@ -1587,6 +1798,7 @@ struct AtomicFixture {
     payload: ComponentPayload,
     trailer: Option<serde_json::Value>,
     affordances: Option<Vec<Affordance>>,
+    attention: Option<Attention>,
 }
 
 impl AtomicFixture {
