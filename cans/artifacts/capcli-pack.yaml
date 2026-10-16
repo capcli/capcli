@@ -1,0 +1,102 @@
+# ═══════════════════════════════════════════════════════════════
+# capcli-pack.yaml — canonical pack manifest archetype
+# Pointers: pack://<tier>/<name>, pack://<tier>/<name>@<version>
+# Canonical homes: marketplace.md#Packs, marketplace.md#Pack-taxonomy,
+#                  marketplace.md#Pack-layers
+# ═══════════════════════════════════════════════════════════════
+version: 1
+
+# ───────────────────────────────────────────────────────────────
+# 1. FILE IDENTITY
+# ───────────────────────────────────────────────────────────────
+# Extension — .cap
+# Format — signed archive
+# Manifest — capcli-pack.yaml at root
+# Hash — SHA-256 computed on write
+# Canonical home — marketplace.md#Packs
+id: pack.ecommerce.shopify
+name: Shopify Production Stack
+version: 2.1.0
+min_kernel_version: 0.8.0
+pack_tier: application                      # kernel | application | community
+
+# ───────────────────────────────────────────────────────────────
+# 2. PLUGIN LAYER
+# ───────────────────────────────────────────────────────────────
+# Each entry has id and source
+# Source pinned to git tag or release
+# binary_sha256 per entry
+# Sub-dependency resolution at install
+# Canonical home — marketplace.md#Pack-layers
+plugins:
+  - id: capcli.plugin.shopify
+    source: github.com/capcli-plugins/shopify@v2.0.1
+    binary_sha256: 9f83b165...
+  - id: capcli.plugin.resend
+    source: github.com/capcli-plugins/resend@v1.1.0
+    binary_sha256: a1b2c3d4...
+
+# ───────────────────────────────────────────────────────────────
+# 3. SCHEMA LAYER
+# ───────────────────────────────────────────────────────────────
+# tables — declarative column model
+# imm_cols — column immutability
+# prov — provenance column injection
+# Shorthand — see schema.yaml
+# Plugin tables register here
+# Canonical home — world.md#Dual-schema
+schema:
+  tables:
+    shopify_orders:
+      columns: [id text pk, customer_email text, total_cents int, status text]
+      imm_cols: [id, total_cents]
+      prov: true
+
+# ───────────────────────────────────────────────────────────────
+# 4. ROUTINE LAYER
+# ───────────────────────────────────────────────────────────────
+# src — relative path inside pack
+# trust — declared rung on import
+# Imported at draft regardless of declaration
+# Canonical home — routines.md#Procedure-layer
+routines:
+  - src: routines/sync_orders.py
+    trust: draft
+  - src: routines/send_receipt.py
+    trust: draft
+
+# ───────────────────────────────────────────────────────────────
+# 5. CLI NOUN LAYER
+# ───────────────────────────────────────────────────────────────
+# Pack ships plugin cli_noun
+# Registered at install
+# capcli api works after capcli.pack.api
+# Canonical home — plugins.md#CLI-projection
+cli_nouns:
+  - noun: shopify
+    mode: owned
+
+# ───────────────────────────────────────────────────────────────
+# 6. CTX NAMESPACE LAYER
+# ───────────────────────────────────────────────────────────────
+# Pack ships plugin ctx_namespace
+# Registered at install
+# ctx.api.call works after install
+# Canonical home — plugins.md#Capability-declarations
+ctx_namespaces:
+  - shopify
+
+# ───────────────────────────────────────────────────────────────
+# 7. BINDING LAYER
+# ───────────────────────────────────────────────────────────────
+# type — webhook, cron, endpoint
+# provider — vendor signature driver
+# event — provider event name
+# capability — target routine reference
+# Canonical home — plugins.md#Capabilities
+bindings:
+  - type: webhook
+    name: shopify_order_created
+    provider: shopify
+    event: orders/create
+    capability: cap://sync_orders

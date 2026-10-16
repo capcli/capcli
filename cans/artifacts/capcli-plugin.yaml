@@ -1,0 +1,131 @@
+# ═══════════════════════════════════════════════════════════════
+# capcli-plugin.yaml — canonical plugin manifest archetype
+# Pointers: plugin://<id>, policy://plugins/*
+# Canonical homes: plugins.md#Manifest, plugins.md#Capabilities,
+#                  plugins.md#CLI-projection, world.md#Plugin-schema-namespace
+# ═══════════════════════════════════════════════════════════════
+version: 1
+
+# ───────────────────────────────────────────────────────────────
+# 1. FILE IDENTITY
+# ───────────────────────────────────────────────────────────────
+# Name — capcli-plugin.yaml
+# Location — plugin root directory
+# Format — YAML, validated at install
+# Digest — SHA-256 computed on write
+# Required fields — see plugins.md#Manifest
+id: capcli.plugin.stripe                     # reverse-DNS unique identifier
+name: Stripe Financial Driver                # human-readable display string
+version: 1.4.0                               # semver, immutable once published
+min_kernel_version: 0.8.0                    # semver floor
+entrypoint: ["bin/stripe-driver"]            # executable path array
+
+# ───────────────────────────────────────────────────────────────
+# 2. CAPABILITY DECLARATIONS
+# ───────────────────────────────────────────────────────────────
+# Verbs — callable operations with params
+# Subscribes — causal DAG event patterns
+# Provides — native extension surfaces
+# fuel_declared — per-verb fuel envelope
+# Canonical home — plugins.md#Capabilities
+verbs:
+  - name: charge
+    description: "Authorize and capture credit card charge"
+    params:
+      amount_cents: { type: integer, required: true }
+      customer_id: { type: string, required: true }
+      currency: { type: string, default: "usd" }
+    fuel_declared: 15
+  - name: refund
+    description: "Issue full or partial refund against existing charge"
+    params:
+      charge_id: { type: string, required: true }
+      amount_cents: { type: integer, required: false }
+    fuel_declared: 15
+
+subscribes:
+  - "db.exec:orders"
+  - "saga.compensate"
+
+provides:
+  urp_schemes: ["stripe"]                    # resolves stripe://ch_123
+  triggers: ["stripe_webhook"]               # adds bind webhook provider
+  vault_backend:
+    schemes: ["vault://stripe/*"]            # external KMS adapter
+  storage_drivers: ["s3", "r2"]              # object store adapters
+  ping_channels: ["slack", "telegram"]       # human notification sinks
+  audit_sinks: ["datadog_siem"]              # WORM notary adapters
+  federation_transports: ["wireguard"]       # peer mesh adapters
+
+# ───────────────────────────────────────────────────────────────
+# 3. SECURITY DECLARATIONS
+# ───────────────────────────────────────────────────────────────
+# Vault — secret names requested
+# Egress — allowed hostnames
+# max_fuel_per_op — integer ceiling
+# storage_access — boolean flag
+# Canonical home — plugins.md#Capabilities
+permissions:
+  vault: ["stripe_secret_key", "stripe_webhook_signing_secret"]
+  egress: ["api.stripe.com"]
+  max_fuel_per_op: 50
+  storage_access: false
+
+# ───────────────────────────────────────────────────────────────
+# 4. DEPENDENCY DECLARATIONS
+# ───────────────────────────────────────────────────────────────
+# Semver-keyed plugin map
+# Resolution — flattened into capcli.lock
+# Cycle check — DFS at install, exit 3
+# Canonical home — plugins.md#Composition
+dependencies:
+  capcli.plugin.currency-converter: "^1.0.0"
+
+# ───────────────────────────────────────────────────────────────
+# 5. CLI PROJECTION
+# ───────────────────────────────────────────────────────────────
+# Surface declaration — cli.surface
+# Entry shape — noun, verb, args, flags, help
+# Extends mode — merges into existing noun
+# Owned mode — plugin-owned new noun
+# Reserved — run, sys, plugin cannot alias
+# Canonical home — plugins.md#CLI-projection
+cli:
+  surface:
+    - noun: stripe
+      verb: charge
+      args: ["amount_cents", "customer_id"]
+      flags: ["--currency"]
+      help: "Authorize and capture credit card charge"
+    - noun: stripe
+      verb: refund
+      args: ["charge_id"]
+      flags: ["--amount-cents"]
+      help: "Issue full or partial refund"
+  cli_noun: stripe                           # owned noun, or extends existing
+  mode: owned                                # owned | extends
+
+# ───────────────────────────────────────────────────────────────
+# 6. CTX NAMESPACE
+# ───────────────────────────────────────────────────────────────
+# Namespace registration — ctx_namespace
+# Registered at install
+# Removed at uninstall
+# Canonical home — plugins.md#Capability-declarations
+ctx_namespace:
+  - stripe
+
+# ───────────────────────────────────────────────────────────────
+# 7. SCHEMA EXTENSION
+# ───────────────────────────────────────────────────────────────
+# Plugin schema namespace — plugin_<id>_
+# Owned by plugin, registered at install
+# Cross-plugin read denied exit 2
+# Shorthand — see schema.yaml
+# Canonical home — world.md#Plugin-schema-namespace
+schema:
+  tables:
+    stripe_charges:
+      columns: [id text pk, amount_cents int, currency text, status text]
+      imm_cols: [id, amount_cents]
+      prov: true

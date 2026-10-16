@@ -142,6 +142,7 @@
       - Format — signed archive
       - Manifest — capcli-pack.yaml at root
       - Hash — SHA-256 computed on write
+      - Shape — see artifacts/capcli-pack.yaml
     - Manifest shape
       - Core fields — see plugins.md#Manifest
       - Pack-specific — pack_tier, layer fields

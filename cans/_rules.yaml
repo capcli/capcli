@@ -85,6 +85,7 @@ canonical_homes:
   environments: lifecycle.md#Environments
   masking: lifecycle.md#Masking
   plugin_manifest: plugins.md#Manifest
+  plugin_manifest_artifact: artifacts/capcli-plugin.yaml
   plugin_capabilities: plugins.md#Capabilities
   cli_noun_registration: plugins.md#CLI-projection
   ctx_namespace_registration: plugins.md#Capability-declarations
@@ -93,6 +94,7 @@ canonical_homes:
   federation_transport: plugins.md#Federation-transport
   pack_taxonomy: marketplace.md#Pack-taxonomy
   pack_format: marketplace.md#Packs
+  pack_manifest_artifact: artifacts/capcli-pack.yaml
   registry: marketplace.md#Registry
   cli_surface: interface.md#CLI-surface
   kernel_nouns: interface.md#The-9-kernel-nouns
