@@ -118,8 +118,8 @@
       "name": "Doc Pointer Resolution & Reading",
       "color": "#10b981",
       "entry": "doc.outline.refusal.not_found",
-      "terminal": "doc.inspect.success.populated",
-      "description": "Pointer hunt: outline on a missing doc://return-policy refuses, read on the typo'd doc://refund-policies refuses -> the live refund-policy doc reads fully, slices to 100 tokens, outlines, and inspects"
+      "terminal": "doc.outline.success.populated",
+      "description": "Pointer hunt: outline on a missing doc://return-policy refuses, read on the typo'd doc://refund-policies refuses -> the live refund-policy doc reads fully, slices to 100 tokens, and outlines"
     },
     "journey_env_lifecycle": {
       "name": "Environment Lifecycle: Provision, Audit, Promote, Deprovision",
@@ -461,7 +461,7 @@
       "arrow_type": "success"
     },
     {
-      "id": "t_schema_diff_to_prove",
+      "id": "t_schema_diff_to_rehearse",
       "journeys": [
         "journey_schema_evolution"
       ],
@@ -469,10 +469,10 @@
         "rule.diff.success.populated"
       ],
       "to": [
-        "rule.prove.success.proven"
+        "rule.rehearse.success.rehearsed"
       ],
       "trigger": "prove_in_sim",
-      "label": "capcli rule prove --env sim -m \"prove schema migration (all pinned routines rehearsed)\"",
+      "label": "capcli rule rehearse --env sim -m \"rehearse schema migration (all pinned routines rehearsed)\"",
       "arrow_type": "progress"
     },
     {
@@ -481,7 +481,7 @@
         "journey_schema_evolution"
       ],
       "from": [
-        "rule.prove.success.proven"
+        "rule.rehearse.success.rehearsed"
       ],
       "to": [
         "rule.apply.success.dry_run"
@@ -1159,10 +1159,10 @@
         "bind.pause.success.completed"
       ],
       "to": [
-        "bind.resume.success.completed"
+        "bind.pause.success.resumed"
       ],
       "trigger": "resume_binding",
-      "label": "capcli bind resume bnd_3k2f",
+      "label": "capcli bind pause bnd_3k2f --resume",
       "arrow_type": "progress"
     },
     {
@@ -1171,7 +1171,7 @@
         "journey_cron_binding_lifecycle"
       ],
       "from": [
-        "bind.resume.success.completed"
+        "bind.pause.success.resumed"
       ],
       "to": [
         "bind.remove.success.completed"
@@ -1208,21 +1208,6 @@
       ],
       "trigger": "pause_dismantled",
       "label": "capcli bind pause bnd_3k2f",
-      "arrow_type": "denial"
-    },
-    {
-      "id": "t_cron_removed_resume_nf",
-      "journeys": [
-        "journey_cron_binding_lifecycle"
-      ],
-      "from": [
-        "bind.remove.success.completed"
-      ],
-      "to": [
-        "bind.resume.refusal.not_found"
-      ],
-      "trigger": "resume_dismantled",
-      "label": "capcli bind resume bnd_3k2f",
       "arrow_type": "denial"
     },
     {
@@ -1448,21 +1433,6 @@
       ],
       "trigger": "outline_doc",
       "label": "capcli doc outline doc://refund-policy",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_doc_outline_to_inspect",
-      "journeys": [
-        "journey_doc_reading"
-      ],
-      "from": [
-        "doc.outline.success.populated"
-      ],
-      "to": [
-        "doc.inspect.success.populated"
-      ],
-      "trigger": "inspect_doc",
-      "label": "capcli doc inspect doc://refund-policy",
       "arrow_type": "progress"
     },
     {
@@ -4184,7 +4154,7 @@
       "arrow_type": "progress"
     },
     {
-      "id": "t_rule_plan_to_prove",
+      "id": "t_rule_plan_to_rehearse",
       "journeys": [
         "journey_rule_governance"
       ],
@@ -4192,10 +4162,10 @@
         "rule.plan.success.planned"
       ],
       "to": [
-        "rule.prove.success.proven"
+        "rule.rehearse.success.rehearsed"
       ],
       "trigger": "rehearse_plan",
-      "label": "capcli rule prove add_order_priority --env sim",
+      "label": "capcli rule rehearse add_order_priority --env sim",
       "arrow_type": "progress"
     },
     {

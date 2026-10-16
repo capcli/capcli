@@ -1,0 +1,79 @@
+$schema: "test-plan/case/v1"
+case_id: "sm_05_rule_rehearse_pinned_break_exit2"
+title: "rule rehearse detects a pinned routine breaking against the revised schema; cutover aborts with exit 2"
+domain: "schema_evolution"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+invariant:
+  law_reference: "cans/world.md#Migration-lifecycle-commands"
+  statement: "rule rehearse <id> --env sim rehearses the migration against every pinned routine before cutover; a pinned routine whose query breaks against the revised schema aborts the migration with exit 2 (diagnostic domain policy.migration) - no phase of the 4-phase pipeline executes against a schema that breaks pinned consumers."
+  blast_radius_if_breached: "A cutover proceeds past a pinned-routine break: the routine ships against columns that no longer exist, throwing at runtime in prod with live traffic on it; recovery routes through a forward revert bundle instead of a two-command re-plan."
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent rehearses with an empty pinned-routine roster (or unpins the breaking routine in the fixture), so rehearse passes vacuously and the break-detection path is never exercised."
+  anti_slop_mitigation: "AS-01 bans roster manipulation in the fixture; AS-02 proves the live sim schema still compiles v12 and the breaking column never materializes; AS-03 requires the typed exit code 2 with a policy.migration diagnostic naming the broken pinned routine."
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "harness.migrationbot@acme.corp"
+    agent_id: "agt_se_05"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: |
+      version: 13
+      engine: sqlite
+      db: workspace.db
+      tables:
+        orders:
+          description: "Transactional order root with discount integrity trigger"
+          prov: true
+          columns:
+            id: pk
+            ref: text!
+            customer_id: int ref=customers.id
+            total_cents: int=0
+            status: text=pending
+    tables:
+      - name: "orders"
+        row_count: 500
+      - name: "routines"
+        row_count: 3
+    vault_secrets: []
+    pinned_routines:
+      - id: "cap://fulfillment_dispatch@7"
+        trust: "pinned"
+        pinned_query: "SELECT id, status FROM orders WHERE status = 'ready'"
+      # the v13 migration renames orders.status -> orders.fulfillment_state; the pinned query above references the dropped column
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli rule rehearse mig_0007_orders_rush --env sim"
+  input_params:
+    migration_id: "mig_0007_orders_rush"
+    migration_change: "orders.status renamed to orders.fulfillment_state (Contract phase destructive DDL)"
+    breaking_routine: "cap://fulfillment_dispatch@7"
+    break_cause: "pinned query selects orders.status; the revised schema drops that column"
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.migration"
+    culprit: "pinned routine cap://fulfillment_dispatch@7 breaks against the revised schema: its pinned query references orders.status, dropped by the Contract phase of mig_0007_orders_rush"
+    remedy: "Re-plan the migration: keep orders.status as an alias view during Expand, update the pinned routine query to fulfillment_state, re-run rule rehearse mig_0007_orders_rush --env sim; nothing in any pipeline phase executed."
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "rule.rehearse (decision: denied, effect: none)"
+    chain_valid: true
+    state_modified_field: false
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 500 before and after; PRAGMA table_info(orders) still lists 'status' and has no 'fulfillment_state' column (rehearse ran in sim and executed no pipeline phase); sha256 of the sim workspace.db identical before and after."
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 (integer) and parse the diagnostic envelope: diagnostic.domain == 'policy.migration', culprit names the pinned routine cap://fulfillment_dispatch@7 and the dropped column orders.status, remedy present and references re-plan + re-rehearse."
+  - rule: "AS-01"
+    verification: "Static lint: the pinned-routine roster must contain cap://fulfillment_dispatch@7 as pinned before rehearse runs; fixture must not unpin or remove it; no mock on the rehearsal path."

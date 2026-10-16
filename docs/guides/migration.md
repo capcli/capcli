@@ -47,7 +47,7 @@ The kernel holds the exclusive write lock only for the final trigger detach and 
 capcli rule diff schema --git
 capcli rule plan --name <slug>
 capcli db snapshot -m "pre-migration safety point"
-capcli rule prove <id> --env sim
+capcli rule rehearse <id> --env sim
 capcli rule apply schema -m "Execute atomic table swap"
 ```
 

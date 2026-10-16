@@ -294,7 +294,7 @@
       - Trigger detach and rename atomic
     - Command surface
       - rule plan --name <slug> generates bundle
-      - rule prove <id> --env sim validates
+      - rule rehearse <id> --env sim validates
       - rule apply <id> executes cutover
       - Envelope shape — see interface.md#CLI-surface
     - Invariants

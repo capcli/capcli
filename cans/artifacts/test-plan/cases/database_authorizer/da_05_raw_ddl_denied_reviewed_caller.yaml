@@ -51,7 +51,7 @@ expected_observations:
   diagnostic:
     domain: "policy.authorizer"
     culprit: "ALTER TABLE orders ADD COLUMN rush boolean issued by trust=reviewed caller; raw DDL denied at the C authorizer for draft and reviewed principals (authorizer.global.alter: deny)"
-    remedy: "Use the kernel migration pipeline: declare the column in schema.yaml, rule plan --name add_rush_flag, rule prove <id> --env sim, then rule apply <id>."
+    remedy: "Use the kernel migration pipeline: declare the column in schema.yaml, rule plan --name add_rush_flag, rule rehearse <id> --env sim, then rule apply <id>."
   database:
     row_count_delta: 0
     tables_mutated: []

@@ -72,8 +72,7 @@ capcli bind <verb> [args] [--flags]
 | **`keys`** | `capcli bind keys issue <name> --principal partner:<id>` | Issues partner API keys with mandatory 90-day expiry. |
 | **`list`** | `capcli bind list` | Displays active, paused, and dead bindings. |
 | **`inspect`** | `capcli bind inspect <handle>` | Inspects binding trigger health and arrival rates. |
-| **`pause`** | `capcli bind pause <handle>` | Temporarily suspends trigger processing. |
-| **`resume`** | `capcli bind resume <handle>` | Resumes paused trigger processing. |
+| **`pause`** | `capcli bind pause <handle> [--resume]` | Suspends trigger processing; `--resume` reactivates. |
 | **`remove`** | `capcli bind remove <handle>` | Unbinds trigger and archives binding record. |
 
 ---

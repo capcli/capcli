@@ -303,7 +303,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `api.rollback.refusal.not_found` | refusal | 3 | validation | not_found | Target version not found |
 | `api.record.success.recorded` | success | 0 | — | recorded | Live response captured as JSON Schema contract |
 
-### 4.5 `bind/` (11 verbs → 28 screens)
+### 4.5 `bind/` (10 verbs → 27 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -328,9 +328,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `bind.inspect.success.populated` | success | 0 | — | populated | Binding configuration envelope |
 | `bind.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
 | `bind.pause.success.completed` | success | 0 | — | completed | Trigger paused |
+| `bind.pause.success.resumed` | success | 0 | — | resumed | Trigger resumed via --resume |
 | `bind.pause.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
-| `bind.resume.success.completed` | success | 0 | — | completed | Trigger resumed |
-| `bind.resume.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
 | `bind.remove.success.completed` | success | 0 | — | completed | Trigger dismantled |
 | `bind.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target binding ID not found |
 | `bind.keys.success.issued` | success | 0 | — | issued | API key stamped for endpoint (90d expiry) |
@@ -377,7 +376,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `rule.validate.refusal.syntax` | refusal | 3 | compile | bad_syntax | Sub-check 1 YAML syntax failure |
 | `rule.validate.refusal.semantics` | refusal | 3 | compile | circular_ref | Sub-check 2 circular dependency detected |
 | `rule.plan.success.planned` | success | 0 | — | planned | Migration bundle generated (plan.json, align stub) |
-| `rule.prove.success.proven` | success | 0 | — | proven | Four-phase migration rehearsed in sim (expand/align/contract/pin); pinned routines rehearsed |
+| `rule.rehearse.success.rehearsed` | success | 0 | — | rehearsed | Four-phase migration rehearsed in sim (expand/align/contract/pin); pinned routines rehearsed |
 
 ### 4.8 `env/` (7 verbs → 19 screens)
 
@@ -461,7 +460,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.serve.refusal.already_running`| refusal| 3 | compile | port_bound | Daemon process already running |
 | `sys.serve.denial.port` | denial | 2 | db.engine | port_denied | Port 4040 binding rejected |
 
-### 4.10 `doc/` (3 verbs → 6 screens)
+### 4.10 `doc/` (2 verbs → 5 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -470,7 +469,6 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `doc.read.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
 | `doc.outline.success.populated` | success | 0 | — | populated | Outline node tree with section indices |
 | `doc.outline.refusal.not_found` | refusal | 3 | validation | not_found | Target document URP not found |
-| `doc.inspect.success.populated` | success | 0 | — | populated | Document metadata, tokens, and node count |
 
 ### 4.11 `pack/` (5 verbs → 14 screens)
 
@@ -854,7 +852,7 @@ Fixture (`wireframe/v2`):
     "layer": "kernel",
     "culprit": "raw DDL (ALTER TABLE orders) issued via capcli sql by a reviewed principal",
     "measured": "trust: reviewed",
-    "remedy": "raw ALTER/DROP/CREATE TABLE is denied for draft and reviewed principals, exit 2; the kernel 4-phase migration pipeline (rule plan -> rule prove in sim -> rule apply) is the sole legal DDL path"
+    "remedy": "raw ALTER/DROP/CREATE TABLE is denied for draft and reviewed principals, exit 2; the kernel 4-phase migration pipeline (rule plan -> rule rehearse in sim -> rule apply) is the sole legal DDL path"
   },
   "affordances": [
     {
@@ -879,7 +877,7 @@ Rendered output:
   culprit:  raw DDL (ALTER TABLE orders) issued via capcli sql by a reviewed principal
   measured: trust: reviewed
   remedy:   raw ALTER/DROP/CREATE TABLE is denied for draft and reviewed principals, exit 2;
-            the kernel 4-phase migration pipeline (rule plan -> rule prove in sim -> rule apply)
+            the kernel 4-phase migration pipeline (rule plan -> rule rehearse in sim -> rule apply)
             is the sole legal DDL path
 
   state_modified: false

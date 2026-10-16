@@ -142,7 +142,7 @@ cans/artifacts/test-plan/
       sm_02_circular_dependency_gate2_refusal.yaml
       sm_03_lockfile_hash_drift_gate3_refusal.yaml
       sm_04_live_pragma_drift_gate4_refusal.yaml
-      sm_05_rule_prove_pinned_break_exit2.yaml
+      sm_05_rule_rehearse_pinned_break_exit2.yaml
       sm_06_env_merge_prod_dual_flag_gate.yaml
       sm_07_shorthand_expansion_ddl_generation.yaml
       sm_08_system_schema_tamper_boot_refusal.yaml
@@ -155,7 +155,7 @@ cans/artifacts/test-plan/
       sm_15_migration_lock_timing_sla.yaml
       sm_16_align_chunking_exit6_yield.yaml
       sm_17_shadow_cutover_zero_loss.yaml
-      sm_18_prove_before_merge_mandate.yaml
+      sm_18_rehearse_before_merge_mandate.yaml
     coordination_claims/
       cc_01_exclusive_lease_acquisition.yaml
       cc_02_contested_claim_rejection.yaml
@@ -572,7 +572,7 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `sm_02_circular_dependency_gate2_refusal.yaml` | Unit | Table A references Table B; Table B references Table A; Sub-check 2 petgraph cycle check aborts with `exit 3`. | TN | Attempting DDL creation and relying on SQLite runtime error. |
 | `sm_03_lockfile_hash_drift_gate3_refusal.yaml` | Integration | On-disk schema.yaml edited without updating capcli.lock refuses prod boot at Sub-check 3 with exit 3 | TN | Agent permits execution in production with uncompiled schema changes - e.g. |
 | `sm_04_live_pragma_drift_gate4_refusal.yaml` | Integration | Table column added directly to SQLite via external tool; `sys doctor` PRAGMA check detects drift and refuses boot. | TN | Silently merging unmanaged columns into compiled schema. |
-| `sm_05_rule_prove_pinned_break_exit2.yaml` | Integration | `rule prove <id> --env sim` rehearsal detects a pinned routine whose query breaks against the migrated schema; cutover aborts with `exit 2` (diagnostic domain `policy.migration`). | TN | Rehearsing with an empty pinned-routine roster so `prove` passes vacuously. |
+| `sm_05_rule_rehearse_pinned_break_exit2.yaml` | Integration | `rule rehearse <id> --env sim` detects a pinned routine whose query breaks against the migrated schema; cutover aborts with `exit 2` (diagnostic domain `policy.migration`). | TN | Rehearsing with an empty pinned-routine roster so `rehearse` passes vacuously. |
 | `sm_06_env_merge_prod_dual_flag_gate.yaml` | E2E | Merging dev schema into prod without both --confirm-backup and --confirm-prod is rejected with exit 2 | TN | Agent permits the production merge with a single confirmation flag (e.g. |
 | `sm_07_shorthand_expansion_ddl_generation.yaml` | Unit | Shorthand notation (`int~`, `text!`, `pk`, `mask=true`) compiles deterministically to correct SQLite DDL dialect. | TP | Manually writing SQL DDL in test rather than asserting compiled output from YAML shorthands. |
 | `sm_08_system_schema_tamper_boot_refusal.yaml` | Integration | Agent modifies `system-schema.yaml` on disk; boot hash check verifies system schema integrity and halts boot with `exit 3`. | TN | Permitting runtime alterations to kernel system tables. |
@@ -582,10 +582,10 @@ This catalog is the definitive index of physical laws, edge cases, and failure m
 | `sm_12_git_worktree_isolation_boundary.yaml` | Integration | Migration applied in the envs/dev/ worktree leaves the envs/prod/ database physically untouched | TP | Agent runs the migration on the primary branch workspace database directly (or points both environments at one workspace.db path in the fixture), so |
 | `sm_13_git_push_dry_run_merge_gate.yaml` | Integration | Production merge pipeline runs `git push --dry-run` to verify remote credentials before committing physical DDL changes. | TP | Applying DDL changes locally when remote git repository is unreachable. |
 | `sm_14_config_proposal_lifecycle.yaml` | E2E | Agent saves YAML edit; Sub-checks 1+2 stage a proposal and yield the frame (`exit 6`); human 1-click PWA approval triggers daemon lockfile recompile, atomic authorizer reload, `rule.config_committed`, and Git auto-commit. | TP | Applying the disk edit to the running engine before approval, or auto-committing without the human cryptographic signature. |
-| `sm_15_migration_lock_timing_sla.yaml` | Integration | Phase-1 Expand and phase-3 Contract swap hold the SQLite write lock within bound (`<10ms` expand, `<20ms` contract); `rule prove --env sim` rehearsal records phase-level lock timings. | TP | Stubbing the lock-timing probe or measuring only aggregate apply duration. |
+| `sm_15_migration_lock_timing_sla.yaml` | Integration | Phase-1 Expand and phase-3 Contract swap hold the SQLite write lock within bound (`<10ms` expand, `<20ms` contract); `rule rehearse --env sim` records phase-level lock timings. | TP | Stubbing the lock-timing probe or measuring only aggregate apply duration. |
 | `sm_16_align_chunking_exit6_yield.yaml` | Integration | Align-phase `align.py` copies rows in `<=500`-row transactions; on fuel exhaustion it yields cleanly via `exit 6` and resumes from the recorded chunk boundary with no re-processed or skipped rows. | TP | Funding the test with an unbounded fuel frame so the yield path is never hit. |
 | `sm_17_shadow_cutover_zero_loss.yaml` | Integration | Concurrent delta writes during the Contract phase replicate via `AFTER INSERT/UPDATE/DELETE` triggers; at the zero-lag swap every concurrent write is present — zero lost rows. | TP | Pausing write traffic during Contract so trigger replication is never exercised. |
-| `sm_18_prove_before_merge_mandate.yaml` | Integration | `env merge <name> prod` without a passing `rule prove` in sim is refused at the merge gate with `exit 2` (diagnostic domain `policy.migration`). | TN | Proving in `dev` instead of `sim` or proving a different migration id. |
+| `sm_18_rehearse_before_merge_mandate.yaml` | Integration | `env merge <name> prod` without a passing `rule rehearse` in sim is refused at the merge gate with `exit 2` (diagnostic domain `policy.migration`). | TN | Rehearsing in `dev` instead of `sim` or rehearsing a different migration id. |
 
 ### 6.8 Coordination & Claims (`cases/coordination_claims/`)
 

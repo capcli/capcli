@@ -31,7 +31,7 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli rule prove add_order_priority --env sim",
+      "command": "capcli rule rehearse add_order_priority --env sim",
       "intent": "Rehearse the planned migration in sim",
       "risk": "safe",
       "requires_intent": false

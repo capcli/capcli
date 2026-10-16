@@ -35,9 +35,9 @@ Expand phase is additive non-breaking DDL only (nullable columns, new tables); e
 Align phase runs in user space via `migrations/NNNN_<slug>/align.py`: bounded chunks (max 500 rows/txn), yields cleanly on quota or fuel exhaustion (exit 6).
 Rehearse in sim before prod:
 ```bash
-capcli rule prove <id> --env sim
+capcli rule rehearse <id> --env sim
 ```
-`rule prove` in sim is mandatory before `env merge <name> prod` — all pinned routines rehearse, any break exits 2.
+`rule rehearse` in sim is mandatory before `env merge <name> prod` — all pinned routines rehearse, any break exits 2.
 
 ## section:stage_3_contract
 Contract phase runs in kernel space (`migrate.rs`): creates `_shadow_<table>`, attaches AFTER INSERT/UPDATE/DELETE delta triggers replicating in-flight mutations, copies base rows in 500-row chunks.

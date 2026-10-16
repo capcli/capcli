@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "bind.resume.success.completed",
+  "id": "bind.pause.success.resumed",
   "target": "bnd_3k2f",
-  "command": "capcli bind resume bnd_3k2f",
+  "command": "capcli bind pause bnd_3k2f --resume",
   "elapsed_ms": 701,
   "context": {
     "env": "dev",
@@ -19,7 +19,7 @@
           "binding_id": "bnd_3k2f",
           "kind": "cron",
           "name": "weekly_digest",
-          "transition": "paused → active",
+          "transition": "paused \u2192 active",
           "next_fire": "2026-10-05T06:00:00Z"
         }
       }

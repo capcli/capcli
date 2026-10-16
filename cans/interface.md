@@ -20,7 +20,7 @@
       - plugin — lifecycle manager
       - db — SQLite storage path
       - routine — guest code path
-      - environment — namespace path
+      - env — namespace path
       - rule — schema compilation path
       - doc — document reading path
       - pack — blueprint and cartridge path
@@ -331,7 +331,7 @@
       - Generates migrations/NNNN/ bundle
       - Migration — see world.md#Migration
     - Verify
-      - rule prove <id> --environment sim
+      - rule rehearse <id> --environment sim
       - Rehearses all four phases on masked
       - Migration — see world.md#Migration
     - Apply
