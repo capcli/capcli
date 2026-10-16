@@ -111,6 +111,11 @@
         - Plaintext stays in kernel buffer
         - Zero leak to IPC or heap
         - Zero leak to _audit mirror
+      - Audit trail
+        - Lease mint emits prove_lease.minted
+        - Each resolution emits prove_lease.resolved
+        - Revoke emits prove_lease.revoked
+        - Zero plaintext in any event payload
   - Vault proxy <!-- ref-by: assembly.md, governance.md, governor.md, identity.md, plugins.md -->
     - Injection point
       - Kernel edge, between cadence and TLS

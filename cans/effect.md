@@ -284,10 +284,14 @@
       - exit 4 — guest crash
         - routine.runtime — guest crash and exceptions
         - federation.transport — dial budget exhausted
+        - plugin.runtime — plugin process crash in fast path
+        - plugin.watchdog — plugin 300s wall clock breach
       - exit 5 — kernel panic — sink loss or leak
       - exit 6 — proactive yield
         - api.quota — quota floor checkpoint
         - ping.ask — ask suspension checkpoint
+        - policy.preemption — priority-class floor reached
+        - api.retry_after — upstream 429 with Retry-After
     - Violation fields
       - rule_id — e.g. policy.query.update.require_where
       - layer — authorizer, AST, governance, budget

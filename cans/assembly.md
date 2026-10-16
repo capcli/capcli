@@ -66,6 +66,11 @@
       - Core — see kernel.md#The-5-concerns
       - CLI — see interface.md#CLI-surface
       - Daemon — see interface.md#Administrative-Cockpit-PWA
+    - Test boundaries
+      - Unit tests live with owning crate
+      - Integration tests span core and cli
+      - Daemon e2e via tests/e2e/
+      - Definition — see #Test-architecture
   - Core subsystems
     - Kernel
       - db — connection.rs, authorizer.rs, migrate.rs, bytecode.rs
@@ -241,7 +246,7 @@
       - No dynamic host library dependency
       - Zero pack bundling in binary
       - CLI renders output procedurally
-  - CICD <!-- ref-by: marketplace.md -->
+  - CICD pipeline <!-- ref-by: marketplace.md -->
     - Monorepo topology
       - Sequencing invariants
         - PWA compiles before daemon crate

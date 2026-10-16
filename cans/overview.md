@@ -141,6 +141,11 @@
         - DB mutations
         - Plugin dispatches
         - Federated outbox
+        - Audit emissions
+          - Every kernel decision appended
+          - Mirror to JSONL and WORM offsite
+          - External attestation via KMS
+          - Flow — see effect.md#Audit-spine
       - Inbound triggers
         - Cron via scheduler plugin
         - Webhooks via scheduler plugin

@@ -145,6 +145,16 @@
         - System table write denial on sys
         - Mask flag redaction on read
         - Definitions — see kernel.md#Layer-1-C-authorizer
+      - Compile-time layer
+        - Sub-check 1 syntax validation
+        - Sub-check 2 semantic reference resolution
+        - Native DFS rejects cycles
+        - Definition — see #Pre-flight-sub-checks
+      - Migration layer
+        - DDL only via migration pipeline
+        - Raw ALTER or DROP rejected at AST
+        - Shadow table swaps kernel-enforced
+        - Definition — see #Migration
     - System schema roster <!-- ref-by: egress.md, governance.md -->
       - Categories
         - Audit — _audit (see effect.md#Audit-spine)
@@ -161,6 +171,16 @@
         - Every table owned by one file
         - Cross-file citation not allowed
         - Definition — see kernel.md#Layer-1-C-authorizer
+      - Boot registration
+        - system-schema.yaml hash verified at boot
+        - Mismatch refuses boot exit 3
+        - Registration precedes any domain write
+        - Definition — see kernel.md#Fail-closed-stance
+      - Table lifecycle
+        - Added via system-schema.yaml version bump
+        - Migrated via migration pipeline
+        - Never dropped in place
+        - Definition — see #Migration
     - Plugin schema namespace <!-- ref-by: marketplace.md -->
       - Prefix — plugin_<id>_
       - Owned by plugin, registered at install
@@ -262,6 +282,11 @@
       - sys inbox pop reads pending rows
       - Consumption marking TBD
       - Envelope shape — see interface.md#CLI-surface
+      - Batch behavior
+        - --count limits rows returned
+        - Zero rows exits 0 with empty data
+        - Never blocks waiting for rows
+        - Envelope — see interface.md#CLI-surface
   - Migration <!-- ref-by: interface.md, lifecycle.md, marketplace.md -->
     - Four-phase pipeline
       - 1 — expand additive DDL under 10ms

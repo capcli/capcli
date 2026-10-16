@@ -44,6 +44,11 @@
         - Max 20 results per query
         - Config — see artifacts/governance.yaml
         - Envelope shape — see interface.md#CLI-surface
+        - Overflow behavior
+          - Additional results suppressed
+          - Truncation flag set on envelope
+          - Refine-query hint emitted
+          - Envelope — see interface.md#CLI-surface
       - Description cap
         - Summary under 60 tokens per entry
         - Enforced at index build
@@ -53,6 +58,11 @@
         - Compiled index under 10MB
         - Enforced at CI publish
         - Config — see artifacts/governance.yaml
+        - Compression
+          - Entries stored with shared strings dictionary
+          - Delta encoding across versions
+          - gzip transfer, raw cache
+          - Rebuild hash deterministic
       - Enforcement points
         - api sync validates spec size
         - plugin install validates bundle
@@ -233,7 +243,7 @@
       - 3 — Sandbox test simulation
       - 4 — Bundle build and hash compute
       - 5 — Index entry append on merge
-      - Pipeline — see assembly.md#CICD
+      - Pipeline — see assembly.md#CICD-pipeline
     - Kernel tier gate
       - Only CI identity may publish kernel tier
       - Manual PRs restricted to community
@@ -349,6 +359,11 @@
       - Low install rate signals poor description
       - Aggregated via search events
       - Event — see effect.md#Kernel-event-payloads
+      - Improvement loop
+        - Flagged entries offered to publisher
+        - Publisher updates summary via PR
+        - Regenerated index on merge
+        - Zero auto-edit of live entries
     - Discovery boundaries
       - Never returns raw blobs
       - Returns pointers and summaries
@@ -424,6 +439,11 @@
       - Forward-only via revert bundles
       - Never delete historical generations
       - Versioning — see lifecycle.md#Versioning
+      - Rollback authority
+        - Operator-initiated only
+        - Never autonomous or timed
+        - Reason recorded on install event
+        - Envelope — see interface.md#CLI-surface
     - Deprecation handling
       - Upstream flag renders warning
       - No auto-uninstall on deprecate
@@ -439,3 +459,8 @@
       - Every lifecycle step emits event
       - Chain preserves install provenance
       - Provenance — see effect.md#Provenance
+      - Query surface
+        - Query by pack urp via sys audit query
+        - Trace install chain via sys audit trace
+        - Filter by pack lifecycle category
+        - Envelope — see interface.md#CLI-surface

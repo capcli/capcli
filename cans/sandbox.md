@@ -22,6 +22,11 @@
         - Rootless OCI fallback on userns restrict
         - gVisor option on hardened multi-tenant
         - podman container fallback
+      - Distinguishing properties
+        - No microVM overhead
+        - No degraded isolation warning
+        - Native host speed retained
+        - Definition — see #Tier-2-virtualized
     - Tier 2 (virtualized)
       - Hosts
         - macOS Darwin native
@@ -39,6 +44,11 @@
         - Lima microVM on Darwin
         - Wasmtime sandbox on Termux
         - Degraded isolation warning emitted
+      - Design trade-offs
+        - MicroVM boundary instead of namespaces
+        - Per-invocation VM spawn overhead
+        - Reduced syscall interception precision
+        - Definition — see #Provider-chain
     - Tier pairing
       - Legal and illegal pairs — see governance.md#Weakest-link-matrix
       - Breach exits 2 at pre-flight
@@ -156,10 +166,20 @@
       - python — clone, futex, POSIX signals; no network, no ptrace
       - bun_node — epoll, io_uring; no network, no raw sockets
       - binary — clone3, futex, rseq, rt_sigreturn; minimal surface
+      - Selection
+        - Runtime tag chooses profile
+        - Default profile per declared runtime
+        - Unknown runtime exits 2 E050
+        - Definition — see #Runtime-resolution
     - Common constraint
       - All profiles deny network syscalls
       - All profiles deny dynamic loader escape
       - Compiled at spawn, immutable post-boot
+      - Resource caps
+        - CPU time bounded by wall clock
+        - Memory capped by rlimit
+        - File descriptors capped per runtime
+        - Definition — see #Execution-limits
     - Breach semantics
       - SIGSYS raises immediately
       - Process terminates with exit 2

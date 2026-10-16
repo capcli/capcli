@@ -105,7 +105,7 @@ canonical_homes:
   trailer_slot: kernel.md#Diagnostic-output-law
   prompt_triggers: artifacts/prompt/_triggers.json
   monorepo: assembly.md#Monorepo-layout
-  cicd: assembly.md#CICD
+  cicd: assembly.md#CICD-pipeline
   pack_distribution: overview.md#The-pack-distribution-model
   test_plan: artifacts/test-plan/manifest.yaml
   test_plan_laws: artifacts/test-plan/matrix.yaml#anti_slop_laws

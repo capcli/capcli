@@ -219,6 +219,11 @@
           - Threshold 0.85 triggers warning
           - Justification via --reason mandatory
           - Config — see artifacts/governance.yaml
+        - Exit criteria
+          - Draft exits on prove success
+          - Draft exits on retire command
+          - Draft never exits on its own
+          - Definition — see #Prove-stage
       - prove stage <!-- ref-by: marketplace.md -->
         - Command
           - capcli routine prove <name>

@@ -112,6 +112,11 @@
         - Runs inside Phase 3 arbiter
         - Skipped for named view reads
         - Skipped for structured ctx.db.get
+      - Exclusions
+        - Not a runtime mutation gate
+        - Not an authorization check
+        - Complements Layer 1 and Layer 1.2
+        - Definition — see #SQL-layers
     - Layer 2 — AST scanner <!-- ref-by: identity.md, world.md -->
       - Engine
         - sqlparser crate pre-check
@@ -376,3 +381,8 @@
       - Tier 2 emits degraded_isolation warning
       - Illegal env/tier pairings emit denial
       - Every alarm appends kernel event to ledger
+    - Trusted interior
+      - Kernel core assumed uncompromised
+      - Host OS assumed uncompromised
+      - Daemon binary assumed uncompromised
+      - Definition — see #Fail-closed-stance

@@ -63,6 +63,11 @@
         - bind endpoint commits to workspace.db
         - Emits bind.create event to ledger
         - Reference — see effect.md#Kernel-event-payloads
+        - Conflict handling
+          - Duplicate bind rejects at commit
+          - Multi-endpoint via array
+          - Zero silent overwrites
+          - Envelope — see interface.md#CLI-surface
       - Daemon serving
         - Persistent axum process binds 127.0.0.1
         - HTTP requests pass identical gates
