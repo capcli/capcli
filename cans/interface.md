@@ -60,6 +60,54 @@
       - doctor reports projection health
       - Displays aliased_as per plugin
       - Envelope — see #CLI-surface
+    - Surface conformance
+      - Mechanism
+        - Executable mirror of this file's CLI grammar
+        - Golden fixture per screen, byte-asserted in CI
+        - Never a source of truth, only a mirror
+        - Canonical homes — kernel.md, effect.md, this file
+        - Runner mechanics — see assembly.md#Test-architecture
+      - Fixture identity
+        - Location — artifacts/wireframe/screens/
+        - Naming — <noun>.<verb>.<state>.<condition>.json
+        - One JSON per screen, zero .txt companions
+        - Path depth exactly three under screens/
+        - Root shape — wireframe/v2 CliEnvelope
+      - Fixture derivation
+        - Command string carries the invocation verbatim
+        - Exit code derives from the id state segment
+        - state_modified derives from the exit law
+        - Derived fields never stored, always computed
+        - Exit law — see kernel.md#Exit-code-law
+      - State taxonomy
+        - Six states, one per exit code, no seventh
+        - Mirror of the exit-to-domain law
+        - Canonical home — see effect.md#Denials
+        - Mirror file — artifacts/wireframe/_states.json
+        - Fixture domains must resolve to canon
+      - Flow engine
+        - Journeys declare entry and terminal screens
+        - Transitions bind from, to, trigger, arrow type
+        - Every endpoint resolves to a fixture id
+        - Every fixture id appears in some journey
+        - Mirror file — artifacts/wireframe/_flows.json
+      - Registry mirror
+        - Nouns mirror this file plus plugin nouns
+        - Noun registry — see #Two-tier-noun-model
+        - Schemes mirror this file's URP dispatch
+        - URP dispatch — see #Run-noun
+        - Mirror file — artifacts/wireframe/manifest.json
+      - Companion
+        - Byte-level fixture schema and runner contract
+        - Shape only, never mechanism or lifecycle
+        - Detail — artifacts/wireframe/wireframe-structure.md
+        - Zero authority, cited for byte shapes
+      - Gate
+        - Fires on CLI surface, exit, or archetype change
+        - Fires on output contract or domain change
+        - Runner — assembly.md#Test-architecture
+        - Checker — assembly.md#Checker-tool
+        - Gate — assembly.md#PR-gate
   - Run noun
     - Execution commands
       - run <capability> [-p k=v]

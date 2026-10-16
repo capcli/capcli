@@ -1,4 +1,8 @@
-# Canonical Wireframe, State Machine & Flow Engine Specification
+# Wireframe Fixture Schema & Runner Contract
+
+Fixture schema and runner contract only. Mechanism spec lives at
+cans/interface.md#Surface-conformance. This document owns byte-level
+shape; that node owns what, why, when.
 
 ---
 

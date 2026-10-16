@@ -99,6 +99,7 @@ canonical_homes:
   plugin_nouns: interface.md#Plugin-provided-nouns
   client_rpc: interface.md#Client-RPC-contract
   onboarding: interface.md#Onboarding
+  wireframe: interface.md#Surface-conformance
   monorepo: assembly.md#Monorepo-layout
   cicd: assembly.md#CICD
   pack_distribution: overview.md#The-pack-distribution-model

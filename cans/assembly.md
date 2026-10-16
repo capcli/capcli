@@ -181,7 +181,7 @@
       - Modules — test_onboarding_human, test_onboarding_harness
       - Modules — test_budget_cascade, test_recovery_drill
       - Modules — test_api_lifecycle, test_env_worktree
-      - Golden fixtures validate CLI surface
+      - Fixture mechanism — see interface.md#Surface-conformance
       - Onboarding — see interface.md#Onboarding
     - Fixtures
       - schema.fixture.yaml — test tables
