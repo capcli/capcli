@@ -140,7 +140,7 @@ cans/artifacts/wireframe/
   ```
 * **Root Aliases:** Exactly four ergonomic root shortcuts are legal invocation grammar (cans/interface.md#CLI-surface): `capcli sql` ≡ `capcli run sql`, `capcli search` ≡ `capcli run search`, `capcli inspect` ≡ `capcli run inspect`, and `capcli apply` ≡ `capcli rule apply schema`. These four root aliases may appear in fixture `command` strings; no other root shortcuts exist — everything else is `capcli <noun> <verb>`.
 * **Run Execute Form:** `capcli run <cap://...>` is the execute invocation (cans/interface.md#CLI-surface: `execute — run <capability>`); `execute` names the screen family and the fixture directory and does not appear in the typed command, and no `capcli run execute ...` form exists.
-* **Compound-Verb Mapping:** Screen IDs and directories keep underscore verb segments (`sys.vault_set`, `sys.vault_import`), while the invocation grammar follows cans/interface.md#CLI-surface: `capcli sys vault set <key> <val>`, `capcli sys vault import-env`, `capcli sys agent register|revoke`, `capcli sys audit tail|trace|query|replay`. The underscore form names the fixture; the spaced form is what the user types.
+* **Compound-Verb Mapping:** Screen IDs use `{noun}.{verb}.{state}.{condition}` where the verb joins multi-token verbs with underscore (`sys.vault_set`, `sys.vault_import`) and carries single-token verbs bare (`sys.register`, `sys.revoke`, `sys.agents`). The invocation grammar follows cans/interface.md#CLI-surface and may differ in surface form (`capcli sys vault set`, `capcli sys agent register`). The ID names the fixture; the spaced form is what the user types.
 * **Dynamic Environment Namespaces:** Environments are user-provisionable namespaces (`env new <slug>`, cans/interface.md#CLI-surface). `state_axes.env` in `manifest.json` lists only the kernel-reserved roots (`dev`, `sim`, `prod`); values like `staging` or `lab` are legal fixtures of dynamically provisioned namespaces (see `env_policy` in `manifest.json`).
 
 ---
@@ -234,7 +234,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Pack URP does not resolve |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.refusal.removed_scheme` | refusal | 3 | missing_param | removed_scheme | hub:// removed scheme refused at parse with exit 3 |
-| `run.inspect.success.masked` | success | 0 | policy.trust | redacted | Secret references rendered as [REDACTED_VAULT_TOKEN]; inspect exits 0 on all rungs |
+| `run.inspect.success.masked` | success | 0 | — | redacted | Secret references rendered as [REDACTED_VAULT_TOKEN]; inspect exits 0 on all rungs |
 | `run.abort.success.aborted` | success | 0 | — | aborted | Suspended frame purged; OCC fence released |
 | `run.abort.refusal.unknown_frame` | refusal | 3 | missing_param | unknown_frame | Abort target frame not suspended |
 
@@ -1375,7 +1375,7 @@ Derived-state law:
 - Fixtures carry no `state_modified`. A non-zero exit carries `state_modified: false` as a kernel invariant (kernel.md#Exit-code-law). Success screens take `state_modified` from the exit-0 variants in `_states.json` (`committed`, `dry_run`, `suspended`, `resumed`). A renderer emits a `state_modified` row from the derived value only; the fixture never stores it.
 - A stored `state_modified` key at envelope root, inside `component.groups[].fields`, inside `component.footer`, or inside `component.fields` carries the same ban at every depth; `_states.json` and the exit are the single home of the value.
 - A diagnostic component carries `domain` once, in the component. Success components carry no `domain`.
-- Archetype dispatch is deterministic: states `denial`, `refusal`, `crash`, `panic`, `yield` are `diagnostic`; `success` resolves to `receipt`, `tree`, or `document` by content (key-value summary, hierarchy, prose slice or help).
+- Archetype dispatch is deterministic: states `denial`, `refusal`, `crash`, `panic`, `yield` are `diagnostic`; `success` resolves to `receipt`, `tree`, or `document` by content (key-value summary, hierarchy, prose slice or help). Archetype law — cans/kernel.md#Diagnostic-output-law.
 - Visual typography is renderer output, never fixture data: caret strings and their column offsets, indentation, tree branch glyphs (`├──`, `└──`, `│`), divider lines (`─`), and key-column alignment are computed by the component renderers from component data.
 
 Component law:

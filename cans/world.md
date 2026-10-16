@@ -164,6 +164,11 @@
         - Every table owned by one file
         - Cross-file citation not allowed
         - Definition — see kernel.md#Layer-1-C-authorizer
+    - Plugin schema namespace
+      - Prefix — plugin_<id>_
+      - Owned by plugin, registered at install
+      - Cross-plugin read denied exit 2
+      - Registration — see plugins.md#Manifest
   - Claims lease
     - Lease identity
       - Tuple — (session_id, harness_marker, op_sequence)

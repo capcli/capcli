@@ -413,7 +413,7 @@
       - L1 trailer capped at 30 tokens
       - L2 envelope capped at 150 tokens
       - L3 leaf capped at 500 tokens
-      - Breach aborts with exit 1
+      - Breach aborts with exit 3
       - Config — see artifacts/cicd.yaml#trinity
     - Campaign envelope
       - inspect doc://prompts/<campaign>
@@ -512,9 +512,9 @@
       - Field shapes — see governance.md#Cascade
       - Refusal rendering — see kernel.md#Diagnostic-output-law
     - Flag ceiling
-      - Twelve universal flags frozen
+      - Thirteen universal flags frozen
       - Per-verb params grow independently
-      - Never a thirteenth universal flag
+      - Never a fourteenth universal flag
       - Reference — see #CLI-surface
   - Refusals and banned operations
     - Matrix denials

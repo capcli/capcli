@@ -1,5 +1,11 @@
 - Kernel
 <!-- ref-by: sandbox.md, governor.md, effect.md, governance.md -->
+  - The 5 concerns
+    - State — see world.md#SQLite-as-SSOT
+    - Physics — see #The-4-physical-laws
+    - Budget — see governance.md#Fuel-formula
+    - Memory — see effect.md#Causal-DAG
+    - Isolation — see sandbox.md#Tri-Jail-engine
   - The 4 physical laws
     - Law 1 — database floor
       - Native C sqlite3_set_authorizer intercept
@@ -343,6 +349,13 @@
       - Array of { rel, command, intent, risk }
       - Agent executes affordance verbatim
       - Absence changes no exit or payload byte
+    - Fixture law
+      - Screen is a wireframe/v2 fixture JSON
+      - Schema — see artifacts/wireframe/wireframe-structure.md#6.1
+      - Exit code derived from id state segment
+      - state_modified derived from exit-0 variant
+      - Trailer dispatch — artifacts/prompt/_triggers.json
+      - Runner — see assembly.md#Test-architecture
   - Boundary isolation
     - Perimeter layers
       - Credentials isolation at socket edge

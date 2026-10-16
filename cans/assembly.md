@@ -28,6 +28,7 @@
       - governance.yaml — structural limits
       - world.sql — deterministic DDL dump
       - artifacts/wireframe/ — golden CLI fixtures, edgeless canvas
+      - artifacts/prompt/ — trailer trigger table, prompt campaigns
       - artifacts/test-plan/ — behavioural cases, 1:1 with crate tests
       - Definition — see world.md#Dual-schema
     - Instance runtime home
@@ -182,6 +183,11 @@
       - Modules — test_budget_cascade, test_recovery_drill
       - Modules — test_api_lifecycle, test_env_worktree
       - Fixture mechanism — see interface.md#Surface-conformance
+      - Fixture runner asserts stdout byte-identical
+      - Fixture runner asserts derived exit and state_modified
+      - Fixture runner asserts banned tokens absent
+      - Cross-layer — every trigger entry resolves to fixture
+      - Runner contract — see artifacts/wireframe/wireframe-structure.md#6.2
       - Onboarding — see interface.md#Onboarding
     - Fixtures
       - schema.fixture.yaml — test tables

@@ -165,7 +165,7 @@
       - Process terminates with exit 2
       - Audit leaf records attempted syscall
       - Kernel emits policy denial event
-  - Channel A — stdio control plane
+  - Channel A
     - Purpose
       - Zero-boilerplate plugin communication
       - Authors read stdin, write stdout
@@ -192,7 +192,7 @@
       - Full law — see kernel.md#Exit-code-law
       - Unique to jail boundary — kernel reads code, decides
       - Envelope shape — see interface.md#CLI-surface
-  - Channel B — shared memory ring
+  - Channel B
     - Purpose
       - High-throughput data plane
       - Bypass subprocess pipe serialization

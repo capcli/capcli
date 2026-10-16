@@ -56,7 +56,7 @@ canonical_homes:
   sql_layers: kernel.md#Layer-1-C-authorizer
   three_phase_engine: kernel.md#Unified-3-phase-engine
   policy_governance_split: kernel.md#Policy-vs-governance-split
-  trust_ladder: governance.md#The-ladder
+  trust_ladder: governance.md#Trust-ladder
   budget_frames: governance.md#Budget-frames
   fuel_formula: governance.md#Fuel-formula
   promotion: governance.md#Promotion-gates
@@ -86,9 +86,9 @@ canonical_homes:
   masking: lifecycle.md#Masking
   plugin_manifest: plugins.md#Manifest
   plugin_capabilities: plugins.md#Capabilities
-  cli_noun_registration: plugins.md#CLI-noun-registration
-  ctx_namespace_registration: plugins.md#Ctx-namespace-registration
-  schema_extension: plugins.md#Schema-extension
+  cli_noun_registration: plugins.md#CLI-projection
+  ctx_namespace_registration: plugins.md#Capability-declarations
+  schema_extension: world.md#Plugin-schema-namespace
   generations: plugins.md#Generations
   federation_transport: plugins.md#Federation-transport
   pack_taxonomy: marketplace.md#Pack-taxonomy
@@ -100,6 +100,10 @@ canonical_homes:
   client_rpc: interface.md#Client-RPC-contract
   onboarding: interface.md#Onboarding
   wireframe: interface.md#Surface-conformance
+  wireframe_contract: kernel.md#Diagnostic-output-law
+  wireframe_runner: assembly.md#Test-architecture
+  trailer_slot: kernel.md#Diagnostic-output-law
+  prompt_triggers: artifacts/prompt/_triggers.json
   monorepo: assembly.md#Monorepo-layout
   cicd: assembly.md#CICD
   pack_distribution: overview.md#The-pack-distribution-model
