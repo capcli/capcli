@@ -1,0 +1,61 @@
+$schema: "test-plan/case/v1"
+case_id: "tl_24_sim_dry_run_zero_wire"
+title: "sim_mode: dry-run performs parameter and policy check, returns simulated: true, transmits zero packets"
+domain: "trust_ladder"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "lifecycle.md#Sim-mode-taxonomy"
+  statement: "A verb declared sim_mode: dry-run executes the full parameter and policy gate but transmits zero wire packets and returns simulated: true in the envelope."
+  blast_radius_if_breached: "A dry-run that leaks a packet to a live provider would consume real quota and could trigger irreversible external side effects during rehearsal."
+
+confusion_matrix:
+  quadrant: "true_positive"
+  slop_risk: "Agent asserts simulated: true but never inspects the wire, so a leaked packet passes as a 'successful' dry-run."
+  anti_slop_mitigation: "AS-02 requires a physical packet count of exactly zero verified at the network layer, not inferred from the envelope."
+
+setup:
+  env: "sim"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:root"
+    agent_id: "agt_anon_test"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "orders"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://stripe.charge@1 -p amount=100 --environment sim"
+  input_params: { amount: 100 }
+
+expected_observations:
+  exit_code: 0
+  state_modified: false
+  diagnostic:
+    domain: "api.dry_run"
+    culprit: "sim_mode: dry-run — policy check passed, dispatch suppressed"
+    remedy: "No action required; run outside sim to dispatch for real"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "api.call_sim"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Assert wire packet counter == 0 via network namespace inspection; SELECT count(*) FROM orders unchanged"
+  - rule: "AS-03"
+    verification: "Assert exit_code == 0 AND envelope.simulated == true AND data.dry_run == true"
+  - rule: "AS-06"
+    verification: "Expected amount 100 and packet count 0 are hardcoded literals"

@@ -415,6 +415,18 @@ anti_slop_assertions:
     verification: "string (exact structured envelope check)"
 ```
 
+### 5.1 Case Discipline Rules
+
+Every case file added to cases/{domain}/ must satisfy these four rules. They are enforced at PR intake by the CI gate list in matrix.yaml#ci_gates and are the structural defense against catalog bloat.
+
+Rule 1 — One invariant per case. invariant.statement names exactly one physical guarantee. If the statement contains "and" joining two guarantees, split into two cases. blast_radius_if_breached may name second-order fallout; that is not a second invariant.
+
+Rule 2 — Cite, never restate. invariant.law_reference must resolve to a canonical home registered in _rules.yaml#canonical_homes. No inline definitions. No chained hops (A → B → C). One hop maximum.
+
+Rule 3 — AS-law reuse only. Every case maps to one of AS-01..AS-08 in matrix.yaml#anti_slop_laws. Adding AS-09 or beyond requires an ADR in _adr/. A case that maps to no existing AS-law is testing something the confusion matrix does not recognize — reclassify it or drop it.
+
+Rule 4 — Domain prefix resolution. Every case_id prefix must resolve to a prefix declared in manifest.yaml#domains. Every domain.case_count must equal the enumerated count of cases: entries carrying that domain. This makes count drift structurally impossible.
+
 ---
 
 ## 6. Master Test Plan Bible & Case Catalog
@@ -719,7 +731,4 @@ When an autonomous software engineering agent is tasked with adding or modifying
 ```
 
 ### 7.1 Automated CI Gate
-The CI pipeline runs a dedicated AST test-linter (`cargo check-tests`) that validates all Rust tests against this test plan before running `cargo test`:
-1. Every test must be annotated with `#[test_case("case_id")]` referencing an active case in `cases/`.
-2. Tests tagged with `quadrant: true_negative` must contain an AST path executing an independent state-verification query.
-3. Tests violating any **Anti-Slop Linter Law (AS-01 to AS-08)** fail CI immediately with a compile error.
+The CI pipeline runs a dedicated AST test-linter (`cargo check-tests`) that validates all Rust tests against this test plan before running `cargo test`. The canonical, enumerated gate list lives in `matrix.yaml#ci_gates`; this document does not restate it.

@@ -6,7 +6,7 @@ plan:
   name: "capcli canonical test plan"
   structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
   matrix_doc: "cans/artifacts/test-plan/matrix.yaml"
-  total_cases: 274
+  total_cases: 287
   domains: 16
   crate_tier_convention:
     unit: "crates/capcli-core"
@@ -16,7 +16,7 @@ plan:
 domains:
   kernel_physics:
     prefix: "kp"
-    case_count: 29
+    case_count: 33
     description: "Kernel physics — dual-engine enforcement, platform tier taxonomy, seccomp-bpf jails, tmpfs scratch isolation, NTP drift halt, audit-sink fail-closed host integrity probes."
 
   database_authorizer:
@@ -26,27 +26,27 @@ domains:
 
   wire_egress:
     prefix: "we"
-    case_count: 14
+    case_count: 15
     description: "Wire floor & quota brokerage — proactive token buckets, JSONPath quota header sync, priority yield floors, vaulted bearer injection, egress byte caps, sim mock fallback."
 
   budget_cascade:
     prefix: "bc"
-    case_count: 25
+    case_count: 26
     description: "Budget cage & frame cascade — downward min inheritance, session ops ceilings, fuel pools, earmark ringfence and TTL sweep, watchdogs, suspended-task refill."
 
   audit_dag:
     prefix: "ad"
-    case_count: 18
+    case_count: 20
     description: "Memory spine & causal DAG — SHA-256 prev-hash linking, genesis anchors, tamper root-worm walks, FPA redaction, W3C traceparent, JSONL mirror SLA, KMS witness."
 
   trust_ladder:
     prefix: "tl"
-    case_count: 22
+    case_count: 24
     description: "Trust ladder & promotion — draft/reviewed/pinned floors, monotonic ascent, auto-promotion conjunction, canary telemetry demotion, human veto, circuit breaker."
 
   schema_migration:
     prefix: "sm"
-    case_count: 22
+    case_count: 24
     description: "Schema migration & compile checks — Sub-check 1..3 refusals (YAML syntax, cycles, lockfile drift), live-drift refusal, migration-safety rehearsal, forward-only migration, worktree isolation."
 
   coordination_claims:
@@ -76,7 +76,7 @@ domains:
 
   plugin_lifecycle:
     prefix: "pl"
-    case_count: 14
+    case_count: 15
     description: "Plugin lifecycle — manifest validation, CLI noun and ctx namespace registration, collision auto-scope, fuel_declared enforcement at frame push, serve bind/request ledger events, partner key hashing at rest, generation flock leases, GC reclamation, schema extension."
 
   pack_marketplace:
@@ -2045,3 +2045,108 @@ cases:
     target_crate: "crates/capcli-core"
     quadrant: "true_negative"
     title: "Dead letter queue enforces FIFO retention, 30-day expiry, and the 1000-item cap; oldest evicted before newest dropped"
+
+  # ── residual sweep — kernel_physics (kp) — 4 cases ─────────
+  - case_id: "kp_30_topology_local_default"
+    file: "cases/kernel_physics/kp_30_topology_local_default.yaml"
+    domain: "kernel_physics"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "Default profile runs single-host with local SQLite writer; unix:///run/capcli/hub.sock transport, no overlay, no orchestrator"
+  - case_id: "kp_31_topology_spoke_thin_delegation"
+    file: "cases/kernel_physics/kp_31_topology_spoke_thin_delegation.yaml"
+    domain: "kernel_physics"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "spoke-thin profile delegates every DB call to Hub via RPC; zero local SQLite file created"
+  - case_id: "kp_32_topology_spoke_ephemeral_zero_disk"
+    file: "cases/kernel_physics/kp_32_topology_spoke_ephemeral_zero_disk.yaml"
+    domain: "kernel_physics"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "spoke-ephemeral refuses to create a local workspace.db; any write attempt fails closed"
+  - case_id: "kp_33_remote_authorizer_spoke_serialize"
+    file: "cases/kernel_physics/kp_33_remote_authorizer_spoke_serialize.yaml"
+    domain: "kernel_physics"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Spoke writes serialize to Hub for authorizer evaluation; zero spoke-side authorizer bypass is possible"
+
+  # ── residual sweep — trust_ladder (tl) — 2 cases ───────────
+  - case_id: "tl_23_sim_sandbox_mode_endpoint_swap"
+    file: "cases/trust_ladder/tl_23_sim_sandbox_mode_endpoint_swap.yaml"
+    domain: "trust_ladder"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "sim_mode: sandbox swaps base_url to provider test endpoint; real wire traffic to sandboxed target"
+  - case_id: "tl_24_sim_dry_run_zero_wire"
+    file: "cases/trust_ladder/tl_24_sim_dry_run_zero_wire.yaml"
+    domain: "trust_ladder"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "sim_mode: dry-run performs parameter and policy check, returns simulated: true, transmits zero packets"
+
+  # ── residual sweep — audit_dag (ad) — 2 cases ──────────────
+  - case_id: "ad_19_genesis_four_event_sequence"
+    file: "cases/audit_dag/ad_19_genesis_four_event_sequence.yaml"
+    domain: "audit_dag"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "First boot emits the deterministic four-event sequence: rule.apply, sql read, sql write deny, sql write ok"
+  - case_id: "ad_20_intent_chain_child_narrows"
+    file: "cases/audit_dag/ad_20_intent_chain_child_narrows.yaml"
+    domain: "audit_dag"
+    target_tier: "unit"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Child routine intent may narrow the parent intent but never widen it; intent_chain preserves full history on every leaf"
+
+  # ── residual sweep — wire_egress (we) — 1 case ─────────────
+  - case_id: "we_15_developer_bridge_egress_utility"
+    file: "cases/wire_egress/we_15_developer_bridge_egress_utility.yaml"
+    domain: "wire_egress"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "capcli egress utility dispatches through the kernel proxy with vault handle resolution and zero guest-side TLS"
+
+  # ── residual sweep — schema_migration (sm) — 2 cases ───────
+  - case_id: "sm_23_wal_checkpoint_passive_postwrite"
+    file: "cases/schema_migration/sm_23_wal_checkpoint_passive_postwrite.yaml"
+    domain: "schema_migration"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_positive"
+    title: "Post-write PRAGMA wal_checkpoint(PASSIVE) runs and bounds WAL size; readers use short-lived snapshots"
+  - case_id: "sm_24_snapshot_catalog_retention"
+    file: "cases/schema_migration/sm_24_snapshot_catalog_retention.yaml"
+    domain: "schema_migration"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Snapshot catalog honors the rolling 30-day disk retention window; older snapshots pruned on maintenance tick"
+
+  # ── residual sweep — plugin_lifecycle (pl) — 1 case ────────
+  - case_id: "pl_15_composition_no_direct_p2p"
+    file: "cases/plugin_lifecycle/pl_15_composition_no_direct_p2p.yaml"
+    domain: "plugin_lifecycle"
+    target_tier: "integration"
+    target_crate: "crates/capcli-core"
+    quadrant: "true_negative"
+    title: "Direct P2P sockets between plugins are structurally impossible; every cross-plugin call routes through the kernel"
+
+  # ── residual sweep — budget_cascade (bc) — 1 case ──────────
+  - case_id: "bc_26_run_abort_purges_suspension"
+    file: "cases/budget_cascade/bc_26_run_abort_purges_suspension.yaml"
+    domain: "budget_cascade"
+    target_tier: "e2e"
+    target_crate: "crates/capcli-cli"
+    quadrant: "true_negative"
+    title: "run abort <frame_id> purges the _suspended_tasks resume target, releases state_fence and claims, writes audit event, never resumes"

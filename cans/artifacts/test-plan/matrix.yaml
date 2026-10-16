@@ -3,6 +3,7 @@
 # §3 (Anti-Slop Confusion Matrix), §4 (AS-01..AS-08) and §7.1 (CI gates).
 $schema: "test-plan/matrix/v1"
 structure_doc: "cans/artifacts/test-plan/test-plan-structure.md"
+discipline_doc: "cans/artifacts/test-plan/test-plan-structure.md#5.1-Case-Discipline-Rules"
 
 confusion_matrix:
   purpose: >-
@@ -95,3 +96,4 @@ ci_gates:
   - "Every test must be annotated with #[test_case(\"case_id\")] referencing an active case in cases/."
   - "Tests tagged with quadrant: true_negative must contain an AST path executing an independent state-verification query."
   - "Tests violating any Anti-Slop Linter Law (AS-01 to AS-08) fail CI immediately with a compile error."
+  - "Every case_id prefix resolves to a declared domain prefix in manifest.yaml#domains, and every domain.case_count equals the enumerated count of cases entries for that domain. Violations fail CI with a count mismatch diagnostic."

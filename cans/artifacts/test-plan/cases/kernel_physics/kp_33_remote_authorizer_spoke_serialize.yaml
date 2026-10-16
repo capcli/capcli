@@ -1,0 +1,61 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_33_remote_authorizer_spoke_serialize"
+title: "Spoke writes serialize to Hub for authorizer evaluation; zero spoke-side authorizer bypass"
+domain: "kernel_physics"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "world.md#Remote-authorizer-proxy"
+  statement: "In hub topology a spoke holds no local authorizer; every write serializes to the Hub where the C authorizer evaluates it before physical commit. No spoke-side path can bypass Hub evaluation."
+  blast_radius_if_breached: "A compromised spoke could commit unauthorised mutations to shared state without Hub policy evaluation, breaking the single-writer security model."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent runs the test with both spoke and hub on the same host, so the RPC layer is stubbed and the authorizer evaluates locally — the bypass path is never exercised."
+  anti_slop_mitigation: "AS-01 forbids mocking the authorizer boundary; AS-02 requires proving zero rows mutated at the Hub post-denial."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:root"
+    agent_id: "agt_anon_test"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "orders"
+        row_count: 3
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"UPDATE orders SET status = 'x'\" -m \"test\" --workspace tcp://hub.test:4040"
+  input_params: {}
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "Hub-side authorizer denied unbounded UPDATE on orders"
+    remedy: "Add a WHERE clause bounding the affected rows or provide a LIMIT"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 1
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "policy.denied"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-01"
+    verification: "Authorizer is never mocked; the Hub process runs the real C callback"
+  - rule: "AS-02"
+    verification: "Direct SELECT count(*) FROM orders on the Hub workspace.db before and after; assert both equal 3"
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 AND diagnostic.domain == 'policy.authorizer' AND remedy names the WHERE-bound fix"
