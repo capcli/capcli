@@ -274,11 +274,11 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.retire.refusal.missing_reason` | refusal | 3 | missing_param | missing_arg | Prod retire of an operational routine demands --reason |
 | `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
 
-### 4.4 `api/` (10 verbs → 26 screens)
+### 4.4 `api/` (9 verbs → 24 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
-| `api.sync.success.synced` | success | 0 | — | synced | OpenAPI spec compiled to catalog |
+| `api.sync.success.synced` | success | 0 | — | synced | Provider OpenAPI synced to catalog; sole spec-ingestion verb |
 | `api.sync.denial.rate` | denial | 2 | api.quota | rate_limit | Sync call within 24h cooldown |
 | `api.sync.refusal.missing_url` | refusal | 3 | missing_param | missing_arg | Upstream spec URL omitted |
 | `api.diff.success.populated` | success | 0 | — | populated | Spec divergence detected |
@@ -301,8 +301,6 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `api.rollback.success.completed` | success | 0 | — | completed | Reverts API spec to prior hash |
 | `api.rollback.denial.depth` | denial | 2 | policy.authorizer | depth_limit | Exceeds max rollback limit of 5 |
 | `api.rollback.refusal.not_found` | refusal | 3 | validation | not_found | Target version not found |
-| `api.import.success.imported` | success | 0 | — | imported | OpenAPI endpoint imported to catalog at draft |
-| `api.import.refusal.missing_spec` | refusal | 3 | missing_param | missing_spec | Import requires a spec source |
 | `api.record.success.recorded` | success | 0 | — | recorded | Live response captured as JSON Schema contract |
 
 ### 4.5 `bind/` (11 verbs → 28 screens)

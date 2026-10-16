@@ -312,7 +312,7 @@
       - Definition — see marketplace.md#Discovery
     - Registry ceilings
       - Limits — see artifacts/governance.yaml#registry
-      - Enforcement — routine prove and api import
+      - Enforcement — routine prove and api sync
       - Creation — filesystem writes ungated
       - Reference — see marketplace.md#Registry
   - Session Overview Primer

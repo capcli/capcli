@@ -55,7 +55,7 @@
         - Config — see artifacts/governance.yaml#registry
       - Enforcement points
         - routine prove validates shape
-        - api import validates spec size
+        - api sync validates spec size
         - plugin install validates bundle
         - Creation via filesystem ungated
         - Definition — see lifecycle.md#Stage-map

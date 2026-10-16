@@ -4154,36 +4154,6 @@
       "arrow_type": "denial"
     },
     {
-      "id": "t_sync_to_import",
-      "journeys": [
-        "journey_api_lifecycle"
-      ],
-      "from": [
-        "api.sync.success.synced"
-      ],
-      "to": [
-        "api.import.success.imported"
-      ],
-      "trigger": "import_provider_verb",
-      "label": "capcli api import stripe /v1/charges POST --spec https://api.stripe.com/openapi.json",
-      "arrow_type": "progress"
-    },
-    {
-      "id": "t_import_to_missing_spec",
-      "journeys": [
-        "journey_api_lifecycle"
-      ],
-      "from": [
-        "api.import.success.imported"
-      ],
-      "to": [
-        "api.import.refusal.missing_spec"
-      ],
-      "trigger": "import_without_spec",
-      "label": "capcli api import stripe /v1/charges POST",
-      "arrow_type": "denial"
-    },
-    {
       "id": "t_catalog_to_record",
       "journeys": [
         "journey_api_lifecycle"

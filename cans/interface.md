@@ -427,7 +427,7 @@
       - help stub lists kernel nouns only
       - Full noun list via plugin list
     - Muscle memory preservation
-      - capcli api import works after install
+      - capcli api sync works after install
       - capcli bind cron works after install
       - capcli ping notify works after install
       - Zero user migration required

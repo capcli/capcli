@@ -82,7 +82,7 @@
     - Install experience
       - plugin install capcli.pack.api
       - Restores old muscle memory
-      - capcli api import works again
+      - capcli api sync works again
       - ctx.api.call works again
       - Zero migration for user
     - Trust inheritance
