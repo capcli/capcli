@@ -1,0 +1,59 @@
+$schema: "test-plan/case/v1"
+case_id: "ab_02_lockfile_drift_ci_gate"
+title: "Uncommitted schema drift fails the CI lockfile gate"
+domain: "assembly_build"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "world.md#Pre-flight-sub-checks"
+  statement: "Sub-check 3 refuses any state where the on-disk schema hash differs from capcli.lock; the CI gate fails the build on uncommitted drift."
+  blast_radius_if_breached: "Uncompiled schema changes could reach a production boot, defeating the compile-time authorizer gate."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts exit 3 on a lockfile that was never modified, proving nothing about drift detection."
+  anti_slop_mitigation: "AS-02 requires proving the lockfile was unchanged by the check; AS-03 requires the typed diagnostic."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:root"
+    agent_id: "agt_anon_test"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: "tables:\n  orders:\n    columns:\n      id: int pk\n"
+    tables:
+      - name: "orders"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli rule validate"
+  input_params: {}
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "policy.rule"
+    culprit: "schema.yaml hash differs from capcli.lock"
+    remedy: "Run rule plan to recompile capcli.lock, then commit both artifacts together"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "rule.drift_detected"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Assert capcli.lock bytes are identical before and after the check"
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 AND diagnostic.domain == 'policy.rule' AND remedy names rule plan"

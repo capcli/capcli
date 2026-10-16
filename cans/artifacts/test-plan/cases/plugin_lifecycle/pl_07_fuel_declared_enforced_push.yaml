@@ -1,0 +1,61 @@
+$schema: "test-plan/case/v1"
+case_id: "pl_07_fuel_declared_enforced_push"
+title: "Op exceeding declared fuel_declared aborts at frame push with exit 2"
+domain: "plugin_lifecycle"
+target_tier: "unit"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "governor.md#Plugin-fuel-declaration"
+  statement: "A plugin verb may never consume more fuel than its manifest fuel_declared permits; the kernel enforces the ceiling at frame push before dispatch."
+  blast_radius_if_breached: "A plugin could starve sibling frames and escape the min() cascade, breaking the budget cage as a security boundary."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts exit 2 on an invocation that never reached the push gate, or mocks the budget accountant so the declared ceiling is never consulted."
+  anti_slop_mitigation: "AS-03 requires matching the typed exit code and diagnostic domain; AS-02 requires proving zero fuel was consumed downstream."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:root"
+    agent_id: "agt_anon_test"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "orders"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "kernel.push_frame(plugin_verb=stripe.charge, fuel_declared=10, attempted_op_cost=11)"
+  input_params: { fuel_declared: 10, attempted_op_cost: 11 }
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.budget"
+    culprit: "plugin verb stripe.charge declared fuel_declared=10, op attempted 11"
+    remedy: "Raise fuel_declared in the plugin manifest or reduce op cost"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "budget.exhausted"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders before and after push; assert strict equality (both 0)"
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 AND diagnostic.domain == 'policy.budget' AND culprit non-empty AND remedy non-empty"
+  - rule: "AS-06"
+    verification: "Expected op cost 11 is a hardcoded literal, never derived from the function under test"

@@ -1,0 +1,63 @@
+$schema: "test-plan/case/v1"
+case_id: "bc_24_outbox_staging_atomicity_crash"
+title: "Crash between ctx.emit and domain commit leaves zero orphan outbox rows and zero partial domain state"
+domain: "budget_cascade"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "governor.md#Outbox-staging"
+  statement: "ctx.emit writes the outbox row inside the caller's open transaction; a crash before commit rolls back both the domain write and the outbox row atomically. No orphan outbox row and no partial domain state may survive."
+  blast_radius_if_breached: "A delivered outbox event describing a mutation that never committed would signal downstream peers to act on phantom state."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent emits a synthetic crash via test-only API that bypasses the SQLite transaction, so the rollback path is never exercised and the assertion passes vacuously."
+  anti_slop_mitigation: "AS-02 requires proving both row counts post-crash are identical to pre-crash via direct SQLite SELECT on both _outbox_events and the domain table."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:root"
+    agent_id: "agt_anon_test"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "_outbox_events"
+        row_count: 0
+      - name: "orders"
+        row_count: 3
+    vault_secrets: []
+
+execution:
+  trigger: "rust_api"
+  command: "begin_txn(); insert_order(ORD-4); ctx.emit('order.created', payload); sigkill_self()"
+  input_params: {}
+
+expected_observations:
+  exit_code: 0
+  state_modified: false
+  diagnostic:
+    domain: "kernel.recovery"
+    culprit: "subprocess terminated mid-transaction; WAL rollback on next open"
+    remedy: "No action required — WAL recovery restored pre-transaction state"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "kernel.txn_rollback"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders == 3 AND SELECT count(*) FROM _outbox_events == 0 after reopen; strict equality to pre-crash"
+  - rule: "AS-05"
+    verification: "kernel.txn_rollback event present in _audit; verify_chain() passes"
+  - rule: "AS-06"
+    verification: "Pre-crash counts 3 and 0 are hardcoded fixture literals"

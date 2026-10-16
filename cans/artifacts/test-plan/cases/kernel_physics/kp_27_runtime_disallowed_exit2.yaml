@@ -1,0 +1,61 @@
+$schema: "test-plan/case/v1"
+case_id: "kp_27_runtime_disallowed_exit2"
+title: "Runtime tag outside the agent whitelist is denied with exit 2 E050_RUNTIME_DISALLOWED"
+domain: "kernel_physics"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "sandbox.md#Runtime-resolution"
+  statement: "The runtime resolution ladder terminates at the workspace default; any explicit runtime tag not in the agent policy whitelist is denied at the pre-flight gate with exit 2 E050_RUNTIME_DISALLOWED, and no sandbox process spawns."
+  blast_radius_if_breached: "An agent could smuggle an unvetted runtime past the whitelist and execute guest code outside the compiled seccomp profile set."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent asserts exit 2 on a routine whose runtime is whitelisted but whose policy check fails for an unrelated reason, crediting the runtime gate with a catch-all denial."
+  anti_slop_mitigation: "AS-03 requires the typed exit code AND diagnostic.domain AND culprit naming the disallowed runtime tag; AS-02 requires proving no sandbox process was spawned."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:root"
+    agent_id: "agt_anon_test"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "orders"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli run cap://reconcile@1 -p runtime=ruby"
+  input_params: { runtime: "ruby" }
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.runtime"
+    culprit: "runtime tag 'ruby' not in agent whitelist [python, bun_node, binary]"
+    remedy: "Add 'ruby' to the agent policy whitelist or change the routine runtime tag to a whitelisted engine"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "policy.denied"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "Assert zero guest processes spawned via process-tree inspection; SELECT count(*) FROM orders before and after unchanged"
+  - rule: "AS-03"
+    verification: "Assert exit_code == 2 AND diagnostic.domain == 'policy.runtime' AND culprit names the specific tag 'ruby'"
+  - rule: "AS-06"
+    verification: "Expected whitelist set is a hardcoded literal, never read from the resolver under test"

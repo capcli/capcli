@@ -1,0 +1,63 @@
+$schema: "test-plan/case/v1"
+case_id: "pm_03_iron_law_1_atomic_rollback"
+title: "Any sub-plugin checksum mismatch rolls back the whole pack (Iron Law 1)"
+domain: "pack_marketplace"
+target_tier: "integration"
+target_crate: "crates/capcli-core"
+
+invariant:
+  law_reference: "marketplace.md#Iron-law-1"
+  statement: "Pack install is 100% or aborts; a single sub-plugin checksum mismatch rolls back every prior sub-install and leaves state_modified: false."
+  blast_radius_if_breached: "A partial pack install leaves dangling schema tables, half-mounted CLI nouns, and provenance-less routines in the workspace."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent stops the install at the first sub-plugin and asserts exit 3 without proving the earlier sub-plugins were rolled back."
+  anti_slop_mitigation: "AS-02 requires a direct post-failure query proving plugin registry, schema table, and lockfile row counts match pre-install."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:root"
+    agent_id: "agt_anon_test"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "plugins"
+        row_count: 0
+      - name: "orders"
+        row_count: 0
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli pack import file://./fixtures/partial_mismatch.cap"
+  input_params: {}
+
+expected_observations:
+  exit_code: 3
+  state_modified: false
+  diagnostic:
+    domain: "policy.plugin"
+    culprit: "sub-plugin stripe.charge binary_sha256 mismatch against capcli-pack.yaml"
+    remedy: "Rebuild the pack bundle; verify SHA-256 in capcli-pack.yaml against the frozen archive"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "plugin.installed_rollback"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM plugins AND SELECT count(*) FROM orders before and after; assert both unchanged (0)"
+  - rule: "AS-03"
+    verification: "Assert exit_code == 3 AND diagnostic.domain == 'policy.plugin' AND culprit names the specific sub-plugin"
+  - rule: "AS-05"
+    verification: "Assert plugin.installed_rollback is present in _audit and verify_chain() passes"

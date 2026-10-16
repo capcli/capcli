@@ -1,0 +1,61 @@
+$schema: "test-plan/case/v1"
+case_id: "cp_06_archetype_a_diagnostic"
+title: "Exit 2 diagnostic renders header, failing span, metadata block, and remedy"
+domain: "cli_projection"
+target_tier: "e2e"
+target_crate: "crates/capcli-cli"
+
+invariant:
+  law_reference: "kernel.md#Diagnostic-output-law"
+  statement: "Archetype A renders exactly four parts on every exit 2 through 6: header line with exit domain, failing span with caret markers, indented metadata block, and remedy line."
+  blast_radius_if_breached: "Agents lose the actionable remedy and structured fault location, degrading recovery from denials to guesswork."
+
+confusion_matrix:
+  quadrant: "true_negative"
+  slop_risk: "Agent matches a generic 'error' substring in stdout instead of asserting the four structural archetype parts."
+  anti_slop_mitigation: "AS-03 requires the typed exit code plus diagnostic.domain; the structural assertion parses all four archetype parts, not a substring."
+
+setup:
+  env: "dev"
+  platform_tier: "tier_1"
+  caller_identity:
+    principal: "user:root"
+    agent_id: "agt_anon_test"
+    trust: "reviewed"
+  initial_state:
+    schema_yaml: null
+    tables:
+      - name: "orders"
+        row_count: 5
+    vault_secrets: []
+
+execution:
+  trigger: "cli_subcommand"
+  command: "capcli sql \"UPDATE orders SET status = 'shipped'\" -m \"test\""
+  input_params: {}
+
+expected_observations:
+  exit_code: 2
+  state_modified: false
+  diagnostic:
+    domain: "policy.authorizer"
+    culprit: "UPDATE statement without WHERE bound"
+    remedy: "Add a WHERE clause bounding the affected rows or provide a LIMIT"
+  database:
+    row_count_delta: 0
+    tables_mutated: []
+  wire:
+    packets_transmitted: 0
+    syscall_42_trapped: false
+  audit:
+    event_emitted: "policy.denied"
+    chain_valid: true
+    state_modified_field: false
+
+anti_slop_assertions:
+  - rule: "AS-02"
+    verification: "SELECT count(*) FROM orders before and after; assert both equal 5"
+  - rule: "AS-03"
+    verification: "Re-run with --json; assert exit_code == 2 AND diagnostic.domain == 'policy.authorizer'. In human mode, assert the four archetype parts are present: header line, caret span, indented metadata, remedy line."
+  - rule: "AS-06"
+    verification: "Expected row_count 5 is a hardcoded literal in the fixture, never queried from the function under test"
