@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.uninstall.success.uninstalled",
+  "target": "stripe-dev",
+  "command": "capcli plugin uninstall stripe-dev",
+  "elapsed_ms": 512,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "plugin_id": "stripe-dev",
+          "removed": "registration dropped; state dir retained",
+          "gc": "state reclaimed after lease drop; --purge-state wipes immediately"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin list",
+      "intent": "Installed plugin registry",
+      "risk": "safe"
+    }
+  ]
+}

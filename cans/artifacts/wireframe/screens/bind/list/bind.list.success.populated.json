@@ -54,8 +54,7 @@
       "rel": "next",
       "command": "capcli bind inspect bnd_3k2f",
       "intent": "Binding configuration envelope",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

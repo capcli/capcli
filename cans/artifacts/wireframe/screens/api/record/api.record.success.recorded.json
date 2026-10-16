@@ -31,8 +31,7 @@
       "rel": "next",
       "command": "capcli api catalog stripe --state active --json",
       "intent": "Confirm the recorded contract sits in the catalog",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

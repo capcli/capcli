@@ -1,0 +1,36 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.search.success.matched",
+  "target": "registry",
+  "command": "capcli plugin search payments --limit 5",
+  "elapsed_ms": 884,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "query": "payments",
+          "matches": "3",
+          "hit_1": "stripe 2.4.0 rating:4.8",
+          "hit_2": "paypal 1.2.0 rating:4.1",
+          "hit_3": "adyen 0.9.4 rating:3.7",
+          "discovery": "see marketplace.md#Discovery"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin install registry:stripe@2.4.0",
+      "intent": "Install top match",
+      "risk": "mutating"
+    }
+  ]
+}

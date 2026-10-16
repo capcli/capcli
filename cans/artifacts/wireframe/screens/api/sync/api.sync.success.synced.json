@@ -31,8 +31,7 @@
       "rel": "next",
       "command": "capcli api diff threads",
       "intent": "Zero drift from active catalog",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

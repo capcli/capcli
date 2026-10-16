@@ -1,0 +1,37 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.logs.success.tailed",
+  "target": "stripe",
+  "command": "capcli plugin logs stripe",
+  "elapsed_ms": 158,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "plugin_id": "stripe",
+          "ring": "stdout+stderr ring buffer",
+          "cap": "64 KiB per plugin",
+          "lines": [
+            "[gen_04] api.sync ok: 214 verbs in 1.8s",
+            "[gen_04] egress dial 1 cadence nominal"
+          ]
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin logs stripe --follow",
+      "intent": "Follow live log stream",
+      "risk": "safe"
+    }
+  ]
+}

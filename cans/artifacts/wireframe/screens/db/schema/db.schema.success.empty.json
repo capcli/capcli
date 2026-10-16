@@ -40,8 +40,7 @@
       "rel": "next",
       "command": "capcli db schema --table orders",
       "intent": "Live DDL schema introspected",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

@@ -30,8 +30,7 @@
       "rel": "next",
       "command": "capcli routine sweep",
       "intent": "Deduplication proposals generated",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

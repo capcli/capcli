@@ -30,8 +30,7 @@
       "rel": "next",
       "command": "capcli rule validate",
       "intent": "Lint blueprint syntax and semantics",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

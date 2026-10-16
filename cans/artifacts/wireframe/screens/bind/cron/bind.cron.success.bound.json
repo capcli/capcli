@@ -31,8 +31,7 @@
       "rel": "next",
       "command": "capcli bind list",
       "intent": "Active bindings displayed",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

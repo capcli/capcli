@@ -38,8 +38,7 @@
       "rel": "next",
       "command": "capcli routine prove overview --env sim",
       "intent": "Overview routine sim rehearsal passes (harness H7)",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

@@ -240,20 +240,50 @@
   - Denials
     - Denial event structure
       - Domain classification
-        - routine.runtime — guest crash and exceptions
-        - db.engine — check and FK constraint fails
-        - policy.authorizer — table or column denied
-        - policy.budget — frame or session fuel zero
-        - policy.quota — spend ceiling breach
-        - policy.trust — E046 trust violation
-        - policy.platform — E045 tier 1 mandate
-        - policy.federation — cycle or unallowlisted
-        - api.upstream — provider failure
-        - kernel.panic — sink loss or leak
-        - policy.plugin — plugin manifest invalid
-        - policy.namespace — ctx namespace missing
-        - policy.cli_noun — reserved noun collision
-        - Namespace — see plugins.md#Ctx-namespace-registration
+        - Scope
+          - Domains ride non-zero exits 2 through 6
+          - exit 0 carries no domain
+          - degraded is a condition flag, not a domain
+          - Mirrors reproduce this list verbatim
+        - exit 2 — policy denial
+          - Core policy
+            - policy.authorizer — table or column denied
+            - policy.budget — frame or session fuel zero
+            - policy.trust — E046 trust violation
+            - policy.platform — E045 tier 1 mandate
+            - policy.federation — cycle or unallowlisted
+            - policy.ast — AST bound breach
+          - Plugin surface
+            - api.quota — spend ceiling breach
+            - api.upstream — provider failure
+            - policy.plugin — plugin manifest invalid
+            - policy.namespace — ctx namespace missing
+            - policy.dependency — retire blocked on active deps
+            - policy.notify — ask cap breach
+            - Namespace — see plugins.md#Ctx-namespace-registration
+          - Storage and jail
+            - db.engine — check and FK constraint fails
+            - db.claims — claim held or lease conflict
+            - kernel.sandbox — jail containment breach
+            - audit.sink — stalled sink refuses write
+        - exit 3 — static refusal
+          - policy.cli_noun — reserved noun collision
+          - policy.pack — intake validation failure
+          - policy.secrets — secret missing headless
+          - compile — compile-time failure
+          - validation — pre-flight input validation
+          - missing_param — required input absent
+          - lockfile_mismatch — lockfile out of sync
+          - schema_hash_mismatch — schema hash drift
+          - kernel.boot — boot refusal
+        - exit 4 — guest crash
+          - routine.runtime — guest crash and exceptions
+          - federation.transport — dial budget exhausted
+        - exit 5 — kernel panic
+          - kernel.panic — sink loss or leak
+        - exit 6 — proactive yield
+          - api.quota — quota floor checkpoint
+          - ping.ask — ask suspension checkpoint
       - Violation fields
         - rule_id — e.g. policy.query.update.require_where
         - layer — authorizer, AST, governance, budget

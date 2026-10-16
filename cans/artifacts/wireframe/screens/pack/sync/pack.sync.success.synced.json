@@ -33,8 +33,7 @@
       "rel": "next",
       "command": "capcli pack import pack://registry/routine/webhook_receiver@1",
       "intent": "Register the pinned registry bundle locally",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

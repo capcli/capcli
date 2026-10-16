@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "bind.export.success.mcp",
+  "id": "serve.export.success.mcp",
   "target": "bindings",
-  "command": "capcli bind export mcp --out tools.json",
+  "command": "capcli serve export mcp --out tools.json",
   "elapsed_ms": 1697,
   "context": {
     "env": "dev",

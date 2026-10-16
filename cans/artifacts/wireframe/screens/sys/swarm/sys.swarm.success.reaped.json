@@ -40,7 +40,6 @@
       "command": "capcli sys swarm list",
       "intent": "Verify the swarm roster after reaping expired nodes",
       "rel": "next",
-      "requires_intent": false,
       "risk": "safe"
     }
   ]

@@ -39,8 +39,7 @@
       "rel": "next",
       "command": "capcli api catalog",
       "intent": "Truncated at 500 verbs",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

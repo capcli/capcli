@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.disable.success.disabled",
+  "target": "stripe",
+  "command": "capcli plugin disable stripe",
+  "elapsed_ms": 377,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "plugin_id": "stripe",
+          "unmount": "projection unmounted; cli_noun api parked",
+          "daemons": "SIGTERM sent to 2 running plugin daemons"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin list --enabled-only",
+      "intent": "Enabled plugins only",
+      "risk": "safe"
+    }
+  ]
+}

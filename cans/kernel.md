@@ -215,7 +215,7 @@
       - Domains
         - See effect.md#Denials
         - Full taxonomy owned there
-        - Seven domains, canonical list
+        - Anchored per exit, exits 2 through 6
         - Never restated here
       - Pre-flight matrix checks fire before dispatch
       - Denial carries remedy field for agent
@@ -232,10 +232,10 @@
       - Type crash or missing dependency
       - Transaction cleanly rolled back
       - Domain routine.runtime
+      - Federation transport unreachable
     - exit 5 — kernel panic
       - Sink loss — audit cannot commit
       - Plaintext credential in guest output
-      - Federation transport unreachable
       - Row-level corruption — see effect.md#Audit-spine
       - Panic protocol
         - Session token revoked by kernel

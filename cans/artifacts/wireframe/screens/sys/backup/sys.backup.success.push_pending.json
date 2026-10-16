@@ -12,8 +12,7 @@
     "archetype": "receipt",
     "component": {
         "rule": "policy.backup.push_best_effort",
-        "domain": "policy.backup",
-        "layer": "kernel",
+            "layer": "kernel",
         "snapshot": "snap_auto_2026-10-04T0300Z (VACUUM INTO complete)",
         "push": "pending",
         "git": "origin rejected (remote ahead by 2 commits)",

@@ -1,0 +1,35 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.link.success.linked",
+  "target": "stripe-dev",
+  "command": "capcli plugin link ./packs/stripe-dev",
+  "elapsed_ms": 214,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "plugin_id": "stripe-dev",
+          "path": "./packs/stripe-dev",
+          "mode": "hot-reload symlink",
+          "env": "dev",
+          "note": "link restricted to dev environment"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin inspect stripe-dev",
+      "intent": "Plugin preflight envelope",
+      "risk": "safe"
+    }
+  ]
+}

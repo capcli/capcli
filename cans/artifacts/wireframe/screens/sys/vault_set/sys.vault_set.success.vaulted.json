@@ -35,8 +35,7 @@
       "rel": "next",
       "command": "capcli api prove stripe.refund_charge --env sim",
       "intent": "Rehearsal in sim verified",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

@@ -31,8 +31,7 @@
       "rel": "next",
       "command": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\"",
       "intent": "100% schema match & shadow canary passed",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

@@ -156,7 +156,7 @@
     - Ceiling gate
       - Monthly provider spend ledger
       - Breach denies before socket dispatch
-      - Exit 2 with domain policy.quota
+      - Exit 2 with domain api.quota
       - Zero packets and zero TLS handshake
     - Cadence gate
       - Leaky token bucket per provider

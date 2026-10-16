@@ -33,8 +33,7 @@
       "rel": "next",
       "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "intent": "Instantiate draft routine sync_orders",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

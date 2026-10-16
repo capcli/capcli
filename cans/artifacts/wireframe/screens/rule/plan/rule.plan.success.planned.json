@@ -33,8 +33,7 @@
       "rel": "next",
       "command": "capcli rule rehearse add_order_priority --env sim",
       "intent": "Rehearse the planned migration in sim",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

@@ -30,8 +30,7 @@
       "rel": "next",
       "command": "capcli run overview",
       "intent": "Reground on situational state after the abort",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

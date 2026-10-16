@@ -37,8 +37,7 @@
       "rel": "next",
       "command": "capcli db dump",
       "intent": "Dump output payload truncated",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

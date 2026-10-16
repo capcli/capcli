@@ -44,8 +44,7 @@
       "rel": "next",
       "command": "capcli doc read doc://refund-policy --max-tokens 100",
       "intent": "Progressive disclosure: leading sections under token cap; typed keyset envelope",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

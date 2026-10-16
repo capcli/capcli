@@ -130,7 +130,7 @@ Logged, not resolved — cans/ is SSOT and was left untouched; fixes live in the
 
 ## Open 2026-10-13 (paradox resolutions §§6–10 — pending another session)
 
-- C-23 wireframe push_fail fixture contradicts cans law: artifacts/wireframe/screens/sys/backup/sys.backup.denial.push_fail.json asserts a command denial on git non-fast-forward during a "dual-storage guarantee" (exit on push failure), but cans/recovery.md#Storage-&-Backup never gates local snapshot durability on remote push success — under the §9c ruling `sys backup` always completes the local VACUUM INTO snapshot and `--push` is best-effort (exit 0, warning `push: pending`, pending-push state recorded). The fixture file has uncommitted changes from another session (dirty in git status) and was left untouched. Pending: the owning session lands its work, then the fixture flips to the completed-with-warning shape.
+- C-23 wireframe push_fail fixture contradicts cans law: artifacts/wireframe/screens/sys/backup/sys.backup.denial.push_fail.json asserts a command denial on git non-fast-forward during a "dual-storage guarantee" (exit on push failure), but cans/lifecycle.md#Backup-mandate never gates local snapshot durability on remote push success — under the §9c ruling `sys backup` always completes the local VACUUM INTO snapshot and `--push` is best-effort (exit 0, warning `push: pending`, pending-push state recorded). The fixture file has uncommitted changes from another session (dirty in git status) and was left untouched. Pending: the owning session lands its work, then the fixture flips to the completed-with-warning shape.
 - C-23 status: OPEN — do not touch the other session's file.
 
 ## Resolved 2026-10-13 (paradox resolutions §§6-10 — operator: agent decides)

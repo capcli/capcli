@@ -43,8 +43,7 @@
       "rel": "next",
       "command": "capcli bind pause bnd_3k2f",
       "intent": "Trigger paused",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

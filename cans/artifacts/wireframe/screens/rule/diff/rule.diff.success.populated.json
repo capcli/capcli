@@ -59,8 +59,7 @@
       "rel": "next",
       "command": "capcli rule apply schema --dry-run",
       "intent": "DDL impact preview on snapshot",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

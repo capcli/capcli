@@ -26,4 +26,4 @@ You interact with the workspace exclusively via `capcli`. Direct database file a
 * `5`: Panic or plaintext credential leak (immediate kill).
 * `6`: Quota/preemption yield (frame parked to _suspended_tasks).
 
-Full exit law: see cans/physics.md#Exit-code-law.
+Full exit law: see cans/kernel.md#Exit-code-law.

@@ -125,8 +125,7 @@
       "rel": "next",
       "command": "capcli rule diff schema --git",
       "intent": "Workspace in lockstep with rules",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

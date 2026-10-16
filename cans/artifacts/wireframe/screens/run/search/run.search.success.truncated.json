@@ -77,8 +77,7 @@
       "rel": "next",
       "command": "capcli inspect cap://stripe/refund_charge",
       "intent": "Inspect the first match from this result set",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

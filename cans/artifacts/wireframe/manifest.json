@@ -8,8 +8,11 @@
   "lockfile": "capcli.lock",
   "compiled_at": "2026-10-09T09:28:10Z",
   "nouns": [
-    "run", "db", "routine", "api", "bind",
-    "ping", "rule", "env", "sys", "doc", "pack"
+    "run", "sys", "plugin", "db", "routine",
+    "env", "rule", "doc", "pack"
+  ],
+  "plugin_nouns": [
+    "api", "bind", "ping", "serve", "storage", "ws"
   ],
   "state_axes": {
     "exit_code": [0, 2, 3, 4, 5, 6],
@@ -25,7 +28,7 @@
     "law": "env new provisions arbitrary lowercase namespace slugs; state_axes.env lists the kernel-reserved roots only"
   },
   "output_contract": {
-    "pointer_schemes": ["doc://", "pack://", "cap://", "db://"],
+    "pointer_schemes": ["cap://", "ask://", "audit://", "quota://", "vault://", "pack://", "policy://", "ws://", "db://", "doc://", "plugin://"],
     "prefix": "[{env}:{tier}]",
     "human_format": "rustc-style diagnostic with atomic blocks, source spans, and indented key-values",
     "machine_format": "--json structured envelope",
@@ -63,13 +66,12 @@
         "type": "array",
         "items": {
           "type": "object",
-          "required": ["rel", "command", "intent", "risk", "requires_intent"],
+          "required": ["rel", "command", "intent", "risk"],
           "properties": {
             "rel": { "type": "string", "enum": ["next", "abort", "inspect"] },
             "command": { "type": "string" },
             "intent": { "type": "string" },
-            "risk": { "type": "string", "enum": ["safe", "mutating"] },
-            "requires_intent": { "type": "boolean" }
+            "risk": { "type": "string", "enum": ["safe", "mutating"] }
           }
         }
       },

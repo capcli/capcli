@@ -37,8 +37,7 @@
       "rel": "next",
       "command": "capcli inspect quota://threads",
       "intent": "Quota headroom verified before instantiation",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

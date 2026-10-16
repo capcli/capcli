@@ -38,7 +38,6 @@
       "command": "capcli sys swarm reap",
       "intent": "Reap swarm nodes past lease_ttl and release held claims",
       "rel": "next",
-      "requires_intent": true,
       "risk": "mutating"
     }
   ]

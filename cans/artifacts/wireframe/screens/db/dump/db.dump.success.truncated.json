@@ -48,8 +48,7 @@
       "rel": "next",
       "command": "capcli db dump --out out/workspace-dump.sql",
       "intent": "Write the full dump to disk past the stdout token cap",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

@@ -54,15 +54,13 @@
       "rel": "inspect",
       "command": "capcli sys doctor --report",
       "intent": "Full YAML Trust Receipt",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     },
     {
       "rel": "inspect",
       "command": "capcli run overview",
       "intent": "Situational KPI briefing (<500 tokens)",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

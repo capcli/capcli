@@ -48,8 +48,7 @@
       "rel": "next",
       "command": "capcli api record stripe.charges.create -p charge_id=\"ch_1032ZX\"",
       "intent": "Live response captured; JSON Schema contract compiled",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

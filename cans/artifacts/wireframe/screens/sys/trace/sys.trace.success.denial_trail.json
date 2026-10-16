@@ -49,8 +49,7 @@
       "rel": "next",
       "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
       "intent": "Denied UPDATE retried against primary key; blast radius 1",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

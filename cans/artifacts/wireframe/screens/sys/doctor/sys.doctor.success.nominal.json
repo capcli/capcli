@@ -49,15 +49,13 @@
       "rel": "next",
       "command": "capcli search 'kombucha supplier sync'",
       "intent": "Zero hits; outputs semantic suggestions",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     },
     {
       "rel": "inspect",
       "command": "capcli search 'order'",
       "intent": "Matched capabilities and URP pointers",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

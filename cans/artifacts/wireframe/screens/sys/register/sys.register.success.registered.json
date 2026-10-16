@@ -36,8 +36,7 @@
       "rel": "next",
       "command": "capcli sys agent list",
       "intent": "Registered agents listed",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

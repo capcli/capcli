@@ -47,8 +47,7 @@
       "rel": "next",
       "command": "capcli api catalog",
       "intent": "Zero APIs configured",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

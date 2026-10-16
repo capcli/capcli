@@ -1,0 +1,42 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.list.success.populated",
+  "target": "plugins",
+  "command": "capcli plugin list",
+  "elapsed_ms": 342,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "tree",
+  "component": {
+    "title": "populated",
+    "root": "plugins",
+    "nodes": [
+      {
+        "label": "stripe 2.4.0 rung:reviewed gen:gen_03 enabled aliased_as:api",
+        "children": []
+      },
+      {
+        "label": "ping 1.9.2 rung:pinned gen:gen_07 enabled aliased_as:ping",
+        "children": []
+      },
+      {
+        "label": "stripe-dev 0.3.0 rung:draft gen:gen_01 disabled (linked)",
+        "children": []
+      }
+    ],
+    "footer": {
+      "plugins": "3 total (2 enabled, 1 disabled)"
+    }
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin inspect stripe",
+      "intent": "Plugin preflight envelope",
+      "risk": "safe"
+    }
+  ]
+}

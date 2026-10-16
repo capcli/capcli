@@ -61,8 +61,7 @@
       "rel": "next",
       "command": "capcli inspect cap://dispatch_order@4",
       "intent": "Pre-flight envelope with `can_invoke_now`",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

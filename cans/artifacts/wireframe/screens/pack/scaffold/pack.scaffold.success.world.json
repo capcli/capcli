@@ -34,8 +34,7 @@
       "rel": "next",
       "command": "capcli env list",
       "intent": "Verify the scaffolded environment is registered",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

@@ -53,8 +53,7 @@
       "rel": "next",
       "command": "capcli routine pending",
       "intent": "Batch promotion candidates listed",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

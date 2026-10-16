@@ -1,0 +1,32 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.unlink.success.unlinked",
+  "target": "stripe-dev",
+  "command": "capcli plugin unlink stripe-dev",
+  "elapsed_ms": 188,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "plugin_id": "stripe-dev",
+          "detached": "symlink removed; installed copy untouched"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin list",
+      "intent": "Installed plugin registry",
+      "risk": "safe"
+    }
+  ]
+}

@@ -31,8 +31,7 @@
       "rel": "next",
       "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
       "intent": "Deterministic execution and commit",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

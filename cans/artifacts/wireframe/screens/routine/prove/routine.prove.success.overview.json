@@ -51,8 +51,7 @@
       "rel": "next",
       "command": "capcli routine ship overview reviewed --queue --reason \"sim prove passed\"",
       "intent": "Enqueued for human review; zero code shipped",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

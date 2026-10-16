@@ -5,7 +5,6 @@
       "command": "capcli sys swarm list",
       "intent": "List swarm nodes connected to the Hub endpoint",
       "rel": "next",
-      "requires_intent": false,
       "risk": "safe"
     }
   ],
@@ -14,12 +13,12 @@
   "component": {
     "culprit": "Unregistered URP scheme 'tcp://': network transports are not URPs.",
     "domain": "compile",
-    "expected_urp_types": "cap://, ws://, db://, vault://, audit://, ask://, quota://, doc://, pack://, policy://",
+    "expected_urp_types": "cap://, ask://, audit://, quota://, vault://, pack://, policy://, ws://, db://, doc://, plugin://",
     "layer": "cli",
     "lines": [
       "FATAL  compile.unregistered_scheme"
     ],
-    "pointer_format": "scheme 'tcp://' not in the 10-scheme registry",
+    "pointer_format": "scheme 'tcp://' not in the 11-scheme registry",
     "remedy": "run capcli sys swarm list for hub endpoints, or inspect a registered URP",
     "target": "'tcp://100.64.0.1:4040'"
   },

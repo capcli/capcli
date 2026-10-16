@@ -1,8 +1,8 @@
 {
   "$schema": "wireframe/v2",
-  "id": "bind.export.success.openapi",
+  "id": "serve.export.success.openapi",
   "target": "bindings",
-  "command": "capcli bind export openapi --out openapi.json",
+  "command": "capcli serve export openapi --out openapi.json",
   "elapsed_ms": 2304,
   "context": {
     "env": "dev",
@@ -29,10 +29,9 @@
   "affordances": [
     {
       "rel": "next",
-      "command": "capcli bind export mcp --out tools.json",
+      "command": "capcli serve export mcp --out tools.json",
       "intent": "Bound MCP tool definition exported",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

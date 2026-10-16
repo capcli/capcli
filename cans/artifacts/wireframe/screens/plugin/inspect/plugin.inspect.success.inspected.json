@@ -1,0 +1,40 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.inspect.success.inspected",
+  "target": "stripe",
+  "command": "capcli plugin inspect stripe",
+  "elapsed_ms": 296,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "plugin_id": "stripe",
+          "version": "2.4.0",
+          "cli_noun": "api",
+          "ctx_namespace": "stripe",
+          "commands": "sync, diff, catalog, prove, ship, stats, retire, rollback, record",
+          "permissions": "egress: api.stripe.com; vault: stripe_key (read)",
+          "vault_keys": "stripe_key",
+          "egress_domains": "api.stripe.com",
+          "hooks": "pre_ship, post_record",
+          "envelope": "PreflightEnvelope"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin update stripe --dry-run",
+      "intent": "Preview generation build",
+      "risk": "safe"
+    }
+  ]
+}

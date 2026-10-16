@@ -1,6 +1,6 @@
 {
   "$schema": "wireframe/v2",
-  "id": "pack.bundle.denial.size_limit",
+  "id": "pack.bundle.refusal.size_limit",
   "target": "pack/atlas_world",
   "command": "capcli pack bundle packs/atlas_world",
   "elapsed_ms": 304,

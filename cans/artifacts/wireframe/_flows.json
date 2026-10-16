@@ -40,7 +40,7 @@
     "journey_tamper_forensics": {
       "name": "Tamper Quarantine & Forensic Isolation",
       "color": "#f0883e",
-      "entry": "sys.doctor.degraded.quarantine",
+      "entry": "sys.doctor.success.quarantine_degraded",
       "terminal": "sys.doctor.success.quarantine",
       "description": "Broken SHA-256 chain detected at boot-check -> corrupted leaves isolated to the quarantine branch (audit.quarantine.jsonl); boot completes degraded (exit 0), valid history stays queryable, quarantined leaves fail-closed -> CAPCLI_RECOVERY=1 break-glass read-only quarantine ledger inspection"
     },
@@ -111,7 +111,7 @@
       "name": "Endpoint Exposure, Partner Keys & Manifest Export",
       "color": "#be185d",
       "entry": "bind.endpoint.denial.trust",
-      "terminal": "bind.export.success.mcp",
+      "terminal": "serve.export.success.mcp",
       "description": "Expose a routine over HTTP: unpinned trust denied -> endpoint cap (10) -> pinned dispatch_order@4 endpoint bound -> partner API key issued (25-key cap first) -> OpenAPI and MCP manifests exported"
     },
     "journey_doc_reading": {
@@ -541,7 +541,7 @@
         "journey_tamper_forensics"
       ],
       "from": [
-        "sys.doctor.degraded.quarantine"
+        "sys.doctor.success.quarantine_degraded"
       ],
       "to": [
         "sys.doctor.success.quarantine"
@@ -1354,10 +1354,10 @@
         "bind.keys.success.issued"
       ],
       "to": [
-        "bind.export.success.openapi"
+        "serve.export.success.openapi"
       ],
       "trigger": "export_openapi",
-      "label": "capcli bind export openapi --out openapi.json",
+      "label": "capcli serve export openapi --out openapi.json",
       "arrow_type": "progress"
     },
     {
@@ -1366,13 +1366,13 @@
         "journey_endpoint_exposure"
       ],
       "from": [
-        "bind.export.success.openapi"
+        "serve.export.success.openapi"
       ],
       "to": [
-        "bind.export.success.mcp"
+        "serve.export.success.mcp"
       ],
       "trigger": "export_mcp",
-      "label": "capcli bind export mcp --out tools.json",
+      "label": "capcli serve export mcp --out tools.json",
       "arrow_type": "progress"
     },
     {
@@ -1459,7 +1459,7 @@
         "env.new.refusal.name_taken"
       ],
       "to": [
-        "pack.bundle.denial.size_limit"
+        "pack.bundle.refusal.size_limit"
       ],
       "trigger": "pack_world_pack",
       "label": "capcli pack bundle packs/atlas_world",
@@ -1471,7 +1471,7 @@
         "journey_env_lifecycle"
       ],
       "from": [
-        "pack.bundle.denial.size_limit"
+        "pack.bundle.refusal.size_limit"
       ],
       "to": [
         "env.new.denial.cap"
@@ -4117,7 +4117,7 @@
         "pack.bundle.success.packed"
       ],
       "to": [
-        "pack.bundle.denial.size_limit"
+        "pack.bundle.refusal.size_limit"
       ],
       "trigger": "pack_oversized_world",
       "label": "capcli pack bundle packs/atlas_world",

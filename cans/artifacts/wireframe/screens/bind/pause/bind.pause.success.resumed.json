@@ -30,8 +30,7 @@
       "rel": "next",
       "command": "capcli bind remove bnd_3k2f",
       "intent": "Trigger dismantled",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

@@ -1,0 +1,38 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.install.success.installed",
+  "target": "stripe",
+  "command": "capcli plugin install registry:stripe@2.4.0",
+  "elapsed_ms": 1180,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "plugin_id": "stripe",
+          "version": "2.4.0",
+          "source": "registry:stripe@2.4.0",
+          "rung": "reviewed",
+          "generation": "gen_03",
+          "trust": "pinned",
+          "preview": "mount projection + cli_noun api; no writes until --yes confirmed",
+          "audit": "op_pl01 committed to _audit"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin inspect stripe",
+      "intent": "Plugin preflight envelope",
+      "risk": "safe"
+    }
+  ]
+}

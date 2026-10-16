@@ -46,13 +46,11 @@ cans/artifacts/wireframe/
       stats/
       retire/
       rollback/
-      import/
       record/
     bind/
       cron/
       webhook/
       endpoint/
-      export/
       list/
       inspect/
       pause/
@@ -110,10 +108,25 @@ cans/artifacts/wireframe/
       pack/
       scaffold/
       sync/
+    serve/
+      export/
+    plugin/
+      install/
+      link/
+      unlink/
+      list/
+      inspect/
+      update/
+      enable/
+      disable/
+      uninstall/
+      search/
+      logs/
+      doctor/
 ```
 
 ### 1.1 Structural Invariants
-* **Active Nouns:** Exactly 11 CLI nouns (`run`, `db`, `routine`, `api`, `bind`, `ping`, `rule`, `env`, `sys`, `doc`, `pack`).
+* **Active Nouns:** The 9 kernel-reserved nouns (`run`, `sys`, `plugin`, `db`, `routine`, `env`, `rule`, `doc`, `pack`) are always active (interface.md#The-9-kernel-nouns). Plugin-provided nouns (`api`, `bind`, `ping`, `serve`, `storage`, `ws`) arrive with pack installs and leave at uninstall (interface.md#Plugin-provided-nouns).
 * **Single-Source Law:** Every screen has exactly one `.json` fixture. No `.txt` files are committed. The JSON shape IS the screen; renderers (HTML canvas, Rust test harness) consume it directly.
 * **Depth Ceiling:** File paths relative to `screens/` must remain exactly 3 path components: `{noun}/{verb}/{filename}.json`.
 * **Sibling Invariants:** Min 3, max 18 verb directories per noun branch node.
@@ -140,9 +153,9 @@ Naming convention, both artifact directories (`wireframe/`, `prompt/`): a leadin
 
 ### 2.2 `_states.json`
 
-Canonical file: `_states.json` (same directory). It is the single home of the state taxonomy: exit code → label, exit → legal domains, exit → required diagnostic fields. Not reproduced here by design.
+Canonical file: `_states.json` (same directory). It is a generated mirror of the state taxonomy owned by effect.md#Denials: exit code → label, exit → legal domains, exit → required diagnostic fields. The mirror derives from canon and owns nothing. Not reproduced here by design.
 
-The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6 (cans/physics.md#Exit-code-law). The screen-ID state slot takes exactly these labels; severity and lifecycle words (`warning`, `tamper`, `suspended`, `rolled_back`) live in the condition slot. A domain determines its exit: two domains are dual-registered — `api.quota` (exit 2 Critical, exit 6 Background) and `policy.pack` (exit 2 denial on pack-time invariant breach, exit 3 refusal on intake validation). Exit 6 covers both quota yields and `ping.ask` frame suspensions (cans/action.md suspension contract).
+The law in one paragraph: six states, one per exit — `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6 (kernel.md#Exit-code-law). The screen-ID state slot takes exactly these labels; severity and lifecycle words (`warning`, `tamper`, `suspended`, `rolled_back`) live in the condition slot. A domain determines its exit; the domain→exit mapping lives in effect.md#Denials and this document restates none of it. `api.quota` is dual-registered (exit 2 Critical, exit 6 Background). `policy.pack` registers exit 3 only — pack intake validation refusal. Exit 6 covers both quota yields and `ping.ask` frame suspensions (governor.md#Suspension-registry).
 
 ---
 
@@ -270,7 +283,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.rollback.denial.depth` | denial | 2 | policy.governance | depth_limit | Versioning cap on retained history: exceeds max rollback depth of 5 |
 | `routine.rollback.refusal.not_found`| refusal | 3 | validation | not_found | Target version not found in history |
 | `routine.retire.success.completed` | success | 0 | — | completed | Routine retired; bound ingress loudly dismantled (cron paused→dissolved by daemon, endpoint revoked) |
-| `routine.retire.denial.active_deps` | denial | 2 | policy.governance | deps_exist | In-memory routine DAG blocks retirement of active dependencies |
+| `routine.retire.denial.active_deps` | denial | 2 | policy.dependency | deps_exist | In-memory routine DAG blocks retirement of active dependencies |
 | `routine.retire.refusal.missing_reason` | refusal | 3 | missing_param | missing_arg | Prod retire of an operational routine demands --reason |
 | `routine.retire.refusal.not_found` | refusal | 3 | validation | not_found | Target routine does not exist |
 
@@ -303,7 +316,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `api.rollback.refusal.not_found` | refusal | 3 | validation | not_found | Target version not found |
 | `api.record.success.recorded` | success | 0 | — | recorded | Live response captured as JSON Schema contract |
 
-### 4.5 `bind/` (10 verbs → 27 screens)
+### 4.5 `bind/` (10 verbs → 25 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -321,8 +334,6 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `bind.endpoint.success.bound` | success | 0 | — | bound | Routine exposed as HTTP/MCP |
 | `bind.endpoint.denial.trust` | denial | 2 | policy.trust | unpinned | Endpoint requires pinned trust |
 | `bind.endpoint.denial.cap` | denial | 2 | policy.authorizer | cap_exceeded| Max 10 active endpoints reached |
-| `bind.export.success.openapi` | success | 0 | — | exported | Bound OpenAPI schema exported |
-| `bind.export.success.mcp` | success | 0 | — | exported | Bound MCP tool definition exported |
 | `bind.list.success.populated` | success | 0 | — | populated | Active bindings displayed |
 | `bind.list.success.empty` | success | 0 | — | empty | Zero bindings active |
 | `bind.inspect.success.populated` | success | 0 | — | populated | Binding configuration envelope |
@@ -442,7 +453,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Total media loss: ledger root + WORM checkpoint unreadable; kill_and_alert |
 | `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode |
 | `sys.doctor.refusal.lockfile` | refusal | 3 | lockfile_mismatch | drift | Lockfile root hash mismatch |
-| `sys.doctor.degraded.quarantine`| degraded | 0 | kernel.integrity | tampered | Row-level chain tamper: sha256 link broken at row 8,412; corrupted leaves isolated to the quarantine branch (`audit.quarantine.jsonl`); boot completes degraded (exit 0) — valid history operable, quarantined leaves fail-closed; operator clears with `sys doctor --ack-tamper` after restore + WORM re-verification |
+| `sys.doctor.success.quarantine_degraded` | success | 0 | — | quarantine_degraded | Row-level chain tamper: sha256 link broken at row 8,412; corrupted leaves isolated to the quarantine branch (`audit.quarantine.jsonl`); boot completes degraded (exit 0) — valid history operable, quarantined leaves fail-closed; operator clears with `sys doctor --ack-tamper` after restore + WORM re-verification |
 | `sys.doctor.success.quarantine`| success | 0 | — | quarantine | Break-glass read-only quarantine ledger inspection (`CAPCLI_RECOVERY=1`); valid history verified |
 | `sys.doctor.denial.thrashing` | denial | 2 | agent.thrashing| looping | 20 sustained denials in 5 minutes |
 | `sys.backup.success.completed` | success | 0 | — | completed | Snapshot pushed to Git and S3 |
@@ -478,7 +489,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `pack.new.refusal.name_taken` | refusal | 3 | validation | name_taken | Pack name already registered |
 | `pack.new.refusal.shape_violation` | refusal | 3 | validation | shape_violation | Scaffold violates complexity or parameter bounds |
 | `pack.bundle.success.packed` | success | 0 | — | packed | Bundle compiled to SHA-256 .cap archive |
-| `pack.bundle.denial.size_limit` | denial | 2 | policy.pack | size_limit | World pack bundle exceeds 5MB ceiling |
+| `pack.bundle.refusal.size_limit` | refusal | 3 | policy.pack | size_limit | World pack bundle exceeds 5MB ceiling |
 | `pack.sync.success.synced` | success | 0 | — | synced | Registry index refreshed from capcli/registry |
 | `pack.import.success.imported` | success | 0 | — | imported | Pinned bundle registered in local _packs at draft trust |
 | `pack.import.refusal.checksum` | refusal | 3 | policy.pack | checksum | Bundle SHA-256 mismatch against pinned hash (wire gate) |
@@ -489,11 +500,35 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `pack.scaffold.refusal.checksum` | refusal | 3 | policy.pack | checksum | Bundle SHA-256 mismatch against registry index |
 | `pack.scaffold.denial.target_exists` | denial | 2 | policy.authoring | target_exists | Target file or environment already exists |
 
+
+### 4.12 `serve/` (1 verb → 2 screens)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `serve.export.success.openapi` | success | 0 | — | exported | OpenAPI schema exported via serve export |
+| `serve.export.success.mcp` | success | 0 | — | exported | MCP tool definition exported via serve export |
+
+### 4.13 `plugin/` (12 verbs → 12 screens)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `plugin.install.success.installed` | success | 0 | — | installed | Plugin installed from registry source |
+| `plugin.link.success.linked` | success | 0 | — | linked | Dev plugin hot-reload symlink linked |
+| `plugin.unlink.success.unlinked` | success | 0 | — | unlinked | Dev plugin symlink detached |
+| `plugin.list.success.populated` | success | 0 | — | populated | Installed plugins listed with rung and generation |
+| `plugin.inspect.success.inspected` | success | 0 | — | inspected | Plugin preflight envelope: commands, permissions, noun |
+| `plugin.update.success.updated` | success | 0 | — | updated | Plugin updated to new generation via atomic swap |
+| `plugin.enable.success.enabled` | success | 0 | — | enabled | Plugin projection mounted; noun live |
+| `plugin.disable.success.disabled` | success | 0 | — | disabled | Plugin projection unmounted; noun parked |
+| `plugin.uninstall.success.uninstalled` | success | 0 | — | uninstalled | Plugin uninstalled; state retained for GC |
+| `plugin.search.success.matched` | success | 0 | — | matched | Registry search returned ranked matches |
+| `plugin.logs.success.tailed` | success | 0 | — | tailed | Plugin ring-buffer logs tailed |
+| `plugin.doctor.success.healthy` | success | 0 | — | healthy | Tri-Jail probes pass; syscall 42 trapping asserted |
 ---
 
 ## 5. Canonical Screen Fixtures
 
-Every fixture is a `wireframe/v2` root in `CliEnvelope` shape (envelope law: cans/physics.md#Diagnostic-output-law): `$schema`, `id`, `command`, `context {env, tier, trust}`, optional `audit_op`, `archetype`, `component`. Exactly one component per screen:
+Every fixture is a `wireframe/v2` root in `CliEnvelope` shape (envelope law: kernel.md#Diagnostic-output-law): `$schema`, `id`, `command`, `context {env, tier, trust}`, optional `audit_op`, `archetype`, `component`. Exactly one component per screen:
 
 - `diagnostic` — states denial, refusal, crash, panic, yield (exits 2, 3, 4, 5, 6)
 - `tree` — hierarchies, causal DAGs, inspection envelopes
@@ -782,8 +817,7 @@ Fixture (`wireframe/v2`):
       "rel": "next",
       "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
       "intent": "Routine scaffold committed",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }
@@ -859,8 +893,7 @@ Fixture (`wireframe/v2`):
       "rel": "next",
       "command": "capcli rule plan --name \"add_order_priority\" -m \"rush shipping priority flag\"",
       "intent": "Start the kernel migration pipeline instead of raw DDL",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }
@@ -1198,8 +1231,7 @@ Fixture (`wireframe/v2`):
       "rel": "next",
       "command": "capcli doc outline doc://refund-policy",
       "intent": "Outline node tree with section indices",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }
@@ -1268,8 +1300,7 @@ Fixture (`wireframe/v2`):
       "rel": "next",
       "command": "capcli sys doctor --boot-check",
       "intent": "Host doctor readiness check",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }
@@ -1295,7 +1326,7 @@ Capabilities are discovered dynamically, not listed in static help.
 ### 6.1 Screen Fixture Schema (`screens/run/sql/run.sql.denial.ast.json`)
 
 A fixture JSON is the serialized `CliEnvelope` payload of the screen and the
-single source the renderer consumes (envelope law: cans/physics.md#Diagnostic-output-law).
+single source the renderer consumes (envelope law: kernel.md#Diagnostic-output-law).
 The root carries the invocation, the runtime context, the audit op, and exactly
 one layout component. The HTML canvas and the Rust test harness both render from
 this shape. No separate `.txt` file exists.
@@ -1330,14 +1361,14 @@ Root field law:
 - `target` names the single invocation target when the command carries one (251/260 fixtures on disk) and is absent on targetless commands.
 - `context` is the `CliEnvelope` context frame: `env`, `tier`, `trust`, plus optional `data_shape` (65/260 fixtures on disk). The renderer derives the `[{env}:{tier}]` badge from it.
 - `audit_op` names the audit operation the envelope reports. It appears when the screen reports one and is absent otherwise.
-- `archetype` is exactly one of `diagnostic`, `tree`, `receipt`, `document` (archetype law: cans/physics.md#Diagnostic-output-law). `component` carries that archetype's payload and nothing else.
+- `archetype` is exactly one of `diagnostic`, `tree`, `receipt`, `document` (archetype law: kernel.md#Diagnostic-output-law). `component` carries that archetype's payload and nothing else.
 - `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
-- `affordances` is an optional root key on exit-0 fixtures only (state segment `success`; archetype `receipt`, `tree`, or `document`). Each entry is `{ rel, command, intent, risk, requires_intent }` (cans/interface.md#CLI-surface Success affordances); `command` is the target screen's fixture `command` string verbatim, sourced from `_flows.json` transitions, and `risk` is `mutating` exactly when `requires_intent` is `true`. It is a machine envelope key: renderers never emit it as a human output line, and its presence or absence changes no exit, state, or payload byte. Shape: `output_contract.affordances.machine_schema` in `manifest.json`.
+- `affordances` is an optional root key on exit-0 fixtures only (state segment `success`; archetype `receipt`, `tree`, or `document`). Each entry is `{ rel, command, intent, risk }` (cans/interface.md#Run-noun Success affordances); `command` is the target screen's fixture `command` string verbatim, sourced from `_flows.json` transitions, and `risk` takes `safe` or `mutating`. It is a machine envelope key: renderers never emit it as a human output line, and its presence or absence changes no exit, state, or payload byte. Shape: `output_contract.affordances.machine_schema` in `manifest.json`.
 
 Derived-state law:
 
 - The exit code derives from the `id` state segment: `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6. Fixtures carry no `exit_code`; state and domain legality lives in `_states.json`.
-- Fixtures carry no `state_modified`. A non-zero exit carries `state_modified: false` as a kernel invariant (cans/physics.md#Exit-code-law). Success screens take `state_modified` from the exit-0 variants in `_states.json` (`committed`, `dry_run`, `suspended`, `resumed`). A renderer emits a `state_modified` row from the derived value only; the fixture never stores it.
+- Fixtures carry no `state_modified`. A non-zero exit carries `state_modified: false` as a kernel invariant (kernel.md#Exit-code-law). Success screens take `state_modified` from the exit-0 variants in `_states.json` (`committed`, `dry_run`, `suspended`, `resumed`). A renderer emits a `state_modified` row from the derived value only; the fixture never stores it.
 - A stored `state_modified` key at envelope root, inside `component.groups[].fields`, inside `component.footer`, or inside `component.fields` carries the same ban at every depth; `_states.json` and the exit are the single home of the value.
 - A diagnostic component carries `domain` once, in the component. Success components carry no `domain`.
 - Archetype dispatch is deterministic: states `denial`, `refusal`, `crash`, `panic`, `yield` are `diagnostic`; `success` resolves to `receipt`, `tree`, or `document` by content (key-value summary, hierarchy, prose slice or help).
@@ -1533,7 +1564,6 @@ struct Affordance {
     command: String,
     intent: String,
     risk: String,
-    requires_intent: bool,
 }
 
 /// Root fixture: a serialized CliEnvelope payload (§6.1).

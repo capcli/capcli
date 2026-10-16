@@ -29,8 +29,7 @@
       "rel": "next",
       "command": "capcli run cap://report_orders@2 -p quarter=2026Q3",
       "intent": "Result >500 tokens; returns `next_cursor`",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

@@ -63,15 +63,13 @@
       "rel": "next",
       "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders WHERE id > 10003\"",
       "intent": "Resume the capped query from the last returned id",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     },
     {
       "rel": "inspect",
       "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\" --out out/orders_export.json",
       "intent": "SQL export payload directed to disk via `--out`",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

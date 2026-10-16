@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.enable.success.enabled",
+  "target": "stripe",
+  "command": "capcli plugin enable stripe",
+  "elapsed_ms": 402,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "plugin_id": "stripe",
+          "mount": "projection mounted; cli_noun api live",
+          "generation": "gen_04"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli api catalog",
+      "intent": "Provider catalog via mounted noun",
+      "risk": "safe"
+    }
+  ]
+}

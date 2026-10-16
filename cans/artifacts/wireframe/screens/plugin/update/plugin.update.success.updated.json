@@ -1,0 +1,36 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "plugin.update.success.updated",
+  "target": "stripe",
+  "command": "capcli plugin update stripe",
+  "elapsed_ms": 2410,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "plugin_id": "stripe",
+          "from_version": "2.4.0",
+          "to_version": "2.5.1",
+          "generation": "gen_03 -> gen_04",
+          "atomic_swap": "12ms (<20ms cap)",
+          "note": "running tasks retain gen_03 until lease drop"
+        }
+      }
+    ]
+  },
+  "affordances": [
+    {
+      "rel": "next",
+      "command": "capcli plugin inspect stripe",
+      "intent": "Plugin preflight envelope",
+      "risk": "safe"
+    }
+  ]
+}

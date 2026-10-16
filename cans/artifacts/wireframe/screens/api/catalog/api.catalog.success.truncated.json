@@ -59,8 +59,7 @@
       "rel": "next",
       "command": "capcli api catalog stripe --state active --json",
       "intent": "Imported catalog verbs listed",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

@@ -48,8 +48,7 @@
       "rel": "next",
       "command": "capcli doc outline doc://refund-policy",
       "intent": "Outline node tree with section indices",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

@@ -50,7 +50,7 @@ Rules that follow from the table:
 | Level | Surface (frozen in `cans/interface.md`) | Cap | Content |
 |---|---|---|---|
 | L0 | boot | 0 prompt tokens | nothing; no bank, catalog, or manifest is mounted |
-| L1 | trigger screen trailer / `next_action` (JSON) | ≤30 tokens (≤60 via `search`, per `cans/action.md`) | pointer `doc://prompts/{bank}/{slug}#{version}` + one-line reason, inside the wireframe's generic trailer slot (`wireframe-structure.md` §6.1.1) |
+| L1 | trigger screen trailer / `next_action` (JSON) | ≤30 tokens (≤60 via `search`, per `cans/interface.md#Doc-noun`) | pointer `doc://prompts/{bank}/{slug}#{version}` + one-line reason, inside the wireframe's generic trailer slot (`wireframe-structure.md` §6.1.1) |
 | L2 | `capcli inspect doc://prompts/{bank}/{slug}#{version}` | ≤150 tokens | envelope only: vars, section index, caps, blocked status; no body |
 | L3 | `capcli doc outline doc://prompts/{bank}/{slug}#{version}` → `capcli doc read doc://prompts/{bank}/{slug}#{version}#<node> --max-tokens <n>` | 1 leaf/turn, leaf ≤500 tokens | exactly one rendered section, kernel-substituted vars; the `#<node>` fragment selects the outline node, with no new flag, noun, or verb |
 
@@ -59,14 +59,14 @@ Rules that follow from the table:
 Caps, stated once:
 
 - Ordinary `doc read` defaults to `--max-tokens 100`
-  (`cans/interface.md`); the global result ceiling is 500 tokens
-  (`cans/action.md`). Prompt leaves request up to 500 explicitly.
+  (`cans/interface.md#Doc-noun`); the global result ceiling is 500 tokens
+  (`cans/interface.md#Doc-noun`). Prompt leaves request up to 500 explicitly.
 - Leaf selection rides `doc outline` node ids carried as the `doc read`
   URL fragment (`#<node>`) per `cans/interface.md`; there is no
   `--section` flag and no new noun or verb.
 - No L1→L3 shortcut. Levels are not skipped; the ladder is the contract.
 - Serving never mutates state (`state_modified: false`), per exit-code law
-  in `cans/physics.md`.
+  in `cans/kernel.md#Exit-code-law`.
 
 ## 4. File and frontmatter law
 
@@ -117,7 +117,7 @@ emits no L1 trailer.
   state resolves to; both partition branches live in `_triggers.json`,
   never in fixture count.
 - Predicates keyed on actor identity are prohibited: the kernel is
-  actor-neutral (`cans/agent.md` Harness-neutrality); screen identity
+  actor-neutral (`cans/identity.md#Harness-neutrality`); screen identity
   carries the distinction.
 - Migration-class campaigns scope to reserved-root environments via
   `env_in: ["dev", "prod"]`; dynamic experiment namespaces never fire
@@ -148,7 +148,7 @@ registry is a second inventory, and the two desync. Counts come from
 |---|---|
 | Remedy catalogue | `docs/reference/errors.md` |
 | Prompt-serving engine | `cans/assembly.md` ownership; no code in this file |
-| Thresholds (promotion, budgets, shapes) | `cans/trust.md`, `cans/budget.md`, `cans/artifacts/governance.yaml` — cited, never restated |
+| Thresholds (promotion, budgets, shapes) | `cans/governance.md`, `cans/artifacts/governance.yaml` — cited, never restated |
 | Full schema / routine teaching | `docs/` via `doc://` pointers in bank `docs:` frontmatter; banks keep one action-sized fragment per stage |
 | Trigger registry | `cans/artifacts/prompt/_triggers.json` — the only home |
 | Campaign inventory | `cans/artifacts/prompt/manifest.json` |

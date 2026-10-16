@@ -40,8 +40,7 @@
       "rel": "next",
       "command": "capcli rule diff schema --git",
       "intent": "Schema/policy drift detected",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

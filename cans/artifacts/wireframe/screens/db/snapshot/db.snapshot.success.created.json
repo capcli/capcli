@@ -31,8 +31,7 @@
       "rel": "next",
       "command": "capcli env merge dev prod -m \"forward DDL\"",
       "intent": "DDL forwarded to production",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

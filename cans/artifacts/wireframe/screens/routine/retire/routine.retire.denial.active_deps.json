@@ -13,7 +13,7 @@
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.governance.retire.deps_exist",
-    "domain": "policy.governance",
+    "domain": "policy.dependency",
     "layer": "governance",
     "culprit": "routine dispatch_order@4 is imported by active routines order_sync@2 and sync_orders@1 (dependency DAG edges order_sync@2 -> cap://dispatch_order and sync_orders@1 -> cap://dispatch_order); retirement of an active dependency is blocked",
     "measured": "2 active dependents (0 permitted for retirement)",

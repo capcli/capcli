@@ -47,8 +47,7 @@
       "rel": "next",
       "command": "capcli search 'order'",
       "intent": "Matched capabilities and URP pointers",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }

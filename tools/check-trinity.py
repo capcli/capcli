@@ -16,6 +16,15 @@ WIREFRAME_DIR = ROOT / "cans/artifacts/wireframe"
 PROMPT_DIR = ROOT / "cans/artifacts/prompt"
 DOCS_DIR = ROOT / "docs"
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import importlib.util as _ilu  # noqa: E402
+_cwc_spec = _ilu.spec_from_file_location(  # noqa: E402
+    "check_wireframe_canon",
+    Path(__file__).resolve().parent / "check-wireframe-canon.py",
+)
+check_wireframe_canon = _ilu.module_from_spec(_cwc_spec)  # noqa: E402
+_cwc_spec.loader.exec_module(check_wireframe_canon)  # noqa: E402  (wireframe<->canon prevention locks)
+
 ERRORS = []
 
 TRINITY_CAGES = {}
@@ -142,6 +151,11 @@ def main():
     print("Verifying Trinity Integrity (wireframe <-> prompt <-> docs)...")
     check_triggers_and_fixtures()
     check_prompt_to_docs()
+    # Wireframe<->canon prevention locks (additive; aggregates into ERRORS).
+    canon_skips = []
+    check_wireframe_canon.run(ERRORS, canon_skips)
+    for s in canon_skips:
+        print(f"  [SKIP] {s}")
     
     if ERRORS:
         print(f"\n[FAIL] Found {len(ERRORS)} Trinity integrity violation(s).", file=sys.stderr)

@@ -38,8 +38,7 @@
       "rel": "next",
       "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
       "intent": "Routine promoted to new trust rung",
-      "risk": "mutating",
-      "requires_intent": true
+      "risk": "mutating"
     }
   ]
 }

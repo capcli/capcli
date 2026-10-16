@@ -31,8 +31,7 @@
       "rel": "next",
       "command": "capcli sys doctor --boot-check",
       "intent": "Host doctor readiness check",
-      "risk": "safe",
-      "requires_intent": false
+      "risk": "safe"
     }
   ]
 }
