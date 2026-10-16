@@ -69,6 +69,32 @@
       - ws://host:port is transport, not pointer
       - Config — see artifacts/policy.yaml
       - Definition — see interface.md#Universal-flags
+  - Registry site
+    - Identity
+      - Static Astro browse frontend for the registry
+      - Package — packages/registry-web
+      - Zero authority, read-only, install via CLI only
+      - Mirror of index.json, never a second store
+    - Data source
+      - Reads the same plugins.json the CLI reads
+      - Zero separate API, zero backend runtime
+      - Cache-busted per index refresh cycle
+      - Bundle links resolve via entry bundle_url
+    - Pages
+      - Entry page per registry entry, manifest summary
+      - Author page groups entries by publisher
+      - Ratings rendered as aggregated signal only
+      - Zero editorial content beyond indexed fields
+    - Constraints
+      - Static export only, zero SSR, zero runtime
+      - Zero JavaScript required for browse
+      - Zero authentication, zero client state
+      - Zero fetch on page load beyond static assets
+    - Human access
+      - Browser opens registry.capcli.dev directly
+      - Entry URL mirrors plugin id verbatim
+      - Zero CLI flag required to browse
+      - Site package — see assembly.md#Registry-site-package
   - Pack taxonomy <!-- ref-by: governance.md, identity.md, interface.md, lifecycle.md, overview.md -->
     - Kernel packs
       - Ship once-native modules

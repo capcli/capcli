@@ -161,6 +161,17 @@
       - Read via daemon JSON-RPC only
       - Never embeds secrets
       - Definition — see interface.md#Administrative-Cockpit-PWA
+  - Registry site package
+    - Identity — packages/registry-web
+    - Owner — kernel maintainers, co-located with Cockpit
+    - Build — Astro 5, Bun, zero SSR runtime
+    - Output — static export to gh-pages branch
+    - Data — reads plugins.json at build time
+    - Deployment
+      - Triggered on index.json change in registry repo
+      - Rebuilt per merged registry PR
+      - Served from registry.capcli.dev
+      - Reference — see marketplace.md#Registry-site
   - Test architecture <!-- ref-by: interface.md, kernel.md -->
     - Every test cites #[test_case("case_id")]
     - Index — artifacts/test-plan/manifest.yaml
@@ -347,6 +358,7 @@
         - Config — see artifacts/cicd.yaml
       - Package boundaries
         - packages/pwa changes trigger build-pwa
+        - packages/registry-web triggers astro build
         - packages/py triggers maturin and pytest
         - packages/ts triggers bun test
         - Config — see artifacts/cicd.yaml
