@@ -54,7 +54,7 @@
       "id": "t_authoring_gaps",
       "screen_id": "run.search.success.gaps",
       "predicate": {
-        "gap_count": ">=1"
+        "gap_count": {"gte": 1}
       },
       "prompt": "doc://prompts/authoring/routine_gaps#1",
       "serve": "L1",
@@ -115,16 +115,6 @@
       "prompt": "doc://prompts/promotion/routine_passed#1",
       "serve": "L1",
       "reason": "proof passed: routine eligible for promotion"
-    },
-    {
-      "id": "t_promotion_overview",
-      "screen_id": "routine.prove.success.overview",
-      "predicate": {
-        "trust": "draft"
-      },
-      "prompt": "doc://prompts/promotion/routine_passed#1",
-      "serve": "L1",
-      "reason": "overview proof passed: promotion handoff"
     },
     {
       "id": "t_api_empty",

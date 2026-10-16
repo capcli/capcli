@@ -89,6 +89,8 @@ Caps, stated once:
   Frontmatter carries no trigger facts.
 - Variables resolve only from kernel state. Unresolvable variable →
   refusal (exit 3). The kernel never guesses state facts.
+- Allowed sources: kernel.env, kernel.tier,
+  kernel.schema.domain_table_count.
 - `manifest.json` in this directory is the compiled campaign inventory
   (bank, stem, file, status), generated from bank frontmatter.
   `_triggers.json` is the sole trigger registry (§5).
@@ -119,6 +121,7 @@ emits no L1 trailer.
 - Predicates keyed on actor identity are prohibited: the kernel is
   actor-neutral (`cans/identity.md#Harness-neutrality`); screen identity
   carries the distinction.
+- Predicate value is a scalar literal, or `{gte, lte, in}` object.
 - Migration-class campaigns scope to reserved-root environments via
   `env_in: ["dev", "prod"]`; dynamic experiment namespaces never fire
   them.

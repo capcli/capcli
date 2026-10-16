@@ -5,10 +5,6 @@ bank: promotion
 slug: routine_passed
 version: 1
 trust: draft
-vars:
-  - name: env
-    type: string
-    source: kernel.env
 sections:
   stage_1_enqueue: 60
   stage_2_canary: 70
@@ -31,7 +27,7 @@ capcli routine ship <routine_name> reviewed --queue
 ```
 
 ## section:stage_2_canary
-Monitor the routine through its 1-hour production canary observation window:
+Monitor the routine through its production canary window:
 ```bash
 capcli routine stats <routine_name>
 ```

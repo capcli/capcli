@@ -5,10 +5,6 @@ bank: authoring
 slug: overview_absent
 version: 1
 trust: draft
-vars:
-  - name: env
-    type: string
-    source: kernel.env
 sections:
   stage_1_scaffold: 140
   stage_2_bound: 50
@@ -28,14 +24,20 @@ Scaffold `routines/overview.py`:
 ```python
 from capcli import routine, ctx
 
-@routine(name="overview", idempotent=True, fuel_declared=50)
+@routine(
+    name="overview",
+    trust="draft",
+    idempotent=True,
+    description="System overview",
+    limits={"fuel_declared": 50},
+)
 def overview():
-    kpis = ctx.db.query("SELECT * FROM orders_summary")
+    kpis = ctx.db.query("SELECT count(*) as count FROM orders_summary")
     pending = ctx.db.query("SELECT count(*) as count FROM orders WHERE status = 'pending'")
     return {
         "status": "nominal",
         "pending_orders": pending[0]["count"] if pending else 0,
-        "kpis": kpis
+        "kpi_count": kpis[0]["count"] if kpis else 0,
     }
 ```
 
@@ -45,6 +47,6 @@ Return count summaries only. No unbounded lists, no raw JSON blobs in overview p
 ## section:stage_3_pin
 Rehearse in simulation and enqueue for reviewed trust:
 ```bash
-capcli routine prove overview --env sim
+capcli routine prove overview --environment sim
 capcli routine ship overview reviewed --queue --reason "Establish system overview baseline"
 ```

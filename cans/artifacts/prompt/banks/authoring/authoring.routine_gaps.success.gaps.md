@@ -5,10 +5,6 @@ bank: authoring
 slug: routine_gaps
 version: 1
 trust: draft
-vars:
-  - name: env
-    type: string
-    source: kernel.env
 sections:
   stage_1_analyze: 70
   stage_2_scaffold: 80
@@ -37,6 +33,6 @@ Declare typed `Param` inputs and explicit `fuel_declared=N` in the file header.
 ## section:stage_3_prove
 Rehearse the scaffolded routine against masked simulation data:
 ```bash
-capcli routine prove <routine_name> --env sim
+capcli routine prove <routine_name> --environment sim
 capcli routine ship <routine_name> reviewed --reason "Codify operational pattern from telemetry"
 ```

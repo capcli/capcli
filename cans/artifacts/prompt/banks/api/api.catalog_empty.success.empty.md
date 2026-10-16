@@ -5,10 +5,6 @@ bank: api
 slug: catalog_empty
 version: 1
 trust: draft
-vars:
-  - name: env
-    type: string
-    source: kernel.env
 sections:
   stage_1_sync: 70
   stage_2_catalog: 70
@@ -21,8 +17,7 @@ status: served
 ---
 
 # ⚡ EXTERNAL API CATALOG LOCKDOWN PROTOCOL
-No external API catalogs are configured. Outbound HTTP requests from routines are blocked
-at the socket layer until synced, proven, and registered.
+No external API catalogs are configured. See egress.md#Wire-edge-enforcement.
 
 ## section:stage_1_sync
 Sync the provider's OpenAPI spec into the local catalog:
@@ -47,7 +42,7 @@ capcli api catalog stripe --state active
 ## section:stage_3_prove
 Prove the API verb inside the simulation environment:
 ```bash
-capcli api prove stripe.refunds.create --env sim
+capcli api prove stripe.refunds.create --environment sim
 ```
 Verify that payload scrubbing and token bucket limits match provider contracts.
 

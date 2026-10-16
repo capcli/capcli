@@ -52,7 +52,7 @@ Trigger a deliberate policy denial to observe compiler physics:
 capcli sql "UPDATE orders SET status = 'shipped'"
 ```
 Observe prepare-time interception (`exit 2`). AST blocks unbounded mutations.
-Zero rows are touched.
+Zero rows are touched. See kernel.md#Layer-2-AST-scanner.
 
 ## section:stage_4_write
 Remediate the write using an explicit primary-key WHERE and causal intent:

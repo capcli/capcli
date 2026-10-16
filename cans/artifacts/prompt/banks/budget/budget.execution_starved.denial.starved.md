@@ -5,10 +5,6 @@ bank: budget
 slug: execution_starved
 version: 1
 trust: draft
-vars:
-  - name: env
-    type: string
-    source: kernel.env
 sections:
   stage_1_budget: 90
   stage_2_jail: 90
@@ -41,7 +37,7 @@ Route traffic via imported catalog verbs:
 ```bash
 capcli api catalog <provider>
 ```
-Dispatch inside routines via `ctx.api.call("<provider>.<verb>", payload)`.
+Dispatch inside routines via `ctx.api.call("<provider>.<verb>", payload, "<intent>")`.
 
 ## section:stage_3_claims
 Resolve contested lease collisions (`db://claims`):

@@ -73,7 +73,7 @@ Author the Ground Zero primer (`routines/overview.py`) by direct write, with bou
 Fill its return with count summaries from declared views. No raw row dumps.
 Prove it and enqueue it for reviewed trust:
 ```bash
-capcli routine prove overview --env sim
+capcli routine prove overview --environment sim
 capcli routine ship overview reviewed --queue --reason "Mount system overview baseline"
 ```
 
@@ -81,6 +81,6 @@ capcli routine ship overview reviewed --queue --reason "Mount system overview ba
 Sync and lock external wire egress before invoking external endpoints:
 ```bash
 capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d
-capcli api prove stripe.charges.create --env sim
+capcli api prove stripe.charges.create --environment sim
 capcli api ship stripe.charges.create reviewed --reason "Order billing capability"
 ```

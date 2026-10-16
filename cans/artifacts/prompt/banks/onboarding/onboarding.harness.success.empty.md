@@ -41,7 +41,8 @@ capcli search "" --json
 ```
 Parse the JSON response array. If zero capabilities exist, trigger the Genesis campaign:
 ```bash
-capcli doc outline doc://prompts/genesis/blank_world#1  # then doc read the stage_1 leaf, --max-tokens 500
+capcli doc outline doc://prompts/genesis/blank_world#1
+capcli doc read doc://prompts/genesis/blank_world#1#stage_1 --max-tokens 500
 ```
 
 ## section:stage_3_rehearsal
@@ -55,6 +56,6 @@ Never dispatch mutating SQL (`UPDATE`, `DELETE`, `INSERT`) without a preceding `
 ## section:stage_4_proving
 Verify ability to execute simulation proving:
 ```bash
-capcli routine prove overview --env sim --json
+capcli routine prove overview --environment sim --json
 ```
-All autonomous routines must pass 100% simulation verification before production deployment.
+See governance.md#Promotion-gates for verification requirements.

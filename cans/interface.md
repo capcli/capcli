@@ -113,8 +113,9 @@
     - Execution commands
       - run <capability> [-p k=v]
       - run abort <frame_id> — cancel suspended
-      - run sql "<query>" [-m "intent"]
+      - run sql "<query>" [-p k=v] [-m "intent"]
       - run overview [--as <principal>]
+      - run search <query> [--limit <n>]
       - run search gaps --since 7d
       - inspect <ptr> — unified resolver
     - Resolvers
@@ -201,7 +202,7 @@
       - sys vault import-env
       - Vault — see egress.md#Vault-storage
     - Diagnostics
-      - sys doctor [--boot-check] [--json]
+      - sys doctor [--boot-check] [--report] [--json]
       - Machine fields — see sandbox.md#Platform-probes
       - Tamper ack — see effect.md#Event-integrity
       - Envelope shape — see #CLI-surface
@@ -329,6 +330,7 @@
       - Prove — see lifecycle.md#Stage-details
     - Promote
       - routine ship <name> reviewed
+      - routine ship <name> reviewed --queue
       - routine ship <name> pinned
       - Skip draft to pinned exits 3
       - Promotion — see governance.md#Promotion-gates
@@ -454,6 +456,8 @@
       - api — api-gateway pack
         - Verbs — import, sync, record, prove, ship
         - Verbs — catalog, drift, stats, rollback, retire
+        - Flags — sync --interval <duration>
+        - Flags — catalog --state <status>
       - bind — scheduler pack
         - Verbs — cron, webhook, endpoint, federation
         - Verbs — list, inspect, pause, resume, remove, keys
