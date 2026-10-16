@@ -44,7 +44,7 @@ capcli api <verb> [args] [--flags]
 
 ## Banned Verbs
 * `capcli api call` ➔ **Banned.** Use `capcli run` or `ctx.api.call` inside guest code.
-* `capcli api import --pick` ➔ **Banned.** Verbs are synced in full to preserve schema integrity.
+* `capcli api import` ➔ **Removed.** `api sync` is the sole spec-ingestion verb; verbs sync in full to preserve schema integrity.
 ```
 
 ---

@@ -78,7 +78,7 @@ Every single refusal, denial, yield, and crash condition across all 11 CLI nouns
 | ID | Screen ID | Exit | Domain | Condition | Line 1 ACTION | Diagnostic Needle / Remedy Text |
 |---|---|---|---|---|---|---|
 | R23 | `api.sync.denial.rate` | 2 | `api.quota` | `rate_limit` | `ACTION: capcli api diff <provider>` | `remedy: spec sync within 24h cooldown; inspect local diff` |
-| R24 | `api.sync.refusal.missing_url` | 3 | `missing_param` | `missing_arg` | `ACTION: capcli api import <p> <path> <m> --spec <u>` | `remedy: upstream OpenAPI spec URL or file path required` |
+| R24 | `api.sync.refusal.missing_url` | 3 | `missing_param` | `missing_arg` | `ACTION: capcli api sync <provider> <spec-url>` | `remedy: upstream OpenAPI spec URL or file path required` |
 | R25 | `api.prove.denial.sim_gap` | 2 | `policy.authorizer` | `sim_gap` | `ACTION: capcli api record <verb> -p k=v` | `remedy: missing mock fixture in sim; record live cassette` |
 | R26 | `api.prove.crash.runtime` | 4 | `routine.runtime` | `exception` | `ACTION: capcli api diff <provider>` | `remedy: upstream API payload violates catalog schema types` |
 
