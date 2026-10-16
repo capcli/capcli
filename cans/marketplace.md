@@ -9,7 +9,7 @@
       - Path — https://registry.capcli.dev/v1/plugins.json
     - Index mechanism
       - GitHub crawler every 30 minutes
-      - Tags — capcli-plugin topic on repos
+      - Topics — capcli-plugin GitHub topic on repos (topics, not git tags)
       - Valid manifest required for indexing
       - Entry appended on merged PR only
     - Entry schema
