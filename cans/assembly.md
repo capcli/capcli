@@ -45,7 +45,6 @@
       - envs/ — environment partitions
       - audit/ — daily JSONL exports
       - storage/ — local blob namespace
-      - docs/ — version-controlled markdown specs and playbooks
     - External runtime paths
       - /run/capcli/kernel.sock — daemon IPC
       - /run/capcli/<ws>.sock — federated peer sockets
