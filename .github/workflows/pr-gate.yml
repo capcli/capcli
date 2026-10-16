@@ -59,6 +59,16 @@ jobs:
       - name: Verify Trinity Links, Anchors, and Token Envelopes
         run: python3 tools/check-trinity.py
 
+  check-cans:
+    needs: changes
+    if: ${{ needs.changes.outputs.artifacts == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Verify cans spec (0 errors, 0 broken refs)
+        run: bunx -y cans-spec@0.5.1 check cans
+
   build-pwa:
     needs: changes
     if: ${{ needs.changes.outputs.pwa == 'true' || needs.changes.outputs.rust == 'true' }}

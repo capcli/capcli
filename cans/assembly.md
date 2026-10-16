@@ -332,9 +332,14 @@
     - PR gate
       - Workflow — .github/workflows/pr-gate.yml
       - SLA — under 4 minutes, fail-closed
-      - Jobs — PWA, Astro, Trinity, Rust, TS, Python
+      - Jobs — PWA, Astro, Trinity, Rust, TS, Python, Cans
       - Config — see artifacts/cicd.yaml
       - Concurrency — cancel-in-progress per ref
+      - Cans check
+        - Tool — cans-spec 0.5.1 via bunx
+        - Trigger — cans/** changes only
+        - Pass — 0 errors, 0 broken refs
+        - Config — see artifacts/cicd.yaml
       - PR compute containment
         - dorny/paths-filter gates execution
         - Docs-only edits bypass Rust matrix

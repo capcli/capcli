@@ -101,3 +101,15 @@ tools:
   python: "3.11"
   bun: "1.1.0"
   node: "20"
+  cans_spec: "0.5.1"
+
+gates:
+  cans_check:
+    job: check-cans
+    trigger:
+      - 'cans/**'
+    command: bunx -y cans-spec@0.5.1 check cans
+    pass_criteria:
+      errors: 0
+      broken_refs: 0
+      stale_backpointers: 0
