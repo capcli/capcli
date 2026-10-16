@@ -432,8 +432,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.revoke.refusal.not_found` | refusal | 3 | validation | not_found | Target agent ID not found |
 | `sys.vault_set.success.vaulted` | success | 0 | — | vaulted | AES-256-GCM secret encrypted |
 | `sys.vault_set.refusal.missing_val` | refusal | 3 | missing_param | missing_arg | Target secret value omitted |
-| `sys.vault_import.success.imported`| success| 0 | — | imported | Scanned and bound `CAPCLI_SECRET_*`|
-| `sys.vault_import.refusal.no_env_vars`|refusal|3 | validation | not_found | No matching environment variables |
+| `sys.vault_import.success.imported` | success | 0 | — | imported | Scanned and bound `CAPCLI_SECRET_*` |
+| `sys.vault_import.refusal.no_env_vars` | refusal | 3 | validation | not_found | No matching environment variables |
 | `sys.doctor.success.nominal` | success | 0 | — | nominal | Host doctor readiness check |
 | `sys.doctor.success.report` | success | 0 | — | report | Full YAML Trust Receipt |
 | `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
