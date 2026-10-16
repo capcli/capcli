@@ -1,6 +1,5 @@
 - Sandbox
-<!-- ref-by: plugins.md, governor.md, egress.md -->
-  - Platform tiers
+  - Platform tiers <!-- ref-by: assembly.md, governor.md, interface.md, lifecycle.md, plugins.md -->
     - Scope
       - Kernel's isolation concern
       - Plugin process runs in Tri-Jail
@@ -22,6 +21,7 @@
         - bwrap unprivileged namespaces primary
         - Rootless OCI fallback on userns restrict
         - gVisor option on hardened multi-tenant
+        - podman container fallback
     - Tier 2 (virtualized)
       - Hosts
         - macOS Darwin native
@@ -44,12 +44,12 @@
       - Breach exits 2 at pre-flight
       - Waiver mechanic — see interface.md#Run-noun
       - Enforcement — see kernel.md#Exit-code-law
-    - Platform probes
+    - Platform probes <!-- ref-by: interface.md -->
       - sys doctor reports host OS and tier
       - Reports permitted environments list
       - Machine contract via --json envelope
       - Zero sandbox spawn during probe
-  - Deployment topology
+  - Deployment topology <!-- ref-by: kernel.md -->
     - Dual-axis contract
       - Swarm axis — spokes proxy DB to Hub
       - Federation axis — sovereign peers
@@ -67,7 +67,7 @@
     - Remote profile
       - Explicit opt-in configuration
       - Transport — WireGuard with mTLS
-      - Config — see artifacts/policy.yaml#network.transports
+      - Config — see artifacts/policy.yaml
       - Hub admin binds 127.0.0.1:4040
       - Mesh bind on declared interface
       - Spokes dial hub at mesh endpoint
@@ -76,7 +76,7 @@
       - Headless Linux under systemd
       - Required for 24/7 background triggers
       - Required for S3 WORM attestations
-      - Reference — see assembly.md#Persistent-daemon-crate
+      - Reference — see assembly.md#Rust-workspace-crates
     - Ephemeral sandbox node
       - Disposable microVM or container
       - Zero-disk state, sync ack
@@ -97,7 +97,7 @@
       - Egress engine — token buckets and secrets
       - Sim routing intercepts network calls
       - Definition — see kernel.md#Layer-1-C-authorizer
-  - Tri-Jail engine
+  - Tri-Jail engine <!-- ref-by: assembly.md, governance.md, governor.md, interface.md, kernel.md, overview.md -->
     - Purpose
       - Zero-trust process isolation
       - Native enforcement across platforms
@@ -125,12 +125,12 @@
       - Wasmtime on Termux and edge hosts
       - Unmapped socket capabilities
       - Degraded isolation warning emitted
-  - Network jail
+  - Network jail <!-- ref-by: identity.md -->
     - Linux network trap
       - Plugin process holds the only pipe
       - Kernel dispatches via IPC
       - Raw connect trapped at Syscall 42
-      - Dispatch — see plugins.md#Kernel-stance
+      - Dispatch — see plugins.md#Hub-mediated-law
     - macOS network trap
       - Scheme profile denies network*
       - Scheme profile denies system-socket
@@ -165,7 +165,7 @@
       - Process terminates with exit 2
       - Audit leaf records attempted syscall
       - Kernel emits policy denial event
-  - Channel A
+  - Channel A <!-- ref-by: governor.md, identity.md, marketplace.md -->
     - Purpose
       - Zero-boilerplate plugin communication
       - Authors read stdin, write stdout
@@ -218,7 +218,7 @@
       - Write region per call invocation
       - Region unmapped on return
       - Zeroized on disposal
-  - Sandbox providers
+  - Sandbox providers <!-- ref-by: interface.md -->
     - Selection per tier
       - Tier 1 — bwrap, podman, gvisor
       - Tier 2 — colima, lima, wasmtime
@@ -265,7 +265,7 @@
       - Async adoption timeline TBD
       - AOT compile path TBD
       - Tier 2 edge hosts priority
-  - Boundary alarms
+  - Boundary alarms <!-- ref-by: interface.md -->
     - Boot refusal
       - All providers absent — exit 3
       - Missing kernel features — exit 3
@@ -290,4 +290,4 @@
       - Plugin process is the socket holder
       - Kernel never opens raw wire
       - Plugin writes staged to outbox
-      - Dispatch — see plugins.md#Kernel-stance
+      - Dispatch — see plugins.md#Hub-mediated-law

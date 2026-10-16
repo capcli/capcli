@@ -1,6 +1,5 @@
 - Effect
-<!-- ref-by: governor.md, routines.md, world.md, governance.md, interface.md -->
-  - Audit spine
+  - Audit spine <!-- ref-by: assembly.md, egress.md, governance.md, kernel.md, routines.md, world.md -->
     - Storage hierarchy
       - Tiers — see world.md#Storage-trinity
       - Flow — workspace → audit → JSONL → object
@@ -12,7 +11,7 @@
         - Never reverse, never skip
         - Mirror lag capped at 5 minutes
         - Lag breach emits alert event
-    - Event anatomy
+    - Event anatomy <!-- ref-by: identity.md, lifecycle.md, marketplace.md -->
       - Identity fields
         - event — typed event name
         - ts — monotonic timestamp
@@ -26,15 +25,13 @@
         - principal — human or root authority
         - harness_marker_hash — sha256 marker
         - Markers — see identity.md#Harness-markers
-      - Causality fields
+      - Content fields
         - caused_by — parent operation id
         - intent — declared causal motivation
         - intent_chain — full goal trace
-      - Payload fields
         - capability — verb or routine name
         - sql — statement when applicable
         - params — recorded verbatim for replay
-      - Policy fields
         - decision — allow or denied
         - rules_matched — array of rule ids
         - layer — authorizer, AST, governance, budget
@@ -48,46 +45,53 @@
         - Canonical JSON outcome hashed
         - No unscrubbed bytes cross boundary
         - Definition — see kernel.md#Exit-code-law
-    - Kernel event payloads
+    - Kernel event payloads <!-- ref-by: egress.md, governance.md, identity.md, lifecycle.md, marketplace.md, plugins.md, routines.md, world.md -->
       - Categories
-        - Bind — create, delete, pause, resume
-        - Vault — set (prefix only, never plaintext)
-        - Plugin — installed, updated, enabled, disabled, uninstalled, schema, noun, namespace
-        - Environment — switch, merge, init_from_pack
-        - Identity — agent register, agent revoke
-        - Capability — search, run, draft, auto_promoted, rollback
-        - Database — exec, snapshot, restore, lock, unlock, claim stolen/abandoned/expired
-        - Federation — call_out, call_in
-        - Saga — execute, compensate
-        - Swarm — node_join, node_reap, preemption_yield
-        - Kernel — panic secret_leak, genesis data_loss, panic sink_loss
-        - Rule — config_proposed, config_committed
-        - API — sync, token_refresh, first_prod_call, call_sim
-        - Budget — frame_push, frame_pop, exhausted
-        - Serve — request, response
-        - Promotion — sla_breached, canary_veto
-        - Platform — waiver_granted, degraded_isolation
+        - Kernel
+          - Kernel — panic secret_leak, genesis data_loss, panic sink_loss
+          - Database — exec, snapshot, restore, lock, unlock, claim stolen/abandoned/expired
+          - Rule — config_proposed, config_committed
+          - Budget — frame_push, frame_pop, exhausted
+          - Saga — execute, compensate
+        - Capabilities
+          - Plugin — installed, updated, enabled, disabled, uninstalled, schema, noun, namespace
+          - Capability — search, run, draft, auto_promoted, rollback
+          - Environment — switch, merge, init_from_pack
+          - Identity — agent register, agent revoke
+        - Services
+          - Vault — set (prefix only, never plaintext)
+          - API — sync, token_refresh, first_prod_call, call_sim
+          - Serve — request, response
+          - Federation — call_out, call_in
+        - Platform
+          - Swarm — node_join, node_reap, preemption_yield
+          - Bind — create, delete, pause, resume
+          - Promotion — sla_breached, canary_veto
+          - Platform — waiver_granted, degraded_isolation
       - Payload contracts
-        - federation.call_out — target_ws, target_urp, params_hash
-        - federation.call_out — child_trace_id, call_chain
-        - federation.call_out — budget_delegated
-        - federation.call_in — source_ws, caller_principal
-        - federation.call_in — parent_frame_id, caused_by_op, outcome
-        - swarm.node_reap — agent, reason, claims_released_count
-        - swarm.preemption_yield — agent, frame_id, checkpoint_cursor
-        - kernel.panic.secret_leak — culprit, decision, effect
-        - rule.config_proposed — file, diff_hash, agent, gate_status
-        - rule.config_committed — file, approver, git_commit, lockfile_hash
-        - api.first_prod_call — call_number, calls_remaining, proof_hash
-        - budget.frame_push — frame_id, routine, declared, inherited
-        - budget.frame_pop — consumed, returned_to_parent
-        - serve.request — endpoint, channel, trace_id, api_key_id
-        - promotion.sla_breached — queue age beyond SLA threshold
-        - platform.waiver_granted — operator, session, routine, run
-      - Representative shape
-        - event — typed name string
-        - payload — domain-specific fields
-        - Canonical anatomy — see #Event-anatomy
+        - Federation
+          - federation.call_out — target_ws, target_urp, params_hash
+          - federation.call_out — child_trace_id, call_chain
+          - federation.call_out — budget_delegated
+          - federation.call_in — source_ws, caller_principal
+        - Kernel
+          - federation.call_in — parent_frame_id, caused_by_op, outcome
+          - swarm.node_reap — agent, reason, claims_released_count
+          - swarm.preemption_yield — agent, frame_id, checkpoint_cursor
+          - kernel.panic.secret_leak — culprit, decision, effect
+        - Budget and rule
+          - budget.frame_push — frame_id, routine, declared, inherited
+          - budget.frame_pop — consumed, returned_to_parent
+          - rule.config_proposed — file, diff_hash, agent, gate_status
+          - rule.config_committed — file, approver, git_commit, lockfile_hash
+        - Platform
+          - api.first_prod_call — call_number, calls_remaining, proof_hash
+          - serve.request — endpoint, channel, trace_id, api_key_id
+          - promotion.sla_breached — queue age beyond SLA threshold
+          - platform.waiver_granted — operator, session, routine, run
+      - event — typed name string
+      - payload — domain-specific fields
+      - Canonical anatomy — see #Event-anatomy
       - References
         - Vault events — see egress.md#Vault-storage
         - Plugin events — see plugins.md#Installation-lifecycle
@@ -95,57 +99,71 @@
         - Identity events — see identity.md#System-agent-registry
         - Budget events — see governance.md#Budget-frames
         - Genesis events — see #Genesis-sequence
-    - Event integrity
-      - Zero ghost actions
-        - Every CLI verb advances chain
-        - Every plugin install advances chain
-        - Every binding fire advances chain
-        - Every environment transition advances chain
-        - Lifecycle — see plugins.md#Installation-lifecycle
-      - Pack instantiation
+    - Event integrity <!-- ref-by: interface.md -->
+      - Chain law
+        - Zero ghost actions
+          - Every CLI verb advances chain
+          - Every plugin install advances chain
+          - Every binding fire advances chain
+          - Every environment transition advances chain
+          - Lifecycle — see plugins.md#Installation-lifecycle
         - One event per scaffold
         - routine.draft for routines
         - env.init_from_pack for worlds
-      - Fail-closed sink law
-        - No audit — no execution invariant
-        - Business write requires staged audit leaf
-        - Sink stall triggers out-of-band spooling
-        - Buffered writes hold 5-minute window
-        - While buffered, business writes denied exit 2
-        - Undrainable buffer panics exit 5
+        - Fail-closed sink law
+          - No audit — no execution invariant
+          - Business write requires staged audit leaf
+          - Sink stall triggers out-of-band spooling
+          - Buffered writes hold 5-minute window
+          - While buffered, business writes denied exit 2
+          - Undrainable buffer panics exit 5
+      - Integrity enforcement
+        - No synthetic types
+          - onboarding.* events denied
+          - Fake lifecycle events denied
+          - Every event traces to real operation
+          - Envelope shape — see #Event-anatomy
+        - Denial logging
+          - Denied operations emit audit events
+          - Record effect: none
+          - Record state_modified: false
+          - Envelope shape — see #Denials
+        - Exit 5 scope
+          - Kernel panic reserved for sink loss
+          - Reserved for credential leaks
+          - Row corruption degrades, never 5
+          - Full law — see kernel.md#Exit-code-law
+          - Degraded mode — see #Event-integrity
+        - Tamper quarantine
+          - Broken sha256 links isolate to quarantine
+          - Corruption never aborts boot
+          - Valid historical blocks remain operable
+          - Critical security alert emitted
+          - Envelope shape — see #Event-integrity
       - Genesis sequence
-        - First event — rule.apply
-        - prev_hash anchored to 64-zero sha256
-        - Second — sql query on empty world
-        - Third — sql write deny (probe)
-        - Fourth — sql write ok (bootstrap)
-        - Re-init ledger opens with kernel.genesis.data_loss
-        - Loss event carries prior root when known
-        - Re-init authority — operator signature plus reason
-        - Only kernel daemon writes genesis
-        - Definition — see world.md#Ledger-re-initialization
-        - Event shape — see #Kernel-event-payloads
-      - Genesis invariants
-        - Sequence is deterministic
-        - Never skipped on first boot
-        - Re-init always precedes fresh chain
-        - Envelope shape — see interface.md#CLI-surface
-      - Genesis authority
-        - Only kernel daemon writes genesis
-        - Operator key signature required for re-init
-        - Typed incident reason recorded
-        - Definition — see world.md#Ledger-re-initialization
-      - No synthetic types
-        - onboarding.* events denied
-        - Fake lifecycle events denied
-        - Every event traces to real operation
-        - Envelope shape — see #Event-anatomy
-      - Tamper quarantine
-        - Broken sha256 links isolate to quarantine
-        - Corruption never aborts boot
-        - Valid historical blocks remain operable
-        - Critical security alert emitted
-        - Envelope shape — see #Event-integrity
+        - Boot sequence
+          - First event — rule.apply
+          - prev_hash anchored to 64-zero sha256
+          - Second — sql query on empty world
+          - Third — sql write deny (probe)
+          - Fourth — sql write ok (bootstrap)
+        - Re-init sequence
+          - Re-init ledger opens with kernel.genesis.data_loss
+          - Loss event carries prior root when known
+          - Re-init authority — operator signature plus reason
+          - Only kernel daemon writes genesis
+          - Definition — see world.md#Ledger-re-initialization
+          - Event shape — see #Kernel-event-payloads
+        - Genesis invariants
+          - Sequence is deterministic
+          - Never skipped on first boot
+          - Re-init always precedes fresh chain
+          - Envelope shape — see interface.md#CLI-surface
+        - Genesis authority
+          - Only kernel daemon writes genesis
+          - Operator key signature required for re-init
+          - Typed incident reason recorded
+          - Definition — see world.md#Ledger-re-initialization
       - Boot verification
         - Kernel validates last 1000 blocks
         - Failed blocks route to quarantine
@@ -156,17 +174,6 @@
         - Quarantined leaves stay fail-closed
         - Tamper alerts repeat until acknowledged
         - sys doctor --ack-tamper records review
-      - Exit 5 scope
-        - Kernel panic reserved for sink loss
-        - Reserved for credential leaks
-        - Row corruption degrades, never 5
-        - Full law — see kernel.md#Exit-code-law
-        - Degraded mode — see #Event-integrity
-      - Denial logging
-        - Denied operations emit audit events
-        - Record effect: none
-        - Record state_modified: false
-        - Envelope shape — see #Denials
     - Line linking
       - Row structure
         - Each _audit row carries prev_hash
@@ -187,19 +194,19 @@
         - Root hash checkpointed to S3 Object Lock
         - KMS signatures stamped
         - Notary witness in witness.log
-        - Config — see artifacts/governance.yaml#maintenance
+        - Config — see artifacts/governance.yaml
       - Verification
         - Scheduled chain walk cron
         - Boot-time last-1000 verification
         - Replay re-verifies code_hash before run
         - DR restore re-verifies chain walk
-    - Query surfaces
+    - Query surfaces <!-- ref-by: governance.md, interface.md, routines.md -->
       - Tail — sys audit tail [--follow]
       - Trace — sys audit trace <op-id> [--explain]
       - Query — sys audit query <sql>
       - Replay — sys audit replay --from <ts>
       - Envelope shape — see interface.md#CLI-surface
-  - Causal DAG
+  - Causal DAG <!-- ref-by: kernel.md, lifecycle.md, routines.md -->
     - Linkage model
       - Parent pointer — caused_by references parent op
       - Hierarchy — op to routine to session goal
@@ -215,7 +222,7 @@
       - Linear — sequential routine interiors acyclic
       - Frame integration — budget frames bind via parent_frame
       - HTTP integration — inbound requests bind serve.request
-    - Replay invariants
+    - Replay invariants <!-- ref-by: identity.md, lifecycle.md -->
       - Deterministic inputs — same state on replay
       - ctx.now() bound to frame start
       - ctx.uuid() uses HMAC(session_token, op_seq)
@@ -237,64 +244,61 @@
       - Partial execution halts at first leaf
       - Distinguishes code vs policy cap breach
       - Definition — see #Denials
-  - Denials
-    - Denial event structure
-      - Domain classification
-        - Scope
-          - Domains ride non-zero exits 2 through 6
-          - exit 0 carries no domain
-          - degraded is a condition flag, not a domain
-          - Mirrors reproduce this list verbatim
-        - exit 2 — policy denial
-          - Core policy
-            - policy.authorizer — table or column denied
-            - policy.budget — frame or session fuel zero
-            - policy.trust — E046 trust violation
-            - policy.platform — E045 tier 1 mandate
-            - policy.federation — cycle or unallowlisted
-            - policy.ast — AST bound breach
-          - Plugin surface
-            - api.quota — spend ceiling breach
-            - api.upstream — provider failure
-            - policy.plugin — plugin manifest invalid
-            - policy.namespace — ctx namespace missing
-            - policy.dependency — retire blocked on active deps
-            - policy.notify — ask cap breach
-            - Namespace — see plugins.md#Ctx-namespace-registration
-          - Storage and jail
-            - db.engine — check and FK constraint fails
-            - db.claims — claim held or lease conflict
-            - kernel.sandbox — jail containment breach
-            - audit.sink — stalled sink refuses write
-        - exit 3 — static refusal
-          - policy.cli_noun — reserved noun collision
-          - policy.pack — intake validation failure
-          - policy.secrets — secret missing headless
-          - compile — compile-time failure
-          - validation — pre-flight input validation
-          - missing_param — required input absent
-          - lockfile_mismatch — lockfile out of sync
-          - schema_hash_mismatch — schema hash drift
-          - kernel.boot — boot refusal
-        - exit 4 — guest crash
-          - routine.runtime — guest crash and exceptions
-          - federation.transport — dial budget exhausted
-        - exit 5 — kernel panic
-          - kernel.panic — sink loss or leak
-        - exit 6 — proactive yield
-          - api.quota — quota floor checkpoint
-          - ping.ask — ask suspension checkpoint
-      - Violation fields
-        - rule_id — e.g. policy.query.update.require_where
-        - layer — authorizer, AST, governance, budget
-        - measured — observed count
-        - ceiling — cap value
-        - state_modified — strictly false
-      - Remediation
-        - Explicit fix instructions printed
-        - Envelope shape — see interface.md#CLI-surface
-        - Machine-readable remedy field
-        - Agent executes remedy verbatim
+  - Denials <!-- ref-by: egress.md, interface.md, lifecycle.md -->
+    - Domain classification
+      - Scope
+        - Domains ride non-zero exits 2 through 6
+        - exit 0 carries no domain
+        - degraded is a condition flag, not a domain
+        - Mirrors reproduce this list verbatim
+      - Core policy
+        - policy.authorizer — table or column denied
+        - policy.budget — frame or session fuel zero
+        - policy.trust — E046 trust violation
+        - policy.platform — E045 tier 1 mandate
+        - policy.federation — cycle or unallowlisted
+        - policy.ast — AST bound breach
+      - Plugin surface
+        - api.quota — spend ceiling breach
+        - api.upstream — provider failure
+        - policy.plugin — plugin manifest invalid
+        - policy.namespace — ctx namespace missing
+        - policy.dependency — retire blocked on active deps
+        - policy.notify — ask cap breach
+        - Namespace — see plugins.md#Capability-declarations
+      - Storage and jail
+        - db.engine — check and FK constraint fails
+        - db.claims — claim held or lease conflict
+        - kernel.sandbox — jail containment breach
+        - audit.sink — stalled sink refuses write
+      - exit 3 — static refusal
+        - policy.cli_noun — reserved noun collision
+        - policy.pack — intake validation failure
+        - policy.secrets — secret missing headless
+        - compile — compile-time failure
+        - validation — pre-flight input validation
+        - missing_param — required input absent
+        - lockfile_mismatch — lockfile out of sync
+        - schema_hash_mismatch — schema hash drift
+        - kernel.boot — boot refusal
+      - exit 4 — guest crash
+        - routine.runtime — guest crash and exceptions
+        - federation.transport — dial budget exhausted
+      - exit 5 — kernel panic — sink loss or leak
+      - exit 6 — proactive yield
+        - api.quota — quota floor checkpoint
+        - ping.ask — ask suspension checkpoint
+    - Violation fields
+      - rule_id — e.g. policy.query.update.require_where
+      - layer — authorizer, AST, governance, budget
+      - measured — observed count
+      - ceiling — cap value
+      - state_modified — strictly false
+    - Remediation
+      - Explicit fix instructions printed
+      - Envelope shape — see interface.md#CLI-surface
+      - Machine-readable remedy field
+      - Agent executes remedy verbatim
     - Canonical error payload
       - domain — exact fault layer string
       - culprit — failing line or constraint
@@ -305,7 +309,7 @@
       - Telemetry feed — denial streams route to diagnosis
       - Thrashing detector — 20 sustained denials
       - Alert fires at threshold
-      - Config — see artifacts/policy.yaml#rate
+      - Config — see artifacts/policy.yaml
       - Training data — denial patterns inform prompts
       - Feed — see lifecycle.md#Decay
     - Denial fidelity
@@ -318,33 +322,35 @@
       - Cannot be deleted, only superseded
       - Superseded by later success
       - Chain preserves both
-  - Provenance
+  - Provenance <!-- ref-by: governance.md, lifecycle.md, marketplace.md, routines.md -->
     - Artifact lineage
       - Version stamp — code_hash, manifest_hash
       - Attribution — created_by, promoted_by
       - Environment journey — promoted_through
       - Merge lineage — consolidated_from
-      - Retention bounds — see artifacts/governance.yaml#routine_shape
-    - Trust receipt
+      - Retention bounds — see artifacts/governance.yaml
+    - Trust receipt <!-- ref-by: interface.md -->
       - Command — sys doctor --report
       - Computed from _audit mirror
       - Cites ledger root hash
       - Cites WORM checkpoint
       - Envelope shape — see interface.md#CLI-surface
-    - Receipt lines
+    - Deployment
       - Deployment topology — dedicated_daemon or local_workstation
       - Host execution tier — tier_1 or tier_2
       - Sandbox provider — bwrap, podman, gvisor, wasm
+      - Secret exposure — verified zero plaintext leaks
+    - Ledger counts
       - Audited events — total count
       - Policy denials — pre-execution count
       - Unaudited writes — must be exactly zero
       - Simulation proofs — successful sim run count
+    - Operations
       - Promotion transitions — validated gate crossings
-      - Secret exposure — verified zero plaintext leaks
       - Backup verification — last push age and hash
       - Recovery testing — last drill status
       - Definition — see interface.md#CLI-surface
-  - Failure forensics
+  - Failure forensics <!-- ref-by: governance.md -->
     - Leaf-level localization
       - sys audit trace pinpoints failing leaf
       - Execution halts at first failing leaf
@@ -371,7 +377,7 @@
       - Max lag — see artifacts/governance.yaml
       - Hash chain audit — scheduled cron
       - Root checkpoint cadence
-      - Config — see artifacts/governance.yaml#maintenance
+      - Config — see artifacts/governance.yaml
     - JSONL rotation
       - Daily file boundary at UTC midnight
       - Append-only, never rewritten

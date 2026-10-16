@@ -1,9 +1,8 @@
 - Marketplace
-<!-- ref-by: interface.md, plugins.md, assembly.md, overview.md -->
-  - Registry
+  - Registry <!-- ref-by: identity.md, interface.md, routines.md -->
     - Substrate
       - Central GitHub repo hosts PR flow
-      - Repo path — see artifacts/governance.yaml#pack.registry_repo
+      - Repo path — see artifacts/governance.yaml
       - PR-driven, no proprietary server
       - Immutable static JSON on GitHub Pages
       - Path — https://registry.capcli.dev/v1/plugins.json
@@ -34,27 +33,27 @@
       - capcli plugin search <query>
       - Returns IDs, ratings, verified badges
       - Summary under 60 tokens per entry
-      - Results cap — see artifacts/governance.yaml#registry
+      - Results cap — see artifacts/governance.yaml
     - Verified publisher
       - Badge granted on repeated green CI
       - Badge revoked on policy violation
       - Badge not a trust rung, only a signal
-      - Trust still governed by governance.md#The-ladder
+      - Trust still governed by governance.md#Trust-ladder
     - Registry ceilings
       - Search result cap
         - Max 20 results per query
-        - Config — see artifacts/governance.yaml#registry
+        - Config — see artifacts/governance.yaml
         - Envelope shape — see interface.md#CLI-surface
       - Description cap
         - Summary under 60 tokens per entry
         - Enforced at index build
+        - routine prove validates shape
         - Definition — see routines.md#Shape-constraints
       - Index size cap
         - Compiled index under 10MB
         - Enforced at CI publish
-        - Config — see artifacts/governance.yaml#registry
+        - Config — see artifacts/governance.yaml
       - Enforcement points
-        - routine prove validates shape
         - api sync validates spec size
         - plugin install validates bundle
         - Creation via filesystem ungated
@@ -68,9 +67,9 @@
     - Network transports
       - Socket endpoints are not URPs
       - ws://host:port is transport, not pointer
-      - Config — see artifacts/policy.yaml#network.transports
+      - Config — see artifacts/policy.yaml
       - Definition — see interface.md#Universal-flags
-  - Pack taxonomy
+  - Pack taxonomy <!-- ref-by: governance.md, identity.md, interface.md, lifecycle.md, overview.md -->
     - Kernel packs
       - Ship once-native modules
       - capcli.pack.api — api-gateway bundle
@@ -96,12 +95,12 @@
       - Values — kernel, application, community
       - Kernel tier gated by CI publisher
       - Others published freely
-    - Trust inheritance
+    - Trust inheritance <!-- ref-by: governance.md -->
       - Every imported routine lands at draft
       - Zero promotional credit inherited
       - Promotion via gates only
       - Promotion — see governance.md#Promotion-gates
-  - Packs
+  - Packs <!-- ref-by: interface.md, lifecycle.md, plugins.md -->
     - File identity
       - Extension — .cap
       - Format — signed archive
@@ -113,69 +112,71 @@
       - Tier values — kernel, application, community
       - Layer fields — plugins, schema, routines
       - Validation — see #Iron-law-1
-    - Plugin layer
-      - Each entry has id and source
-      - Source pinned to git tag or release
-      - binary_sha256 per entry
-      - Sub-dependency resolution at install
-      - Manifest — see plugins.md#Manifest
-    - Schema layer
-      - tables — declarative column model
-      - imm_cols — column immutability
-      - prov — provenance column injection
-      - Shorthand — see world.md#Dual-schema
-      - Plugin tables register here
-      - Schema namespace — see plugins.md#Schema-extension
-    - Routine layer
-      - src — relative path inside pack
-      - trust — declared rung on import
-      - Imported at draft regardless of declaration
-      - Routines — see routines.md#Procedure-layer
-    - CLI noun layer
-      - Pack ships plugin cli_noun
-      - Registered at install
-      - capcli api works after capcli.pack.api
-      - Muscle memory restored
-      - Registration — see plugins.md#CLI-noun-registration
-    - Ctx namespace layer
-      - Pack ships plugin ctx_namespace
-      - Registered at install
-      - ctx.api.call works after install
-      - Registration — see plugins.md#Ctx-namespace-registration
-    - Binding layer
-      - type — webhook, cron, endpoint
-      - provider — vendor signature driver
-      - event — provider event name
-      - capability — target routine reference
-      - Bindings — see plugins.md#Capabilities
-    - Iron law 1 — atomic intake
-      - Pack installs 100% or aborts
-      - Any sub-plugin checksum mismatch rolls back
-      - state_modified: false on failure
-      - Exit 3 on abort
-      - Exit law — see kernel.md#Exit-code-law
-    - Iron law 2 — trust floor
-      - Import floor — see governance.md#Import-floor
-      - Prod install refused outright
-      - Exit 2 E045 on prod attempt
-      - Promotion path — see governance.md#Promotion-gates
-      - Cross-agent floor — see governance.md#Composition-and-dependency-floor
-    - Iron law 3 — no lifecycle scripts
-      - postinstall.sh banned
-      - pre-compile hooks banned
-      - Dynamic network downloads banned
-      - Static AST expansion only
-      - Exit 3 on any script detected
-    - Intake pipeline
-      - 1 — Download to tmpfs /scratch
-      - 2 — Stream cap at 5MB
-      - 3 — SHA-256 verify against index
-      - 4 — Archive extraction
-      - 5 — rule validate on manifest
-      - 6 — Sub-check 1 and 2 on schema
-      - 7 — py_compile on routines
-      - 8 — AST complexity scan
-      - 9 — Register into dev worktree
+    - Pack layers
+      - Plugin layer
+        - Each entry has id and source
+        - Source pinned to git tag or release
+        - binary_sha256 per entry
+        - Sub-dependency resolution at install
+        - Manifest — see plugins.md#Manifest
+      - Schema layer
+        - tables — declarative column model
+        - imm_cols — column immutability
+        - prov — provenance column injection
+        - Shorthand — see world.md#Dual-schema
+        - Plugin tables register here
+        - Schema namespace — see world.md#Plugin-schema-namespace
+      - Routine layer
+        - src — relative path inside pack
+        - trust — declared rung on import
+        - Imported at draft regardless of declaration
+        - Routines — see routines.md#Procedure-layer
+      - CLI noun layer
+        - Pack ships plugin cli_noun
+        - Registered at install
+        - capcli api works after capcli.pack.api
+        - Muscle memory restored
+        - Registration — see plugins.md#CLI-projection
+      - Ctx namespace layer
+        - Pack ships plugin ctx_namespace
+        - Registered at install
+        - ctx.api.call works after install
+        - Registration — see plugins.md#Capability-declarations
+      - Binding layer
+        - type — webhook, cron, endpoint
+        - provider — vendor signature driver
+        - event — provider event name
+        - capability — target routine reference
+        - Bindings — see plugins.md#Capabilities
+    - Intake
+      - Iron law 1 — atomic intake
+        - Pack installs 100% or aborts
+        - Any sub-plugin checksum mismatch rolls back
+        - state_modified: false on failure
+        - Exit 3 on abort
+        - Exit law — see kernel.md#Exit-code-law
+      - Iron law 2 <!-- ref-by: governance.md, overview.md -->
+        - Import floor — see governance.md#Import-floor
+        - Prod install refused outright
+        - Exit 2 E045 on prod attempt
+        - Promotion path — see governance.md#Promotion-gates
+        - Cross-agent floor — see governance.md#Composition-and-dependency-floor
+      - Iron law 3 — no lifecycle scripts
+        - postinstall.sh banned
+        - pre-compile hooks banned
+        - Dynamic network downloads banned
+        - Static AST expansion only
+        - Exit 3 on any script detected
+      - Intake pipeline
+        - 1 — Download to tmpfs /scratch
+        - 2 — Stream cap at 5MB
+        - 3 — SHA-256 verify against index
+        - 4 — Archive extraction
+        - 5 — rule validate on manifest
+        - 6 — Sub-check 1 and 2 on schema
+        - 7 — py_compile on routines
+        - 8 — AST complexity scan
+        - 9 — Register into dev worktree
     - Install preview
       - Vault keys displayed before write
       - Egress domains displayed before write
@@ -183,14 +184,14 @@
       - Ctx namespace displayed before write
       - Schema tables displayed before write
       - Operator confirmation required
-    - Pack command surface
+    - Pack command surface <!-- ref-by: interface.md -->
       - pack new <name> --type world
       - pack bundle <dir> [--out bundle.cap]
       - pack sync refreshes registry index
       - pack import <urp|url|file>
       - pack scaffold <urp> <target>
       - Envelope — see interface.md#CLI-surface
-  - Publishing
+  - Publishing <!-- ref-by: assembly.md -->
     - Intake PR gate
       - Author PRs require green CI
       - rule validate on capcli-pack.yaml
@@ -236,7 +237,7 @@
       - plugin.deprecated — upstream flag
       - plugin.retired — uncallable marker
       - Event — see effect.md#Kernel-event-payloads
-  - Distribution channels
+  - Distribution channels <!-- ref-by: interface.md -->
     - Source types
       - GitHub repo — github.com/org/repo
       - Registry alias — pack://registry/<tier>/<name>@<ver>
@@ -267,7 +268,7 @@
       - No network egress during unpack
       - No binary execution until install
       - Reference — see #Iron-law-3
-    - Trust containment
+    - Trust containment <!-- ref-by: governance.md -->
       - Floor enforced at import
       - Reference — see #Iron-law-2
       - Containment — see governance.md#Import-floor
@@ -283,13 +284,13 @@
       - World pack — 5MB max
       - Routine pack — 1MB max
       - Exceed exits 3 refuse intake
-      - Config — see artifacts/governance.yaml#pack
+      - Config — see artifacts/governance.yaml
     - Provenance stamping
       - source_uri recorded on install
       - bundle_sha256 on install event
       - schema_version on install event
       - Event — see effect.md#Kernel-event-payloads
-  - Discovery
+  - Discovery <!-- ref-by: interface.md, routines.md -->
     - Search command
       - capcli plugin search <query>
       - Queries cached index.json
@@ -339,21 +340,17 @@
       - Aggregated from installed workspaces
       - Opt-in only, zero telemetry default
       - Synthetic ratings rejected at index
-      - Config — see artifacts/governance.yaml#registry
+      - Config — see artifacts/governance.yaml
     - Download signals
       - Raw counts from GitHub Releases
       - Never a ranking input
       - Purely informational display
-      - Config — see artifacts/governance.yaml#registry
+      - Config — see artifacts/governance.yaml
     - Deprecation signal
       - Upstream flag on entry
       - Does not remove from index
       - Renders warning on install
       - Reference — see #Publishing-events
-    - Retirement signal
-      - Uncallable marker on entry
-      - Historical provenance retained
-      - Decay — see lifecycle.md#Decay
     - Signal boundaries
       - Zero proprietary ranking algorithm
       - Zero hidden promotion of entries
@@ -375,7 +372,7 @@
     - No fast-track promotion anywhere
     - Markers are metadata, never authority
   - Pack lifecycle
-    - Install flow
+    - Install flow <!-- ref-by: overview.md -->
       - fetch → preview → confirm → extract
       - Rule validate at extraction
       - Register into dev worktree
@@ -407,8 +404,10 @@
       - Operator action required
       - Envelope — see interface.md#CLI-surface
     - Retirement handling
+      - Uncallable marker on entry
       - Retired entry stays in index
       - Install refused with clear remedy
+      - Historical provenance retained
       - Decay — see lifecycle.md#Decay
     - Audit trail
       - Every lifecycle step emits event

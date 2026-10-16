@@ -29,21 +29,21 @@
   - Undeclared primitives surface as governance events consumed by routine sweep and promotion review
   - Merge candidates gain a behavioral signal alongside code-text similarity
   - Human merge approval unchanged: merge_requires_human true; auto_retire_dead stays false
-  - Manifest anatomy and fingerprint views: see action.md#Manifests-&-fingerprints
+  - Manifest anatomy and fingerprint views: see routines.md#Manifests-and-fingerprints
   - Enforcement map carries forward unchanged
     - registry → capcli routine draft
-      - Registry caps: see artifacts/governance.yaml#registry
+      - Registry caps: see artifacts/governance.yaml
     - routine_shape → routine draft (static) + routine prove (runtime)
-      - Shape and runtime caps: see artifacts/governance.yaml#routine_shape
+      - Shape and runtime caps: see artifacts/governance.yaml
     - overrides → capcli rule apply (compile-time merge)
       - large_migration, weekly_report, order_status — declared need, approved by human commit
     - maintenance → routine sweep + bind cron
       - consolidation schedule "0 3 * * 0", fingerprint_similarity 0.90, duplicate_similarity 0.85
     - schedule / watch / serve → bind cron | webhook | endpoint
-      - Schedule/serve caps: see artifacts/governance.yaml#schedule, #serve
+      - Schedule/serve caps: see artifacts/governance.yaml
     - env → env new | remove | doctor
-      - Env caps: see artifacts/governance.yaml#env
+      - Env caps: see artifacts/governance.yaml
     - backup → sys backup + sys doctor
-      - Backup config: see artifacts/governance.yaml#backup
+      - Backup config: see artifacts/governance.yaml
     - denials → sys audit trace --explain
       - cite_measured_value, suggest_remediation, log_all, budget denial cites level/remaining

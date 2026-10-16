@@ -1,5 +1,4 @@
 - Overview
-<!-- ref-by: plugins.md, marketplace.md, interface.md, kernel.md -->
   - What capcli is
     - Core identity
       - Governed perimeter between harness and workspace
@@ -189,21 +188,25 @@
         - Human commits schema upfront
         - Agent executes strictly inside bounds
         - Zero schema drift allowed
-    - Anti-decisions
-      - Decisions
-        - Gates govern promotion — see governance.md#Promotion-gates
-        - Decay governs lifespan — see lifecycle.md#Decay
-        - Overrides banned — see governance.md#Limits-and-refusals
-        - Edits force versions — see lifecycle.md#Versioning
-        - Retirement over deletion — see lifecycle.md#Retirement-semantics
-        - Imports over inline auth — see plugins.md#Composition
-    - Invariants
-      - Physics
-        - Validation — see kernel.md#Unified-3-phase-engine
-        - Containment — see sandbox.md#Tri-Jail-engine
-        - Pinning — see lifecycle.md#Versioning
         - Drift — see lifecycle.md#Drift
-        - Fail-closed — see kernel.md#Fail-closed-stance
+      - Pack-seeded world
+        - pack scaffold pack://world/<name> seeds environment
+        - World pack — 5MB max
+        - env.init_from_pack event for worlds
+        - Install flow — see marketplace.md#Install-flow
+    - Decisions
+      - Gates govern promotion — see governance.md#Promotion-gates
+      - Decay governs lifespan — see lifecycle.md#Decay
+      - Overrides banned — see governance.md#Limits-and-refusals
+      - Edits force versions — see lifecycle.md#Versioning
+      - Retirement over deletion — see lifecycle.md#Retirement-semantics
+      - Imports over inline auth — see plugins.md#Composition
+    - Physics
+      - Validation — see kernel.md#Unified-3-phase-engine
+      - Containment — see sandbox.md#Tri-Jail-engine
+      - Pinning — see lifecycle.md#Versioning
+      - Drift — see lifecycle.md#Drift
+      - Fail-closed — see kernel.md#Fail-closed-stance
     - Refusals
       - No ORMs or query builders
       - No runtime policy mutation

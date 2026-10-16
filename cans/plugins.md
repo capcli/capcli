@@ -1,6 +1,5 @@
 - Plugins
-<!-- ref-by: interface.md, governor.md, sandbox.md, egress.md, marketplace.md -->
-  - Manifest
+  - Manifest <!-- ref-by: assembly.md, governance.md, governor.md, lifecycle.md, marketplace.md, world.md -->
     - File identity
       - Name — capcli-plugin.yaml
       - Location — plugin root directory
@@ -12,7 +11,7 @@
       - version — semver, immutable once published
       - min_kernel_version — semver floor
       - entrypoint — executable path array
-    - Capability declarations
+    - Capability declarations <!-- ref-by: effect.md, egress.md, marketplace.md -->
       - verbs — callable operations with params
       - subscribes — causal DAG event patterns
       - provides — native extension surfaces
@@ -28,7 +27,7 @@
       - resolution — flattened into capcli.lock
       - cycle check — DFS at install, exit 3
       - definition — see marketplace.md#Packs
-  - Capabilities
+  - Capabilities <!-- ref-by: assembly.md, governor.md, lifecycle.md, marketplace.md, world.md -->
     - Plugin verbs
       - Declaration — name, description, params
       - Invocation — JSON on stdin, JSON on stdout
@@ -59,7 +58,7 @@
         - Scheduler — binding address and signature verification: see lifecycle.md#Schedule
         - Notify — ask caps and lint advisory: see governance.md#Limits-and-refusals
         - Storage, serve, federation — each pack spec owns its specifics
-    - Serve lifecycle
+    - Serve lifecycle <!-- ref-by: lifecycle.md -->
       - CLI configuration
         - bind endpoint commits to workspace.db
         - Emits bind.create event to ledger
@@ -70,14 +69,14 @@
         - Authorizer, AST, budget all apply
         - Zero HTTP relaxation of physics
         - Definition — see kernel.md#Unified-3-phase-engine
-      - Endpoint governance
+      - Endpoint governance <!-- ref-by: lifecycle.md -->
         - Minimum trust — pinned rung only
         - Version lock — routine@version explicit
         - Default writes — deny
         - Surface limits — 10 endpoints, 25 keys
         - Payload ceiling — 64KB response body
         - Key rotation — days cap per governance
-        - Config — see artifacts/governance.yaml#serve
+        - Config — see artifacts/governance.yaml
       - Endpoint audit
         - serve.request emits on every inbound
         - Carries endpoint, channel, trace_id
@@ -94,14 +93,14 @@
         - Rotation policy per governance
         - Revocation immediate
         - Definition — see identity.md#System-agent-registry
-  - CLI projection
+  - CLI projection <!-- ref-by: egress.md, interface.md, marketplace.md -->
     - Surface declaration
       - Manifest block — cli.surface
       - Entry shape — noun, verb, args, flags, help
       - Extends mode — merges into existing noun
       - Owned mode — plugin-owned new noun
       - Reserved — run, sys, plugin cannot alias
-    - Resolution rules
+    - Resolution rules <!-- ref-by: interface.md -->
       - Extends — merge iff verb slot is free
       - Native wins — kernel verb beats plugin verb
       - Collision fallback — auto-scope to plugin <id>
@@ -134,7 +133,7 @@
       - Health — sys doctor reports status
       - Collisions surfaced at install
       - Full surface — see interface.md#Projection-introspection
-  - Generations
+  - Generations <!-- ref-by: interface.md, marketplace.md -->
     - Directory layout
       - Path — plugins/installations/<slug>/<pid>-<gen>
       - Contents — immutable checkout, compiled binary
@@ -155,8 +154,8 @@
       - Attempt — exclusive flock on .in-use
       - Skip — running processes hold shared lock
       - Delete — never while mapped in memory
-  - Composition
-    - Hub-mediated law
+  - Composition <!-- ref-by: governance.md, identity.md, lifecycle.md, overview.md -->
+    - Hub-mediated law <!-- ref-by: egress.md, sandbox.md -->
       - Rule — no direct P2P sockets between plugins
       - Rule — every call routes through kernel
       - Reason — fuel metering, authorizer, audit
@@ -181,13 +180,13 @@
       - Contents — resolved plugin DAG
       - Hash — binary_sha256 per plugin
       - Tamper — daemon halts boot with exit 3
-  - Federation transport
+  - Federation transport <!-- ref-by: effect.md, governance.md, identity.md, interface.md, kernel.md, lifecycle.md, routines.md, sandbox.md, world.md -->
     - Sovereignty axiom
       - Rule — peers export routines, never plugins
       - Refusal — ws://plugin:stripe/charge exits 3
       - Reason — plugin is private hardware driver
       - Contract — routine is the boundary
-    - Socket authentication
+    - Socket authentication <!-- ref-by: identity.md, sandbox.md, world.md -->
       - Local — SO_PEERCRED at accept
       - Remote — mTLS over WireGuard mesh
       - UID mismatch — connection dropped
@@ -209,13 +208,13 @@
       - Network partition — lost Hub connection aborts exit 5
       - Backoff — exponential against peer cold start
       - Exhaustion — exit 4 E055_FEDERATION_UNREACHABLE
-      - Config — see artifacts/policy.yaml#network.dial
+      - Config — see artifacts/policy.yaml
     - Transport adapters
       - wireguard — default Linux mesh driver
       - tailscale — zero-config corporate networks
       - nats — high-throughput message brokers
       - Custom — plugin-provided transport adapters
-  - Installation lifecycle
+  - Installation lifecycle <!-- ref-by: assembly.md, effect.md, interface.md, sandbox.md -->
     - States
       - installed — registered, active, verbs mounted
       - disabled — projection unmounted, hooks skipped

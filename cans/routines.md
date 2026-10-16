@@ -1,6 +1,5 @@
 - Routines
-<!-- ref-by: governor.md, plugins.md, interface.md, governance.md -->
-  - Procedure layer
+  - Procedure layer <!-- ref-by: assembly.md, identity.md, interface.md, lifecycle.md, marketplace.md -->
     - Substrate
       - Python .py — primary runtime
       - JS .js and TS .ts — secondary
@@ -21,6 +20,7 @@
       - Raw exploration becomes governed routine
       - Repeated sequences trigger pattern mining
       - Codification path — see lifecycle.md#Decay
+      - Registry — see marketplace.md#Registry
     - Granularity
       - Op — single atomic capability call
       - Effect — state change in world
@@ -56,7 +56,7 @@
       - Retries reuse same key
       - Key isolates per environment
       - Scope — see identity.md#Concurrency
-  - Shape constraints
+  - Shape constraints <!-- ref-by: assembly.md, identity.md, interface.md, kernel.md, lifecycle.md, marketplace.md -->
     - Token envelope
       - Max 2000 tokens per routine file
       - Whitespace and comments unpenalized
@@ -66,7 +66,7 @@
       - Complexity and param ceilings emit lint
       - Advisory only, exit 0 retained
       - Never blocks promotion
-      - Ceilings — see artifacts/governance.yaml#routine_shape
+      - Ceilings — see artifacts/governance.yaml
       - Separation — see governance.md#Lint-tier-separation
     - Execution caps
       - Fuel envelope per budget frame
@@ -90,7 +90,7 @@
       - Schema shape — items, pagination
       - Pagination carries has_more and next_cursor
       - Breach exits 3 at pre-flight
-  - The ctx contract
+  - The ctx contract <!-- ref-by: assembly.md, effect.md, governor.md, interface.md -->
     - Database methods
       - ctx.db.view(name, params) — named view read
       - ctx.db.get(table, id) — structured lookup
@@ -127,7 +127,7 @@
       - ctx.storage.get(key) returns stream
       - ctx.storage.url(key, ttl) mints signed link
       - Size and MIME gates apply
-      - Config — see artifacts/governance.yaml#storage
+      - Config — see artifacts/governance.yaml
     - Cursor methods
       - ctx.cursor.load(name, default)
       - ctx.cursor.save_and_yield(name, next)
@@ -147,15 +147,17 @@
       - ctx.log(msg) — audited log entry
       - Execution guards
         - Kernel-mediated egress; auth engines resolved at socket edge
-        - Pre-call quota; kernel-minted idempotency key persisted
+        - Pre-call quota gate
+        - Kernel-minted idempotency key persisted
         - poll_until sleeps in Rust runtime; no Python busy-wait
       - Data protection
-        - Raw records stay inside sandbox; egress truncation at token cap
+        - Raw records stay inside sandbox
+        - Egress truncation at token cap
         - System columns created_by, modified_by populated by kernel
-      - System introspection
-        - Read-only on _audit, _api_quota, _budget_frames
+        - Masking — see lifecycle.md#Masking
+      - System introspection — read-only on _audit, _api_quota, _budget_frames
       - ctx.params — validated input map
-  - Interior rules
+  - Interior rules <!-- ref-by: world.md -->
     - Execution model
       - Strictly sequential
       - Zero concurrent branches
@@ -183,19 +185,24 @@
       - All exit 3 at AST parse
     - Banned rationale
       - Break DAG linearity and tx boundaries
-      - Invariants and anti-decisions
-        - No YAML procedures; no module imports for authority
-        - No self-promotion; no silent edits; no deletion
-        - Pre-execution validation, sandbox isolation, hash-pinned versions
       - Break replay determinism
       - Break causal chain integrity
       - Causal DAG — see effect.md#Causal-DAG
+    - Invariants and anti-decisions
+      - No YAML procedures
+      - No module imports for authority
+      - No self-promotion
+      - No silent edits
+      - No deletion
+      - Pre-execution validation
+      - Sandbox isolation
+      - Hash-pinned versions
     - Bulk operations
       - Chunking model
         - Agent loops bounded chunks via ctx.db.execute
         - Each chunk independent transaction
         - Each chunk independent audit event
-        - Execution bounds — see artifacts/policy.yaml#query
+        - Execution bounds — see artifacts/policy.yaml
       - Pre-flight checks
         - sql --count mandatory before mass update
         - Dev and sim waive pre-count
@@ -205,9 +212,9 @@
         - Prod bulk over 10 rows needs approval
         - Bulk minimum trust — reviewed rung
         - Human threshold above row caps
-        - Definition — see governance.md#The-ladder
+        - Definition — see governance.md#Trust-ladder
       - Chunk ceiling
-        - Rows per chunk — see artifacts/policy.yaml#query
+        - Rows per chunk — see artifacts/policy.yaml
         - Independent transactions only
         - Failure isolates to one chunk
         - Never a partial multi-chunk commit
@@ -232,20 +239,20 @@
       - Draft callees strictly banned
       - Enforcement — pre-flight exit 2 E046
       - Cross-agent — see governance.md#Ladder-laws
-    - Nesting ceiling
+    - Call ceilings
       - Max 5 nested budget frames
       - 6th nested call exits 2
       - Federated hops count toward cap
       - Federation ceiling binds first at 3
-    - Import ceiling
       - Counts distinct ctx.call targets per routine
-      - Ceiling — see artifacts/governance.yaml#routine_shape
+      - Ceiling — see artifacts/governance.yaml
       - Cross-agent dedup forces merge or fork
     - Constraint direction
       - Cages tighten downward only
       - Child never widens parent
       - Formula — see governance.md#Fuel-formula
-  - Manifests and fingerprints
+      - Precedence — see governance.md#Precedence-calculation
+  - Manifests and fingerprints <!-- ref-by: _adr/001-governance-yaml-v2.md, governance.md, lifecycle.md -->
     - Declared manifest
       - Extracted from decorator at prove
       - Call sequence — provider.verb pairs
@@ -274,11 +281,14 @@
       - Per-leaf wire byte count
       - Architectural purpose
         - Mirror views — shared_subsequences, primitive_cost, primitive_failures
-        - Consolidation input; regression tracking; cost attribution
+        - Consolidation input
+        - Regression tracking
+        - Cost attribution
       - Source views — see effect.md#Query-surfaces
   - Capability record
     - Purpose
-      - Shape powering search and inspect
+      - Shape powering search
+      - Shape powering inspect
       - Aggregates cost, provenance, boundary
       - Definition — see interface.md#CLI-surface
     - Fields per record
@@ -311,16 +321,15 @@
       - SQLite FTS5 BM25 on descriptions
       - Definition — see marketplace.md#Discovery
     - Registry ceilings
-      - Limits — see artifacts/governance.yaml#registry
+      - Limits — see artifacts/governance.yaml
       - Enforcement — routine prove and api sync
       - Creation — filesystem writes ungated
       - Reference — see marketplace.md#Registry
-  - Session Overview Primer
-    - Core aim
-      - Grounds incoming agents with situational awareness
-      - Prevents blind schema exploration
-      - Canonical domain KPI snapshot
-      - Dense output under 60 tokens
+  - Session Overview Primer <!-- ref-by: effect.md, identity.md, interface.md -->
+    - Grounds incoming agents with situational awareness
+    - Prevents blind schema exploration
+    - Canonical domain KPI snapshot
+    - Dense output under 60 tokens
     - Contract and trigger
       - File — routines/overview.py
       - Fires at every turn boot

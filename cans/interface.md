@@ -1,6 +1,5 @@
 - Interface
-<!-- ref-by: overview.md, plugins.md, marketplace.md, assembly.md -->
-  - CLI surface
+  - CLI surface <!-- ref-by: assembly.md, effect.md, egress.md, governance.md, governor.md, identity.md, lifecycle.md, marketplace.md, plugins.md, routines.md, sandbox.md, world.md -->
     - Design laws
       - Exit codes — strict integer contract
       - Shape — capcli <noun> <verb> [target] [flags]
@@ -14,7 +13,7 @@
         - Plugin nouns — dynamic, installed at runtime
         - Resolution — see plugins.md#Resolution-rules
         - Identical surface in help output
-        - Registration — see plugins.md#CLI-noun-registration
+        - Registration — see plugins.md#CLI-projection
       - The 9 kernel nouns
         - run — dispatch any URP
         - sys — kernel operations
@@ -31,7 +30,7 @@
         - Registered at plugin install
         - Removed at plugin uninstall
         - capcli stripe, capcli s3, capcli api
-        - Registration — see plugins.md#CLI-noun-registration
+        - Registration — see plugins.md#CLI-projection
       - Reserved nouns — see #The-9-kernel-nouns
     - Prefix standard
       - [environment:platform tier] prepended to output
@@ -54,14 +53,14 @@
       - Collision — auto-scope to plugin <id>
       - Never a hard install failure
       - Full rules — see plugins.md#CLI-projection
-      - Noun registration — see plugins.md#CLI-noun-registration
-    - Projection introspection
+      - Noun registration — see plugins.md#CLI-projection
+    - Projection introspection <!-- ref-by: plugins.md -->
       - plugin list --nouns shows registry
       - inspect plugin://<id> shows cli_noun
       - doctor reports projection health
       - Displays aliased_as per plugin
       - Envelope — see #CLI-surface
-    - Surface conformance
+    - Surface conformance <!-- ref-by: assembly.md -->
       - Mechanism
         - Executable mirror of this file's CLI grammar
         - Golden fixture per screen, byte-asserted in CI
@@ -103,390 +102,424 @@
         - Shape only, never mechanism or lifecycle
         - Detail — artifacts/wireframe/wireframe-structure.md
         - Zero authority, cited for byte shapes
-      - Gate
+      - PR gate
         - Fires on CLI surface, exit, or archetype change
         - Fires on output contract or domain change
         - Runner — assembly.md#Test-architecture
         - Checker — assembly.md#Checker-tool
         - Gate — assembly.md#PR-gate
-  - Run noun
-    - Execution commands
-      - run <capability> [-p k=v]
-      - run abort <frame_id> — cancel suspended
-      - run sql "<query>" [-p k=v] [-m "intent"]
-      - run overview [--as <principal>]
-      - run search <query> [--limit <n>]
-      - run search gaps --since 7d
-      - inspect <ptr> — unified resolver
-    - Resolvers
-      - URP dispatch
-        - cap://routine@version — local routine
-        - vault://, audit://, ask://, quota:// — DB entity pointers
-        - pack://, policy:// — artifact pointers
-        - plugin://<id>/<verb> — plugin verb
-        - ws://workspace/routine@version — federated
-        - db://table — DB entity inspection
-        - doc://path — document reading
-        - Bare plugin:// is escape hatch, not daily
-      - Executable resolver fields
-        - fuel_declared — integer
-        - session_fuel_remaining — integer
-        - cadence_status — enum headroom
-        - ceiling_status — enum ledger position
-        - can_invoke_now — boolean verdict
-        - routine_min_fuel equals fuel_declared
-      - DB entity resolver
-        - Row schema, check constraints
-        - Mask flags, TTL per row
-        - Handles db://, vault://, audit://
-        - Handles ask://, quota://
-      - Artifact resolver
-        - Token size and node outlines
-        - Bundle metadata and manifest
-        - Handles doc://, pack://, policy://
-        - Zero fuel cost for inspection
-    - Tier waiver
-      - --tier-waiver grants one prod on tier 2
-      - Interactive TTY only, headless denied
-      - Binds to one session and one run
-      - Never persisted or defaulted
-      - Platform — see sandbox.md#Platform-tiers
-    - Turn-zero contract
-      - Primer — see routines.md#Session-Overview-Primer
-      - Trigger — every harness turn
-      - Budget-exempt, under 60 tokens
-      - Locks and sensory inbox included
-    - Aliases
-      - capcli sql aliases run sql
-      - capcli search aliases run search
-      - capcli inspect aliases inspect
-      - Alias resolution precedes handler gate
-    - PreflightEnvelope
-      - One envelope per resolver trait
-      - Contents vary by resolver class
-      - Envelope — see #CLI-surface
-      - Executables carry budget_status block
-    - Refusal law
-      - AST pre-flight rejects when fuel short
-      - Exit 2 with domain policy.budget
-      - Routine never invoked on refusal
-      - Exit law — see kernel.md#Exit-code-law
-    - Success affordances
-      - Exit 0 only, absent on non-zero
-      - Array of rel, command, intent, risk
-      - Agent executes affordance verbatim
-      - Diagnostic — see kernel.md#Diagnostic-output-law
-  - Sys noun
-    - Help stub
-      - sys help returns 6-line discovery stub
-      - Aliases — capcli --help, capcli help
-      - Never dumps full noun tree
-      - Envelope — see #CLI-surface
-    - Sensory inbox
-      - sys inbox pop [--channel <name>]
-      - Reads pending _inbox rows
-      - Consumption marking — see world.md#Outbox-inbox
-    - Audit
-      - sys audit tail [--follow]
-      - sys audit trace <op-id> [--explain]
-      - sys audit query <sql> [-p k=v]
-      - sys audit replay --from <ts>
-      - Query — see effect.md#Query-surfaces
-    - Identity
-      - sys agent register — mint agent row
-      - sys agent list — show roster
-      - sys agent revoke — end execution
-      - Registry — see identity.md#System-agent-registry
-    - Vault
-      - sys vault set <key> <val>
-      - sys vault import-env
-      - Vault — see egress.md#Vault-storage
-    - Diagnostics
-      - sys doctor [--boot-check] [--report] [--json]
-      - Machine fields — see sandbox.md#Platform-probes
-      - Tamper ack — see effect.md#Event-integrity
-      - Envelope shape — see #CLI-surface
-    - Backup
-      - sys backup [--push] — local always
-      - sys recover <snapshot-id>
-      - Push best-effort, warning on failure
-      - Snapshots — see world.md#Snapshots
-    - Ledger
-      - sys init --fresh — re-init after loss
-      - Dual confirmation required
-      - Ledger — see world.md#Ledger-re-initialization
-    - Execution
-      - Swarm
-        - sys swarm list [--active]
-        - sys swarm reap — evict expired
-        - Swarm — see identity.md#Ephemeral-swarm-identity
-      - Sandbox
-        - sys exec <cmd> --sandbox
-        - Same Tri-Jail envelope applied
-        - Providers — see sandbox.md#Sandbox-providers
-      - Harness shim
-        - sys shim <target-bin> [--wrap <path>]
-        - Deploys zero-cost wrapper
-        - Captures caller marker hashes
-        - Scrubs secrets from output
-        - Markers — see identity.md#Harness-markers
-      - Daemon
-        - sys serve --start, --stop, --restart
-        - sys serve --status
-        - Daemon — see assembly.md#Persistent-daemon-crate
-  - Plugin noun
-    - Install
-      - plugin install <source>
-      - Source — github, registry alias, pack
-      - Flags — --ref, --yes, --environment
-      - Preview before write
-      - Lifecycle — see plugins.md#Installation-lifecycle
-    - Link and unlink
-      - plugin link <path> — dev hot reload
-      - plugin unlink <id> — detach symlink
-      - Link restricted to dev environment
-      - Exit 2 on prod link attempt
-    - List
-      - plugin list [--json] [--enabled-only]
-      - Renders aligned receipt table
-      - Shows ID, version, rung, generation
-      - Shows aliased_as per plugin
-      - Shows ctx_namespace per plugin
-      - Envelope — see #CLI-surface
-    - Inspect
-      - plugin inspect <id|urp>
-      - Returns PreflightEnvelope
-      - Manifest commands and permissions
-      - Vault keys, egress domains, hooks
-      - CLI noun and ctx namespace
-      - Envelope — see #CLI-surface
-    - Update
-      - plugin update [id...]
-      - --dry-run and --check flags
-      - Builds new generation, atomic swap
-      - Generations — see plugins.md#Generations
-    - Enable and disable
-      - plugin enable <id> — mount projection
-      - plugin disable <id> — unmount projection
-      - SIGTERM to running plugin daemons
-      - Generations — see plugins.md#Generations
-    - Uninstall
-      - plugin uninstall <id>
-      - --purge-state wipes state directory
-      - Running tasks retain old generation
-      - GC reclaims after lease drop
-      - Generations — see plugins.md#Generations
-    - Search
-      - plugin search <query>
-      - --tier and --limit flags
-      - Returns matching IDs and ratings
-      - Discovery — see marketplace.md#Discovery
-    - Logs
-      - plugin logs <id> [--follow]
-      - Ring-buffered stdout and stderr
-      - Cap at 64 KiB per plugin
-      - Envelope — see #CLI-surface
-    - Doctor
-      - plugin doctor [<id>]
-      - Probes Tri-Jail substrate
-      - Asserts Syscall 42 trapping
-      - Tests IPC latency over kernel.sock
-      - Alarms — see sandbox.md#Boundary-alarms
-  - DB noun
-    - Lock
-      - db lock <table>:<ref> --ttl <duration>
-      - Acquires Layer 1 lease
-      - Flags — see world.md#Claims-lease
-      - --takeover acquires stale claim
-      - --abandon releases with --reason
-    - Unlock
-      - db unlock <target>
-      - db unlock <target> --abandon
-      - Abandon requires --reason
-      - Claims — see world.md#Claims-lease
-    - Schema
-      - db schema [--table]
-      - Renders DDL for inspection
-      - Shows kernel and plugin tables
-      - Envelope — see #CLI-surface
-    - Snapshots
-      - db snapshot — VACUUM INTO
-      - db restore <id> — point-in-time
-      - db dump — deterministic export
-      - Snapshots — see world.md#Snapshots
-    - Boundary
-      - All SQL routes through run sql
-      - AST and authorizer on every call
-      - Raw DDL outside migration denied
-      - Raw SQL — see kernel.md#Raw-SQL-rules
-  - Routine noun
-    - Authoring
-      - Direct write in routines/<name>.py
-      - Or pack scaffold pack://routine/<name>
-      - Procedure — see routines.md#Procedure-layer
-    - Verify
-      - routine prove <name> [-p k=v]
-      - --environment flag, default sim
-      - Prove — see lifecycle.md#Stage-details
-    - Promote
-      - routine ship <name> reviewed
-      - routine ship <name> reviewed --queue
-      - routine ship <name> pinned
-      - Skip draft to pinned exits 3
-      - Promotion — see governance.md#Promotion-gates
-    - Maintenance
-      - routine sweep [--since 30d]
-      - routine stats <name> [--deep]
-      - Decay — see lifecycle.md#Decay
-    - Recovery
-      - routine rollback <name> [version]
-      - Forward-only via revert bundle
-      - Versioning — see lifecycle.md#Versioning
-    - Retirement
-      - routine retire <name> [--reason]
-      - Dissolves ingress bindings atomically
-      - Decay — see lifecycle.md#Decay
-  - Environment noun
-    - Provision
-      - env new <name> [--seed prod]
-      - Or pack scaffold pack://world/<name>
-      - Environments — see lifecycle.md#Environments
-    - Switch
-      - env use <name>
-      - Sets sticky context for CLI
-      - Envelope — see #CLI-surface
-    - Audit
-      - env list, inspect, doctor
-      - Flags drift and staleness
-      - Drift — see lifecycle.md#Drift
-    - Merge
-      - env merge <name> [target=prod]
-      - -m flag for intent
-      - --confirm-backup required for prod target
-      - --confirm-prod required for prod target
-      - Requires tier 1 host and rehearsal
-      - Promotion — see governance.md#Promotion-gates
-    - Remove
-      - env remove <name>
-      - Dual confirmation for prod
-      - Environments — see lifecycle.md#Environments
-    - Namespace law
-      - Path — capcli/envs/<name>/
-      - Isolated directory per environment
-      - Namespace — see lifecycle.md#Namespace-boundary
-  - Rule noun
-    - Inspect
-      - rule show [target=schema]
-      - rule diff [target=schema] [--git]
-      - Envelope — see #CLI-surface
-    - Plan
-      - rule plan --name <slug> [-m "why"]
-      - Generates migrations/NNNN/ bundle
-      - Migration — see world.md#Migration
-    - Verify
-      - rule rehearse <id> --environment sim
-      - Rehearses all four phases on masked
-      - Migration — see world.md#Migration
-    - Apply
-      - rule apply <id> [--dry-run]
-      - Executes expand to align to contract to pin
-      - Migration — see world.md#Migration
-    - Validate
-      - rule validate [target]
-      - Unified syntax and acyclic verification
-      - Includes plugin schema validation
-      - Envelope — see #CLI-surface
-    - Ergonomic alias
-      - capcli apply aliases rule apply schema
-      - Alias resolves before handler gate
-      - Aliases — see #Run-noun
-  - Doc noun
-    - Reading
-      - doc read <ptr> [--max-tokens 100]
-      - Resolves any doc:// URP
-      - Specs and prompt campaigns identical
-      - Shape — see routines.md#Shape-constraints
-    - Outline
-      - doc outline <ptr>
-      - Returns section index
-      - Envelope — see #CLI-surface
-    - Leaf selection
-      - Fragment #<node> selects one node
-      - Token cage ceilings apply
-      - Shape — see routines.md#Shape-constraints
-    - Token cage ceilings
-      - L1 trailer capped at 30 tokens
-      - L2 envelope capped at 150 tokens
-      - L3 leaf capped at 500 tokens
-      - Breach aborts with exit 3
-      - Config — see artifacts/cicd.yaml#trinity
-    - Campaign envelope
-      - inspect doc://prompts/<campaign>
-      - Returns vars, sections, caps
-      - Body withheld
-      - Envelope — see #CLI-surface
-    - Single reading surface
-      - No prompt noun exists
-      - Prompt campaigns read via doc read
-      - Unified grammar for doc pointers
-      - Aliases — see #Run-noun
-  - Pack noun
-    - New
-      - pack new <name> --type routine|world
-      - Scaffolds capcli-pack.yaml
-      - Envelope — see #CLI-surface
-    - Bundle
-      - pack bundle <dir> [--out bundle.cap]
-      - Freezes blueprint into bundle
-      - Packs — see marketplace.md#Packs
-    - Sync
-      - pack sync refreshes registry index
-      - Envelope — see #CLI-surface
-    - Import
-      - pack import <urp|url|file>
-      - --sha256 flag for direct URL
-      - Channels — see marketplace.md#Distribution-channels
-    - Scaffold
-      - pack scaffold <urp> <target>
-      - -p flag for typed params
-      - Hydrates draft into routines/ or envs/
-      - Packs — see marketplace.md#Packs
-  - Plugin-provided nouns
-    - Pack nouns
-      - api — api-gateway pack
-        - Verbs — import, sync, record, prove, ship
-        - Verbs — catalog, drift, stats, rollback, retire
-        - Flags — sync --interval <duration>
-        - Flags — catalog --state <status>
-      - bind — scheduler pack
-        - Verbs — cron, webhook, endpoint, federation
-        - Verbs — list, inspect, pause, resume, remove, keys
-      - ping — notify pack (notify, ask, list, resolve, expire)
-      - serve — http-server pack (start, stop, restart, status, export)
-      - storage — storage pack (put, get, url, list, remove)
-      - ws — federation pack (peers, dial, status, cassettes)
-    - Mechanics
-      - Registered at install via cli.surface manifest
-      - Removed at uninstall
-      - Full resolution — see plugins.md#CLI-projection
-      - Pack taxonomy — see marketplace.md#Pack-taxonomy
-    - Collision behavior
-      - First-install wins the noun
-      - Later plugin auto-scopes
-      - Auto-scope — capcli plugin <id> <verb>
-      - Never a hard install failure
-      - Rules — see plugins.md#CLI-noun-registration
-    - Discovery
-      - plugin list --nouns shows owners
-      - plugin inspect <id> shows noun
-      - help stub lists kernel nouns only
-      - Full noun list via plugin list
-    - Muscle memory preservation
-      - capcli api sync works after install
-      - capcli bind cron works after install
-      - capcli ping notify works after install
-      - Zero user migration required
-  - Universal flags
+  - CLI nouns
+    - Run noun <!-- ref-by: routines.md, sandbox.md -->
+      - Execution commands
+        - run <capability> [-p k=v]
+        - run abort <frame_id> — cancel suspended
+        - run sql "<query>" [-p k=v] [-m "intent"]
+        - run overview [--as <principal>]
+        - run search <query> [--limit <n>]
+        - run search gaps --since 7d
+        - inspect <ptr> — unified resolver
+      - Resolvers
+        - URP dispatch
+          - cap://routine@version — local routine
+          - vault://, audit://, ask://, quota:// — DB entity pointers
+          - pack://, policy:// — artifact pointers
+          - plugin://<id>/<verb> — plugin verb
+          - ws://workspace/routine@version — federated
+          - db://table — DB entity inspection
+          - doc://path — document reading
+          - Bare plugin:// is escape hatch, not daily
+        - Executable resolver fields
+          - fuel_declared — integer
+          - session_fuel_remaining — integer
+          - cadence_status — enum headroom
+          - ceiling_status — enum ledger position
+          - can_invoke_now — boolean verdict
+          - routine_min_fuel equals fuel_declared
+        - DB entity resolver
+          - Row schema, check constraints
+          - Mask flags, TTL per row
+          - Handles db://, vault://, audit://
+          - Handles ask://, quota://
+        - Artifact resolver
+          - Token size and node outlines
+          - Bundle metadata and manifest
+          - Handles doc://, pack://, policy://
+          - Zero fuel cost for inspection
+      - Tier waiver
+        - --tier-waiver grants one prod on tier 2
+        - Interactive TTY only, headless denied
+        - Binds to one session and one run
+        - Never persisted or defaulted
+        - Platform — see sandbox.md#Platform-tiers
+      - Turn-zero contract
+        - Primer — see routines.md#Session-Overview-Primer
+        - Trigger — every harness turn
+        - Budget-exempt, under 60 tokens
+        - Locks and sensory inbox included
+      - Aliases
+        - capcli sql aliases run sql
+        - capcli search aliases run search
+        - capcli inspect aliases inspect
+        - Alias resolution precedes handler gate
+      - PreflightEnvelope
+        - One envelope per resolver trait
+        - Contents vary by resolver class
+        - Envelope — see #CLI-surface
+        - Executables carry budget_status block
+      - Refusal law
+        - AST pre-flight rejects when fuel short
+        - Exit 2 with domain policy.budget
+        - Routine never invoked on refusal
+        - Exit law — see kernel.md#Exit-code-law
+      - Success affordances
+        - Exit 0 only, absent on non-zero
+        - Array of rel, command, intent, risk
+        - Agent executes affordance verbatim
+        - Diagnostic — see kernel.md#Diagnostic-output-law
+    - Sys noun
+      - Help stub
+        - sys help returns 6-line discovery stub
+        - Aliases — capcli --help, capcli help
+        - Never dumps full noun tree
+        - Envelope — see #CLI-surface
+      - Sensory inbox
+        - sys inbox pop [--channel <name>]
+        - Reads pending _inbox rows
+        - Consumption marking — see world.md#Outbox-inbox
+        - Lifecycle — see world.md#Inbox-lifecycle
+      - Audit
+        - sys audit tail [--follow]
+        - sys audit trace <op-id> [--explain]
+        - sys audit query <sql> [-p k=v]
+        - sys audit replay --from <ts>
+        - Query — see effect.md#Query-surfaces
+      - Identity
+        - sys agent register — mint agent row
+        - sys agent list — show roster
+        - sys agent revoke — end execution
+        - Registry — see identity.md#System-agent-registry
+      - Vault
+        - sys vault set <key> <val>
+        - sys vault import-env
+        - sys vault list shows names
+        - Vault — see egress.md#Vault-storage
+      - Diagnostics
+        - sys doctor [--boot-check] [--report] [--json]
+        - Machine fields — see sandbox.md#Platform-probes
+        - Tamper ack — see effect.md#Event-integrity
+        - Envelope shape — see #CLI-surface
+      - Backup
+        - sys backup [--push] — local always
+        - sys recover <snapshot-id>
+        - Push best-effort, warning on failure
+        - Snapshots — see world.md#Snapshots
+      - Ledger
+        - sys init --fresh
+        - Re-init after total media loss
+        - Dual confirmation required
+        - Ledger — see world.md#Ledger-re-initialization
+      - Execution
+        - Swarm
+          - sys swarm list [--active]
+          - sys swarm reap
+          - Evicts expired swarm nodes
+          - Swarm — see identity.md#Ephemeral-swarm-identity
+        - Sandbox
+          - sys exec <cmd> --sandbox
+          - Same Tri-Jail envelope applied
+          - Providers — see sandbox.md#Sandbox-providers
+          - Definition — see sandbox.md#Tri-Jail-engine
+        - Harness shim
+          - sys shim <target-bin> [--wrap <path>]
+          - Deploys zero-cost wrapper
+          - Captures caller marker hashes
+          - Scrubs secrets from output
+          - Markers — see identity.md#Harness-markers
+        - Daemon
+          - sys serve --start
+          - sys serve --stop
+          - sys serve --restart
+          - sys serve --status
+          - Daemon — see assembly.md#Rust-workspace-crates
+    - Plugin noun <!-- ref-by: plugins.md -->
+      - Install
+        - plugin install <source>
+        - Source — github, registry alias, pack
+        - Flags — --ref, --yes, --environment
+        - Preview before write
+        - Lifecycle — see plugins.md#Installation-lifecycle
+      - Link and unlink
+        - plugin link <path> — dev hot reload
+        - plugin unlink <id> — detach symlink
+        - Link restricted to dev environment
+        - Exit 2 on prod link attempt
+      - List plugins
+        - plugin list [--json] [--enabled-only]
+        - Renders aligned receipt table
+        - Shows ID, version, rung, generation
+        - Shows aliased_as per plugin
+        - Shows ctx_namespace per plugin
+        - Envelope — see #CLI-surface
+      - Inspect
+        - plugin inspect <id|urp>
+        - Returns PreflightEnvelope
+        - Manifest commands and permissions
+        - Vault keys, egress domains, hooks
+        - CLI noun and ctx namespace
+        - Envelope — see #CLI-surface
+      - Update
+        - plugin update [id...]
+        - --dry-run and --check flags
+        - Builds new generation, atomic swap
+        - Generations — see plugins.md#Generations
+      - Enable and disable
+        - plugin enable <id> — mount projection
+        - plugin disable <id> — unmount projection
+        - SIGTERM to running plugin daemons
+        - Generations — see plugins.md#Generations
+      - Uninstall
+        - plugin uninstall <id>
+        - --purge-state wipes state directory
+        - Running tasks retain old generation
+        - GC reclaims after lease drop
+        - Generations — see plugins.md#Generations
+      - Search
+        - plugin search <query>
+        - --tier and --limit flags
+        - Returns matching IDs and ratings
+        - Discovery — see marketplace.md#Discovery
+      - Plugin logs
+        - plugin logs <id> [--follow]
+        - Ring-buffered stdout and stderr
+        - Cap at 64 KiB per plugin
+        - Envelope — see #CLI-surface
+      - Doctor
+        - plugin doctor [<id>]
+        - Probes Tri-Jail substrate
+        - Asserts Syscall 42 trapping
+        - Tests IPC latency over kernel.sock
+        - Alarms — see sandbox.md#Boundary-alarms
+    - DB noun
+      - Claim lock
+        - db lock <table>:<ref> --ttl <duration>
+        - Acquires Layer 1 lease
+        - Flags — see world.md#Claims-lease
+        - --takeover acquires stale claim
+        - --abandon releases with --reason
+      - Unlock
+        - db unlock <target>
+        - db unlock <target> --abandon
+        - Abandon requires --reason
+        - Claims — see world.md#Claims-lease
+      - Schema
+        - db schema [--table]
+        - Renders DDL for inspection
+        - Shows kernel and plugin tables
+        - Envelope — see #CLI-surface
+      - Snapshots
+        - db snapshot — VACUUM INTO
+        - db restore <id> — point-in-time
+        - db dump — deterministic export
+        - Snapshots — see world.md#Snapshots
+      - Boundary
+        - All SQL routes through run sql
+        - AST and authorizer on every call
+        - Raw DDL outside migration denied
+        - Raw SQL — see kernel.md#SQL-layers
+    - Routine noun <!-- ref-by: lifecycle.md -->
+      - Authoring
+        - Direct write in routines/<name>.py
+        - Or pack scaffold pack://routine/<name>
+        - Promote — see #Promote
+        - Procedure — see routines.md#Procedure-layer
+      - Verify
+        - routine prove <name> [-p k=v]
+        - --environment flag
+        - default sim
+        - Prove — see lifecycle.md#Stage-details
+      - Promote
+        - routine ship <name> reviewed
+        - routine ship <name> reviewed --queue
+        - routine ship <name> pinned
+        - Skip draft to pinned exits 3
+        - Promotion — see governance.md#Promotion-gates
+      - Maintenance
+        - routine sweep [--since 30d]
+        - routine stats <name>
+        - --deep flag
+        - Decay — see lifecycle.md#Decay
+      - Recovery
+        - routine rollback <name> [version]
+        - Forward-only
+        - Revert bundle
+        - Versioning — see lifecycle.md#Versioning
+      - Retirement
+        - routine retire <name> [--reason]
+        - Dissolves ingress bindings
+        - Atomic dissolve
+        - Decay — see lifecycle.md#Decay
+    - Environment noun
+      - Provision
+        - env new <name>
+        - --seed prod seeds from prod
+        - Or pack scaffold pack://world/<name>
+        - Environments — see lifecycle.md#Environments
+      - Switch
+        - env use <name>
+        - Sets sticky context for CLI
+        - Override — see #Global-flags
+        - Envelope — see #CLI-surface
+      - Audit
+        - env list
+        - env inspect
+        - env doctor
+        - Flags drift and staleness
+        - Drift — see lifecycle.md#Drift
+      - Merge
+        - env merge <name> [target=prod]
+        - -m flag for intent
+        - --confirm-backup required for prod target
+        - --confirm-prod required for prod target
+        - Requires tier 1 host and rehearsal
+        - Promotion — see governance.md#Promotion-gates
+      - Remove
+        - env remove <name>
+        - Dual confirmation for prod
+        - Cryptographic auth required
+        - Environments — see lifecycle.md#Environments
+      - Namespace law
+        - Path — capcli/envs/<name>/
+        - Root — capcli/envs/
+        - Isolated directory per environment
+        - Namespace — see lifecycle.md#Namespace-boundary
+    - Rule noun
+      - Inspect
+        - rule show [target=schema]
+        - rule diff [target=schema]
+        - --git detects structural drift
+        - Envelope — see #CLI-surface
+      - Plan migration
+        - rule plan --name <slug>
+        - -m records intent
+        - Generates migrations/NNNN/ bundle
+        - Migration — see world.md#Migration
+      - Verify
+        - rule rehearse <id> --environment sim
+        - Rehearses all four phases
+        - On masked sim snapshot
+        - Migration — see world.md#Migration
+      - Apply
+        - rule apply <id>
+        - --dry-run — plan without applying
+        - Executes expand to align to contract to pin
+        - Migration — see world.md#Migration
+      - Validate
+        - rule validate [target]
+        - Unified syntax and acyclic verification
+        - Includes plugin schema validation
+        - Envelope — see #CLI-surface
+      - Ergonomic alias
+        - capcli apply — alias
+        - rule apply schema — alias target
+        - Alias resolves before handler gate
+        - Aliases — see #Run-noun
+    - Doc noun <!-- ref-by: assembly.md -->
+      - Reading
+        - doc read <ptr> [--max-tokens 100]
+        - Resolves any doc:// URP
+        - Specs and prompt campaigns identical
+        - Shape — see routines.md#Shape-constraints
+      - Outline
+        - doc outline <ptr>
+        - Returns section index
+        - Envelope — see #CLI-surface
+        - Selection — see #Leaf-selection
+      - Leaf selection
+        - Fragment #<node> selects one node
+        - Token cage ceilings apply
+        - Ceilings — see #Token-cage-ceilings
+        - Shape — see routines.md#Shape-constraints
+      - Token cage ceilings
+        - L1 trailer capped at 30 tokens
+        - L2 envelope capped at 150 tokens
+        - L3 leaf capped at 500 tokens
+        - Breach aborts with exit 3
+        - Config — see artifacts/cicd.yaml
+      - Campaign envelope
+        - inspect doc://prompts/<campaign>
+        - Returns vars, sections, caps
+        - Body withheld
+        - Envelope — see #CLI-surface
+      - Single reading surface
+        - No prompt noun exists
+        - Prompt campaigns read via doc read
+        - Unified grammar for doc pointers
+        - Aliases — see #Run-noun
+    - Pack noun
+      - New pack
+        - pack new <name> --type routine|world
+        - Scaffolds capcli-pack.yaml
+        - Envelope — see #CLI-surface
+        - Packs — see marketplace.md#Packs
+      - Bundle
+        - pack bundle <dir>
+        - --out bundle.cap — output path
+        - Freezes blueprint into bundle
+        - Packs — see marketplace.md#Packs
+      - Sync index
+        - pack sync
+        - refreshes registry index
+        - Envelope — see #CLI-surface
+        - Command surface — see marketplace.md#Pack-command-surface
+      - Import
+        - pack import <urp>
+        - pack import <url>
+        - pack import <file>
+        - --sha256 flag for direct URL
+        - Channels — see marketplace.md#Distribution-channels
+      - Scaffold
+        - pack scaffold <urp> <target>
+        - -p flag for typed params
+        - Hydrates draft into routines/ or envs/
+        - Packs — see marketplace.md#Packs
+    - Plugin-provided nouns
+      - Pack nouns
+        - api — api-gateway pack
+          - Verbs — import, sync, record, prove, ship
+          - Verbs — catalog, drift, stats, rollback, retire
+          - Flags — sync --interval <duration>
+          - Flags — catalog --state <status>
+        - bind — scheduler pack
+          - Verbs — cron, webhook
+          - Verbs — endpoint, federation
+          - Verbs — list, inspect
+          - Verbs — pause, resume, remove, keys
+        - ping — notify pack (notify, ask, list, resolve, expire)
+        - serve — http-server pack (start, stop, restart, status, export)
+        - storage — storage pack (put, get, url, list, remove)
+        - ws — federation pack (peers, dial, status, cassettes)
+      - Mechanics
+        - Registered at install via cli.surface manifest
+        - Removed at uninstall
+        - Full resolution — see plugins.md#CLI-projection
+        - Pack taxonomy — see marketplace.md#Pack-taxonomy
+      - Collision behavior
+        - First-install wins the noun
+        - Later plugin auto-scopes
+        - Auto-scope — capcli plugin <id> <verb>
+        - Never a hard install failure
+        - Rules — see plugins.md#CLI-projection
+      - Discovery
+        - plugin list --nouns shows owners
+        - plugin inspect <id> shows noun
+        - help stub lists kernel nouns only
+        - Full noun list via plugin list
+      - Muscle memory preservation
+        - capcli api sync works after install
+        - capcli bind cron works after install
+        - capcli ping notify works after install
+        - Zero user migration required
+  - Universal flags <!-- ref-by: marketplace.md -->
     - Global flags
       - --json — machine-readable output
       - --as <principal> — semantic home identity.md
@@ -506,11 +539,12 @@
       - --lock <ref> — exclusive claim lease
       - --tier-waiver — semantic home sandbox.md
       - Waiver mechanics — see sandbox.md#Platform-tiers
+      - Claims — see world.md#Claims-lease
     - Network transports
       - --workspace accepts remote endpoint
       - Example — tcp://100.64.0.1:4040
       - Overrides workspace env var — see identity.md#Environment-variables
-      - Config — see artifacts/policy.yaml#network.transports
+      - Config — see artifacts/policy.yaml
       - Socket endpoints are not URPs
       - Definition — see marketplace.md#Registry
       - Distribution — see marketplace.md#Distribution-channels
@@ -518,24 +552,30 @@
       - budget_status block in PreflightEnvelope
       - Field shapes — see governance.md#Cascade
       - Refusal rendering — see kernel.md#Diagnostic-output-law
+      - PreflightEnvelope — see #PreflightEnvelope
     - Flag ceiling
       - Thirteen universal flags frozen
       - Per-verb params grow independently
       - Never a fourteenth universal flag
       - Reference — see #CLI-surface
-  - Refusals and banned operations
+  - Refusals and banned operations <!-- ref-by: governance.md -->
     - Matrix denials
-      - Environment and trust and platform pre-flight
+      - Environment pre-flight
+      - trust pre-flight
+      - platform pre-flight
       - Exit 2 with domain policy.trust or platform
       - Matrix — see governance.md#Weakest-link-matrix
     - SSOT enforcement
       - Config mutations require git commits
       - Direct config set denied exit 3
       - Proposals — see world.md#Configuration-proposals
+      - Approval sync — see #Background-git-sync
     - Raw DDL via sql
-      - ALTER, DROP, CREATE outside migration denied
+      - ALTER outside migration denied
+      - DROP outside migration denied
+      - CREATE outside migration denied
       - Exit 2 with domain policy.authorizer
-      - Raw SQL — see kernel.md#Raw-SQL-rules
+      - Raw SQL — see kernel.md#SQL-layers
     - Banned bypass flags
       - --force rejected at parser exit 3
       - --override-budget rejected
@@ -562,7 +602,7 @@
       - Recovery mode names canonical paths
       - Alias never bypasses authorization
       - Definition — see world.md#Ledger-re-initialization
-  - Client RPC contract
+  - Client RPC contract <!-- ref-by: governance.md, identity.md -->
     - Instantiation
       - Entry — packages/pwa/src/client.ts
       - createClient({ endpoint, token, brand })
@@ -606,7 +646,7 @@
       - diagnostic — machine-readable remedy
       - audit_op — operation id for trace
       - Diagnostic — see kernel.md#Diagnostic-output-law
-  - Administrative Cockpit PWA
+  - Administrative Cockpit PWA <!-- ref-by: assembly.md, egress.md -->
     - Architecture
       - Embedded static bundle in daemon
       - Served at 127.0.0.1:4040
@@ -653,30 +693,31 @@
       - Layer 6 — Promotion and Approvals
       - Layer 7 — Human Interaction (Ask)
       - Layer 8 — Vault and Biometrics
-    - Federation surfaces
-      - Peer roster with transport and health
-      - Catalog entries for ws:// routines
-      - Trace stitching across workspaces
-      - Delegated budget display
-      - Federation — see plugins.md#Federation-transport
-    - Plugin surfaces
-      - Noun registry viewer
-      - Ctx namespace registry viewer
-      - Schema extension viewer
-      - Generation lease status
-      - Registration — see plugins.md#CLI-noun-registration
-    - Interaction primitives
-      - Inspect — drill DAG to manifest
-      - Authorize — sign promotion or ask
-      - Inject — input secrets to vault
-      - Rollback — snapshot restore dual confirm
-    - Interaction patterns
-      - Browse — read-only drill-down
-      - Approve — gate with evidence inspection
-      - Answer — resolve ask cards
-      - Recover — trigger snapshot restore
-      - Observe — monitor streaming events
-  - Onboarding
+    - Interaction surfaces
+      - Federation surfaces
+        - Peer roster with transport and health
+        - Catalog entries for ws:// routines
+        - Trace stitching across workspaces
+        - Delegated budget display
+        - Federation — see plugins.md#Federation-transport
+      - Plugin surfaces
+        - Noun registry viewer
+        - Ctx namespace registry viewer
+        - Schema extension viewer
+        - Generation lease status
+        - Registration — see plugins.md#CLI-projection
+      - Interaction primitives
+        - Inspect — drill DAG to manifest
+        - Authorize — sign promotion or ask
+        - Inject — input secrets to vault
+        - Rollback — snapshot restore dual confirm
+      - Interaction patterns
+        - Browse — read-only drill-down
+        - Approve — gate with evidence inspection
+        - Answer — resolve ask cards
+        - Recover — trigger snapshot restore
+        - Observe — monitor streaming events
+  - Onboarding <!-- ref-by: assembly.md -->
     - Architecture
       - Intent declaration precedes scaffolding
       - Harness drafts, kernel gates, human approves
@@ -699,6 +740,5 @@
       - No synthetic onboarding events
       - No direct prod writes during onboarding
       - Integrity — see effect.md#Event-integrity
-    - Receipt
-      - Produced via sys doctor --report
-      - Provenance — see effect.md#Trust-receipt
+    - Produced via sys doctor --report
+    - Provenance — see effect.md#Trust-receipt

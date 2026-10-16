@@ -1,383 +1,393 @@
 - Lifecycle
-<!-- ref-by: governance.md, world.md, interface.md -->
-  - Environments
-    - World definitions
-      - dev environment
-        - Purpose — birthplace for authoring
-        - Live risk — none
-        - Matrix — see governance.md#Weakest-link-matrix
-        - Worktree — see #Worktree-convention
-      - sim environment
-        - Purpose — proving ground for prod candidates
-        - Data — seeded from prod, masked
-        - Live risk — none
-        - Draft prove exception — see governance.md#Weakest-link-matrix
-        - Matrix — see governance.md#Weakest-link-matrix
-      - prod environment
-        - Purpose — live operational destination
-        - Live risk — real business state
-        - Matrix — see governance.md#Weakest-link-matrix
-        - Protection — see #Prod-protection
-    - Orthogonality
-      - Environment bounds data substrate
-      - Trust rung bounds capability blast
-      - Neither axis implies the other
-      - Combined matrix governs permission
-    - Namespace boundary
-      - Path — capcli/envs/<name>/
-      - Isolated directory per environment
-      - Each holds own workspace.db and audit.db
-      - Substrate isolated, uncommitted locally
-      - Definition — see world.md#SQLite-as-SSOT
-    - Worktree convention
-      - Environment worktree branch carries envs/<name>
-      - Congruent with directory namespace
-      - Merges travel via manifest promotion
-      - Definition — see governance.md#Promotion-gates
-    - Filesystem mandate
-      - POSIX locking compliance required
-      - Non-compliant filesystems refused
-      - Definition — see sandbox.md#Platform-tiers
-    - Prod protection
-      - Operations need cryptographic challenge
-      - git push --dry-run gate precedes any prod merge
-      - Merge scope — declarative schemas, routines, bundles only
-      - WebAuthn or Passkey accepted
-      - GPG or SSH key accepted
-      - CLI flag bypass rejected exit 3
-      - Definition — see interface.md#CLI-surface
-    - Backup mandate
-      - Git and object push required on mutation
-      - Push is best-effort, warning on failure
-      - Pending state reconciles next push
-      - Definition — see world.md#Snapshots
-    - Capacity limits
-      - Max 5 concurrent environments
-      - prod, dev, sim, plus 2 experiments
-      - Ceiling — see artifacts/governance.yaml
-    - Environment command surface
-      - env new <name> [--seed prod]
-      - env use <name> — activate sticky context
-      - env list, inspect, doctor — audit views
-      - env merge <name> [target=prod]
-      - Rehearsal cycle — env use sim → run → sys audit tail → env use prod
-      - env remove <name> — deprovision
-      - Envelope shape — see interface.md#CLI-surface
-  - Primitive scoping
-    - Event identity
-      - Leaf events stamped with environment
-      - Leaf events stamped with stage
-      - Sim and prod events distinct namespaces
-      - Denial logging records world context
-      - Definition — see effect.md#Event-anatomy
-    - Idempotency boundaries
-      - Key = f(routine_version, params, environment)
-      - Cross-environment key sharing denied
-      - Sim replay cannot collide with prod keys
-      - Scope enforced at kernel
-      - Definition — see identity.md#Concurrency
-    - Quota isolation
-      - _api_quota tracks usage per environment
-      - Sim rehearsals consume sim quota only
-      - Prod quota untouched by sim
-      - Exhaustion denies at target gate
-      - Definition — see egress.md#Quotas
-    - Composition propagation
-      - Child constraints propagate up call stack
-      - Sim gaps bubble to root preflight
-      - Prod-only children route to sim mocks
-      - Mock schema-validated against upstream
-      - Definition — see #Sim-mode-taxonomy
-    - Data isolation
-      - workspace.db per environment partition
-      - audit.db per environment partition
-      - Cross-environment file access denied
-      - Definition — see world.md#SQLite-as-SSOT
-    - Configuration isolation
-      - policy.yaml resolves per environment
-      - governance.yaml resolves per environment
-      - apis/<provider>.sim.yaml overlays in sim
-      - Definition — see world.md#Configuration-proposals
-  - Masking
-    - Fork rule
-      - sim_seed_masking — enforce
-      - Config — see artifacts/governance.yaml#env
-      - Applies on prod-to-sim seed
-      - Never bypassed for dev
-    - Redaction
-      - mask=true columns populated with synthetic
-      - Format-Preserving Anonymization
-      - Type validity preserved
-      - Emails become anon_*@sim.local
-      - Raw unicode blocks banned in data files
-    - Column flags
-      - mask=true on text columns
-      - mask=true on json columns
-      - Other types rejected at compile
-      - Canonical constraint — see world.md#Dual-schema
-    - Data flow
-      - Live prod rows read once at seed
-      - Synthetic generated per column
-      - Written to sim workspace.db
-      - Original never copied to sim
-    - Verification
-      - env inspect flags unmasked leakage
-      - Any leak aborts seed
-      - Exit 3 with domain policy.masking
-      - Envelope shape — see interface.md#CLI-surface
-    - Sensible tag
-      - sens: true marks table for masking
-      - Combined with mask=true for columns
-      - Both enforced during seed
-      - Canonical definition — see world.md#Dual-schema
-  - Sim mode taxonomy
-    - sandbox mode
-      - HTTP routes to provider test endpoint
-      - Overlay swaps base_url
-      - Real wire traffic, sandboxed target
-      - Config — see artifacts/governance.yaml#api
-    - mock mode
-      - Kernel replays verified HTTP exchange
-      - Fixtures — apis/<provider>.cassette.jsonl
-      - Unrecorded endpoints fail closed
-      - Exit 2 with domain api.upstream
-    - federated mock
-      - ws:// calls auto-replay recorded responses
-      - Fixtures — federation/cassettes/*.jsonl
-      - When peer socket absent or sim
-      - Definition — see plugins.md#Federation-transport
-    - dry-run mode
-      - Parameters and policy check
-      - Returns simulated: true
-      - Zero wire traffic
-      - Envelope shape — see interface.md#CLI-surface
-    - skip mode
-      - Excluded from execution
-      - Omitted from fingerprint
-      - Does not count against manifest match
-      - Definition — see routines.md#Manifests-and-fingerprints
-    - prod-only mode
-      - Execution routes to schema-validated mock
-      - Physical egress denied outside prod
-      - Mock schema matches upstream contract
-      - Exit 2 if no mock fixture
-    - Mode selection
-      - Declared per plugin verb in manifest
-      - Override via environment overlay
-      - Config — see artifacts/governance.yaml#api
-      - Manifest — see plugins.md#Manifest
-    - Historical replay
-      - Command — sys audit replay --from prod --since 7d
-      - DB ops — deterministic re-execution
-      - External ops — human confirmation required
-      - Definition — see effect.md#Replay-invariants
-  - Serve lifecycle
-    - Canonical home — see plugins.md#Serve-lifecycle
-    - Daemon process — see assembly.md#Daemon-binary
-    - Policy parity — see kernel.md#Unified-3-phase-engine
-    - Audit trail — see effect.md#Kernel-event-payloads
-    - Governance — see plugins.md#Endpoint-governance
-    - No duplication here; all mechanics in plugins.md
-  - Drift
-    - Manifest drift
-      - Runtime fingerprint differs from manifest
-      - Kernel detects during Phase 3
-      - Emits governance.anomaly event
-      - Blocks auto-promotion
-      - Canonical home — see routines.md#Manifests-and-fingerprints
-    - Environment drift
-      - env doctor checks unmerged routines
-      - env inspect flags schema drift
-      - Data staleness threshold 14 days
-      - Staleness triggers re-seed nag
-      - Envelope shape — see interface.md#CLI-surface
-    - Deprovisioning
-      - env remove needs cryptographic auth
-      - Definition — see #Prod-protection
-      - Pending-push reconciles first
-      - Definition — see world.md#Snapshots
-    - Spec drift
-      - Provider spec_hash change demotes rung
-      - Mock drift demotion applies
-      - Applies to API verbs only
-      - Canonical rule — see governance.md#The-ladder
-    - Schema drift
-      - Un-migrated schema aborts boot
-      - system_schema hash mismatch exits 3
-      - Definition — see world.md#Pre-flight-sub-checks
-    - Drift detection surface
-      - env inspect — full report
-      - sys doctor — boot drift check
-      - Envelope shape — see interface.md#CLI-surface
-  - Stage map
-    - Lifecycle pipeline
-      - draft — filesystem authoring, ungated
-      - prove — static and simulated validation
-      - ship — trust rung elevation via gates
-      - live — authorized production execution
-      - monitor — passive metrics observation
-      - subtraction — sweep, rollback, retire
-    - Rung framing
-      - Rungs govern trust, not engine stages
-      - Ladder semantics — see governance.md#Trust-ladder
-      - Monotonic ascent — see governance.md#Ladder-laws
-      - Runtime engine — see kernel.md#Unified-3-phase-engine
-    - Runtime engine
-      - Every invocation runs 3-phase engine
-      - Pre-flight, Sandbox, Commit
-      - Definition — see kernel.md#Unified-3-phase-engine
-    - Enforcement gates
-      - register — namespace and rate validation
-      - prove — shape and invariant verification
-      - runtime — ops, timeout, drift checks
-      - monitor — dead and failing thresholds
-      - sweep — dedup and consolidation proposals
-    - Gate asymmetry
-      - Creation free in harness filesystem
-      - Registration gated by kernel rules
-      - Execution gated per call by policy
-      - Subtraction is automatic for decay
-  - Stage details
-    - draft stage
-      - Authoring claim
-        - File lock on routines/<name>.py
-        - Concurrent edits exit 2
-        - Lock held for duration
+  - Environment substrate
+    - Environments <!-- ref-by: assembly.md, egress.md, governance.md, interface.md, marketplace.md, sandbox.md, world.md -->
+      - World definitions
+        - dev environment
+          - Purpose — birthplace for authoring
+          - Live risk — none
+          - Matrix — see governance.md#Weakest-link-matrix
+          - Worktree — see #Worktree-convention
+        - sim environment
+          - Purpose — proving ground for prod candidates
+          - Data — seeded from prod, masked
+          - Live risk — none
+          - Draft prove exception — see governance.md#Weakest-link-matrix
+          - Matrix — see governance.md#Weakest-link-matrix
+        - prod environment
+          - Purpose — live operational destination
+          - Live risk — real business state
+          - Matrix — see governance.md#Weakest-link-matrix
+          - Protection — see #Prod-protection
+        - experiment environment — ephemeral slot beyond the standard three
+      - Orthogonality
+        - Environment bounds data substrate
+        - Trust rung bounds capability blast
+        - Neither axis implies the other
+        - Combined matrix governs permission
+      - Namespace boundary <!-- ref-by: interface.md -->
+        - Path — capcli/envs/<name>/
+        - Isolated directory per environment
+        - Each holds own workspace.db and audit.db
+        - Substrate isolated, uncommitted locally
+        - Filesystem mandate — POSIX locking compliance required; non-compliant refused
+        - Platform tiers — see sandbox.md#Platform-tiers
+        - Definition — see world.md#SQLite-as-SSOT
+      - Worktree convention
+        - Environment worktree branch carries envs/<name>
+        - Congruent with directory namespace
+        - Merges travel via manifest promotion
+        - Definition — see governance.md#Promotion-gates
+      - Prod protection
+        - Operations need cryptographic challenge
+        - git push --dry-run gate precedes any prod merge
+        - Merge scope — declarative schemas, routines, bundles only
+        - WebAuthn or Passkey accepted
+        - GPG or SSH key accepted
+        - CLI flag bypass rejected exit 3
+        - Definition — see interface.md#CLI-surface
+      - Backup mandate
+        - Git and object push required on mutation
+        - Push is best-effort, warning on failure
+        - Pending state reconciles next push
+        - Definition — see world.md#Snapshots
+      - Capacity limits
+        - Max 5 concurrent environments
+        - Standard environments — prod, dev, sim
+        - Experiment slots — 2 beyond standard
+        - Ceiling — see artifacts/governance.yaml
+      - Environment command surface
+        - env new <name> [--seed prod]
+        - env use <name> — activate sticky context
+        - env list, inspect, doctor — audit views
+        - env merge <name> [target=prod]
+        - Rehearsal cycle — env use sim → run → sys audit tail → env use prod
+        - env remove <name> — deprovision
         - Envelope shape — see interface.md#CLI-surface
-      - Scaffolding
-        - Direct creation in routines/
-        - Or pack scaffold pack://routine/<name>
-        - Definition — see marketplace.md#Packs
-      - Near-duplicate scan
-        - Levenshtein distance similarity
-        - Threshold 0.85 triggers warning
-        - Justification via --reason mandatory
-        - Config — see artifacts/governance.yaml#maintenance
-    - prove stage
-      - Command
-        - capcli routine prove <name>
-        - Optional params and environment
-        - Default environment — sim
-      - Verification checks
-        - Sandbox rules trap subprocess and os
-        - Param schemas validated
-        - Policy reachability verified
-        - Shape limits enforced
-        - Definition — see routines.md#Shape-constraints
-      - Manifest proof
-        - cost_class saved with version
-        - Partial match reports fractional
-        - Fingerprint comparison static vs dynamic
+    - Primitive scoping <!-- ref-by: identity.md -->
+      - Event identity
+        - Leaf events stamped with environment
+        - Leaf events stamped with stage
+        - Sim and prod events distinct namespaces
+        - Denial logging records world context
+        - Definition — see effect.md#Event-anatomy
+      - Idempotency boundaries
+        - Key = f(routine_version, params, environment)
+        - Cross-environment key sharing denied
+        - Sim replay cannot collide with prod keys
+        - Scope enforced at kernel
+        - Definition — see identity.md#Concurrency
+      - Quota isolation
+        - _api_quota tracks usage per environment
+        - Sim rehearsals consume sim quota only
+        - Prod quota untouched by sim
+        - Exhaustion denies at target gate
+        - Definition — see egress.md#Quotas
+      - Composition propagation
+        - Child constraints propagate up call stack
+        - Sim gaps bubble to root preflight
+        - Prod-only children route to sim mocks
+        - Mock schema-validated against upstream
+        - Definition — see #Sim-mode-taxonomy
+      - Data isolation
+        - workspace.db per environment partition
+        - audit.db per environment partition
+        - Cross-environment file access denied
+        - Definition — see world.md#SQLite-as-SSOT
+      - Configuration isolation
+        - policy.yaml resolves per environment
+        - governance.yaml resolves per environment
+        - apis/<provider>.sim.yaml overlays in sim
+        - Definition — see world.md#Configuration-proposals
+    - Masking <!-- ref-by: governance.md, routines.md -->
+      - Fork rule
+        - sim_seed_masking — enforce
+        - Config — see artifacts/governance.yaml
+        - Applies on prod-to-sim seed
+        - Never bypassed for dev
+      - Redaction
+        - mask=true columns populated with synthetic
+        - Format-Preserving Anonymization
+        - Type validity preserved
+        - Emails become anon_*@sim.local
+        - Raw unicode blocks banned in data files
+      - Column flags
+        - mask=true on text columns
+        - mask=true on json columns
+        - Other types rejected at compile
+        - Canonical constraint — see world.md#Dual-schema
+      - Data flow
+        - Live prod rows read once at seed
+        - Synthetic generated per column
+        - Written to sim workspace.db
+        - Original never copied to sim
+      - Verification
+        - env inspect flags unmasked leakage
+        - Any leak aborts seed
+        - Exit 3 with domain policy.masking
+        - Envelope shape — see interface.md#CLI-surface
+      - Sensible tag
+        - sens: true marks table for masking
+        - Combined with mask=true for columns
+        - Both enforced during seed
+        - Canonical definition — see world.md#Dual-schema
+    - Sim mode taxonomy <!-- ref-by: governance.md -->
+      - sandbox mode
+        - HTTP routes to provider test endpoint
+        - Overlay swaps base_url
+        - Real wire traffic, sandboxed target
+        - Config — see artifacts/governance.yaml
+      - mock mode
+        - Kernel replays verified HTTP exchange
+        - Fixtures — apis/<provider>.cassette.jsonl
+        - Unrecorded endpoints fail closed
+        - Exit 2 with domain api.upstream
+      - federated mock
+        - ws:// calls auto-replay recorded responses
+        - Fixtures — federation/cassettes/*.jsonl
+        - When peer socket absent or sim
+        - Definition — see plugins.md#Federation-transport
+      - dry-run mode
+        - Parameters and policy check
+        - Returns simulated: true
+        - Zero wire traffic
+        - Envelope shape — see interface.md#CLI-surface
+      - skip mode
+        - Excluded from execution
+        - Omitted from fingerprint
+        - Does not count against manifest match
         - Definition — see routines.md#Manifests-and-fingerprints
-      - Trust floor
-        - Prove runs at draft regardless of declaration
-        - Never elevates trust rung
-        - Reference — see governance.md#Promotion-gates
-      - Scope
-        - Validates at authoring time
-        - Simulated execution never enters runtime engine
-        - Real inputs sampled via audit
-    - ship stage
-      - Command
-        - capcli routine ship <name> reviewed
-        - Or ship <name> pinned
-        - Envelope shape — see interface.md#CLI-surface
-      - Authority
-        - Human or tier 1 CI sign-off for pinned
-        - Autonomous for reviewed per criteria
-        - Definition — see governance.md#Promotion-gates
-      - Metric prerequisites
-        - Success rates from routine_stats
-        - Replay pass on masked sim data
-        - Contract proof for external verbs
-      - Production promotion
-        - Automatic on passing fuzz and replay
-        - No manual review queue
-        - Canary veto window applies
-        - Definition — see governance.md#Promotion-gates
-    - live stage
-      - Invocation
-        - Via run, cron, webhook, or ask resume
-        - Rung authorizes the run
-        - Engine governs execution
+      - prod-only mode
+        - Execution routes to schema-validated mock
+        - Physical egress denied outside prod
+        - Mock schema matches upstream contract
+        - Exit 2 if no mock fixture
+      - Mode selection
+        - Declared per plugin verb in manifest
+        - Override via environment overlay
+        - Config — see artifacts/governance.yaml
+        - Manifest — see plugins.md#Manifest
+      - Historical replay
+        - Command — sys audit replay --from prod --since 7d
+        - DB ops — deterministic re-execution
+        - External ops — human confirmation required
+        - Definition — see effect.md#Replay-invariants
+  - Routine pipeline
+    - Stage map <!-- ref-by: marketplace.md, overview.md, world.md -->
+      - Lifecycle pipeline
+        - draft — filesystem authoring, ungated
+        - prove — static and simulated validation
+        - ship — trust rung elevation via gates
+        - live — authorized production execution
+        - monitor — passive metrics observation
+        - subtraction — sweep, rollback, retire
+      - Rung framing
+        - Rungs govern trust, not engine stages
+        - Ladder semantics — see governance.md#Trust-ladder
+        - Monotonic ascent — see governance.md#Ladder-laws
+        - Runtime engine — see kernel.md#Unified-3-phase-engine
+      - Runtime engine
+        - Every invocation runs 3-phase engine
+        - Pre-flight
+        - Sandbox
+        - Commit
         - Definition — see kernel.md#Unified-3-phase-engine
-      - Budget frames
-        - Each call pushes a budget frame
-        - Plugin verbs declare fuel
-        - Frames — see governance.md#Budget-frames
-      - Drift monitoring
+      - Enforcement gates
+        - register — namespace and rate validation
+        - prove — shape and invariant verification
+        - runtime — ops, timeout, drift checks
+        - monitor — dead and failing thresholds
+        - sweep — dedup and consolidation proposals
+      - Gate asymmetry
+        - Creation free in harness filesystem
+        - Registration gated by kernel rules
+        - Execution gated per call by policy
+        - Subtraction is automatic for decay
+    - Stage details <!-- ref-by: interface.md -->
+      - draft stage
+        - Authoring claim
+          - File lock on routines/<name>.py
+          - Concurrent edits exit 2
+          - Lock held for duration
+          - Envelope shape — see interface.md#CLI-surface
+        - Scaffolding
+          - Direct creation in routines/
+          - Scaffold command — pack scaffold
+          - Pack address — pack://routine/<name>
+          - Definition — see marketplace.md#Packs
+        - Near-duplicate scan
+          - Levenshtein distance similarity
+          - Threshold 0.85 triggers warning
+          - Justification via --reason mandatory
+          - Config — see artifacts/governance.yaml
+      - prove stage <!-- ref-by: marketplace.md -->
+        - Command
+          - capcli routine prove <name>
+          - Optional params
+          - Optional environment
+          - Default environment — sim
+        - Verification checks
+          - Sandbox rules trap subprocess and os
+          - Param schemas validated
+          - Policy reachability verified
+          - Shape limits enforced
+          - Definition — see routines.md#Shape-constraints
+        - Manifest proof
+          - cost_class saved with version
+          - Partial match reports fractional
+          - Fingerprint comparison static vs dynamic
+          - Definition — see routines.md#Manifests-and-fingerprints
+        - Trust floor
+          - Prove runs at draft
+          - Declared rung — ignored by prove
+          - Never elevates trust rung
+          - Reference — see governance.md#Promotion-gates
+        - Scope
+          - Validates at authoring time
+          - Simulated execution never enters runtime engine
+          - Real inputs — sampled for simulation
+          - Sampling source — audit
+      - ship stage
+        - Command
+          - Base — capcli routine ship <name>
+          - Reviewed rung — ship <name> reviewed
+          - Pinned rung — ship <name> pinned
+          - Envelope shape — see interface.md#CLI-surface
+        - Authority
+          - Human sign-off — pinned promotion
+          - Tier 1 CI sign-off — pinned promotion
+          - Autonomous for reviewed per criteria
+          - Definition — see governance.md#Promotion-gates
+        - Metric prerequisites
+          - Success rates from routine_stats
+          - Replay — pass on masked sim data
+          - Sim data — masked
+          - Contract proof for external verbs
+        - Production promotion
+          - Automatic on passing fuzz and replay
+          - No manual review queue
+          - Canary veto window applies
+          - Definition — see governance.md#Promotion-gates
+      - live stage
+        - Invocation
+          - Via run, cron, webhook, or ask resume
+          - Rung authorizes the run
+          - Engine governs execution
+          - Definition — see kernel.md#Unified-3-phase-engine
+        - Budget frames
+          - Each call pushes a budget frame
+          - Plugin verbs declare fuel
+          - Fuel accounting — see governance.md#Fuel-formula
+          - Frames — see governance.md#Budget-frames
         - Runtime fingerprint vs manifest continuous
         - Definition — see #Drift
-    - auto-promotion path
-      - Qualifying low-risk routines
-      - Promotion conjunction holds
-      - Definition — see governance.md#Auto-promotion
-      - Emits routine.auto_promoted event
-      - Canary veto window applies
-      - Definition — see governance.md#Promotion-gates
-    - promotion queue
-      - Enqueue — routine ship <name> reviewed --queue
-      - Inspection — routine pending
-      - Batch approval via single audit event
-      - Expiration SLA — queue age over 48h
-      - Breach emits promotion.sla_breached
-      - Envelope shape — see interface.md#CLI-surface
-    - plugin-pack-stage
-      - Kernel pack install enters at reviewed
-      - Application pack install enters at draft
-      - Community pack install enters at draft
-      - Taxonomy — see plugins.md#Pack-taxonomy
-      - Trust — see governance.md#Promotion-gates
-      - Stage detail pointers
-        - Draft — file lock, scaffolding, near-dup scan
-        - Prove — shape, sandbox, manifest, trust floor
-        - Ship — authority, metrics, production promotion
-        - Live — invocation, budget frames, drift, auto-promotion
-        - Full gates — see governance.md#Promotion-gates
-        - Commands — see interface.md#Routine-noun
-        - Shapes — see routines.md#Shape-constraints
-        - Manifests — see routines.md#Manifests-and-fingerprints
-        - Queue — see governance.md#Promotion-gates
-  - Decay
-    - Decay thresholds
-      - Inactivity — unused for 30 days
-      - Failure rate over 0.30 in 20 runs
-      - Structural rot — dropped tables
-      - Deprecated APIs — spec removal
-      - Definition — see #Circuit-breaker
-    - Circuit breaker
-      - Trigger — see governance.md#Promotion-gates
-      - Demotes pinned to reviewed, one rung
-      - Suspends active crons
-      - Alerts Cockpit PWA
-    - Version retention
-      - Window — see artifacts/governance.yaml#routine_shape
-      - Rollback reaches any version in window
-      - No separate depth bound
-      - Definition — see #Versioning
-    - Structural rot
-      - Dropped tables force quarantine
-      - Deprecated API forces quarantine
-      - Quarantine uncallable until renewed
-      - Envelope shape — see interface.md#CLI-surface
-    - Subtraction pipeline
-      - active → candidate → quarantined → retired
-      - Sweep command — routine sweep --since 30d
-      - Rollback — routine rollback <name>
-      - Retire — routine retire <name>
-      - Envelope shape — see interface.md#CLI-surface
-    - Dependency protection
-      - Routine dependency graph blocks retirement
-      - Active dependencies refuse retire
-      - Exit 2 with domain policy.dependency
-      - Definition — see plugins.md#Composition
-    - Retirement semantics
-      - Routine becomes uncallable
-      - Historical provenance preserved
-      - Rollback un-retires via pointer reinstatement
-      - DAG retains retired pointers
-      - Definition — see effect.md#Causal-DAG
-  - Learning loop
+        - Trust rung — see governance.md#Trust-ladder
+      - auto-promotion path
+        - Qualifying low-risk routines
+        - Promotion conjunction holds
+        - Definition — see governance.md#Auto-promotion
+        - Emits routine.auto_promoted event
+        - Canary veto window applies
+        - Definition — see governance.md#Promotion-gates
+      - promotion queue
+        - Enqueue — routine ship <name> reviewed --queue
+        - Inspection — routine pending
+        - Batch approval via single audit event
+        - Expiration SLA — queue age over 48h
+        - Breach emits promotion.sla_breached
+        - Envelope shape — see interface.md#CLI-surface
+      - plugin-pack-stage
+        - Kernel pack install enters at reviewed
+        - Application pack install enters at draft
+        - Community pack install enters at draft
+        - Taxonomy — see marketplace.md#Pack-taxonomy
+        - Trust — see governance.md#Promotion-gates
+        - Stage detail pointers
+          - Draft — file lock, scaffolding, near-dup scan
+          - Prove — shape, sandbox, manifest, trust floor
+          - Ship — authority, metrics, production promotion
+          - Live — invocation, budget frames, drift, auto-promotion
+          - Full gates — see governance.md#Promotion-gates
+          - Commands — see interface.md#Routine-noun
+          - Shapes — see routines.md#Shape-constraints
+          - Manifests — see routines.md#Manifests-and-fingerprints
+          - Queue — see governance.md#Promotion-gates
+    - Serve lifecycle
+      - Canonical home — see plugins.md#Serve-lifecycle
+      - Daemon process — see assembly.md#Daemon-binary
+      - Policy parity — see kernel.md#Unified-3-phase-engine
+      - Audit trail — see effect.md#Kernel-event-payloads
+      - Governance — see plugins.md#Endpoint-governance
+      - No duplication here; all mechanics in plugins.md
+    - Drift <!-- ref-by: interface.md, overview.md -->
+      - Manifest drift
+        - Runtime fingerprint differs from manifest
+        - Kernel detects during Phase 3
+        - Emits governance.anomaly event
+        - Blocks auto-promotion
+        - Canonical home — see routines.md#Manifests-and-fingerprints
+      - Environment drift
+        - env inspect flags schema drift
+        - Data staleness threshold 14 days
+        - Staleness triggers re-seed nag
+        - Envelope shape — see interface.md#CLI-surface
+      - Deprovisioning
+        - env remove needs cryptographic auth
+        - Definition — see #Prod-protection
+        - Pending-push reconciles first
+        - Definition — see world.md#Snapshots
+      - Spec and schema drift
+        - Provider spec_hash change demotes rung
+        - Mock drift demotion applies
+        - Applies to API verbs only
+        - Un-migrated schema aborts boot
+        - system_schema hash mismatch exits 3
+        - Canonical rule — see governance.md#Trust-ladder
+        - Definition — see world.md#Pre-flight-sub-checks
+      - Drift detection surface
+        - env inspect — full report
+        - sys doctor — boot drift check
+        - env doctor — unmerged routine check
+        - Envelope shape — see interface.md#CLI-surface
+    - Decay <!-- ref-by: effect.md, governance.md, identity.md, interface.md, marketplace.md, overview.md, routines.md -->
+      - Decay thresholds
+        - Inactivity — unused for 30 days
+        - Failure rate over 0.30 in 20 runs
+        - Structural rot — dropped tables
+        - Deprecated APIs — spec removal
+        - Definition — see #Circuit-breaker
+      - Circuit breaker
+        - Trigger — see governance.md#Promotion-gates
+        - Demotes pinned to reviewed, one rung
+        - Suspends active crons
+        - Alerts Cockpit PWA
+      - Version retention
+        - Window — see artifacts/governance.yaml
+        - Rollback reaches any version in window
+        - No separate depth bound
+        - Definition — see #Versioning
+      - Structural rot
+        - Dropped tables force quarantine
+        - Deprecated API forces quarantine
+        - Quarantine uncallable until renewed
+        - Envelope shape — see interface.md#CLI-surface
+      - Subtraction pipeline
+        - active → candidate → quarantined → retired
+        - Sweep command — routine sweep --since 30d
+        - Rollback — routine rollback <name>
+        - Retire — routine retire <name>
+        - Envelope shape — see interface.md#CLI-surface
+      - Dependency protection
+        - Routine dependency graph blocks retirement
+        - Active dependencies refuse retire
+        - Exit 2 with domain policy.dependency
+        - Definition — see plugins.md#Composition
+      - Retirement semantics <!-- ref-by: overview.md -->
+        - Routine becomes uncallable
+        - Historical provenance preserved
+        - Rollback un-retires via pointer reinstatement
+        - DAG retains retired pointers
+        - Definition — see effect.md#Causal-DAG
+  - Learning loop <!-- ref-by: marketplace.md, overview.md -->
     - Discovery arc
       - Telemetry accumulates from exploratory ops
       - Kernel logs every DB and egress attempt
@@ -413,23 +423,23 @@
       - Text similarity via Levenshtein
       - Fingerprint similarity via leaf sequence
       - Native DFS clusters nearest routines
-      - Config — see artifacts/governance.yaml#maintenance
+      - Config — see artifacts/governance.yaml
     - Merge mechanics
       - Draft — harness generates consolidated code
       - Verification — automated gate tests
       - Approval — autonomous on zero drift
-      - Provenance — consolidated_from preserves origins
       - Definition — see effect.md#Provenance
     - Merge scope
       - Same trust rung only
       - Cross-rung merge denied exit 3
       - Cross-agent merge forces fork
-      - Definition — see governance.md#The-ladder
+      - Definition — see governance.md#Trust-ladder
     - Consolidation audit
       - Emits routine.consolidated event
       - Records source routine hashes
+      - Provenance — consolidated_from preserves origins
       - Definition — see effect.md#Kernel-event-payloads
-  - Schedule
+  - Schedule <!-- ref-by: plugins.md -->
     - Cron governance
       - Active schedule ceiling per environment
       - Minimum interval floor
@@ -437,24 +447,23 @@
       - Catchup max 1 execution per boot
       - Orphan handling binds dissolve with routine
       - Definition — see plugins.md#Capabilities
-      - Config — see artifacts/governance.yaml#schedule
+      - Config — see artifacts/governance.yaml
     - System integrity cadence
       - Audit mirror sync max lag 5 minutes
       - Hash chain audit weekly
       - API catalog sync on schedule
-      - Backup snapshots per governance
-      - Config — see artifacts/governance.yaml#maintenance
+      - Config — see artifacts/governance.yaml
     - Schedule defenses
       - Orphan protection atomic dissolve
       - Restart safety max 1 catchup
       - Webhook ingress capped at 100 events/minute
       - Loopback ingress URL without tunnel denied
       - Webhook payload ceiling 64KB
-      - Dead letter queue
-        - Retains failed events per world.md policy
-        - Canonical home — see world.md#Outbox-inbox
+      - Retains failed events per world.md policy
+      - Canonical home — see world.md#Outbox-inbox
       - Definition — see world.md#Outbox-inbox
-  - Versioning
+    - Snapshot cadence — backup snapshots per governance
+  - Versioning <!-- ref-by: interface.md, marketplace.md, overview.md -->
     - Version record
       - Name — routine or API verb
       - Version — sequential integer
@@ -471,13 +480,16 @@
       - Definition — see effect.md#Provenance
     - Rollback reach
       - Any version inside retention window
-      - Forward-only via revert bundles
+      - Direction — forward-only
+      - Mechanism — revert bundles
       - Definition — see world.md#Migration
     - Provenance stamping
       - Journey recorded on every promotion
-      - Merge lineage via consolidated_from
+      - Merge lineage — tracked
+      - Lineage key — consolidated_from
       - Definition — see effect.md#Provenance
     - Version audit
-      - sys audit query routine_stats
+      - Command — sys audit query
+      - Table — routine_stats
       - Shows versions and outcomes
       - Envelope shape — see interface.md#CLI-surface

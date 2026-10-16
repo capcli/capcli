@@ -1,11 +1,11 @@
 - Kernel
-  - The 5 concerns
+  - The 5 concerns <!-- ref-by: assembly.md, egress.md, governor.md, sandbox.md -->
     - State — see world.md#SQLite-as-SSOT
     - Physics — see #The-4-physical-laws
     - Budget — see governance.md#Fuel-formula
     - Memory — see effect.md#Causal-DAG
     - Isolation — see sandbox.md#Tri-Jail-engine
-  - The 4 physical laws
+  - The 4 physical laws <!-- ref-by: sandbox.md -->
     - Law 1 — database floor
       - Native C sqlite3_set_authorizer intercept
       - AST scanner enforces WHERE and LIMIT bounds
@@ -31,8 +31,8 @@
       - No law overrides another
       - Denial at any law keeps state untouched
       - state_modified: false guaranteed
-  - SQL layers
-    - Layer 1 — C authorizer
+  - SQL layers <!-- ref-by: interface.md, world.md -->
+    - Layer 1 — C authorizer <!-- ref-by: assembly.md, governance.md, identity.md, sandbox.md, world.md -->
       - Engine
         - sqlite3_set_authorizer inside sqlite3_prepare_v2
         - Native Rust closure passed to rusqlite
@@ -59,9 +59,9 @@
         - Access forced through scoped views
         - :principal bind variable mandatory
         - ctx.db.mutate asserts row owner
-      - Remote authorizer proxy
-        - Canonical home — see world.md#Remote-authorizer-proxy
-        - Spoke writes serialize to Hub for eval
+      - Remote authorizer proxy <!-- ref-by: world.md -->
+        - Spoke writes serialize to Hub
+        - Hub evaluates authorizer decision
         - Zero spoke-side authorizer bypass
         - Topology — see sandbox.md#Deployment-topology
       - OCC fence evaluation
@@ -81,7 +81,7 @@
         - Counts B-Tree row mutations
         - Counts VDBE byte-code steps
         - Aborts mid-flight on breach
-      - Caps
+      - Mutation caps
         - Mutated row count per statement
         - Independent of WHERE clause shape
         - Complements AST static bounds
@@ -112,7 +112,7 @@
         - Runs inside Phase 3 arbiter
         - Skipped for named view reads
         - Skipped for structured ctx.db.get
-    - Layer 2 — AST scanner
+    - Layer 2 — AST scanner <!-- ref-by: identity.md, world.md -->
       - Engine
         - sqlparser crate pre-check
         - Runs in Phase 1 pre-flight
@@ -173,7 +173,7 @@
       - Governance cannot alter jail walls
       - Config layers are declarative only
       - Kernel core stays compiled C and Rust
-  - Unified 3-phase engine
+  - Unified 3-phase engine <!-- ref-by: assembly.md, governance.md, identity.md, lifecycle.md, overview.md, plugins.md, routines.md, world.md -->
     - Overview
       - Single execution model for every call
       - capcli run, capcli sql, worker tasks
@@ -204,55 +204,56 @@
       - Layers 1, 1.2, 1.5 — Phase 3
       - Tri-Jail — Phase 2
       - Ledger append — Phase 3
-  - Exit code law
+  - Exit code law <!-- ref-by: assembly.md, effect.md, egress.md, governance.md, governor.md, identity.md, interface.md, marketplace.md, sandbox.md -->
     - Scope
       - Binds every capcli command returning CliEnvelope
       - External tooling defines its own contract
       - Exit codes are machines' lingua franca
       - Never print ambiguous success on failure
-    - exit 0 — success
-      - Single deterministic audit record appended
-      - Upstream HTTP failures handled in envelope
-      - Affordances array present on envelope
-      - state_modified may be true or false
-    - exit 2 — policy denial
-      - Phase 3 policy or governance block
-      - state_modified strictly false
-      - Domains
-        - See effect.md#Denials
-        - Full taxonomy owned there
-        - Anchored per exit, exits 2 through 6
-        - Never restated here
-      - Pre-flight matrix checks fire before dispatch
-      - Denial carries remedy field for agent
-    - exit 3 — static refusal
-      - Phase 1 pre-flight refusal
-      - Token envelope over 2000
-      - AST cycle detected
-      - String interpolation present
-      - Statically-declared unpaginated payload
-      - Missing or invalid intent
-      - Lockfile or schema hash mismatch
-    - exit 4 — guest crash
-      - Phase 2 unhandled runtime exception
-      - Type crash or missing dependency
-      - Transaction cleanly rolled back
-      - Domain routine.runtime
-      - Federation transport unreachable
-    - exit 5 — kernel panic
-      - Sink loss — audit cannot commit
-      - Plaintext credential in guest output
-      - Row-level corruption — see effect.md#Audit-spine
-      - Panic protocol
-        - Session token revoked by kernel
-        - Secret buffers zeroized by kernel
-        - Full protocol — see identity.md#Credential-binding
-        - Secret custody — see egress.md#Vault-storage
-    - exit 6 — proactive yield
-      - Cadence wait over 2s
-      - Upstream 429 with Retry-After
-      - Priority-class preemption floors
-      - Not an error — a checkpoint
+    - Exit codes
+      - exit 0 — success
+        - Single deterministic audit record appended
+        - Upstream HTTP failures handled in envelope
+        - Affordances array present on envelope
+        - state_modified may be true or false
+      - exit 2 — policy denial
+        - Phase 3 policy or governance block
+        - state_modified strictly false
+        - Domains
+          - See effect.md#Denials
+          - Full taxonomy owned there
+          - Anchored per exit, exits 2 through 6
+          - Never restated here
+        - Pre-flight matrix checks fire before dispatch
+        - Denial carries remedy field for agent
+      - exit 3 — static refusal
+        - Phase 1 pre-flight refusal
+        - Token envelope over 2000
+        - AST cycle detected
+        - String interpolation present
+        - Statically-declared unpaginated payload
+        - Missing or invalid intent
+        - Lockfile or schema hash mismatch
+      - exit 4 — guest crash
+        - Phase 2 unhandled runtime exception
+        - Type crash or missing dependency
+        - Transaction cleanly rolled back
+        - Domain routine.runtime
+        - Federation transport unreachable
+      - exit 5 — kernel panic
+        - Sink loss — audit cannot commit
+        - Plaintext credential in guest output
+        - Row-level corruption — see effect.md#Audit-spine
+        - Panic protocol
+          - Session token revoked by kernel
+          - Secret buffers zeroized by kernel
+          - Full protocol — see identity.md#Credential-binding
+          - Secret custody — see egress.md#Vault-storage
+      - exit 6 — proactive yield
+        - Cadence wait over 2s
+        - Upstream 429 with Retry-After
+        - Priority-class preemption floors
+        - Not an error — a checkpoint
     - Full yield protocol — see governor.md#Yield-path
     - Mechanical resumption — see governor.md#Daemon-resumption
     - Proactive yield semantics — see governor.md#Yield-path
@@ -261,7 +262,7 @@
       - Partial commit is a critical kernel bug
       - state_modified asserted on every envelope
       - Envelope is the machine contract
-  - Fail-closed stance
+  - Fail-closed stance <!-- ref-by: assembly.md, governance.md, interface.md, overview.md -->
     - Anchor principle
       - Default: deny
       - Compiled from artifacts/policy.yaml
@@ -278,17 +279,19 @@
       - Missing policy or governance aborts
       - Every boot refusal exits 3
     - Bootstrap safety checks
-      - Clock drift over 500ms emits warning
-      - Internal chain binds CLOCK_MONOTONIC
-      - SQLite sequence IDs bind as fallback
-      - Warning never blocks boot
+      - Clock binding
+        - Clock drift over 500ms emits warning
+        - Internal chain binds CLOCK_MONOTONIC
+        - SQLite sequence IDs bind as fallback
+        - Warning never blocks boot
+      - Intake gates
+        - Pack syntax error aborts intake
+        - py_compile failure exits 3
+        - min_kernel_version mismatch exits 3
+        - policy_version mismatch exits 3
       - Unconfigured git identity auto-fallback
       - Fallback identity — capcli[bot]
       - Or abort with exit 3 if disabled
-      - Pack syntax error aborts intake
-      - py_compile failure exits 3
-      - min_kernel_version mismatch exits 3
-      - policy_version mismatch exits 3
     - Runtime refusals
       - Unparseable SQL denied
       - Anonymous mutating write denied
@@ -308,7 +311,7 @@
       - Read-only SQL only in recovery
       - sys doctor --boot-check verifies without daemon
       - rule validate runs in CI prior to commit
-  - Diagnostic output law
+  - Diagnostic output law <!-- ref-by: assembly.md, effect.md, governance.md, interface.md, plugins.md -->
     - Data contract
       - All commands return CliEnvelope<T>
       - Envelope shape — context, exit_code, state_modified
@@ -351,12 +354,12 @@
       - Absence changes no exit or payload byte
     - Fixture law
       - Screen is a wireframe/v2 fixture JSON
-      - Schema — see artifacts/wireframe/wireframe-structure.md#6.1
+      - Schema — see artifacts/wireframe/wireframe-structure.md
       - Exit code derived from id state segment
       - state_modified derived from exit-0 variant
       - Trailer dispatch — artifacts/prompt/_triggers.json
       - Runner — see assembly.md#Test-architecture
-  - Boundary isolation
+  - Boundary isolation <!-- ref-by: effect.md, egress.md, interface.md, marketplace.md, overview.md -->
     - Perimeter layers
       - Credentials isolation at socket edge
       - Egress allowlist via provider catalog

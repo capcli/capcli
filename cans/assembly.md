@@ -1,5 +1,4 @@
 - Assembly
-<!-- ref-by: overview.md -->
   - Monorepo layout
     - Workspace files
       - Cargo.toml — workspace members and profiles
@@ -47,16 +46,17 @@
       - audit/ — daily JSONL exports
       - storage/ — local blob namespace
     - External runtime paths
+      - Socket directory — /run/capcli/
       - /run/capcli/kernel.sock — daemon IPC
       - /run/capcli/<ws>.sock — federated peer sockets
       - /scratch — tmpfs download sandbox
-  - Rust workspace crates
+  - Rust workspace crates <!-- ref-by: interface.md, sandbox.md -->
     - Crates
       - capcli-types — shared contracts (exit, error, URP, audit, schema, rpc)
       - capcli-core — domain engine (db, parse, compile, budget, audit, vault, plugin)
       - capcli-cli — CLI executable (main, transport, commands, terminal)
-      - capcli-daemon — persistent daemon (server, hub_rpc, ipc, cron, webhook, reaper, yield, registry, assets)
-    - Flow
+      - capcli-daemon — daemon (server, hub_rpc, ipc, cron, webhook, reaper, registry)
+    - Dependency flow
       - types imported by all
       - core imported by cli and daemon
       - daemon spawns cli, never reverse
@@ -67,31 +67,34 @@
       - CLI — see interface.md#CLI-surface
       - Daemon — see interface.md#Administrative-Cockpit-PWA
   - Core subsystems
-    - Domains
+    - Kernel
       - db — connection.rs, authorizer.rs, migrate.rs, bytecode.rs
       - db — snapshot.rs, claims.rs
       - db — see world.md#Claims-lease
+      - sys — audit.rs, mirror.rs, hashchain.rs, witness.rs
+      - sys — doctor.rs, recover.rs
+      - sys — see effect.md#Audit-spine
+      - rule — loader.rs, cycle_check.rs, template_bundle.rs
+      - rule — shorthand.rs, lockfile.rs
+      - rule — see world.md#Pre-flight-sub-checks
+    - Execution
       - routine — runner.rs, jail.rs, shape_gate.rs, saga.rs
       - routine — scaffold.rs, manifest.rs, fingerprint.rs, ipc_socket.rs
       - routine — see routines.md#Procedure-layer
-      - storage — local.rs, s3.rs, signer.rs, metadata.rs
-      - storage — see egress.md#Developer-bridge
       - api — catalog.rs, auth_schemes.rs, projector.rs
       - api — contract_validator.rs, outbox.rs, quota.rs
       - api — header_parser.rs, egress.rs, sim_mock.rs, refresh.rs
       - api — see egress.md#Vault-proxy
+    - Interaction
       - bind — cron.rs, webhook.rs, endpoint.rs, keys.rs
       - bind — see plugins.md#Capabilities
       - ping — notify.rs, ask.rs, timeout.rs
       - ping — see governor.md#Suspension-registry
-      - rule — loader.rs, cycle_check.rs, template_bundle.rs
-      - rule — shorthand.rs, lockfile.rs
-      - rule — see world.md#Pre-flight-sub-checks
       - env — namespace.rs, masking.rs, drift.rs
       - env — see lifecycle.md#Environments
-      - sys — audit.rs, mirror.rs, hashchain.rs, witness.rs
-      - sys — doctor.rs, recover.rs
-      - sys — see effect.md#Audit-spine
+    - Services
+      - storage — local.rs, s3.rs, signer.rs, metadata.rs
+      - storage — see egress.md#Developer-bridge
       - run — registry.rs, search.rs, preflight.rs
       - run — see routines.md#Procedure-layer
       - identity — process.rs, vault.rs, session.rs
@@ -102,6 +105,7 @@
       - All under crates/capcli-core/src/<domain>/
       - Module counts governed by scope
       - No cross-domain imports without core mediation
+      - Scope — see artifacts/governance.yaml
   - Polyglot packages
     - TypeScript runtime (packages/ts)
       - Identity — @capcli/sdk
@@ -115,16 +119,18 @@
     - Python runtime (packages/py)
       - Identity — capcli-py
       - Target >= 3.11
-      - routine.py — @routine decorator
-      - param.py — Param[T] typing
-      - context_db.py — db method wrappers
-      - context_runtime.py — now, uuid, cursor
-      - context_proxy.py — plugin namespace proxy
-      - native_bridge.py — FFI and shared memory
-      - context_api.py, context_quota.py — egress and quota wrappers
-      - context_storage.py, context_ping.py — blob and ask wrappers
-      - cli.py — plugin CLI surface builder
-      - Ctx contract — see routines.md#The-ctx-contract
+      - Authoring surface
+        - routine.py — @routine decorator
+        - param.py — Param[T] typing
+        - cli.py — plugin CLI surface builder
+        - Ctx contract — see routines.md#The-ctx-contract
+      - Context modules
+        - context_db.py — db method wrappers
+        - context_runtime.py — now, uuid, cursor
+        - context_proxy.py — plugin namespace proxy
+        - native_bridge.py — FFI and shared memory
+        - context_api.py, context_quota.py — egress and quota wrappers
+        - context_storage.py, context_ping.py — blob and ask wrappers
     - Distribution
       - npm publish on release tag
       - maturin wheel linking capcli_native.so
@@ -136,7 +142,7 @@
       - Declares manifest and CLI surface
       - Routes egress via capcli binary
       - Definition — see plugins.md#Manifest
-  - Cockpit package
+  - Cockpit package <!-- ref-by: interface.md -->
     - Identity — packages/pwa
     - Purpose — zero-authority admin frontend
     - Build — React 19, Tailwind 4, Vite 6
@@ -155,10 +161,9 @@
       - Read via daemon JSON-RPC only
       - Never embeds secrets
       - Definition — see interface.md#Administrative-Cockpit-PWA
-  - Test architecture
-    - Case binding
-      - Every test cites #[test_case("case_id")]
-      - Index — artifacts/test-plan/manifest.yaml
+  - Test architecture <!-- ref-by: interface.md, kernel.md -->
+    - Every test cites #[test_case("case_id")]
+    - Index — artifacts/test-plan/manifest.yaml
     - Unit tier
       - Location — crates/capcli-core/tests/unit/
       - Count — 11 modules
@@ -176,18 +181,20 @@
       - Cross-platform — Linux, macOS, Windows
       - Definition — see sandbox.md#Tri-Jail-engine
     - End-to-end tier
-      - Location — tests/e2e/
-      - Count — 10 modules
-      - Modules — test_wireframe_fixtures
-      - Modules — test_onboarding_human, test_onboarding_harness
-      - Modules — test_budget_cascade, test_recovery_drill
-      - Modules — test_api_lifecycle, test_env_worktree
-      - Fixture mechanism — see interface.md#Surface-conformance
-      - Fixture runner asserts stdout byte-identical
-      - Fixture runner asserts derived exit and state_modified
-      - Fixture runner asserts banned tokens absent
-      - Cross-layer — every trigger entry resolves to fixture
-      - Runner contract — see artifacts/wireframe/wireframe-structure.md#6.2
+      - Modules
+        - Location — tests/e2e/
+        - Count — 10 modules
+        - Modules — test_wireframe_fixtures
+        - Modules — test_onboarding_human, test_onboarding_harness
+        - Modules — test_budget_cascade, test_recovery_drill
+        - Modules — test_api_lifecycle, test_env_worktree
+      - Fixture law
+        - Fixture mechanism — see interface.md#Surface-conformance
+        - Fixture runner asserts stdout byte-identical
+        - Fixture runner asserts derived exit and state_modified
+        - Fixture runner asserts banned tokens absent
+        - Cross-layer — every trigger entry resolves to fixture
+      - Runner contract — see artifacts/wireframe/wireframe-structure.md
       - Onboarding — see interface.md#Onboarding
     - Fixtures
       - schema.fixture.yaml — test tables
@@ -202,7 +209,7 @@
       - Bundled SQLite and axum linked
       - Zero host npm or node_modules
       - Definition — see kernel.md#Fail-closed-stance
-    - Daemon binary
+    - Daemon binary <!-- ref-by: lifecycle.md -->
       - Target — capcli-daemon
       - Same musl static linkage
       - Embeds Cockpit PWA via rust-embed
@@ -211,17 +218,19 @@
       - packages/py/dist/capcli.whl
       - Links capcli_native.so FFI
       - Definition — see routines.md#Procedure-layer
+      - Maturin build — see #Distribution
     - npm packages
       - @capcli/sdk on npm registry
       - Zero runtime dependencies
       - Definition — see marketplace.md#Publishing
+      - Published on release — see #Distribution
     - Binary composition
       - Static x86_64 and aarch64 musl
       - libc and SQLite bundled
       - No dynamic host library dependency
       - Zero pack bundling in binary
       - CLI renders output procedurally
-  - CICD
+  - CICD <!-- ref-by: marketplace.md -->
     - Monorepo topology
       - Sequencing invariants
         - PWA compiles before daemon crate
@@ -239,7 +248,6 @@
         - FFI bridge before maturin build
         - Astro docs independent of Trinity
         - Order enforced by Cargo dependencies
-    - Workspace graph
       - types foundations
         - serde models for capabilities
         - Exit codes shared integer contract
@@ -255,22 +263,6 @@
         - daemon hosts Cockpit PWA
         - py bridge exposes SQLite FFI
         - Definition — see routines.md#Procedure-layer
-    - Path filtering
-      - PR compute containment
-        - dorny/paths-filter gates execution
-        - Docs-only edits bypass Rust matrix
-        - Cost bounds on GitHub Actions
-        - Config — see artifacts/cicd.yaml#cost_controls
-      - Package boundaries
-        - packages/pwa changes trigger build-pwa
-        - packages/py triggers maturin and pytest
-        - packages/ts triggers bun test
-        - Config — see artifacts/cicd.yaml
-      - Core boundaries
-        - crates changes trigger clippy and tests
-        - artifacts and lock changes trigger Trinity
-        - docs changes trigger Astro build
-        - Config — see artifacts/cicd.yaml#trinity
     - Trinity integrity
       - Wireframe ground truth
         - Golden fixtures define CLI layouts
@@ -297,12 +289,11 @@
       - Doc URI resolution to markdown
       - Anchor slug verification
       - Token estimation via 3.5 char ratio
-      - Config — see artifacts/cicd.yaml#trinity
+      - Config — see artifacts/cicd.yaml
     - Local developer loop
-      - Justfile runner
-        - Local tasks mirror CI PR gate
-        - Inner loop target under 15 seconds
-        - Config — see artifacts/cicd.yaml#sla
+      - Local tasks mirror CI PR gate
+      - Inner loop target under 15 seconds
+      - Config — see artifacts/cicd.yaml
       - Fast targets
         - check — fmt, clippy, trinity, pwa
         - check-trinity — pointer validation
@@ -317,7 +308,7 @@
         - check then validate then docs
         - Fail-closed on any subtask
         - Full run under 45 seconds
-        - Config — see artifacts/cicd.yaml#sla
+        - Config — see artifacts/cicd.yaml
       - Hygiene checks
         - cargo fmt --all --check
         - clippy -D warnings workspace-wide
@@ -342,14 +333,29 @@
       - Workflow — .github/workflows/pr-gate.yml
       - SLA — under 4 minutes, fail-closed
       - Jobs — PWA, Astro, Trinity, Rust, TS, Python
-      - Config — see artifacts/cicd.yaml#sla
+      - Config — see artifacts/cicd.yaml
       - Concurrency — cancel-in-progress per ref
+      - PR compute containment
+        - dorny/paths-filter gates execution
+        - Docs-only edits bypass Rust matrix
+        - Cost bounds on GitHub Actions
+        - Config — see artifacts/cicd.yaml
+      - Package boundaries
+        - packages/pwa changes trigger build-pwa
+        - packages/py triggers maturin and pytest
+        - packages/ts triggers bun test
+        - Config — see artifacts/cicd.yaml
+      - Core boundaries
+        - crates changes trigger clippy and tests
+        - artifacts and lock changes trigger Trinity
+        - docs changes trigger Astro build
+        - Config — see artifacts/cicd.yaml
     - Deep test
       - Workflow — .github/workflows/deep-test.yml
       - Trigger — push to main, SLA under 20 min
       - Matrix — Ubuntu, macOS, Windows
       - Supply chain — cargo-deny, RustSec audit — license policy enforced
-      - Config — see artifacts/cicd.yaml#cost_controls
+      - Config — see artifacts/cicd.yaml
       - Tiers — see sandbox.md#Platform-tiers
     - Release pipeline
       - Workflow — .github/workflows/release.yml

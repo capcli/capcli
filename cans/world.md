@@ -1,67 +1,66 @@
 - World
-<!-- ref-by: routines.md, governor.md, identity.md, lifecycle.md -->
-  - SQLite as SSOT
-    - Storage trinity
-      - workspace.db — domain state source of truth
-      - audit.db — append-only ledger, isolated file
-      - JSONL mirror — cold daily export view
-      - Object store — WORM checkpoint offsite
-      - Flow — workspace → audit → JSONL → object
-    - workspace.db role
-      - Holds domain tables and claims
-      - Holds system tables per schema
-      - WAL mode with concurrent readers
-      - chmod 600 filesystem permission
-      - Path — capcli/envs/<name>/workspace.db
-    - audit.db role
-      - Isolated from workspace.db physically
-      - Append-only _audit ledger
-      - Eliminates WAL checkpoint contention
-      - Definition — see effect.md#Audit-spine
-    - world.sql role
-      - Deterministic DDL and seed dump
-      - Byte-reproducible across instances
-      - Committed to git for schema history
-      - Regenerated on every migration
-    - object snapshots
-      - Binary VACUUM INTO backups
-      - Synced to object store on push
-      - WORM retention offsite
-      - Retention — see #Snapshots
-    - Storage engine substrate
-      - sqlite local — standalone embedded
-      - libsql replica — embedded replica sync
-      - remote refusal — HTTP DB without authorizer
-      - Kernel daemon is sole gateway
-    - Topology modes
-      - local mode — embedded single process
-      - hub mode — persistent daemon, holds live db
-      - spoke-thin — stateless client, delegates to hub
-      - spoke-fat — local compute, proxied DB
-      - spoke-ephemeral — in-memory only, zero disk
-      - replica — read-only cache, writes to hub
-    - Remote topology
-      - Authorizer proxy — see kernel.md#Remote-authorizer-proxy
-      - OCC fence — see governor.md#Suspension-registry
-      - Auth scope — see plugins.md#Socket-authentication
-      - Hub evaluates all spoke writes
-      - Zero spoke-side bypass possible
-      - Disconnect law — socket drop rolls back spoke transaction
-      - Disconnect law — drops holder claims without reaper wait
-    - Writer serialization
-      - Hub serializes physical writes
-      - BEGIN IMMEDIATE across writers
-      - Spokes queue via busy_timeout
-      - Timeout exhaustion exits 2
-    - Lifetime law
+  - SQLite as SSOT <!-- ref-by: assembly.md, identity.md, kernel.md, lifecycle.md -->
+    - Storage
+      - Storage trinity <!-- ref-by: effect.md -->
+        - workspace.db — domain state source of truth
+        - audit.db — append-only ledger, isolated file
+        - JSONL mirror — cold daily export view
+        - Object store — WORM checkpoint offsite
+        - Flow — workspace → audit → JSONL → object
+      - workspace.db role
+        - Holds domain tables and claims
+        - Holds system tables per schema
+        - WAL mode with concurrent readers
+        - chmod 600 filesystem permission
+        - Path — capcli/envs/<name>/workspace.db
+      - audit.db role
+        - Isolated from workspace.db physically
+        - Append-only _audit ledger
+        - Eliminates WAL checkpoint contention
+        - Definition — see effect.md#Audit-spine
+      - world.sql role
+        - Deterministic DDL and seed dump
+        - Byte-reproducible across instances
+        - Committed to git for schema history
+        - Regenerated on every migration
+      - object snapshots
+        - Binary VACUUM INTO backups
+        - Synced to object store on push
+        - WORM retention offsite
+        - Retention — see #Snapshots
+    - Topology
+      - Storage engine substrate
+        - sqlite local — standalone embedded
+        - libsql replica — embedded replica sync
+        - remote refusal — HTTP DB without authorizer
+        - Kernel daemon is sole gateway
+      - Topology modes <!-- ref-by: identity.md, sandbox.md -->
+        - local mode — embedded single process
+        - hub mode — persistent daemon, holds live db
+        - spoke-thin — stateless client, delegates to hub
+        - spoke-fat — local compute, proxied DB
+        - spoke-ephemeral — in-memory only, zero disk
+        - replica — read-only cache, writes to hub
+      - Remote topology
+        - Authorizer proxy — see kernel.md#Remote-authorizer-proxy
+        - OCC fence — see governor.md#Suspension-registry
+        - Auth scope — see plugins.md#Socket-authentication
+        - Hub evaluates all spoke writes
+        - Zero spoke-side bypass possible
+        - Disconnect law — socket drop rolls back spoke transaction
+        - Disconnect law — drops holder claims without reaper wait
+      - Writer serialization <!-- ref-by: identity.md -->
+        - Hub serializes physical writes
+        - BEGIN IMMEDIATE across writers
+        - Spokes queue via busy_timeout
+        - Timeout exhaustion exits 2
+    - Lifetime law <!-- ref-by: governor.md, identity.md -->
       - Write locks held only during commit
       - Never held across agent execution
       - Host SIGKILL rolls back via WAL recovery
       - User-space txn ceiling — 15ms
       - Migration swap ceiling — 20ms
       - Breach exits 2, rollback instant
-      - Egress never inside open txn
-    - Network isolation
       - Zero network calls inside transactions
       - ctx.api.call inside ctx.txn denied
       - Contract — see routines.md#Interior-rules
@@ -85,7 +84,7 @@
       - 5 — physical SQLite commit
       - 6 — asynchronous audit emission
       - Definition — see kernel.md#Unified-3-phase-engine
-  - Dual schema
+  - Dual schema <!-- ref-by: assembly.md, governor.md, identity.md, lifecycle.md, marketplace.md -->
     - File partition
       - Agent file — schema.yaml
       - Kernel file — system-schema.yaml
@@ -94,7 +93,7 @@
     - schema.yaml ownership
       - Authored by agent harness
       - Agent-writable in dev worktree
-      - Limits — see artifacts/governance.yaml#schema.world
+      - Limits — see artifacts/governance.yaml
       - Validated at compile time
     - system-schema.yaml ownership
       - Authored by kernel maintainers only
@@ -129,12 +128,10 @@
         - sys: true — read-only grant for agents
         - imm_rows: true — UPDATE/DELETE denied
         - tenant: true — multi-tenant tag
-      - Index shorthands
-        - idx: [col] — single-column index
-        - idx: [[a, b]] — composite index
-      - Constraint shorthands
-        - chk: — physical SQLite CHECK array
-        - trig: — kernel-compiled trigger
+      - idx: [col] — single-column index
+      - idx: [[a, b]] — composite index
+      - chk: — physical SQLite CHECK array
+      - trig: — kernel-compiled trigger
     - Enforcement split
       - SQLite engine layer
         - Type affinity and constraints
@@ -148,7 +145,7 @@
         - System table write denial on sys
         - Mask flag redaction on read
         - Definitions — see kernel.md#Layer-1-C-authorizer
-    - System schema roster
+    - System schema roster <!-- ref-by: egress.md, governance.md -->
       - Categories
         - Audit — _audit (see effect.md#Audit-spine)
         - Budget — _budget_frames, _api_quota (see governance.md#Budget-frames)
@@ -164,12 +161,12 @@
         - Every table owned by one file
         - Cross-file citation not allowed
         - Definition — see kernel.md#Layer-1-C-authorizer
-    - Plugin schema namespace
+    - Plugin schema namespace <!-- ref-by: marketplace.md -->
       - Prefix — plugin_<id>_
       - Owned by plugin, registered at install
       - Cross-plugin read denied exit 2
       - Registration — see plugins.md#Manifest
-  - Claims lease
+  - Claims lease <!-- ref-by: assembly.md, governor.md, identity.md, interface.md, routines.md -->
     - Lease identity
       - Tuple — (session_id, harness_marker, op_sequence)
       - OS PID binding banned
@@ -211,7 +208,7 @@
       - db unlock <target>
       - db unlock <target> --abandon --reason
       - Envelope shape — see interface.md#CLI-surface
-  - Outbox-inbox
+  - Outbox-inbox <!-- ref-by: governor.md, interface.md, lifecycle.md, routines.md -->
     - Outbox write path
       - ctx.emit(event, payload) writes row
       - Commits inside caller transaction
@@ -239,7 +236,7 @@
       - Positions in _watch_cursors table
       - Transport — see plugins.md#Federation-transport
       - Failures retry with backoff
-    - Inbox lifecycle
+    - Inbox lifecycle <!-- ref-by: governor.md, interface.md -->
       - States — pending, in_flight, completed
       - Crash rolls row to failed
       - Budget exhaustion rolls row to failed
@@ -255,7 +252,7 @@
       - source field — cron, webhook, ping, federation
       - System principal per executing task
       - Definition — see identity.md#Concurrency
-    - Dead letter queue
+    - Dead letter queue <!-- ref-by: governor.md -->
       - FIFO retention order
       - 30-day expiry
       - 1,000-item cap
@@ -265,7 +262,7 @@
       - sys inbox pop reads pending rows
       - Consumption marking TBD
       - Envelope shape — see interface.md#CLI-surface
-  - Migration
+  - Migration <!-- ref-by: interface.md, lifecycle.md, marketplace.md -->
     - Four-phase pipeline
       - 1 — expand additive DDL under 10ms
       - 2 — align user-space routine bounded
@@ -314,7 +311,7 @@
       - System schema edit denied
       - Unmerged cross-environment DDL denied
       - Migration pipeline is sole DDL path
-  - Snapshots
+  - Snapshots <!-- ref-by: effect.md, interface.md, lifecycle.md -->
     - Local point-in-time
       - db.snapshot.rs executes VACUUM INTO
       - Transactionally clean copy under traffic
@@ -330,7 +327,7 @@
       - Local cache retention — rolling 30-day disk window
       - Envelope shape — see interface.md#CLI-surface
       - Retention managed by maintenance
-      - Config — see artifacts/governance.yaml#backup
+      - Config — see artifacts/governance.yaml
     - Restore path
       - db restore <id> — instant local rollback
       - sys recover <commit> — git reconstruction
@@ -342,13 +339,13 @@
       - Push failure exits 0, warns pending
       - Reconciliation retries next push
       - Pending state visible in list
-    - Hash chains
+    - Hash chains <!-- ref-by: effect.md -->
       - Ledger tamper-evidence canonical in effect
       - Boot gate verifies system schema hash
       - Replay gate verifies code_hash
       - DR restore verifies ledger chain walk
       - Reference — see effect.md#Audit-spine
-    - Ledger re-initialization
+    - Ledger re-initialization <!-- ref-by: effect.md, interface.md -->
       - sys init --fresh after total media loss
       - Dual confirmation required
       - Operator key signature plus typed reason
@@ -367,7 +364,7 @@
       - Historical provenance preserved
       - Rollback un-retires by pointer reinstatement
       - Offboarding order — preserve, revoke, teardown
-  - Configuration proposals
+  - Configuration proposals <!-- ref-by: governance.md, interface.md, kernel.md, lifecycle.md, marketplace.md -->
     - Authoring freedom
       - Agents edit schema, policy, governance YAML
       - Standard filesystem tools apply
@@ -396,7 +393,7 @@
       - Manual human git manipulation prohibited
       - Signing key from encrypted vault
       - Commits signed under caller's key
-  - Pre-flight sub-checks
+  - Pre-flight sub-checks <!-- ref-by: assembly.md, lifecycle.md -->
     - Sub-check 1 — syntax
       - Runs at parse time on file load
       - Valid YAML without duplicate keys
@@ -459,4 +456,4 @@
       - All SQL routes through capcli run sql
       - AST and C authorizer run on every call
       - Raw DDL outside migration denied
-      - Definition — see kernel.md#Raw-SQL-rules
+      - Definition — see kernel.md#SQL-layers

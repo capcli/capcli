@@ -33,8 +33,8 @@ Exit 3 guarantees no guest code ran.
 Apply the remedy verbatim from the denial envelope:
 - Param faults — pass the missing arg with `-p k=v`.
 - Type faults — match the declared Param type exactly.
-- Lockfile drift — see world.md#Pre-flight-sub-checks.
-- Schema drift — see world.md#Pre-flight-sub-checks.
+- Lockfile drift — rerun pre-flight sub-checks.
+- Schema drift — rerun pre-flight sub-checks.
 Never edit capcli.lock by hand.
 
 ## section:stage_3_redispatch

@@ -1,5 +1,4 @@
 - Egress
-<!-- ref-by: sandbox.md, governor.md, plugins.md, identity.md -->
   - Zero-knowledge stance
     - Guest boundary
       - Plugin process never holds plaintext keys
@@ -25,14 +24,14 @@
     - Plugin surface
       - api-gateway plugin declares ctx.api namespace
       - CLI noun capcli api via manifest
-      - Registration — see plugins.md#Ctx-namespace-registration
-      - Noun — see plugins.md#CLI-noun-registration
-    - Trust floor
+      - Registration — see plugins.md#Capability-declarations
+      - Noun — see plugins.md#CLI-projection
+    - Trust floor <!-- ref-by: governance.md -->
       - Draft routines denied secret access
       - Exit 2 at pre-flight E047
-      - Full ladder — see governance.md#The-ladder
+      - Full ladder — see governance.md#Trust-ladder
       - Prove-run leases — see #Prove-run-secret-leases
-  - Vault storage
+  - Vault storage <!-- ref-by: effect.md, interface.md, kernel.md, world.md -->
     - Table layout
       - Table lives in kernel system schema
       - Roster — see world.md#System-schema-roster
@@ -96,7 +95,7 @@
         - Leak panic exits 5
         - Buffers zeroized post-dispatch
         - Replacement — [REDACTED_VAULT_TOKEN]
-    - Prove-run secret leases
+    - Prove-run secret leases <!-- ref-by: governance.md -->
       - Minting
         - routine prove --env sim mints lease
         - Bound to prove_run_id, session, frame
@@ -106,13 +105,13 @@
         - vault:// handles resolve under lease
         - E047 does not fire under active lease
         - Sim egress only, never prod
-        - Definition — see governance.md#The-ladder
+        - Definition — see governance.md#Trust-ladder
       - Custody
         - Guest receives opaque handles only
         - Plaintext stays in kernel buffer
         - Zero leak to IPC or heap
         - Zero leak to _audit mirror
-  - Vault proxy
+  - Vault proxy <!-- ref-by: assembly.md, governance.md, governor.md, identity.md, plugins.md -->
     - Injection point
       - Kernel edge, between cadence and TLS
       - vault:// handle resolved exactly here
@@ -143,7 +142,7 @@
       - Never shows values or hash prefixes
       - Health check reports rotation status
       - Envelope shape — see interface.md#CLI-surface
-  - Wire-edge enforcement
+  - Wire-edge enforcement <!-- ref-by: governance.md, governor.md, kernel.md, routines.md -->
     - Strict check order
       - 1 — ceiling check before anything else
       - 2 — cadence check via token bucket
@@ -163,7 +162,7 @@
       - Waits under 2s sleep the socket in kernel
       - Waits over 2s yield routine exit 6
       - Upstream 429 drains bucket to zero
-    - Wire scrubber
+    - Wire scrubber <!-- ref-by: effect.md -->
       - Holds active secret hashes in memory
       - Scans incoming and outgoing bytes
       - Matches replaced with [REDACTED_VAULT_TOKEN]
@@ -181,7 +180,7 @@
       - Fabricated secret-shaped match
       - Vault/proxy zero-knowledge stays intact
       - Detection model — see effect.md#Denials
-  - Quotas
+  - Quotas <!-- ref-by: governor.md, lifecycle.md, routines.md -->
     - Cadence dial
       - Leaky token bucket per provider
       - State in _api_quota table
@@ -206,20 +205,20 @@
       - Providers without headers use sliding window
       - Kernel-counted, no upstream signal
       - Conservative defaults apply
-      - Config — see artifacts/policy.yaml#api.rate_limit
+      - Config — see artifacts/policy.yaml
     - Live quota read
       - ctx.quota.inspect(verb) returns snapshot
       - Total, available, priority floors, reset_at
       - Reads _api_quota row
       - Zero fuel cost for inspection
-  - Developer bridge
+  - Developer bridge <!-- ref-by: assembly.md -->
     - capcli egress utility
       - Shell-native egress command
       - Dormant OpenAPI verbs require explicit activation
       - Plugin calls as subprocess
       - Kernel proxy performs TLS
       - Vault key resolution transparent
-      - Plugin dispatch — see plugins.md#Kernel-stance
+      - Plugin dispatch — see plugins.md#Hub-mediated-law
     - Curl-like interface
       - --method GET, POST, PUT, DELETE
       - --auth vault://<name> for secret handle
@@ -260,9 +259,10 @@
       - Emits api.first_prod_call event
       - Promotion gate — see governance.md#Promotion-gates
     - Provider drift
-      - spec_hash change demotes rung
+      - spec_hash change
+      - One-rung demotion
       - Mock drift demotion
-      - Definition — see governance.md#The-ladder
+      - Definition — see governance.md#Trust-ladder
     - Federation egress
       - Caller never sees callee secrets
       - Callee plugins use callee vault only

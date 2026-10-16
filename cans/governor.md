@@ -1,5 +1,4 @@
 - Governor
-<!-- ref-by: plugins.md, routines.md, world.md, governance.md -->
   - Execution Governor
     - Purpose
       - Determines execution physics at runtime
@@ -63,7 +62,7 @@
       - Duration over 15ms forces yield
       - Kernel promotes mid-flight if needed
       - Caller never observes escalation
-  - Yield path
+  - Yield path <!-- ref-by: identity.md, kernel.md -->
     - Trigger conditions
       - External wire egress required
       - Operation exceeds 15ms ceiling
@@ -106,39 +105,43 @@
       - Result row enters _inbox
       - Inbound dispatch claims atomically
       - Lifecycle — see world.md#Outbox-inbox
+      - States — see world.md#Inbox-lifecycle
     - Stage 7 detail
       - Daemon detects unblocked frame
       - Executes pre-compiled guest routine
       - Mechanical resumption, no LLM wake
+      - Wake ban — see #Waking-prohibition
   - Outbox staging
-    - Purpose
-      - Yield path stages outbound work here
-      - Atomic with caller transaction
-      - Never a partial domain state
     - Table and row shape — see world.md#Outbox-inbox
     - Claim and drain — see world.md#Outbox-inbox
     - Dead letter queue — see world.md#Dead-letter-queue
     - Writers — plugins and routines via ctx.emit
     - Why yield uses outbox
+      - Yield path stages outbound work here
+      - Atomic with caller transaction
+      - Never a partial domain state
       - Egress cannot run inside transaction
       - Staging defers wire call to daemon
       - Same atomicity guarantee as fast path
       - Reference — see #Yield-path
-  - Suspension registry
+  - Suspension registry <!-- ref-by: assembly.md, egress.md, identity.md, kernel.md, routines.md, world.md -->
     - Row identity
       - frame_id — suspended budget frame
       - routine — pinned routine@version
       - cursor — execution position saved
       - state_fence — OCC read versions
       - resume_after — timestamp or event
-    - Persistence
       - Stored in _suspended_tasks table
       - Kernel-managed, agent-readable
       - System schema — see world.md#Dual-schema
-    - OCC fence fields
+    - Drift recovery
       - Rows read during Phase 1
       - Declared write intent
       - Reference — see kernel.md#Exit-code-law
+      - Read drift exhausts fence retries
+      - Exit 2 E061_OCC_DRIFT
+      - Abort drifted frame before re-run
+      - Write drift releases lease, re-plan directly
     - Lease retention
       - Claims survive yield boundary
       - Identity tuple — see world.md#Claims-lease
@@ -149,12 +152,7 @@
       - Purges _suspended_tasks resume target
       - Releases state_fence and claims
       - Writes audit event, never resumes
-    - Drift recovery
-      - Read drift exhausts fence retries
-      - Exit 2 E061_OCC_DRIFT
-      - Abort drifted frame before re-run
-      - Write drift releases lease, re-plan directly
-  - Daemon resumption
+  - Daemon resumption <!-- ref-by: kernel.md -->
     - Trigger conditions
       - Clock reaches reset_at for quota refill
       - Human 1-click approval via Cockpit
@@ -182,6 +180,7 @@
       - Daemon posts completion to _inbox
       - Harness surfaces at next overview
       - Envelope shape — see interface.md#CLI-surface
+      - Lifecycle — see world.md#Inbox-lifecycle
     - Verification gates
       - Lease still active and owned
       - Fence re-verified under lock
@@ -191,7 +190,7 @@
         - Read drift outside set — no invalidation
         - Write-write drift — exit 2 E061
         - Approval discarded, never applied to changed facts
-  - Priority classes
+  - Priority classes <!-- ref-by: governance.md, identity.md -->
     - Background
       - Lowest fuel and cadence priority
       - Yields at 15 token floor
@@ -207,15 +206,14 @@
       - For interactive approve path
       - For human-triggered ops
       - Declared in routine manifest
-    - Floor interaction
+    - Preemption
       - Preemption floor per class
       - Definition — see egress.md#Quotas
-      - Config — see artifacts/policy.yaml#api.rate_limit
-    - Writer priority
+      - Config — see artifacts/policy.yaml
       - Interactive preempts bulk align
       - Webhook preempts align backfill
       - Enforcement — see identity.md#Concurrency
-  - Watchdog interaction
+  - Watchdog interaction <!-- ref-by: governance.md, routines.md, sandbox.md -->
     - Wall clock distinct from fuel
       - Fuel measures compute steps
       - Watchdog measures wall seconds
@@ -231,10 +229,9 @@
       - Watchdog is involuntary, force-kill
       - Yield preserves fence and claims
       - Watchdog kills, no resume
-    - Sandbox interaction
-      - Watchdog lives in sandbox supervisor
-      - Tri-Jail kills process on expiry
-      - Definition — see sandbox.md#Platform-tiers
+    - Watchdog lives in sandbox supervisor
+    - Tri-Jail kills process on expiry
+    - Definition — see sandbox.md#Platform-tiers
   - Integration points
     - With sandbox
       - Exit 6 flows through jail boundary

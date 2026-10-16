@@ -11,7 +11,7 @@
 
 - Decision
   - The canonical term for db/schema change is migration. revisions/ → migrations/, revision.rs → migrate.rs, the Four-phase state migration pipeline, Migration safety, Migration invariants, Migration lifecycle commands, diagnostic domain policy.migration, snap_migration_* snapshots, E060_MIGRATION_REJECTED.
-  - world.md node renames: Schema-evolution → Schema-migration, with all see: pointers rehomed.
+  - world.md node renames: Schema-evolution → Schema-migration, with all pointers rehomed.
   - Test-plan domain renamed schema_evolution → schema_migration; case IDs se_* → sm_*.
   - CLI verbs unchanged: rule plan / rule prove / rule apply keep their names; only the concept term and paths change.
   - Deliberately untouched: "git revision" (git terminology), rev_hash/prev_hash (audit hash chain, "previous hash"), _collab/conflicts.md (historical log), docs/ (frozen).
