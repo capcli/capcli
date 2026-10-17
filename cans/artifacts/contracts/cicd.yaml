@@ -1,7 +1,10 @@
-# ═══════════════════════════════════════════════════════════════
-# cicd.yaml — Declarative CI/CD pipeline & gate constraints
-# Lockfile-verified; enforces deterministic execution on 100% Free Tier.
-# ═══════════════════════════════════════════════════════════════
+# ───────────────────────────────────────────────────────────────
+# cicd.yaml — Declarative CI/CD pipeline & gate constraints (lockfile-verified, deterministic Free-Tier execution)
+# Owns:     CI/CD pipeline definition — ci_runtime, cost_controls, sla, trinity, dependency_graph, filters, matrix, tools, gates
+# Not:      runtime budgets & rate limits → see policy.yaml
+# Not:      RPC transport & endpoints → see client.yaml
+# Compiled: no
+# ───────────────────────────────────────────────────────────────
 version: 1
 ci_runtime: github_actions
 
