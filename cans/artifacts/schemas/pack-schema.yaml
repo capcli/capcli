@@ -1,7 +1,11 @@
-# ═══════════════════════════════════════════════════════════════
-# packs.yaml — blueprint manifest schema SSOT
+# ───────────────────────────────────────────────────────────────
+# pack-schema.yaml — blueprint manifest schema SSOT
+# Owns:     pack manifest validation schema — kind, inputs, urp, hashes
+# Not:      pack manifest archetype → see templates/pack.yaml
+# Not:      pack taxonomy & registry → see marketplace.md
+# Compiled: no
+# ───────────────────────────────────────────────────────────────
 # Pointers: pack://routine/*, pack://world/*
-# ═══════════════════════════════════════════════════════════════
 version: 1
 kind: routine                            # routine | world
 urp: "pack://routine/atomic_action"
