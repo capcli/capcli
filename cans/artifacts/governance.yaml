@@ -2,6 +2,11 @@
 # governance.yaml — registry & capability shape governance
 # Version-locked with schema.yaml + policy.yaml at boot.
 # Compiled by kernel; never runtime-editable except through the configuration proposal lifecycle (see world.md#Configuration-proposal-lifecycle).
+# Not:      environment ceilings & per-world overlays → see artifacts/environments.yaml
+# Not:      deployment topology → see artifacts/transport.yaml
+# Not:      blob storage bounds & backup policy → see artifacts/storage.yaml
+# Not:      budget composition & fuel execution limits → see artifacts/budget.yaml
+# Not:      api catalog scale & rate limits → see artifacts/rate-limits.yaml
 # ═══════════════════════════════════════════════════════════════
 version: 8
 lockfile: capcli.lock                 # deterministic compiler target; drift law: see policy.yaml#fail_closed
@@ -21,30 +26,7 @@ registry:
     max_description_tokens: 60        # keep search surface lean per capability
     require_description: true         # unsearchable = unregistrable
 
-# ───────────────────────────────────────────────────────────────
-# 1.2 TOPOLOGY — single-host default, remote opt-in
-# Two deployment profiles, no cluster orchestrator: see cans/physics.md#Deployment-topology.
-# ───────────────────────────────────────────────────────────────
-topology:
-  default_mode: local                 # local | hub | spoke_thin | spoke_fat | spoke_ephemeral | replica
-  allowed_modes: [local, hub, spoke_thin, spoke_fat, spoke_ephemeral, replica]
-  transports: [unix_socket, wireguard_mesh, mtls]
-  hub:                                # default profile — single-host Hub, local spokes over unix:// IPC: see cans/physics.md#Deployment-topology
-    max_concurrent_spokes: 256
-    idle_timeout_seconds: 60
-    busy_timeout_ms: 5000             # SQLite BEGIN IMMEDIATE queue ceiling
-    # mesh bind — remote profile: swarm RPC listen endpoint declared at artifacts/policy.yaml#network.transports; admin/cockpit surface binds loopback per serve.bind: see cans/physics.md#Deployment-topology
-  spoke:                              # remote profile — WireGuard + mTLS opt-in: see cans/physics.md#Deployment-topology
-    rpc_pool_size: 16
-    connect_timeout_ms: 2000
-    keepalive_interval_seconds: 10
-  ephemeral:                          # remote profile only — heartbeat/reaper mechanics are remote-profile invariants: see cans/agent.md#Ephemeral-swarm-identity
-    max_concurrent_nodes: 1000        # auto-scaling dynamic container ceiling
-    default_ttl_seconds: 300          # dead worker reap window
-    heartbeat_interval_seconds: 5
-    missed_heartbeats_to_reap: 3
-    force_sync_audit_ack: true        # no exit 0 without central audit receipt; spoke-side extension of the fail-closed sink law: see cans/effect.md#Audit-spine
-    memory_buffer_mb: 16              # RAM buffer for spoke→hub audit replication only; distinct from the 5-minute local fail-closed stall buffer: see cans/effect.md#Event-integrity
+topology: see artifacts/transport.yaml
 
 # ───────────────────────────────────────────────────────────────
 # 1.5 PACKS — blueprints are unproven proposals
@@ -94,12 +76,9 @@ routine_shape:
         ext: [".ts"]
 
   execution:
-    max_fuel_per_run: 50              # fuel envelope per run — frame burns at most 50 fuel
-    macro_envelope_enabled: true      # permits routines to draw from the session fuel pool without micro-suspensions
-    max_duration_seconds: 300         # sandbox watchdog kill
     max_result_tokens: 500            # summary cap crossing to the model
     enforce_pagination_contract: true # bans raw JSON string chopping; requires { items, next_cursor } schema
-    session_fuel_ceiling: 2500        # session fuel pool ceiling
+    # max_fuel_per_run, macro_envelope_enabled, max_duration_seconds, session_fuel_ceiling → see artifacts/budget.yaml
 
   # Proactive Brokerage
   priority_classes: [critical, standard, background]
@@ -116,16 +95,7 @@ routine_shape:
       tier_1: [linux, wsl2]           # see: cans/physics.md#Platform-tier-taxonomy
       tier_2: [darwin, termux, win]   # see: cans/physics.md#Platform-tier-taxonomy
     pinned_prod_requires_tier_1: true  # see: cans/trust.md#Weakest-link-matrix
-  composition:
-    budget_inheritance: min            # child effective = min(declared fuel, parent remaining, session remaining, governance max)
-    fuel_scope: session                # fuel is session-level, not per-routine
-    result_tokens_scope: routine       # each routine caps its own output independently
-    max_nesting_depth: 5               # composition depth hygiene
-    budget_exhaustion: deny            # exhausted budget = exit 2, never silent truncation
-    cascade: true
-    session_scoped: [fuel]
-    routine_scoped_cascade: [fuel]
-    routine_scoped_independent: [result_tokens]
+  composition: see artifacts/budget.yaml
   versions:
     max_versions_kept: 25             # provenance graph stays navigable; rollback addresses any retained version: see cans/time.md#decay-and-subtraction
   manifest_drift: anomaly             # undeclared primitives trigger governance event
@@ -165,24 +135,15 @@ schedule:
   max_catchup_fires: 1                # daemon restart ≠ fire the missed 40
   dead_schedule_disable: true         # bound routine retired → auto-disable loudly
 
-# ───────────────────────────────────────────────────────────────
-# 5. STORAGE — blob storage bounds
-# ───────────────────────────────────────────────────────────────
-storage:
-  provider: local                      # local | s3 | r2
-  max_upload_bytes: 10485760           # 10MB per object ceiling
-  allowed_mime: ["application/pdf", "image/*", "text/*", "application/json"]
+storage: see artifacts/storage.yaml
 
 # ───────────────────────────────────────────────────────────────
 # 6. API — the catalog has dimensions
 # ───────────────────────────────────────────────────────────────
 api:
-  max_providers: 10
-  max_verbs_per_provider: 300            # full catalog fits
+  # max_providers, max_verbs_per_provider, sync.min_interval_hours, sync.max_catalog_size_mb → see artifacts/rate-limits.yaml
   require_description: true              # unsearchable = unregistrable
   sync:
-    min_interval_hours: 24               # no hourly hammering of provider URLs
-    max_catalog_size_mb: 10              # compiled catalog stays lean
     auto_deprecate_removed: true         # upstream removal → deprecated state
   token_refresh:
     auto_refresh: true                   # auto-rotates ephemeral access tokens via vaulted root
@@ -245,22 +206,8 @@ notify:
     default_timeout_minutes: 60
     max_timeout_minutes: 480
 
-# ───────────────────────────────────────────────────────────────
-# 10. ENVIRONMENTS — worlds stay honest
-# ───────────────────────────────────────────────────────────────
-env:
-  max_environments: 5                 # isolated directory namespaces under envs/
-  prod_destructive_auth: challenge_signature  # requires out-of-band WebAuthn/SSH signed challenge
-  require_backup_push: true           # no world exists unbacked
-  sim_seed_masking: enforce           # sensitive columns masked on fork, always
-
-# ───────────────────────────────────────────────────────────────
-# 11. BACKUP — recoverability is a structural property
-# ───────────────────────────────────────────────────────────────
-backup:
-  provider: object_storage            # s3 | r2
-  snapshot_interval_minutes: 60
-  include_audit: true
+env: see artifacts/environments.yaml
+backup: see artifacts/storage.yaml
 
 # ───────────────────────────────────────────────────────────────
 # 12. DENIAL UX — limits teach, not just block
