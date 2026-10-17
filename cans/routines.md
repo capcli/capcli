@@ -127,7 +127,7 @@
       - ctx.storage.get(key) returns stream
       - ctx.storage.url(key, ttl) mints signed link
       - Size and MIME gates apply
-      - Config — see artifacts/governance.yaml
+      - Config — see artifacts/storage.yaml
     - Cursor methods
       - ctx.cursor.load(name, default)
       - ctx.cursor.save_and_yield(name, next)
@@ -245,7 +245,7 @@
       - Federated hops count toward cap
       - Federation ceiling binds first at 3
       - Counts distinct ctx.call targets per routine
-      - Ceiling — see artifacts/governance.yaml
+      - Ceiling — see artifacts/budget.yaml
       - Cross-agent dedup forces merge or fork
     - Constraint direction
       - Cages tighten downward only
