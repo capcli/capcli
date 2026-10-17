@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════════════════════════════
 # governance.yaml — registry & capability shape governance
 # Version-locked with schema.yaml + policy.yaml at boot.
-# Compiled by kernel; never runtime-editable except through the configuration proposal lifecycle (see world.md#Configuration-proposal-lifecycle).
+# Compiled by kernel; never runtime-editable except through the configuration proposal lifecycle (see world.md#Configuration-proposals).
 # Not:      environment ceilings & per-world overlays → see artifacts/environments.yaml
 # Not:      deployment topology → see artifacts/transport.yaml
 # Not:      blob storage bounds & backup policy → see artifacts/storage.yaml
@@ -29,7 +29,7 @@ registry:
 topology: see artifacts/transport.yaml
 
 # ───────────────────────────────────────────────────────────────
-# 1.5 PACKS — blueprints are unproven proposals
+# 2. PACKS — blueprints are unproven proposals
 # ───────────────────────────────────────────────────────────────
 pack:
   max_packs: 100                      # registry capacity ceiling for blueprints
@@ -47,7 +47,7 @@ pack:
     enforce_shape_on_intake: true     # fails intake if pack violates routine_shape
 
 # ───────────────────────────────────────────────────────────────
-# 2. ROUTINE SHAPE — defaults every file must satisfy
+# 3. ROUTINE SHAPE — defaults every file must satisfy
 # ───────────────────────────────────────────────────────────────
 routine_shape:
   tokens:     { max: 2000 }              # file size ceiling (context cost)
@@ -101,7 +101,7 @@ routine_shape:
   manifest_drift: anomaly             # undeclared primitives trigger governance event
 
 # ───────────────────────────────────────────────────────────────
-# 3. MAINTENANCE — subtraction runs on schedule
+# 4. MAINTENANCE — subtraction runs on schedule
 # ───────────────────────────────────────────────────────────────
 maintenance:
   consolidation:
@@ -126,7 +126,7 @@ maintenance:
     queue_age_max_hours: 48           # promotion queue SLA; breach emits promotion.sla_breached
 
 # ───────────────────────────────────────────────────────────────
-# 4. SCHEDULE — time is governed like everything else
+# 5. SCHEDULE — time is governed like everything else
 # ───────────────────────────────────────────────────────────────
 schedule:
   max_active: 20
@@ -135,10 +135,13 @@ schedule:
   max_catchup_fires: 1                # daemon restart ≠ fire the missed 40
   dead_schedule_disable: true         # bound routine retired → auto-disable loudly
 
+# ───────────────────────────────────────────────────────────────
+# 6. STORAGE — delegated to artifacts/storage.yaml
+# ───────────────────────────────────────────────────────────────
 storage: see artifacts/storage.yaml
 
 # ───────────────────────────────────────────────────────────────
-# 6. API — the catalog has dimensions
+# 7. API — the catalog has dimensions
 # ───────────────────────────────────────────────────────────────
 api:
   # max_providers, max_verbs_per_provider, sync.min_interval_hours, sync.max_catalog_size_mb → see artifacts/rate-limits.yaml
@@ -164,7 +167,7 @@ api:
     min_trust_for_served_api: pinned     # served endpoints calling APIs need pin
 
 # ───────────────────────────────────────────────────────────────
-# 7. WATCH — ears with limits
+# 8. WATCH — ears with limits
 # ───────────────────────────────────────────────────────────────
 watch:
   max_active: 50
@@ -180,7 +183,7 @@ watch:
     max_items: 1000                   # FIFO purge past this, loudly
 
 # ───────────────────────────────────────────────────────────────
-# 8. SERVE — the counter window is the strictest door
+# 9. SERVE — the counter window is the strictest door
 # ───────────────────────────────────────────────────────────────
 serve:
   max_endpoints: 10                   # exposure surface stays small
@@ -195,7 +198,7 @@ serve:
     max_result_tokens: 500            # inherits routine result cap
 
 # ───────────────────────────────────────────────────────────────
-# 9. NOTIFY / ASK — voices don't shout
+# 10. NOTIFY / ASK — voices don't shout
 # ───────────────────────────────────────────────────────────────
 notify:
   max_channels: 3
@@ -206,11 +209,18 @@ notify:
     default_timeout_minutes: 60
     max_timeout_minutes: 480
 
+# ───────────────────────────────────────────────────────────────
+# 11. ENV — delegated to artifacts/environments.yaml
+# ───────────────────────────────────────────────────────────────
 env: see artifacts/environments.yaml
+
+# ───────────────────────────────────────────────────────────────
+# 12. BACKUP — delegated to artifacts/storage.yaml
+# ───────────────────────────────────────────────────────────────
 backup: see artifacts/storage.yaml
 
 # ───────────────────────────────────────────────────────────────
-# 12. DENIAL UX — limits teach, not just block
+# 13. DENIAL UX — limits teach, not just block
 # ───────────────────────────────────────────────────────────────
 denials:
   cite_measured_value: true           # cites measured value, e.g. token envelope over the 2,000-token cap
@@ -222,7 +232,7 @@ denials:
   budget_denial_cites_ancestors: true # shows parent/session remaining for context
 
 # ───────────────────────────────────────────────────────────────
-# 13. SCHEMA — two files, two owners, one DDL
+# 14. SCHEMA — two files, two owners, one DDL
 # ───────────────────────────────────────────────────────────────
 schema:
   world:
@@ -238,7 +248,7 @@ schema:
     require_hash_verify: true           # boot verifies file hash against kernel version
 
 # ───────────────────────────────────────────────────────────────
-# 14. TELEMETRY — kernel event egress configuration
+# 15. TELEMETRY — kernel event egress configuration
 # ───────────────────────────────────────────────────────────────
 # sinks are declared here as plain endpoints with explicit drivers,
 # never as resource-pointer URIs.

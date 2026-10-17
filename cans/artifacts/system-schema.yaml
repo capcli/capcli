@@ -4,7 +4,7 @@ db: audit.db                           # isolated ledger database (workspace.db 
 readonly_for_agent: true               # kernel-upgrades only; agent write throws exit 2
 
 # ───────────────────────────────────────────────────────────────
-# SYSTEM TABLES (13 KERNEL-MANAGED SURFACES)
+# SYSTEM TABLES (KERNEL-MANAGED SURFACES)
 # ───────────────────────────────────────────────────────────────
 tables:
   _audit:

@@ -168,7 +168,7 @@
         - Attention — _attention_cursors (see kernel.md#Diagnostic-output-law)
         - Plugin attention — _plugin_attention (see plugins.md#Attention-sources)
       - Roster invariant
-        - Seventeen kernel tables total
+        - Every kernel table appears in the roster above
         - Every table owned by one file
         - Cross-file citation not allowed
         - Definition — see kernel.md#Layer-1-C-authorizer

@@ -22,7 +22,7 @@ network: see artifacts/transport.yaml
 # ───────────────────────────────────────────────────────────────
 authorizer:
   tables:
-    # System tables (13 kernel-managed surfaces)
+    # System tables (kernel-managed surfaces)
     _audit:
       allow: [read]
     _api_quota:
@@ -119,6 +119,9 @@ trust:
     audit: summary
     may_run_unattended: true                   # schedules in prod
 
+# ───────────────────────────────────────────────────────────────
+# 4. RATE & BUDGET — delegated to their own artifacts
+# ───────────────────────────────────────────────────────────────
 rate: see artifacts/rate-limits.yaml
 budget: see artifacts/budget.yaml
 
@@ -228,6 +231,9 @@ identity:
     on_invalid: strip_and_warn                 # malformed → drop field, log warning, don't deny
     # Skills cannot grant authority. This is metadata only — trust still comes from principal + agent.
 
+# ───────────────────────────────────────────────────────────────
+# 8. ENV — delegated to artifacts/environments.yaml
+# ───────────────────────────────────────────────────────────────
 env: see artifacts/environments.yaml
 
 # ───────────────────────────────────────────────────────────────

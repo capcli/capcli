@@ -25,7 +25,7 @@ rules:
     generator: "fpa_lorem_hash"
     preserve_length: true
 
-  # audit redaction rules (moved byte-for-byte from policy.yaml#audit.redact)
+  # Owns audit redaction rules; policy.yaml#audit.redact delegates here.
   redact:
     columns: [secrets.value]
     params_matching: ["*token*", "*password*", "*secret*"]

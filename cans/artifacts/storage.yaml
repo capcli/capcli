@@ -47,8 +47,7 @@ backup:
 # ───────────────────────────────────────────────────────────────
 # 3. EGRESS SINKS
 # ───────────────────────────────────────────────────────────────
-# Kernel event egress is declared only at artifacts/governance.yaml#telemetry,
-# as plain per-env endpoints with explicit drivers
-# (e.g. file://envs/<env>/telemetry/<name>.jsonl); resource-pointer URIs
-# are not sinks. This file declares no sinks.
+# Sinks are owned by artifacts/governance.yaml#telemetry as plain per-env
+# endpoints with explicit drivers (e.g. file://envs/<env>/telemetry/<name>.jsonl);
+# resource-pointer URIs are not sinks.
 sinks: see artifacts/governance.yaml#telemetry
