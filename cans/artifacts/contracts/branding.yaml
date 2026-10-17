@@ -1,0 +1,22 @@
+# ───────────────────────────────────────────────────────────────
+# branding.yaml — white-label branding specification
+# Owns:     branding — product identity, noun display aliases, output presentation
+# Not:      RPC transport & endpoints → see client.yaml
+# Not:      noun definitions (runtime law) → see governance.yaml
+# Compiled: no
+# ───────────────────────────────────────────────────────────────
+version: 1
+
+branding:
+  product_name: "Core Gateway"
+  binary_alias: "capcli"
+  tagline: "Autonomous Agent Execution Kernel"
+  noun_aliases:
+    run: "run"
+    sql: "sql"
+    routine: "routine"
+    sys: "sys"                          # Kernel noun; cannot be re-aliased
+  output:
+    tier_prefix: true                   # Emits [env:tier] headers
+    json_strict: true                   # Raw CliEnvelope<T> responses never rebranded
+    table_pipes_banned: true            # Standard diagnostic formatting

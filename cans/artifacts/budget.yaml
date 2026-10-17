@@ -1,0 +1,39 @@
+# ───────────────────────────────────────────────────────────────
+# budget.yaml — fuel pools, budget frames, cascade and exhaustion behavior
+# Owns:     fuel, frames, cascade, exhaustion
+# Not:      structural routine ceilings (tokens, params, complexity) → see governance.yaml
+# Not:      live provider rate limits (token bucket, spend ceilings) → see rate-limits.yaml
+# Not:      behavioral permission floors & trust overlays → see policy.yaml
+# Compiled: yes → capcli.lock root hash
+# ───────────────────────────────────────────────────────────────
+version: 1
+
+budget:
+  overage_behavior: deny               # behavior: what happens at exhaustion
+  partial_result_on_exhaustion: false  # behavior: no half-execution
+  budget_frame_audit: true             # behavior: every frame is an audit event
+  denial_cites_level: true             # behavior: exit 2 names the frame
+  denial_cites_remaining: true         # behavior: shows remaining
+  denial_cites_ancestors: true         # behavior: shows parent/session context
+
+fuel:
+  per_session_fuel: 100000             # integer fuel allocation per session
+  max_call_egress_bytes: 5242880       # 5MB physical wire limit per egress dispatch
+  confirm_above_fuel: 50000            # gate reserved for high wire/compute impact
+
+composition:
+  budget_inheritance: min            # child effective = min(declared fuel, parent remaining, session remaining, governance max)
+  fuel_scope: session                # fuel is session-level, not per-routine
+  result_tokens_scope: routine       # each routine caps its own output independently
+  max_nesting_depth: 5               # composition depth hygiene
+  budget_exhaustion: deny            # exhausted budget = exit 2, never silent truncation
+  cascade: true
+  session_scoped: [fuel]
+  routine_scoped_cascade: [fuel]
+  routine_scoped_independent: [result_tokens]
+
+execution:
+  max_fuel_per_run: 50              # fuel envelope per run — frame burns at most 50 fuel
+  macro_envelope_enabled: true      # permits routines to draw from the session fuel pool without micro-suspensions
+  max_duration_seconds: 300         # sandbox watchdog kill
+  session_fuel_ceiling: 2500        # session fuel pool ceiling

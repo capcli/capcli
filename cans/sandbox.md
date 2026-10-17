@@ -77,7 +77,7 @@
     - Remote profile
       - Explicit opt-in configuration
       - Transport — WireGuard with mTLS
-      - Config — see artifacts/policy.yaml
+      - Config — see artifacts/transport.yaml
       - Hub admin binds 127.0.0.1:4040
       - Mesh bind on declared interface
       - Spokes dial hub at mesh endpoint

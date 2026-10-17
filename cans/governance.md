@@ -110,7 +110,7 @@
     - Declared limits
       - declared_max_ops — primitive ceiling
       - declared_max_duration_ms — wall clock
-      - Defaults from artifacts/governance.yaml
+      - Defaults from artifacts/budget.yaml
       - Invocation tightens, never loosens
     - Consumed counters
       - consumed_fuel — single internal counter
@@ -224,7 +224,7 @@
         - Session fuel never resets via composition
         - 100-fuel split into 10x10 sub-routines
         - Still hits session fuel ceiling
-        - Session ceiling — see artifacts/governance.yaml
+        - Session ceiling — see artifacts/budget.yaml
       - Cascade view in inspect
         - Pre-flight block
           - can_invoke_now boolean verdict
@@ -240,7 +240,7 @@
           - session_fuel_remaining — integer
           - cadence_status — leaky bucket headroom
           - ceiling_status — monthly spend ledger
-          - Composition — see artifacts/governance.yaml
+          - Composition — see artifacts/budget.yaml
         - Composition block
           - max_nesting_depth — 5 by default
           - child_routines — declared callees
@@ -271,7 +271,7 @@
         - wire_bytes_scope — session, default 4MB
         - max_nesting_depth — 5
         - call_preflight — cycle check before dispatch
-        - Config — see artifacts/governance.yaml
+        - Config — see artifacts/budget.yaml
   - Exhaustion
     - Exhaustion event
       - Payload — frame_id, routine, blocking_level
@@ -296,7 +296,7 @@
       - Standard — yields at 5 token floor
       - Critical — drains to 0
       - Canonical floors — see governor.md#Priority-classes
-      - Rate config — see artifacts/policy.yaml
+      - Rate config — see artifacts/rate-limits.yaml
     - Worked example
       - archive_old_orders@3 hits frame 20/20
       - attempted_op db.exec exits 2 mid-DAG
@@ -403,7 +403,7 @@
       - Autonomous when criteria hold
       - Boundary safety via fuel caps
       - Schema migrations governed by caps
-      - Caps — see artifacts/governance.yaml
+      - Caps — see artifacts/budget.yaml
     - Canary veto window
       - Newly pinned face 1-hour observation
       - Error rate over 1% demotes to reviewed

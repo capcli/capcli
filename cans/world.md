@@ -353,7 +353,7 @@
       - Local cache retention — rolling 30-day disk window
       - Envelope shape — see interface.md#CLI-surface
       - Retention managed by maintenance
-      - Config — see artifacts/governance.yaml
+      - Config — see artifacts/storage.yaml
     - Restore path
       - db restore <id> — instant local rollback
       - sys recover <commit> — git reconstruction

@@ -1,7 +1,11 @@
-# ═══════════════════════════════════════════════════════════════
+# ───────────────────────────────────────────────────────────────
 # campaigns.yaml — prompt banks & campaign envelopes SSOT
+# Owns:     prompt banks & campaign envelopes — bank registry, section budgets, sources
+# Not:      individual prompt documents → see doc://prompts/{bank}/{slug}#{version}
+# Not:      prompt compilation & triggers → see prompt/manifest.json
+# Compiled: no
+# ───────────────────────────────────────────────────────────────
 # Pointers: doc://prompts/{bank}/{slug}#{version}
-# ═══════════════════════════════════════════════════════════════
 version: 1
 
 banks:

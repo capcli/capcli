@@ -1,9 +1,13 @@
-# ═══════════════════════════════════════════════════════════════
-# capcli-plugin.yaml — canonical plugin manifest archetype
+# ───────────────────────────────────────────────────────────────
+# plugin.yaml — canonical plugin manifest archetype
+# Owns:     plugin manifest archetype — required fields of a plugin manifest
+# Not:      plugin manifest spec & capabilities → see plugins.md
+# Not:      plugin schema namespace → see world.md
+# Compiled: no
+# ───────────────────────────────────────────────────────────────
 # Pointers: plugin://<id>, policy://plugins/*
 # Canonical homes: plugins.md#Manifest, plugins.md#Capabilities,
 #                  plugins.md#CLI-projection, world.md#Plugin-schema-namespace
-# ═══════════════════════════════════════════════════════════════
 version: 1
 
 # ───────────────────────────────────────────────────────────────

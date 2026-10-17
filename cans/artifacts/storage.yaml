@@ -1,7 +1,10 @@
-# ═══════════════════════════════════════════════════════════════
-# storage.yaml — blob storage & WORM retention SSOT
-# Pointers: storage://*
-# ═══════════════════════════════════════════════════════════════
+# ───────────────────────────────────────────────────────────────
+# storage.yaml — blob storage, WORM backup & storage bounds SSOT
+# Owns:     blob storage endpoints (storage://*), WORM backup retention, blob storage bounds, backup policy
+# Not:      telemetry event egress sinks → see artifacts/governance.yaml#telemetry
+# Not:      audit cold mirror & storage hierarchy → see cans/effect.md#Storage-hierarchy
+# Compiled: yes → capcli.lock root hash
+# ───────────────────────────────────────────────────────────────
 version: 1
 
 # ───────────────────────────────────────────────────────────────
@@ -28,9 +31,21 @@ storage:
       key_ref: "vault://kms/attestation_key"
       witness_log: "witness.log"
       signature_interval_minutes: 60
+  # ─── BLOB STORAGE BOUNDS ─────────────────────────────────────
+  provider: local                      # local | s3 | r2
+  max_upload_bytes: 10485760           # 10MB per object ceiling
+  allowed_mime: ["application/pdf", "image/*", "text/*", "application/json"]
 
 # ───────────────────────────────────────────────────────────────
-# 2. EGRESS SINKS
+# 2. BACKUP — recoverability is a structural property
+# ───────────────────────────────────────────────────────────────
+backup:
+  provider: object_storage            # s3 | r2
+  snapshot_interval_minutes: 60
+  include_audit: true
+
+# ───────────────────────────────────────────────────────────────
+# 3. EGRESS SINKS
 # ───────────────────────────────────────────────────────────────
 # Kernel event egress is declared only at artifacts/governance.yaml#telemetry,
 # as plain per-env endpoints with explicit drivers

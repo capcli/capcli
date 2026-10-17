@@ -213,7 +213,7 @@
       - Network partition — lost Hub connection aborts exit 5
       - Backoff — exponential against peer cold start
       - Exhaustion — exit 4 E055_FEDERATION_UNREACHABLE
-      - Config — see artifacts/policy.yaml
+      - Config — see artifacts/transport.yaml
     - Transport adapters
       - wireguard — default Linux mesh driver
       - tailscale — zero-config corporate networks

@@ -1,9 +1,13 @@
-# ═══════════════════════════════════════════════════════════════
-# capcli-pack.yaml — canonical pack manifest archetype
+# ───────────────────────────────────────────────────────────────
+# pack.yaml — canonical pack manifest archetype
+# Owns:     pack manifest archetype — fields of a signed, tiered pack archive
+# Not:      pack manifest validation schema → see schemas/pack-schema.yaml
+# Not:      pack taxonomy & marketplace rules → see marketplace.md
+# Compiled: no
+# ───────────────────────────────────────────────────────────────
 # Pointers: pack://<tier>/<name>, pack://<tier>/<name>@<version>
 # Canonical homes: marketplace.md#Packs, marketplace.md#Pack-taxonomy,
 #                  marketplace.md#Pack-layers
-# ═══════════════════════════════════════════════════════════════
 version: 1
 
 # ───────────────────────────────────────────────────────────────

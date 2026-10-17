@@ -209,7 +209,7 @@
     - Preemption
       - Preemption floor per class
       - Definition — see egress.md#Quotas
-      - Config — see artifacts/policy.yaml
+      - Config — see artifacts/rate-limits.yaml
       - Interactive preempts bulk align
       - Webhook preempts align backfill
       - Enforcement — see identity.md#Concurrency
@@ -223,7 +223,7 @@
       - 300s wall clock ceiling
       - Kills guest on breach
       - Exit 4 with domain routine.runtime
-      - Config — see artifacts/governance.yaml
+      - Config — see artifacts/budget.yaml
     - Yield vs watchdog
       - Yield is voluntary, pre-empts watchdog
       - Watchdog is involuntary, force-kill

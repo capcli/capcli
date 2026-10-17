@@ -194,7 +194,7 @@
         - Root hash checkpointed to S3 Object Lock
         - KMS signatures stamped
         - Notary witness in witness.log
-        - Config — see artifacts/governance.yaml
+        - Config — see artifacts/storage.yaml
       - Verification
         - Scheduled chain walk cron
         - Boot-time last-1000 verification
@@ -313,7 +313,7 @@
       - Telemetry feed — denial streams route to diagnosis
       - Thrashing detector — 20 sustained denials
       - Alert fires at threshold
-      - Config — see artifacts/policy.yaml
+      - Config — see artifacts/rate-limits.yaml
       - Training data — denial patterns inform prompts
       - Feed — see lifecycle.md#Decay
     - Denial fidelity

@@ -54,7 +54,7 @@
         - Max 5 concurrent environments
         - Standard environments — prod, dev, sim
         - Experiment slots — 2 beyond standard
-        - Ceiling — see artifacts/governance.yaml
+        - Ceiling — see artifacts/environments.yaml
       - Environment command surface
         - env new <name> [--seed prod]
         - env use <name> — activate sticky context
@@ -101,7 +101,7 @@
     - Masking <!-- ref-by: governance.md, routines.md -->
       - Fork rule
         - sim_seed_masking — enforce
-        - Config — see artifacts/governance.yaml
+        - Config — see artifacts/environments.yaml
         - Applies on prod-to-sim seed
         - Never bypassed for dev
       - Redaction

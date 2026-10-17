@@ -1,0 +1,28 @@
+# ───────────────────────────────────────────────────────────────
+# harness.yaml — harness marker detection, sniffing & attribution SSOT
+# Owns:     harness markers (session_keys, presence_keys), marker sniffing (sniff_environ), anonymous fallback attribution
+# Not:      harness session model & kernel-session binding → see identity.md#Harness-markers
+# Not:      exit codes & E-code taxonomy → see errors.yaml
+# Compiled: yes → capcli.lock root hash
+# ───────────────────────────────────────────────────────────────
+version: 1
+
+harness:
+  pointer: "policy://platform/harness"
+  sniff_environ: ["/proc/$PPID/environ", "env"]
+  markers:
+    session_keys:
+      - { var: "CLAUDE_CODE_SESSION_ID", harness: "claude-code" }
+      - { var: "CODEX_THREAD_ID", harness: "codex" }
+      - { var: "CODEX_SESSION_ID", harness: "codex" }
+      - { var: "CODEX_CONVERSATION_ID", harness: "codex" }
+      - { var: "ANTIGRAVITY_CONVERSATION_ID", harness: "antigravity" }
+      - { var: "HERMES_SESSION_KEY", harness: "hermes" }
+    presence_keys:
+      - { var: "CLAUDECODE", harness: "claude-code" }
+      - { var: "GEMINI_CLI", harness: "gemini-cli" }
+      - { var: "CURSOR_AGENT", harness: "cursor" }
+      - { var: "OPENCLAW_SHELL", harness: "openclaw" }
+  fallback:
+    anonymous_pattern: "agt_anon_{session}"
+    allow_mutating_writes: false

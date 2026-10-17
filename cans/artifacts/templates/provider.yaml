@@ -1,7 +1,11 @@
-# ═══════════════════════════════════════════════════════════════
-# provider-spec.yaml — canonical external provider archetype
+# ───────────────────────────────────────────────────────────────
+# provider.yaml — canonical external provider archetype
+# Owns:     external provider archetype — auth, rate-limit & webhook contract
+# Not:      vault proxy & egress scrubbing → see egress.md
+# Not:      sandbox platform tiers → see sandbox.md
+# Compiled: no
+# ───────────────────────────────────────────────────────────────
 # Pointers: doc://specs/<provider>, doc://specs/<provider>#webhook
-# ═══════════════════════════════════════════════════════════════
 version: 1
 provider: upstream_service
 base_url: "https://api.upstream.domain/v1"

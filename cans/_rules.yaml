@@ -85,7 +85,7 @@ canonical_homes:
   environments: lifecycle.md#Environments
   masking: lifecycle.md#Masking
   plugin_manifest: plugins.md#Manifest
-  plugin_manifest_artifact: artifacts/capcli-plugin.yaml
+  plugin_manifest_artifact: artifacts/templates/plugin.yaml
   plugin_capabilities: plugins.md#Capabilities
   cli_noun_registration: plugins.md#CLI-projection
   ctx_namespace_registration: plugins.md#Capability-declarations
@@ -94,7 +94,7 @@ canonical_homes:
   federation_transport: plugins.md#Federation-transport
   pack_taxonomy: marketplace.md#Pack-taxonomy
   pack_format: marketplace.md#Packs
-  pack_manifest_artifact: artifacts/capcli-pack.yaml
+  pack_manifest_artifact: artifacts/templates/pack.yaml
   registry: marketplace.md#Registry
   cli_surface: interface.md#CLI-surface
   kernel_nouns: interface.md#The-9-kernel-nouns
@@ -113,6 +113,23 @@ canonical_homes:
   test_plan_laws: artifacts/test-plan/matrix.yaml#anti_slop_laws
   test_plan_matrix: artifacts/test-plan/matrix.yaml#confusion_matrix
   test_plan_schema: artifacts/test-plan/test-plan-structure.md
+
+# Deprecated paths — pre-reorganization artifact filenames and their new homes
+# (cans/artifacts reorg, Waves 1–4). History lookups only: never re-introduce
+# the old paths in cans/. Note: artifacts/test-plan/manifest.yaml is a distinct,
+# legitimate file — not the deprecated top-level archetype manifest.yaml.
+deprecated_paths:
+  env.yaml: artifacts/environments.yaml
+  client.yaml: [artifacts/transport.yaml, artifacts/contracts/branding.yaml]
+  platform.yaml: [artifacts/syscalls.yaml, artifacts/errors.yaml, artifacts/harness.yaml, artifacts/transport.yaml]
+  capcli-pack.yaml: artifacts/templates/pack.yaml
+  capcli-plugin.yaml: artifacts/templates/plugin.yaml
+  manifest.yaml: artifacts/templates/routine.yaml
+  packs.yaml: artifacts/schemas/pack-schema.yaml
+  provider-spec.yaml: artifacts/templates/provider.yaml
+  schema.yaml: artifacts/templates/world-schema.yaml
+  cicd.yaml: artifacts/contracts/cicd.yaml
+  campaigns.yaml: artifacts/contracts/campaigns.yaml
 
 token_budget:
   enabled: true
