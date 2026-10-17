@@ -33,6 +33,13 @@ environments:
     destructive_operations: cryptographic_challenge
 
 env:
+  # environment ceilings
+  max_environments: 5                 # isolated directory namespaces under envs/
+  prod_destructive_auth: challenge_signature  # requires out-of-band WebAuthn/SSH signed challenge
+  require_backup_push: true           # no world exists unbacked
+  sim_seed_masking: enforce           # sensitive columns masked on fork, always
+
+  # per-world overlays
   prod:
     draft_writes: deny                         # unproven code cannot touch prod
     intent: required                           # reads too? no — writes; reads stay free
