@@ -1,7 +1,11 @@
-# ═══════════════════════════════════════════════════════════════
-# schema.yaml — canonical reference domain archetype
+# ───────────────────────────────────────────────────────────────
+# world-schema.yaml — canonical reference domain archetype
+# Owns:     reference domain archetype — tables, columns, sensitivity bounds
+# Not:      system schema roster → see world.md
+# Not:      masking rules → see lifecycle.md
+# Compiled: no
+# ───────────────────────────────────────────────────────────────
 # Pointers: db://<table_name>
-# ═══════════════════════════════════════════════════════════════
 
 version: 12                            # compiled into capcli.lock root hash
 engine: sqlite                         # sqlite | libsql (embedded C authorizer mandatory)
