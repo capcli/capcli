@@ -111,24 +111,67 @@ function spanCaretLine(span){
   return ' '.repeat(start)+'^'.repeat(Math.max(1,length));
 }
 
+// Captured envelope text (screen lines written $from live.*) may carry
+// the CLI's own verb/rule header or restate kv fields the envelope also
+// carries. The canvas prints each once: it suppresses its synthesized
+// header when the capture already opens with it, and skips captured
+// lines that restate a consumed structured field verbatim. Typography
+// inside captures stays verbatim; the canvas never restates data.
+
 function renderDiagnostic(context,component){
   const c=component||{};
   const exit=context.exit??0;
+  const verb=VERB_BY_EXIT_CODE[exit]||'FAIL';
   const bodyItems=[];
-  if(c.rule!==null&&c.rule!==undefined&&c.rule!=='')bodyItems.push({text:`${VERB_BY_EXIT_CODE[exit]||'FAIL'}  ${c.rule}`,indent:2});
+  const headerText=(c.rule!==null&&c.rule!==undefined&&c.rule!=='')?`${verb}  ${c.rule}`:null;
   const span=(c.span&&typeof c.span==='object')?c.span:null;
   const sourceText=c.source??span?.source??span?.text??span?.code??null;
-  if(typeof sourceText==='string'){
+  const firstLine=Array.isArray(c.lines)&&typeof c.lines[0]==='string'?c.lines[0]:null;
+  // A capture may open with the verb/rule header — either as the span
+  // source or as lines[0] (rule is optional on refusal diagnostics per
+  // _states.json state 3); the header prints once, verbatim, in the
+  // header slot.
+  const capturedHeader=(typeof sourceText==='string'&&sourceText===headerText)
+    ||firstLine===headerText
+    ||(headerText===null&&firstLine!==null&&/^(FAIL|FATAL|CRASH|PANIC|YIELD)\s{2,}\S/.test(firstLine));
+  if(capturedHeader){
+    if(typeof sourceText==='string'&&sourceText===headerText){
+      bodyItems.push({text:sourceText,indent:2});
+      const caret=spanCaretLine(span);
+      if(caret)bodyItems.push({text:caret,indent:2});
+      const detail=span?.detail??c.detail;
+      if(detail!==null&&detail!==undefined&&detail!=='')bodyItems.push({text:kvValue(detail),indent:8});
+    }else if(firstLine){
+      bodyItems.push({text:firstLine,indent:2});
+    }
+  }else if(headerText){
+    bodyItems.push({text:headerText,indent:2});
+  }
+  if(typeof sourceText==='string'&&sourceText!==headerText){
     bodyItems.push({text:sourceText,indent:8});
     const caret=spanCaretLine(span);
     if(caret)bodyItems.push({text:caret,indent:8});
     const detail=span?.detail??c.detail;
     if(detail!==null&&detail!==undefined&&detail!=='')bodyItems.push({text:kvValue(detail),indent:8});
-  }else if(span?.detail!==null&&span?.detail!==undefined){
+  }else if(span?.detail!==null&&span?.detail!==undefined&&!(typeof sourceText==='string'&&sourceText===headerText)){
     bodyItems.push({text:kvValue(span.detail),indent:8});
   }
   if(c.culprit!==null&&c.culprit!==undefined&&c.culprit!=='')bodyItems.push({text:kvValue(c.culprit),indent:8});
-  if(Array.isArray(c.lines))c.lines.forEach(line=>bodyItems.push({text:kvValue(line),indent:8}));
+  // Captured kv-shaped lines that restate a consumed structured field
+  // verbatim are skipped — the kv section prints the field once.
+  const CONSUMED_KV=['audit_op','domain','layer','measured','remedy'];
+  const isRestate=line=>{
+    const m=/^([a-z][a-z_]*):\s+([\s\S]+)$/.exec(line);
+    if(!m||!CONSUMED_KV.includes(m[1]))return false;
+    return kvValue(c[m[1]])===m[2].replace(/\s+$/,'');
+  };
+  if(Array.isArray(c.lines))c.lines.forEach(line=>{
+    const text=kvValue(line);
+    if(text===headerText||(typeof sourceText==='string'&&text===sourceText&&text===headerText))return;
+    if(line===c.lines[0]&&capturedHeader&&firstLine===text)return;
+    if(isRestate(text))return;
+    bodyItems.push({text,indent:8});
+  });
   const kv=[];
   if(context.audit_op!==null&&context.audit_op!==undefined)kv.push({field:'audit_op',value:kvValue(context.audit_op)});
   kv.push({field:'state_modified',value:'false'});
@@ -200,6 +243,17 @@ function renderTree(context,component){
       }
     });
   };
+  // String root: the envelope carries the rendered root line as a plain
+  // string (§5.2 golden: `ses_a992f session.start "…"`). Split the first
+  // token as the id column and pad the remainder onto the label column
+  // so it grids with the node labels.
+  const pushRoot=head=>{items.push({text:head.replace(/\s+$/,''),indent:2})};
+  if(typeof c.root==='string'&&c.root.trim()){
+    const t=c.root.trim();
+    const sp=t.indexOf(' ');
+    if(sp>0)pushRoot(`${t.slice(0,sp)}  ${t.slice(sp+1).padEnd(labelWidth)}`);
+    else pushRoot(t);
+  }
   if(c.root&&typeof c.root==='object'){
     const r=c.root;
     let head='';
@@ -210,7 +264,7 @@ function renderTree(context,component){
       const intent=String(r.intent);
       head+=(head?'  ':'')+(intent.startsWith('"')?intent:`"${intent}"`);
     }
-    items.push({text:head.replace(/\s+$/,''),indent:2});
+    pushRoot(head);
   }
   nodes.forEach((n,i)=>emit(n,0,[],i===nodes.length-1));
   const sections=[];
@@ -227,11 +281,14 @@ function renderReceipt(context,component){
   let groups=Array.isArray(c.groups)?c.groups.filter(g=>g&&typeof g==='object'):[];
   if(!groups.length&&(c.fields||c.title))groups=[{fields:c.fields||{}}];
   const sections=[];
-  groups.forEach((g,gi)=>{
+  groups.forEach(g=>{
     const items=[];
-    if(gi>0)items.push({text:DIVIDER_LINE,indent:2});
-    appendKvEntries(items,g.fields);
+    // Golden receipt law: a group's captured lead-in ("result:") precedes
+    // its kv fields; groups separate by blank space — the renderer does
+    // not insert divider runs of its own (stored captures, if any,
+    // print once).
     if(Array.isArray(g.lines))g.lines.forEach(line=>items.push({text:kvValue(line),indent:2}));
+    appendKvEntries(items,g.fields);
     sections.push({title:g.title??null,items});
   });
   if(Array.isArray(c.lines)&&c.lines.length){
@@ -241,19 +298,72 @@ function renderReceipt(context,component){
   return{header:{style:'badge',label},sections};
 }
 
+// Document pagination items → display rows. Array items pair with the
+// comma-separated columns spec in fields.columns (when dimensions
+// match); object items derive their header from the union of their
+// keys; string items pass through verbatim with embedded spacing.
+// Column alignment is computed here — never stored in fixture data.
+function alignedTableLines(header,rows){
+  const grid=[...(header&&header.length?[header]:[]),...rows];
+  const n=grid.reduce((m,r)=>Math.max(m,r.length),0);
+  const widths=Array.from({length:n},(_,i)=>grid.reduce((m,r)=>Math.max(m,String(r[i]??'').length),0));
+  return grid.map(r=>r.map((v,i)=>String(v??'').padEnd(widths[i])).join('  ').replace(/\s+$/,''));
+}
+
+function documentItemRows(items,columnSpec){
+  if(items.every(Array.isArray)){
+    const cols=(typeof columnSpec==='string')
+      ?columnSpec.split(',').map(s=>s.trim()).filter(Boolean):[];
+    const width=items.reduce((m,r)=>Math.max(m,r.length),0);
+    const grid=items.map(r=>Array.from({length:width},(_,i)=>kvValue(r[i])));
+    return alignedTableLines(cols.length===width?cols:null,grid);
+  }
+  if(items.every(it=>it&&typeof it==='object'&&!Array.isArray(it))){
+    const header=Array.from(items.reduce((set,it)=>{Object.keys(it).forEach(k=>set.add(k));return set},new Set()));
+    const grid=items.map(it=>header.map(k=>kvValue(it[k])));
+    return alignedTableLines(header,grid);
+  }
+  return items.map(it=>kvValue(it));
+}
+
 function renderDocument(context,component){
   const c=component||{};
   const sections=[];
-  const metaItems=[];
-  appendKvEntries(metaItems,c.meta??c.fields);
-  if(metaItems.length)sections.push({title:null,items:metaItems});
+  // Summary kv: the domain's own fields, then the keyset envelope
+  // mirror (meta). Prose screens carry only meta, so the order is
+  // stable across all document fixtures.
+  const kv=[];
+  appendKvEntries(kv,c.fields);
+  appendKvEntries(kv,c.meta);
+  if(kv.length)sections.push({title:null,items:kv});
   const rawBody=Array.isArray(c.body)?c.body:(typeof c.body==='string'?[c.body]:(Array.isArray(c.lines)?c.lines:[]));
   const bodyLines=[];
   rawBody.forEach(entry=>String(entry).split('\n').forEach(line=>bodyLines.push(line)));
+  // Keyset envelope law (§6.1.2): pagination.items mirror the body
+  // slice in the machine payload — search results list the same lines
+  // in both. With an empty body (truncated rowsets, dump listings,
+  // step lists) the leading items ARE the human content and render as
+  // an aligned table. The divider before the first content section
+  // matches the golden document output and is renderer output —
+  // never fixture data.
+  const pag=(c.pagination&&typeof c.pagination==='object')?c.pagination:null;
+  const pagItems=(pag&&Array.isArray(pag.items))?pag.items:[];
+  if(!bodyLines.length&&pagItems.length){
+    const rows=documentItemRows(pagItems,c.fields&&c.fields.columns);
+    if(rows.length){
+      const items=[];
+      if(kv.length)items.push({text:DIVIDER_LINE,indent:2});
+      rows.forEach(line=>items.push({text:line,indent:2}));
+      sections.push({title:null,items});
+    }
+  }
   if(bodyLines.length){
     // Lines consisting solely of ─ are divider runs and pass through
     // verbatim; every other line is body text at the document indent.
-    sections.push({title:null,items:bodyLines.map(line=>({text:line,indent:2}))});
+    const items=[];
+    if(kv.length)items.push({text:DIVIDER_LINE,indent:2});
+    bodyLines.forEach(line=>items.push({text:line,indent:2}));
+    sections.push({title:null,items});
   }
   if(Array.isArray(c.footer_lines)&&c.footer_lines.length){
     sections.push({title:null,items:c.footer_lines.map(line=>({text:kvValue(line),indent:2}))});
@@ -301,10 +411,9 @@ function normalizeScreen(screen){
 }
 
 // ─── Screen Renderer (JSON shape → styled output) ──────────────
-function RenderScreen({fixture}){
-  if(!fixture)return null;
-  const view=normalizeScreen(fixture);
-  const{state,render,diagnostic,trailer}=view;
+function RenderScreen({view}){
+  if(!view)return null;
+  const{state,render,trailer}=view;
   const env=state?.env||'dev';
   const tier=state?.tier||'tier_1';
   const exit=state?.exit_code??0;
@@ -429,6 +538,10 @@ function TerminalPanel({screenId,visible,onClose}){
   const[fixture,setFixture]=useState(null);
   const[error,setError]=useState(null);
   const[loading,setLoading]=useState(false);
+  // Normalize once so the header reads resolved literals, not raw
+  // $slot/$interpolate objects — rendering those as React children is
+  // error #31.
+  const view=useMemo(()=>fixture?normalizeScreen(fixture):null,[fixture]);
 
   useEffect(()=>{
     if(!screenId){setFixture(null);return;}
@@ -452,21 +565,21 @@ function TerminalPanel({screenId,visible,onClose}){
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-semibold break-all">{screenId||'—'}</span>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {fixture&&fixture.elapsed_ms!=null&&<span className={`text-[10px] ${fixture.elapsed_ms>=10000?'text-yield':'text-muted'}`}>{fmtElapsed(fixture.elapsed_ms)}</span>}
-            {fixture&&<span className={`text-[10px] px-2 py-0.5 rounded-full border ${exitColors[exit]} border-current`}>{stateWordFromScreenId(screenId)} · exit {exit}</span>}
+            {view&&view.elapsed_ms!=null&&<span className={`text-[10px] ${view.elapsed_ms>=10000?'text-yield':'text-muted'}`}>{fmtElapsed(view.elapsed_ms)}</span>}
+            {view&&<span className={`text-[10px] px-2 py-0.5 rounded-full border ${exitColors[exit]} border-current`}>{stateWordFromScreenId(screenId)} · exit {exit}</span>}
             <button onClick={onClose} className="text-muted hover:text-white text-sm">✕</button>
           </div>
         </div>
-        {fixture&&fixture.command&&<div className="text-xs text-accent truncate">$ {fixture.command}</div>}
-        {fixture&&fixture.context&&<div className="flex gap-1.5 flex-wrap">
+        {view&&view.command&&<div className="text-xs text-accent truncate">$ {view.command}</div>}
+        {view&&view.context&&<div className="flex gap-1.5 flex-wrap">
           {['env','tier','trust'].map(k=>(
-            <span key={k} className={`text-[10px] px-2 py-0.5 rounded-full border border-border ${k==='trust'&&fixture.context[k]==='draft'?'text-refusal':'text-muted'}`}>{fixture.context[k]}</span>
+            <span key={k} className={`text-[10px] px-2 py-0.5 rounded-full border border-border ${k==='trust'&&view.context[k]==='draft'?'text-refusal':'text-muted'}`}>{view.context[k]}</span>
           ))}
         </div>}
       </div>
       {loading&&<div className="flex-1 flex items-center justify-center text-muted text-[11px] animate-pulse">Loading fixture…</div>}
       {error&&<div className="flex-1 flex items-center justify-center text-denial text-[11px] p-4">{error}</div>}
-      {fixture&&<RenderScreen fixture={fixture}/>}
+      {view&&<RenderScreen view={view}/>}
       {!fixture&&!loading&&!error&&<div className="flex-1 flex items-center justify-center text-muted text-[11px]">Select a node to inspect.</div>}
     </div>
   );
@@ -548,12 +661,15 @@ function App(){
     return s;
   },[flows,activeJourney]);
 
-  // Searchable haystack per node: screen id + command + render payload.
+  // Searchable haystack per node: screen id + resolved command + component
+  // payload. Raw fixtures hold $slot/$interpolate authoring objects, so
+  // instantiate first or commands index as "[object Object]".
   const searchIndex=useMemo(()=>{
     if(!fixtures)return null;
     const idx=new Map();
     fixtures.forEach((f,id)=>{
-      idx.set(id,[id,f.command||'',JSON.stringify(f.render||f.component||{})].join(' ').toLowerCase());
+      const inst=instantiate(f);
+      idx.set(id,[id,inst.command||'',JSON.stringify(inst.component||{})].join(' ').toLowerCase());
     });
     return idx;
   },[fixtures]);
