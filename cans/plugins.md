@@ -16,6 +16,7 @@
       - subscribes — causal DAG event patterns
       - provides — native extension surfaces
       - fuel_declared — per-verb fuel envelope
+      - attends — attention source names
       - Frame fields — see governance.md#Budget-frames
     - Security declarations
       - permissions.vault — secret names requested
@@ -58,6 +59,36 @@
         - Scheduler — binding address and signature verification: see lifecycle.md#Schedule
         - Notify — ask caps and lint advisory: see governance.md#Limits-and-refusals
         - Storage, serve, federation — each pack spec owns its specifics
+    - Attention sources <!-- ref-by: lifecycle.md, world.md -->
+      - Source identity
+        - Format — plugin:<plugin_id>.<source_name>
+        - Namespaced, collision-proof across plugins
+        - Kernel source update.available reserved
+        - Cross-plugin impersonation denied exit 3
+      - Class and caps
+        - Class Background only, kernel-written
+        - Critical and Standard kernel-reserved
+        - Plugin-supplied class ignored on insert
+        - Three items per plugin per render
+        - Ten total plugin items across all plugins
+        - Overflow dropped silently, advisory only
+      - Lifecycle
+        - TTL seven days default, renew by re-emit
+        - No ack surface, TTL is lifecycle
+        - Purged on plugin disable or uninstall
+        - No cross-plugin reads, no orphan items
+      - Storage and render
+        - Table _plugin_attention in system schema
+        - Columns plugin_id, source_name, item_id
+        - Columns class, summary, affordance_json
+        - Columns created_at, expires_at
+        - Read at envelope render where not expired
+        - Ordering update.available first, then created_at
+      - Affordance validation
+        - affordance.command passes AST at emit
+        - Invalid affordance rejected exit 3
+        - Phase 1 gate — see kernel.md#Unified-3-phase-engine
+        - Never a broken command handed to agent
     - Serve lifecycle <!-- ref-by: lifecycle.md -->
       - CLI configuration
         - bind endpoint commits to workspace.db

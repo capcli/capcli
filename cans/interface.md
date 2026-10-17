@@ -241,6 +241,11 @@
           - sys serve --restart
           - sys serve --status
           - Daemon — see assembly.md#Rust-workspace-crates
+      - Update
+        - sys update [--only <stage>] [--to <target>]
+        - --check reports, --allow-downgrade gates older targets
+        - Stage 6 requires --allow-migrations always
+        - Canonical home — see lifecycle.md#Update-pipeline
     - Plugin noun <!-- ref-by: plugins.md -->
       - Install
         - plugin install <source>

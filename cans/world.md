@@ -161,14 +161,14 @@
         - Budget — _budget_frames, _api_quota (see governance.md#Budget-frames)
         - Catalog — _api_catalog, secrets (see egress.md#Vault-storage)
         - Identity — agents, claims (see identity.md#System-agent-registry)
-        - Interaction — _pending_asks (see governor.md#Suspension-registry)
         - Triggers — _watch_cursors, _bindings (see plugins.md#Capabilities)
         - Queues — _outbox_events, _inbox (see #Outbox-inbox)
-        - State — _suspended_tasks, _packs (see governor.md#Suspension-registry)
+        - State — _pending_asks, _suspended_tasks, _packs (see governor.md#Suspension-registry)
         - Metrics — routine_stats (see lifecycle.md#Stage-map)
         - Attention — _attention_cursors (see kernel.md#Diagnostic-output-law)
+        - Plugin attention — _plugin_attention (see plugins.md#Attention-sources)
       - Roster invariant
-        - Sixteen kernel tables total
+        - Seventeen kernel tables total
         - Every table owned by one file
         - Cross-file citation not allowed
         - Definition — see kernel.md#Layer-1-C-authorizer

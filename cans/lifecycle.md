@@ -498,3 +498,35 @@
       - Table — routine_stats
       - Shows versions and outcomes
       - Envelope shape — see interface.md#CLI-surface
+  - Update pipeline <!-- ref-by: interface.md -->
+    - Scope
+      - Kernel binary, artifacts, plugins, packs, APIs, schema
+      - One governed pipeline, per-component atomic
+      - Never partial across components
+      - Trust rungs unchanged by update
+    - Ordered stages
+      - 1 — kernel binary self-update
+      - 2 — artifacts recompile — see kernel.md#Policy-vs-governance-split
+      - 3 — plugins swap — see plugins.md#Generations
+      - 4 — packs update — see marketplace.md#Pack-lifecycle
+      - 5 — API catalogs sync
+      - 6 — schema migrations — see world.md#Migration
+    - Stage laws
+      - Rollback law — see kernel.md#Exit-code-law
+      - Prior completed stages stay committed
+      - Audit leaf per stage, chain advances each
+      - Order is invariant, never reordered
+    - Downgrade
+      - Per-component only via --to target
+      - Kernel binary needs schema hash match at boot
+      - Plugins flip generation pointer backwards
+      - Packs re-import old version — see marketplace.md#Immutable-versioning
+      - Schema migrations never downgrade — see world.md#Migration
+      - Incompatible targets exit 2 policy.update.incompatible_downgrade
+    - Attention
+      - Source string update.available per pending item
+      - Class Background always, zero priority competition
+      - Affordance sys update, risk low
+      - Summary names installed versus available version
+      - Plugin sources — see plugins.md#Attention-sources
+      - Block shape and fields — see kernel.md#Attention-block

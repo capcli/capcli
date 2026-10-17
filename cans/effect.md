@@ -258,6 +258,7 @@
         - policy.platform — E045 tier 1 mandate
         - policy.federation — cycle or unallowlisted
         - policy.ast — AST bound breach
+        - policy.update — incompatible or refused downgrade
       - Plugin surface
         - api.quota — spend ceiling breach
         - api.upstream — provider failure

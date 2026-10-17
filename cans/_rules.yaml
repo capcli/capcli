@@ -84,9 +84,11 @@ canonical_homes:
   decay: lifecycle.md#Decay
   environments: lifecycle.md#Environments
   masking: lifecycle.md#Masking
+  update_pipeline: lifecycle.md#Update-pipeline
   plugin_manifest: plugins.md#Manifest
   plugin_manifest_artifact: artifacts/templates/plugin.yaml
   plugin_capabilities: plugins.md#Capabilities
+  attention_sources: plugins.md#Attention-sources
   cli_noun_registration: plugins.md#CLI-projection
   ctx_namespace_registration: plugins.md#Capability-declarations
   schema_extension: world.md#Plugin-schema-namespace
