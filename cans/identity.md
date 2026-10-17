@@ -250,7 +250,7 @@
       - Spokes ping Hub every 5s
       - Updates heartbeat_at in agents table
       - Missing heartbeat marks stale
-      - Config — see artifacts/governance.yaml
+      - Config — see artifacts/transport.yaml
     - Reaper eviction
       - Hub reaps nodes exceeding lease_ttl
       - Marks status expired
@@ -298,7 +298,7 @@
         - Writers queue up to busy_timeout
         - Timeout exhaustion exits 2
         - Canonical window — see world.md#SQLite-as-SSOT
-        - Config — see artifacts/governance.yaml
+        - Config — see artifacts/transport.yaml
       - Physical arbiter
         - Shared workspace.db with WAL
         - Serialized via BEGIN IMMEDIATE
