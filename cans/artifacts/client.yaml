@@ -5,17 +5,3 @@
 version: 1
 rpc_endpoint: "http://127.0.0.1:4040/rpc"
 ws_tail: "ws://127.0.0.1:4040/ws/audit"
-
-branding:
-  product_name: "Core Gateway"
-  binary_alias: "capcli"
-  tagline: "Autonomous Agent Execution Kernel"
-  noun_aliases:
-    run: "run"
-    sql: "sql"
-    routine: "routine"
-    sys: "sys"                          # Kernel noun; cannot be re-aliased
-  output:
-    tier_prefix: true                   # Emits [env:tier] headers
-    json_strict: true                   # Raw CliEnvelope<T> responses never rebranded
-    table_pipes_banned: true            # Standard diagnostic formatting
