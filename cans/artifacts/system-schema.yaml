@@ -1,4 +1,4 @@
-version: 3                             # compiled into capcli.lock root hash
+version: 1                             # compiled into capcli.lock root hash
 engine: sqlite                         # SQLite SSOT substrate
 db: audit.db                           # isolated ledger database (workspace.db hosts domain state)
 readonly_for_agent: true               # kernel-upgrades only; agent write throws exit 2

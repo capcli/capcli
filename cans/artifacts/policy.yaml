@@ -9,7 +9,7 @@
 # Not:      rate limits & header calibration → see artifacts/rate-limits.yaml
 # Not:      audit redaction & mask rules → see artifacts/masking.yaml
 # ═══════════════════════════════════════════════════════════════
-version: 5
+version: 1
 lockfile: capcli.lock                 # compiled root hash SSOT
 default: deny                         # THE anchor. everything below carves exceptions
 

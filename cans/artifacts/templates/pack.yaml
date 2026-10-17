@@ -21,7 +21,7 @@ version: 1
 id: pack.ecommerce.shopify
 name: Shopify Production Stack
 version: 2.1.0
-min_kernel_version: 0.8.0
+min_kernel_version: 1.0.0
 pack_tier: application                      # kernel | application | community
 
 # ───────────────────────────────────────────────────────────────

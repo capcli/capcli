@@ -10,7 +10,7 @@ version: 1
 kind: routine                            # routine | world
 urp: "pack://routine/atomic_action"
 min_kernel_version: "1.0.0"
-policy_version: 5
+policy_version: 1
 bundle_hash: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 inputs:

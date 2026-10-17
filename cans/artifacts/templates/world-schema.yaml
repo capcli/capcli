@@ -7,7 +7,7 @@
 # ───────────────────────────────────────────────────────────────
 # Pointers: db://<table_name>
 
-version: 12                            # compiled into capcli.lock root hash
+version: 1                             # compiled into capcli.lock root hash
 engine: sqlite                         # sqlite | libsql (embedded C authorizer mandatory)
 db: workspace.db                       # managed runtime database
 

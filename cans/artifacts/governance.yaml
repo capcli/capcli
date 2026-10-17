@@ -8,9 +8,9 @@
 # Not:      budget composition & fuel execution limits → see artifacts/budget.yaml
 # Not:      api catalog scale & rate limits → see artifacts/rate-limits.yaml
 # ═══════════════════════════════════════════════════════════════
-version: 8
+version: 1
 lockfile: capcli.lock                 # deterministic compiler target; drift law: see policy.yaml#fail_closed
-policy_version: 5
+policy_version: 1
 
 # ───────────────────────────────────────────────────────────────
 # 1. REGISTRY — the shelves have dimensions

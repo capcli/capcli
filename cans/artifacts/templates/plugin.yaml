@@ -21,7 +21,7 @@ version: 1
 id: capcli.plugin.stripe                     # reverse-DNS unique identifier
 name: Stripe Financial Driver                # human-readable display string
 version: 1.4.0                               # semver, immutable once published
-min_kernel_version: 0.8.0                    # semver floor
+min_kernel_version: 1.0.0                    # semver floor
 entrypoint: ["bin/stripe-driver"]            # executable path array
 
 # ───────────────────────────────────────────────────────────────
