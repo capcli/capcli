@@ -1,7 +1,10 @@
-# ═══════════════════════════════════════════════════════════════
-# storage.yaml — blob storage & WORM retention SSOT
-# Pointers: storage://*
-# ═══════════════════════════════════════════════════════════════
+# ───────────────────────────────────────────────────────────────
+# storage.yaml — blob storage, WORM backup & storage bounds SSOT
+# Owns:     blob storage endpoints (storage://*), WORM backup retention, blob storage bounds, backup policy
+# Not:      telemetry event egress sinks → see artifacts/governance.yaml#telemetry
+# Not:      audit cold mirror & storage hierarchy → see cans/effect.md#Storage-hierarchy
+# Compiled: yes → capcli.lock root hash
+# ───────────────────────────────────────────────────────────────
 version: 1
 
 # ───────────────────────────────────────────────────────────────
