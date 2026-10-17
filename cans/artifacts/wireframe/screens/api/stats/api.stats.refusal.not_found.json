@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.stats.refusal.not_found",
-  "target": "shopify",
-  "command": "capcli api stats shopify",
-  "elapsed_ms": 143,
+  "scenario": {
+    "provider": "shopify"
+  },
+  "target": {
+    "$slot": "provider",
+    "$from": "scenario.provider",
+    "$example": "shopify"
+  },
+  "command": {
+    "$interpolate": "capcli api stats {{provider}}",
+    "$bindings": {
+      "provider": "scenario.provider"
+    },
+    "$example": "capcli api stats shopify"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 143
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,14 +30,44 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "validation",
-    "culprit": "Target provider not found: 'shopify'.",
+    "culprit": {
+      "$interpolate": "Target provider not found: '{{provider}}'.",
+      "$bindings": {
+        "provider": "scenario.provider"
+      },
+      "$example": "Target provider not found: 'shopify'."
+    },
     "remedy": "sync the provider first, e.g. 'capcli api sync shopify <openapi-url>', or list configured providers via 'capcli api catalog'",
-    "command": "capcli api stats shopify",
-    "provider": "shopify",
+    "command": {
+      "$interpolate": "capcli api stats {{provider}}",
+      "$bindings": {
+        "provider": "scenario.provider"
+      },
+      "$example": "capcli api stats shopify"
+    },
+    "provider": {
+      "$slot": "provider_2",
+      "$from": "scenario.provider",
+      "$example": "shopify"
+    },
     "lines": [
-      "FATAL  validation.not_found",
-      "Target provider not found.",
-      "No catalog entry for provider 'shopify' (providers configured: 2)."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.not_found"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Target provider not found."
+      },
+      {
+        "$interpolate": "No catalog entry for provider '{{provider}}' (providers configured: 2).",
+        "$bindings": {
+          "provider": "scenario.provider"
+        },
+        "$example": "No catalog entry for provider 'shopify' (providers configured: 2)."
+      }
     ]
   }
 }

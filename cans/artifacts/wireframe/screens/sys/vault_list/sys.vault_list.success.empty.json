@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.vault_list.success.empty",
-  "target": "vault",
-  "command": "capcli sys vault list",
-  "elapsed_ms": 41,
+  "scenario": {
+    "vault": "vault"
+  },
+  "target": {
+    "$slot": "vault",
+    "$from": "scenario.vault",
+    "$example": "vault"
+  },
+  "command": {
+    "$interpolate": "capcli sys {{vault}} list",
+    "$bindings": {
+      "vault": "scenario.vault"
+    },
+    "$example": "capcli sys vault list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 41
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,12 +38,22 @@
     "groups": [
       {
         "fields": {
-          "total": "0 names"
+          "total": {
+            "$slot": "total",
+            "$from": "live.groups[0].fields.total",
+            "$example": "0 names"
+          }
         }
       },
       {
         "lines": [
-          "No secrets vaulted. Add one with 'capcli sys vault set <name> --in @-'."
+          {
+            "$interpolate": "No secrets vaulted. Add one with 'capcli sys {{vault}} set <name> --in @-'.",
+            "$bindings": {
+              "vault": "scenario.vault"
+            },
+            "$example": "No secrets vaulted. Add one with 'capcli sys vault set <name> --in @-'."
+          }
         ]
       }
     ]

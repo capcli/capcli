@@ -1,29 +1,69 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.recover.success.listed",
-  "target": "snapshots",
-  "command": "capcli sys recover --list",
-  "elapsed_ms": 143,
+  "scenario": {
+    "snapshot_id": "snapshots"
+  },
+  "target": {
+    "$slot": "snapshot_id",
+    "$from": "scenario.snapshot_id",
+    "$example": "snapshots"
+  },
+  "command": {
+    "$interpolate": "capcli sys recover --list",
+    "$bindings": {},
+    "$example": "capcli sys recover --list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 143
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
-    "title": "snapshots",
+    "title": {
+      "$slot": "snapshot_id_2",
+      "$from": "scenario.snapshot_id",
+      "$example": "snapshots"
+    },
     "groups": [
       {
         "fields": {
-          "snap_onboarding_final": "git:3f9c2ab (2026-10-04T03:00Z)",
-          "snap_auto_2026-10-03T0300Z": "git:1c8d4e2",
-          "snap_auto_2026-10-02T0300Z": "git:9a7b3f1"
+          "snap_onboarding_final": {
+            "$slot": "snap_onboarding_final",
+            "$from": "live.groups[0].fields.snap_onboarding_final",
+            "$example": "git:3f9c2ab (2026-10-04T03:00Z)"
+          },
+          "snap_auto_2026-10-03T0300Z": {
+            "$slot": "snap_auto_2026_10_03t0300z",
+            "$from": "live.groups[0].fields.snap_auto_2026_10_03t0300z",
+            "$example": "git:1c8d4e2"
+          },
+          "snap_auto_2026-10-02T0300Z": {
+            "$slot": "snap_auto_2026_10_02t0300z",
+            "$from": "live.groups[0].fields.snap_auto_2026_10_02t0300z",
+            "$example": "git:9a7b3f1"
+          }
         }
       },
       {
         "lines": [
-          "restore with 'capcli sys recover <commit>'"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "restore with 'capcli sys recover <commit>'"
+          }
         ]
       }
     ]

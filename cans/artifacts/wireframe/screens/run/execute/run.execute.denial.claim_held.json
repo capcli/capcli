@@ -1,9 +1,33 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.denial.claim_held",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-10 -p carrier=fedex --lock orders:ORD-10 -m \"fulfill urgent pending orders\"",
-  "elapsed_ms": 387,
+  "scenario": {
+    "routine_urp": "cap://dispatch_order@4",
+    "order_id": "ORD-10",
+    "carrier": "fedex",
+    "intent": "fulfill urgent pending orders"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p order_id={{order_id}} -p carrier={{carrier}} --lock orders:ORD-10 -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "carrier": "scenario.carrier",
+      "order_id": "scenario.order_id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://dispatch_order@4 -p order_id=ORD-10 -p carrier=fedex --lock orders:ORD-10 -m \"fulfill urgent pending orders\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 387
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,20 +38,56 @@
     "rule": "db.claims.held",
     "domain": "db.claims",
     "layer": "claims",
-    "culprit": "Exclusive --lock ref 'orders:ORD-10' already held by agt_9k2w (14m 22s remaining; lease claim_c3d4).",
-    "measured": "1 active lease on orders:ORD-10 (expires in 14m 22s)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Exclusive --lock ref 'orders:ORD-10' already held by agt_9k2w (14m 22s remaining; lease claim_c3d4)."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "1 active lease on orders:ORD-10 (expires in 14m 22s)"
+    },
     "remedy": "wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'",
-    "holder": "agt_9k2w (nightly reorder batch)",
-    "lease": "claim_c3d4 (14m 22s remaining, ttl 30m)",
+    "holder": {
+      "$slot": "holder",
+      "$from": "live.holder",
+      "$example": "agt_9k2w (nightly reorder batch)"
+    },
+    "lease": {
+      "$slot": "lease",
+      "$from": "live.lease",
+      "$example": "claim_c3d4 (14m 22s remaining, ttl 30m)"
+    },
     "lines": [
-      "exclusive claim 'orders:ORD-10' already held",
-      "Exclusive --lock refs serialize mutations per target;",
-      "concurrent dispatch refused to prevent lost updates."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "exclusive claim 'orders:ORD-10' already held"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Exclusive --lock refs serialize mutations per target;"
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "concurrent dispatch refused to prevent lost updates."
+      }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/budget/execution_starved#1",
-    "reason": "claim held denial: entity lease contested",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "claim held denial: entity lease contested"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }

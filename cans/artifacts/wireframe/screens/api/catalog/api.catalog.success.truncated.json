@@ -1,65 +1,217 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.catalog.success.truncated",
-  "target": "catalog",
-  "command": "capcli api catalog",
-  "elapsed_ms": 370,
+  "scenario": {
+    "catalog": "catalog"
+  },
+  "target": {
+    "$slot": "catalog",
+    "$from": "scenario.catalog",
+    "$example": "catalog"
+  },
+  "command": {
+    "$interpolate": "capcli api {{catalog}}",
+    "$bindings": {
+      "catalog": "scenario.catalog"
+    },
+    "$example": "capcli api catalog"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 370
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "truncated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "truncated"
+    }
   },
   "archetype": "document",
   "component": {
-    "header_badge": "truncated",
+    "header_badge": {
+      "$slot": "header_badge",
+      "$from": "live.header_badge",
+      "$example": "truncated"
+    },
     "pagination": {
       "items": [
         {
-          "verb": "stripe.refund_charge",
-          "state": "active",
-          "trust": "draft"
+          "verb": {
+            "$slot": "api_verb",
+            "$from": "live.api_verb",
+            "$example": "stripe.refund_charge"
+          },
+          "state": {
+            "$slot": "state",
+            "$from": "live.pagination.items[0].state",
+            "$example": "active"
+          },
+          "trust": {
+            "$slot": "trust",
+            "$from": "live.pagination.items[0].trust",
+            "$example": "draft"
+          }
         },
         {
-          "verb": "threads.create_media_post",
-          "state": "active",
-          "trust": "draft"
+          "verb": {
+            "$slot": "api_verb_2",
+            "$from": "live.api_verb",
+            "$example": "threads.create_media_post"
+          },
+          "state": {
+            "$slot": "state_2",
+            "$from": "live.pagination.items[1].state",
+            "$example": "active"
+          },
+          "trust": {
+            "$slot": "trust_2",
+            "$from": "live.pagination.items[1].trust",
+            "$example": "draft"
+          }
         }
       ],
-      "next_cursor": "cap://shipstation/create_order",
-      "has_more": true
+      "next_cursor": {
+        "$slot": "next_cursor",
+        "$from": "live.pagination.next_cursor",
+        "$example": "cap://shipstation/create_order"
+      },
+      "has_more": {
+        "$slot": "has_more",
+        "$from": "live.pagination.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "meta": {
-      "next_cursor": "cap://shipstation/create_order",
-      "has_more": true
+      "next_cursor": {
+        "$slot": "next_cursor_2",
+        "$from": "live.meta.next_cursor",
+        "$example": "cap://shipstation/create_order"
+      },
+      "has_more": {
+        "$slot": "has_more_2",
+        "$from": "live.meta.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "fields": {
-      "providers": "10",
-      "verbs_total": "1204",
-      "verbs_listed": "500 (listing cap)",
-      "truncated": "true"
+      "providers": {
+        "$slot": "providers",
+        "$from": "live.fields.providers",
+        "$example": "10"
+      },
+      "verbs_total": {
+        "$slot": "verbs_total",
+        "$from": "live.fields.verbs_total",
+        "$example": "1204"
+      },
+      "verbs_listed": {
+        "$slot": "verbs_listed",
+        "$from": "live.fields.verbs_listed",
+        "$example": "500 (listing cap)"
+      },
+      "truncated": {
+        "$slot": "truncated",
+        "$from": "live.fields.truncated",
+        "$example": "true"
+      }
     },
     "body": [
-      "catalog",
-      "├── cap://stripe",
-      "│     ├── refund_charge           active    draft",
-      "│     ├── create_payment_intent   active    draft",
-      "│     └── issue_credit_note       active    draft",
-      "├── cap://threads",
-      "│     ├── create_media_post       active    draft",
-      "│     └── get_media_post          active    —",
-      "└── cap://fedex",
-      "├── ship                    active    reviewed",
-      "└── track                   active    reviewed",
-      "... 493 further verbs elided (listing capped at 500) ..."
+      {
+        "$slot": "catalog_2",
+        "$from": "scenario.catalog",
+        "$example": "catalog"
+      },
+      {
+        "$slot": "body_0",
+        "$from": "live.body[1]",
+        "$example": "├── cap://stripe"
+      },
+      {
+        "$slot": "body_1",
+        "$from": "live.body[2]",
+        "$example": "│     ├── refund_charge           active    draft"
+      },
+      {
+        "$slot": "body_2",
+        "$from": "live.body[3]",
+        "$example": "│     ├── create_payment_intent   active    draft"
+      },
+      {
+        "$slot": "body_3",
+        "$from": "live.body[4]",
+        "$example": "│     └── issue_credit_note       active    draft"
+      },
+      {
+        "$slot": "body_4",
+        "$from": "live.body[5]",
+        "$example": "├── cap://threads"
+      },
+      {
+        "$slot": "body_5",
+        "$from": "live.body[6]",
+        "$example": "│     ├── create_media_post       active    draft"
+      },
+      {
+        "$slot": "body_6",
+        "$from": "live.body[7]",
+        "$example": "│     └── get_media_post          active    —"
+      },
+      {
+        "$slot": "body_7",
+        "$from": "live.body[8]",
+        "$example": "└── cap://fedex"
+      },
+      {
+        "$slot": "body_8",
+        "$from": "live.body[9]",
+        "$example": "├── ship                    active    reviewed"
+      },
+      {
+        "$slot": "body_9",
+        "$from": "live.body[10]",
+        "$example": "└── track                   active    reviewed"
+      },
+      {
+        "$slot": "body_10",
+        "$from": "live.body[11]",
+        "$example": "... 493 further verbs elided (listing capped at 500) ..."
+      }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api catalog stripe --state active --json",
-      "intent": "Imported catalog verbs listed",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api {{catalog}} stripe --state active --json",
+        "$bindings": {
+          "catalog": "scenario.catalog"
+        },
+        "$example": "capcli api catalog stripe --state active --json"
+      },
+      "intent": {
+        "$interpolate": "Imported {{catalog}} verbs listed",
+        "$bindings": {
+          "catalog": "scenario.catalog"
+        },
+        "$example": "Imported catalog verbs listed"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

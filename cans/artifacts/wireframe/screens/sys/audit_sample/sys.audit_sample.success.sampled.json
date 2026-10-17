@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.audit_sample.success.sampled",
-  "target": "_audit",
-  "command": "capcli sys audit sample --capability process_wholesale_order --limit 10",
-  "elapsed_ms": 187,
+  "scenario": {
+    "audit": "_audit"
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit sample --capability process_wholesale_order --limit 10",
+    "$bindings": {},
+    "$example": "capcli sys audit sample --capability process_wholesale_order --limit 10"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 187
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,18 +36,52 @@
     "groups": [
       {
         "fields": {
-          "capability": "process_wholesale_order",
-          "window": "last 30 days",
-          "rows_scanned": "1,204",
-          "sampled": "10 (limit 10)",
-          "fuel_total": "3,412 integer compute",
-          "wire_bytes_total": "88,104",
-          "provenance": "real historical values — synthetic fixtures banned for evidence"
+          "capability": {
+            "$slot": "capability",
+            "$from": "live.groups[0].fields.capability",
+            "$example": "process_wholesale_order"
+          },
+          "window": {
+            "$slot": "window",
+            "$from": "live.groups[0].fields.window",
+            "$example": "last 30 days"
+          },
+          "rows_scanned": {
+            "$slot": "rows_scanned",
+            "$from": "live.groups[0].fields.rows_scanned",
+            "$example": "1,204"
+          },
+          "sampled": {
+            "$slot": "sampled",
+            "$from": "live.groups[0].fields.sampled",
+            "$example": "10 (limit 10)"
+          },
+          "fuel_total": {
+            "$slot": "fuel_total",
+            "$from": "live.groups[0].fields.fuel_total",
+            "$example": "3,412 integer compute"
+          },
+          "wire_bytes_total": {
+            "$slot": "wire_bytes_total",
+            "$from": "live.groups[0].fields.wire_bytes_total",
+            "$example": "88,104"
+          },
+          "provenance": {
+            "$slot": "provenance",
+            "$from": "live.groups[0].fields.provenance",
+            "$example": "real historical values — synthetic fixtures banned for evidence"
+          }
         }
       },
       {
         "lines": [
-          "evidence source: _audit mirror; config per artifacts/governance.yaml"
+          {
+            "$interpolate": "evidence source: {{audit}} mirror; config per artifacts/governance.yaml",
+            "$bindings": {
+              "audit": "scenario.audit"
+            },
+            "$example": "evidence source: _audit mirror; config per artifacts/governance.yaml"
+          }
         ]
       }
     ]

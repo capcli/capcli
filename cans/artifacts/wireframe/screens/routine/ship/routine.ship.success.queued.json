@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.ship.success.queued",
-  "target": "sync_orders",
-  "command": "capcli routine ship sync_orders reviewed --queue --reason \"recurring fulfillment sync, human-reviewed\"",
-  "elapsed_ms": 989,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine ship {{sync_orders}} reviewed --queue --reason \"recurring fulfillment sync, human-reviewed\"",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine ship sync_orders reviewed --queue --reason \"recurring fulfillment sync, human-reviewed\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 989
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,45 +33,121 @@
     "groups": [
       {
         "fields": {
-          "routine": "sync_orders@1 (draft)",
-          "requested_rung": "reviewed",
-          "mode": "--queue (promotion batch)",
-          "reason": "\"recurring fulfillment sync, human-reviewed\""
+          "routine": {
+            "$slot": "routine",
+            "$from": "live.groups[0].fields.routine",
+            "$example": "sync_orders@1 (draft)"
+          },
+          "requested_rung": {
+            "$slot": "requested_rung",
+            "$from": "live.groups[0].fields.requested_rung",
+            "$example": "reviewed"
+          },
+          "mode": {
+            "$slot": "mode",
+            "$from": "live.groups[0].fields.mode",
+            "$example": "--queue (promotion batch)"
+          },
+          "reason": {
+            "$slot": "reason",
+            "$from": "live.groups[0].fields.reason",
+            "$example": "\"recurring fulfillment sync, human-reviewed\""
+          }
         }
       },
       {
         "fields": {
-          "routine_changes": "0",
-          "deploys": "0",
-          "queue_row": "1 committed (promotion batch)"
+          "routine_changes": {
+            "$slot": "routine_changes",
+            "$from": "live.groups[1].fields.routine_changes",
+            "$example": "0"
+          },
+          "deploys": {
+            "$slot": "deploys",
+            "$from": "live.groups[1].fields.deploys",
+            "$example": "0"
+          },
+          "queue_row": {
+            "$slot": "queue_row",
+            "$from": "live.groups[1].fields.queue_row",
+            "$example": "1 committed (promotion batch)"
+          }
         },
         "lines": [
-          "enqueued for human review; no code shipped, no changes committed to the routine"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "enqueued for human review; no code shipped, no changes committed to the routine"
+          }
         ]
       },
       {
         "fields": {
-          "queue": "promotion (position 2 of 2)",
-          "enqueued_at": "2026-10-09T14:22:07Z",
-          "sla": "48h to sign-off (promotion.sla_breached alert via sys doctor)",
-          "veto_window": "1h canary telemetry after sign-off (autonomous rollback on anomalies)",
-          "supervisor_inspection": "capcli routine pending"
+          "queue": {
+            "$slot": "queue",
+            "$from": "live.groups[2].fields.queue",
+            "$example": "promotion (position 2 of 2)"
+          },
+          "enqueued_at": {
+            "$slot": "enqueued_at",
+            "$from": "live.groups[2].fields.enqueued_at",
+            "$example": "2026-10-09T14:22:07Z"
+          },
+          "sla": {
+            "$slot": "sla",
+            "$from": "live.groups[2].fields.sla",
+            "$example": "48h to sign-off (promotion.sla_breached alert via sys doctor)"
+          },
+          "veto_window": {
+            "$slot": "veto_window",
+            "$from": "live.groups[2].fields.veto_window",
+            "$example": "1h canary telemetry after sign-off (autonomous rollback on anomalies)"
+          },
+          "supervisor_inspection": {
+            "$slot": "supervisor_inspection",
+            "$from": "live.groups[2].fields.supervisor_inspection",
+            "$example": "capcli routine pending"
+          }
         }
       },
       {
         "fields": {
-          "audit": "op_ship_05 (promotion queue row committed; no routine version change)",
-          "note": "batch approval commits a single audit event per queue"
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[3].fields.audit",
+            "$example": "op_ship_05 (promotion queue row committed; no routine version change)"
+          },
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[3].fields.note",
+            "$example": "batch approval commits a single audit event per queue"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli routine pending",
-      "intent": "Batch promotion candidates listed",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli routine pending",
+        "$bindings": {},
+        "$example": "capcli routine pending"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Batch promotion candidates listed"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.serve.denial.port",
-  "target": "daemon",
-  "command": "capcli sys serve --start",
-  "elapsed_ms": 73,
+  "scenario": {
+    "daemon": "daemon"
+  },
+  "target": {
+    "$slot": "daemon",
+    "$from": "scenario.daemon",
+    "$example": "daemon"
+  },
+  "command": {
+    "$interpolate": "capcli sys serve --start",
+    "$bindings": {},
+    "$example": "capcli sys serve --start"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 73
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,16 +30,50 @@
     "rule": "db.engine.port_denied",
     "domain": "db.engine",
     "layer": "engine",
-    "culprit": "bind(127.0.0.1:4040) rejected: EADDRINUSE (foreign pid 49012)",
-    "measured": "port 4040 unavailable (required: 1 of 1)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "bind(127.0.0.1:4040) rejected: EADDRINUSE (foreign pid 49012)"
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "port 4040 unavailable (required: 1 of 1)"
+    },
     "remedy": "stop the foreign listener on 4040, then retry 'capcli sys serve --start'",
-    "holder": "pid 49012 (postgres) owns the socket",
-    "daemon": "start aborted before first serve.request event",
+    "holder": {
+      "$slot": "holder",
+      "$from": "live.holder",
+      "$example": "pid 49012 (postgres) owns the socket"
+    },
+    "daemon": {
+      "$slot": "daemon_2",
+      "$from": "live.daemon",
+      "$example": "start aborted before first serve.request event"
+    },
     "lines": [
-      "bind(127.0.0.1:4040) rejected: EADDRINUSE",
-      "The daemon admin surface binds 127.0.0.1:4040; binding denied, not retried.",
-      "layer:          engine",
-      "measured:       port 4040 unavailable (required: 1 of 1)"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "bind(127.0.0.1:4040) rejected: EADDRINUSE"
+      },
+      {
+        "$interpolate": "The {{daemon}} admin surface binds 127.0.0.1:4040; binding denied, not retried.",
+        "$bindings": {
+          "daemon": "scenario.daemon"
+        },
+        "$example": "The daemon admin surface binds 127.0.0.1:4040; binding denied, not retried."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[2]",
+        "$example": "layer:          engine"
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[3]",
+        "$example": "measured:       port 4040 unavailable (required: 1 of 1)"
+      }
     ]
   }
 }

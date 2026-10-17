@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.register.denial.cap",
-  "target": "agents",
-  "command": "capcli sys agent register",
-  "elapsed_ms": 228,
+  "scenario": {
+    "agents": "agents"
+  },
+  "target": {
+    "$slot": "agents",
+    "$from": "scenario.agents",
+    "$example": "agents"
+  },
+  "command": {
+    "$interpolate": "capcli sys agent register",
+    "$bindings": {},
+    "$example": "capcli sys agent register"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 228
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,8 +30,18 @@
     "rule": "policy.registry.agent_cap",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "registration refused: agent registry at capacity",
-    "measured": "8 registered agents (cap: 8)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "registration refused: agent registry at capacity"
+    },
+    "measured": {
+      "$interpolate": "8 registered {{agents}} (cap: 8)",
+      "$bindings": {
+        "agents": "scenario.agents"
+      },
+      "$example": "8 registered agents (cap: 8)"
+    },
     "remedy": "revoke an idle agent via capcli sys agent revoke <agent-id>, then re-register; limit: artifacts/governance.yaml#registry.max_agents"
   }
 }

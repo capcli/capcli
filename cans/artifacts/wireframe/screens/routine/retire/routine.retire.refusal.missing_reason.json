@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.retire.refusal.missing_reason",
-  "target": "legacy_etl",
-  "command": "capcli routine retire legacy_etl",
-  "elapsed_ms": 84,
+  "scenario": {
+    "legacy_etl": "legacy_etl"
+  },
+  "target": {
+    "$slot": "legacy_etl",
+    "$from": "scenario.legacy_etl",
+    "$example": "legacy_etl"
+  },
+  "command": {
+    "$interpolate": "capcli routine retire {{legacy_etl}}",
+    "$bindings": {
+      "legacy_etl": "scenario.legacy_etl"
+    },
+    "$example": "capcli routine retire legacy_etl"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 84
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
@@ -13,10 +31,28 @@
   "component": {
     "rule": "missing_param.retire.reason_required",
     "domain": "missing_param",
-    "culprit": "Retiring an operational routine in prod is a high-impact write; threshold justifications demand --reason.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Retiring an operational routine in prod is a high-impact write; threshold justifications demand --reason."
+    },
     "remedy": "re-run with --reason, e.g. capcli routine retire legacy_etl --reason \"replaced by unified pipeline\"",
-    "command": "capcli routine retire legacy_etl",
-    "routine": "legacy_etl@6 (active, pinned, prod)",
-    "bound_ingress": "cron bnd_3k2f + endpoint bnd_8d3p would be dismantled by this retirement"
+    "command": {
+      "$interpolate": "capcli routine retire {{legacy_etl}}",
+      "$bindings": {
+        "legacy_etl": "scenario.legacy_etl"
+      },
+      "$example": "capcli routine retire legacy_etl"
+    },
+    "routine": {
+      "$slot": "routine",
+      "$from": "live.routine",
+      "$example": "legacy_etl@6 (active, pinned, prod)"
+    },
+    "bound_ingress": {
+      "$slot": "bound_ingress",
+      "$from": "live.bound_ingress",
+      "$example": "cron bnd_3k2f + endpoint bnd_8d3p would be dismantled by this retirement"
+    }
   }
 }

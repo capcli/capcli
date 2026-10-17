@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.pack",
-  "target": "pack://routine/webhook_receiver",
-  "command": "capcli inspect pack://routine/webhook_receiver",
-  "elapsed_ms": 1630,
+  "scenario": {
+    "pack_urp": "pack://routine/webhook_receiver"
+  },
+  "target": {
+    "$slot": "pack_urp",
+    "$from": "scenario.pack_urp",
+    "$example": "pack://routine/webhook_receiver"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{pack_urp}}",
+    "$bindings": {
+      "pack_urp": "scenario.pack_urp"
+    },
+    "$example": "capcli inspect pack://routine/webhook_receiver"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1630
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,28 +38,76 @@
     "groups": [
       {
         "fields": {
-          "pack": "pack://routine/webhook_receiver",
-          "kind": "routine",
-          "policy_version": "5",
-          "min_kernel_version": "2.1",
-          "can_scaffold": "true"
+          "pack": {
+            "$slot": "pack_urp_2",
+            "$from": "scenario.pack_urp",
+            "$example": "pack://routine/webhook_receiver"
+          },
+          "kind": {
+            "$slot": "kind",
+            "$from": "live.groups[0].fields.kind",
+            "$example": "routine"
+          },
+          "policy_version": {
+            "$slot": "policy_version",
+            "$from": "live.groups[0].fields.policy_version",
+            "$example": "5"
+          },
+          "min_kernel_version": {
+            "$slot": "min_kernel_version",
+            "$from": "live.groups[0].fields.min_kernel_version",
+            "$example": "2.1"
+          },
+          "can_scaffold": {
+            "$slot": "can_scaffold",
+            "$from": "live.groups[0].fields.can_scaffold",
+            "$example": "true"
+          }
         }
       },
       {
         "fields": {
-          "inputs": "endpoint_url: string (required); retry_limit: integer (default 3); secret_ref: string (optional)",
-          "capabilities": "net.egress, db.write, audit.emit",
-          "seed_rows": "0"
+          "inputs": {
+            "$slot": "inputs",
+            "$from": "live.groups[1].fields.inputs",
+            "$example": "endpoint_url: string (required); retry_limit: integer (default 3); secret_ref: string (optional)"
+          },
+          "capabilities": {
+            "$slot": "capabilities",
+            "$from": "live.groups[1].fields.capabilities",
+            "$example": "net.egress, db.write, audit.emit"
+          },
+          "seed_rows": {
+            "$slot": "seed_rows",
+            "$from": "live.groups[1].fields.seed_rows",
+            "$example": "0"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli inspect quota://threads",
-      "intent": "Quota headroom verified before instantiation",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli inspect quota://threads",
+        "$bindings": {},
+        "$example": "capcli inspect quota://threads"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Quota headroom verified before instantiation"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.refusal.missing_ptr",
-  "target": "dispatch_order@4",
-  "command": "capcli inspect dispatch_order@4",
-  "elapsed_ms": 265,
+  "scenario": {
+    "routine_ref": "dispatch_order@4"
+  },
+  "target": {
+    "$slot": "routine_ref",
+    "$from": "scenario.routine_ref",
+    "$example": "dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{routine_ref}}",
+    "$bindings": {
+      "routine_ref": "scenario.routine_ref"
+    },
+    "$example": "capcli inspect dispatch_order@4"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 265
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,14 +30,36 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "missing_param",
-    "culprit": "Unrecognized pointer format: missing scheme prefix.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Unrecognized pointer format: missing scheme prefix."
+    },
     "remedy": "restate as a typed URP, e.g. cap://dispatch_order@4",
-    "target": "'dispatch_order@4'",
-    "pointer_format": "missing scheme prefix.",
-    "expected_urp_types": "cap://, db://, quota://, doc://, ...",
+    "target": {
+      "$interpolate": "'{{routine_ref}}'",
+      "$bindings": {
+        "routine_ref": "scenario.routine_ref"
+      },
+      "$example": "'dispatch_order@4'"
+    },
+    "pointer_format": {
+      "$slot": "pointer_format",
+      "$from": "live.pointer_format",
+      "$example": "missing scheme prefix."
+    },
+    "expected_urp_types": {
+      "$slot": "expected_urp_types",
+      "$from": "live.expected_urp_types",
+      "$example": "cap://, db://, quota://, doc://, ..."
+    },
     "layer": "cli",
     "lines": [
-      "FATAL  missing_param.unrecognized_ptr"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  missing_param.unrecognized_ptr"
+      }
     ]
   }
 }

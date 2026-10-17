@@ -1,29 +1,79 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.prove.refusal.missing_docstring",
-  "target": "sync_orders",
-  "command": "capcli routine prove sync_orders --env sim",
-  "elapsed_ms": 178,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine prove sync_orders --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 178
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_prove_10",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_prove_10"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "validation.routine.missing_docstring",
     "domain": "validation",
-    "culprit": "Description required: routines/sync_orders.py declares no module docstring and the @routine wrapper carries description=\"\"",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Description required: routines/sync_orders.py declares no module docstring and the @routine wrapper carries description=\"\""
+    },
     "remedy": "write a summary description of at least 5 words into the @routine decorator plus a module docstring, then re-run prove in sim",
-    "module_docstring": "absent",
+    "module_docstring": {
+      "$slot": "module_docstring",
+      "$from": "live.module_docstring",
+      "$example": "absent"
+    },
     "lines": [
-      "routines/sync_orders.py:19 — decorator wrapper:",
-      "@routine(name=\"sync_orders\", trust=\"draft\", description=\"\")"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "routines/sync_orders.py:19 — decorator wrapper:"
+      },
+      {
+        "$interpolate": "@routine(name=\"{{sync_orders}}\", trust=\"draft\", description=\"\")",
+        "$bindings": {
+          "sync_orders": "scenario.sync_orders"
+        },
+        "$example": "@routine(name=\"sync_orders\", trust=\"draft\", description=\"\")"
+      }
     ],
     "span": {
-      "source": "@routine(name=\"sync_orders\", trust=\"draft\", description=\"\")",
-      "highlight": "description=\""
+      "source": {
+        "$interpolate": "@routine(name=\"{{sync_orders}}\", trust=\"draft\", description=\"\")",
+        "$bindings": {
+          "sync_orders": "scenario.sync_orders"
+        },
+        "$example": "@routine(name=\"sync_orders\", trust=\"draft\", description=\"\")"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "description=\""
+      }
     }
   }
 }

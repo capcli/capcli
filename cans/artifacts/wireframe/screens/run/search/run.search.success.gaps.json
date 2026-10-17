@@ -1,43 +1,101 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.search.success.gaps",
-  "target": "gaps",
-  "command": "capcli search gaps --since 7d",
-  "elapsed_ms": 2376,
+  "scenario": {
+    "gaps": "gaps"
+  },
+  "target": {
+    "$slot": "gaps",
+    "$from": "scenario.gaps",
+    "$example": "gaps"
+  },
+  "command": {
+    "$interpolate": "capcli search {{gaps}} --since 7d",
+    "$bindings": {
+      "gaps": "scenario.gaps"
+    },
+    "$example": "capcli search gaps --since 7d"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2376
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_9f2u",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2u"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "lines": [
-          "zero_result (ranked first):",
-          "\"kombucha supplier sync\"    4 searches · 0 hits · last 2h ago",
-          "\"batch invoice csv export\"  3 searches · 0 hits · last 1d ago"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[0].lines[0]",
+            "$example": "zero_result (ranked first):"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[0].lines[1]",
+            "$example": "\"kombucha supplier sync\"    4 searches · 0 hits · last 2h ago"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[0].lines[2]",
+            "$example": "\"batch invoice csv export\"  3 searches · 0 hits · last 1d ago"
+          }
         ]
       },
       {
         "lines": [
-          "low_conversion (searched, never invoked):",
-          "cap://stripe/payouts.list   5 views · 0 invokes · last seen 3d ago",
-          "cap://stripe/disputes.list  3 views · 0 invokes · last seen 5d ago"
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "low_conversion (searched, never invoked):"
+          },
+          {
+            "$slot": "lines_4",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "cap://stripe/payouts.list   5 views · 0 invokes · last seen 3d ago"
+          },
+          {
+            "$slot": "lines_5",
+            "$from": "live.groups[1].lines[2]",
+            "$example": "cap://stripe/disputes.list  3 views · 0 invokes · last seen 5d ago"
+          }
         ]
       },
       {
         "fields": {
-          "next_step": "author a draft routine or expand catalog via capcli api sync"
+          "next_step": {
+            "$slot": "next_step",
+            "$from": "live.groups[2].fields.next_step",
+            "$example": "author a draft routine or expand catalog via capcli api sync"
+          }
         }
       }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/authoring/routine_gaps#1",
-    "reason": "telemetry shows uncodified operational sequence",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "telemetry shows uncodified operational sequence"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }

@@ -1,30 +1,78 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.init.success.initialized",
-  "target": "ledger",
-  "command": "capcli sys init --fresh",
-  "elapsed_ms": 3110,
+  "scenario": {
+    "ledger": "ledger"
+  },
+  "target": {
+    "$slot": "ledger",
+    "$from": "scenario.ledger",
+    "$example": "ledger"
+  },
+  "command": {
+    "$interpolate": "capcli sys init --fresh",
+    "$bindings": {},
+    "$example": "capcli sys init --fresh"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 3110
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_9f3e",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f3e"
+  },
   "archetype": "receipt",
   "component": {
-    "title": "init",
+    "title": {
+      "$slot": "title",
+      "$from": "live.title",
+      "$example": "init"
+    },
     "groups": [
       {
         "fields": {
-          "event": "kernel.genesis.data_loss opened the new ledger",
-          "confirmations": "2/2 — typed reason recorded, operator key signature verified",
-          "schema_version": "genesis (system-schema hash verified)",
-          "ledger_root_hash": "sha256:9d2c4e1a7b5f0836c1d9e4a2f7b60583d1c9e4a7"
+          "event": {
+            "$interpolate": "kernel.genesis.data_loss opened the new {{ledger}}",
+            "$bindings": {
+              "ledger": "scenario.ledger"
+            },
+            "$example": "kernel.genesis.data_loss opened the new ledger"
+          },
+          "confirmations": {
+            "$slot": "confirmations",
+            "$from": "live.groups[0].fields.confirmations",
+            "$example": "2/2 — typed reason recorded, operator key signature verified"
+          },
+          "schema_version": {
+            "$slot": "schema_version",
+            "$from": "live.groups[0].fields.schema_version",
+            "$example": "genesis (system-schema hash verified)"
+          },
+          "ledger_root_hash": {
+            "$slot": "ledger_root_hash",
+            "$from": "live.groups[0].fields.ledger_root_hash",
+            "$example": "sha256:9d2c4e1a7b5f0836c1d9e4a2f7b60583d1c9e4a7"
+          }
         }
       },
       {
         "lines": [
-          "note: sole write path out of total media loss; prior ledger archived to WORM"
+          {
+            "$interpolate": "note: sole write path out of total media loss; prior {{ledger}} archived to WORM",
+            "$bindings": {
+              "ledger": "scenario.ledger"
+            },
+            "$example": "note: sole write path out of total media loss; prior ledger archived to WORM"
+          }
         ]
       }
     ]

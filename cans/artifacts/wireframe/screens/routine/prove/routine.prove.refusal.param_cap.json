@@ -1,31 +1,85 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.prove.refusal.param_cap",
-  "target": "sync_orders",
-  "command": "capcli routine prove sync_orders --env sim",
-  "elapsed_ms": 242,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine prove sync_orders --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 242
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_prove_09",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_prove_09"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "validation.routine.param_cap",
     "domain": "validation",
-    "culprit": "Signature bloat: 9 typed Param declarations vs ceiling 8",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Signature bloat: 9 typed Param declarations vs ceiling 8"
+    },
     "remedy": "drop or fold the ninth parameter (order notes can ride the request payload), then re-run prove in sim",
     "span": {
-      "source": "    dry_run: Param[bool]) -> dict:",
-      "highlight": "dry_run"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "    dry_run: Param[bool]) -> dict:"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "dry_run"
+      }
     },
-    "routine": "sync_orders@1 (draft)",
-    "params_declared": "9 (ceiling: 8)",
+    "routine": {
+      "$slot": "routine",
+      "$from": "live.routine",
+      "$example": "sync_orders@1 (draft)"
+    },
+    "params_declared": {
+      "$slot": "params_declared",
+      "$from": "live.params_declared",
+      "$example": "9 (ceiling: 8)"
+    },
     "lines": [
-      "routines/sync_orders.py:25 — signature:",
-      "def dispatch(order_id: Param[str], carrier: Param[str], warehouse: Param[str],",
-      "    rush: Param[bool], note: Param[str], locale: Param[str], region: Param[str],"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "routines/sync_orders.py:25 — signature:"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "def dispatch(order_id: Param[str], carrier: Param[str], warehouse: Param[str],"
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "    rush: Param[bool], note: Param[str], locale: Param[str], region: Param[str],"
+      }
     ]
   }
 }

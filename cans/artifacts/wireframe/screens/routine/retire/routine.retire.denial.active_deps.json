@@ -1,29 +1,83 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.retire.denial.active_deps",
-  "target": "dispatch_order",
-  "command": "capcli routine retire dispatch_order --reason \"replaced by unified fulfillment path\"",
-  "elapsed_ms": 93,
+  "scenario": {
+    "dispatch_order": "dispatch_order"
+  },
+  "target": {
+    "$slot": "dispatch_order",
+    "$from": "scenario.dispatch_order",
+    "$example": "dispatch_order"
+  },
+  "command": {
+    "$interpolate": "capcli routine retire {{dispatch_order}} --reason \"replaced by unified fulfillment path\"",
+    "$bindings": {
+      "dispatch_order": "scenario.dispatch_order"
+    },
+    "$example": "capcli routine retire dispatch_order --reason \"replaced by unified fulfillment path\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 93
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_retire_02",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_retire_02"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.governance.retire.deps_exist",
     "domain": "policy.dependency",
     "layer": "governance",
-    "culprit": "routine dispatch_order@4 is imported by active routines order_sync@2 and sync_orders@1 (dependency DAG edges order_sync@2 -> cap://dispatch_order and sync_orders@1 -> cap://dispatch_order); retirement of an active dependency is blocked",
-    "measured": "2 active dependents (0 permitted for retirement)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "routine dispatch_order@4 is imported by active routines order_sync@2 and sync_orders@1 (dependency DAG edges order_sync@2 -> cap://dispatch_order and sync_orders@1 -> cap://dispatch_order); retirement of an active dependency is blocked"
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "2 active dependents (0 permitted for retirement)"
+    },
     "remedy": "retire order_sync@2 and sync_orders@1 first, or remove the import edges from the dependents and re-prove them, then retry routine retire dispatch_order",
-    "routine": "dispatch_order@4",
-    "graph": "in-memory routine dependency DAG (petgraph)",
+    "routine": {
+      "$slot": "routine",
+      "$from": "live.routine",
+      "$example": "dispatch_order@4"
+    },
+    "graph": {
+      "$slot": "graph",
+      "$from": "live.graph",
+      "$example": "in-memory routine dependency DAG (petgraph)"
+    },
     "lines": [
-      "callers (dependency graph):",
-      "├── order_sync@2   imports dispatch_order (reviewed)",
-      "└── sync_orders@1  imports dispatch_order (draft)"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "callers (dependency graph):"
+      },
+      {
+        "$interpolate": "├── order_sync@2   imports {{dispatch_order}} (reviewed)",
+        "$bindings": {
+          "dispatch_order": "scenario.dispatch_order"
+        },
+        "$example": "├── order_sync@2   imports dispatch_order (reviewed)"
+      },
+      {
+        "$interpolate": "└── sync_orders@1  imports {{dispatch_order}} (draft)",
+        "$bindings": {
+          "dispatch_order": "scenario.dispatch_order"
+        },
+        "$example": "└── sync_orders@1  imports dispatch_order (draft)"
+      }
     ]
   }
 }

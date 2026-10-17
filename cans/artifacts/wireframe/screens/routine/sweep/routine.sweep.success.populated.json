@@ -1,13 +1,26 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.sweep.success.populated",
-  "command": "capcli routine sweep",
-  "elapsed_ms": 1524,
+  "command": {
+    "$interpolate": "capcli routine sweep",
+    "$bindings": {},
+    "$example": "capcli routine sweep"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1524
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -15,19 +28,39 @@
     "groups": [
       {
         "fields": {
-          "sweep": "duplicate routine scan (14 routines fingerprinted)"
+          "sweep": {
+            "$slot": "sweep",
+            "$from": "live.groups[0].fields.sweep",
+            "$example": "duplicate routine scan (14 routines fingerprinted)"
+          }
         }
       },
       {
         "lines": [
-          "proposals (2):",
-          "order_sync@3 ≈ order_sync_v2@1   fingerprint overlap 0.97 — merge candidate",
-          "nightly_report@2 ≈ report_job@5  fingerprint overlap 0.93 — merge candidate"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "proposals (2):"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "order_sync@3 ≈ order_sync_v2@1   fingerprint overlap 0.97 — merge candidate"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[1].lines[2]",
+            "$example": "nightly_report@2 ≈ report_job@5  fingerprint overlap 0.93 — merge candidate"
+          }
         ]
       },
       {
         "fields": {
-          "note": "proposals only; deduplication requires explicit ship-time review"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[2].fields.note",
+            "$example": "proposals only; deduplication requires explicit ship-time review"
+          }
         }
       }
     ]

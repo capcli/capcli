@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.bundle.refusal.size_limit",
-  "target": "pack/atlas_world",
-  "command": "capcli pack bundle packs/atlas_world",
-  "elapsed_ms": 304,
+  "scenario": {
+    "pack_atlas_world": "pack/atlas_world"
+  },
+  "target": {
+    "$slot": "pack_atlas_world",
+    "$from": "scenario.pack_atlas_world",
+    "$example": "pack/atlas_world"
+  },
+  "command": {
+    "$interpolate": "capcli pack bundle packs/atlas_world",
+    "$bindings": {},
+    "$example": "capcli pack bundle packs/atlas_world"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 304
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,14 +30,38 @@
     "rule": "policy.pack.size_limit",
     "domain": "policy.pack",
     "layer": "authorizer",
-    "culprit": "World pack bundle measures 7.2MB, over the 5MB ceiling.",
-    "measured": "bundle: 7.2MB (ceiling: 5MB)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "World pack bundle measures 7.2MB, over the 5MB ceiling."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "bundle: 7.2MB (ceiling: 5MB)"
+    },
     "remedy": "prune assets under 5MB or split the bundle, then re-run capcli pack bundle packs/atlas_world",
-    "pack": "pack://world/atlas_world",
-    "kind": "world",
+    "pack": {
+      "$slot": "pack",
+      "$from": "live.pack",
+      "$example": "pack://world/atlas_world"
+    },
+    "kind": {
+      "$slot": "kind",
+      "$from": "live.kind",
+      "$example": "world"
+    },
     "lines": [
-      "bundle: 7.2MB (ceiling: 5MB)",
-      "World pack bundle exceeds the size ceiling."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "bundle: 7.2MB (ceiling: 5MB)"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "World pack bundle exceeds the size ceiling."
+      }
     ]
   }
 }

@@ -1,60 +1,136 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.list.success.populated",
-  "target": "bindings",
-  "command": "capcli bind list",
-  "elapsed_ms": 590,
+  "scenario": {
+    "bindings": "bindings"
+  },
+  "target": {
+    "$slot": "bindings",
+    "$from": "scenario.bindings",
+    "$example": "bindings"
+  },
+  "command": {
+    "$interpolate": "capcli bind list",
+    "$bindings": {},
+    "$example": "capcli bind list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 590
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "populated",
-    "root": "cron",
+    "title": {
+      "$slot": "title",
+      "$from": "live.list.title",
+      "$example": "populated"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.list.root",
+      "$example": "cron"
+    },
     "nodes": [
       {
-        "label": "bnd_5f8a nightly_sync cap://sync_orders 0 3 * * * active",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.list.nodes[0].label",
+          "$example": "bnd_5f8a nightly_sync cap://sync_orders 0 3 * * * active"
+        },
         "children": []
       },
       {
-        "label": "bnd_3k2f weekly_digest cap://report_summary 0 6 * * 1 active",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.list.nodes[1].label",
+          "$example": "bnd_3k2f weekly_digest cap://report_summary 0 6 * * 1 active"
+        },
         "children": []
       },
       {
-        "label": "webhook",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.list.nodes[2].label",
+          "$example": "webhook"
+        },
         "children": []
       },
       {
-        "label": "bnd_8d3k stripe_hook cap://sync_orders payment_succeeded active",
+        "label": {
+          "$slot": "n3",
+          "$from": "live.list.nodes[3].label",
+          "$example": "bnd_8d3k stripe_hook cap://sync_orders payment_succeeded active"
+        },
         "children": []
       },
       {
-        "label": "endpoint",
+        "label": {
+          "$slot": "n4",
+          "$from": "live.list.nodes[4].label",
+          "$example": "endpoint"
+        },
         "children": [
           {
-            "label": "bnd_2m7p dispatch_order cap://dispatch_order@4 127.0.0.1:4040 active",
+            "label": {
+              "$slot": "n4c0",
+              "$from": "live.list.nodes[4].children[0].label",
+              "$example": "bnd_2m7p dispatch_order cap://dispatch_order@4 127.0.0.1:4040 active"
+            },
             "children": []
           },
           {
-            "label": "bnd_9x4e partner_hook cap://report_summary@3 127.0.0.1:4040 active",
+            "label": {
+              "$slot": "n4c1",
+              "$from": "live.list.nodes[4].children[1].label",
+              "$example": "bnd_9x4e partner_hook cap://report_summary@3 127.0.0.1:4040 active"
+            },
             "children": []
           }
         ]
       }
     ],
     "footer": {
-      "bindings": "5 total (5 active, 0 paused)"
+      "bindings": {
+        "$slot": "bindings_2",
+        "$from": "live.list.footer.bindings",
+        "$example": "5 total (5 active, 0 paused)"
+      }
     }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli bind inspect bnd_3k2f",
-      "intent": "Binding configuration envelope",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli bind inspect bnd_3k2f",
+        "$bindings": {},
+        "$example": "capcli bind inspect bnd_3k2f"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Binding configuration envelope"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

@@ -1,49 +1,130 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "run.execute.success.echo_scrubbed",
+  "scenario": {
+    "routine_urp": "cap://stripe.refund@2",
+    "routine_name": "stripe.refund",
+    "routine_version": 2,
+    "charge_id": "ch_9d21K",
+    "intent": "refund failed delivery"
+  },
   "archetype": "receipt",
-  "audit_op": "op_3d8e",
-  "command": "capcli run cap://stripe.refund@2 -p charge_id=ch_9d21K -m \"refund failed delivery\"",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_3d8e"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p charge_id={{charge_id}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "charge_id": "scenario.charge_id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://stripe.refund@2 -p charge_id=ch_9d21K -m \"refund failed delivery\""
+  },
   "component": {
     "groups": [
       {
         "fields": {
-          "frame": "frame_033 (2/6 ops · 211ms)",
-          "intent": "\"refund failed delivery\"",
-          "routine": "stripe.refund@2 (reviewed)",
-          "session": "ses_b311c"
+          "frame": {
+            "$slot": "frame",
+            "$from": "live.groups[0].fields.frame",
+            "$example": "frame_033 (2/6 ops · 211ms)"
+          },
+          "intent": {
+            "$interpolate": "\"{{intent}}\"",
+            "$bindings": {
+              "intent": "scenario.intent"
+            },
+            "$example": "\"refund failed delivery\""
+          },
+          "routine": {
+            "$interpolate": "{{routine_name}}@{{routine_version}} (reviewed)",
+            "$bindings": {
+              "routine_name": "scenario.routine_name",
+              "routine_version": "scenario.routine_version"
+            },
+            "$example": "stripe.refund@2 (reviewed)"
+          },
+          "session": {
+            "$slot": "session",
+            "$from": "live.groups[0].fields.session",
+            "$example": "ses_b311c"
+          }
         }
       },
       {
         "lines": [
-          "leaves:",
-          "1. api.call    stripe.refund                 203ms"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "leaves:"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "1. api.call    stripe.refund                 203ms"
+          }
         ]
       },
       {
         "fields": {
-          "echoed": "credential bytes in error body",
-          "scrubbed": "1 occurrence → [REDACTED_VAULT_TOKEN]",
-          "upstream": "400 invalid_request_error"
+          "echoed": {
+            "$slot": "echoed",
+            "$from": "live.groups[2].fields.echoed",
+            "$example": "credential bytes in error body"
+          },
+          "scrubbed": {
+            "$slot": "scrubbed",
+            "$from": "live.groups[2].fields.scrubbed",
+            "$example": "1 occurrence → [REDACTED_VAULT_TOKEN]"
+          },
+          "upstream": {
+            "$slot": "upstream",
+            "$from": "live.groups[2].fields.upstream",
+            "$example": "400 invalid_request_error"
+          }
         },
         "lines": [
-          "result: scrubbed error delivered to sandbox; plaintext never crossed the wire edge"
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "result: scrubbed error delivered to sandbox; plaintext never crossed the wire edge"
+          }
         ]
       },
       {
         "fields": {
-          "result_hash": "sha256:4f7c2a91e0b3d668e5aa"
+          "result_hash": {
+            "$slot": "result_hash",
+            "$from": "live.groups[3].fields.result_hash",
+            "$example": "sha256:4f7c2a91e0b3d668e5aa"
+          }
         }
       }
     ],
     "title": null
   },
   "context": {
-    "data_shape": "populated",
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    },
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "elapsed_ms": 214,
-  "id": "run.execute.success.echo_scrubbed",
-  "target": "cap://stripe.refund@2"
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 214
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://stripe.refund@2"
+  }
 }

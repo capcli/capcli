@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.cron.refusal.missing_intent",
-  "target": "cap://sync_orders",
-  "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\"",
-  "elapsed_ms": 133,
+  "scenario": {
+    "routine_urp": "cap://sync_orders"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli bind cron nightly_sync {{routine_urp}} \"0 3 * * *\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp"
+    },
+    "$example": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 133
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +31,23 @@
   "component": {
     "rule": "missing_param.no_intent",
     "domain": "missing_param",
-    "culprit": "Mutating bind requires an intent declaration. Unattributed triggers are refused.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Mutating bind requires an intent declaration. Unattributed triggers are refused."
+    },
     "remedy": "re-run with -m \"why this trigger exists\"",
-    "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\"",
-    "flag": "-m / --intent"
+    "command": {
+      "$interpolate": "capcli bind cron nightly_sync {{routine_urp}} \"0 3 * * *\"",
+      "$bindings": {
+        "routine_urp": "scenario.routine_urp"
+      },
+      "$example": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\""
+    },
+    "flag": {
+      "$slot": "flag",
+      "$from": "live.flag",
+      "$example": "-m / --intent"
+    }
   }
 }

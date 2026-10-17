@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.vault",
-  "target": "vault://stripe_secret_key",
-  "command": "capcli inspect vault://stripe_secret_key",
-  "elapsed_ms": 58,
+  "scenario": {
+    "vault_urp": "vault://stripe_secret_key"
+  },
+  "target": {
+    "$slot": "vault_urp",
+    "$from": "scenario.vault_urp",
+    "$example": "vault://stripe_secret_key"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{vault_urp}}",
+    "$bindings": {
+      "vault_urp": "scenario.vault_urp"
+    },
+    "$example": "capcli inspect vault://stripe_secret_key"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 58
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,17 +33,45 @@
     "groups": [
       {
         "fields": {
-          "target": "vault://stripe_secret_key",
-          "cipher": "aes-256-gcm",
-          "fingerprint": "sha256:4c1b8e93a7d2f0065be34c881a9d20f7e5c3b6a8",
-          "scope": "workspace root secret (envs/dev/workspace.db secrets table)",
-          "value": "masked — plaintext never echoed to any output stream"
+          "target": {
+            "$slot": "vault_urp_2",
+            "$from": "scenario.vault_urp",
+            "$example": "vault://stripe_secret_key"
+          },
+          "cipher": {
+            "$slot": "cipher",
+            "$from": "live.groups[0].fields.cipher",
+            "$example": "aes-256-gcm"
+          },
+          "fingerprint": {
+            "$slot": "fingerprint",
+            "$from": "live.groups[0].fields.fingerprint",
+            "$example": "sha256:4c1b8e93a7d2f0065be34c881a9d20f7e5c3b6a8"
+          },
+          "scope": {
+            "$slot": "scope",
+            "$from": "live.groups[0].fields.scope",
+            "$example": "workspace root secret (envs/dev/workspace.db secrets table)"
+          },
+          "value": {
+            "$slot": "value",
+            "$from": "live.groups[0].fields.value",
+            "$example": "masked — plaintext never echoed to any output stream"
+          }
         }
       },
       {
         "fields": {
-          "preflight": "opaque handle; plaintext crosses no output boundary",
-          "can_invoke_now": "true"
+          "preflight": {
+            "$slot": "preflight",
+            "$from": "live.groups[1].fields.preflight",
+            "$example": "opaque handle; plaintext crosses no output boundary"
+          },
+          "can_invoke_now": {
+            "$slot": "can_invoke_now",
+            "$from": "live.groups[1].fields.can_invoke_now",
+            "$example": "true"
+          }
         }
       }
     ]

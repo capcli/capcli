@@ -1,25 +1,63 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.unlock.success.released",
-  "target": "orders:ORD-10",
-  "command": "capcli db unlock orders:ORD-10",
-  "elapsed_ms": 1060,
+  "scenario": {
+    "db_key": "orders:ORD-10"
+  },
+  "target": {
+    "$slot": "db_key",
+    "$from": "scenario.db_key",
+    "$example": "orders:ORD-10"
+  },
+  "command": {
+    "$interpolate": "capcli db unlock {{db_key}}",
+    "$bindings": {
+      "db_key": "scenario.db_key"
+    },
+    "$example": "capcli db unlock orders:ORD-10"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1060
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_6a33",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_6a33"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "target": "orders:ORD-10",
-          "lease_id": "claim_c3d4",
-          "holder": "agt_9k2w",
-          "ttl_remaining": "187s (released ahead of TTL)"
+          "target": {
+            "$slot": "db_key_2",
+            "$from": "scenario.db_key",
+            "$example": "orders:ORD-10"
+          },
+          "lease_id": {
+            "$slot": "lease_id",
+            "$from": "live.groups[0].fields.lease_id",
+            "$example": "claim_c3d4"
+          },
+          "holder": {
+            "$slot": "holder",
+            "$from": "live.groups[0].fields.holder",
+            "$example": "agt_9k2w"
+          },
+          "ttl_remaining": {
+            "$slot": "ttl_remaining",
+            "$from": "live.groups[0].fields.ttl_remaining",
+            "$example": "187s (released ahead of TTL)"
+          }
         }
       }
     ]

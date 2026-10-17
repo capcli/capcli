@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.doctor.panic.tamper",
-  "target": "_audit",
-  "command": "capcli sys doctor",
-  "elapsed_ms": 515,
+  "scenario": {
+    "audit": "_audit"
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  },
+  "command": {
+    "$interpolate": "capcli sys doctor",
+    "$bindings": {},
+    "$example": "capcli sys doctor"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 515
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,16 +29,48 @@
   "component": {
     "rule": "kernel.panic.audit_chain_media_loss",
     "domain": "kernel.panic",
-    "culprit": "Total media loss: audit.db ledger root unreadable AND S3 WORM checkpoint missing — both hash anchors gone, chain unverifiable end-to-end",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Total media loss: audit.db ledger root unreadable AND S3 WORM checkpoint missing — both hash anchors gone, chain unverifiable end-to-end"
+    },
     "remedy": "restore from the last verified object-store checkpoint via 'capcli sys recover <snapshot-id>', or re-enter read-only with CAPCLI_RECOVERY=1",
-    "ledger_root": "envs/dev/audit.db unreadable (I/O error)",
-    "worm_checkpoint": "s3://capcli-worm/audit/root.jsonl missing (404)",
-    "chain_verdict": "unverifiable end-to-end — no hash anchor survives",
-    "kill_and_alert": "process tree terminated, supervisor alerted.",
-    "boot_refusal": "no execution until a verified checkpoint is restored.",
+    "ledger_root": {
+      "$slot": "ledger_root",
+      "$from": "live.ledger_root",
+      "$example": "envs/dev/audit.db unreadable (I/O error)"
+    },
+    "worm_checkpoint": {
+      "$slot": "worm_checkpoint",
+      "$from": "live.worm_checkpoint",
+      "$example": "s3://capcli-worm/audit/root.jsonl missing (404)"
+    },
+    "chain_verdict": {
+      "$slot": "chain_verdict",
+      "$from": "live.chain_verdict",
+      "$example": "unverifiable end-to-end — no hash anchor survives"
+    },
+    "kill_and_alert": {
+      "$slot": "kill_and_alert",
+      "$from": "live.kill_and_alert",
+      "$example": "process tree terminated, supervisor alerted."
+    },
+    "boot_refusal": {
+      "$slot": "boot_refusal",
+      "$from": "live.boot_refusal",
+      "$example": "no execution until a verified checkpoint is restored."
+    },
     "lines": [
-      "Ledger root unreadable and S3 WORM checkpoint missing.",
-      "layer:          kernel"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Ledger root unreadable and S3 WORM checkpoint missing."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "layer:          kernel"
+      }
     ]
   }
 }

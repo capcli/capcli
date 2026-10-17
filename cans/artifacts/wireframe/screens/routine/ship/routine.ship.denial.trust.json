@@ -1,25 +1,67 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.ship.denial.trust",
-  "target": "order_sync",
-  "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
-  "elapsed_ms": 319,
+  "scenario": {
+    "order_sync": "order_sync"
+  },
+  "target": {
+    "$slot": "order_sync",
+    "$from": "scenario.order_sync",
+    "$example": "order_sync"
+  },
+  "command": {
+    "$interpolate": "capcli routine ship {{order_sync}} pinned --reason \"30d clean canary\"",
+    "$bindings": {
+      "order_sync": "scenario.order_sync"
+    },
+    "$example": "capcli routine ship order_sync pinned --reason \"30d clean canary\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 319
+  },
   "context": {
     "env": "dev",
     "tier": "tier_2",
     "trust": "reviewed"
   },
-  "audit_op": "op_ship_03",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_ship_03"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.trust.promotion_signoff",
     "domain": "policy.trust",
     "layer": "trust",
-    "culprit": "Pinned promotion denied: ship requires human sign-off or Tier-1 CI pipeline.",
-    "measured": "sign-off absent (autonomous ship from tier_2 host)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Pinned promotion denied: ship requires human sign-off or Tier-1 CI pipeline."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "sign-off absent (autonomous ship from tier_2 host)"
+    },
     "remedy": "re-run with human sign-off or from the Tier-1 CI pipeline",
-    "routine": "order_sync@2 (current rung: reviewed)",
-    "target": "pinned",
-    "host": "tier_2 (degraded isolation; broker-mediated sandbox)"
+    "routine": {
+      "$slot": "routine",
+      "$from": "live.routine",
+      "$example": "order_sync@2 (current rung: reviewed)"
+    },
+    "target": {
+      "$slot": "target",
+      "$from": "live.target",
+      "$example": "pinned"
+    },
+    "host": {
+      "$slot": "host",
+      "$from": "live.host",
+      "$example": "tier_2 (degraded isolation; broker-mediated sandbox)"
+    }
   }
 }

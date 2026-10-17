@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.refusal.not_found",
-  "target": "pack://routine/ghost_hook",
-  "command": "capcli inspect pack://routine/ghost_hook",
-  "elapsed_ms": 118,
+  "scenario": {
+    "pack_urp": "pack://routine/ghost_hook"
+  },
+  "target": {
+    "$slot": "pack_urp",
+    "$from": "scenario.pack_urp",
+    "$example": "pack://routine/ghost_hook"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{pack_urp}}",
+    "$bindings": {
+      "pack_urp": "scenario.pack_urp"
+    },
+    "$example": "capcli inspect pack://routine/ghost_hook"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 118
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,13 +31,35 @@
   "component": {
     "rule": "validation.pack.not_found",
     "domain": "validation",
-    "culprit": "Pack URP 'pack://routine/ghost_hook' does not resolve to a registered blueprint.",
+    "culprit": {
+      "$interpolate": "Pack URP '{{pack_urp}}' does not resolve to a registered blueprint.",
+      "$bindings": {
+        "pack_urp": "scenario.pack_urp"
+      },
+      "$example": "Pack URP 'pack://routine/ghost_hook' does not resolve to a registered blueprint."
+    },
     "remedy": "run capcli search --type tpl and retry with an exact pack:// URP",
-    "pack": "pack://routine/ghost_hook",
-    "registered": "4 packs (routine: 3, world: 1)",
+    "pack": {
+      "$slot": "pack_urp_2",
+      "$from": "scenario.pack_urp",
+      "$example": "pack://routine/ghost_hook"
+    },
+    "registered": {
+      "$slot": "registered",
+      "$from": "live.registered",
+      "$example": "4 packs (routine: 3, world: 1)"
+    },
     "lines": [
-      "FATAL  validation.pack.not_found",
-      "Pack URP does not resolve."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.pack.not_found"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Pack URP does not resolve."
+      }
     ]
   }
 }

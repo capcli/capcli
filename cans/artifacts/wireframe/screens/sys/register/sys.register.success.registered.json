@@ -1,42 +1,108 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.register.success.registered",
-  "target": "agents",
-  "command": "capcli sys agent register",
-  "elapsed_ms": 293,
+  "scenario": {
+    "agents": "agents"
+  },
+  "target": {
+    "$slot": "agents",
+    "$from": "scenario.agents",
+    "$example": "agents"
+  },
+  "command": {
+    "$interpolate": "capcli sys agent register",
+    "$bindings": {},
+    "$example": "capcli sys agent register"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 293
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_r702",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_r702"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "agent_id": "agt_5k2p",
-          "name": "refund-processor",
-          "principal": "user:root",
-          "harness": "claude-code",
-          "token": "kernel-minted HMAC capability token (bound to active _budget_frames)",
-          "status": "active"
+          "agent_id": {
+            "$slot": "agent_id",
+            "$from": "live.groups[0].fields.agent_id",
+            "$example": "agt_5k2p"
+          },
+          "name": {
+            "$slot": "name",
+            "$from": "live.groups[0].fields.name",
+            "$example": "refund-processor"
+          },
+          "principal": {
+            "$slot": "principal",
+            "$from": "live.groups[0].fields.principal",
+            "$example": "user:root"
+          },
+          "harness": {
+            "$slot": "harness",
+            "$from": "live.groups[0].fields.harness",
+            "$example": "claude-code"
+          },
+          "token": {
+            "$slot": "token",
+            "$from": "live.groups[0].fields.token",
+            "$example": "kernel-minted HMAC capability token (bound to active _budget_frames)"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[0].fields.status",
+            "$example": "active"
+          }
         }
       },
       {
         "fields": {
-          "note": "ids and tokens are kernel-issued; self-declared identities are denied"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[1].fields.note",
+            "$example": "ids and tokens are kernel-issued; self-declared identities are denied"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli sys agent list",
-      "intent": "Registered agents listed",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli sys agent list",
+        "$bindings": {},
+        "$example": "capcli sys agent list"
+      },
+      "intent": {
+        "$interpolate": "Registered {{agents}} listed",
+        "$bindings": {
+          "agents": "scenario.agents"
+        },
+        "$example": "Registered agents listed"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

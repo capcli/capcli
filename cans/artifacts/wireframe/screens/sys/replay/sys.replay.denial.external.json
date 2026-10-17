@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.replay.denial.external",
-  "target": "_audit",
-  "command": "capcli sys audit replay --from 2026-10-03T22:41:07Z",
-  "elapsed_ms": 379,
+  "scenario": {
+    "audit": "_audit"
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit replay --from 2026-10-03T22:41:07Z",
+    "$bindings": {},
+    "$example": "capcli sys audit replay --from 2026-10-03T22:41:07Z"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 379
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,9 +30,23 @@
     "rule": "policy.api.replay",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "window contains external api.call effect: op_2c8d (fedex.ship) is flagged replay: manual in _audit",
-    "measured": "1 external op in window (17 ops total: 16 local, 1 external)",
+    "culprit": {
+      "$interpolate": "window contains external api.call effect: op_2c8d (fedex.ship) is flagged replay: manual in {{audit}}",
+      "$bindings": {
+        "audit": "scenario.audit"
+      },
+      "$example": "window contains external api.call effect: op_2c8d (fedex.ship) is flagged replay: manual in _audit"
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "1 external op in window (17 ops total: 16 local, 1 external)"
+    },
     "remedy": "narrow --from to a local-only window (external ops are excluded from replay), or re-dispatch the external verb as a fresh governed call via 'capcli run' under current policy",
-    "external_api_effect": "op_2c8d (fedex.ship) at 23:41:08Z — flagged replay: manual"
+    "external_api_effect": {
+      "$slot": "external_api_effect",
+      "$from": "live.external_api_effect",
+      "$example": "op_2c8d (fedex.ship) at 23:41:08Z — flagged replay: manual"
+    }
   }
 }

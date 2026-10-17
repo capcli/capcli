@@ -1,55 +1,142 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.trace.success.denial_trail",
-  "target": "op_9f2e",
-  "command": "capcli sys audit trace op_9f2e --explain",
-  "elapsed_ms": 1404,
+  "scenario": {
+    "session_id": "ses_a992f",
+    "root_intent": "fulfill urgent pending orders",
+    "trace_op": "op_9f2e"
+  },
+  "target": {
+    "$slot": "trace_op",
+    "$from": "scenario.trace_op",
+    "$example": "op_9f2e"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit trace {{trace_op}} --explain",
+    "$bindings": {
+      "trace_op": "scenario.trace_op"
+    },
+    "$example": "capcli sys audit trace op_9f2e --explain"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1404
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "Causal DAG Trace (op_9f2e)",
-    "root": "ses_a992f session.start \"fulfill urgent pending orders\"",
+    "title": {
+      "$interpolate": "Causal DAG Trace ({{trace_op}})",
+      "$bindings": {
+        "trace_op": "scenario.trace_op"
+      },
+      "$example": "Causal DAG Trace (op_9f2e)"
+    },
+    "root": {
+      "$interpolate": "{{session_id}} session.start \"{{root_intent}}\"",
+      "$bindings": {
+        "session_id": "scenario.session_id",
+        "root_intent": "scenario.root_intent"
+      },
+      "$example": "ses_a992f session.start \"fulfill urgent pending orders\""
+    },
     "nodes": [
       {
-        "label": "op_9f2e db.execute (orders) ✗ [denied] exit 2",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.trace.nodes[0].label",
+          "$example": "op_9f2e db.execute (orders) ✗ [denied] exit 2"
+        },
         "children": [
           {
-            "label": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
+            "label": {
+              "$slot": "n0c0",
+              "$from": "live.trace.nodes[0].children[0].label",
+              "$example": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'"
+            },
             "children": []
           },
           {
-            "label": "✗ policy.ast policy.query.update_delete.require_bounded_predicate",
+            "label": {
+              "$slot": "n0c1",
+              "$from": "live.trace.nodes[0].children[1].label",
+              "$example": "✗ policy.ast policy.query.update_delete.require_bounded_predicate"
+            },
             "children": [
               {
-                "label": "effect: none (0 rows touched)",
+                "label": {
+                  "$slot": "n0c1c0",
+                  "$from": "live.trace.nodes[0].children[1].children[0].label",
+                  "$example": "effect: none (0 rows touched)"
+                },
                 "children": []
               }
             ]
           },
           {
-            "label": "remedy target a specific primary key or a bounded predicate",
+            "label": {
+              "$slot": "n0c2",
+              "$from": "live.trace.nodes[0].children[2].label",
+              "$example": "remedy target a specific primary key or a bounded predicate"
+            },
             "children": []
           }
         ]
       }
     ],
     "footer": {
-      "Root Intent": "\"fulfill urgent pending orders\"",
-      "Authority": "user:root (via agt_7f3k)",
-      "Integrity": "valid hash link (chain verified)"
+      "Root Intent": {
+        "$interpolate": "\"{{root_intent}}\"",
+        "$bindings": {
+          "root_intent": "scenario.root_intent"
+        },
+        "$example": "\"fulfill urgent pending orders\""
+      },
+      "Authority": {
+        "$slot": "authority",
+        "$from": "live.trace.footer.authority",
+        "$example": "user:root (via agt_7f3k)"
+      },
+      "Integrity": {
+        "$slot": "integrity",
+        "$from": "live.trace.footer.integrity",
+        "$example": "valid hash link (chain verified)"
+      }
     }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
-      "intent": "Denied UPDATE retried against primary key; blast radius 1",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
+        "$bindings": {},
+        "$example": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Denied UPDATE retried against primary key; blast radius 1"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

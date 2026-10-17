@@ -1,9 +1,29 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.cron.denial.cap",
-  "target": "cap://sync_orders",
-  "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",
-  "elapsed_ms": 143,
+  "scenario": {
+    "routine_urp": "cap://sync_orders",
+    "intent": "refresh catalog each night"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli bind cron nightly_sync {{routine_urp}} \"0 3 * * *\" -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 143
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,8 +34,16 @@
     "rule": "policy.authorizer.schedule_cap_exceeded",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Max 20 active schedules reached. New schedule binding refused.",
-    "measured": "20 active schedules (cap: 20)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Max 20 active schedules reached. New schedule binding refused."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "20 active schedules (cap: 20)"
+    },
     "remedy": "pause or remove an idle schedule first (capcli bind list); limit: artifacts/governance.yaml#schedule.max_active"
   }
 }

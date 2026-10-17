@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.sync.refusal.missing_url",
-  "target": "stripe",
-  "command": "capcli api sync stripe",
-  "elapsed_ms": 40,
+  "scenario": {
+    "stripe": "stripe"
+  },
+  "target": {
+    "$slot": "stripe",
+    "$from": "scenario.stripe",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli api sync {{stripe}}",
+    "$bindings": {
+      "stripe": "scenario.stripe"
+    },
+    "$example": "capcli api sync stripe"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 40
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,13 +30,35 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "missing_param",
-    "culprit": "Upstream spec URL omitted.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Upstream spec URL omitted."
+    },
     "remedy": "re-run with the provider's OpenAPI URL, e.g. 'capcli api sync stripe https://api.stripe.com/openapi.json'",
-    "command": "capcli api sync stripe",
-    "usage": "capcli api sync <provider> <url> [--interval 7d] [--dry-run]",
+    "command": {
+      "$interpolate": "capcli api sync {{stripe}}",
+      "$bindings": {
+        "stripe": "scenario.stripe"
+      },
+      "$example": "capcli api sync stripe"
+    },
+    "usage": {
+      "$slot": "usage",
+      "$from": "live.usage",
+      "$example": "capcli api sync <provider> <url> [--interval 7d] [--dry-run]"
+    },
     "lines": [
-      "FATAL  missing_param.missing_arg",
-      "The kernel alone parses OpenAPI specs; compilation requires a spec URL."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  missing_param.missing_arg"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "The kernel alone parses OpenAPI specs; compilation requires a spec URL."
+      }
     ]
   }
 }

@@ -1,44 +1,114 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.swarm.success.populated",
-  "target": "swarm",
-  "command": "capcli sys swarm list",
-  "elapsed_ms": 2339,
+  "scenario": {
+    "swarm": "swarm"
+  },
+  "target": {
+    "$slot": "swarm",
+    "$from": "scenario.swarm",
+    "$example": "swarm"
+  },
+  "command": {
+    "$interpolate": "capcli sys {{swarm}} list",
+    "$bindings": {
+      "swarm": "scenario.swarm"
+    },
+    "$example": "capcli sys swarm list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2339
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
     "footer": {
-      "active": "4 · expired: 0",
-      "nodes": "4 nodes (cap: 256 spokes)"
+      "active": {
+        "$slot": "active",
+        "$from": "live.swarm.footer.active",
+        "$example": "4 · expired: 0"
+      },
+      "nodes": {
+        "$slot": "nodes",
+        "$from": "live.swarm.footer.nodes",
+        "$example": "4 nodes (cap: 256 spokes)"
+      }
     },
     "nodes": [
       {
         "children": [],
-        "label": "agt_7f3k order-filler spoke_fat user:root active heartbeat 2s ago"
+        "label": {
+          "$slot": "n0",
+          "$from": "live.swarm.nodes[0].label",
+          "$example": "agt_7f3k order-filler spoke_fat user:root active heartbeat 2s ago"
+        }
       },
       {
         "children": [],
-        "label": "agt_tmp_9f3k22ab sandbox-worker spoke_ephemeral kernel active heartbeat 1s ago ephemeral"
+        "label": {
+          "$slot": "n1",
+          "$from": "live.swarm.nodes[1].label",
+          "$example": "agt_tmp_9f3k22ab sandbox-worker spoke_ephemeral kernel active heartbeat 1s ago ephemeral"
+        }
       },
       {
         "children": [],
-        "label": "agt_2m8p inventory-sync spoke_thin user:root active heartbeat 4s ago"
+        "label": {
+          "$slot": "n2",
+          "$from": "live.swarm.nodes[2].label",
+          "$example": "agt_2m8p inventory-sync spoke_thin user:root active heartbeat 4s ago"
+        }
       }
     ],
-    "root": "hub 100.64.0.1:4040 hub active",
-    "title": "listed"
+    "root": {
+      "$slot": "root",
+      "$from": "live.swarm.root",
+      "$example": "hub 100.64.0.1:4040 hub active"
+    },
+    "title": {
+      "$slot": "title",
+      "$from": "live.swarm.title",
+      "$example": "listed"
+    }
   },
   "affordances": [
     {
-      "command": "capcli sys swarm reap",
-      "intent": "Reap swarm nodes past lease_ttl and release held claims",
-      "rel": "next",
-      "risk": "mutating"
+      "command": {
+        "$interpolate": "capcli sys {{swarm}} reap",
+        "$bindings": {
+          "swarm": "scenario.swarm"
+        },
+        "$example": "capcli sys swarm reap"
+      },
+      "intent": {
+        "$interpolate": "Reap {{swarm}} nodes past lease_ttl and release held claims",
+        "$bindings": {
+          "swarm": "scenario.swarm"
+        },
+        "$example": "Reap swarm nodes past lease_ttl and release held claims"
+      },
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

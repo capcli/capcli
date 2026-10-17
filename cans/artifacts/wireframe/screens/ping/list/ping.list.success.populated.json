@@ -1,76 +1,168 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.list.success.populated",
-  "target": "_pending_asks",
-  "command": "capcli ping list --pending",
-  "elapsed_ms": 2075,
+  "scenario": {
+    "pending_asks": "_pending_asks"
+  },
+  "target": {
+    "$slot": "pending_asks",
+    "$from": "scenario.pending_asks",
+    "$example": "_pending_asks"
+  },
+  "command": {
+    "$interpolate": "capcli ping list --pending",
+    "$bindings": {},
+    "$example": "capcli ping list --pending"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2075
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "populated",
-    "root": "ask_88a awaiting_input \"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
+    "title": {
+      "$slot": "title",
+      "$from": "live.list.title",
+      "$example": "populated"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.list.root",
+      "$example": "ask_88a awaiting_input \"Fraud score 0.83 on ORD-1042. Approve dispatch?\""
+    },
     "nodes": [
       {
-        "label": "principal: user:root",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.list.nodes[0].label",
+          "$example": "principal: user:root"
+        },
         "children": []
       },
       {
-        "label": "options: approve, deny",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.list.nodes[1].label",
+          "$example": "options: approve, deny"
+        },
         "children": []
       },
       {
-        "label": "timeout: 60m (fail-closed)",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.list.nodes[2].label",
+          "$example": "timeout: 60m (fail-closed)"
+        },
         "children": []
       },
       {
-        "label": "asked_by: agt_7f3k (dispatch_order@4, frame_026)",
+        "label": {
+          "$slot": "n3",
+          "$from": "live.list.nodes[3].label",
+          "$example": "asked_by: agt_7f3k (dispatch_order@4, frame_026)"
+        },
         "children": []
       },
       {
-        "label": "cockpit: http://127.0.0.1:4040/ask/ask_88a",
+        "label": {
+          "$slot": "n4",
+          "$from": "live.list.nodes[4].label",
+          "$example": "cockpit: http://127.0.0.1:4040/ask/ask_88a"
+        },
         "children": []
       },
       {
-        "label": "ask_77c3 awaiting_input \"Approve refund for order ORD-10?\"",
+        "label": {
+          "$slot": "n5",
+          "$from": "live.list.nodes[5].label",
+          "$example": "ask_77c3 awaiting_input \"Approve refund for order ORD-10?\""
+        },
         "children": [
           {
-            "label": "principal: user:root",
+            "label": {
+              "$slot": "n5c0",
+              "$from": "live.list.nodes[5].children[0].label",
+              "$example": "principal: user:root"
+            },
             "children": []
           },
           {
-            "label": "options: approve, reject, escalate",
+            "label": {
+              "$slot": "n5c1",
+              "$from": "live.list.nodes[5].children[1].label",
+              "$example": "options: approve, reject, escalate"
+            },
             "children": []
           },
           {
-            "label": "timeout: 24h (fail-closed)",
+            "label": {
+              "$slot": "n5c2",
+              "$from": "live.list.nodes[5].children[2].label",
+              "$example": "timeout: 24h (fail-closed)"
+            },
             "children": []
           },
           {
-            "label": "asked_by: agt_7f3k (task_99a8b1, frame_018)",
+            "label": {
+              "$slot": "n5c3",
+              "$from": "live.list.nodes[5].children[3].label",
+              "$example": "asked_by: agt_7f3k (task_99a8b1, frame_018)"
+            },
             "children": []
           },
           {
-            "label": "cockpit: http://127.0.0.1:4040/ask/ask_77c3",
+            "label": {
+              "$slot": "n5c4",
+              "$from": "live.list.nodes[5].children[4].label",
+              "$example": "cockpit: http://127.0.0.1:4040/ask/ask_77c3"
+            },
             "children": []
           }
         ]
       }
     ],
     "footer": {
-      "pending": "2 inquiries"
+      "pending": {
+        "$slot": "pending",
+        "$from": "live.list.footer.pending",
+        "$example": "2 inquiries"
+      }
     }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli ping resolve ask_88a --choice approve",
-      "intent": "Choice selected; resumes task",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli ping resolve ask_88a --choice approve",
+        "$bindings": {},
+        "$example": "capcli ping resolve ask_88a --choice approve"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Choice selected; resumes task"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

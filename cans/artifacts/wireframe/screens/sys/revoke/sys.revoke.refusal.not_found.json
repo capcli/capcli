@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.revoke.refusal.not_found",
-  "target": "agt_0000",
-  "command": "capcli sys agent revoke agt_0000",
-  "elapsed_ms": 238,
+  "scenario": {
+    "agent_id": "agt_0000"
+  },
+  "target": {
+    "$slot": "agent_id",
+    "$from": "scenario.agent_id",
+    "$example": "agt_0000"
+  },
+  "command": {
+    "$interpolate": "capcli sys agent revoke {{agent_id}}",
+    "$bindings": {
+      "agent_id": "scenario.agent_id"
+    },
+    "$example": "capcli sys agent revoke agt_0000"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 238
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,11 +30,25 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "validation",
-    "culprit": "No registered agent with id 'agt_0000' in the agents system table.",
+    "culprit": {
+      "$interpolate": "No registered agent with id '{{agent_id}}' in the agents system table.",
+      "$bindings": {
+        "agent_id": "scenario.agent_id"
+      },
+      "$example": "No registered agent with id 'agt_0000' in the agents system table."
+    },
     "remedy": "list registered agents via capcli sys agents, then revoke a valid agent id",
-    "target": "agt_0000",
+    "target": {
+      "$slot": "agent_id_2",
+      "$from": "scenario.agent_id",
+      "$example": "agt_0000"
+    },
     "lines": [
-      "FATAL  validation.not_found"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.not_found"
+      }
     ]
   }
 }

@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.notify.refusal.missing_intent",
-  "target": "user:root",
-  "command": "capcli ping notify user:root \"Nightly sync finished\" --channel email",
-  "elapsed_ms": 44,
+  "scenario": {
+    "principal": "user:root"
+  },
+  "target": {
+    "$slot": "principal",
+    "$from": "scenario.principal",
+    "$example": "user:root"
+  },
+  "command": {
+    "$interpolate": "capcli ping notify {{principal}} \"Nightly sync finished\" --channel email",
+    "$bindings": {
+      "principal": "scenario.principal"
+    },
+    "$example": "capcli ping notify user:root \"Nightly sync finished\" --channel email"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 44
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,11 +31,25 @@
   "component": {
     "rule": "missing_param.no_intent",
     "domain": "missing_param",
-    "culprit": "Missing intent declaration.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Missing intent declaration."
+    },
     "remedy": "re-run with --intent \"<why this notification is sent>\"",
     "lines": [
-      "capcli ping notify user:root \"Nightly sync finished\" --channel email",
-      "ping notify requires --intent \"...\" (policy: notify.require_intent)."
+      {
+        "$interpolate": "capcli ping notify {{principal}} \"Nightly sync finished\" --channel email",
+        "$bindings": {
+          "principal": "scenario.principal"
+        },
+        "$example": "capcli ping notify user:root \"Nightly sync finished\" --channel email"
+      },
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[1]",
+        "$example": "ping notify requires --intent \"...\" (policy: notify.require_intent)."
+      }
     ]
   }
 }

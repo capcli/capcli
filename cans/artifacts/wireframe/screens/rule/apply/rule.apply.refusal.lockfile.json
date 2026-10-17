@@ -1,9 +1,28 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "rule.apply.refusal.lockfile",
-  "target": "schema://orders",
-  "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
-  "elapsed_ms": 124,
+  "scenario": {
+    "schema_urp": "schema://orders",
+    "intent": "add priority flag for rush shipping"
+  },
+  "target": {
+    "$slot": "schema_urp",
+    "$from": "scenario.schema_urp",
+    "$example": "schema://orders"
+  },
+  "command": {
+    "$interpolate": "capcli rule apply schema -m \"{{intent}}\"",
+    "$bindings": {
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli rule apply schema -m \"add priority flag for rush shipping\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 124
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,13 +31,33 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "lockfile_mismatch",
-    "culprit": "Working tree drifted from the locked manifest; DDL application refused.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Working tree drifted from the locked manifest; DDL application refused."
+    },
     "remedy": "restore drifted sources from git HEAD, or recompile capcli.lock via the reviewed apply path",
-    "lockfile_entry": "sha256:4a8f9c2d11e9a4c0",
-    "compiled_root_hash": "sha256:7b31d05e88c2f4a9",
-    "hashed_sources": "schema.yaml, system-schema.yaml, policy.yaml, governance.yaml",
+    "lockfile_entry": {
+      "$slot": "lockfile_entry",
+      "$from": "live.lockfile_entry",
+      "$example": "sha256:4a8f9c2d11e9a4c0"
+    },
+    "compiled_root_hash": {
+      "$slot": "compiled_root_hash",
+      "$from": "live.compiled_root_hash",
+      "$example": "sha256:7b31d05e88c2f4a9"
+    },
+    "hashed_sources": {
+      "$slot": "hashed_sources",
+      "$from": "live.hashed_sources",
+      "$example": "schema.yaml, system-schema.yaml, policy.yaml, governance.yaml"
+    },
     "lines": [
-      "FATAL  lockfile_mismatch.root_hash_drift"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  lockfile_mismatch.root_hash_drift"
+      }
     ]
   }
 }

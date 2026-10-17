@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.prove.crash.runtime",
-  "target": "sync_orders",
-  "command": "capcli routine prove sync_orders --env sim",
-  "elapsed_ms": 12758,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine prove sync_orders --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 12758
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
@@ -13,17 +31,45 @@
   "component": {
     "rule": "routine.runtime.exception",
     "domain": "routine.runtime",
-    "culprit": "TypeError: unsupported operand types for +: 'NoneType' and 'int'",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "TypeError: unsupported operand types for +: 'NoneType' and 'int'"
+    },
     "remedy": "guard carrier_fee against None before arithmetic, bump the version, and re-prove in sim",
     "span": {
-      "source": "total = carrier_fee + surcharge",
-      "highlight": "carrier_fee"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "total = carrier_fee + surcharge"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "carrier_fee"
+      }
     },
-    "TypeError": "unsupported operand types for +: 'NoneType' and 'int'",
-    "rollback": "clean",
+    "TypeError": {
+      "$slot": "typeerror",
+      "$from": "live.typeerror",
+      "$example": "unsupported operand types for +: 'NoneType' and 'int'"
+    },
+    "rollback": {
+      "$slot": "rollback",
+      "$from": "live.rollback",
+      "$example": "clean"
+    },
     "lines": [
-      "routines/sync_orders.py:34 in dispatch",
-      "carrier_fee is None on edge route 'pickup'; uncaught in sim test pass 3 of 10"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "routines/sync_orders.py:34 in dispatch"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "carrier_fee is None on edge route 'pickup'; uncaught in sim test pass 3 of 10"
+      }
     ]
   }
 }

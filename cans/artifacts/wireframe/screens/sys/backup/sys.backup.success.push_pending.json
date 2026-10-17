@@ -1,27 +1,71 @@
 {
-    "$schema": "wireframe/v2",
-    "id": "sys.backup.success.push_pending",
-    "target": "workspace",
-    "command": "capcli sys backup --push",
-    "elapsed_ms": 376,
-    "context": {
-        "env": "dev",
-        "tier": "tier_1",
-        "trust": "reviewed"
+  "$schema": "wireframe/v1",
+  "id": "sys.backup.success.push_pending",
+  "scenario": {
+    "workspace": "workspace"
+  },
+  "target": {
+    "$slot": "workspace",
+    "$from": "scenario.workspace",
+    "$example": "workspace"
+  },
+  "command": {
+    "$interpolate": "capcli sys backup --push",
+    "$bindings": {},
+    "$example": "capcli sys backup --push"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 376
+  },
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed"
+  },
+  "archetype": "receipt",
+  "component": {
+    "rule": "policy.backup.push_best_effort",
+    "layer": "kernel",
+    "snapshot": {
+      "$slot": "snapshot",
+      "$from": "live.snapshot",
+      "$example": "snap_auto_2026-10-04T0300Z (VACUUM INTO complete)"
     },
-    "archetype": "receipt",
-    "component": {
-        "rule": "policy.backup.push_best_effort",
-            "layer": "kernel",
-        "snapshot": "snap_auto_2026-10-04T0300Z (VACUUM INTO complete)",
-        "push": "pending",
-        "git": "origin rejected (remote ahead by 2 commits)",
-        "s3": "PutObject returned 403 (credentials expired)",
-        "pending_push": "recorded; retried on next push",
-        "lines": [
-            "Local snapshot complete: snap_auto_2026-10-04T0300Z.",
-            "Push best-effort: git non-fast-forward, s3 403 — push: pending, recorded for retry."
-        ],
-        "remedy": "reconcile remotes; the next 'capcli sys backup --push' retries the pending push"
-    }
+    "push": {
+      "$slot": "push",
+      "$from": "live.push",
+      "$example": "pending"
+    },
+    "git": {
+      "$slot": "git",
+      "$from": "live.git",
+      "$example": "origin rejected (remote ahead by 2 commits)"
+    },
+    "s3": {
+      "$slot": "s3",
+      "$from": "live.s3",
+      "$example": "PutObject returned 403 (credentials expired)"
+    },
+    "pending_push": {
+      "$slot": "pending_push",
+      "$from": "live.pending_push",
+      "$example": "recorded; retried on next push"
+    },
+    "lines": [
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Local snapshot complete: snap_auto_2026-10-04T0300Z."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Push best-effort: git non-fast-forward, s3 403 — push: pending, recorded for retry."
+      }
+    ],
+    "remedy": "reconcile remotes; the next 'capcli sys backup --push' retries the pending push"
+  }
 }

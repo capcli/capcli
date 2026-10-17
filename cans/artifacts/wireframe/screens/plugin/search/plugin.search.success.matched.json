@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "plugin.search.success.matched",
-  "target": "registry",
-  "command": "capcli plugin search payments --limit 5",
-  "elapsed_ms": 884,
+  "scenario": {
+    "registry": "registry"
+  },
+  "target": {
+    "$slot": "registry",
+    "$from": "scenario.registry",
+    "$example": "registry"
+  },
+  "command": {
+    "$interpolate": "capcli plugin search payments --limit 5",
+    "$bindings": {},
+    "$example": "capcli plugin search payments --limit 5"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 884
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,22 +31,62 @@
     "groups": [
       {
         "fields": {
-          "query": "payments",
-          "matches": "3",
-          "hit_1": "stripe 2.4.0 rating:4.8",
-          "hit_2": "paypal 1.2.0 rating:4.1",
-          "hit_3": "adyen 0.9.4 rating:3.7",
-          "discovery": "see marketplace.md#Discovery"
+          "query": {
+            "$slot": "query",
+            "$from": "live.groups[0].fields.query",
+            "$example": "payments"
+          },
+          "matches": {
+            "$slot": "matches",
+            "$from": "live.groups[0].fields.matches",
+            "$example": "3"
+          },
+          "hit_1": {
+            "$slot": "hit_1",
+            "$from": "live.groups[0].fields.hit_1",
+            "$example": "stripe 2.4.0 rating:4.8"
+          },
+          "hit_2": {
+            "$slot": "hit_2",
+            "$from": "live.groups[0].fields.hit_2",
+            "$example": "paypal 1.2.0 rating:4.1"
+          },
+          "hit_3": {
+            "$slot": "hit_3",
+            "$from": "live.groups[0].fields.hit_3",
+            "$example": "adyen 0.9.4 rating:3.7"
+          },
+          "discovery": {
+            "$slot": "discovery",
+            "$from": "live.groups[0].fields.discovery",
+            "$example": "see marketplace.md#Discovery"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli plugin install registry:stripe@2.4.0",
-      "intent": "Install top match",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli plugin install registry:stripe@2.4.0",
+        "$bindings": {},
+        "$example": "capcli plugin install registry:stripe@2.4.0"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Install top match"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

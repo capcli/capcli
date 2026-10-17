@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.new.refusal.shape_violation",
-  "target": "chunked_batch",
-  "command": "capcli pack new chunked_batch --type routine",
-  "elapsed_ms": 136,
+  "scenario": {
+    "pack": "chunked_batch"
+  },
+  "target": {
+    "$slot": "pack",
+    "$from": "scenario.pack",
+    "$example": "chunked_batch"
+  },
+  "command": {
+    "$interpolate": "capcli pack new {{pack}} --type routine",
+    "$bindings": {
+      "pack": "scenario.pack"
+    },
+    "$example": "capcli pack new chunked_batch --type routine"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 136
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,15 +31,43 @@
   "component": {
     "rule": "validation.pack.shape_violation",
     "domain": "validation",
-    "culprit": "Scaffold starter violates shape bounds: AST complexity 12 over ceiling 10; 9 params over max 8.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Scaffold starter violates shape bounds: AST complexity 12 over ceiling 10; 9 params over max 8."
+    },
     "remedy": "split the starter under the ceilings (AST complexity 10 max, 8 params max), then re-run capcli pack new chunked_batch --type routine",
-    "pack": "chunked_batch",
-    "ast_complexity": "12 (ceiling: 10)",
-    "params": "9 (max: 8)",
+    "pack": {
+      "$slot": "pack_2",
+      "$from": "scenario.pack",
+      "$example": "chunked_batch"
+    },
+    "ast_complexity": {
+      "$slot": "ast_complexity",
+      "$from": "live.ast_complexity",
+      "$example": "12 (ceiling: 10)"
+    },
+    "params": {
+      "$slot": "params",
+      "$from": "live.params",
+      "$example": "9 (max: 8)"
+    },
     "lines": [
-      "FATAL  validation.pack.shape_violation",
-      "AST complexity 12 over ceiling 10.",
-      "Params 9 over max 8."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.pack.shape_violation"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "AST complexity 12 over ceiling 10."
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "Params 9 over max 8."
+      }
     ]
   }
 }

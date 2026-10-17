@@ -4,6 +4,13 @@ Fixture schema and runner contract only. Mechanism spec lives at
 cans/interface.md#Surface-conformance. This document owns byte-level
 shape; that node owns what, why, when.
 
+Anchor nodes — cross-file pointers land on these four:
+
+- Screen Shape
+- Runner Contract
+- Codegen Contract
+- Plugin Screens
+
 ---
 
 ## 1. Directory Tree & Architecture
@@ -161,6 +168,7 @@ cans/artifacts/wireframe/
 * **Run Execute Form:** `capcli run <cap://...>` is the execute invocation (cans/interface.md#CLI-surface: `execute — run <capability>`); `execute` names the screen family and the fixture directory and does not appear in the typed command, and no `capcli run execute ...` form exists.
 * **Compound-Verb Mapping:** Screen IDs use `{noun}.{verb}.{state}.{condition}` where the verb joins multi-token verbs with underscore (`sys.vault_set`, `sys.vault_import`) and carries single-token verbs bare (`sys.register`, `sys.revoke`, `sys.agents`). The invocation grammar follows cans/interface.md#CLI-surface and may differ in surface form (`capcli sys vault set`, `capcli sys agent register`). The ID names the fixture; the spaced form is what the user types.
 * **Dynamic Environment Namespaces:** Environments are user-provisionable namespaces (`env new <slug>`, cans/interface.md#CLI-surface). `state_axes.env` in `manifest.json` lists only the kernel-reserved roots (`dev`, `sim`, `prod`); values like `staging` or `lab` are legal fixtures of dynamically provisioned namespaces (see `env_policy` in `manifest.json`).
+* **Slot Law:** every screen is `$schema: "wireframe/v1"`; instance data appears as `$slot` or `$interpolate` with `$example`. Semantic literals (`id`, `archetype`, `rule`, `domain`, `layer`, `remedy`, `context.{env,tier,trust}`) are never slotted. Grammar — `manifest.json#output_contract.slot`.
 
 ---
 
@@ -601,7 +609,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 
 ## 5. Canonical Screen Fixtures
 
-Every fixture is a `wireframe/v2` root in `CliEnvelope` shape (envelope law: kernel.md#Diagnostic-output-law): `$schema`, `id`, `command`, `context {env, tier, trust}`, optional `audit_op`, optional `attention`, `archetype`, `component`. Exactly one component per screen:
+Every fixture is a `wireframe/v1` root in `CliEnvelope` shape (envelope law: kernel.md#Diagnostic-output-law): `$schema`, `id`, `command`, `context {env, tier, trust}`, optional `audit_op`, optional `attention`, `archetype`, `component`. Exactly one component per screen:
 
 - `diagnostic` — states denial, refusal, crash, panic, yield (exits 2, 3, 4, 5, 6)
 - `tree` — hierarchies, causal DAGs, inspection envelopes
@@ -614,31 +622,71 @@ Success screens classify by content: key-value summaries are `receipt`, hierarch
 
 ### 5.1 AST Blast-Radius Denial (`screens/run/sql/run.sql.denial.ast.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.sql.denial.ast",
-  "target": "db://orders",
-  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
+  "scenario": {
+    "db_urp": "db://orders",
+    "intent": "batch ship"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"{{intent}}\"",
+    "$bindings": {
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 54
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_9f2e",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2e"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.query.update_delete.require_limit",
     "domain": "policy.ast",
     "layer": "AST",
-    "culprit": "No LIMIT clause. Blast radius unbounded.",
-    "measured": "matches potentially 847 rows (cap: 100)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "No LIMIT clause. Blast radius unbounded."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "matches potentially 847 rows (cap: 100)"
+    },
     "remedy": "add LIMIT, or target specific primary key",
     "span": {
-      "source": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
-      "highlight": "sing'"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "UPDATE orders"
+      }
     }
   }
 }
@@ -665,46 +713,108 @@ Rendered output (what the HTML canvas and Rust harness produce):
 
 ### 5.2 Causal DAG Tree Walk (`screens/sys/trace/sys.trace.success.populated.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.trace.success.populated",
-  "target": "op_7c4f",
-  "command": "capcli sys audit trace op_7c4f --explain",
+  "scenario": {
+    "session_id": "ses_a992f",
+    "root_intent": "fulfill urgent pending orders",
+    "trace_op": "op_7c4f"
+  },
+  "target": {
+    "$slot": "trace_op",
+    "$from": "scenario.trace_op",
+    "$example": "op_7c4f"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit trace {{trace_op}} --explain",
+    "$bindings": {
+      "trace_op": "scenario.trace_op"
+    },
+    "$example": "capcli sys audit trace op_7c4f --explain"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1268
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "Causal DAG Trace (op_7c4f)",
-    "root": "ses_a992f session.start \"fulfill urgent pending orders\"",
+    "title": {
+      "$interpolate": "Causal DAG Trace ({{trace_op}})",
+      "$bindings": {
+        "trace_op": "scenario.trace_op"
+      },
+      "$example": "Causal DAG Trace (op_7c4f)"
+    },
+    "root": {
+      "$interpolate": "{{session_id}} session.start \"{{root_intent}}\"",
+      "$bindings": {
+        "session_id": "scenario.session_id",
+        "root_intent": "scenario.root_intent"
+      },
+      "$example": "ses_a992f session.start \"fulfill urgent pending orders\""
+    },
     "nodes": [
       {
-        "label": "op_9f2c routine.dispatch_order@4",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.trace.nodes[0].label",
+          "$example": "op_9f2c routine.dispatch_order@4"
+        },
         "children": [
           {
-            "label": "op_9f2d db.query (orders) ✓ [allowed] 12ms",
+            "label": {
+              "$slot": "n0c0",
+              "$from": "live.trace.nodes[0].children[0].label",
+              "$example": "op_9f2d db.query (orders) ✓ [allowed] 12ms"
+            },
             "children": []
           },
           {
-            "label": "op_7c4f api.call (fedex.ship) ✓ [allowed] 340ms",
+            "label": {
+              "$slot": "n0c1",
+              "$from": "live.trace.nodes[0].children[1].label",
+              "$example": "op_7c4f api.call (fedex.ship) ✓ [allowed] 340ms"
+            },
             "children": [
               {
-                "label": "tracking 794644790133",
+                "label": {
+                  "$slot": "n0c1c0",
+                  "$from": "live.trace.nodes[0].children[1].children[0].label",
+                  "$example": "tracking 794644790133"
+                },
                 "children": []
               }
             ]
           },
           {
-            "label": "op_9f2f db.execute (orders) ✓ [allowed] 18ms",
+            "label": {
+              "$slot": "n0c2",
+              "$from": "live.trace.nodes[0].children[2].label",
+              "$example": "op_9f2f db.execute (orders) ✓ [allowed] 18ms"
+            },
             "children": [
               {
-                "label": "status = 'shipped' (1 row)",
+                "label": {
+                  "$slot": "n0c2c0",
+                  "$from": "live.trace.nodes[0].children[2].children[0].label",
+                  "$example": "status = 'shipped' (1 row)"
+                },
                 "children": []
               }
             ]
@@ -713,9 +823,23 @@ Fixture (`wireframe/v2`):
       }
     ],
     "footer": {
-      "Root Intent": "\"fulfill urgent pending orders\"",
-      "Authority": "user:root (via agt_7f3k)",
-      "Integrity": "valid hash link (chain verified)"
+      "Root Intent": {
+        "$interpolate": "\"{{root_intent}}\"",
+        "$bindings": {
+          "root_intent": "scenario.root_intent"
+        },
+        "$example": "\"fulfill urgent pending orders\""
+      },
+      "Authority": {
+        "$slot": "authority",
+        "$from": "live.trace.footer.authority",
+        "$example": "user:root (via agt_7f3k)"
+      },
+      "Integrity": {
+        "$slot": "integrity",
+        "$from": "live.trace.footer.integrity",
+        "$example": "valid hash link (chain verified)"
+      }
     }
   }
 }
@@ -743,14 +867,31 @@ Rendered output:
 
 ### 5.3 YAML Trust Receipt (`screens/sys/doctor/sys.doctor.success.report.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.doctor.success.report",
-  "target": "host",
-  "command": "capcli sys doctor --report",
+  "scenario": {
+    "host": "host"
+  },
+  "target": {
+    "$slot": "host",
+    "$from": "scenario.host",
+    "$example": "host"
+  },
+  "command": {
+    "$interpolate": "capcli sys doctor --report",
+    "$bindings": {},
+    "$example": "capcli sys doctor --report"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1647
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
@@ -758,24 +899,89 @@ Fixture (`wireframe/v2`):
   },
   "archetype": "receipt",
   "component": {
-    "title": "trust_receipt",
+    "title": {
+      "$slot": "title",
+      "$from": "live.title",
+      "$example": "trust_receipt"
+    },
     "groups": [
       {
-        "title": "trust_receipt",
+        "title": {
+          "$slot": "title_2",
+          "$from": "live.groups[0].title",
+          "$example": "trust_receipt"
+        },
         "fields": {
-          "status": "nominal (witness anchoring pending)",
-          "host_tier": "tier_1 (hardened Linux namespaces)",
-          "workspace": "envs/prod/workspace.db",
-          "ledger_root_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-          "witness_store": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)",
-          "worm_checkpoint": "pending — ledger root is local-only until the first object-store anchor",
-          "audited_events": "14290 committed to _audit",
-          "policy_denials": "18 (intercepted pre-execution; state untouched)",
-          "unaudited_writes": "0",
-          "secret_leaks": "0",
-          "pinned_routines": "32",
-          "active_triggers": "4 crons, 3 webhooks, 1 endpoint",
-          "sleep_score": "100%"
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[0].fields.status",
+            "$example": "nominal (witness anchoring pending)"
+          },
+          "host_tier": {
+            "$slot": "host_tier",
+            "$from": "live.groups[0].fields.host_tier",
+            "$example": "tier_1 (hardened Linux namespaces)"
+          },
+          "permitted_envs": {
+            "$slot": "permitted_envs",
+            "$from": "live.groups[0].fields.permitted_envs",
+            "$example": "dev, sim, prod"
+          },
+          "workspace": {
+            "$slot": "workspace",
+            "$from": "live.groups[0].fields.workspace",
+            "$example": "envs/prod/workspace.db"
+          },
+          "ledger_root_hash": {
+            "$slot": "ledger_root_hash",
+            "$from": "live.groups[0].fields.ledger_root_hash",
+            "$example": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          "witness_store": {
+            "$slot": "witness_store",
+            "$from": "live.groups[0].fields.witness_store",
+            "$example": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)"
+          },
+          "worm_checkpoint": {
+            "$slot": "worm_checkpoint",
+            "$from": "live.groups[0].fields.worm_checkpoint",
+            "$example": "pending — ledger root is local-only until the first object-store anchor"
+          },
+          "audited_events": {
+            "$slot": "audited_events",
+            "$from": "live.groups[0].fields.audited_events",
+            "$example": "14290 committed to _audit"
+          },
+          "policy_denials": {
+            "$slot": "policy_denials",
+            "$from": "live.groups[0].fields.policy_denials",
+            "$example": "18 (intercepted pre-execution; state untouched)"
+          },
+          "unaudited_writes": {
+            "$slot": "unaudited_writes",
+            "$from": "live.groups[0].fields.unaudited_writes",
+            "$example": "0"
+          },
+          "secret_leaks": {
+            "$slot": "secret_leaks",
+            "$from": "live.groups[0].fields.secret_leaks",
+            "$example": "0"
+          },
+          "pinned_routines": {
+            "$slot": "pinned_routines",
+            "$from": "live.groups[0].fields.pinned_routines",
+            "$example": "32"
+          },
+          "active_triggers": {
+            "$slot": "active_triggers",
+            "$from": "live.groups[0].fields.active_triggers",
+            "$example": "4 crons, 3 webhooks, 1 endpoint"
+          },
+          "sleep_score": {
+            "$slot": "sleep_score",
+            "$from": "live.groups[0].fields.sleep_score",
+            "$example": "100%"
+          }
         }
       }
     ]
@@ -808,19 +1014,42 @@ trust_receipt:
 
 ### 5.4 Pre-Flight Routine Inspection Envelope (`screens/run/inspect/run.inspect.success.routine.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.routine",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli inspect cap://dispatch_order@4",
+  "scenario": {
+    "routine_urp": "cap://dispatch_order@4"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{routine_urp}}",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp"
+    },
+    "$example": "capcli inspect cap://dispatch_order@4"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2270
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -828,71 +1057,166 @@ Fixture (`wireframe/v2`):
     "groups": [
       {
         "fields": {
-          "trust": "pinned",
-          "runtime": "typescript (bun)",
-          "params": "order_id: string, carrier: string",
-          "description": "\"Dispatch paid order to carrier and update status\""
+          "trust": {
+            "$slot": "trust",
+            "$from": "live.groups[0].fields.trust",
+            "$example": "pinned"
+          },
+          "runtime": {
+            "$slot": "runtime",
+            "$from": "live.groups[0].fields.runtime",
+            "$example": "typescript (bun)"
+          },
+          "params": {
+            "$slot": "params",
+            "$from": "live.groups[0].fields.params",
+            "$example": "order_id: string, carrier: string"
+          },
+          "description": {
+            "$slot": "description",
+            "$from": "live.groups[0].fields.description",
+            "$example": "\"Dispatch paid order to carrier and update status\""
+          }
         }
       },
       {
         "fields": {
-          "limits": "8 ops · 15s · 500 result tokens"
+          "limits": {
+            "$slot": "limits",
+            "$from": "live.groups[1].fields.limits",
+            "$example": "50 fuel declared · 300s watchdog · 500 result tokens"
+          }
         }
       },
       {
         "lines": [
-          "manifest:",
-          "1. db.query    orders (read)",
-          "2. api.call    logistics.shipments.create",
-          "3. db.execute  orders (write)"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "manifest:"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[2].lines[1]",
+            "$example": "1. db.query    orders (read)"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[2].lines[2]",
+            "$example": "2. api.call    logistics.shipments.create"
+          },
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[2].lines[3]",
+            "$example": "3. db.execute  orders (write)"
+          }
         ]
       },
       {
         "fields": {
-          "can_invoke_now": "true",
-          "session_ops_remaining": "488",
-          "session_duration_remaining": "555000ms",
-          "session_fuel_remaining": "80400",
-          "session_egress_remaining": "4181824 bytes",
-          "session_rate_remaining": "287",
-          "tightest_constraint": "null"
+          "fuel_declared": {
+            "$slot": "fuel_declared",
+            "$from": "live.groups[3].fields.fuel_declared",
+            "$example": "50"
+          },
+          "session_fuel_remaining": {
+            "$slot": "session_fuel_remaining",
+            "$from": "live.groups[3].fields.session_fuel_remaining",
+            "$example": "80400"
+          },
+          "cadence_status": {
+            "$slot": "cadence_status",
+            "$from": "live.groups[3].fields.cadence_status",
+            "$example": "nominal"
+          },
+          "ceiling_status": {
+            "$slot": "ceiling_status",
+            "$from": "live.groups[3].fields.ceiling_status",
+            "$example": "nominal"
+          },
+          "can_invoke_now": {
+            "$slot": "can_invoke_now",
+            "$from": "live.groups[3].fields.can_invoke_now",
+            "$example": "true"
+          },
+          "tightest_constraint": {
+            "$slot": "tightest_constraint",
+            "$from": "live.groups[3].fields.tightest_constraint",
+            "$example": "null"
+          }
         },
         "lines": [
-          "budget_status:"
+          {
+            "$slot": "lines_4",
+            "$from": "live.groups[3].lines[0]",
+            "$example": "budget_status:"
+          }
         ]
       },
       {
         "fields": {
-          "max_nesting_depth": "5",
-          "budget_inheritance": "min",
-          "child_routines": "[]"
+          "max_nesting_depth": {
+            "$slot": "max_nesting_depth",
+            "$from": "live.groups[4].fields.max_nesting_depth",
+            "$example": "5"
+          },
+          "budget_inheritance": {
+            "$slot": "budget_inheritance",
+            "$from": "live.groups[4].fields.budget_inheritance",
+            "$example": "min"
+          },
+          "child_routines": {
+            "$slot": "child_routines",
+            "$from": "live.groups[4].fields.child_routines",
+            "$example": "[]"
+          }
         },
         "lines": [
-          "composition:"
+          {
+            "$slot": "lines_5",
+            "$from": "live.groups[4].lines[0]",
+            "$example": "composition:"
+          }
         ]
       },
       {
         "fields": {
-          "total_runs": "214",
-          "success_rate": "99.1%",
-          "p50_duration": "340ms",
-          "p95_duration": "890ms",
-          "last_run_at": "2m ago"
+          "total_runs": {
+            "$slot": "total_runs",
+            "$from": "live.groups[5].fields.total_runs",
+            "$example": "214"
+          },
+          "success_rate": {
+            "$slot": "success_rate",
+            "$from": "live.groups[5].fields.success_rate",
+            "$example": "99.1%"
+          },
+          "p50_duration": {
+            "$slot": "p50_duration",
+            "$from": "live.groups[5].fields.p50_duration",
+            "$example": "340ms"
+          },
+          "p95_duration": {
+            "$slot": "p95_duration",
+            "$from": "live.groups[5].fields.p95_duration",
+            "$example": "890ms"
+          },
+          "last_run_at": {
+            "$slot": "last_run_at",
+            "$from": "live.groups[5].fields.last_run_at",
+            "$example": "2m ago"
+          }
         },
         "lines": [
-          "stats:"
+          {
+            "$slot": "lines_6",
+            "$from": "live.groups[5].lines[0]",
+            "$example": "stats:"
+          }
         ]
       }
     ]
-  },
-  "affordances": [
-    {
-      "rel": "next",
-      "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
-      "intent": "Routine scaffold committed",
-      "risk": "mutating"
-    }
-  ]
+  }
 }
 ```
 
@@ -939,32 +1263,69 @@ Rendered output:
 
 ### 5.5 Authorizer Denial of Raw DDL for Reviewed Caller (`screens/run/sql/run.sql.denial.authorizer_reviewed.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
-  "id": "run.sql.denial.authorizer_reviewed",
-  "target": "db://orders",
-  "command": "capcli sql \"ALTER TABLE orders ADD COLUMN rush boolean\" --dry-run",
+  "$schema": "wireframe/v1",
+  "archetype": "diagnostic",
+  "audit_op": {
+    "$example": "op_9f2m",
+    "$from": "live.audit_op",
+    "$slot": "audit_op"
+  },
+  "command": {
+    "$bindings": {},
+    "$example": "capcli sql \"ALTER TABLE orders ADD COLUMN rush boolean\" --dry-run",
+    "$interpolate": "capcli sql \"ALTER TABLE orders ADD COLUMN rush boolean\" --dry-run"
+  },
+  "component": {
+    "culprit": {
+      "$example": "Raw DDL denied at the C authorizer for reviewed principals; raw DDL is denied for draft and reviewed alike.",
+      "$from": "live.culprit",
+      "$slot": "culprit"
+    },
+    "domain": "policy.authorizer",
+    "layer": "authorizer",
+    "measured": {
+      "$example": "statement rejected at prepare; 0 rows touched",
+      "$from": "live.measured",
+      "$slot": "measured"
+    },
+    "remedy": "declare the column in schema.yaml and ship it via the 4-phase migration pipeline (rule plan -> rule rehearse in sim -> rule apply schema)",
+    "rule": "policy.authorizer.alter_table",
+    "span": {
+      "highlight": {
+        "$example": "ALTER TABLE",
+        "$from": "live.span.highlight",
+        "$slot": "highlight"
+      },
+      "source": {
+        "$example": "ALTER TABLE orders ADD COLUMN rush boolean",
+        "$from": "live.span.source",
+        "$slot": "source"
+      }
+    }
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "archetype": "diagnostic",
-  "audit_op": "op_9f2m",
-  "component": {
-    "domain": "policy.authorizer",
-    "layer": "authorizer",
-    "culprit": "Raw DDL denied at the C authorizer for reviewed principals; raw DDL is denied for draft and reviewed alike.",
-    "measured": "statement rejected at prepare; 0 rows touched",
-    "remedy": "declare the column in schema.yaml and ship it via the 4-phase migration pipeline (rule plan -> rule rehearse in sim -> rule apply schema)",
-    "rule": "policy.authorizer.alter_table",
-    "span": {
-      "highlight": "ALTER TABLE",
-      "source": "ALTER TABLE orders ADD COLUMN rush boolean"
-    }
+  "elapsed_ms": {
+    "$example": 121,
+    "$from": "live.elapsed_ms",
+    "$slot": "elapsed_ms",
+    "$type": "integer"
+  },
+  "id": "run.sql.denial.authorizer_reviewed",
+  "scenario": {
+    "db_urp": "db://orders"
+  },
+  "target": {
+    "$example": "db://orders",
+    "$from": "scenario.db_urp",
+    "$slot": "db_urp"
   }
 }
 ```
@@ -989,14 +1350,31 @@ Rendered output:
 
 ### 5.6 Agent Thrashing Denial (`screens/sys/doctor/sys.doctor.denial.thrashing.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.doctor.denial.thrashing",
-  "target": "host",
-  "command": "capcli sys doctor",
+  "scenario": {
+    "host": "host"
+  },
+  "target": {
+    "$slot": "host",
+    "$from": "scenario.host",
+    "$example": "host"
+  },
+  "command": {
+    "$interpolate": "capcli sys doctor",
+    "$bindings": {},
+    "$example": "capcli sys doctor"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 115
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -1006,14 +1384,42 @@ Fixture (`wireframe/v2`):
   "component": {
     "domain": "agent.thrashing",
     "layer": "governance",
-    "culprit": "agent agt_7f3k stuck in repetitive denial loop (rule: policy.query.update_delete.require_limit, target: db://orders)",
-    "measured": "denials_last_5m: 22 (threshold: 20)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "agent agt_7f3k stuck in repetitive denial loop (rule: policy.query.update_delete.require_limit, target: db://orders)"
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "denials_last_5m: 22 (threshold: 20)"
+    },
     "remedy": "harness execution throttled; escalate to human or inspect remedy payload",
-    "agent": "agt_7f3k",
-    "denials_last_5m": "22",
-    "rule_hit": "policy.query.update_delete.require_limit",
-    "target": "db://orders",
-    "harness_status": "stuck in repetitive denial loop"
+    "agent": {
+      "$slot": "agent",
+      "$from": "live.agent",
+      "$example": "agt_7f3k"
+    },
+    "denials_last_5m": {
+      "$slot": "denials_last_5m",
+      "$from": "live.denials_last_5m",
+      "$example": "22"
+    },
+    "rule_hit": {
+      "$slot": "rule_hit",
+      "$from": "live.rule_hit",
+      "$example": "policy.query.update_delete.require_limit"
+    },
+    "target": {
+      "$slot": "target",
+      "$from": "live.target",
+      "$example": "db://orders"
+    },
+    "harness_status": {
+      "$slot": "harness_status",
+      "$from": "live.harness_status",
+      "$example": "stuck in repetitive denial loop"
+    }
   }
 }
 ```
@@ -1038,33 +1444,90 @@ Rendered output:
 
 ### 5.7 Missing Vault Secret with Cockpit URL (`screens/run/execute/run.execute.refusal.missing_secret.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.refusal.missing_secret",
-  "target": "cap://stripe.refund_charge",
-  "command": "capcli run cap://stripe.refund_charge -p charge_id=ch_1F2a9b -p amount_cents=8400 -m \"refund duplicate charge\"",
+  "scenario": {
+    "routine_urp": "cap://stripe.refund_charge",
+    "charge_id": "ch_1F2a9b",
+    "amount_cents": "8400",
+    "intent": "refund duplicate charge"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://stripe.refund_charge"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p charge_id={{charge_id}} -p amount_cents={{amount_cents}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "amount_cents": "scenario.amount_cents",
+      "charge_id": "scenario.charge_id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://stripe.refund_charge -p charge_id=ch_1F2a9b -p amount_cents=8400 -m \"refund duplicate charge\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 294
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
-    "trust": "draft"
+    "trust": "reviewed"
   },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.secrets.missing",
     "domain": "policy.secrets",
     "layer": "vault",
-    "culprit": "Credential 'stripe_secret_key' not found in vault.",
-    "remedy": "prompt human supervisor to inject credential via Cockpit (http://127.0.0.1:4040/vault)",
-    "capability": "cap://stripe.refund_charge",
-    "secret_ref": "vault://stripe_secret_key"
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Secret 'stripe_secret_key' absent from vault and process env (CAPCLI_SECRET_* checked before suspension)."
+    },
+    "lines": [
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "vault:// handles resolve at trust >= reviewed \u2014 floor passed, no trust denial"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "headless execution suspends at the pre-call check (exit 3)"
+      }
+    ],
+    "remedy": "Execution suspends (exit 3). The operator injects the value out-of-band \u2014 pipe it to `capcli sys vault set stripe_secret_key --in @-` (stdin, never argv), bind `CAPCLI_SECRET_STRIPE_SECRET_KEY` in the harness env, or use external client RPC \u2014 then the command is re-run. The agent passes only the opaque vault://stripe_secret_key handle; plaintext never enters agent context or process argv.",
+    "capability": {
+      "$slot": "routine_urp_2",
+      "$from": "scenario.routine_urp",
+      "$example": "cap://stripe.refund_charge"
+    },
+    "secret_ref": {
+      "$slot": "secret_ref",
+      "$from": "live.secret_ref",
+      "$example": "vault://stripe_secret_key"
+    }
   },
   "trailer": {
     "prompt": "doc://prompts/budget/execution_starved#1",
-    "reason": "missing secret refusal: vault credential absent",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "missing secret refusal: vault credential absent"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }
 ```
@@ -1089,14 +1552,37 @@ Rendered output:
 
 ### 5.8 Network Jail Syscall 42 Trapping (`screens/run/execute/run.execute.denial.network_jail.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.denial.network_jail",
-  "target": "cap://sneaky_exfil@1",
-  "command": "capcli run cap://sneaky_exfil@1 -p db_host=10.0.0.5:5432 -m \"replicate orders to analytics host\"",
+  "scenario": {
+    "routine_urp": "cap://sneaky_exfil@1",
+    "db_host": "10.0.0.5:5432",
+    "intent": "replicate orders to analytics host"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sneaky_exfil@1"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p db_host={{db_host}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "db_host": "scenario.db_host",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://sneaky_exfil@1 -p db_host=10.0.0.5:5432 -m \"replicate orders to analytics host\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 73
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -1107,18 +1593,44 @@ Fixture (`wireframe/v2`):
     "rule": "kernel.network.jail",
     "domain": "kernel.sandbox",
     "layer": "sandbox",
-    "culprit": "Raw connect() to 10.0.0.5:5432 trapped by seccomp-bpf filter (syscall 42).",
+    "culprit": {
+      "$interpolate": "Raw connect() to {{db_host}} trapped by seccomp-bpf filter (syscall 42).",
+      "$bindings": {
+        "db_host": "scenario.db_host"
+      },
+      "$example": "Raw connect() to 10.0.0.5:5432 trapped by seccomp-bpf filter (syscall 42)."
+    },
     "remedy": "use ctx.api.call with an activated catalog verb",
-    "target": "10.0.0.5:5432",
-    "caller": "routines/sneaky_exfil.py",
+    "target": {
+      "$slot": "db_host",
+      "$from": "scenario.db_host",
+      "$example": "10.0.0.5:5432"
+    },
+    "caller": {
+      "$slot": "caller",
+      "$from": "live.caller",
+      "$example": "routines/sneaky_exfil.py"
+    },
     "lines": [
-      "syscall 42 (connect) trapped by seccomp-bpf"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "syscall 42 (connect) trapped by seccomp-bpf"
+      }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/budget/execution_starved#1",
-    "reason": "network jail denial: sandbox egress trapped",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "network jail denial: sandbox egress trapped"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }
 ```
@@ -1142,14 +1654,39 @@ Rendered output:
 
 ### 5.9 Quota Yield Frame Suspension (`screens/run/execute/run.execute.yield.quota.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.yield.quota",
-  "target": "cap://broadcast_newsletter@2",
-  "command": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
+  "scenario": {
+    "routine_urp": "cap://broadcast_newsletter@2",
+    "routine_name": "broadcast_newsletter",
+    "routine_version": 2,
+    "audience": "followers",
+    "intent": "daily digest broadcast"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://broadcast_newsletter@2"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p audience={{audience}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "audience": "scenario.audience",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 651
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
@@ -1159,16 +1696,48 @@ Fixture (`wireframe/v2`):
   "component": {
     "rule": "policy.api.quota_exhausted",
     "domain": "api.quota",
-    "culprit": "Provider quota exhausted: threads has 0/50 tokens left in the 24h window.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Provider quota exhausted: threads has 0/50 tokens left in the 24h rolling window."
+    },
     "remedy": "task safely yielded; daemon will auto-resume at reset_at",
-    "tokens_left": "0 / 50 (24h window)",
-    "reset_at": "18:00:00 UTC (in 4h 12m)",
-    "suspended_frame": "task_99a8b1",
-    "provider": "threads",
-    "verb": "threads.create_media_post",
+    "tokens_left": {
+      "$slot": "tokens_left",
+      "$from": "live.tokens_left",
+      "$example": "0 / 50"
+    },
+    "reset_at": {
+      "$slot": "reset_at",
+      "$from": "live.reset_at",
+      "$example": "18:00:00 UTC (in 4h 12m)"
+    },
+    "suspended_frame": {
+      "$slot": "frame_id",
+      "$from": "live.frame_id",
+      "$example": "task_99a8b1"
+    },
+    "provider": {
+      "$slot": "provider",
+      "$from": "live.provider",
+      "$example": "threads"
+    },
+    "verb": {
+      "$slot": "api_verb",
+      "$from": "live.api_verb",
+      "$example": "threads.create_media_post"
+    },
     "layer": "quota",
     "lines": [
-      "routine broadcast_newsletter@2 (frame_018)"
+      {
+        "$interpolate": "routine {{routine_name}}@{{routine_version}} ({{frame_id}})",
+        "$bindings": {
+          "routine_name": "scenario.routine_name",
+          "routine_version": "scenario.routine_version",
+          "frame_id": "live.frame_id"
+        },
+        "$example": "routine broadcast_newsletter@2 (frame_018)"
+      }
     ]
   }
 }
@@ -1196,19 +1765,40 @@ Rendered output:
 
 ### 5.10 NTP Clock Drift Diagnostic Warning (`screens/sys/doctor/sys.doctor.success.clock_drift.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.doctor.success.clock_drift",
-  "target": "host",
-  "command": "capcli sys doctor",
+  "scenario": {
+    "host": "host"
+  },
+  "target": {
+    "$slot": "host",
+    "$from": "scenario.host",
+    "$example": "host"
+  },
+  "command": {
+    "$interpolate": "capcli sys doctor",
+    "$bindings": {},
+    "$example": "capcli sys doctor"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2195
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -1216,13 +1806,27 @@ Fixture (`wireframe/v2`):
     "groups": [
       {
         "fields": {
-          "clock_drift_warning": "host delta vs NTP is 840ms (warning threshold: 500ms)",
-          "causal ordering unaffected": "intact"
+          "clock_drift_warning": {
+            "$interpolate": "{{host}} delta vs NTP is 840ms (warning threshold: 500ms)",
+            "$bindings": {
+              "host": "scenario.host"
+            },
+            "$example": "host delta vs NTP is 840ms (warning threshold: 500ms)"
+          },
+          "causal ordering unaffected": {
+            "$slot": "causal_ordering_unaffected",
+            "$from": "live.groups[0].fields.causal_ordering_unaffected",
+            "$example": "intact"
+          }
         }
       },
       {
         "fields": {
-          "host": "ws-07 (chronyd reachable, not yet synced)",
+          "host": {
+            "$slot": "host_2",
+            "$from": "live.groups[1].fields.host",
+            "$example": "ws-07 (chronyd reachable, not yet synced)"
+          },
           "remedy": "synchronize host system clock via 'chronyd' or 'ntpdate' when convenient; execution is not blocked"
         }
       }
@@ -1248,59 +1852,184 @@ Rendered output:
 
 ### 5.11 Progressive Disclosure Doc Reading (`screens/doc/read/doc.read.success.sliced.json`)
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "doc.read.success.sliced",
-  "target": "doc://refund-policy",
-  "command": "capcli doc read doc://refund-policy --max-tokens 100",
+  "scenario": {
+    "doc_urp": "doc://refund-policy"
+  },
+  "target": {
+    "$slot": "doc_urp",
+    "$from": "scenario.doc_urp",
+    "$example": "doc://refund-policy"
+  },
+  "command": {
+    "$interpolate": "capcli doc read {{doc_urp}} --max-tokens 100",
+    "$bindings": {
+      "doc_urp": "scenario.doc_urp"
+    },
+    "$example": "capcli doc read doc://refund-policy --max-tokens 100"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1292
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "truncated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "truncated"
+    }
   },
   "archetype": "document",
   "component": {
-    "header_badge": "doc://refund-policy (sections 1-2 of 5)",
+    "header_badge": {
+      "$interpolate": "{{doc_urp}} (sections 1-2 of 5)",
+      "$bindings": {
+        "doc_urp": "scenario.doc_urp"
+      },
+      "$example": "doc://refund-policy (sections 1-2 of 5)"
+    },
     "pagination": {
       "items": [
         {
-          "section": 1,
-          "heading": "Scope",
-          "tokens": 22
+          "section": {
+            "$slot": "section",
+            "$from": "live.pagination.items[0].section",
+            "$type": "integer",
+            "$example": 1
+          },
+          "heading": {
+            "$slot": "heading",
+            "$from": "live.pagination.items[0].heading",
+            "$example": "Scope"
+          },
+          "tokens": {
+            "$slot": "tokens",
+            "$from": "live.pagination.items[0].tokens",
+            "$type": "integer",
+            "$example": 22
+          }
         },
         {
-          "section": 2,
-          "heading": "Refund windows",
-          "tokens": 74
+          "section": {
+            "$slot": "section_2",
+            "$from": "live.pagination.items[1].section",
+            "$type": "integer",
+            "$example": 2
+          },
+          "heading": {
+            "$slot": "heading_2",
+            "$from": "live.pagination.items[1].heading",
+            "$example": "Refund windows"
+          },
+          "tokens": {
+            "$slot": "tokens_2",
+            "$from": "live.pagination.items[1].tokens",
+            "$type": "integer",
+            "$example": 74
+          }
         }
       ],
-      "next_cursor": "doc://refund-policy#3",
-      "has_more": true
+      "next_cursor": {
+        "$interpolate": "{{doc_urp}}#3",
+        "$bindings": {
+          "doc_urp": "scenario.doc_urp"
+        },
+        "$example": "doc://refund-policy#3"
+      },
+      "has_more": {
+        "$slot": "has_more",
+        "$from": "live.pagination.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "meta": {
-      "document": "doc://refund-policy",
-      "tokens": "96 (cap: 100)",
-      "has_more": true,
-      "next_cursor": "doc://refund-policy#3"
+      "document": {
+        "$slot": "doc_urp_2",
+        "$from": "scenario.doc_urp",
+        "$example": "doc://refund-policy"
+      },
+      "tokens": {
+        "$slot": "tokens_3",
+        "$from": "live.meta.tokens",
+        "$example": "96 (cap: 100)"
+      },
+      "has_more": {
+        "$slot": "has_more_2",
+        "$from": "live.meta.has_more",
+        "$type": "boolean",
+        "$example": true
+      },
+      "next_cursor": {
+        "$interpolate": "{{doc_urp}}#3",
+        "$bindings": {
+          "doc_urp": "scenario.doc_urp"
+        },
+        "$example": "doc://refund-policy#3"
+      }
     },
     "body": [
-      "1. Scope",
-      "Refund routing and approval rules for the storefront.",
-      "2. Refund windows",
-      "Standard window is 30 days. Extended window is 120 days and requires",
-      "supervisor approval."
+      {
+        "$slot": "body_0",
+        "$from": "live.body[0]",
+        "$example": "1. Scope"
+      },
+      {
+        "$slot": "body_1",
+        "$from": "live.body[1]",
+        "$example": "Refund routing and approval rules for the storefront."
+      },
+      {
+        "$slot": "body_2",
+        "$from": "live.body[2]",
+        "$example": "2. Refund windows"
+      },
+      {
+        "$slot": "body_3",
+        "$from": "live.body[3]",
+        "$example": "Standard window is 30 days. Extended window is 120 days and requires"
+      },
+      {
+        "$slot": "body_4",
+        "$from": "live.body[4]",
+        "$example": "supervisor approval."
+      }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli doc outline doc://refund-policy",
-      "intent": "Outline node tree with section indices",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli doc outline {{doc_urp}}",
+        "$bindings": {
+          "doc_urp": "scenario.doc_urp"
+        },
+        "$example": "capcli doc outline doc://refund-policy"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Outline node tree with section indices"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }
@@ -1334,13 +2063,23 @@ collection-law trio from `manifest.json` `output_contract.pagination`.
 
 Host screen only; the trailer line renders after it as an additive final line. Line-cap accounting: `manifest.json` `output_contract.trailer.line_cap_law`.
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.help.success.stub",
-  "command": "capcli",
+  "command": {
+    "$interpolate": "capcli",
+    "$bindings": {},
+    "$example": "capcli"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1166
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -1348,28 +2087,76 @@ Fixture (`wireframe/v2`):
   },
   "archetype": "document",
   "component": {
-    "header_badge": "capcli 0.4.2 — compiled execution firewall for AI agents",
+    "header_badge": {
+      "$slot": "header_badge",
+      "$from": "live.header_badge",
+      "$example": "capcli 0.4.2 — compiled execution firewall for AI agents"
+    },
     "fields": {
-      "Find actions": "capcli search <query>",
-      "Pre-flight": "capcli inspect <urp>",
-      "System status": "capcli sys doctor"
+      "Find actions": {
+        "$slot": "find_actions",
+        "$from": "live.fields.find_actions",
+        "$example": "capcli search <query>"
+      },
+      "Pre-flight": {
+        "$slot": "pre_flight",
+        "$from": "live.fields.pre_flight",
+        "$example": "capcli inspect <urp>"
+      },
+      "System status": {
+        "$slot": "system_status",
+        "$from": "live.fields.system_status",
+        "$example": "capcli sys doctor"
+      }
     },
     "body": [
-      "Usage: capcli <noun> <verb> [target] [flags]",
-      "Capabilities are discovered dynamically, not listed in static help."
+      {
+        "$slot": "body_0",
+        "$from": "live.body[0]",
+        "$example": "Usage: capcli <noun> <verb> [target] [flags]"
+      },
+      {
+        "$slot": "body_1",
+        "$from": "live.body[1]",
+        "$example": "Capabilities are discovered dynamically, not listed in static help."
+      }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/onboarding/human#1",
-    "reason": "human operator requested onboarding tour",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "human operator requested onboarding tour"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli sys doctor --boot-check",
-      "intent": "Host doctor readiness check",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli sys doctor --boot-check",
+        "$bindings": {},
+        "$example": "capcli sys doctor --boot-check"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Host doctor readiness check"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }
@@ -1397,81 +2184,238 @@ The commit receipt renders exactly as the zero-attention screen; the
 illustrative: the cursor advances on every envelope render and the golden
 runner never asserts it.
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.success.attention",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+  "scenario": {
+    "routine_urp": "cap://dispatch_order@4",
+    "routine_name": "dispatch_order",
+    "routine_version": 4,
+    "order_id": "ORD-1042",
+    "carrier": "fedex",
+    "intent": "fulfill urgent pending orders"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p order_id={{order_id}} -p carrier={{carrier}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "carrier": "scenario.carrier",
+      "order_id": "scenario.order_id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 361
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
-  "audit_op": "op_9f2c",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2c"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "routine": "dispatch_order@4 (pinned)",
-          "session": "ses_a992f",
-          "intent": "\"fulfill urgent pending orders\"",
-          "frame": "frame_021 (3/8 ops · 358ms)"
+          "routine": {
+            "$interpolate": "{{routine_name}}@{{routine_version}} (pinned)",
+            "$bindings": {
+              "routine_name": "scenario.routine_name",
+              "routine_version": "scenario.routine_version"
+            },
+            "$example": "dispatch_order@4 (pinned)"
+          },
+          "session": {
+            "$slot": "session",
+            "$from": "live.groups[0].fields.session",
+            "$example": "ses_a992f"
+          },
+          "intent": {
+            "$interpolate": "\"{{intent}}\"",
+            "$bindings": {
+              "intent": "scenario.intent"
+            },
+            "$example": "\"fulfill urgent pending orders\""
+          },
+          "frame": {
+            "$slot": "frame",
+            "$from": "live.groups[0].fields.frame",
+            "$example": "frame_021 (3/8 ops · 358ms)"
+          }
         }
       },
       {
         "fields": {
-          "order_id": "ORD-1042",
-          "carrier": "fedex",
-          "tracking": "794644790133",
-          "status": "shipped (1 row committed)"
+          "order_id": {
+            "$slot": "order_id",
+            "$from": "scenario.order_id",
+            "$example": "ORD-1042"
+          },
+          "carrier": {
+            "$slot": "carrier",
+            "$from": "scenario.carrier",
+            "$example": "fedex"
+          },
+          "tracking": {
+            "$slot": "tracking",
+            "$from": "live.groups[1].fields.tracking",
+            "$example": "794644790133"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[1].fields.status",
+            "$example": "shipped (1 row committed)"
+          }
         },
         "lines": [
-          "result:"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "result:"
+          }
         ]
       },
       {
         "fields": {
-          "result_hash": "sha256:9c41e7b0d2a8f513c6ee"
+          "result_hash": {
+            "$slot": "result_hash",
+            "$from": "live.groups[2].fields.result_hash",
+            "$example": "sha256:9c41e7b0d2a8f513c6ee"
+          }
         }
       }
     ]
   },
   "attention": {
-    "cursor": "att_a992f_042",
+    "cursor": {
+      "$slot": "cursor",
+      "$from": "live.attention.cursor",
+      "$example": "att_a992f_042"
+    },
     "counts": {
-      "critical": 1,
-      "standard": 1,
-      "background": 0
+      "critical": {
+        "$slot": "critical",
+        "$from": "live.attention.counts.critical",
+        "$type": "integer",
+        "$example": 1
+      },
+      "standard": {
+        "$slot": "standard",
+        "$from": "live.attention.counts.standard",
+        "$type": "integer",
+        "$example": 1
+      },
+      "background": {
+        "$slot": "background",
+        "$from": "live.attention.counts.background",
+        "$type": "integer",
+        "$example": 0
+      }
     },
     "top": [
       {
-        "id": "ask_88a",
+        "id": {
+          "$slot": "ask_id",
+          "$from": "live.attention.top[0].id",
+          "$example": "ask_88a"
+        },
         "class": "critical",
-        "source": "ping.ask",
-        "summary": "Fraud score 0.83 on ORD-1042. Approve dispatch?",
+        "source": {
+          "$slot": "source",
+          "$from": "live.attention.top[0].source",
+          "$example": "ping.ask"
+        },
+        "summary": {
+          "$interpolate": "Fraud score 0.83 on {{order_id}}. Approve dispatch?",
+          "$bindings": {
+            "order_id": "scenario.order_id"
+          },
+          "$example": "Fraud score 0.83 on ORD-1042. Approve dispatch?"
+        },
         "affordance": {
-          "rel": "next",
-          "command": "capcli ping resolve ask_88a --choice approve",
-          "intent": "Resolve the pending approval ask",
-          "risk": "safe"
+          "rel": {
+            "$slot": "rel",
+            "$from": "live.attention.top[0].affordance.rel",
+            "$example": "next"
+          },
+          "command": {
+            "$interpolate": "capcli ping resolve ask_88a --choice approve",
+            "$bindings": {},
+            "$example": "capcli ping resolve ask_88a --choice approve"
+          },
+          "intent": {
+            "$slot": "intent",
+            "$from": "live.attention.top[0].affordance.intent",
+            "$example": "Resolve the pending approval ask"
+          },
+          "risk": {
+            "$slot": "risk",
+            "$from": "live.attention.top[0].affordance.risk",
+            "$example": "safe"
+          }
         }
       },
       {
-        "id": "evt_ord_903",
+        "id": {
+          "$slot": "event_id",
+          "$from": "live.attention.top[1].id",
+          "$example": "evt_ord_903"
+        },
         "class": "standard",
-        "source": "_inbox",
-        "summary": "Refund request queued via shopify_refunds intake",
+        "source": {
+          "$slot": "source_2",
+          "$from": "live.attention.top[1].source",
+          "$example": "_inbox"
+        },
+        "summary": {
+          "$slot": "summary",
+          "$from": "live.attention.top[1].summary",
+          "$example": "Refund request queued via shopify_refunds intake"
+        },
         "affordance": {
-          "rel": "next",
-          "command": "capcli sys inbox pop --channel webhook",
-          "intent": "Drain the queued sensory events",
-          "risk": "safe"
+          "rel": {
+            "$slot": "rel_2",
+            "$from": "live.attention.top[1].affordance.rel",
+            "$example": "next"
+          },
+          "command": {
+            "$interpolate": "capcli sys inbox pop --channel webhook",
+            "$bindings": {},
+            "$example": "capcli sys inbox pop --channel webhook"
+          },
+          "intent": {
+            "$slot": "intent_2",
+            "$from": "live.attention.top[1].affordance.intent",
+            "$example": "Drain the queued sensory events"
+          },
+          "risk": {
+            "$slot": "risk_2",
+            "$from": "live.attention.top[1].affordance.risk",
+            "$example": "safe"
+          }
         }
       }
     ],
@@ -1507,38 +2451,104 @@ Zero counts, yet the key is present: suppression is active. The held row
 waits on the Layer 1 claim release, which is also its dismiss path — no
 per-item ack exists.
 
-Fixture (`wireframe/v2`):
+Fixture (`wireframe/v1`):
 
 ```json
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.inbox.success.suppressed",
-  "target": "webhook",
-  "command": "capcli sys inbox pop --channel webhook",
+  "scenario": {
+    "channel": "webhook"
+  },
+  "target": {
+    "$slot": "channel",
+    "$from": "scenario.channel",
+    "$example": "webhook"
+  },
+  "command": {
+    "$interpolate": "capcli sys inbox pop --channel {{channel}}",
+    "$bindings": {
+      "channel": "scenario.channel"
+    },
+    "$example": "capcli sys inbox pop --channel webhook"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1004
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "popped",
-    "root": "events:",
+    "title": {
+      "$slot": "title",
+      "$from": "live.inbox.title",
+      "$example": "popped"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.inbox.root",
+      "$example": "events:"
+    },
     "nodes": [],
     "footer": {
-      "channel": "webhook",
-      "popped": "0 events",
-      "remaining": "1 held under active claim",
-      "note": "claim orders:ORD-10 held by agt_9k2w; held rows stay invisible until release"
+      "channel": {
+        "$slot": "channel_2",
+        "$from": "scenario.channel",
+        "$example": "webhook"
+      },
+      "popped": {
+        "$slot": "popped",
+        "$from": "live.inbox.footer.popped",
+        "$example": "0 events"
+      },
+      "remaining": {
+        "$slot": "remaining",
+        "$from": "live.inbox.footer.remaining",
+        "$example": "1 held under active claim"
+      },
+      "note": {
+        "$slot": "note",
+        "$from": "live.inbox.footer.note",
+        "$example": "claim orders:ORD-10 held by agt_9k2w; held rows stay invisible until release"
+      }
     }
   },
   "attention": {
-    "cursor": "att_a992f_043",
+    "cursor": {
+      "$slot": "cursor",
+      "$from": "live.attention.cursor",
+      "$example": "att_a992f_043"
+    },
     "counts": {
-      "critical": 0,
-      "standard": 0,
-      "background": 0
+      "critical": {
+        "$slot": "critical",
+        "$from": "live.attention.counts.critical",
+        "$type": "integer",
+        "$example": 0
+      },
+      "standard": {
+        "$slot": "standard",
+        "$from": "live.attention.counts.standard",
+        "$type": "integer",
+        "$example": 0
+      },
+      "background": {
+        "$slot": "background",
+        "$from": "live.attention.counts.background",
+        "$type": "integer",
+        "$example": 0
+      }
     },
     "top": [],
     "suppressed": [
@@ -1576,64 +2586,40 @@ Rendered output (tree with an empty walk; no attention line):
 
 ## 6. Fixture Schema & Rust Test Runner Contract
 
-### 6.1 Screen Fixture Schema (`screens/run/sql/run.sql.denial.ast.json`)
+### 6.1 Screen Shape
 
-A fixture JSON is the serialized `CliEnvelope` payload of the screen and the
-single source the renderer consumes (envelope law: kernel.md#Diagnostic-output-law).
-The root carries the invocation, the runtime context, the audit op, and exactly
-one layout component. The HTML canvas and the Rust test harness both render from
-this shape. No separate `.txt` file exists.
-
-```json
-{
-  "$schema": "wireframe/v2",
-  "id": "run.sql.denial.ast",
-  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
-  "context": { "env": "dev", "tier": "tier_1", "trust": "draft" },
-  "audit_op": "op_9f2e",
-  "archetype": "diagnostic",
-  "component": {
-    "rule": "policy.query.update_delete.require_limit",
-    "domain": "policy.ast",
-    "layer": "AST",
-    "span": {
-      "source": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
-      "highlight": "processing"
-    },
-    "culprit": "No LIMIT clause. Blast radius unbounded.",
-    "measured": "matches potentially 847 rows (cap: 100)",
-    "remedy": "add LIMIT, or target specific primary key"
-  }
-}
-```
+A screen is a serialized `CliEnvelope` payload with typed holes.
 
 Root field law:
 
-- `$schema` is `wireframe/v2`. `id` is the screen identity; noun and verb are its first two segments and appear nowhere else.
-- `command` states the invocation the screen answers; any target pointer lives inside the command string.
-- `target` names the single invocation target when the command carries one (251/260 fixtures on disk) and is absent on targetless commands.
-- `context` is the `CliEnvelope` context frame: `env`, `tier`, `trust`, plus optional `data_shape` (65/260 fixtures on disk). The renderer derives the `[{env}:{tier}]` badge from it.
-- `audit_op` names the audit operation the envelope reports. It appears when the screen reports one and is absent otherwise.
-- `archetype` is exactly one of `diagnostic`, `tree`, `receipt`, `document` (archetype law: kernel.md#Diagnostic-output-law). `component` carries that archetype's payload and nothing else.
-- `trailer` appears only on screens named in `_triggers.json` (§6.1.1).
-- `affordances` is an optional root key on exit-0 fixtures only (state segment `success`; archetype `receipt`, `tree`, or `document`). Each entry is `{ rel, command, intent, risk }` (cans/interface.md#Run-noun Success affordances); `command` is the target screen's fixture `command` string verbatim, sourced from `_flows.json` transitions, and `risk` takes `safe` or `mutating`. It is a machine envelope key: renderers never emit it as a human output line, and its presence or absence changes no exit, state, or payload byte. Shape: `output_contract.affordances.machine_schema` in `manifest.json`.
-- `attention` is an optional root key on any exit (envelope law: kernel.md#Diagnostic-output-law). It carries `{ cursor, counts, top, suppressed }`; each `top` and `suppressed` entry is `{ id, class, source, summary, affordance }` with `class` mirroring governor.md#Priority-classes and `affordance` shaped as an `affordances` entry. Present when counts are nonzero or suppression is active; absent when zero unacked and no suppression. It is a machine envelope key: renderers never emit it as a human output line, and its presence or absence changes no exit, state, or payload byte. `cursor` advances on every envelope render and is illustrative in fixtures, never byte-asserted. Shape: `output_contract.attention.machine_schema` in `manifest.json`.
+- `$schema` is `"wireframe/v1"`. `id` is the screen identity; noun and verb are its first two segments.
+- `scenario` is a light key-value block carrying the per-screen data referenced by `$from: "scenario.*"`.
+- `command`, `target`, and any component value may be a literal string, a `$slot` object, or an `$interpolate` object.
+- `context`, `audit_op`, `trailer`, `affordances`, `attention`, `archetype`, `component` — unchanged from today.
+- `archetype` is exactly one of `diagnostic`, `tree`, `receipt`, `document`. `component` carries that archetype's payload.
 
-Derived-state law:
+Slot grammar (also declared in `manifest.json#output_contract.slot`):
 
-- The exit code derives from the `id` state segment: `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6. Fixtures carry no `exit_code`; state and domain legality lives in `_states.json`.
-- Fixtures carry no `state_modified`. A non-zero exit carries `state_modified: false` as a kernel invariant (kernel.md#Exit-code-law). Success screens take `state_modified` from the exit-0 variants in `_states.json` (`committed`, `dry_run`, `resumed`). A renderer emits a `state_modified` row from the derived value only; the fixture never stores it.
-- A stored `state_modified` key at envelope root, inside `component.groups[].fields`, inside `component.footer`, or inside `component.fields` carries the same ban at every depth; `_states.json` and the exit are the single home of the value.
-- A diagnostic component carries `domain` once, in the component. Success components carry no `domain`.
-- Archetype dispatch is deterministic: states `denial`, `refusal`, `crash`, `panic`, `yield` are `diagnostic`; `success` resolves to `receipt`, `tree`, or `document` by content (key-value summary, hierarchy, prose slice or help). Archetype law — cans/kernel.md#Diagnostic-output-law.
-- Visual typography is renderer output, never fixture data: caret strings and their column offsets, indentation, tree branch glyphs (`├──`, `└──`, `│`), divider lines (`─`), and key-column alignment are computed by the component renderers from component data.
+```json
+{ "$slot": "<name>", "$kind": "instance", "$from": "<binding>",
+  "$type"?: "<urp|string|integer|…>", "$pattern"?: "<regex>", "$enum"?: [...],
+  "$example": "<current literal>" }
 
-Component law:
+{ "$interpolate": "text {{a}} text {{b}}",
+  "$bindings": { "a": "<binding>", "b": "<binding>" },
+  "$example": "<current literal>" }
+```
 
-- **diagnostic** — `{ rule?, domain, layer?, span?, culprit, measured?, remedy, lines?, suspended_frame?, tokens_left?, reset_at?, ask_id?, pending_asks?, ...fields }`. `domain`, `culprit`, and `remedy` are present on every diagnostic fixture (135/135 on disk); `remedy` is a single string. `rule` (114/135 on disk) is the violated rule id, stored once here; `layer` (72/135 on disk) names the enforcement layer. Required fields per exit live in `_states.json` `diagnostic_required` and every fixture carries its exit's required set. `span` is `{ source, highlight?, detail? }`: `source` is the offending source text, `highlight` is the exact substring the renderer underlines with carets at its computed offset, `detail` carries indented span context lines. `measured` cites the measured value on denials that carry one. `lines` is an optional array of verbatim content strings (89/135 on disk). Every other key at component root is a screen-specific field row captured by the flattened fields map; no diagnostic fixture carries a nested `fields` key (0/135 on disk), and field values are strings or list values. A flattened key is the rendered field label: one complete label, never a truncated sentence fragment; the value carries the data. Exit 6 components additionally carry `suspended_frame`, plus the domain fields registered in `_states.json` (`api.quota` → `tokens_left`, `reset_at`; `ping.ask` → `ask_id`, `pending_asks`).
-- **tree** — `{ title, root, nodes, footer? }`. `title` is the header line after the badge. `root` is a string (19/19 on disk): the rendered root line. `nodes` is an ordered array of `{ label, children }` (121 nodes on disk); `children` recurses with the same shape and is present on every node, empty at leaves. The renderer computes indentation and branch glyphs from nesting; the node label carries the full line text. `footer` is an optional ordered key-value block rendered after the walk.
-- **receipt** — `{ title, groups }`. `title` renders as the receipt heading and is `null` on fixtures that carry no heading (87/93 null, 6/93 string on disk). `groups` is an ordered array of `{ title?, fields?, lines? }` (190 groups on disk): `title` renders as the group's heading line (8/190 on disk; a `name` key appears on 0/190), `fields` is an ordered key-value map the renderer aligns into label columns (160/190), `lines` carries verbatim content lines the renderer indents under the group (55/190). Key order in `fields` is render order.
-- **document** — `{ header_badge, pagination?, meta?, fields?, body }`. `header_badge` is the document header line after the context badge. `pagination` is the keyset envelope of a truncated or sliced payload (§6.1.2). `meta` is an ordered key-value map (9/10 on disk) carrying slice accounting and the pagination cursor mirror. `fields` is an ordered key-value map (9/10 on disk) carrying the screen's rows. `body` is an ordered array of prose strings (10/10 on disk); the renderer emits divider lines and wraps body text.
+Binding sources (closed set):
+
+- `context.*` — the screen's own `context` block.
+- `scenario.*` — the screen's `scenario` block.
+- `world.*` — seeded workspace state for the screen's scenario (opt-in).
+- `live.*` — extracted from the invocation's actual envelope at assertion time.
+
+`$kind` is `"instance"` or absent. `$example` is required.
+
+Derived state is unchanged: exit code derives from the `id` state segment; `state_modified` derives from exit-0 variants in `_states.json`; diagnostics carry no `exit_code` or `state_modified`; typography (carets, glyphs, dividers, alignment) is renderer output.
 
 ### 6.1.1 Trailer Slot
 
@@ -1652,7 +2638,7 @@ trailer and nothing else about the producer.
 - Line-cap accounting lives in `manifest.json` `output_contract.trailer.line_cap_law`; this section carries no cap number.
 
 The slot-naming bridge, stated once so it can never be confused: on a
-`wireframe/v2` fixture the slot is the root key `trailer`, beside `component` —
+`wireframe/v1` fixture the slot is the root key `trailer`, beside `component` —
 the `human_field`, producer-facing slot above. When a
 renderer emits the `--json` machine envelope, the key becomes `next_action`
 per `output_contract.trailer.machine_field` in `manifest.json`. Fixtures
@@ -1674,311 +2660,76 @@ Truncated screens carry the keyset envelope inside the component, mirroring
 `has_more` is always `true` on a truncated screen. Non-truncated screens
 carry none of these keys.
 
-### 6.2 Rust Integration Test Runner
+### 6.2 Runner Contract
 
 Status: spec contract. The repository carries no `crates/` tree; the Python
 validator enforces the checks in this section until the Rust harness exists.
 No golden `.txt` files; the fixture component IS the golden source.
 
-The runner deserializes every fixture as an `AtomicFixture`, renders the
-expected terminal output procedurally from its component, dispatches the
-command against the real binary, and asserts byte-identical stdout plus the
-exit code derived from the fixture `id`. Diagnostic spans render through the
-kernel's `miette` / `codespan` pipeline, so fixtures validate the real CLI
-formatting engine.
+One mode — **structural match**. `cargo test --workspace` executes it against every screen.
 
-```rust
-// crates/capcli-cli/tests/e2e/test_wireframe_fixtures.rs — contract path; no crates/ tree exists in the repo today
+For each screen:
 
-use std::fs;
-use std::path::Path;
-use glob::glob;
-use serde::Deserialize;
+1. Dispatch `command` against the real binary.
+2. Extract `live.*` bindings from the emitted envelope (via the `CliEnvelope<T>` deserializer).
+3. Walk the screen: every literal matches byte-exact; every `$slot` satisfies its `$type`/`$pattern`/`$enum` and equals the actual field; every `$interpolate` produces a string that equals the actual field.
+4. Assert exit code equals the derivation from `id`; assert `state_modified: false` on non-zero exits.
+5. Assert banned tokens absent, no pipe character, trailer present iff `_triggers.json` says so, no `next_action` on a screen with no trailer.
 
-/// Runtime context frame — mirrors `context` in every fixture (§6.1).
-#[derive(Deserialize)]
-struct Context {
-    env: String,
-    tier: String,
-    trust: String,
-    data_shape: Option<String>,
-}
+Strict instantiation (substitute `$example`, byte-compare) is a developer tool: `cargo xtask wireframe-strict`. It never runs in CI.
 
-/// Semantic span. Caret runs and offsets are computed at render time
-/// from `source` + `highlight`; fixtures store neither.
-#[derive(Deserialize)]
-struct Span {
-    source: String,
-    highlight: Option<String>,
-    detail: Option<String>,
-}
-
-/// Archetype A payload (§6.1 component law). Required fields per exit
-/// live in `_states.json` `diagnostic_required`; every fixture carries
-/// its exit's set. Screen-specific field rows are flattened at component
-/// root (see `fields`); no fixture carries a nested `fields` key.
-#[derive(Deserialize)]
-struct DiagnosticComponent {
-    rule: Option<String>,
-    domain: String,
-    layer: Option<String>,
-    span: Option<Span>,
-    culprit: String,
-    measured: Option<String>,
-    remedy: String,
-    lines: Option<Vec<String>>,
-    suspended_frame: Option<String>,
-    tokens_left: Option<String>,
-    reset_at: Option<String>,
-    ask_id: Option<String>,
-    pending_asks: Option<String>,
-    #[serde(flatten)]
-    fields: serde_json::Map<String, serde_json::Value>,
-}
-
-/// Archetype B node; `children` recurses and is present on every node,
-/// empty at leaves. Branch glyphs and indentation are computed at
-/// render time from nesting; the label carries the full line text.
-#[derive(Deserialize)]
-struct TreeNode {
-    label: String,
-    #[serde(default)]
-    children: Vec<TreeNode>,
-}
-
-/// Archetype B root: the rendered root line as a plain string.
-type TreeRoot = String;
-
-/// Archetype B payload (§6.1 component law).
-#[derive(Deserialize)]
-struct TreeComponent {
-    title: String,
-    root: TreeRoot,
-    nodes: Vec<TreeNode>,
-    footer: Option<serde_json::Map<String, serde_json::Value>>,
-}
-
-/// Archetype C group; key order in `fields` is render order.
-#[derive(Deserialize)]
-struct ReceiptGroup {
-    title: Option<String>,
-    fields: Option<serde_json::Map<String, serde_json::Value>>,
-    lines: Option<Vec<String>>,
-}
-
-/// Archetype C payload (§6.1 component law). `title` is `null` on
-/// fixtures that carry no heading.
-#[derive(Deserialize)]
-struct ReceiptComponent {
-    title: Option<String>,
-    groups: Vec<ReceiptGroup>,
-}
-
-/// Archetype D pagination envelope (§6.1.2): typed leading items plus
-/// the keyset cursor state. Every truncated or sliced screen on disk is
-/// a `document` carrying this object.
-#[derive(Deserialize)]
-struct DocumentPagination {
-    items: Vec<serde_json::Value>,
-    next_cursor: String,
-    has_more: bool,
-}
-
-/// Archetype D payload (§6.1 component law). `meta` carries slice
-/// accounting and the pagination cursor mirror; `fields` carries the
-/// screen's rows. Both are ordered key-value maps.
-#[derive(Deserialize)]
-struct DocumentComponent {
-    header_badge: String,
-    pagination: Option<DocumentPagination>,
-    meta: Option<serde_json::Map<String, serde_json::Value>>,
-    fields: Option<serde_json::Map<String, serde_json::Value>>,
-    body: Vec<String>,
-}
-
-/// The four layout components, dispatched on the `archetype` key.
-#[derive(Deserialize)]
-#[serde(tag = "archetype", content = "component")]
-enum ComponentPayload {
-    #[serde(rename = "diagnostic")]
-    Diagnostic(DiagnosticComponent),
-    #[serde(rename = "tree")]
-    Tree(TreeComponent),
-    #[serde(rename = "receipt")]
-    Receipt(ReceiptComponent),
-    #[serde(rename = "document")]
-    Document(DocumentComponent),
-}
-
-/// Exit-0 next action (§6.1 root field law; cans/interface.md#CLI-surface
-/// Success affordances). The command is a fixture command string verbatim.
-#[derive(Deserialize)]
-struct Affordance {
-    rel: String,
-    command: String,
-    intent: String,
-    risk: String,
-}
-
-/// Attention item (envelope law: kernel.md#Diagnostic-output-law).
-/// `class` mirrors governor.md#Priority-classes.
-#[derive(Deserialize)]
-struct AttentionItem {
-    id: String,
-    class: String,
-    source: String,
-    summary: String,
-    affordance: Affordance,
-}
-
-/// Attention envelope block (§6.1 root field law). Machine-only: the
-/// golden renderer consumes the component alone and never emits this
-/// key as a human output line. `cursor` advances on every envelope
-/// render, so fixture cursor values are illustrative and never asserted.
-#[derive(Deserialize)]
-struct Attention {
-    cursor: String,
-    counts: std::collections::HashMap<String, i32>,
-    top: Vec<AttentionItem>,
-    #[serde(default)]
-    suppressed: Vec<AttentionItem>,
-}
-
-/// Root fixture: a serialized CliEnvelope payload (§6.1).
-/// Exit code and state_modified are derived, never stored.
-#[derive(Deserialize)]
-struct AtomicFixture {
-    #[serde(rename = "$schema")]
-    schema: String,
-    id: String,
-    target: Option<String>,
-    command: String,
-    context: Context,
-    audit_op: Option<String>,
-    #[serde(flatten)]
-    payload: ComponentPayload,
-    trailer: Option<serde_json::Value>,
-    affordances: Option<Vec<Affordance>>,
-    attention: Option<Attention>,
-}
-
-impl AtomicFixture {
-    /// Exit code law: derived from the `id` state segment (§6.1).
-    fn expected_exit_code(&self) -> i32 {
-        match self.id.split('.').nth(2) {
-            Some("success") => 0,
-            Some("denial") => 2,
-            Some("refusal") => 3,
-            Some("crash") => 4,
-            Some("panic") => 5,
-            Some("yield") => 6,
-            other => panic!("{}: illegal state segment {:?}", self.id, other),
-        }
-    }
-}
-
-/// Procedural component renderers — the single source of terminal layout.
-/// Carets, indents, branch glyphs, dividers, and key alignment exist only here.
-fn render_diagnostic(context: &Context, c: &DiagnosticComponent) -> String;
-fn render_tree(context: &Context, c: &TreeComponent) -> String;
-fn render_receipt(context: &Context, c: &ReceiptComponent) -> String;
-fn render_document(context: &Context, c: &DocumentComponent) -> String;
-
-fn render_fixture(fixture: &AtomicFixture) -> String {
-    match &fixture.payload {
-        ComponentPayload::Diagnostic(c) => render_diagnostic(&fixture.context, c),
-        ComponentPayload::Tree(c) => render_tree(&fixture.context, c),
-        ComponentPayload::Receipt(c) => render_receipt(&fixture.context, c),
-        ComponentPayload::Document(c) => render_document(&fixture.context, c),
-    }
-}
-
-#[test]
-fn execute_wireframe_golden_tests() {
-    let root = Path::new("cans/artifacts/wireframe/screens");
-
-    for entry in glob(&format!("{}/**/*.json", root.display())).unwrap() {
-        let json_path = entry.unwrap();
-        let content = fs::read_to_string(&json_path).unwrap();
-        let fixture: AtomicFixture = serde_json::from_str(&content).unwrap();
-
-        // 1. Procedural render of the component = expected stdout
-        let expected = render_fixture(&fixture);
-
-        // 2. Dispatch the fixture's command against the real binary
-        let output = capcli_test_exec(&fixture.command);
-
-        // 3. Derived-state assertions (§6.1): exit code from the id,
-        //    state_modified from the kernel invariant.
-        assert_eq!(output.exit_code, fixture.expected_exit_code(),
-            "Exit mismatch at {}", fixture.id);
-        if fixture.expected_exit_code() != 0 {
-            assert_eq!(output.state_modified, false,
-                "state_modified invariant failed at {}", fixture.id);
-        }
-
-        // 4. Golden rendering: stdout is byte-identical to the
-        //    procedural component render.
-        assert_eq!(output.stdout, expected,
-            "Render mismatch at {}", fixture.id);
-
-        // 5. Global negatives (asserted once here for all screens)
-        for banned in ["--force", "--override-budget", "--force-prod", "--verbose"] {
-            assert!(!output.stdout.contains(banned),
-                "{}: banned token '{}'", fixture.id, banned);
-        }
-        assert!(!output.stdout.contains('|'),
-            "{}: pipe character forbidden", fixture.id);
-        if fixture.trailer.is_none() {
-            assert!(!output.stdout.contains("trailer:"),
-                "{}: trailer on fixture with no trailer", fixture.id);
-        }
-
-        assert!(output.stderr.is_empty(),
-            "{}: unexpected stderr: {}", fixture.id, output.stderr);
-    }
-}
-```
-
-Trailer checks, applied by the runner to every fixture:
-
-Trailer presence on a screen is decided solely by `cans/artifacts/prompt/_triggers.json`. This section carries no trailer-screen list.
-
-Predicate branches on a single screen are trigger-level tests: the runner evaluates each `_triggers.json` predicate for that screen against the runtime context and asserts the selected pointer, the fixture carries the one trailer instance for the branch its context represents, and no second fixture for the same screen id is created for another branch.
-
-a. **Schema.** A `trailer` payload validates against `machine_schema` in `manifest.json`.
-b. **Position.** The human trailer is the final rendered line; the machine trailer is an additive envelope key.
-c. **State neutrality.** For every trailer-carrying fixture, a twin assertion runs the same command with no trailer: output is identical except the trailer line/key is absent.
-d. **Correspondence.** Every `_triggers.json` entry resolves to a fixture on disk, and every `_flows.json` transition endpoint resolves to a fixture.
-e. **Negative space.** A fixture with no `trailer` renders no `trailer:` line and no `next_action` key.
-
-Cross-layer referential test:
-
-```rust
-#[test]
-fn assert_prompt_triggers_match_wireframe_screens() {
-    let triggers_raw = fs::read_to_string("cans/artifacts/prompt/_triggers.json").unwrap();
-    let triggers: serde_json::Value = serde_json::from_str(&triggers_raw).unwrap();
-
-    for t in triggers["triggers"].as_array().unwrap() {
-        let screen_id = t["screen_id"].as_str().unwrap();
-        let parts: Vec<&str> = screen_id.split('.').collect();
-        let path = format!(
-            "cans/artifacts/wireframe/screens/{}/{}/{}.json",
-            parts[0], parts[1], screen_id
-        );
-        assert!(Path::new(&path).exists(),
-            "Trigger {} references missing fixture: {}", t["id"], path);
-    }
-}
-```
+Cross-layer test (`assert_prompt_triggers_match_wireframe_screens`) is unchanged.
 
 ---
 
 ## 7. Edgeless Playable Canvas Implementation (`wireframe.html`)
 
-The HTML canvas renders all screens directly from `.json` fixture shapes. No `.txt` files are fetched. `TerminalPanel` implements the four component renderers defined in §6.1 (`diagnostic`, `tree`, `receipt`, `document`); it consumes component payloads, and carets, branch glyphs, dividers, and alignment are its output.
+The HTML canvas renders all screens by instantiating `$example` values from `wireframe/v1` screens. No `.txt` files are fetched. `TerminalPanel` implements the four component renderers defined in §6.1 (`diagnostic`, `tree`, `receipt`, `document`); it consumes component payloads, and carets, branch glyphs, dividers, and alignment are its output.
 
 ```
 zoomable, node draggable, click inspect (renders from json shape), scenario select to highlight the flows in canvas
 ```
+
+---
+
+## 8. Codegen Contract
+
+`wireframe-codegen` (module `crates/capcli-cli/src/codegen/`, binary `wireframe-codegen`) reads every `wireframe/v1` screen — kernel and installed plugin — and emits, deterministically (sorted iteration, no timestamps):
+
+```
+crates/capcli-types/src/generated/
+  envelope.rs        CliEnvelope<T> per archetype
+  bindings.rs        <Screen>Bindings per screen family
+  diagnostics.rs     DiagnosticRule enum from the union of `rule` literals
+  domains.rs         Domain enum, cross-checked against _states.json
+crates/capcli-cli/src/generated/
+  nouns/<noun>.rs    clap subcommand trees
+  renderers/<…>.rs   fn render(&<Screen>Bindings) -> Component
+  tests/             structural-match #[test_case] entries
+```
+
+Hand-written modules own behavior (authorizer, quota, DAG, claims); generated modules own surface. The seam is `<Screen>Bindings` — handlers populate it; generated renderers format it.
+
+`wireframe-codegen --check` regenerates into a temp dir and exits 1 on any diff against the checked-in modules.
+
+## 9. Plugin Screens
+
+A plugin author writes one `screens:` map per verb (`defineVerb({ screens: {…} })`). `capcli plugin build` emits, inside the plugin package:
+
+- `screens/<noun>.<verb>.<state>.<condition>.json` — one per state
+- `capcli-plugin.yaml#cli.surface[].screens[]` entries pointing at those files
+
+`capcli plugin install` runs `wireframe-codegen --plugin <id>`, mounts the generated clap subcommands into the noun tree, registers renderers keyed by `(noun, verb, state)`, and atomic-flips the generation pointer.
+
+**Reciprocal obligation:** every key in `defineVerb.screens` must yield a resolvable screen at build time and install time.
+
+**Escape hatch:** `screens: { success: Custom({ renderer: "./renderers/logs.ts" }) }` — the renderer runs in a Tri-Jail sandbox; the kernel validates output against `CliEnvelope<T>` before wrapping.
+
+**Pack vs screen:**
+
+| | pack | screen |
+|---|---|---|
+| Kind | shipping unit (`.cap`) | rendering unit (one CLI output) |
+| URP | `pack://*` | none (`<noun>.<verb>.<state>.<condition>`) |
+| Lifecycle | `new → bundle → import → scaffold` | authored → bound → rendered |
+| Contains the other? | yes — a pack may ship `screens/` | no — a screen is never a pack |

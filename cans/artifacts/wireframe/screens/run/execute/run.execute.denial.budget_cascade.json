@@ -1,9 +1,33 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.denial.budget_cascade",
-  "target": "cap://sync_inventory@3",
-  "command": "capcli run cap://sync_inventory@3 -p warehouse=west -m \"nightly inventory sync\"",
-  "elapsed_ms": 212,
+  "scenario": {
+    "routine_urp": "cap://sync_inventory@3",
+    "routine_name": "sync_inventory",
+    "routine_version": 3,
+    "warehouse": "west",
+    "intent": "nightly inventory sync"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_inventory@3"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p warehouse={{warehouse}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "warehouse": "scenario.warehouse",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://sync_inventory@3 -p warehouse=west -m \"nightly inventory sync\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 212
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,22 +38,70 @@
     "rule": "policy.budget.starved",
     "domain": "policy.budget",
     "layer": "budget",
-    "culprit": "Child frame starved by min() cascade: recount_stock@2 (frame_025) granted 20 of 60 declared fuel.",
-    "measured": "child effective 20 fuel (declared 60); parent remaining 20 fuel; session remaining 488 fuel",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Child frame starved by min() cascade: recount_stock@2 (frame_025) granted 20 of 60 declared fuel."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "child effective 20 fuel (declared 60); parent remaining 20 fuel; session remaining 488 fuel"
+    },
     "remedy": "shrink the child manifest, or invoke the child earlier in the parent DAG while fuel remains",
-    "child": "recount_stock@2 (frame_025) declared 60 fuel",
-    "effective": "min(declared 60, parent 20, session 488, governance 50) -> 20 fuel",
-    "exhausted_at": "fuel 21 (db.query crossed the clipped ceiling)",
-    "parent_frame": "frame_024 (sync_inventory@3) 20 fuel remaining",
-    "ancestors": "session remaining 488 fuel (parent was the tightest constraint)",
-    "frame_splitting": "the cage tightens, never widens.",
+    "child": {
+      "$slot": "child",
+      "$from": "live.child",
+      "$example": "recount_stock@2 (frame_025) declared 60 fuel"
+    },
+    "effective": {
+      "$slot": "effective",
+      "$from": "live.effective",
+      "$example": "min(declared 60, parent 20, session 488, governance 50) -> 20 fuel"
+    },
+    "exhausted_at": {
+      "$slot": "exhausted_at",
+      "$from": "live.exhausted_at",
+      "$example": "fuel 21 (db.query crossed the clipped ceiling)"
+    },
+    "parent_frame": {
+      "$interpolate": "{{frame_id}} ({{routine_name}}@{{routine_version}}) 20 fuel remaining",
+      "$bindings": {
+        "frame_id": "live.frame_id",
+        "routine_name": "scenario.routine_name",
+        "routine_version": "scenario.routine_version"
+      },
+      "$example": "frame_024 (sync_inventory@3) 20 fuel remaining"
+    },
+    "ancestors": {
+      "$slot": "ancestors",
+      "$from": "live.ancestors",
+      "$example": "session remaining 488 fuel (parent was the tightest constraint)"
+    },
+    "frame_splitting": {
+      "$slot": "frame_splitting",
+      "$from": "live.frame_splitting",
+      "$example": "the cage tightens, never widens."
+    },
     "lines": [
-      "child frame starved by min() cascade"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "child frame starved by min() cascade"
+      }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/budget/execution_starved#1",
-    "reason": "call-tree preflight failed budget cascade bounds",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "call-tree preflight failed budget cascade bounds"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }

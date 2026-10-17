@@ -1,28 +1,75 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "db.snapshot.denial.prod_draft",
+  "scenario": {
+    "db_urp": "db://",
+    "intent": "nightly safety point"
+  },
   "archetype": "diagnostic",
-  "audit_op": "op_71b2",
-  "command": "capcli db snapshot --env prod -m \"nightly safety point\"",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_71b2"
+  },
+  "command": {
+    "$interpolate": "capcli db snapshot --env prod -m \"{{intent}}\"",
+    "$bindings": {
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli db snapshot --env prod -m \"nightly safety point\""
+  },
   "component": {
-    "code": "E046_TRUST_VIOLATION",
-    "culprit": "Draft identity agt_7f3k invoked db snapshot in prod; the production floor requires the pinned rung (E046_TRUST_VIOLATION).",
+    "code": {
+      "$slot": "code",
+      "$from": "live.code",
+      "$example": "E046_TRUST_VIOLATION"
+    },
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Draft identity agt_7f3k invoked db snapshot in prod; the production floor requires the pinned rung (E046_TRUST_VIOLATION)."
+    },
     "domain": "policy.trust",
     "layer": "trust",
     "lines": [
-      "acting identity agt_7f3k holds draft trust",
-      "Draft identities cannot snapshot production.",
-      "Promote to pinned first, then retry."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "acting identity agt_7f3k holds draft trust"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Draft identities cannot snapshot production."
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "Promote to pinned first, then retry."
+      }
     ],
     "remedy": "promote the acting identity to pinned (via reviewed), then retry the snapshot",
     "rule": "policy.trust.unproven",
-    "target_env": "prod (floor: pinned)"
+    "target_env": {
+      "$slot": "target_env",
+      "$from": "live.target_env",
+      "$example": "prod (floor: pinned)"
+    }
   },
   "context": {
     "env": "prod",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "elapsed_ms": 346,
-  "id": "db.snapshot.denial.prod_draft",
-  "target": "db://"
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 346
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://"
+  }
 }

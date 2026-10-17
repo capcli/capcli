@@ -48,6 +48,19 @@ def err(msg: str):
 def approx_tokens(text: str) -> int:
     return max(1, int(len(text.strip()) / 3.5))
 
+def instantiate(value):
+    """$example instantiation (wireframe/v1): a $slot / $interpolate object
+    renders as its $example literal. The L1 token ceiling governs the
+    RENDERED trailer line, which is byte-identical pre/post conversion
+    (3-c reconciliation; slot grammar per diff-patches §11.6)."""
+    if isinstance(value, dict):
+        if "$slot" in value or "$interpolate" in value:
+            return instantiate(value.get("$example"))
+        return {k: instantiate(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [instantiate(x) for x in value]
+    return value
+
 def check_triggers_and_fixtures():
     triggers_file = PROMPT_DIR / "_triggers.json"
     if not triggers_file.exists():
@@ -83,7 +96,7 @@ def check_triggers_and_fixtures():
             if not ptr.startswith("doc://prompts/"):
                 err(f"{fix_file.name}: invalid trailer scheme: '{ptr}'")
             
-            reason = trailer.get("reason", "")
+            reason = instantiate(trailer.get("reason", ""))
             trailer_str = f"trailer: {ptr} - {reason}"
             tokens = approx_tokens(trailer_str)
             if tokens > 30:

@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.import.success.imported",
-  "target": "pack://registry/routine/webhook_receiver@1",
-  "command": "capcli pack import pack://registry/routine/webhook_receiver@1",
-  "elapsed_ms": 169,
+  "scenario": {
+    "pack_urp": "pack://registry/routine/webhook_receiver@1"
+  },
+  "target": {
+    "$slot": "pack_urp",
+    "$from": "scenario.pack_urp",
+    "$example": "pack://registry/routine/webhook_receiver@1"
+  },
+  "command": {
+    "$interpolate": "capcli pack import {{pack_urp}}",
+    "$bindings": {
+      "pack_urp": "scenario.pack_urp"
+    },
+    "$example": "capcli pack import pack://registry/routine/webhook_receiver@1"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 169
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,25 +33,61 @@
     "groups": [
       {
         "fields": {
-          "pack": "pack://registry/routine/webhook_receiver@1",
-          "bundle": "webhook_receiver.cap",
-          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-          "registered": "_packs/webhook_receiver (draft)"
+          "pack": {
+            "$slot": "pack_urp_2",
+            "$from": "scenario.pack_urp",
+            "$example": "pack://registry/routine/webhook_receiver@1"
+          },
+          "bundle": {
+            "$slot": "bundle",
+            "$from": "live.groups[0].fields.bundle",
+            "$example": "webhook_receiver.cap"
+          },
+          "sha256": {
+            "$slot": "sha256",
+            "$from": "live.groups[0].fields.sha256",
+            "$example": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+          },
+          "registered": {
+            "$slot": "registered",
+            "$from": "live.groups[0].fields.registered",
+            "$example": "_packs/webhook_receiver (draft)"
+          }
         }
       },
       {
         "fields": {
-          "audit": "op_pack_import_01 (bundle registered at draft trust)"
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[1].fields.audit",
+            "$example": "op_pack_import_01 (bundle registered at draft trust)"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
-      "intent": "Instantiate draft routine sync_orders",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+        "$bindings": {},
+        "$example": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Instantiate draft routine sync_orders"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

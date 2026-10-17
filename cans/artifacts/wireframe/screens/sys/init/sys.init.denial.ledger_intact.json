@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.init.denial.ledger_intact",
-  "target": "ledger",
-  "command": "capcli sys init --fresh",
-  "elapsed_ms": 58,
+  "scenario": {
+    "ledger": "ledger"
+  },
+  "target": {
+    "$slot": "ledger",
+    "$from": "scenario.ledger",
+    "$example": "ledger"
+  },
+  "command": {
+    "$interpolate": "capcli sys init --fresh",
+    "$bindings": {},
+    "$example": "capcli sys init --fresh"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 58
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,11 +30,27 @@
     "rule": "policy.authorizer.destructive_init",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Ledger is intact (chain walk passed, 14,290 rows verified); --fresh is the sole write path out of total media loss only.",
-    "measured": "ledger root readable; 0 missing blocks",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Ledger is intact (chain walk passed, 14,290 rows verified); --fresh is the sole write path out of total media loss only."
+    },
+    "measured": {
+      "$interpolate": "{{ledger}} root readable; 0 missing blocks",
+      "$bindings": {
+        "ledger": "scenario.ledger"
+      },
+      "$example": "ledger root readable; 0 missing blocks"
+    },
     "remedy": "restore from a snapshot with 'capcli sys recover <commit>' instead of re-initializing",
     "lines": [
-      "Destructive re-initialization of a healthy ledger is denied."
+      {
+        "$interpolate": "Destructive re-initialization of a healthy {{ledger}} is denied.",
+        "$bindings": {
+          "ledger": "scenario.ledger"
+        },
+        "$example": "Destructive re-initialization of a healthy ledger is denied."
+      }
     ]
   }
 }

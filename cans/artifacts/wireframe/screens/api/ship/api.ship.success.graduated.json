@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.ship.success.graduated",
-  "target": "cap://threads.create_media_post",
-  "command": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\"",
-  "elapsed_ms": 2468,
+  "scenario": {
+    "routine_urp": "cap://threads.create_media_post"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://threads.create_media_post"
+  },
+  "command": {
+    "$interpolate": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\"",
+    "$bindings": {},
+    "$example": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2468
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,12 +31,36 @@
     "groups": [
       {
         "fields": {
-          "verb": "cap://threads.create_media_post",
-          "rung": "draft → reviewed",
-          "training_wheels": "cleared on call 4 of 4",
-          "evidence": "synthetic contract replay 3/3 passed (calls 1–3)",
-          "call 4 executed under replayed contract": "pass",
-          "governance": "standard (24h approval windows closed)"
+          "verb": {
+            "$slot": "api_verb",
+            "$from": "live.api_verb",
+            "$example": "cap://threads.create_media_post"
+          },
+          "rung": {
+            "$slot": "rung",
+            "$from": "live.groups[0].fields.rung",
+            "$example": "draft → reviewed"
+          },
+          "training_wheels": {
+            "$slot": "training_wheels",
+            "$from": "live.groups[0].fields.training_wheels",
+            "$example": "cleared on call 4 of 4"
+          },
+          "evidence": {
+            "$slot": "evidence",
+            "$from": "live.groups[0].fields.evidence",
+            "$example": "synthetic contract replay 3/3 passed (calls 1–3)"
+          },
+          "call 4 executed under replayed contract": {
+            "$slot": "call_4_executed_under_replayed_contract",
+            "$from": "live.groups[0].fields.call_4_executed_under_replayed_contract",
+            "$example": "pass"
+          },
+          "governance": {
+            "$slot": "governance",
+            "$from": "live.groups[0].fields.governance",
+            "$example": "standard (24h approval windows closed)"
+          }
         }
       }
     ]

@@ -1,9 +1,28 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.sql.refusal.missing_intent",
-  "target": "db://orders",
-  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127",
-  "elapsed_ms": 169,
+  "scenario": {
+    "db_urp": "db://orders",
+    "id": "4127"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id={{id}}",
+    "$bindings": {
+      "id": "scenario.id"
+    },
+    "$example": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 169
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,14 +32,34 @@
   "component": {
     "rule": "missing_param.no_intent",
     "domain": "missing_param",
-    "culprit": "Mutating write rejected: -m/--intent is required for writes.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Mutating write rejected: -m/--intent is required for writes."
+    },
     "remedy": "restate with -m \"<why>\", e.g. -m \"batch ship processing orders\"",
-    "mutating_write": "-m/--intent is required for writes.",
-    "policy.query.writes_require_intent": "no intent, no execution.",
+    "mutating_write": {
+      "$slot": "mutating_write",
+      "$from": "live.mutating_write",
+      "$example": "-m/--intent is required for writes."
+    },
+    "policy.query.writes_require_intent": {
+      "$slot": "policy_query_writes_require_intent",
+      "$from": "live.policy_query_writes_require_intent",
+      "$example": "no intent, no execution."
+    },
     "layer": "missing_param",
     "lines": [
-      "FATAL  missing_param.no_intent",
-      "UPDATE orders SET status = 'shipped' WHERE id = :id"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  missing_param.no_intent"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "UPDATE orders SET status = 'shipped' WHERE id = :id"
+      }
     ]
   }
 }

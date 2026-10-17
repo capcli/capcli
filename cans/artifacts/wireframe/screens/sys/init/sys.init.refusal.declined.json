@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.init.refusal.declined",
-  "target": "ledger",
-  "command": "capcli sys init --fresh",
-  "elapsed_ms": 96,
+  "scenario": {
+    "ledger": "ledger"
+  },
+  "target": {
+    "$slot": "ledger",
+    "$from": "scenario.ledger",
+    "$example": "ledger"
+  },
+  "command": {
+    "$interpolate": "capcli sys init --fresh",
+    "$bindings": {},
+    "$example": "capcli sys init --fresh"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 96
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,11 +28,23 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "validation",
-    "culprit": "Operator declined the second confirmation; --fresh requires dual confirmation (typed reason plus operator key signature).",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Operator declined the second confirmation; --fresh requires dual confirmation (typed reason plus operator key signature)."
+    },
     "remedy": "re-run and complete both confirmations, or restore from a snapshot via 'capcli sys recover --list'",
     "lines": [
-      "FATAL  validation.confirmation_declined",
-      "No state was modified."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.confirmation_declined"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "No state was modified."
+      }
     ]
   }
 }

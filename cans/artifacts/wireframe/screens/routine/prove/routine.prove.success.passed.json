@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.prove.success.passed",
-  "target": "sync_orders",
-  "command": "capcli routine prove sync_orders --env sim",
-  "elapsed_ms": 814,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine prove sync_orders --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 814
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
@@ -15,50 +33,142 @@
     "groups": [
       {
         "fields": {
-          "routine": "sync_orders@1",
-          "fingerprint": "sha256:9e1b7c04... (dynamic leaf sequence from _audit mirror)",
-          "manifest": "sha256:4d2f8a11... (declared call sequence via @routine over kernel.sock)",
-          "match": "5 executed / 5 declared (subset; 0 undeclared leaves)"
+          "routine": {
+            "$slot": "routine",
+            "$from": "live.groups[0].fields.routine",
+            "$example": "sync_orders@1"
+          },
+          "fingerprint": {
+            "$slot": "fingerprint",
+            "$from": "live.groups[0].fields.fingerprint",
+            "$example": "sha256:9e1b7c04... (dynamic leaf sequence from _audit mirror)"
+          },
+          "manifest": {
+            "$slot": "manifest",
+            "$from": "live.groups[0].fields.manifest",
+            "$example": "sha256:4d2f8a11... (declared call sequence via @routine over kernel.sock)"
+          },
+          "match": {
+            "$slot": "match",
+            "$from": "live.groups[0].fields.match",
+            "$example": "5 executed / 5 declared (subset; 0 undeclared leaves)"
+          }
         }
       },
       {
         "fields": {
-          "sandbox_rules": "pass (subprocess, os, raw socket trapped by jail)",
-          "param_typing": "pass (order_id: string, carrier: string)",
-          "policy_reachability": "pass (orders read/write; logistics.shipments.create egress)",
-          "shape_limits": "pass (74 LOC, 1180 tokens, 2 params)",
-          "invariant_suite": "pass (boundary + idempotency assertions)"
+          "sandbox_rules": {
+            "$slot": "sandbox_rules",
+            "$from": "live.groups[1].fields.sandbox_rules",
+            "$example": "pass (subprocess, os, raw socket trapped by jail)"
+          },
+          "param_typing": {
+            "$slot": "param_typing",
+            "$from": "live.groups[1].fields.param_typing",
+            "$example": "pass (order_id: string, carrier: string)"
+          },
+          "policy_reachability": {
+            "$slot": "policy_reachability",
+            "$from": "live.groups[1].fields.policy_reachability",
+            "$example": "pass (orders read/write; logistics.shipments.create egress)"
+          },
+          "shape_limits": {
+            "$slot": "shape_limits",
+            "$from": "live.groups[1].fields.shape_limits",
+            "$example": "pass (74 LOC, 1180 tokens, 2 params)"
+          },
+          "invariant_suite": {
+            "$slot": "invariant_suite",
+            "$from": "live.groups[1].fields.invariant_suite",
+            "$example": "pass (boundary + idempotency assertions)"
+          }
         },
         "lines": [
-          "checks:"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "checks:"
+          }
         ]
       },
       {
         "fields": {
-          "note": "verification only; no sim world state committed",
-          "overview_exists": "true",
-          "audit": "op_prove_01"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[2].fields.note",
+            "$example": "verification only; no sim world state committed"
+          },
+          "overview_exists": {
+            "$slot": "overview_exists",
+            "$from": "live.groups[2].fields.overview_exists",
+            "$example": "true"
+          },
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[2].fields.audit",
+            "$example": "op_prove_01"
+          }
         }
       }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/promotion/routine_passed#1",
-    "reason": "proof passed: routine eligible for promotion",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "proof passed: routine eligible for promotion"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli sys audit trace op_prove_01 --explain",
-      "intent": "Causal DAG walk of a routine prove op",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli sys audit trace op_prove_01 --explain",
+        "$bindings": {},
+        "$example": "capcli sys audit trace op_prove_01 --explain"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Causal DAG walk of a routine prove op"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     },
     {
-      "rel": "inspect",
-      "command": "capcli routine pending",
-      "intent": "Batch promotion candidates listed",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel_2",
+        "$from": "live.affordances[1].rel",
+        "$example": "inspect"
+      },
+      "command": {
+        "$interpolate": "capcli routine pending",
+        "$bindings": {},
+        "$example": "capcli routine pending"
+      },
+      "intent": {
+        "$slot": "intent_2",
+        "$from": "live.affordances[1].intent",
+        "$example": "Batch promotion candidates listed"
+      },
+      "risk": {
+        "$slot": "risk_2",
+        "$from": "live.affordances[1].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

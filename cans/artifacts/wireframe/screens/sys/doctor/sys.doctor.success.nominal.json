@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.doctor.success.nominal",
-  "target": "host",
-  "command": "capcli sys doctor --boot-check",
-  "elapsed_ms": 2319,
+  "scenario": {
+    "host": "host"
+  },
+  "target": {
+    "$slot": "host",
+    "$from": "scenario.host",
+    "$example": "host"
+  },
+  "command": {
+    "$interpolate": "capcli sys doctor --boot-check",
+    "$bindings": {},
+    "$example": "capcli sys doctor --boot-check"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2319
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -11,51 +27,159 @@
   },
   "archetype": "receipt",
   "component": {
-    "title": "boot_check",
+    "title": {
+      "$slot": "title",
+      "$from": "live.title",
+      "$example": "boot_check"
+    },
     "groups": [
       {
-        "title": "boot_check",
+        "title": {
+          "$slot": "title_2",
+          "$from": "live.groups[0].title",
+          "$example": "boot_check"
+        },
         "fields": {
-          "kernel": "capcli 0.4.2",
-          "platform": "linux x86_64 (tier_1, hardened namespaces)",
-          "python_runtime": "3.12.2 (floor: 3.11)",
-          "git_version": "2.43.0 (floor: 2.30; identity: configured)",
-          "git_worktree": "active — .git present; capcli/ runtime home gitignored (machine-managed; kernel never auto-commits)",
-          "engine": "sqlite_3.45.1 (wal_mode: true)",
-          "c_authorizer": "active",
-          "sandbox_provider": "bwrap (unprivileged userns: supported)",
-          "seccomp_bpf": "active",
-          "ntp_drift_ms": "14 (cap: 500)",
-          "audit_sink": "online",
-          "witness_store": "unconfigured — S3/R2 unreachable, credentials absent (WORM checkpoint pending; local mirror only)",
-          "lockfile": "capcli.lock (root hash verified)",
-          "workspace": "envs/dev/workspace.db"
+          "kernel": {
+            "$slot": "kernel",
+            "$from": "live.groups[0].fields.kernel",
+            "$example": "capcli 0.4.2"
+          },
+          "platform": {
+            "$slot": "platform",
+            "$from": "live.groups[0].fields.platform",
+            "$example": "linux x86_64 (tier_1, hardened namespaces)"
+          },
+          "python_runtime": {
+            "$slot": "python_runtime",
+            "$from": "live.groups[0].fields.python_runtime",
+            "$example": "3.12.2 (floor: 3.11)"
+          },
+          "git_version": {
+            "$slot": "git_version",
+            "$from": "live.groups[0].fields.git_version",
+            "$example": "2.43.0 (floor: 2.30; identity: configured)"
+          },
+          "git_worktree": {
+            "$slot": "git_worktree",
+            "$from": "live.groups[0].fields.git_worktree",
+            "$example": "active — .git present; capcli/ runtime home gitignored (machine-managed; kernel never auto-commits)"
+          },
+          "engine": {
+            "$slot": "engine",
+            "$from": "live.groups[0].fields.engine",
+            "$example": "sqlite_3.45.1 (wal_mode: true)"
+          },
+          "c_authorizer": {
+            "$slot": "c_authorizer",
+            "$from": "live.groups[0].fields.c_authorizer",
+            "$example": "active"
+          },
+          "sandbox_provider": {
+            "$slot": "sandbox_provider",
+            "$from": "live.groups[0].fields.sandbox_provider",
+            "$example": "bwrap (unprivileged userns: supported)"
+          },
+          "seccomp_bpf": {
+            "$slot": "seccomp_bpf",
+            "$from": "live.groups[0].fields.seccomp_bpf",
+            "$example": "active"
+          },
+          "ntp_drift_ms": {
+            "$slot": "ntp_drift_ms",
+            "$from": "live.groups[0].fields.ntp_drift_ms",
+            "$example": "14 (cap: 500)"
+          },
+          "audit_sink": {
+            "$slot": "audit_sink",
+            "$from": "live.groups[0].fields.audit_sink",
+            "$example": "online"
+          },
+          "witness_store": {
+            "$slot": "witness_store",
+            "$from": "live.groups[0].fields.witness_store",
+            "$example": "unconfigured — S3/R2 unreachable, credentials absent (WORM checkpoint pending; local mirror only)"
+          },
+          "lockfile": {
+            "$slot": "lockfile",
+            "$from": "live.groups[0].fields.lockfile",
+            "$example": "capcli.lock (root hash verified)"
+          },
+          "workspace": {
+            "$slot": "workspace",
+            "$from": "live.groups[0].fields.workspace",
+            "$example": "envs/dev/workspace.db"
+          }
         }
       },
       {
         "lines": [
-          "note:           boot-check probes only; no execution occurred"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "note:           boot-check probes only; no execution occurred"
+          }
         ]
       }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/onboarding/harness#1",
-    "reason": "harness at nominal doctor with empty domain",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "harness at nominal doctor with empty domain"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli search 'kombucha supplier sync'",
-      "intent": "Zero hits; outputs semantic suggestions",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli search 'kombucha supplier sync'",
+        "$bindings": {},
+        "$example": "capcli search 'kombucha supplier sync'"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Zero hits; outputs semantic suggestions"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     },
     {
-      "rel": "inspect",
-      "command": "capcli search 'order'",
-      "intent": "Matched capabilities and URP pointers",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel_2",
+        "$from": "live.affordances[1].rel",
+        "$example": "inspect"
+      },
+      "command": {
+        "$interpolate": "capcli search 'order'",
+        "$bindings": {},
+        "$example": "capcli search 'order'"
+      },
+      "intent": {
+        "$slot": "intent_2",
+        "$from": "live.affordances[1].intent",
+        "$example": "Matched capabilities and URP pointers"
+      },
+      "risk": {
+        "$slot": "risk_2",
+        "$from": "live.affordances[1].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.tail.success.empty",
-  "target": "_audit",
-  "command": "capcli sys audit tail --follow --since 1h",
-  "elapsed_ms": 1073,
+  "scenario": {
+    "audit": "_audit"
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit tail --follow --since 1h",
+    "$bindings": {},
+    "$example": "capcli sys audit tail --follow --since 1h"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1073
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,30 +36,70 @@
     "groups": [
       {
         "fields": {
-          "mirror": "audit/2026-10-03.jsonl (synced, lag 0s)",
-          "since": "1h window (from 23:04:11Z)",
-          "follow": "live stream active — Ctrl-C to detach",
-          "events": "0 in window"
+          "mirror": {
+            "$slot": "mirror",
+            "$from": "live.groups[0].fields.mirror",
+            "$example": "audit/2026-10-03.jsonl (synced, lag 0s)"
+          },
+          "since": {
+            "$slot": "since",
+            "$from": "live.groups[0].fields.since",
+            "$example": "1h window (from 23:04:11Z)"
+          },
+          "follow": {
+            "$slot": "follow",
+            "$from": "live.groups[0].fields.follow",
+            "$example": "live stream active — Ctrl-C to detach"
+          },
+          "events": {
+            "$slot": "events",
+            "$from": "live.groups[0].fields.events",
+            "$example": "0 in window"
+          }
         }
       },
       {
         "lines": [
-          "No audit events within window. Ledger quiet — last commit before window opened."
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "No audit events within window. Ledger quiet — last commit before window opened."
+          }
         ]
       },
       {
         "fields": {
-          "integrity": "hash chain valid (root sha256:7f9a1b2c...)"
+          "integrity": {
+            "$slot": "integrity",
+            "$from": "live.groups[2].fields.integrity",
+            "$example": "hash chain valid (root sha256:7f9a1b2c...)"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli sys audit tail --follow --since 1h",
-      "intent": "Live streaming audit records",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli sys audit tail --follow --since 1h",
+        "$bindings": {},
+        "$example": "capcli sys audit tail --follow --since 1h"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Live streaming audit records"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

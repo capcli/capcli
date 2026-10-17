@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.query.refusal.unparseable",
-  "target": "_audit",
-  "command": "capcli sys audit query \"SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20\"",
-  "elapsed_ms": 27,
+  "scenario": {
+    "audit": "_audit"
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit query \"SELECT op_id, domain FORM {{audit}} WHERE exit_code = 2 LIMIT 20\"",
+    "$bindings": {
+      "audit": "scenario.audit"
+    },
+    "$example": "capcli sys audit query \"SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 27
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,14 +30,32 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "compile",
-    "culprit": "Expected FROM; found identifier 'FORM' at column 22.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Expected FROM; found identifier 'FORM' at column 22."
+    },
     "remedy": "correct the SQL and re-run capcli sys audit query against _audit",
     "span": {
-      "source": "SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20",
-      "highlight": "FORM"
+      "source": {
+        "$interpolate": "SELECT op_id, domain FORM {{audit}} WHERE exit_code = 2 LIMIT 20",
+        "$bindings": {
+          "audit": "scenario.audit"
+        },
+        "$example": "SELECT op_id, domain FORM _audit WHERE exit_code = 2 LIMIT 20"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "FORM"
+      }
     },
     "lines": [
-      "FATAL  compile.bad_syntax"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  compile.bad_syntax"
+      }
     ]
   }
 }

@@ -62,19 +62,20 @@
       - Envelope — see #CLI-surface
     - Surface conformance <!-- ref-by: assembly.md -->
       - Mechanism
-        - Executable mirror of this file's CLI grammar
-        - Golden fixture per screen, byte-asserted in CI
-        - Never a source of truth, only a mirror
-        - Canonical homes — kernel.md, effect.md, this file
+        - Executable IDL of the CLI surface
+        - Canonical home for shape — wireframe-structure.md#Screen-Shape
+        - This node consumes shape; it does not own it
+        - Generated clap trees, envelope structs, renderers
         - Runner mechanics — see assembly.md#Test-architecture
       - Fixture identity
         - Location — artifacts/wireframe/screens/
         - Naming — <noun>.<verb>.<state>.<condition>.json
-        - One JSON per screen, zero .txt companions
+        - One screen per invocation, zero .txt companions
         - Path depth exactly three under screens/
-        - Root shape — wireframe/v2 CliEnvelope
+        - Root shape — wireframe/v1 CliEnvelope with $slot / $interpolate
+        - Shape grammar — wireframe-structure.md#Screen-Shape
       - Fixture derivation
-        - Command string carries the invocation verbatim
+        - command carries the invocation as literal or $interpolate
         - Exit code derives from the id state segment
         - state_modified derives from the exit law
         - Derived fields never stored, always computed
@@ -88,8 +89,8 @@
       - Flow engine
         - Journeys declare entry and terminal screens
         - Transitions bind from, to, trigger, arrow type
-        - Every endpoint resolves to a fixture id
-        - Every fixture id appears in some journey
+        - Every endpoint resolves to a screen id
+        - Every screen id appears in some journey
         - Mirror file — artifacts/wireframe/_flows.json
       - Registry mirror
         - Nouns mirror this file plus plugin nouns
@@ -98,16 +99,17 @@
         - URP dispatch — see #Run-noun
         - Mirror file — artifacts/wireframe/manifest.json
       - Companion
-        - Byte-level fixture schema and runner contract
+        - Byte-level screen grammar and runner contract
         - Shape only, never mechanism or lifecycle
         - Detail — artifacts/wireframe/wireframe-structure.md
-        - Zero authority, cited for byte shapes
+        - Authority for shape; cited by canon for byte grammar
       - PR gate
         - Fires on CLI surface, exit, or archetype change
         - Fires on output contract or domain change
         - Runner — assembly.md#Test-architecture
         - Checker — assembly.md#Checker-tool
         - Gate — assembly.md#PR-gate
+        - Codegen — assembly.md#CICD-pipeline
   - CLI nouns
     - Run noun <!-- ref-by: routines.md, sandbox.md -->
       - Execution commands

@@ -1,83 +1,319 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.search.success.truncated",
-  "target": "stripe",
-  "command": "capcli search 'stripe'",
-  "elapsed_ms": 790,
+  "scenario": {
+    "stripe": "stripe"
+  },
+  "target": {
+    "$slot": "stripe",
+    "$from": "scenario.stripe",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli search 'stripe'",
+    "$bindings": {},
+    "$example": "capcli search 'stripe'"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 790
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "truncated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "truncated"
+    }
   },
-  "audit_op": "op_9f2t",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2t"
+  },
   "archetype": "document",
   "component": {
-    "header_badge": "20 matches for 'stripe' (capped)",
+    "header_badge": {
+      "$interpolate": "20 matches for '{{stripe}}' (capped)",
+      "$bindings": {
+        "stripe": "scenario.stripe"
+      },
+      "$example": "20 matches for 'stripe' (capped)"
+    },
     "pagination": {
       "items": [
-        "cap://stripe/payment_intents.create        api    active",
-        "cap://stripe/payment_intents.confirm       api    active",
-        "cap://stripe/payment_intents.cancel        api    active",
-        "cap://stripe/refund_charge                 api    active",
-        "cap://stripe/charges.list                  api    active",
-        "cap://stripe/customers.create              api    active",
-        "cap://stripe/customers.retrieve            api    active",
-        "cap://stripe/invoices.create               api    active",
-        "cap://stripe/invoices.send                 api    active",
-        "cap://stripe/invoice_items.create          api    active",
-        "cap://stripe/payment_methods.attach        api    active",
-        "cap://stripe/payouts.list                  api    active",
-        "cap://stripe/balance.retrieve              api    active",
-        "cap://stripe/disputes.list                 api    active",
-        "cap://stripe/verification_sessions.create  api    active",
-        "vault://stripe_secret_key                  vault  missing",
-        "vault://stripe_webhook_secret              vault  missing",
-        "quota://stripe                             quota  tracked",
-        "webhook/stripe/invoice_paid                bind   active",
-        "doc://refund-policy                        doc    readable"
+        {
+          "$slot": "items_0",
+          "$from": "live.pagination.items[0]",
+          "$example": "cap://stripe/payment_intents.create        api    active"
+        },
+        {
+          "$slot": "items_1",
+          "$from": "live.pagination.items[1]",
+          "$example": "cap://stripe/payment_intents.confirm       api    active"
+        },
+        {
+          "$slot": "items_2",
+          "$from": "live.pagination.items[2]",
+          "$example": "cap://stripe/payment_intents.cancel        api    active"
+        },
+        {
+          "$slot": "items_3",
+          "$from": "live.pagination.items[3]",
+          "$example": "cap://stripe/refund_charge                 api    active"
+        },
+        {
+          "$slot": "items_4",
+          "$from": "live.pagination.items[4]",
+          "$example": "cap://stripe/charges.list                  api    active"
+        },
+        {
+          "$slot": "items_5",
+          "$from": "live.pagination.items[5]",
+          "$example": "cap://stripe/customers.create              api    active"
+        },
+        {
+          "$slot": "items_6",
+          "$from": "live.pagination.items[6]",
+          "$example": "cap://stripe/customers.retrieve            api    active"
+        },
+        {
+          "$slot": "items_7",
+          "$from": "live.pagination.items[7]",
+          "$example": "cap://stripe/invoices.create               api    active"
+        },
+        {
+          "$slot": "items_8",
+          "$from": "live.pagination.items[8]",
+          "$example": "cap://stripe/invoices.send                 api    active"
+        },
+        {
+          "$slot": "items_9",
+          "$from": "live.pagination.items[9]",
+          "$example": "cap://stripe/invoice_items.create          api    active"
+        },
+        {
+          "$slot": "items_10",
+          "$from": "live.pagination.items[10]",
+          "$example": "cap://stripe/payment_methods.attach        api    active"
+        },
+        {
+          "$slot": "items_11",
+          "$from": "live.pagination.items[11]",
+          "$example": "cap://stripe/payouts.list                  api    active"
+        },
+        {
+          "$slot": "items_12",
+          "$from": "live.pagination.items[12]",
+          "$example": "cap://stripe/balance.retrieve              api    active"
+        },
+        {
+          "$slot": "items_13",
+          "$from": "live.pagination.items[13]",
+          "$example": "cap://stripe/disputes.list                 api    active"
+        },
+        {
+          "$slot": "items_14",
+          "$from": "live.pagination.items[14]",
+          "$example": "cap://stripe/verification_sessions.create  api    active"
+        },
+        {
+          "$slot": "items_15",
+          "$from": "live.pagination.items[15]",
+          "$example": "vault://stripe_secret_key                  vault  missing"
+        },
+        {
+          "$slot": "items_16",
+          "$from": "live.pagination.items[16]",
+          "$example": "vault://stripe_webhook_secret              vault  missing"
+        },
+        {
+          "$slot": "items_17",
+          "$from": "live.pagination.items[17]",
+          "$example": "quota://stripe                             quota  tracked"
+        },
+        {
+          "$slot": "items_18",
+          "$from": "live.pagination.items[18]",
+          "$example": "webhook/stripe/invoice_paid                bind   active"
+        },
+        {
+          "$slot": "items_19",
+          "$from": "live.pagination.items[19]",
+          "$example": "doc://refund-policy                        doc    readable"
+        }
       ],
-      "next_cursor": "doc://refund-policy",
-      "has_more": true
+      "next_cursor": {
+        "$slot": "next_cursor",
+        "$from": "live.pagination.next_cursor",
+        "$example": "doc://refund-policy"
+      },
+      "has_more": {
+        "$slot": "has_more",
+        "$from": "live.pagination.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "meta": {
-      "next_cursor": "doc://refund-policy",
-      "has_more": true
+      "next_cursor": {
+        "$slot": "next_cursor_2",
+        "$from": "live.meta.next_cursor",
+        "$example": "doc://refund-policy"
+      },
+      "has_more": {
+        "$slot": "has_more_2",
+        "$from": "live.meta.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "fields": {
-      "truncated": "true",
-      "result_cap": "20 (search.max_results)",
-      "total": "34"
+      "truncated": {
+        "$slot": "truncated",
+        "$from": "live.fields.truncated",
+        "$example": "true"
+      },
+      "result_cap": {
+        "$slot": "result_cap",
+        "$from": "live.fields.result_cap",
+        "$example": "20 (search.max_results)"
+      },
+      "total": {
+        "$slot": "total",
+        "$from": "live.fields.total",
+        "$example": "34"
+      }
     },
     "body": [
-      "cap://stripe/payment_intents.create        api    active",
-      "cap://stripe/payment_intents.confirm       api    active",
-      "cap://stripe/payment_intents.cancel        api    active",
-      "cap://stripe/refund_charge                 api    active",
-      "cap://stripe/charges.list                  api    active",
-      "cap://stripe/customers.create              api    active",
-      "cap://stripe/customers.retrieve            api    active",
-      "cap://stripe/invoices.create               api    active",
-      "cap://stripe/invoices.send                 api    active",
-      "cap://stripe/invoice_items.create          api    active",
-      "cap://stripe/payment_methods.attach        api    active",
-      "cap://stripe/payouts.list                  api    active",
-      "cap://stripe/balance.retrieve              api    active",
-      "cap://stripe/disputes.list                 api    active",
-      "cap://stripe/verification_sessions.create  api    active",
-      "vault://stripe_secret_key                  vault  missing",
-      "vault://stripe_webhook_secret              vault  missing",
-      "quota://stripe                             quota  tracked",
-      "webhook/stripe/invoice_paid                bind   active",
-      "doc://refund-policy                        doc    readable"
+      {
+        "$slot": "body_0",
+        "$from": "live.body[0]",
+        "$example": "cap://stripe/payment_intents.create        api    active"
+      },
+      {
+        "$slot": "body_1",
+        "$from": "live.body[1]",
+        "$example": "cap://stripe/payment_intents.confirm       api    active"
+      },
+      {
+        "$slot": "body_2",
+        "$from": "live.body[2]",
+        "$example": "cap://stripe/payment_intents.cancel        api    active"
+      },
+      {
+        "$slot": "body_3",
+        "$from": "live.body[3]",
+        "$example": "cap://stripe/refund_charge                 api    active"
+      },
+      {
+        "$slot": "body_4",
+        "$from": "live.body[4]",
+        "$example": "cap://stripe/charges.list                  api    active"
+      },
+      {
+        "$slot": "body_5",
+        "$from": "live.body[5]",
+        "$example": "cap://stripe/customers.create              api    active"
+      },
+      {
+        "$slot": "body_6",
+        "$from": "live.body[6]",
+        "$example": "cap://stripe/customers.retrieve            api    active"
+      },
+      {
+        "$slot": "body_7",
+        "$from": "live.body[7]",
+        "$example": "cap://stripe/invoices.create               api    active"
+      },
+      {
+        "$slot": "body_8",
+        "$from": "live.body[8]",
+        "$example": "cap://stripe/invoices.send                 api    active"
+      },
+      {
+        "$slot": "body_9",
+        "$from": "live.body[9]",
+        "$example": "cap://stripe/invoice_items.create          api    active"
+      },
+      {
+        "$slot": "body_10",
+        "$from": "live.body[10]",
+        "$example": "cap://stripe/payment_methods.attach        api    active"
+      },
+      {
+        "$slot": "body_11",
+        "$from": "live.body[11]",
+        "$example": "cap://stripe/payouts.list                  api    active"
+      },
+      {
+        "$slot": "body_12",
+        "$from": "live.body[12]",
+        "$example": "cap://stripe/balance.retrieve              api    active"
+      },
+      {
+        "$slot": "body_13",
+        "$from": "live.body[13]",
+        "$example": "cap://stripe/disputes.list                 api    active"
+      },
+      {
+        "$slot": "body_14",
+        "$from": "live.body[14]",
+        "$example": "cap://stripe/verification_sessions.create  api    active"
+      },
+      {
+        "$slot": "body_15",
+        "$from": "live.body[15]",
+        "$example": "vault://stripe_secret_key                  vault  missing"
+      },
+      {
+        "$slot": "body_16",
+        "$from": "live.body[16]",
+        "$example": "vault://stripe_webhook_secret              vault  missing"
+      },
+      {
+        "$slot": "body_17",
+        "$from": "live.body[17]",
+        "$example": "quota://stripe                             quota  tracked"
+      },
+      {
+        "$slot": "body_18",
+        "$from": "live.body[18]",
+        "$example": "webhook/stripe/invoice_paid                bind   active"
+      },
+      {
+        "$slot": "body_19",
+        "$from": "live.body[19]",
+        "$example": "doc://refund-policy                        doc    readable"
+      }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli inspect cap://stripe/refund_charge",
-      "intent": "Inspect the first match from this result set",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli inspect cap://stripe/refund_charge",
+        "$bindings": {},
+        "$example": "capcli inspect cap://stripe/refund_charge"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Inspect the first match from this result set"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

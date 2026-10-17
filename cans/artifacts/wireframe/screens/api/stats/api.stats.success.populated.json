@@ -1,42 +1,116 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.stats.success.populated",
-  "target": "stripe",
-  "command": "capcli api stats stripe --deep",
-  "elapsed_ms": 1188,
+  "scenario": {
+    "provider": "stripe"
+  },
+  "target": {
+    "$slot": "provider",
+    "$from": "scenario.provider",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli api stats {{provider}} --deep",
+    "$bindings": {
+      "provider": "scenario.provider"
+    },
+    "$example": "capcli api stats stripe --deep"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1188
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "populated",
-    "root": "top_verbs_by_spend:",
+    "title": {
+      "$slot": "title",
+      "$from": "live.stats.title",
+      "$example": "populated"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.stats.root",
+      "$example": "top_verbs_by_spend:"
+    },
     "nodes": [
       {
-        "label": "refund_charge 214 calls 0 errors",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.stats.nodes[0].label",
+          "$example": "refund_charge 214 calls 0 errors"
+        },
         "children": []
       },
       {
-        "label": "create_payment_intent 89 calls 1 error",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.stats.nodes[1].label",
+          "$example": "create_payment_intent 89 calls 1 error"
+        },
         "children": []
       },
       {
-        "label": "issue_credit_note 12 calls 2 errors",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.stats.nodes[2].label",
+          "$example": "issue_credit_note 12 calls 2 errors"
+        },
         "children": []
       }
     ],
     "footer": {
-      "provider": "stripe",
-      "window": "24h rolling",
-      "quota_used": "41 of 60 tokens (68%)",
-      "quota_remaining": "19",
-      "reset_at": "18:00:00 UTC (in 4h 12m)",
-      "error_rate": "0.8% (3 of 372 calls)",
-      "p50_latency": "118ms",
-      "p95_latency": "240ms"
+      "provider": {
+        "$slot": "provider_2",
+        "$from": "scenario.provider",
+        "$example": "stripe"
+      },
+      "window": {
+        "$slot": "window",
+        "$from": "live.stats.footer.window",
+        "$example": "24h rolling"
+      },
+      "quota_used": {
+        "$slot": "quota_used",
+        "$from": "live.stats.footer.quota_used",
+        "$example": "41 of 60 tokens (68%)"
+      },
+      "quota_remaining": {
+        "$slot": "quota_remaining",
+        "$from": "live.stats.footer.quota_remaining",
+        "$example": "19"
+      },
+      "reset_at": {
+        "$slot": "reset_at",
+        "$from": "live.stats.footer.reset_at",
+        "$example": "18:00:00 UTC (in 4h 12m)"
+      },
+      "error_rate": {
+        "$slot": "error_rate",
+        "$from": "live.stats.footer.error_rate",
+        "$example": "0.8% (3 of 372 calls)"
+      },
+      "p50_latency": {
+        "$slot": "p50_latency",
+        "$from": "live.stats.footer.p50_latency",
+        "$example": "118ms"
+      },
+      "p95_latency": {
+        "$slot": "p95_latency",
+        "$from": "live.stats.footer.p95_latency",
+        "$example": "240ms"
+      }
     }
   }
 }

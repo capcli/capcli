@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "rule.validate.refusal.semantics",
-  "target": "schema://orders",
-  "command": "capcli rule validate",
-  "elapsed_ms": 178,
+  "scenario": {
+    "schema_urp": "schema://orders"
+  },
+  "target": {
+    "$slot": "schema_urp",
+    "$from": "scenario.schema_urp",
+    "$example": "schema://orders"
+  },
+  "command": {
+    "$interpolate": "capcli rule validate",
+    "$bindings": {},
+    "$example": "capcli rule validate"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 178
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,20 +29,60 @@
   "component": {
     "rule": "compile.gate_2_circular_ref",
     "domain": "compile",
-    "culprit": "Dependency cycle detected: orders -> order_items -> orders.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Dependency cycle detected: orders -> order_items -> orders."
+    },
     "remedy": "break the cycle by removing one ref= edge or introducing a junction table, then re-run capcli rule validate",
-    "first_item": "int ref=order_items.id",
-    "dependency_cycle": "orders -> order_items -> orders.",
+    "first_item": {
+      "$slot": "first_item",
+      "$from": "live.first_item",
+      "$example": "int ref=order_items.id"
+    },
+    "dependency_cycle": {
+      "$slot": "dependency_cycle",
+      "$from": "live.dependency_cycle",
+      "$example": "orders -> order_items -> orders."
+    },
     "lines": [
-      "--> schema.yaml:47:41",
-      "orders:",
-      "columns:",
-      "Topological table compile order cannot be established."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "--> schema.yaml:47:41"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "orders:"
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "columns:"
+      },
+      {
+        "$slot": "lines_3",
+        "$from": "live.lines[3]",
+        "$example": "Topological table compile order cannot be established."
+      }
     ],
     "span": {
-      "source": "int ref=order_items.id",
-      "highlight": "ref=order_items.id",
-      "detail": "schema.yaml:47:41 cyclic_edge"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "int ref=order_items.id"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "ref=order_items.id"
+      },
+      "detail": {
+        "$slot": "detail",
+        "$from": "live.span.detail",
+        "$example": "schema.yaml:47:41 cyclic_edge"
+      }
     }
   }
 }

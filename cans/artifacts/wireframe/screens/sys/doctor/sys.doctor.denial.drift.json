@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.doctor.denial.drift",
-  "target": "host",
-  "command": "capcli sys doctor",
-  "elapsed_ms": 267,
+  "scenario": {
+    "host": "host"
+  },
+  "target": {
+    "$slot": "host",
+    "$from": "scenario.host",
+    "$example": "host"
+  },
+  "command": {
+    "$interpolate": "capcli sys doctor",
+    "$bindings": {},
+    "$example": "capcli sys doctor"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 267
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,18 +30,50 @@
     "rule": "policy.authorizer.declaration_drift",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Live DB schema diverges from the compiled declaration (orders.idx_orders_status, customers.region)",
-    "measured": "2 drift items (declaration v3 vs envs/dev/workspace.db)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Live DB schema diverges from the compiled declaration (orders.idx_orders_status, customers.region)"
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "2 drift items (declaration v3 vs envs/dev/workspace.db)"
+    },
     "remedy": "reconcile with 'capcli rule diff --git', then 'capcli rule apply schema'",
     "drift": [
-      "orders.idx_orders_status present in live DB, absent from schema.yaml",
-      "customers.region declared, missing from live table"
+      {
+        "$slot": "drift_0",
+        "$from": "live.drift[0]",
+        "$example": "orders.idx_orders_status present in live DB, absent from schema.yaml"
+      },
+      {
+        "$slot": "drift_1",
+        "$from": "live.drift[1]",
+        "$example": "customers.region declared, missing from live table"
+      }
     ],
     "lines": [
-      "Live DB schema diverges from the compiled declaration.",
-      "Doctor refuses to certify a drifted workspace.",
-      "layer:          authorizer",
-      "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Live DB schema diverges from the compiled declaration."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Doctor refuses to certify a drifted workspace."
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "layer:          authorizer"
+      },
+      {
+        "$slot": "lines_3",
+        "$from": "live.lines[3]",
+        "$example": "measured:       2 drift items (declaration v3 vs envs/dev/workspace.db)"
+      }
     ]
   }
 }

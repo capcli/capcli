@@ -1,36 +1,96 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.pause.success.resumed",
-  "target": "bnd_3k2f",
-  "command": "capcli bind pause bnd_3k2f --resume",
-  "elapsed_ms": 701,
+  "scenario": {
+    "binding_id": "bnd_3k2f"
+  },
+  "target": {
+    "$slot": "binding_id",
+    "$from": "scenario.binding_id",
+    "$example": "bnd_3k2f"
+  },
+  "command": {
+    "$interpolate": "capcli bind pause {{binding_id}} --resume",
+    "$bindings": {
+      "binding_id": "scenario.binding_id"
+    },
+    "$example": "capcli bind pause bnd_3k2f --resume"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 701
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_9k2w",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9k2w"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "binding_id": "bnd_3k2f",
-          "kind": "cron",
-          "name": "weekly_digest",
-          "transition": "paused \u2192 active",
-          "next_fire": "2026-10-05T06:00:00Z"
+          "binding_id": {
+            "$slot": "binding_id_2",
+            "$from": "scenario.binding_id",
+            "$example": "bnd_3k2f"
+          },
+          "kind": {
+            "$slot": "kind",
+            "$from": "live.groups[0].fields.kind",
+            "$example": "cron"
+          },
+          "name": {
+            "$slot": "name",
+            "$from": "live.groups[0].fields.name",
+            "$example": "weekly_digest"
+          },
+          "transition": {
+            "$slot": "transition",
+            "$from": "live.groups[0].fields.transition",
+            "$example": "paused \u2192 active"
+          },
+          "next_fire": {
+            "$slot": "next_fire",
+            "$from": "live.groups[0].fields.next_fire",
+            "$example": "2026-10-05T06:00:00Z"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli bind remove bnd_3k2f",
-      "intent": "Trigger dismantled",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli bind remove {{binding_id}}",
+        "$bindings": {
+          "binding_id": "scenario.binding_id"
+        },
+        "$example": "capcli bind remove bnd_3k2f"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Trigger dismantled"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

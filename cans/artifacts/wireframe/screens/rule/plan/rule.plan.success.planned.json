@@ -1,22 +1,63 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "rule.plan.success.planned",
+  "scenario": {
+    "intent": "rush shipping priority flag"
+  },
   "archetype": "receipt",
-  "audit_op": "op_7c48",
-  "command": "capcli rule plan --name \"add_order_priority\" -m \"rush shipping priority flag\"",
-  "elapsed_ms": 521,
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_7c48"
+  },
+  "command": {
+    "$interpolate": "capcli rule plan --name \"add_order_priority\" -m \"{{intent}}\"",
+    "$bindings": {
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli rule plan --name \"add_order_priority\" -m \"rush shipping priority flag\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 521
+  },
   "component": {
     "groups": [
       {
         "fields": {
-          "intent": "\"rush shipping priority flag\"",
-          "migration": "add_order_priority"
+          "intent": {
+            "$interpolate": "\"{{intent}}\"",
+            "$bindings": {
+              "intent": "scenario.intent"
+            },
+            "$example": "\"rush shipping priority flag\""
+          },
+          "migration": {
+            "$slot": "migration",
+            "$from": "live.groups[0].fields.migration",
+            "$example": "add_order_priority"
+          }
         }
       },
       {
         "lines": [
-          "bundle:",
-          "plan.json",
-          "align stub"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "bundle:"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "plan.json"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[1].lines[2]",
+            "$example": "align stub"
+          }
         ]
       }
     ],
@@ -27,13 +68,28 @@
     "tier": "tier_1",
     "trust": "draft"
   },
-  "id": "rule.plan.success.planned",
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli rule rehearse add_order_priority --env sim",
-      "intent": "Rehearse the planned migration in sim",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli rule rehearse add_order_priority --env sim",
+        "$bindings": {},
+        "$example": "capcli rule rehearse add_order_priority --env sim"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Rehearse the planned migration in sim"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

@@ -1,37 +1,101 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.sync.success.synced",
-  "target": "stripe",
-  "command": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d",
-  "elapsed_ms": 1778,
+  "scenario": {
+    "provider": "stripe"
+  },
+  "target": {
+    "$slot": "provider",
+    "$from": "scenario.provider",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli api sync {{provider}} https://api.stripe.com/openapi.json --interval 7d",
+    "$bindings": {
+      "provider": "scenario.provider"
+    },
+    "$example": "capcli api sync stripe https://api.stripe.com/openapi.json --interval 7d"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1778
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_4e19",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_4e19"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "provider": "stripe",
-          "spec_url": "https://api.stripe.com/openapi.json",
-          "verbs_imported": "418 (active at draft trust)",
-          "spec_hash": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa",
-          "catalog": "apis/stripe.yaml (2.1MB)",
-          "interval": "7d"
+          "provider": {
+            "$slot": "provider_2",
+            "$from": "scenario.provider",
+            "$example": "stripe"
+          },
+          "spec_url": {
+            "$interpolate": "https://api.{{provider}}.com/openapi.json",
+            "$bindings": {
+              "provider": "scenario.provider"
+            },
+            "$example": "https://api.stripe.com/openapi.json"
+          },
+          "verbs_imported": {
+            "$slot": "verbs_imported",
+            "$from": "live.groups[0].fields.verbs_imported",
+            "$example": "418 (active at draft trust)"
+          },
+          "spec_hash": {
+            "$slot": "spec_hash",
+            "$from": "live.groups[0].fields.spec_hash",
+            "$example": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa"
+          },
+          "catalog": {
+            "$slot": "catalog",
+            "$from": "live.groups[0].fields.catalog",
+            "$example": "apis/stripe.yaml (2.1MB)"
+          },
+          "interval": {
+            "$slot": "interval",
+            "$from": "live.groups[0].fields.interval",
+            "$example": "7d"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api diff threads",
-      "intent": "Zero drift from active catalog",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api diff threads",
+        "$bindings": {},
+        "$example": "capcli api diff threads"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Zero drift from active catalog"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

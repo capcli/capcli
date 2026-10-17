@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.inspect.refusal.not_found",
-  "target": "bnd_3k2f",
-  "command": "capcli bind inspect bnd_3k2f",
-  "elapsed_ms": 46,
+  "scenario": {
+    "binding_id": "bnd_3k2f"
+  },
+  "target": {
+    "$slot": "binding_id",
+    "$from": "scenario.binding_id",
+    "$example": "bnd_3k2f"
+  },
+  "command": {
+    "$interpolate": "capcli bind inspect {{binding_id}}",
+    "$bindings": {
+      "binding_id": "scenario.binding_id"
+    },
+    "$example": "capcli bind inspect bnd_3k2f"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 46
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +31,21 @@
   "component": {
     "rule": "validation.binding_not_found",
     "domain": "validation",
-    "culprit": "Target binding ID not found in workspace.db.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Target binding ID not found in workspace.db."
+    },
     "remedy": "confirm the binding ID via capcli bind list",
-    "binding_id": "bnd_3k2f",
-    "action": "inspect"
+    "binding_id": {
+      "$slot": "binding_id_2",
+      "$from": "scenario.binding_id",
+      "$example": "bnd_3k2f"
+    },
+    "action": {
+      "$slot": "action",
+      "$from": "live.action",
+      "$example": "inspect"
+    }
   }
 }

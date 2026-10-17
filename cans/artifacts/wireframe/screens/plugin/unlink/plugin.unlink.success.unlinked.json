@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "plugin.unlink.success.unlinked",
-  "target": "stripe-dev",
-  "command": "capcli plugin unlink stripe-dev",
-  "elapsed_ms": 188,
+  "scenario": {
+    "plugin_id": "stripe-dev"
+  },
+  "target": {
+    "$slot": "plugin_id",
+    "$from": "scenario.plugin_id",
+    "$example": "stripe-dev"
+  },
+  "command": {
+    "$interpolate": "capcli plugin unlink {{plugin_id}}",
+    "$bindings": {
+      "plugin_id": "scenario.plugin_id"
+    },
+    "$example": "capcli plugin unlink stripe-dev"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 188
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,18 +33,42 @@
     "groups": [
       {
         "fields": {
-          "plugin_id": "stripe-dev",
-          "detached": "symlink removed; installed copy untouched"
+          "plugin_id": {
+            "$slot": "plugin_id_2",
+            "$from": "scenario.plugin_id",
+            "$example": "stripe-dev"
+          },
+          "detached": {
+            "$slot": "detached",
+            "$from": "live.groups[0].fields.detached",
+            "$example": "symlink removed; installed copy untouched"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli plugin list",
-      "intent": "Installed plugin registry",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli plugin list",
+        "$bindings": {},
+        "$example": "capcli plugin list"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Installed plugin registry"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

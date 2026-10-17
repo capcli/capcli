@@ -1,9 +1,29 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.scaffold.success.applied",
-  "target": "sync_orders",
-  "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
-  "elapsed_ms": 2161,
+  "scenario": {
+    "sync_orders": "sync_orders",
+    "endpoint_url": "https://ops.example.com/hook"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli pack scaffold pack://routine/webhook_receiver {{sync_orders}} -p endpoint_url={{endpoint_url}}",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders",
+      "endpoint_url": "scenario.endpoint_url"
+    },
+    "$example": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2161
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,26 +35,68 @@
     "groups": [
       {
         "fields": {
-          "routine": "routines/sync_orders.py",
-          "trust": "draft",
-          "version": "1",
-          "pack.source": "pack://routine/webhook_receiver",
-          "pack.hash": "sha256:a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4"
+          "routine": {
+            "$slot": "routine",
+            "$from": "live.groups[0].fields.routine",
+            "$example": "routines/sync_orders.py"
+          },
+          "trust": {
+            "$slot": "trust",
+            "$from": "live.groups[0].fields.trust",
+            "$example": "draft"
+          },
+          "version": {
+            "$slot": "version",
+            "$from": "live.groups[0].fields.version",
+            "$example": "1"
+          },
+          "pack.source": {
+            "$slot": "pack_source",
+            "$from": "live.groups[0].fields.pack_source",
+            "$example": "pack://routine/webhook_receiver"
+          },
+          "pack.hash": {
+            "$slot": "pack_hash",
+            "$from": "live.groups[0].fields.pack_hash",
+            "$example": "sha256:a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4"
+          }
         }
       },
       {
         "fields": {
-          "audit": "op_pack_scaffold_01 (routine draft instantiated from pack://routine/webhook_receiver)"
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[1].fields.audit",
+            "$example": "op_pack_scaffold_01 (routine draft instantiated from pack://routine/webhook_receiver)"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli routine prove sync_orders --env sim",
-      "intent": "Dynamic fingerprint verified",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+        "$bindings": {
+          "sync_orders": "scenario.sync_orders"
+        },
+        "$example": "capcli routine prove sync_orders --env sim"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Dynamic fingerprint verified"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

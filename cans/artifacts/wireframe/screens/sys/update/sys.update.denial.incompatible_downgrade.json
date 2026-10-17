@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.update.denial.incompatible_downgrade",
-  "target": "kernel",
-  "command": "capcli sys update --to 0.4.9",
-  "elapsed_ms": 41,
+  "scenario": {
+    "kernel": "kernel"
+  },
+  "target": {
+    "$slot": "kernel",
+    "$from": "scenario.kernel",
+    "$example": "kernel"
+  },
+  "command": {
+    "$interpolate": "capcli sys update --to 0.4.9",
+    "$bindings": {},
+    "$example": "capcli sys update --to 0.4.9"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 41
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,11 +30,23 @@
     "rule": "policy.update.incompatible_downgrade",
     "domain": "policy.update",
     "layer": "preflight",
-    "culprit": "Target 0.4.9 is incompatible with the current schema generation; schema migrations never downgrade.",
-    "measured": "installed schema gen 12 > target schema gen 9",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Target 0.4.9 is incompatible with the current schema generation; schema migrations never downgrade."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "installed schema gen 12 > target schema gen 9"
+    },
     "remedy": "target a version at or above the current schema generation, or restore from a pre-migration snapshot",
     "lines": [
-      "Target 0.4.9 rejected: incompatible downgrade."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Target 0.4.9 rejected: incompatible downgrade."
+      }
     ]
   }
 }

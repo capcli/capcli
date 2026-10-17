@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.restore.refusal.missing_id",
-  "target": "db://",
-  "command": "capcli db restore",
-  "elapsed_ms": 38,
+  "scenario": {
+    "db_urp": "db://"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://"
+  },
+  "command": {
+    "$interpolate": "capcli db restore",
+    "$bindings": {},
+    "$example": "capcli db restore"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 38
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +29,21 @@
   "component": {
     "rule": "missing_param.restore.snapshot_id_required",
     "domain": "missing_param",
-    "culprit": "Target snapshot ID missing; restore requires an explicit recovery point.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Target snapshot ID missing; restore requires an explicit recovery point."
+    },
     "remedy": "list recovery points with 'capcli sys recover --list', then 'capcli db restore <snapshot_id>'",
-    "command": "capcli db restore",
-    "target": "(absent)"
+    "command": {
+      "$slot": "command",
+      "$from": "live.command",
+      "$example": "capcli db restore"
+    },
+    "target": {
+      "$slot": "target",
+      "$from": "live.target",
+      "$example": "(absent)"
+    }
   }
 }

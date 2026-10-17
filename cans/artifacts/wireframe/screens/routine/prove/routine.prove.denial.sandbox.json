@@ -1,27 +1,69 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.prove.denial.sandbox",
-  "target": "sync_orders",
-  "command": "capcli routine prove sync_orders --env sim",
-  "elapsed_ms": 335,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine prove sync_orders --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 335
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_prove_06",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_prove_06"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "kernel.sandbox.breach",
     "domain": "kernel.sandbox",
     "layer": "sandbox",
-    "culprit": "Jail containment boundary violated; raw network egress prohibited from guest sandboxes.",
-    "measured": "1 containment violation (connect trapped at 0 bytes egress)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Jail containment boundary violated; raw network egress prohibited from guest sandboxes."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "1 containment violation (connect trapped at 0 bytes egress)"
+    },
     "remedy": "use ctx.api.call with an activated catalog verb",
-    "target": "10.0.0.5:5432",
-    "caller": "routines/sync_orders.py:47 (raw socket in sim test pass)",
+    "target": {
+      "$slot": "target",
+      "$from": "live.target",
+      "$example": "10.0.0.5:5432"
+    },
+    "caller": {
+      "$slot": "caller",
+      "$from": "live.caller",
+      "$example": "routines/sync_orders.py:47 (raw socket in sim test pass)"
+    },
     "lines": [
-      "syscall 42 (connect) trapped by seccomp-bpf"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "syscall 42 (connect) trapped by seccomp-bpf"
+      }
     ]
   }
 }

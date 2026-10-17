@@ -1,131 +1,287 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "rule.show.success.populated",
-  "target": "schema://orders",
-  "command": "capcli rule show schema --table orders",
-  "elapsed_ms": 2023,
+  "scenario": {
+    "schema_urp": "schema://orders"
+  },
+  "target": {
+    "$slot": "schema_urp",
+    "$from": "scenario.schema_urp",
+    "$example": "schema://orders"
+  },
+  "command": {
+    "$interpolate": "capcli rule show schema --table orders",
+    "$bindings": {},
+    "$example": "capcli rule show schema --table orders"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2023
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "compiled rules (orders)",
-    "root": "orders (prov)",
+    "title": {
+      "$slot": "title",
+      "$from": "live.show.title",
+      "$example": "compiled rules (orders)"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.show.root",
+      "$example": "orders (prov)"
+    },
     "nodes": [
       {
-        "label": "columns",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.show.nodes[0].label",
+          "$example": "columns"
+        },
         "children": []
       },
       {
-        "label": "id pk",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.show.nodes[1].label",
+          "$example": "id pk"
+        },
         "children": []
       },
       {
-        "label": "ref text unique",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.show.nodes[2].label",
+          "$example": "ref text unique"
+        },
         "children": []
       },
       {
-        "label": "customer_id int ref=customers.id",
+        "label": {
+          "$slot": "n3",
+          "$from": "live.show.nodes[3].label",
+          "$example": "customer_id int ref=customers.id"
+        },
         "children": []
       },
       {
-        "label": "total_cents int default 0",
+        "label": {
+          "$slot": "n4",
+          "$from": "live.show.nodes[4].label",
+          "$example": "total_cents int default 0"
+        },
         "children": []
       },
       {
-        "label": "discount_cents int default 0",
+        "label": {
+          "$slot": "n5",
+          "$from": "live.show.nodes[5].label",
+          "$example": "discount_cents int default 0"
+        },
         "children": []
       },
       {
-        "label": "status text default 'pending'",
+        "label": {
+          "$slot": "n6",
+          "$from": "live.show.nodes[6].label",
+          "$example": "status text default 'pending'"
+        },
         "children": []
       },
       {
-        "label": "receipt blob ref=storage",
+        "label": {
+          "$slot": "n7",
+          "$from": "live.show.nodes[7].label",
+          "$example": "receipt blob ref=storage"
+        },
         "children": []
       },
       {
-        "label": "created_by text (prov)",
+        "label": {
+          "$slot": "n8",
+          "$from": "live.show.nodes[8].label",
+          "$example": "created_by text (prov)"
+        },
         "children": []
       },
       {
-        "label": "modified_by text (prov)",
+        "label": {
+          "$slot": "n9",
+          "$from": "live.show.nodes[9].label",
+          "$example": "modified_by text (prov)"
+        },
         "children": []
       },
       {
-        "label": "checks",
+        "label": {
+          "$slot": "n10",
+          "$from": "live.show.nodes[10].label",
+          "$example": "checks"
+        },
         "children": []
       },
       {
-        "label": "discount_cents <= total_cents",
+        "label": {
+          "$slot": "n11",
+          "$from": "live.show.nodes[11].label",
+          "$example": "discount_cents <= total_cents"
+        },
         "children": []
       },
       {
-        "label": "status IN ('pending', 'processing', 'completed', 'cancelled')",
+        "label": {
+          "$slot": "n12",
+          "$from": "live.show.nodes[12].label",
+          "$example": "status IN ('pending', 'processing', 'completed', 'cancelled')"
+        },
         "children": []
       },
       {
-        "label": "indexes",
+        "label": {
+          "$slot": "n13",
+          "$from": "live.show.nodes[13].label",
+          "$example": "indexes"
+        },
         "children": []
       },
       {
-        "label": "[ref]",
+        "label": {
+          "$slot": "n14",
+          "$from": "live.show.nodes[14].label",
+          "$example": "[ref]"
+        },
         "children": []
       },
       {
-        "label": "[[customer_id, status]]",
+        "label": {
+          "$slot": "n15",
+          "$from": "live.show.nodes[15].label",
+          "$example": "[[customer_id, status]]"
+        },
         "children": []
       },
       {
-        "label": "triggers",
+        "label": {
+          "$slot": "n16",
+          "$from": "live.show.nodes[16].label",
+          "$example": "triggers"
+        },
         "children": [
           {
-            "label": "validate_total (BEFORE INSERT)",
+            "label": {
+              "$slot": "n16c0",
+              "$from": "live.show.nodes[16].children[0].label",
+              "$example": "validate_total (BEFORE INSERT)"
+            },
             "children": []
           }
         ]
       },
       {
-        "label": "──────────────────────────────────────────────────────────────────────────",
+        "label": {
+          "$slot": "n17",
+          "$from": "live.show.nodes[17].label",
+          "$example": "──────────────────────────────────────────────────────────────────────────"
+        },
         "children": []
       },
       {
-        "label": "authorizer rules (compiled from policy v5)",
+        "label": {
+          "$slot": "n18",
+          "$from": "live.show.nodes[18].label",
+          "$example": "authorizer rules (compiled from policy v5)"
+        },
         "children": []
       },
       {
-        "label": "alter: require_trust reviewed",
+        "label": {
+          "$slot": "n19",
+          "$from": "live.show.nodes[19].label",
+          "$example": "alter: require_trust reviewed"
+        },
         "children": []
       },
       {
-        "label": "drop: deny",
+        "label": {
+          "$slot": "n20",
+          "$from": "live.show.nodes[20].label",
+          "$example": "drop: deny"
+        },
         "children": []
       },
       {
-        "label": "vacuum: require_trust pinned",
+        "label": {
+          "$slot": "n21",
+          "$from": "live.show.nodes[21].label",
+          "$example": "vacuum: require_trust pinned"
+        },
         "children": []
       },
       {
-        "label": "triggers: deny_agent (kernel-compiled exempt)",
+        "label": {
+          "$slot": "n22",
+          "$from": "live.show.nodes[22].label",
+          "$example": "triggers: deny_agent (kernel-compiled exempt)"
+        },
         "children": []
       }
     ],
     "footer": {
-      "source": "schema.yaml v12 (compiled)",
-      "engine": "sqlite (envs/dev/workspace.db)",
-      "compiled_at": "2026-10-04T00:00:00Z",
-      "gates": "Sub-check 1 pass · Sub-check 2 pass"
+      "source": {
+        "$slot": "source",
+        "$from": "live.show.footer.source",
+        "$example": "schema.yaml v12 (compiled)"
+      },
+      "engine": {
+        "$slot": "engine",
+        "$from": "live.show.footer.engine",
+        "$example": "sqlite (envs/dev/workspace.db)"
+      },
+      "compiled_at": {
+        "$slot": "compiled_at",
+        "$from": "live.show.footer.compiled_at",
+        "$example": "2026-10-04T00:00:00Z"
+      },
+      "gates": {
+        "$slot": "gates",
+        "$from": "live.show.footer.gates",
+        "$example": "Sub-check 1 pass · Sub-check 2 pass"
+      }
     }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli rule diff schema --git",
-      "intent": "Workspace in lockstep with rules",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli rule diff schema --git",
+        "$bindings": {},
+        "$example": "capcli rule diff schema --git"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Workspace in lockstep with rules"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

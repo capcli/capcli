@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.trace.refusal.not_found",
-  "target": "op_9f99",
-  "command": "capcli sys audit trace op_9f99 --explain",
-  "elapsed_ms": 81,
+  "scenario": {
+    "trace_op": "op_9f99"
+  },
+  "target": {
+    "$slot": "trace_op",
+    "$from": "scenario.trace_op",
+    "$example": "op_9f99"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit trace {{trace_op}} --explain",
+    "$bindings": {
+      "trace_op": "scenario.trace_op"
+    },
+    "$example": "capcli sys audit trace op_9f99 --explain"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 81
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,11 +30,25 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "validation",
-    "culprit": "No audit operation with id 'op_9f99' exists in _audit.",
+    "culprit": {
+      "$interpolate": "No audit operation with id '{{trace_op}}' exists in _audit.",
+      "$bindings": {
+        "trace_op": "scenario.trace_op"
+      },
+      "$example": "No audit operation with id 'op_9f99' exists in _audit."
+    },
     "remedy": "verify the operation id via capcli sys audit tail or sys audit query, then re-run sys audit trace <op-id> --explain",
-    "target": "op_9f99",
+    "target": {
+      "$slot": "trace_op_2",
+      "$from": "scenario.trace_op",
+      "$example": "op_9f99"
+    },
     "lines": [
-      "FATAL  validation.not_found"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.not_found"
+      }
     ]
   }
 }

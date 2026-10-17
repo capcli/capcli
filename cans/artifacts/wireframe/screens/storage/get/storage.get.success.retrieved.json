@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "storage.get.success.retrieved",
-  "target": "reports/r1.pdf",
-  "command": "capcli storage get reports/r1.pdf --out ./r1.pdf",
-  "elapsed_ms": 218,
+  "scenario": {
+    "key": "reports/r1.pdf"
+  },
+  "target": {
+    "$slot": "key",
+    "$from": "scenario.key",
+    "$example": "reports/r1.pdf"
+  },
+  "command": {
+    "$interpolate": "capcli storage get {{key}} --out ./r1.pdf",
+    "$bindings": {
+      "key": "scenario.key"
+    },
+    "$example": "capcli storage get reports/r1.pdf --out ./r1.pdf"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 218
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "redirected"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "redirected"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,10 +38,26 @@
     "groups": [
       {
         "fields": {
-          "artifact": "./r1.pdf",
-          "key": "reports/r1.pdf",
-          "bytes": "241802",
-          "sha256": "7f9a1b2c4d8e001fa882bc19488a09b2e4f019c (match)"
+          "artifact": {
+            "$slot": "artifact",
+            "$from": "live.groups[0].fields.artifact",
+            "$example": "./r1.pdf"
+          },
+          "key": {
+            "$slot": "key_2",
+            "$from": "scenario.key",
+            "$example": "reports/r1.pdf"
+          },
+          "bytes": {
+            "$slot": "bytes",
+            "$from": "live.groups[0].fields.bytes",
+            "$example": "241802"
+          },
+          "sha256": {
+            "$slot": "sha256",
+            "$from": "live.groups[0].fields.sha256",
+            "$example": "7f9a1b2c4d8e001fa882bc19488a09b2e4f019c (match)"
+          }
         }
       }
     ]

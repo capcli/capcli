@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.ship.refusal.missing_reason",
-  "target": "order_sync",
-  "command": "capcli routine ship order_sync pinned",
-  "elapsed_ms": 31,
+  "scenario": {
+    "order_sync": "order_sync"
+  },
+  "target": {
+    "$slot": "order_sync",
+    "$from": "scenario.order_sync",
+    "$example": "order_sync"
+  },
+  "command": {
+    "$interpolate": "capcli routine ship {{order_sync}} pinned",
+    "$bindings": {
+      "order_sync": "scenario.order_sync"
+    },
+    "$example": "capcli routine ship order_sync pinned"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 31
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +31,23 @@
   "component": {
     "rule": "missing_param.promotion.reason_required",
     "domain": "missing_param",
-    "culprit": "Elevation to pinned requires a --reason justification; threshold crossings need evidence.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Elevation to pinned requires a --reason justification; threshold crossings need evidence."
+    },
     "remedy": "re-run with --reason, e.g. capcli routine ship order_sync pinned --reason \"30d clean canary\"",
-    "command": "capcli routine ship order_sync pinned",
-    "rung": "pinned"
+    "command": {
+      "$interpolate": "capcli routine ship {{order_sync}} pinned",
+      "$bindings": {
+        "order_sync": "scenario.order_sync"
+      },
+      "$example": "capcli routine ship order_sync pinned"
+    },
+    "rung": {
+      "$slot": "rung",
+      "$from": "live.rung",
+      "$example": "pinned"
+    }
   }
 }

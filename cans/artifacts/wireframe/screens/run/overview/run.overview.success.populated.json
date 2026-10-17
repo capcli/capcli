@@ -1,53 +1,129 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.overview.success.populated",
-  "target": "cap://overview@1",
-  "command": "capcli run overview",
-  "elapsed_ms": 2111,
+  "scenario": {
+    "routine_urp": "cap://overview@1"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://overview@1"
+  },
+  "command": {
+    "$interpolate": "capcli run overview",
+    "$bindings": {},
+    "$example": "capcli run overview"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2111
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
-  "audit_op": "op_9f2p",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2p"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "pending_orders": "14 (3 rush)",
-          "shipped_today": "87",
-          "low_stock_alerts": "2 (ethiopia_yirgacheffe, colombia_huila)",
-          "inbox_backlog": "6 events queued"
+          "pending_orders": {
+            "$slot": "pending_orders",
+            "$from": "live.groups[0].fields.pending_orders",
+            "$example": "14 (3 rush)"
+          },
+          "shipped_today": {
+            "$slot": "shipped_today",
+            "$from": "live.groups[0].fields.shipped_today",
+            "$example": "87"
+          },
+          "low_stock_alerts": {
+            "$slot": "low_stock_alerts",
+            "$from": "live.groups[0].fields.low_stock_alerts",
+            "$example": "2 (ethiopia_yirgacheffe, colombia_huila)"
+          },
+          "inbox_backlog": {
+            "$slot": "inbox_backlog",
+            "$from": "live.groups[0].fields.inbox_backlog",
+            "$example": "6 events queued"
+          }
         },
         "lines": [
-          "domain_kpis:"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[0].lines[0]",
+            "$example": "domain_kpis:"
+          }
         ]
       },
       {
         "fields": {
-          "pending_asks": "1 (ask_8812 awaiting user:root)",
-          "unresolved_vault": "1 (stripe_secret_key)",
-          "active_locks": "1 (db://orders held by op_9f1c, ttl 4m)"
+          "pending_asks": {
+            "$slot": "pending_asks",
+            "$from": "live.groups[1].fields.pending_asks",
+            "$example": "1 (ask_8812 awaiting user:root)"
+          },
+          "unresolved_vault": {
+            "$slot": "unresolved_vault",
+            "$from": "live.groups[1].fields.unresolved_vault",
+            "$example": "1 (stripe_secret_key)"
+          },
+          "active_locks": {
+            "$slot": "active_locks",
+            "$from": "live.groups[1].fields.active_locks",
+            "$example": "1 (db://orders held by op_9f1c, ttl 4m)"
+          }
         },
         "lines": [
-          "blockers:"
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "blockers:"
+          }
         ]
       },
       {
         "fields": {
-          "session_fuel": "80400 remaining",
-          "threads_quota": "28 remaining (24h window)"
+          "session_fuel": {
+            "$slot": "session_fuel",
+            "$from": "live.groups[2].fields.session_fuel",
+            "$example": "80400 remaining"
+          },
+          "threads_quota": {
+            "$slot": "threads_quota",
+            "$from": "live.groups[2].fields.threads_quota",
+            "$example": "28 remaining (24h window)"
+          }
         },
         "lines": [
-          "budget_headroom:"
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "budget_headroom:"
+          }
         ]
       },
       {
         "fields": {
-          "system_health": "nominal"
+          "system_health": {
+            "$slot": "system_health",
+            "$from": "live.groups[3].fields.system_health",
+            "$example": "nominal"
+          }
         }
       }
     ]

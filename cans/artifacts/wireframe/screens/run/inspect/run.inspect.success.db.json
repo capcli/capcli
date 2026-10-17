@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.db",
-  "target": "db://orders",
-  "command": "capcli inspect db://orders",
-  "elapsed_ms": 67,
+  "scenario": {
+    "db_urp": "db://orders"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{db_urp}}",
+    "$bindings": {
+      "db_urp": "scenario.db_urp"
+    },
+    "$example": "capcli inspect db://orders"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 67
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,17 +33,45 @@
     "groups": [
       {
         "fields": {
-          "target": "db://orders",
-          "kind": "domain table (kernel system schema)",
-          "columns": "id, status, carrier, tracking, created_at",
-          "rows": "12,408",
-          "writes": "authorizer-gated"
+          "target": {
+            "$slot": "db_urp_2",
+            "$from": "scenario.db_urp",
+            "$example": "db://orders"
+          },
+          "kind": {
+            "$slot": "kind",
+            "$from": "live.groups[0].fields.kind",
+            "$example": "domain table (kernel system schema)"
+          },
+          "columns": {
+            "$slot": "columns",
+            "$from": "live.groups[0].fields.columns",
+            "$example": "id, status, carrier, tracking, created_at"
+          },
+          "rows": {
+            "$slot": "rows",
+            "$from": "live.groups[0].fields.rows",
+            "$example": "12,408"
+          },
+          "writes": {
+            "$slot": "writes",
+            "$from": "live.groups[0].fields.writes",
+            "$example": "authorizer-gated"
+          }
         }
       },
       {
         "fields": {
-          "preflight": "table exists; caller holds read grant",
-          "can_invoke_now": "true"
+          "preflight": {
+            "$slot": "preflight",
+            "$from": "live.groups[1].fields.preflight",
+            "$example": "table exists; caller holds read grant"
+          },
+          "can_invoke_now": {
+            "$slot": "can_invoke_now",
+            "$from": "live.groups[1].fields.can_invoke_now",
+            "$example": "true"
+          }
         }
       }
     ]

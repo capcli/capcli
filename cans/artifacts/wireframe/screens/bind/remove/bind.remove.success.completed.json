@@ -1,26 +1,68 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.remove.success.completed",
-  "target": "bnd_3k2f",
-  "command": "capcli bind remove bnd_3k2f",
-  "elapsed_ms": 2438,
+  "scenario": {
+    "binding_id": "bnd_3k2f"
+  },
+  "target": {
+    "$slot": "binding_id",
+    "$from": "scenario.binding_id",
+    "$example": "bnd_3k2f"
+  },
+  "command": {
+    "$interpolate": "capcli bind remove {{binding_id}}",
+    "$bindings": {
+      "binding_id": "scenario.binding_id"
+    },
+    "$example": "capcli bind remove bnd_3k2f"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2438
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_6h4d",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_6h4d"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "binding_id": "bnd_3k2f",
-          "kind": "cron",
-          "name": "weekly_digest",
-          "target": "cap://report_summary",
-          "transition": "active → dismantled"
+          "binding_id": {
+            "$slot": "binding_id_2",
+            "$from": "scenario.binding_id",
+            "$example": "bnd_3k2f"
+          },
+          "kind": {
+            "$slot": "kind",
+            "$from": "live.groups[0].fields.kind",
+            "$example": "cron"
+          },
+          "name": {
+            "$slot": "name",
+            "$from": "live.groups[0].fields.name",
+            "$example": "weekly_digest"
+          },
+          "target": {
+            "$slot": "target",
+            "$from": "live.groups[0].fields.target",
+            "$example": "cap://report_summary"
+          },
+          "transition": {
+            "$slot": "transition",
+            "$from": "live.groups[0].fields.transition",
+            "$example": "active → dismantled"
+          }
         }
       }
     ]

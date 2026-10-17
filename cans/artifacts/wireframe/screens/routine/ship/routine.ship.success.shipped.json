@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.ship.success.shipped",
-  "target": "order_sync",
-  "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
-  "elapsed_ms": 2398,
+  "scenario": {
+    "order_sync": "order_sync"
+  },
+  "target": {
+    "$slot": "order_sync",
+    "$from": "scenario.order_sync",
+    "$example": "order_sync"
+  },
+  "command": {
+    "$interpolate": "capcli routine ship {{order_sync}} pinned --reason \"30d clean canary\"",
+    "$bindings": {
+      "order_sync": "scenario.order_sync"
+    },
+    "$example": "capcli routine ship order_sync pinned --reason \"30d clean canary\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2398
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
@@ -15,52 +33,140 @@
     "groups": [
       {
         "fields": {
-          "routine": "order_sync@2",
-          "rung": "reviewed -> pinned",
-          "reason": "\"30d clean canary\""
+          "routine": {
+            "$slot": "routine",
+            "$from": "live.groups[0].fields.routine",
+            "$example": "order_sync@2"
+          },
+          "rung": {
+            "$slot": "rung",
+            "$from": "live.groups[0].fields.rung",
+            "$example": "reviewed -> pinned"
+          },
+          "reason": {
+            "$slot": "reason",
+            "$from": "live.groups[0].fields.reason",
+            "$example": "\"30d clean canary\""
+          }
         }
       },
       {
         "fields": {
-          "git_status": "prod worktree clean (branch merged, commit 4c89a0b)",
-          "invariant_suite": "passed (boundary + idempotency assertions)",
-          "mutation_tests": "passed (12/12)",
-          "success_rate": "0.99 over 30d canary (floor: 0.95)",
-          "policy_denials": "0",
-          "fingerprint_drift": "0"
+          "git_status": {
+            "$slot": "git_status",
+            "$from": "live.groups[1].fields.git_status",
+            "$example": "prod worktree clean (branch merged, commit 4c89a0b)"
+          },
+          "invariant_suite": {
+            "$slot": "invariant_suite",
+            "$from": "live.groups[1].fields.invariant_suite",
+            "$example": "passed (boundary + idempotency assertions)"
+          },
+          "mutation_tests": {
+            "$slot": "mutation_tests",
+            "$from": "live.groups[1].fields.mutation_tests",
+            "$example": "passed (12/12)"
+          },
+          "success_rate": {
+            "$slot": "success_rate",
+            "$from": "live.groups[1].fields.success_rate",
+            "$example": "0.99 over 30d canary (floor: 0.95)"
+          },
+          "policy_denials": {
+            "$slot": "policy_denials",
+            "$from": "live.groups[1].fields.policy_denials",
+            "$example": "0"
+          },
+          "fingerprint_drift": {
+            "$slot": "fingerprint_drift",
+            "$from": "live.groups[1].fields.fingerprint_drift",
+            "$example": "0"
+          }
         },
         "lines": [
-          "evidence:"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "evidence:"
+          }
         ]
       },
       {
         "fields": {
-          "may_run_unattended": "true",
-          "audit_mode": "summary"
+          "may_run_unattended": {
+            "$slot": "may_run_unattended",
+            "$from": "live.groups[2].fields.may_run_unattended",
+            "$example": "true"
+          },
+          "audit_mode": {
+            "$slot": "audit_mode",
+            "$from": "live.groups[2].fields.audit_mode",
+            "$example": "summary"
+          }
         },
         "lines": [
-          "unlocked:"
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "unlocked:"
+          }
         ]
       },
       {
         "fields": {
-          "audit": "op_ship_04 (routine.ship committed; promoted_through recorded)"
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[3].fields.audit",
+            "$example": "op_ship_04 (routine.ship committed; promoted_through recorded)"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "inspect",
-      "command": "capcli sys doctor --report",
-      "intent": "Full YAML Trust Receipt",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "inspect"
+      },
+      "command": {
+        "$interpolate": "capcli sys doctor --report",
+        "$bindings": {},
+        "$example": "capcli sys doctor --report"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Full YAML Trust Receipt"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     },
     {
-      "rel": "inspect",
-      "command": "capcli run overview",
-      "intent": "Situational KPI briefing (<500 tokens)",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel_2",
+        "$from": "live.affordances[1].rel",
+        "$example": "inspect"
+      },
+      "command": {
+        "$interpolate": "capcli run overview",
+        "$bindings": {},
+        "$example": "capcli run overview"
+      },
+      "intent": {
+        "$slot": "intent_2",
+        "$from": "live.affordances[1].intent",
+        "$example": "Situational KPI briefing (<500 tokens)"
+      },
+      "risk": {
+        "$slot": "risk_2",
+        "$from": "live.affordances[1].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

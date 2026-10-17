@@ -1,53 +1,125 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.search.success.empty",
-  "target": "kombucha supplier sync",
-  "command": "capcli search 'kombucha supplier sync'",
-  "elapsed_ms": 986,
+  "scenario": {
+    "kombucha_supplier_sync": "kombucha supplier sync"
+  },
+  "target": {
+    "$slot": "kombucha_supplier_sync",
+    "$from": "scenario.kombucha_supplier_sync",
+    "$example": "kombucha supplier sync"
+  },
+  "command": {
+    "$interpolate": "capcli search 'kombucha supplier sync'",
+    "$bindings": {},
+    "$example": "capcli search 'kombucha supplier sync'"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 986
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
-  "audit_op": "op_9f2s",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2s"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "exact": "0 · prefix: 0 · fuzzy: 0 · semantic: below 0.60 floor"
+          "exact": {
+            "$slot": "exact",
+            "$from": "live.groups[0].fields.exact",
+            "$example": "0 · prefix: 0 · fuzzy: 0 · semantic: below 0.60 floor"
+          }
         }
       },
       {
         "fields": {
-          "'supplier'": "cap://process_wholesale_order@2 (routine, pinned)",
-          "'sync'": "api sync for providers: stripe, fedex",
-          "'schedule'": "bind cron bindings (3 active)"
+          "'supplier'": {
+            "$slot": "supplier",
+            "$from": "live.groups[1].fields.supplier",
+            "$example": "cap://process_wholesale_order@2 (routine, pinned)"
+          },
+          "'sync'": {
+            "$slot": "sync",
+            "$from": "live.groups[1].fields.sync",
+            "$example": "api sync for providers: stripe, fedex"
+          },
+          "'schedule'": {
+            "$slot": "schedule",
+            "$from": "live.groups[1].fields.schedule",
+            "$example": "bind cron bindings (3 active)"
+          }
         },
         "lines": [
-          "did_you_mean:"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "did_you_mean:"
+          }
         ]
       },
       {
         "fields": {
-          "gap_signal": "1 of 3 zero-hit searches toward gap_threshold"
+          "gap_signal": {
+            "$slot": "gap_signal",
+            "$from": "live.groups[2].fields.gap_signal",
+            "$example": "1 of 3 zero-hit searches toward gap_threshold"
+          }
         }
       }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/genesis/blank_world#1",
-    "reason": "no capabilities and no world to search",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "no capabilities and no world to search"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli search 'order'",
-      "intent": "Matched capabilities and URP pointers",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli search 'order'",
+        "$bindings": {},
+        "$example": "capcli search 'order'"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Matched capabilities and URP pointers"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

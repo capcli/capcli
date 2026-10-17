@@ -1,32 +1,92 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.success.resumed",
-  "target": "cap://broadcast_newsletter@2",
-  "command": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
-  "elapsed_ms": 1890,
+  "scenario": {
+    "routine_urp": "cap://broadcast_newsletter@2",
+    "routine_name": "broadcast_newsletter",
+    "routine_version": 2,
+    "audience": "followers",
+    "intent": "daily digest broadcast"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://broadcast_newsletter@2"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p audience={{audience}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "audience": "scenario.audience",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1890
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_9f44e",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f44e"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "task": "task_99a8b1 (background)",
-          "routine": "broadcast_newsletter@2 (frame_018 re-dispatched)",
-          "trigger": "token refill epoch — threads pool restored to 50/50",
-          "yielded_for": "4h 12m (yield_until elapsed at 18:00:00 UTC)"
+          "task": {
+            "$slot": "task",
+            "$from": "live.groups[0].fields.task",
+            "$example": "task_99a8b1 (background)"
+          },
+          "routine": {
+            "$interpolate": "{{routine_name}}@{{routine_version}} ({{frame_id}} re-dispatched)",
+            "$bindings": {
+              "routine_name": "scenario.routine_name",
+              "routine_version": "scenario.routine_version",
+              "frame_id": "live.frame_id"
+            },
+            "$example": "broadcast_newsletter@2 (frame_018 re-dispatched)"
+          },
+          "trigger": {
+            "$slot": "trigger",
+            "$from": "live.groups[0].fields.trigger",
+            "$example": "token refill epoch — threads pool restored to 50/50"
+          },
+          "yielded_for": {
+            "$slot": "yielded_for",
+            "$from": "live.groups[0].fields.yielded_for",
+            "$example": "4h 12m (yield_until elapsed at 18:00:00 UTC)"
+          }
         }
       },
       {
         "fields": {
-          "queue": "daemon re-queued from _suspended_tasks",
-          "retry": "threads.create_media_post replayed under idempotent key",
-          "result": "posted (media_id 1793882)"
+          "queue": {
+            "$slot": "queue",
+            "$from": "live.groups[1].fields.queue",
+            "$example": "daemon re-queued from _suspended_tasks"
+          },
+          "retry": {
+            "$slot": "retry",
+            "$from": "live.groups[1].fields.retry",
+            "$example": "threads.create_media_post replayed under idempotent key"
+          },
+          "result": {
+            "$slot": "result",
+            "$from": "live.groups[1].fields.result",
+            "$example": "posted (media_id 1793882)"
+          }
         }
       }
     ]

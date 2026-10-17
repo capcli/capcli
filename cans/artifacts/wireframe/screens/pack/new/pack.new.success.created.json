@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.new.success.created",
-  "target": "webhook_receiver",
-  "command": "capcli pack new webhook_receiver --type routine",
-  "elapsed_ms": 235,
+  "scenario": {
+    "webhook_receiver": "webhook_receiver"
+  },
+  "target": {
+    "$slot": "webhook_receiver",
+    "$from": "scenario.webhook_receiver",
+    "$example": "webhook_receiver"
+  },
+  "command": {
+    "$interpolate": "capcli pack new {{webhook_receiver}} --type routine",
+    "$bindings": {
+      "webhook_receiver": "scenario.webhook_receiver"
+    },
+    "$example": "capcli pack new webhook_receiver --type routine"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 235
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,22 +33,64 @@
     "groups": [
       {
         "fields": {
-          "pack": "pack://routine/webhook_receiver",
-          "type": "routine",
-          "path": "pack/webhook_receiver",
-          "files": "capcli-pack.yaml, webhook_receiver.py (starter)",
-          "policy_version": "5",
-          "trust": "draft"
+          "pack": {
+            "$slot": "pack",
+            "$from": "live.groups[0].fields.pack",
+            "$example": "pack://routine/webhook_receiver"
+          },
+          "type": {
+            "$slot": "type",
+            "$from": "live.groups[0].fields.type",
+            "$example": "routine"
+          },
+          "path": {
+            "$slot": "path",
+            "$from": "live.groups[0].fields.path",
+            "$example": "pack/webhook_receiver"
+          },
+          "files": {
+            "$interpolate": "capcli-pack.yaml, {{webhook_receiver}}.py (starter)",
+            "$bindings": {
+              "webhook_receiver": "scenario.webhook_receiver"
+            },
+            "$example": "capcli-pack.yaml, webhook_receiver.py (starter)"
+          },
+          "policy_version": {
+            "$slot": "policy_version",
+            "$from": "live.groups[0].fields.policy_version",
+            "$example": "5"
+          },
+          "trust": {
+            "$slot": "trust",
+            "$from": "live.groups[0].fields.trust",
+            "$example": "draft"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli rule validate",
-      "intent": "Lint blueprint syntax and semantics",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli rule validate",
+        "$bindings": {},
+        "$example": "capcli rule validate"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Lint blueprint syntax and semantics"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

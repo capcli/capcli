@@ -1,9 +1,26 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.ship.denial.metrics",
-  "target": "cap://threads.create_media_post",
-  "command": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
-  "elapsed_ms": 272,
+  "scenario": {
+    "routine_urp": "cap://threads.create_media_post",
+    "routine_name": "threads.create_media_post"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://threads.create_media_post"
+  },
+  "command": {
+    "$interpolate": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
+    "$bindings": {},
+    "$example": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 272
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,16 +31,40 @@
     "rule": "policy.authorizer.unproven",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Fails synthetic contract replay: 2 of 3 replays passed.",
-    "measured": "synthetic contract replay 2/3 passed (required: 3/3) · sim success rate 0.67 (floor: 0.90)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Fails synthetic contract replay: 2 of 3 replays passed."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "synthetic contract replay 2/3 passed (required: 3/3) · sim success rate 0.67 (floor: 0.90)"
+    },
     "remedy": "fix the failing invariant, re-run 'capcli api prove threads.create_media_post --env sim', then re-ship",
     "span": {
-      "source": "capcli api ship threads.create_media_post reviewed",
-      "highlight": "threads.create_media_post"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "capcli api ship threads.create_media_post reviewed"
+      },
+      "highlight": {
+        "$slot": "routine_name",
+        "$from": "scenario.routine_name",
+        "$example": "threads.create_media_post"
+      }
     },
     "lines": [
-      "Fails synthetic contract replay.",
-      "Invariant 'response echoes media_post id' failed on replay 2 of 3."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Fails synthetic contract replay."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Invariant 'response echoes media_post id' failed on replay 2 of 3."
+      }
     ]
   }
 }

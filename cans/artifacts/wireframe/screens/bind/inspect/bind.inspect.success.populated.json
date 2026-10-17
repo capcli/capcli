@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.inspect.success.populated",
-  "target": "bnd_3k2f",
-  "command": "capcli bind inspect bnd_3k2f",
-  "elapsed_ms": 1708,
+  "scenario": {
+    "binding_id": "bnd_3k2f"
+  },
+  "target": {
+    "$slot": "binding_id",
+    "$from": "scenario.binding_id",
+    "$example": "bnd_3k2f"
+  },
+  "command": {
+    "$interpolate": "capcli bind inspect {{binding_id}}",
+    "$bindings": {
+      "binding_id": "scenario.binding_id"
+    },
+    "$example": "capcli bind inspect bnd_3k2f"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1708
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,34 +38,100 @@
     "groups": [
       {
         "fields": {
-          "binding_id": "bnd_3k2f",
-          "kind": "cron",
-          "name": "weekly_digest",
-          "target": "cap://report_summary",
-          "trust": "pinned",
-          "schedule": "0 6 * * 1",
-          "state": "active",
-          "next_fire": "2026-10-05T06:00:00Z",
-          "last_fire": "2026-09-28T06:00:00Z (exit 0)"
+          "binding_id": {
+            "$slot": "binding_id_2",
+            "$from": "scenario.binding_id",
+            "$example": "bnd_3k2f"
+          },
+          "kind": {
+            "$slot": "kind",
+            "$from": "live.groups[0].fields.kind",
+            "$example": "cron"
+          },
+          "name": {
+            "$slot": "name",
+            "$from": "live.groups[0].fields.name",
+            "$example": "weekly_digest"
+          },
+          "target": {
+            "$slot": "target",
+            "$from": "live.groups[0].fields.target",
+            "$example": "cap://report_summary"
+          },
+          "trust": {
+            "$slot": "trust",
+            "$from": "live.groups[0].fields.trust",
+            "$example": "pinned"
+          },
+          "schedule": {
+            "$slot": "schedule",
+            "$from": "live.groups[0].fields.schedule",
+            "$example": "0 6 * * 1"
+          },
+          "state": {
+            "$slot": "state",
+            "$from": "live.groups[0].fields.state",
+            "$example": "active"
+          },
+          "next_fire": {
+            "$slot": "next_fire",
+            "$from": "live.groups[0].fields.next_fire",
+            "$example": "2026-10-05T06:00:00Z"
+          },
+          "last_fire": {
+            "$slot": "last_fire",
+            "$from": "live.groups[0].fields.last_fire",
+            "$example": "2026-09-28T06:00:00Z (exit 0)"
+          }
         }
       },
       {
         "fields": {
-          "catchup_policy": "max 1 fire on daemon restart",
-          "dead_schedule": "dissolved in the same commit as the routine retire (loud)"
+          "catchup_policy": {
+            "$slot": "catchup_policy",
+            "$from": "live.groups[1].fields.catchup_policy",
+            "$example": "max 1 fire on daemon restart"
+          },
+          "dead_schedule": {
+            "$slot": "dead_schedule",
+            "$from": "live.groups[1].fields.dead_schedule",
+            "$example": "dissolved in the same commit as the routine retire (loud)"
+          }
         },
         "lines": [
-          "defenses:"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "defenses:"
+          }
         ]
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli bind pause bnd_3k2f",
-      "intent": "Trigger paused",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli bind pause {{binding_id}}",
+        "$bindings": {
+          "binding_id": "scenario.binding_id"
+        },
+        "$example": "capcli bind pause bnd_3k2f"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Trigger paused"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

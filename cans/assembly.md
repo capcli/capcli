@@ -26,7 +26,7 @@
       - policy.yaml — behavioral rules
       - governance.yaml — structural limits
       - world.sql — deterministic DDL dump
-      - artifacts/wireframe/ — golden CLI fixtures, edgeless canvas
+      - artifacts/wireframe/ — canonical CLI surface IDL, edgeless canvas
       - artifacts/prompt/ — trailer trigger table, prompt campaigns
       - artifacts/test-plan/ — behavioural cases, 1:1 with crate tests
       - Definition — see world.md#Dual-schema
@@ -54,7 +54,7 @@
     - Crates
       - capcli-types — shared contracts (exit, error, URP, audit, schema, rpc)
       - capcli-core — domain engine (db, parse, compile, budget, audit, vault, plugin)
-      - capcli-cli — CLI executable (main, transport, commands, terminal)
+      - capcli-cli — CLI executable (main, transport, commands, terminal, codegen)
       - capcli-daemon — daemon (server, hub_rpc, ipc, cron, webhook, reaper, registry)
     - Dependency flow
       - types imported by all
@@ -72,6 +72,12 @@
       - Daemon e2e via tests/e2e/
       - Definition — see #Test-architecture
   - Core subsystems
+    - Surface
+      - codegen — mod.rs, screens.rs, emit_types.rs, emit_cli.rs
+      - codegen — reads wireframe/v1 screens, emits generated modules
+      - codegen — binary wireframe-codegen, `--check` diffs generated output
+      - codegen — lives in capcli-cli, not core
+      - Contract — see artifacts/wireframe/wireframe-structure.md#Codegen-Contract
     - Kernel
       - db — connection.rs, authorizer.rs, migrate.rs, bytecode.rs
       - db — snapshot.rs, claims.rs
@@ -206,10 +212,10 @@
         - Modules — test_api_lifecycle, test_env_worktree
       - Fixture law
         - Fixture mechanism — see interface.md#Surface-conformance
-        - Fixture runner asserts stdout byte-identical
+        - Fixture runner asserts structural match (wireframe-structure.md#Runner-Contract)
         - Fixture runner asserts derived exit and state_modified
-        - Fixture runner asserts banned tokens absent
-        - Cross-layer — every trigger entry resolves to fixture
+        - Fixture runner asserts banned tokens absent, no `template` substring
+        - Cross-layer — every trigger entry resolves to a screen
       - Runner contract — see artifacts/wireframe/wireframe-structure.md
       - Onboarding — see interface.md#Onboarding
     - Fixtures
@@ -245,7 +251,14 @@
       - libc and SQLite bundled
       - No dynamic host library dependency
       - Zero pack bundling in binary
-      - CLI renders output procedurally
+      - CLI renders output via generated renderers
+    - Generated modules
+      - Path — crates/capcli-types/src/generated/
+      - Path — crates/capcli-cli/src/generated/
+      - Emitted by wireframe-codegen, checked in
+      - Regenerated on every `cargo build` via build.rs hook
+      - --check-gated in CI; hand-edits fail the PR
+      - Contract — see artifacts/wireframe/wireframe-structure.md#Codegen-Contract
   - CICD pipeline <!-- ref-by: marketplace.md -->
     - Monorepo topology
       - Sequencing invariants
@@ -305,6 +318,11 @@
       - Doc URI resolution to markdown
       - Anchor slug verification
       - Token estimation via 3.5 char ratio
+      - Slot checks
+        - Slot grammar — every $slot / $interpolate satisfies manifest.json#output_contract.slot
+        - Semantic-position — no $slot at semantic_positions keys (manifest.json#output_contract.slot)
+        - Binding-prefix check — $from/$bindings values match context.*, scenario.*, world.*, live.*
+        - Volatility — time-like fields are $slot, never literal (manifest.json#output_contract.slot)
       - Config — see artifacts/contracts/cicd.yaml
     - Local developer loop
       - Local tasks mirror CI PR gate
@@ -348,13 +366,20 @@
     - PR gate
       - Workflow — .github/workflows/pr-gate.yml
       - SLA — under 4 minutes, fail-closed
-      - Jobs — PWA, Astro, Trinity, Rust, TS, Python, Cans
+      - Jobs — PWA, Astro, Trinity, Codegen, Rust, TS, Python, Cans
       - Config — see artifacts/contracts/cicd.yaml
       - Concurrency — cancel-in-progress per ref
+      - Codegen job
+        - Runs wireframe-codegen --check
+        - Fails on any diff against checked-in generated modules
+        - Deterministic: sorted iteration, no timestamps
+        - Contract — see artifacts/wireframe/wireframe-structure.md#Codegen-Contract
       - Cans check
         - Tool — cans-spec 0.5.1 via bunx
         - Trigger — cans/** changes only
         - Pass — 0 errors, 0 broken refs
+        - Pass — 0 bare `template` in cans/** prose (`vocabulary.required_qualifiers`)
+        - Pass — 0 occurrences of `template` in artifacts/wireframe/screens/**
         - Config — see artifacts/contracts/cicd.yaml
       - PR compute containment
         - dorny/paths-filter gates execution
@@ -393,8 +418,9 @@
         - Definition — see identity.md#Harness-markers
     - Verification checklist
       - 1 Pre-build — workspace diff, path filter
-      - 2 Compile — AST syntax, semantics, DFS
-      - 3 Integrity — lockfile, Trinity, UI assets
-      - 4 Runtime — sandbox, binary, polyglot
+      - 2 Codegen — wireframe-codegen --check, zero drift
+      - 3 Compile — AST syntax, semantics, DFS
+      - 4 Integrity — lockfile, Trinity, UI assets
+      - 5 Runtime — sandbox, binary, polyglot
       - Token ceilings — see routines.md#Shape-constraints
       - Config — see artifacts/contracts/cicd.yaml

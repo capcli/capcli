@@ -1,9 +1,33 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.crash.runtime",
-  "target": "cap://enrich_customers@2",
-  "command": "capcli run cap://enrich_customers@2 -p cohort=enterprise -m \"enrich customer records\"",
-  "elapsed_ms": 9652,
+  "scenario": {
+    "routine_urp": "cap://enrich_customers@2",
+    "routine_name": "enrich_customers",
+    "routine_version": 2,
+    "cohort": "enterprise",
+    "intent": "enrich customer records"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://enrich_customers@2"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p cohort={{cohort}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "cohort": "scenario.cohort",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://enrich_customers@2 -p cohort=enterprise -m \"enrich customer records\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 9652
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,14 +38,42 @@
     "rule": "routine.runtime.exception",
     "domain": "routine.runtime",
     "layer": "runtime",
-    "culprit": "Uncaught guest exception: TypeError (unsupported operand for +: 'NoneType' and 'int') at routines/enrich_customers.py:42.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Uncaught guest exception: TypeError (unsupported operand for +: 'NoneType' and 'int') at routines/enrich_customers.py:42."
+    },
     "remedy": "guard the None case at routines/enrich_customers.py:42, then prove in sim before re-running",
-    "routine": "enrich_customers@2 (frame_027)",
-    "error": "TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'",
-    "at": "routines/enrich_customers.py:42 in compute_lifetime_value",
-    "rollback": "clean (all ops reverted)",
+    "routine": {
+      "$interpolate": "{{routine_name}}@{{routine_version}} ({{frame_id}})",
+      "$bindings": {
+        "routine_name": "scenario.routine_name",
+        "routine_version": "scenario.routine_version",
+        "frame_id": "live.frame_id"
+      },
+      "$example": "enrich_customers@2 (frame_027)"
+    },
+    "error": {
+      "$slot": "error",
+      "$from": "live.error",
+      "$example": "TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'"
+    },
+    "at": {
+      "$slot": "at",
+      "$from": "live.at",
+      "$example": "routines/enrich_customers.py:42 in compute_lifetime_value"
+    },
+    "rollback": {
+      "$slot": "rollback",
+      "$from": "live.rollback",
+      "$example": "clean (all ops reverted)"
+    },
     "lines": [
-      "Guest language exception escaped the routine boundary."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Guest language exception escaped the routine boundary."
+      }
     ]
   }
 }

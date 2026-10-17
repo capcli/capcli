@@ -1,18 +1,54 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "sys.doctor.refusal.boot",
+  "scenario": {
+    "host": "host"
+  },
   "archetype": "diagnostic",
-  "command": "capcli sys doctor --boot-check",
+  "command": {
+    "$interpolate": "capcli sys doctor --boot-check",
+    "$bindings": {},
+    "$example": "capcli sys doctor --boot-check"
+  },
   "component": {
-    "culprit": "no isolation provider available on tier_1: bwrap absent from PATH, automatic fallback to container (rootless OCI: crun/podman) failed, fallback to microvm (gVisor) failed",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "no isolation provider available on tier_1: bwrap absent from PATH, automatic fallback to container (rootless OCI: crun/podman) failed, fallback to microvm (gVisor) failed"
+    },
     "domain": "kernel.boot",
     "lines": [
-      "FATAL  kernel.boot.missing_dependency",
-      "Isolation probe failed on tier_1 (linux x86_64): bwrap absent, container fallback failed, microvm fallback failed.",
-      "Boot aborted before workspace mount; no daemon started.",
-      "layer:          boot"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  kernel.boot.missing_dependency"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Isolation probe failed on tier_1 (linux x86_64): bwrap absent, container fallback failed, microvm fallback failed."
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "Boot aborted before workspace mount; no daemon started."
+      },
+      {
+        "$slot": "lines_3",
+        "$from": "live.lines[3]",
+        "$example": "layer:          boot"
+      }
     ],
-    "measured": "bwrap: absent from PATH (floor: 0.8.0); container: rootless OCI daemon unreachable; microvm: gVisor probe failed",
-    "python3": "3.12.2 ok",
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "bwrap: absent from PATH (floor: 0.8.0); container: rootless OCI daemon unreachable; microvm: gVisor probe failed"
+    },
+    "python3": {
+      "$slot": "python3",
+      "$from": "live.python3",
+      "$example": "3.12.2 ok"
+    },
     "remedy": "install bubblewrap >= 0.8.0, or bring up a container or microvm runner, then re-run 'capcli sys doctor --boot-check'"
   },
   "context": {
@@ -20,7 +56,15 @@
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "elapsed_ms": 54,
-  "id": "sys.doctor.refusal.boot",
-  "target": "host"
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 54
+  },
+  "target": {
+    "$slot": "host",
+    "$from": "scenario.host",
+    "$example": "host"
+  }
 }

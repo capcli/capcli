@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.doctor.refusal.lockfile",
-  "target": "host",
-  "command": "capcli sys doctor --boot-check",
-  "elapsed_ms": 127,
+  "scenario": {
+    "host": "host"
+  },
+  "target": {
+    "$slot": "host",
+    "$from": "scenario.host",
+    "$example": "host"
+  },
+  "command": {
+    "$interpolate": "capcli sys doctor --boot-check",
+    "$bindings": {},
+    "$example": "capcli sys doctor --boot-check"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 127
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
@@ -12,15 +28,43 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "lockfile_mismatch",
-    "culprit": "Compiled capcli.lock root hash does not match the locked declarations",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Compiled capcli.lock root hash does not match the locked declarations"
+    },
     "remedy": "recompile declarations via 'capcli rule validate' and re-lock; hand-editing capcli.lock is prohibited",
-    "expected": "sha256:5b2e8c71d0a3f4e6b8c9d0a1f2e3b4c5d6e7f8a9",
-    "found": "sha256:9f14ac02be7d4c18f0a3b5c6d7e8f9a0b1c2d3e4",
-    "boot_abort": "lockfile verification gate failed.",
+    "expected": {
+      "$slot": "expected",
+      "$from": "live.expected",
+      "$example": "sha256:5b2e8c71d0a3f4e6b8c9d0a1f2e3b4c5d6e7f8a9"
+    },
+    "found": {
+      "$slot": "found",
+      "$from": "live.found",
+      "$example": "sha256:9f14ac02be7d4c18f0a3b5c6d7e8f9a0b1c2d3e4"
+    },
+    "boot_abort": {
+      "$slot": "boot_abort",
+      "$from": "live.boot_abort",
+      "$example": "lockfile verification gate failed."
+    },
     "lines": [
-      "FATAL  kernel.boot.lockfile_mismatch",
-      "Compiled capcli.lock root hash does not match the locked declarations.",
-      "layer:          boot"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  kernel.boot.lockfile_mismatch"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Compiled capcli.lock root hash does not match the locked declarations."
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "layer:          boot"
+      }
     ]
   }
 }

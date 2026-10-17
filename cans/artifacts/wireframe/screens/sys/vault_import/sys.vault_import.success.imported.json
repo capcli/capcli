@@ -1,37 +1,99 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.vault_import.success.imported",
-  "target": "CAPCLI_SECRET_*",
-  "command": "capcli sys vault import-env",
-  "elapsed_ms": 877,
+  "scenario": {
+    "secret_ref": "CAPCLI_SECRET_*"
+  },
+  "target": {
+    "$slot": "secret_ref",
+    "$from": "scenario.secret_ref",
+    "$example": "CAPCLI_SECRET_*"
+  },
+  "command": {
+    "$interpolate": "capcli sys vault import-env",
+    "$bindings": {},
+    "$example": "capcli sys vault import-env"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 877
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_r705",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_r705"
+  },
   "archetype": "tree",
   "component": {
-    "title": "imported",
-    "root": "CAPCLI_SECRET_STRIPE_KEY → vault://stripe_secret_key aes-256-gcm",
+    "title": {
+      "$slot": "title",
+      "$from": "live.vault_import.title",
+      "$example": "imported"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.vault_import.root",
+      "$example": "CAPCLI_SECRET_STRIPE_KEY → vault://stripe_secret_key aes-256-gcm"
+    },
     "nodes": [
       {
-        "label": "CAPCLI_SECRET_RESEND_API_KEY → vault://resend_api_key aes-256-gcm",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.vault_import.nodes[0].label",
+          "$example": "CAPCLI_SECRET_RESEND_API_KEY → vault://resend_api_key aes-256-gcm"
+        },
         "children": []
       }
     ],
     "footer": {
-      "scanned": "process environment for CAPCLI_SECRET_*",
-      "bound": "2 secrets (values masked in all outputs)",
-      "note": "vault.set events committed with SHA-256 fingerprints; plaintext zeroized after ingest"
+      "scanned": {
+        "$interpolate": "process environment for {{secret_ref}}",
+        "$bindings": {
+          "secret_ref": "scenario.secret_ref"
+        },
+        "$example": "process environment for CAPCLI_SECRET_*"
+      },
+      "bound": {
+        "$slot": "bound",
+        "$from": "live.vault_import.footer.bound",
+        "$example": "2 secrets (values masked in all outputs)"
+      },
+      "note": {
+        "$slot": "note",
+        "$from": "live.vault_import.footer.note",
+        "$example": "vault.set events committed with SHA-256 fingerprints; plaintext zeroized after ingest"
+      }
     }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
-      "intent": "Deterministic execution and commit",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+        "$bindings": {},
+        "$example": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Deterministic execution and commit"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

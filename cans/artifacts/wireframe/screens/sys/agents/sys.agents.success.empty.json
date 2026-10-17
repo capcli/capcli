@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.agents.success.empty",
-  "target": "agents",
-  "command": "capcli sys agent list",
-  "elapsed_ms": 1198,
+  "scenario": {
+    "agents": "agents"
+  },
+  "target": {
+    "$slot": "agents",
+    "$from": "scenario.agents",
+    "$example": "agents"
+  },
+  "command": {
+    "$interpolate": "capcli sys agent list",
+    "$bindings": {},
+    "$example": "capcli sys agent list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1198
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,27 +36,59 @@
     "groups": [
       {
         "fields": {
-          "registered": "0 agents (cap: 8)"
+          "registered": {
+            "$interpolate": "0 {{agents}} (cap: 8)",
+            "$bindings": {
+              "agents": "scenario.agents"
+            },
+            "$example": "0 agents (cap: 8)"
+          }
         }
       },
       {
         "lines": [
-          "Zero registered agents. Identity registry empty."
+          {
+            "$interpolate": "Zero registered {{agents}}. Identity registry empty.",
+            "$bindings": {
+              "agents": "scenario.agents"
+            },
+            "$example": "Zero registered agents. Identity registry empty."
+          }
         ]
       },
       {
         "fields": {
-          "note": "register the first harness via capcli sys agent register"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[2].fields.note",
+            "$example": "register the first harness via capcli sys agent register"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli sys agent register",
-      "intent": "Empty agent registry -> first agent registered -> roster populated -> registry hits capacity -> revoke gauntlet (unknown id refuses, then the live agent revokes and frees a slot)",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli sys agent register",
+        "$bindings": {},
+        "$example": "capcli sys agent register"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Empty agent registry -> first agent registered -> roster populated -> registry hits capacity -> revoke gauntlet (unknown id refuses, then the live agent revokes and frees a slot)"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

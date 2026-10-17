@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.notify.refusal.unknown_principal",
-  "target": "user:bob",
-  "command": "capcli ping notify user:bob \"Nightly sync finished\" --channel slack --intent \"morning briefing\"",
-  "elapsed_ms": 85,
+  "scenario": {
+    "principal": "user:bob"
+  },
+  "target": {
+    "$slot": "principal",
+    "$from": "scenario.principal",
+    "$example": "user:bob"
+  },
+  "command": {
+    "$interpolate": "capcli ping notify {{principal}} \"Nightly sync finished\" --channel slack --intent \"morning briefing\"",
+    "$bindings": {
+      "principal": "scenario.principal"
+    },
+    "$example": "capcli ping notify user:bob \"Nightly sync finished\" --channel slack --intent \"morning briefing\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 85
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,8 +31,18 @@
   "component": {
     "rule": "validation.unknown_principal",
     "domain": "validation",
-    "culprit": "Principal 'user:bob' not found in the agents registry.",
+    "culprit": {
+      "$interpolate": "Principal '{{principal}}' not found in the agents registry.",
+      "$bindings": {
+        "principal": "scenario.principal"
+      },
+      "$example": "Principal 'user:bob' not found in the agents registry."
+    },
     "remedy": "register the recipient first (capcli sys agent register), or notify an existing principal such as user:root",
-    "principal": "user:bob"
+    "principal": {
+      "$slot": "principal_2",
+      "$from": "scenario.principal",
+      "$example": "user:bob"
+    }
   }
 }

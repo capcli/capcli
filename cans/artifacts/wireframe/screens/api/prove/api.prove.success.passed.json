@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.prove.success.passed",
-  "target": "cap://stripe.refund_charge",
-  "command": "capcli api prove stripe.refund_charge --env sim",
-  "elapsed_ms": 1682,
+  "scenario": {
+    "routine_urp": "cap://stripe.refund_charge"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://stripe.refund_charge"
+  },
+  "command": {
+    "$interpolate": "capcli api prove stripe.refund_charge --env sim",
+    "$bindings": {},
+    "$example": "capcli api prove stripe.refund_charge --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1682
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
@@ -15,19 +31,55 @@
     "groups": [
       {
         "fields": {
-          "verb": "cap://stripe.refund_charge",
-          "mode": "sim (sandbox — apis/stripe.sim.yaml)",
-          "fixture": "apis/stripe.mock.yaml:refund_charge",
-          "params": "charge_id: ch_1032ZX · amount: 1500"
+          "verb": {
+            "$slot": "api_verb",
+            "$from": "live.api_verb",
+            "$example": "cap://stripe.refund_charge"
+          },
+          "mode": {
+            "$slot": "mode",
+            "$from": "live.groups[0].fields.mode",
+            "$example": "sim (sandbox — apis/stripe.sim.yaml)"
+          },
+          "fixture": {
+            "$slot": "fixture",
+            "$from": "live.groups[0].fields.fixture",
+            "$example": "apis/stripe.mock.yaml:refund_charge"
+          },
+          "params": {
+            "$slot": "params",
+            "$from": "live.groups[0].fields.params",
+            "$example": "charge_id: ch_1032ZX · amount: 1500"
+          }
         }
       },
       {
         "fields": {
-          "contract_replay": "6/6 invariants passed",
-          "success_rate": "1.00 (floor: 0.90)",
-          "policy_denials": "0",
-          "p50_duration": "118ms",
-          "p95_duration": "240ms"
+          "contract_replay": {
+            "$slot": "contract_replay",
+            "$from": "live.groups[1].fields.contract_replay",
+            "$example": "6/6 invariants passed"
+          },
+          "success_rate": {
+            "$slot": "success_rate",
+            "$from": "live.groups[1].fields.success_rate",
+            "$example": "1.00 (floor: 0.90)"
+          },
+          "policy_denials": {
+            "$slot": "policy_denials",
+            "$from": "live.groups[1].fields.policy_denials",
+            "$example": "0"
+          },
+          "p50_duration": {
+            "$slot": "p50_duration",
+            "$from": "live.groups[1].fields.p50_duration",
+            "$example": "118ms"
+          },
+          "p95_duration": {
+            "$slot": "p95_duration",
+            "$from": "live.groups[1].fields.p95_duration",
+            "$example": "240ms"
+          }
         }
       }
     ]

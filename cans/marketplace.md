@@ -213,7 +213,9 @@
         - 6 — Sub-check 1 and 2 on schema
         - 7 — py_compile on routines
         - 8 — AST complexity scan
-        - 9 — Register into dev worktree
+        - 9 — Verify every cli.surface[].screens[] entry resolves to a wireframe/v1 screen
+        - 10 — Register into dev worktree
+      - Screen shape — see artifacts/wireframe/wireframe-structure.md#Plugin-Screens
     - Install preview
       - Vault keys displayed before write
       - Egress domains displayed before write

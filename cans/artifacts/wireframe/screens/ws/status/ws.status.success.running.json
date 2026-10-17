@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ws.status.success.running",
-  "target": "sessions",
-  "command": "capcli ws status",
-  "elapsed_ms": 61,
+  "scenario": {
+    "sessions": "sessions"
+  },
+  "target": {
+    "$slot": "sessions",
+    "$from": "scenario.sessions",
+    "$example": "sessions"
+  },
+  "command": {
+    "$interpolate": "capcli ws status",
+    "$bindings": {},
+    "$example": "capcli ws status"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 61
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,13 +36,25 @@
     "groups": [
       {
         "fields": {
-          "ses_w042": "agt_7f3k (unix_socket, pinned, idle 12s)",
-          "transport": "unix_socket"
+          "ses_w042": {
+            "$slot": "ses_w042",
+            "$from": "live.groups[0].fields.ses_w042",
+            "$example": "agt_7f3k (unix_socket, pinned, idle 12s)"
+          },
+          "transport": {
+            "$slot": "transport",
+            "$from": "live.groups[0].fields.transport",
+            "$example": "unix_socket"
+          }
         }
       },
       {
         "fields": {
-          "total": "1 active session"
+          "total": {
+            "$slot": "total",
+            "$from": "live.groups[1].fields.total",
+            "$example": "1 active session"
+          }
         }
       }
     ]

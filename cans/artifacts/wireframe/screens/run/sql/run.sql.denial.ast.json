@@ -1,26 +1,65 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.sql.denial.ast",
-  "target": "db://orders",
-  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\"",
-  "elapsed_ms": 54,
+  "scenario": {
+    "db_urp": "db://orders",
+    "intent": "batch ship"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"{{intent}}\"",
+    "$bindings": {
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE status = 'processing'\" -m \"batch ship\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 54
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_9f2e",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2e"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.query.update_delete.require_limit",
     "domain": "policy.ast",
     "layer": "AST",
-    "culprit": "No LIMIT clause. Blast radius unbounded.",
-    "measured": "matches potentially 847 rows (cap: 100)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "No LIMIT clause. Blast radius unbounded."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "matches potentially 847 rows (cap: 100)"
+    },
     "remedy": "add LIMIT, or target specific primary key",
     "span": {
-      "source": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'",
-      "highlight": "UPDATE orders"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "UPDATE orders SET status = 'shipped' WHERE status = 'processing'"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "UPDATE orders"
+      }
     }
   }
 }

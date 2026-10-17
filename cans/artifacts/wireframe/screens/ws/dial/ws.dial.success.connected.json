@@ -1,26 +1,68 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ws.dial.success.connected",
-  "target": "agt_7f3k",
-  "command": "capcli ws dial agt_7f3k",
-  "elapsed_ms": 412,
+  "scenario": {
+    "agent_id": "agt_7f3k"
+  },
+  "target": {
+    "$slot": "agent_id",
+    "$from": "scenario.agent_id",
+    "$example": "agt_7f3k"
+  },
+  "command": {
+    "$interpolate": "capcli ws dial {{agent_id}}",
+    "$bindings": {
+      "agent_id": "scenario.agent_id"
+    },
+    "$example": "capcli ws dial agt_7f3k"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 412
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_9f44",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f44"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "peer": "agt_7f3k",
-          "session": "ses_w042",
-          "socket": "/run/capcli/tasks.sock (SO_PEERCRED ok)",
-          "trust_floor": "pinned",
-          "call_chain": "[]"
+          "peer": {
+            "$slot": "agent_id_2",
+            "$from": "scenario.agent_id",
+            "$example": "agt_7f3k"
+          },
+          "session": {
+            "$slot": "session",
+            "$from": "live.groups[0].fields.session",
+            "$example": "ses_w042"
+          },
+          "socket": {
+            "$slot": "socket",
+            "$from": "live.groups[0].fields.socket",
+            "$example": "/run/capcli/tasks.sock (SO_PEERCRED ok)"
+          },
+          "trust_floor": {
+            "$slot": "trust_floor",
+            "$from": "live.groups[0].fields.trust_floor",
+            "$example": "pinned"
+          },
+          "call_chain": {
+            "$slot": "call_chain",
+            "$from": "live.groups[0].fields.call_chain",
+            "$example": "[]"
+          }
         }
       }
     ]

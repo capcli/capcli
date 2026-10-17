@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.sync.success.synced",
-  "target": "capcli/registry",
-  "command": "capcli pack sync",
-  "elapsed_ms": 774,
+  "scenario": {
+    "registry": "capcli/registry"
+  },
+  "target": {
+    "$slot": "registry",
+    "$from": "scenario.registry",
+    "$example": "capcli/registry"
+  },
+  "command": {
+    "$interpolate": "capcli pack sync",
+    "$bindings": {},
+    "$example": "capcli pack sync"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 774
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,25 +31,61 @@
     "groups": [
       {
         "fields": {
-          "registry": "capcli/registry",
-          "index": "index.json (cached)",
-          "entries": "4 (routine: 3, world: 1)",
-          "index_sha256": "sha256:c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2"
+          "registry": {
+            "$slot": "registry_2",
+            "$from": "scenario.registry",
+            "$example": "capcli/registry"
+          },
+          "index": {
+            "$slot": "index",
+            "$from": "live.groups[0].fields.index",
+            "$example": "index.json (cached)"
+          },
+          "entries": {
+            "$slot": "entries",
+            "$from": "live.groups[0].fields.entries",
+            "$example": "4 (routine: 3, world: 1)"
+          },
+          "index_sha256": {
+            "$slot": "index_sha256",
+            "$from": "live.groups[0].fields.index_sha256",
+            "$example": "sha256:c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2"
+          }
         }
       },
       {
         "fields": {
-          "audit": "op_pack_sync_01 (registry index refreshed)"
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[1].fields.audit",
+            "$example": "op_pack_sync_01 (registry index refreshed)"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli pack import pack://registry/routine/webhook_receiver@1",
-      "intent": "Register the pinned registry bundle locally",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli pack import pack://registry/routine/webhook_receiver@1",
+        "$bindings": {},
+        "$example": "capcli pack import pack://registry/routine/webhook_receiver@1"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Register the pinned registry bundle locally"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

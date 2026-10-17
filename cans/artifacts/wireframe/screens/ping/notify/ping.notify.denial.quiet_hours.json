@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.notify.denial.quiet_hours",
-  "target": "user:root",
-  "command": "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
-  "elapsed_ms": 114,
+  "scenario": {
+    "principal": "user:root"
+  },
+  "target": {
+    "$slot": "principal",
+    "$from": "scenario.principal",
+    "$example": "user:root"
+  },
+  "command": {
+    "$interpolate": "capcli ping notify {{principal}} \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+    "$bindings": {
+      "principal": "scenario.principal"
+    },
+    "$example": "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 114
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,11 +32,25 @@
     "rule": "policy.notify.quiet_hours",
     "domain": "policy.notify",
     "layer": "notify",
-    "culprit": "Notifications blocked between 22:00 and 07:00.",
-    "measured": "current time 23:12 inside quiet window (22:00-07:00)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Notifications blocked between 22:00 and 07:00."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "current time 23:12 inside quiet window (22:00-07:00)"
+    },
     "remedy": "re-dispatch after 07:00, or use ping ask (urgent asks bypass quiet hours)",
     "lines": [
-      "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\""
+      {
+        "$interpolate": "capcli ping notify {{principal}} \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+        "$bindings": {
+          "principal": "scenario.principal"
+        },
+        "$example": "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\""
+      }
     ]
   }
 }

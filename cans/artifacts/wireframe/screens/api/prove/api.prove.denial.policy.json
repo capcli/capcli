@@ -1,9 +1,26 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.prove.denial.policy",
-  "target": "cap://stripe.delete_account",
-  "command": "capcli api prove stripe.delete_account --env sim",
-  "elapsed_ms": 113,
+  "scenario": {
+    "routine_urp": "cap://stripe.delete_account",
+    "routine_name": "stripe.delete_account"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://stripe.delete_account"
+  },
+  "command": {
+    "$interpolate": "capcli api prove stripe.delete_account --env sim",
+    "$bindings": {},
+    "$example": "capcli api prove stripe.delete_account --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 113
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
@@ -14,16 +31,40 @@
     "rule": "policy.authorizer.forbidden",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Verb egress rule rejected: DELETE on account scope is forbidden.",
-    "measured": "egress scope: account (permitted scopes: charge, invoice, customer)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Verb egress rule rejected: DELETE on account scope is forbidden."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "egress scope: account (permitted scopes: charge, invoice, customer)"
+    },
     "remedy": "prove a scoped-down verb, or request an explicit egress grant for account-scope operations",
     "span": {
-      "source": "capcli api prove stripe.delete_account --env sim",
-      "highlight": "stripe.delete_account"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "capcli api prove stripe.delete_account --env sim"
+      },
+      "highlight": {
+        "$slot": "routine_name",
+        "$from": "scenario.routine_name",
+        "$example": "stripe.delete_account"
+      }
     },
-    "egress": "DELETE https://api.stripe.com/v1/account (account scope)",
+    "egress": {
+      "$slot": "egress",
+      "$from": "live.egress",
+      "$example": "DELETE https://api.stripe.com/v1/account (account scope)"
+    },
     "lines": [
-      "Verb egress rule rejected."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Verb egress rule rejected."
+      }
     ]
   }
 }

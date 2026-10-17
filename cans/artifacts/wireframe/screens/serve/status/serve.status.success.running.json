@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "serve.status.success.running",
-  "target": "http-server",
-  "command": "capcli serve status",
-  "elapsed_ms": 73,
+  "scenario": {
+    "http_server": "http-server"
+  },
+  "target": {
+    "$slot": "http_server",
+    "$from": "scenario.http_server",
+    "$example": "http-server"
+  },
+  "command": {
+    "$interpolate": "capcli serve status",
+    "$bindings": {},
+    "$example": "capcli serve status"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 73
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,12 +36,38 @@
     "groups": [
       {
         "fields": {
-          "daemon": "http-server pack projection",
-          "state": "running",
-          "pid": "52107",
-          "port": "4040",
-          "uptime": "42m",
-          "sessions": "2 active"
+          "daemon": {
+            "$interpolate": "{{http_server}} pack projection",
+            "$bindings": {
+              "http_server": "scenario.http_server"
+            },
+            "$example": "http-server pack projection"
+          },
+          "state": {
+            "$slot": "state",
+            "$from": "live.groups[0].fields.state",
+            "$example": "running"
+          },
+          "pid": {
+            "$slot": "pid",
+            "$from": "live.groups[0].fields.pid",
+            "$example": "52107"
+          },
+          "port": {
+            "$slot": "port",
+            "$from": "live.groups[0].fields.port",
+            "$example": "4040"
+          },
+          "uptime": {
+            "$slot": "uptime",
+            "$from": "live.groups[0].fields.uptime",
+            "$example": "42m"
+          },
+          "sessions": {
+            "$slot": "sessions",
+            "$from": "live.groups[0].fields.sessions",
+            "$example": "2 active"
+          }
         }
       }
     ]

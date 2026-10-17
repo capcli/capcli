@@ -1,9 +1,35 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.yield.ask",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
-  "elapsed_ms": 1319,
+  "scenario": {
+    "routine_urp": "cap://dispatch_order@4",
+    "routine_name": "dispatch_order",
+    "routine_version": 4,
+    "order_id": "ORD-1042",
+    "carrier": "fedex",
+    "intent": "fulfill urgent pending orders"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p order_id={{order_id}} -p carrier={{carrier}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "carrier": "scenario.carrier",
+      "order_id": "scenario.order_id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1319
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,21 +39,77 @@
   "component": {
     "rule": "ping.ask_suspended",
     "domain": "ping.ask",
-    "culprit": "routine reached ctx.ping.ask (ask_88a); frame checkpoint snapshotted to _pending_asks",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "routine reached ctx.ping.ask (ask_88a); frame checkpoint snapshotted to _pending_asks"
+    },
     "remedy": "frame checkpointed to _pending_asks; human resolves the inquiry in Cockpit or via 'capcli ping resolve ask_88a --choice approve'; frame auto-resumes after hash re-verification",
-    "ask_id": "ask_88a",
-    "pending_asks": "1 enqueued (ask_88a)",
-    "suspended_frame": "frame_026",
-    "session": "ses_a992f",
-    "intent": "\"fulfill urgent pending orders\"",
-    "ask": "ask_88a",
-    "question": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
-    "options": "approve, deny",
-    "timeout": "60m (fail-closed)",
-    "cockpit": "http://127.0.0.1:4040/ask/ask_88a",
+    "ask_id": {
+      "$slot": "ask_id",
+      "$from": "live.ask_id",
+      "$example": "ask_88a"
+    },
+    "pending_asks": {
+      "$slot": "pending_asks",
+      "$from": "live.pending_asks",
+      "$example": "1 enqueued (ask_88a)"
+    },
+    "suspended_frame": {
+      "$slot": "frame_id",
+      "$from": "live.frame_id",
+      "$example": "frame_026"
+    },
+    "session": {
+      "$slot": "session",
+      "$from": "live.session",
+      "$example": "ses_a992f"
+    },
+    "intent": {
+      "$interpolate": "\"{{intent}}\"",
+      "$bindings": {
+        "intent": "scenario.intent"
+      },
+      "$example": "\"fulfill urgent pending orders\""
+    },
+    "ask": {
+      "$slot": "ask",
+      "$from": "live.ask",
+      "$example": "ask_88a"
+    },
+    "question": {
+      "$interpolate": "\"Fraud score 0.83 on {{order_id}}. Approve dispatch?\"",
+      "$bindings": {
+        "order_id": "scenario.order_id"
+      },
+      "$example": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\""
+    },
+    "options": {
+      "$slot": "options",
+      "$from": "live.options",
+      "$example": "approve, deny"
+    },
+    "timeout": {
+      "$slot": "timeout",
+      "$from": "live.timeout",
+      "$example": "60m (fail-closed)"
+    },
+    "cockpit": {
+      "$slot": "cockpit",
+      "$from": "live.cockpit",
+      "$example": "http://127.0.0.1:4040/ask/ask_88a"
+    },
     "layer": "ping",
     "lines": [
-      "routine dispatch_order@4 (frame_026, paused at leaf 2 of 3)"
+      {
+        "$interpolate": "routine {{routine_name}}@{{routine_version}} ({{frame_id}}, paused at leaf 2 of 3)",
+        "$bindings": {
+          "routine_name": "scenario.routine_name",
+          "routine_version": "scenario.routine_version",
+          "frame_id": "live.frame_id"
+        },
+        "$example": "routine dispatch_order@4 (frame_026, paused at leaf 2 of 3)"
+      }
     ]
   }
 }

@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "plugin.update.success.updated",
-  "target": "stripe",
-  "command": "capcli plugin update stripe",
-  "elapsed_ms": 2410,
+  "scenario": {
+    "plugin_id": "stripe"
+  },
+  "target": {
+    "$slot": "plugin_id",
+    "$from": "scenario.plugin_id",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli plugin update {{plugin_id}}",
+    "$bindings": {
+      "plugin_id": "scenario.plugin_id"
+    },
+    "$example": "capcli plugin update stripe"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2410
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,22 +33,64 @@
     "groups": [
       {
         "fields": {
-          "plugin_id": "stripe",
-          "from_version": "2.4.0",
-          "to_version": "2.5.1",
-          "generation": "gen_03 -> gen_04",
-          "atomic_swap": "12ms (<20ms cap)",
-          "note": "running tasks retain gen_03 until lease drop"
+          "plugin_id": {
+            "$slot": "plugin_id_2",
+            "$from": "scenario.plugin_id",
+            "$example": "stripe"
+          },
+          "from_version": {
+            "$slot": "from_version",
+            "$from": "live.groups[0].fields.from_version",
+            "$example": "2.4.0"
+          },
+          "to_version": {
+            "$slot": "to_version",
+            "$from": "live.groups[0].fields.to_version",
+            "$example": "2.5.1"
+          },
+          "generation": {
+            "$slot": "generation",
+            "$from": "live.groups[0].fields.generation",
+            "$example": "gen_03 -> gen_04"
+          },
+          "atomic_swap": {
+            "$slot": "atomic_swap",
+            "$from": "live.groups[0].fields.atomic_swap",
+            "$example": "12ms (<20ms cap)"
+          },
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[0].fields.note",
+            "$example": "running tasks retain gen_03 until lease drop"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli plugin inspect stripe",
-      "intent": "Plugin preflight envelope",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli plugin inspect {{plugin_id}}",
+        "$bindings": {
+          "plugin_id": "scenario.plugin_id"
+        },
+        "$example": "capcli plugin inspect stripe"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Plugin preflight envelope"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

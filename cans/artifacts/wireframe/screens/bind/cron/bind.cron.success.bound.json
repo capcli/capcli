@@ -1,37 +1,101 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.cron.success.bound",
-  "target": "cap://sync_orders",
-  "command": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\"",
-  "elapsed_ms": 1620,
+  "scenario": {
+    "routine_urp": "cap://sync_orders",
+    "intent": "refresh catalog each night"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli bind cron nightly_sync {{routine_urp}} \"0 3 * * *\" -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli bind cron nightly_sync cap://sync_orders \"0 3 * * *\" -m \"refresh catalog each night\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1620
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_7c41",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_7c41"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "binding_id": "bnd_5f8a",
-          "name": "nightly_sync",
-          "schedule": "0 3 * * *",
-          "target": "cap://sync_orders",
-          "next_fire": "2026-10-05T03:00:00Z",
-          "catchup_policy": "max 1 fire on daemon restart"
+          "binding_id": {
+            "$slot": "binding_id",
+            "$from": "live.groups[0].fields.binding_id",
+            "$example": "bnd_5f8a"
+          },
+          "name": {
+            "$slot": "name",
+            "$from": "live.groups[0].fields.name",
+            "$example": "nightly_sync"
+          },
+          "schedule": {
+            "$slot": "schedule",
+            "$from": "live.groups[0].fields.schedule",
+            "$example": "0 3 * * *"
+          },
+          "target": {
+            "$slot": "routine_urp_2",
+            "$from": "scenario.routine_urp",
+            "$example": "cap://sync_orders"
+          },
+          "next_fire": {
+            "$slot": "next_fire",
+            "$from": "live.groups[0].fields.next_fire",
+            "$example": "2026-10-05T03:00:00Z"
+          },
+          "catchup_policy": {
+            "$slot": "catchup_policy",
+            "$from": "live.groups[0].fields.catchup_policy",
+            "$example": "max 1 fire on daemon restart"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli bind list",
-      "intent": "Active bindings displayed",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli bind list",
+        "$bindings": {},
+        "$example": "capcli bind list"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Active bindings displayed"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

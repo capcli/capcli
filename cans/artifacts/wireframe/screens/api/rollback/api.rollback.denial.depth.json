@@ -1,9 +1,26 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.rollback.denial.depth",
-  "target": "cap://threads.create_media_post",
-  "command": "capcli api rollback threads.create_media_post 2",
-  "elapsed_ms": 62,
+  "scenario": {
+    "routine_urp": "cap://threads.create_media_post",
+    "routine_name": "threads.create_media_post"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://threads.create_media_post"
+  },
+  "command": {
+    "$interpolate": "capcli api rollback threads.create_media_post 2",
+    "$bindings": {},
+    "$example": "capcli api rollback threads.create_media_post 2"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 62
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,16 +31,40 @@
     "rule": "policy.authorizer.depth_limit",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Exceeds max rollback limit of 5: version 8 to version 2 spans depth 6.",
-    "measured": "rollback depth 6 (cap: 5)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Exceeds max rollback limit of 5: version 8 to version 2 spans depth 6."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "rollback depth 6 (cap: 5)"
+    },
     "remedy": "roll back to version 3 or later, or re-sync the exact prior spec to pin it fresh",
     "span": {
-      "source": "capcli api rollback threads.create_media_post 2",
-      "highlight": "threads.create_media_post"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "capcli api rollback threads.create_media_post 2"
+      },
+      "highlight": {
+        "$slot": "routine_name",
+        "$from": "scenario.routine_name",
+        "$example": "threads.create_media_post"
+      }
     },
     "lines": [
-      "Exceeds max rollback limit of 5.",
-      "Current spec version 8; rollback to version 2 spans depth 6."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Exceeds max rollback limit of 5."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Current spec version 8; rollback to version 2 spans depth 6."
+      }
     ]
   }
 }

@@ -1,27 +1,71 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "serve.export.success.mcp",
-  "target": "bindings",
-  "command": "capcli serve export mcp --out tools.json",
-  "elapsed_ms": 1697,
+  "scenario": {
+    "bindings": "bindings"
+  },
+  "target": {
+    "$slot": "bindings",
+    "$from": "scenario.bindings",
+    "$example": "bindings"
+  },
+  "command": {
+    "$interpolate": "capcli serve export mcp --out tools.json",
+    "$bindings": {},
+    "$example": "capcli serve export mcp --out tools.json"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1697
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "redirected"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "redirected"
+    }
   },
-  "audit_op": "op_1k6w",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_1k6w"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "artifact": "tools.json",
-          "format": "mcp tool manifest",
-          "tools": "2 (dispatch_order@4, report_summary@3)",
-          "bytes": "1286",
-          "sha256": "8c3e5d7012a4b6c8"
+          "artifact": {
+            "$slot": "artifact",
+            "$from": "live.groups[0].fields.artifact",
+            "$example": "tools.json"
+          },
+          "format": {
+            "$slot": "format",
+            "$from": "live.groups[0].fields.format",
+            "$example": "mcp tool manifest"
+          },
+          "tools": {
+            "$slot": "tools",
+            "$from": "live.groups[0].fields.tools",
+            "$example": "2 (dispatch_order@4, report_summary@3)"
+          },
+          "bytes": {
+            "$slot": "bytes",
+            "$from": "live.groups[0].fields.bytes",
+            "$example": "1286"
+          },
+          "sha256": {
+            "$slot": "sha256",
+            "$from": "live.groups[0].fields.sha256",
+            "$example": "8c3e5d7012a4b6c8"
+          }
         }
       }
     ]

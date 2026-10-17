@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ws.cassettes.success.populated",
-  "target": "cassettes",
-  "command": "capcli ws cassettes",
-  "elapsed_ms": 84,
+  "scenario": {
+    "cassettes": "cassettes"
+  },
+  "target": {
+    "$slot": "cassettes",
+    "$from": "scenario.cassettes",
+    "$example": "cassettes"
+  },
+  "command": {
+    "$interpolate": "capcli ws {{cassettes}}",
+    "$bindings": {
+      "cassettes": "scenario.cassettes"
+    },
+    "$example": "capcli ws cassettes"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 84
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,13 +38,27 @@
     "groups": [
       {
         "fields": {
-          "dial_create_todo.jsonl": "ws://tasks/create_todo@v1 (recorded 2026-10-12, 14 frames)",
-          "dial_ship_status.jsonl": "ws://tasks/ship_status@v2 (recorded 2026-10-14, 9 frames)"
+          "dial_create_todo.jsonl": {
+            "$slot": "dial_create_todo_jsonl",
+            "$from": "live.groups[0].fields.dial_create_todo_jsonl",
+            "$example": "ws://tasks/create_todo@v1 (recorded 2026-10-12, 14 frames)"
+          },
+          "dial_ship_status.jsonl": {
+            "$slot": "dial_ship_status_jsonl",
+            "$from": "live.groups[0].fields.dial_ship_status_jsonl",
+            "$example": "ws://tasks/ship_status@v2 (recorded 2026-10-14, 9 frames)"
+          }
         }
       },
       {
         "fields": {
-          "total": "2 recorded cassettes"
+          "total": {
+            "$interpolate": "2 recorded {{cassettes}}",
+            "$bindings": {
+              "cassettes": "scenario.cassettes"
+            },
+            "$example": "2 recorded cassettes"
+          }
         }
       }
     ]

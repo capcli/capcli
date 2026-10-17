@@ -1,32 +1,86 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "run.execute.denial.occ_drift",
+  "scenario": {
+    "routine_urp": "cap://sync_inventory@3",
+    "region": "eu-west",
+    "intent": "nightly stock reconciliation"
+  },
   "archetype": "diagnostic",
-  "command": "capcli run cap://sync_inventory@3 -p region=eu-west -m \"nightly stock reconciliation\"",
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p region={{region}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "region": "scenario.region",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://sync_inventory@3 -p region=eu-west -m \"nightly stock reconciliation\""
+  },
   "component": {
-    "culprit": "E061_OCC_DRIFT: read drift on inventory row INV-2201 (v88 \\u2192 v91) while frame_024 was suspended; frame remains parked",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "E061_OCC_DRIFT: read drift on inventory row INV-2201 (v88 \\u2192 v91) while frame_024 was suspended; frame remains parked"
+    },
     "domain": "db.engine",
     "layer": "engine",
     "lines": [
-      "Daemon resume verification failed: OCC state_fence drifted during suspension.",
-      "E061_OCC_DRIFT: read drift during suspension; resumption refused with exit 2.",
-      "Mechanical resumption is unsafe against moved state; the frame was never resumed."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Daemon resume verification failed: OCC state_fence drifted during suspension."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "E061_OCC_DRIFT: read drift during suspension; resumption refused with exit 2."
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "Mechanical resumption is unsafe against moved state; the frame was never resumed."
+      }
     ],
-    "measured": "1 fenced row drifted during suspension (recorded v88, live v91)",
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "1 fenced row drifted during suspension (recorded v88, live v91)"
+    },
     "remedy": "run 'capcli run abort frame_024' first \u2014 it purges the _suspended_tasks resume target and releases the frame's claims lease; then re-run 'capcli run cap://sync_inventory@3' against current state; the drifted frame never resumes",
     "rule": "db.engine.occ_fence",
-    "suspended_frame": "frame_024"
+    "suspended_frame": {
+      "$slot": "frame_id",
+      "$from": "live.frame_id",
+      "$example": "frame_024"
+    }
   },
   "trailer": {
     "prompt": "doc://prompts/budget/occ_drift#1",
-    "reason": "suspended frame resumed with drifted read set",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "suspended frame resumed with drifted read set"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "elapsed_ms": 214,
-  "id": "run.execute.denial.occ_drift",
-  "target": "cap://sync_inventory@3"
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 214
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_inventory@3"
+  }
 }

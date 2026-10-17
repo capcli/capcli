@@ -1,44 +1,109 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.trace.success.prove",
-  "target": "op_prove_01",
-  "command": "capcli sys audit trace op_prove_01 --explain",
-  "elapsed_ms": 1548,
+  "scenario": {
+    "session_id": "ses_a992f",
+    "root_intent": "fulfill urgent pending orders",
+    "trace_op": "op_prove_01"
+  },
+  "target": {
+    "$slot": "trace_op",
+    "$from": "scenario.trace_op",
+    "$example": "op_prove_01"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit trace {{trace_op}} --explain",
+    "$bindings": {
+      "trace_op": "scenario.trace_op"
+    },
+    "$example": "capcli sys audit trace op_prove_01 --explain"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1548
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "Causal DAG Trace (op_prove_01)",
-    "root": "ses_a992f session.start \"fulfill urgent pending orders\"",
+    "title": {
+      "$interpolate": "Causal DAG Trace ({{trace_op}})",
+      "$bindings": {
+        "trace_op": "scenario.trace_op"
+      },
+      "$example": "Causal DAG Trace (op_prove_01)"
+    },
+    "root": {
+      "$interpolate": "{{session_id}} session.start \"{{root_intent}}\"",
+      "$bindings": {
+        "session_id": "scenario.session_id",
+        "root_intent": "scenario.root_intent"
+      },
+      "$example": "ses_a992f session.start \"fulfill urgent pending orders\""
+    },
     "nodes": [
       {
-        "label": "op_prove_01 routine.prove (sync_orders@3) ✓ [passed] sim",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.trace.nodes[0].label",
+          "$example": "op_prove_01 routine.prove (sync_orders@3) ✓ [passed] sim"
+        },
         "children": [
           {
-            "label": "op_7a91 db.query (orders) ✓ [sim] 6ms",
+            "label": {
+              "$slot": "n0c0",
+              "$from": "live.trace.nodes[0].children[0].label",
+              "$example": "op_7a91 db.query (orders) ✓ [sim] 6ms"
+            },
             "children": []
           },
           {
-            "label": "op_7a92 db.query (inventory) ✓ [sim] 4ms",
+            "label": {
+              "$slot": "n0c1",
+              "$from": "live.trace.nodes[0].children[1].label",
+              "$example": "op_7a92 db.query (inventory) ✓ [sim] 4ms"
+            },
             "children": []
           },
           {
-            "label": "op_7a93 db.execute (orders) ✓ [sim] 9ms",
+            "label": {
+              "$slot": "n0c2",
+              "$from": "live.trace.nodes[0].children[2].label",
+              "$example": "op_7a93 db.execute (orders) ✓ [sim] 9ms"
+            },
             "children": []
           },
           {
-            "label": "op_7a94 api.call (logistics.shipments.create) ✓ [sim] 210ms",
+            "label": {
+              "$slot": "n0c3",
+              "$from": "live.trace.nodes[0].children[3].label",
+              "$example": "op_7a94 api.call (logistics.shipments.create) ✓ [sim] 210ms"
+            },
             "children": []
           },
           {
-            "label": "op_7a95 db.query (orders) ✓ [sim] 5ms",
+            "label": {
+              "$slot": "n0c4",
+              "$from": "live.trace.nodes[0].children[4].label",
+              "$example": "op_7a95 db.query (orders) ✓ [sim] 5ms"
+            },
             "children": [
               {
-                "label": "5 executed / 5 declared (subset; 0 undeclared leaves)",
+                "label": {
+                  "$slot": "n0c4c0",
+                  "$from": "live.trace.nodes[0].children[4].children[0].label",
+                  "$example": "5 executed / 5 declared (subset; 0 undeclared leaves)"
+                },
                 "children": []
               }
             ]
@@ -47,9 +112,23 @@
       }
     ],
     "footer": {
-      "Root Intent": "\"fulfill urgent pending orders\"",
-      "Authority": "user:root (via agt_7f3k)",
-      "Integrity": "valid hash link (chain verified)"
+      "Root Intent": {
+        "$interpolate": "\"{{root_intent}}\"",
+        "$bindings": {
+          "root_intent": "scenario.root_intent"
+        },
+        "$example": "\"fulfill urgent pending orders\""
+      },
+      "Authority": {
+        "$slot": "authority",
+        "$from": "live.trace.footer.authority",
+        "$example": "user:root (via agt_7f3k)"
+      },
+      "Integrity": {
+        "$slot": "integrity",
+        "$from": "live.trace.footer.integrity",
+        "$example": "valid hash link (chain verified)"
+      }
     }
   }
 }

@@ -1,25 +1,63 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "storage.put.success.put",
-  "target": "reports/r1.pdf",
-  "command": "capcli storage put ./report.pdf --key reports/r1.pdf",
-  "elapsed_ms": 342,
+  "scenario": {
+    "key": "reports/r1.pdf"
+  },
+  "target": {
+    "$slot": "key",
+    "$from": "scenario.key",
+    "$example": "reports/r1.pdf"
+  },
+  "command": {
+    "$interpolate": "capcli storage put ./report.pdf --key {{key}}",
+    "$bindings": {
+      "key": "scenario.key"
+    },
+    "$example": "capcli storage put ./report.pdf --key reports/r1.pdf"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 342
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "audit_op": "op_9f42",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f42"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "key": "reports/r1.pdf",
-          "bytes": "241802",
-          "sha256": "7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-          "version": "v1"
+          "key": {
+            "$slot": "key_2",
+            "$from": "scenario.key",
+            "$example": "reports/r1.pdf"
+          },
+          "bytes": {
+            "$slot": "bytes",
+            "$from": "live.groups[0].fields.bytes",
+            "$example": "241802"
+          },
+          "sha256": {
+            "$slot": "sha256",
+            "$from": "live.groups[0].fields.sha256",
+            "$example": "7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          "version": {
+            "$slot": "version",
+            "$from": "live.groups[0].fields.version",
+            "$example": "v1"
+          }
         }
       }
     ]

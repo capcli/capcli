@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.keys.denial.cap",
-  "target": "partner_hook",
-  "command": "capcli bind keys issue partner_hook --principal partner:acme",
-  "elapsed_ms": 276,
+  "scenario": {
+    "partner_hook": "partner_hook"
+  },
+  "target": {
+    "$slot": "partner_hook",
+    "$from": "scenario.partner_hook",
+    "$example": "partner_hook"
+  },
+  "command": {
+    "$interpolate": "capcli bind keys issue {{partner_hook}} --principal partner:acme",
+    "$bindings": {
+      "partner_hook": "scenario.partner_hook"
+    },
+    "$example": "capcli bind keys issue partner_hook --principal partner:acme"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 276
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,8 +32,16 @@
     "rule": "policy.authorizer.key_cap_exceeded",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Max 25 keys reached. Key issuance refused.",
-    "measured": "25 active keys (cap: 25)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Max 25 keys reached. Key issuance refused."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "25 active keys (cap: 25)"
+    },
     "remedy": "remove an idle endpoint binding to release its keys, then re-issue (capcli bind remove); limit: artifacts/governance.yaml#serve.max_keys"
   }
 }

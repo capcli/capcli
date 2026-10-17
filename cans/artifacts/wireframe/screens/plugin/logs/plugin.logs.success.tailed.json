@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "plugin.logs.success.tailed",
-  "target": "stripe",
-  "command": "capcli plugin logs stripe",
-  "elapsed_ms": 158,
+  "scenario": {
+    "plugin_id": "stripe"
+  },
+  "target": {
+    "$slot": "plugin_id",
+    "$from": "scenario.plugin_id",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli plugin logs {{plugin_id}}",
+    "$bindings": {
+      "plugin_id": "scenario.plugin_id"
+    },
+    "$example": "capcli plugin logs stripe"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 158
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,12 +33,32 @@
     "groups": [
       {
         "fields": {
-          "plugin_id": "stripe",
-          "ring": "stdout+stderr ring buffer",
-          "cap": "64 KiB per plugin",
+          "plugin_id": {
+            "$slot": "plugin_id_2",
+            "$from": "scenario.plugin_id",
+            "$example": "stripe"
+          },
+          "ring": {
+            "$slot": "ring",
+            "$from": "live.groups[0].fields.ring",
+            "$example": "stdout+stderr ring buffer"
+          },
+          "cap": {
+            "$slot": "cap",
+            "$from": "live.groups[0].fields.cap",
+            "$example": "64 KiB per plugin"
+          },
           "lines": [
-            "[gen_04] api.sync ok: 214 verbs in 1.8s",
-            "[gen_04] egress dial 1 cadence nominal"
+            {
+              "$slot": "lines_0",
+              "$from": "live.groups[0].fields.lines[0]",
+              "$example": "[gen_04] api.sync ok: 214 verbs in 1.8s"
+            },
+            {
+              "$slot": "lines_1",
+              "$from": "live.groups[0].fields.lines[1]",
+              "$example": "[gen_04] egress dial 1 cadence nominal"
+            }
           ]
         }
       }
@@ -28,10 +66,28 @@
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli plugin logs stripe --follow",
-      "intent": "Follow live log stream",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli plugin logs {{plugin_id}} --follow",
+        "$bindings": {
+          "plugin_id": "scenario.plugin_id"
+        },
+        "$example": "capcli plugin logs stripe --follow"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Follow live log stream"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

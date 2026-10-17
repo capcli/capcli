@@ -1,9 +1,28 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.sql.refusal.unparseable",
-  "target": "db://orders",
-  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHER status = 'processing'\" -m \"batch ship\"",
-  "elapsed_ms": 167,
+  "scenario": {
+    "db_urp": "db://orders",
+    "intent": "batch ship"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli sql \"UPDATE orders SET status = 'shipped' WHER status = 'processing'\" -m \"{{intent}}\"",
+    "$bindings": {
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli sql \"UPDATE orders SET status = 'shipped' WHER status = 'processing'\" -m \"batch ship\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 167
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,16 +31,36 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "compile",
-    "culprit": "Unparseable SQL: 'WHER' is not a recognized keyword; parser fails closed.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Unparseable SQL: 'WHER' is not a recognized keyword; parser fails closed."
+    },
     "remedy": "correct the keyword to WHERE and restate the query",
     "span": {
-      "source": "UPDATE orders SET status = 'shipped' WHER status = 'processing'",
-      "highlight": "WHER"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "UPDATE orders SET status = 'shipped' WHER status = 'processing'"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "WHER"
+      }
     },
-    "unparseable_sql": "'WHER' is not a recognized keyword; parser fails closed.",
+    "unparseable_sql": {
+      "$slot": "unparseable_sql",
+      "$from": "live.unparseable_sql",
+      "$example": "'WHER' is not a recognized keyword; parser fails closed."
+    },
     "layer": "parser",
     "lines": [
-      "FATAL  compile.bad_syntax"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  compile.bad_syntax"
+      }
     ]
   }
 }

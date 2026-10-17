@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.serve.refusal.already_running",
-  "target": "daemon",
-  "command": "capcli sys serve --start",
-  "elapsed_ms": 287,
+  "scenario": {
+    "daemon": "daemon"
+  },
+  "target": {
+    "$slot": "daemon",
+    "$from": "scenario.daemon",
+    "$example": "daemon"
+  },
+  "command": {
+    "$interpolate": "capcli sys serve --start",
+    "$bindings": {},
+    "$example": "capcli sys serve --start"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 287
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,14 +29,42 @@
   "component": {
     "rule": "compile.port_bound",
     "domain": "compile",
-    "culprit": "127.0.0.1:4040 already bound by active capcli-daemon pid 50211",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "127.0.0.1:4040 already bound by active capcli-daemon pid 50211"
+    },
     "remedy": "inspect with 'capcli sys serve --status' or replace via 'capcli sys serve --restart'",
-    "holder": "pid 50211 (uptime: 2h 14m, listening)",
-    "candidate": "pid 51288 (start aborted)",
+    "holder": {
+      "$slot": "holder",
+      "$from": "live.holder",
+      "$example": "pid 50211 (uptime: 2h 14m, listening)"
+    },
+    "candidate": {
+      "$slot": "candidate",
+      "$from": "live.candidate",
+      "$example": "pid 51288 (start aborted)"
+    },
     "lines": [
-      "127.0.0.1:4040 is already bound by an active capcli-daemon.",
-      "One daemon per workspace; duplicate start refused at port check.",
-      "layer:          daemon"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "127.0.0.1:4040 is already bound by an active capcli-daemon."
+      },
+      {
+        "$interpolate": "One {{daemon}} per workspace; duplicate start refused at port check.",
+        "$bindings": {
+          "daemon": "scenario.daemon"
+        },
+        "$example": "One daemon per workspace; duplicate start refused at port check."
+      },
+      {
+        "$interpolate": "layer:          {{daemon}}",
+        "$bindings": {
+          "daemon": "scenario.daemon"
+        },
+        "$example": "layer:          daemon"
+      }
     ]
   }
 }

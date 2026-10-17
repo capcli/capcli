@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.quota",
-  "target": "quota://threads",
-  "command": "capcli inspect quota://threads",
-  "elapsed_ms": 1901,
+  "scenario": {
+    "quota_urp": "quota://threads"
+  },
+  "target": {
+    "$slot": "quota_urp",
+    "$from": "scenario.quota_urp",
+    "$example": "quota://threads"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{quota_urp}}",
+    "$bindings": {
+      "quota_urp": "scenario.quota_urp"
+    },
+    "$example": "capcli inspect quota://threads"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1901
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,52 +38,132 @@
     "groups": [
       {
         "fields": {
-          "provider": "threads",
-          "window": "24h rolling",
-          "status": "tracked"
+          "provider": {
+            "$slot": "provider",
+            "$from": "live.groups[0].fields.provider",
+            "$example": "threads"
+          },
+          "window": {
+            "$slot": "window",
+            "$from": "live.groups[0].fields.window",
+            "$example": "24h rolling"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[0].fields.status",
+            "$example": "tracked"
+          }
         }
       },
       {
         "fields": {
-          "total": "50",
-          "available": "28",
-          "earmarked": "7",
-          "unreserved": "21"
+          "total": {
+            "$slot": "total",
+            "$from": "live.groups[1].fields.total",
+            "$example": "50"
+          },
+          "available": {
+            "$slot": "available",
+            "$from": "live.groups[1].fields.available",
+            "$example": "28"
+          },
+          "earmarked": {
+            "$slot": "earmarked",
+            "$from": "live.groups[1].fields.earmarked",
+            "$example": "7"
+          },
+          "unreserved": {
+            "$slot": "unreserved",
+            "$from": "live.groups[1].fields.unreserved",
+            "$example": "21"
+          }
         },
         "lines": [
-          "headroom:"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "headroom:"
+          }
         ]
       },
       {
         "lines": [
-          "reservations:",
-          "earmark_01c3 5 tokens   ttl 3h    \"newsletter batch send\"",
-          "earmark_01d8 2 tokens   ttl 45m   \"story reply sweep\""
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "reservations:"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[2].lines[1]",
+            "$example": "earmark_01c3 5 tokens   ttl 3h    \"newsletter batch send\""
+          },
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[2].lines[2]",
+            "$example": "earmark_01d8 2 tokens   ttl 45m   \"story reply sweep\""
+          }
         ]
       },
       {
         "fields": {
-          "burst_bucket": "10 (refill 1.0/s)"
+          "burst_bucket": {
+            "$slot": "burst_bucket",
+            "$from": "live.groups[3].fields.burst_bucket",
+            "$example": "10 (refill 1.0/s)"
+          }
         },
         "lines": [
-          "rate:"
+          {
+            "$slot": "lines_4",
+            "$from": "live.groups[3].lines[0]",
+            "$example": "rate:"
+          }
         ]
       },
       {
         "fields": {
-          "can_invoke_now": "true",
-          "yield_floor": "5 tokens (standard priority yields below floor)",
-          "reset_at": "18:00:00 UTC (in 4h 12m)"
+          "can_invoke_now": {
+            "$slot": "can_invoke_now",
+            "$from": "live.groups[4].fields.can_invoke_now",
+            "$example": "true"
+          },
+          "yield_floor": {
+            "$slot": "yield_floor",
+            "$from": "live.groups[4].fields.yield_floor",
+            "$example": "5 tokens (standard priority yields below floor)"
+          },
+          "reset_at": {
+            "$slot": "reset_at",
+            "$from": "live.groups[4].fields.reset_at",
+            "$example": "18:00:00 UTC (in 4h 12m)"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli inspect cap://dispatch_order@4",
-      "intent": "Pre-flight envelope with `can_invoke_now`",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli inspect cap://dispatch_order@4",
+        "$bindings": {},
+        "$example": "capcli inspect cap://dispatch_order@4"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Pre-flight envelope with `can_invoke_now`"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

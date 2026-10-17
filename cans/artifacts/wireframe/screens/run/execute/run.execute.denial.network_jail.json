@@ -1,9 +1,31 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.denial.network_jail",
-  "target": "cap://sneaky_exfil@1",
-  "command": "capcli run cap://sneaky_exfil@1 -p db_host=10.0.0.5:5432 -m \"replicate orders to analytics host\"",
-  "elapsed_ms": 73,
+  "scenario": {
+    "routine_urp": "cap://sneaky_exfil@1",
+    "db_host": "10.0.0.5:5432",
+    "intent": "replicate orders to analytics host"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sneaky_exfil@1"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p db_host={{db_host}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "db_host": "scenario.db_host",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://sneaky_exfil@1 -p db_host=10.0.0.5:5432 -m \"replicate orders to analytics host\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 73
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,17 +36,43 @@
     "rule": "kernel.network.jail",
     "domain": "kernel.sandbox",
     "layer": "sandbox",
-    "culprit": "Raw connect() to 10.0.0.5:5432 trapped by seccomp-bpf filter (syscall 42).",
+    "culprit": {
+      "$interpolate": "Raw connect() to {{db_host}} trapped by seccomp-bpf filter (syscall 42).",
+      "$bindings": {
+        "db_host": "scenario.db_host"
+      },
+      "$example": "Raw connect() to 10.0.0.5:5432 trapped by seccomp-bpf filter (syscall 42)."
+    },
     "remedy": "use ctx.api.call with an activated catalog verb",
-    "target": "10.0.0.5:5432",
-    "caller": "routines/sneaky_exfil.py",
+    "target": {
+      "$slot": "db_host",
+      "$from": "scenario.db_host",
+      "$example": "10.0.0.5:5432"
+    },
+    "caller": {
+      "$slot": "caller",
+      "$from": "live.caller",
+      "$example": "routines/sneaky_exfil.py"
+    },
     "lines": [
-      "syscall 42 (connect) trapped by seccomp-bpf"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "syscall 42 (connect) trapped by seccomp-bpf"
+      }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/budget/execution_starved#1",
-    "reason": "network jail denial: sandbox egress trapped",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "network jail denial: sandbox egress trapped"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }

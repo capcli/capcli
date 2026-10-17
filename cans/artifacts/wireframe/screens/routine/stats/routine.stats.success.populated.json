@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.stats.success.populated",
-  "target": "dispatch_order",
-  "command": "capcli routine stats dispatch_order --deep",
-  "elapsed_ms": 985,
+  "scenario": {
+    "dispatch_order": "dispatch_order"
+  },
+  "target": {
+    "$slot": "dispatch_order",
+    "$from": "scenario.dispatch_order",
+    "$example": "dispatch_order"
+  },
+  "command": {
+    "$interpolate": "capcli routine stats {{dispatch_order}} --deep",
+    "$bindings": {
+      "dispatch_order": "scenario.dispatch_order"
+    },
+    "$example": "capcli routine stats dispatch_order --deep"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 985
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,31 +38,83 @@
     "groups": [
       {
         "fields": {
-          "routine": "dispatch_order@4",
-          "window": "214 runs (last 30d)"
+          "routine": {
+            "$slot": "routine",
+            "$from": "live.groups[0].fields.routine",
+            "$example": "dispatch_order@4"
+          },
+          "window": {
+            "$slot": "window",
+            "$from": "live.groups[0].fields.window",
+            "$example": "214 runs (last 30d)"
+          }
         }
       },
       {
         "fields": {
-          "runs": "214",
-          "success_rate": "99.1%",
-          "p50_duration": "340ms",
-          "p95_duration": "890ms",
-          "last_run_at": "2m ago (op_9b54, ses_a992f)",
-          "drift_events": "0"
+          "runs": {
+            "$slot": "runs",
+            "$from": "live.groups[1].fields.runs",
+            "$example": "214"
+          },
+          "success_rate": {
+            "$slot": "success_rate",
+            "$from": "live.groups[1].fields.success_rate",
+            "$example": "99.1%"
+          },
+          "p50_duration": {
+            "$slot": "p50_duration",
+            "$from": "live.groups[1].fields.p50_duration",
+            "$example": "340ms"
+          },
+          "p95_duration": {
+            "$slot": "p95_duration",
+            "$from": "live.groups[1].fields.p95_duration",
+            "$example": "890ms"
+          },
+          "last_run_at": {
+            "$slot": "last_run_at",
+            "$from": "live.groups[1].fields.last_run_at",
+            "$example": "2m ago (op_9b54, ses_a992f)"
+          },
+          "drift_events": {
+            "$slot": "drift_events",
+            "$from": "live.groups[1].fields.drift_events",
+            "$example": "0"
+          }
         }
       },
       {
         "lines": [
-          "leaves (--deep):",
-          "db.query    orders                     p50 12ms  p95 41ms  fuel 40",
-          "api.call    logistics.shipments.create p50 340ms p95 812ms fuel 610",
-          "db.execute  orders                     p50 18ms  p95 52ms  fuel 46"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "leaves (--deep):"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[2].lines[1]",
+            "$example": "db.query    orders                     p50 12ms  p95 41ms  fuel 40"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[2].lines[2]",
+            "$example": "api.call    logistics.shipments.create p50 340ms p95 812ms fuel 610"
+          },
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[2].lines[3]",
+            "$example": "db.execute  orders                     p50 18ms  p95 52ms  fuel 46"
+          }
         ]
       },
       {
         "fields": {
-          "note": "read-only profiling from routine_stats and the audit mirror"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[3].fields.note",
+            "$example": "read-only profiling from routine_stats and the audit mirror"
+          }
         }
       }
     ]

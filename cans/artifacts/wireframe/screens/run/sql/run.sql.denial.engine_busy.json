@@ -1,25 +1,64 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.sql.denial.engine_busy",
-  "target": "db://orders",
-  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"batch ship processing orders\"",
-  "elapsed_ms": 367,
+  "scenario": {
+    "db_urp": "db://orders",
+    "id": "4127",
+    "intent": "batch ship processing orders"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id={{id}} -m \"{{intent}}\"",
+    "$bindings": {
+      "id": "scenario.id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"batch ship processing orders\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 367
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_9f2l",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2l"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "db.engine.txn_queue_timeout",
     "domain": "db.engine",
     "layer": "engine",
-    "culprit": "write lock on db://orders held by op_9f1c; wait exceeded the 5000ms ceiling",
-    "measured": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active",
+    "culprit": {
+      "$interpolate": "write lock on {{db_urp}} held by op_9f1c; wait exceeded the 5000ms ceiling",
+      "$bindings": {
+        "db_urp": "scenario.db_urp"
+      },
+      "$example": "write lock on db://orders held by op_9f1c; wait exceeded the 5000ms ceiling"
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "waited 5001ms (ceiling: 5000ms); holder op_9f1c still active"
+    },
     "remedy": "retry after holder commits, or inspect the claim via capcli inspect db://orders",
     "lines": [
-      "UPDATE orders SET status = 'shipped' WHERE id = :id"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "UPDATE orders SET status = 'shipped' WHERE id = :id"
+      }
     ]
   }
 }

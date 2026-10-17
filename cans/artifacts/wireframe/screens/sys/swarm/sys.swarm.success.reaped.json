@@ -1,35 +1,87 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.swarm.success.reaped",
-  "target": "swarm",
-  "command": "capcli sys swarm reap",
-  "elapsed_ms": 1111,
+  "scenario": {
+    "swarm": "swarm"
+  },
+  "target": {
+    "$slot": "swarm",
+    "$from": "scenario.swarm",
+    "$example": "swarm"
+  },
+  "command": {
+    "$interpolate": "capcli sys {{swarm}} reap",
+    "$bindings": {
+      "swarm": "scenario.swarm"
+    },
+    "$example": "capcli sys swarm reap"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1111
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
     "groups": [
       {
         "fields": {
-          "agents_expired": "2",
-          "claims_released_count": "3",
-          "reason": "ttl_expired"
+          "agents_expired": {
+            "$slot": "agents_expired",
+            "$from": "live.groups[0].fields.agents_expired",
+            "$example": "2"
+          },
+          "claims_released_count": {
+            "$slot": "claims_released_count",
+            "$from": "live.groups[0].fields.claims_released_count",
+            "$example": "3"
+          },
+          "reason": {
+            "$slot": "reason",
+            "$from": "live.groups[0].fields.reason",
+            "$example": "ttl_expired"
+          }
         }
       },
       {
         "lines": [
-          "agt_tmp_9f3k22ab expired — reason: ttl_expired — claims released: 2",
-          "agt_4t6r expired — reason: evicted — claims released: 1"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "agt_tmp_9f3k22ab expired — reason: ttl_expired — claims released: 2"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "agt_4t6r expired — reason: evicted — claims released: 1"
+          }
         ]
       },
       {
         "fields": {
-          "audit": "swarm.node_reap committed to _audit with claims_released_count per agent",
-          "status": "expired nodes purged from the agents table; held leases dropped"
+          "audit": {
+            "$interpolate": "{{swarm}}.node_reap committed to _audit with claims_released_count per agent",
+            "$bindings": {
+              "swarm": "scenario.swarm"
+            },
+            "$example": "swarm.node_reap committed to _audit with claims_released_count per agent"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[2].fields.status",
+            "$example": "expired nodes purged from the agents table; held leases dropped"
+          }
         }
       }
     ],
@@ -37,10 +89,30 @@
   },
   "affordances": [
     {
-      "command": "capcli sys swarm list",
-      "intent": "Verify the swarm roster after reaping expired nodes",
-      "rel": "next",
-      "risk": "safe"
+      "command": {
+        "$interpolate": "capcli sys {{swarm}} list",
+        "$bindings": {
+          "swarm": "scenario.swarm"
+        },
+        "$example": "capcli sys swarm list"
+      },
+      "intent": {
+        "$interpolate": "Verify the {{swarm}} roster after reaping expired nodes",
+        "$bindings": {
+          "swarm": "scenario.swarm"
+        },
+        "$example": "Verify the swarm roster after reaping expired nodes"
+      },
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

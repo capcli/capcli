@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.scaffold.denial.target_exists",
-  "target": "lab",
-  "command": "capcli pack scaffold pack://world/atlas_world lab",
-  "elapsed_ms": 280,
+  "scenario": {
+    "lab": "lab"
+  },
+  "target": {
+    "$slot": "lab",
+    "$from": "scenario.lab",
+    "$example": "lab"
+  },
+  "command": {
+    "$interpolate": "capcli pack scaffold pack://world/atlas_world {{lab}}",
+    "$bindings": {
+      "lab": "scenario.lab"
+    },
+    "$example": "capcli pack scaffold pack://world/atlas_world lab"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 280
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,15 +32,45 @@
     "rule": "policy.authoring.target_exists",
     "domain": "policy.authoring",
     "layer": "authoring",
-    "culprit": "Target environment 'lab' already exists at envs/lab.",
-    "measured": "envs/lab present (world atlas_world, draft)",
+    "culprit": {
+      "$interpolate": "Target environment '{{lab}}' already exists at envs/lab.",
+      "$bindings": {
+        "lab": "scenario.lab"
+      },
+      "$example": "Target environment 'lab' already exists at envs/lab."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "envs/lab present (world atlas_world, draft)"
+    },
     "remedy": "pick a distinct target name or remove the existing environment (capcli env remove lab), then re-run capcli pack scaffold pack://world/atlas_world <target>",
-    "target_env": "envs/lab",
-    "existing": "envs/lab (draft)",
+    "target_env": {
+      "$slot": "target_env",
+      "$from": "live.target_env",
+      "$example": "envs/lab"
+    },
+    "existing": {
+      "$slot": "existing",
+      "$from": "live.existing",
+      "$example": "envs/lab (draft)"
+    },
     "lines": [
-      "layer:           authoring",
-      "measured:        envs/lab present",
-      "remedy:          pick a distinct target name or remove envs/lab"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "layer:           authoring"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "measured:        envs/lab present"
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "remedy:          pick a distinct target name or remove envs/lab"
+      }
     ]
   }
 }

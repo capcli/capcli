@@ -1,29 +1,85 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.webhook.success.bound",
-  "target": "cap://sync_orders",
-  "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
-  "elapsed_ms": 882,
+  "scenario": {
+    "routine_urp": "cap://sync_orders",
+    "intent": "process fulfillment on stripe async payment success"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli bind webhook stripe_hook stripe payment_succeeded {{routine_urp}} --ingress https://ops.example.com/hook -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 882
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_2b9f",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_2b9f"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "binding_id": "bnd_8d3k",
-          "name": "stripe_hook",
-          "route": "https://ops.example.com/hook",
-          "provider": "stripe",
-          "event": "payment_succeeded",
-          "target": "cap://sync_orders",
-          "signing": "vault://stripe_webhook_secret (hmac-sha256)",
-          "ingress": "verified (public https)"
+          "binding_id": {
+            "$slot": "binding_id",
+            "$from": "live.groups[0].fields.binding_id",
+            "$example": "bnd_8d3k"
+          },
+          "name": {
+            "$slot": "name",
+            "$from": "live.groups[0].fields.name",
+            "$example": "stripe_hook"
+          },
+          "route": {
+            "$slot": "route",
+            "$from": "live.groups[0].fields.route",
+            "$example": "https://ops.example.com/hook"
+          },
+          "provider": {
+            "$slot": "provider",
+            "$from": "live.groups[0].fields.provider",
+            "$example": "stripe"
+          },
+          "event": {
+            "$slot": "event",
+            "$from": "live.groups[0].fields.event",
+            "$example": "payment_succeeded"
+          },
+          "target": {
+            "$slot": "routine_urp_2",
+            "$from": "scenario.routine_urp",
+            "$example": "cap://sync_orders"
+          },
+          "signing": {
+            "$slot": "signing",
+            "$from": "live.groups[0].fields.signing",
+            "$example": "vault://stripe_webhook_secret (hmac-sha256)"
+          },
+          "ingress": {
+            "$slot": "ingress",
+            "$from": "live.groups[0].fields.ingress",
+            "$example": "verified (public https)"
+          }
         }
       }
     ]

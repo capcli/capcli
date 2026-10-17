@@ -1,33 +1,99 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "rule.rehearse.success.rehearsed",
+  "scenario": {
+    "migration": "add_order_priority"
+  },
   "affordances": [
     {
-      "command": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
-      "intent": "Apply the rehearsed migration",
-      "rel": "next",
-      "risk": "mutating"
+      "command": {
+        "$interpolate": "capcli rule apply schema -m \"add priority flag for rush shipping\"",
+        "$bindings": {},
+        "$example": "capcli rule apply schema -m \"add priority flag for rush shipping\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Apply the rehearsed migration"
+      },
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ],
   "archetype": "receipt",
-  "audit_op": "op_8d52",
-  "command": "capcli rule rehearse add_order_priority --env sim",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_8d52"
+  },
+  "command": {
+    "$interpolate": "capcli rule rehearse {{migration}} --env sim",
+    "$bindings": {
+      "migration": "scenario.migration"
+    },
+    "$example": "capcli rule rehearse add_order_priority --env sim"
+  },
   "component": {
     "groups": [
       {
         "fields": {
-          "align": "pass (4281 rows, \u2264500 rows/txn; exit-6 yields clean)",
-          "contract": "pass (_shadow_orders + AFTER INSERT/UPDATE/DELETE delta triggers; swap 12ms <20ms)",
-          "expand": "pass (<10ms; nullable column, no table rebuild)",
-          "mode": "sim (rehearsal)",
-          "pin": "pass (PRAGMA check + capcli.lock seal)",
-          "pinned_routines": "pass (all pinned routines rehearsed; none broke)",
-          "migration": "add_order_priority"
+          "align": {
+            "$slot": "align",
+            "$from": "live.groups[0].fields.align",
+            "$example": "pass (4281 rows, \u2264500 rows/txn; exit-6 yields clean)"
+          },
+          "contract": {
+            "$slot": "contract",
+            "$from": "live.groups[0].fields.contract",
+            "$example": "pass (_shadow_orders + AFTER INSERT/UPDATE/DELETE delta triggers; swap 12ms <20ms)"
+          },
+          "expand": {
+            "$slot": "expand",
+            "$from": "live.groups[0].fields.expand",
+            "$example": "pass (<10ms; nullable column, no table rebuild)"
+          },
+          "mode": {
+            "$slot": "mode",
+            "$from": "live.groups[0].fields.mode",
+            "$example": "sim (rehearsal)"
+          },
+          "pin": {
+            "$slot": "pin",
+            "$from": "live.groups[0].fields.pin",
+            "$example": "pass (PRAGMA check + capcli.lock seal)"
+          },
+          "pinned_routines": {
+            "$slot": "pinned_routines",
+            "$from": "live.groups[0].fields.pinned_routines",
+            "$example": "pass (all pinned routines rehearsed; none broke)"
+          },
+          "migration": {
+            "$slot": "migration_2",
+            "$from": "scenario.migration",
+            "$example": "add_order_priority"
+          }
         }
       },
       {
         "fields": {
-          "audit": "op_8d52 (rule.rehearse) committed to _audit",
-          "note": "verification only; no sim world state committed"
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[1].fields.audit",
+            "$example": "op_8d52 (rule.rehearse) committed to _audit"
+          },
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[1].fields.note",
+            "$example": "verification only; no sim world state committed"
+          }
         }
       }
     ],
@@ -38,7 +104,15 @@
     "tier": "tier_1",
     "trust": "draft"
   },
-  "elapsed_ms": 267,
-  "id": "rule.rehearse.success.rehearsed",
-  "target": "add_order_priority"
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 267
+  },
+  "target": {
+    "$slot": "migration",
+    "$from": "scenario.migration",
+    "$example": "add_order_priority"
+  }
 }

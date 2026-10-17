@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.ask",
-  "target": "ask://ask_88a",
-  "command": "capcli inspect ask://ask_88a",
-  "elapsed_ms": 63,
+  "scenario": {
+    "ask_urp": "ask://ask_88a"
+  },
+  "target": {
+    "$slot": "ask_urp",
+    "$from": "scenario.ask_urp",
+    "$example": "ask://ask_88a"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{ask_urp}}",
+    "$bindings": {
+      "ask_urp": "scenario.ask_urp"
+    },
+    "$example": "capcli inspect ask://ask_88a"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 63
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,17 +33,45 @@
     "groups": [
       {
         "fields": {
-          "target": "ask://ask_88a",
-          "question": "Flag transfer TXN-9918 as fraud?",
-          "options": "approve, deny, escalate",
-          "status": "pending",
-          "frame": "frame_026 (suspended, exits 6 until resolved)"
+          "target": {
+            "$slot": "ask_urp_2",
+            "$from": "scenario.ask_urp",
+            "$example": "ask://ask_88a"
+          },
+          "question": {
+            "$slot": "question",
+            "$from": "live.groups[0].fields.question",
+            "$example": "Flag transfer TXN-9918 as fraud?"
+          },
+          "options": {
+            "$slot": "options",
+            "$from": "live.groups[0].fields.options",
+            "$example": "approve, deny, escalate"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[0].fields.status",
+            "$example": "pending"
+          },
+          "frame": {
+            "$slot": "frame",
+            "$from": "live.groups[0].fields.frame",
+            "$example": "frame_026 (suspended, exits 6 until resolved)"
+          }
         }
       },
       {
         "fields": {
-          "preflight": "ask exists and is unresolved",
-          "can_invoke_now": "true"
+          "preflight": {
+            "$slot": "preflight",
+            "$from": "live.groups[1].fields.preflight",
+            "$example": "ask exists and is unresolved"
+          },
+          "can_invoke_now": {
+            "$slot": "can_invoke_now",
+            "$from": "live.groups[1].fields.can_invoke_now",
+            "$example": "true"
+          }
         }
       }
     ]

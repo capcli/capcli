@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.routine",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli inspect cap://dispatch_order@4",
-  "elapsed_ms": 2270,
+  "scenario": {
+    "routine_urp": "cap://dispatch_order@4"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{routine_urp}}",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp"
+    },
+    "$example": "capcli inspect cap://dispatch_order@4"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2270
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,58 +38,162 @@
     "groups": [
       {
         "fields": {
-          "trust": "pinned",
-          "runtime": "typescript (bun)",
-          "params": "order_id: string, carrier: string",
-          "description": "\"Dispatch paid order to carrier and update status\""
+          "trust": {
+            "$slot": "trust",
+            "$from": "live.groups[0].fields.trust",
+            "$example": "pinned"
+          },
+          "runtime": {
+            "$slot": "runtime",
+            "$from": "live.groups[0].fields.runtime",
+            "$example": "typescript (bun)"
+          },
+          "params": {
+            "$slot": "params",
+            "$from": "live.groups[0].fields.params",
+            "$example": "order_id: string, carrier: string"
+          },
+          "description": {
+            "$slot": "description",
+            "$from": "live.groups[0].fields.description",
+            "$example": "\"Dispatch paid order to carrier and update status\""
+          }
         }
       },
       {
         "fields": {
-          "limits": "50 fuel declared · 300s watchdog · 500 result tokens"
+          "limits": {
+            "$slot": "limits",
+            "$from": "live.groups[1].fields.limits",
+            "$example": "50 fuel declared · 300s watchdog · 500 result tokens"
+          }
         }
       },
       {
         "lines": [
-          "manifest:",
-          "1. db.query    orders (read)",
-          "2. api.call    logistics.shipments.create",
-          "3. db.execute  orders (write)"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "manifest:"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[2].lines[1]",
+            "$example": "1. db.query    orders (read)"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[2].lines[2]",
+            "$example": "2. api.call    logistics.shipments.create"
+          },
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[2].lines[3]",
+            "$example": "3. db.execute  orders (write)"
+          }
         ]
       },
       {
         "fields": {
-          "fuel_declared": "50",
-          "session_fuel_remaining": "80400",
-          "cadence_status": "nominal",
-          "ceiling_status": "nominal",
-          "can_invoke_now": "true",
-          "tightest_constraint": "null"
+          "fuel_declared": {
+            "$slot": "fuel_declared",
+            "$from": "live.groups[3].fields.fuel_declared",
+            "$example": "50"
+          },
+          "session_fuel_remaining": {
+            "$slot": "session_fuel_remaining",
+            "$from": "live.groups[3].fields.session_fuel_remaining",
+            "$example": "80400"
+          },
+          "cadence_status": {
+            "$slot": "cadence_status",
+            "$from": "live.groups[3].fields.cadence_status",
+            "$example": "nominal"
+          },
+          "ceiling_status": {
+            "$slot": "ceiling_status",
+            "$from": "live.groups[3].fields.ceiling_status",
+            "$example": "nominal"
+          },
+          "can_invoke_now": {
+            "$slot": "can_invoke_now",
+            "$from": "live.groups[3].fields.can_invoke_now",
+            "$example": "true"
+          },
+          "tightest_constraint": {
+            "$slot": "tightest_constraint",
+            "$from": "live.groups[3].fields.tightest_constraint",
+            "$example": "null"
+          }
         },
         "lines": [
-          "budget_status:"
+          {
+            "$slot": "lines_4",
+            "$from": "live.groups[3].lines[0]",
+            "$example": "budget_status:"
+          }
         ]
       },
       {
         "fields": {
-          "max_nesting_depth": "5",
-          "budget_inheritance": "min",
-          "child_routines": "[]"
+          "max_nesting_depth": {
+            "$slot": "max_nesting_depth",
+            "$from": "live.groups[4].fields.max_nesting_depth",
+            "$example": "5"
+          },
+          "budget_inheritance": {
+            "$slot": "budget_inheritance",
+            "$from": "live.groups[4].fields.budget_inheritance",
+            "$example": "min"
+          },
+          "child_routines": {
+            "$slot": "child_routines",
+            "$from": "live.groups[4].fields.child_routines",
+            "$example": "[]"
+          }
         },
         "lines": [
-          "composition:"
+          {
+            "$slot": "lines_5",
+            "$from": "live.groups[4].lines[0]",
+            "$example": "composition:"
+          }
         ]
       },
       {
         "fields": {
-          "total_runs": "214",
-          "success_rate": "99.1%",
-          "p50_duration": "340ms",
-          "p95_duration": "890ms",
-          "last_run_at": "2m ago"
+          "total_runs": {
+            "$slot": "total_runs",
+            "$from": "live.groups[5].fields.total_runs",
+            "$example": "214"
+          },
+          "success_rate": {
+            "$slot": "success_rate",
+            "$from": "live.groups[5].fields.success_rate",
+            "$example": "99.1%"
+          },
+          "p50_duration": {
+            "$slot": "p50_duration",
+            "$from": "live.groups[5].fields.p50_duration",
+            "$example": "340ms"
+          },
+          "p95_duration": {
+            "$slot": "p95_duration",
+            "$from": "live.groups[5].fields.p95_duration",
+            "$example": "890ms"
+          },
+          "last_run_at": {
+            "$slot": "last_run_at",
+            "$from": "live.groups[5].fields.last_run_at",
+            "$example": "2m ago"
+          }
         },
         "lines": [
-          "stats:"
+          {
+            "$slot": "lines_6",
+            "$from": "live.groups[5].lines[0]",
+            "$example": "stats:"
+          }
         ]
       }
     ]

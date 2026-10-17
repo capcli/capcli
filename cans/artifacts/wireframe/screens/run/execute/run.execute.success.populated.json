@@ -1,50 +1,145 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.success.populated",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
-  "elapsed_ms": 361,
+  "scenario": {
+    "routine_urp": "cap://dispatch_order@4",
+    "routine_name": "dispatch_order",
+    "routine_version": 4,
+    "order_id": "ORD-1042",
+    "carrier": "fedex",
+    "intent": "fulfill urgent pending orders"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p order_id={{order_id}} -p carrier={{carrier}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "carrier": "scenario.carrier",
+      "order_id": "scenario.order_id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 361
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
-  "audit_op": "op_9f2c",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2c"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "routine": "dispatch_order@4 (pinned)",
-          "session": "ses_a992f",
-          "intent": "\"fulfill urgent pending orders\"",
-          "frame": "frame_021 (3/8 ops · 358ms)"
+          "routine": {
+            "$interpolate": "{{routine_name}}@{{routine_version}} (pinned)",
+            "$bindings": {
+              "routine_name": "scenario.routine_name",
+              "routine_version": "scenario.routine_version"
+            },
+            "$example": "dispatch_order@4 (pinned)"
+          },
+          "session": {
+            "$slot": "session",
+            "$from": "live.groups[0].fields.session",
+            "$example": "ses_a992f"
+          },
+          "intent": {
+            "$interpolate": "\"{{intent}}\"",
+            "$bindings": {
+              "intent": "scenario.intent"
+            },
+            "$example": "\"fulfill urgent pending orders\""
+          },
+          "frame": {
+            "$slot": "frame",
+            "$from": "live.groups[0].fields.frame",
+            "$example": "frame_021 (3/8 ops · 358ms)"
+          }
         }
       },
       {
         "lines": [
-          "leaves:",
-          "1. db.query    orders (read)               12ms",
-          "2. api.call    logistics.shipments.create  340ms",
-          "3. db.execute  orders (write)              18ms"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "leaves:"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "1. db.query    orders (read)               12ms"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[1].lines[2]",
+            "$example": "2. api.call    logistics.shipments.create  340ms"
+          },
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[1].lines[3]",
+            "$example": "3. db.execute  orders (write)              18ms"
+          }
         ]
       },
       {
         "fields": {
-          "order_id": "ORD-1042",
-          "carrier": "fedex",
-          "tracking": "794644790133",
-          "status": "shipped (1 row committed)"
+          "order_id": {
+            "$slot": "order_id",
+            "$from": "scenario.order_id",
+            "$example": "ORD-1042"
+          },
+          "carrier": {
+            "$slot": "carrier",
+            "$from": "scenario.carrier",
+            "$example": "fedex"
+          },
+          "tracking": {
+            "$slot": "tracking",
+            "$from": "live.groups[2].fields.tracking",
+            "$example": "794644790133"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[2].fields.status",
+            "$example": "shipped (1 row committed)"
+          }
         },
         "lines": [
-          "result:"
+          {
+            "$slot": "lines_4",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "result:"
+          }
         ]
       },
       {
         "fields": {
-          "result_hash": "sha256:9c41e7b0d2a8f513c6ee"
+          "result_hash": {
+            "$slot": "result_hash",
+            "$from": "live.groups[3].fields.result_hash",
+            "$example": "sha256:9c41e7b0d2a8f513c6ee"
+          }
         }
       }
     ]

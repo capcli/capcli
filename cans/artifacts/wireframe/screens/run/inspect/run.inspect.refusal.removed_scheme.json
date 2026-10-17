@@ -1,25 +1,65 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "run.inspect.refusal.removed_scheme",
+  "scenario": {
+    "hub_addr": "hub://100.64.0.1:4040"
+  },
   "archetype": "diagnostic",
-  "command": "capcli inspect hub://100.64.0.1:4040",
+  "command": {
+    "$interpolate": "capcli inspect {{hub_addr}}",
+    "$bindings": {
+      "hub_addr": "scenario.hub_addr"
+    },
+    "$example": "capcli inspect hub://100.64.0.1:4040"
+  },
   "component": {
-    "culprit": "URP scheme 'hub://' is not in the registry; hub endpoints are network transports, not URPs. hub://, prompt://, mesh://, apis://, sink://, snap:// all fail parse the same way (exit 3).",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "URP scheme 'hub://' is not in the registry; hub endpoints are network transports, not URPs. hub://, prompt://, mesh://, apis://, sink://, snap:// all fail parse the same way (exit 3)."
+    },
     "domain": "compile",
-    "expected_urp_types": "cap://, ws://, db://, vault://, audit://, ask://, quota://, doc://, pack://, policy://",
+    "expected_urp_types": {
+      "$slot": "expected_urp_types",
+      "$from": "live.expected_urp_types",
+      "$example": "cap://, ws://, db://, vault://, audit://, ask://, quota://, doc://, pack://, policy://"
+    },
     "layer": "cli",
     "lines": [
-      "FATAL  compile.removed_scheme"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  compile.removed_scheme"
+      }
     ],
-    "pointer_format": "scheme 'hub://' is not one of the 10 registered schemes",
+    "pointer_format": {
+      "$slot": "pointer_format",
+      "$from": "live.pointer_format",
+      "$example": "scheme 'hub://' is not one of the 10 registered schemes"
+    },
     "remedy": "inspect a registered URP (cap://, db://, doc://, …); hub transport config lives under artifacts/policy.yaml#network.transports",
-    "target": "'hub://100.64.0.1:4040'"
+    "target": {
+      "$interpolate": "'{{hub_addr}}'",
+      "$bindings": {
+        "hub_addr": "scenario.hub_addr"
+      },
+      "$example": "'hub://100.64.0.1:4040'"
+    }
   },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "elapsed_ms": 189,
-  "id": "run.inspect.refusal.removed_scheme",
-  "target": "hub://100.64.0.1:4040"
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 189
+  },
+  "target": {
+    "$slot": "hub_addr",
+    "$from": "scenario.hub_addr",
+    "$example": "hub://100.64.0.1:4040"
+  }
 }

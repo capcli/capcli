@@ -1,25 +1,71 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.prove.refusal.oversized_output",
-  "target": "sync_orders",
-  "command": "capcli routine prove sync_orders --env sim",
-  "elapsed_ms": 179,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine prove sync_orders --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 179
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_prove_11",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_prove_11"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "validation.routine.oversized_output",
     "domain": "validation",
-    "culprit": "Output envelope violation: the sim test pass returned an unpaginated dump of 612 result tokens (cap: 500)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Output envelope violation: the sim test pass returned an unpaginated dump of 612 result tokens (cap: 500)"
+    },
     "remedy": "return {items, pagination: {has_more, next_cursor}} from a new version — encapsulate the iteration internally — or condense the summary under 500 tokens",
-    "routine": "sync_orders@1 (draft)",
-    "emitted": "raw dump of 847 order rows (unpaginated)",
-    "keyset_pagination": "absent (no {items, next_cursor, has_more} envelope)",
-    "raw_string_slicing": "detected",
-    "measured": "612 result tokens vs 500 cap"
+    "routine": {
+      "$slot": "routine",
+      "$from": "live.routine",
+      "$example": "sync_orders@1 (draft)"
+    },
+    "emitted": {
+      "$slot": "emitted",
+      "$from": "live.emitted",
+      "$example": "raw dump of 847 order rows (unpaginated)"
+    },
+    "keyset_pagination": {
+      "$slot": "keyset_pagination",
+      "$from": "live.keyset_pagination",
+      "$example": "absent (no {items, next_cursor, has_more} envelope)"
+    },
+    "raw_string_slicing": {
+      "$slot": "raw_string_slicing",
+      "$from": "live.raw_string_slicing",
+      "$example": "detected"
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "612 result tokens vs 500 cap"
+    }
   }
 }

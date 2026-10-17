@@ -1,55 +1,181 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.success.truncated",
-  "target": "cap://report_orders@2",
-  "command": "capcli run cap://report_orders@2 -p quarter=2026Q3",
-  "elapsed_ms": 1334,
+  "scenario": {
+    "routine_urp": "cap://report_orders@2",
+    "routine_name": "report_orders",
+    "routine_version": 2,
+    "quarter": "2026Q3"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://report_orders@2"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p quarter={{quarter}}",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "quarter": "scenario.quarter"
+    },
+    "$example": "capcli run cap://report_orders@2 -p quarter=2026Q3"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1334
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "truncated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "truncated"
+    }
   },
-  "audit_op": "op_9f32b",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f32b"
+  },
   "archetype": "document",
   "component": {
-    "header_badge": "truncated",
+    "header_badge": {
+      "$slot": "header_badge",
+      "$from": "live.header_badge",
+      "$example": "truncated"
+    },
     "pagination": {
       "items": [
         {
-          "step": 1,
-          "op": "db.query",
-          "target": "orders (read)",
-          "ms": 14
+          "step": {
+            "$slot": "step",
+            "$from": "live.pagination.items[0].step",
+            "$type": "integer",
+            "$example": 1
+          },
+          "op": {
+            "$slot": "op",
+            "$from": "live.pagination.items[0].op",
+            "$example": "db.query"
+          },
+          "target": {
+            "$slot": "target",
+            "$from": "live.pagination.items[0].target",
+            "$example": "orders (read)"
+          },
+          "ms": {
+            "$slot": "ms",
+            "$from": "live.pagination.items[0].ms",
+            "$type": "integer",
+            "$example": 14
+          }
         },
         {
-          "step": 2,
-          "op": "db.query",
-          "target": "order_items (read)",
-          "ms": 31
+          "step": {
+            "$slot": "step_2",
+            "$from": "live.pagination.items[1].step",
+            "$type": "integer",
+            "$example": 2
+          },
+          "op": {
+            "$slot": "op_2",
+            "$from": "live.pagination.items[1].op",
+            "$example": "db.query"
+          },
+          "target": {
+            "$slot": "target_2",
+            "$from": "live.pagination.items[1].target",
+            "$example": "order_items (read)"
+          },
+          "ms": {
+            "$slot": "ms_2",
+            "$from": "live.pagination.items[1].ms",
+            "$type": "integer",
+            "$example": 31
+          }
         }
       ],
-      "next_cursor": "cur_0192f",
-      "has_more": true
+      "next_cursor": {
+        "$slot": "next_cursor",
+        "$from": "live.pagination.next_cursor",
+        "$example": "cur_0192f"
+      },
+      "has_more": {
+        "$slot": "has_more",
+        "$from": "live.pagination.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "meta": {
-      "next_cursor": "cur_0192f",
-      "has_more": true
+      "next_cursor": {
+        "$slot": "next_cursor_2",
+        "$from": "live.meta.next_cursor",
+        "$example": "cur_0192f"
+      },
+      "has_more": {
+        "$slot": "has_more_2",
+        "$from": "live.meta.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "fields": {
-      "routine": "report_orders@2 (reviewed)",
-      "frame": "frame_022",
-      "result": "500 of 2384 tokens (cap: 500)",
-      "truncated": "true"
+      "routine": {
+        "$interpolate": "{{routine_name}}@{{routine_version}} (reviewed)",
+        "$bindings": {
+          "routine_name": "scenario.routine_name",
+          "routine_version": "scenario.routine_version"
+        },
+        "$example": "report_orders@2 (reviewed)"
+      },
+      "frame": {
+        "$slot": "frame",
+        "$from": "live.fields.frame",
+        "$example": "frame_022"
+      },
+      "result": {
+        "$slot": "result",
+        "$from": "live.fields.result",
+        "$example": "500 of 2384 tokens (cap: 500)"
+      },
+      "truncated": {
+        "$slot": "truncated",
+        "$from": "live.fields.truncated",
+        "$example": "true"
+      }
     },
     "body": []
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli run cap://report_orders@2 -p quarter=2026Q3 --out report.json",
-      "intent": "Payload directed to file via `--out`; stdout emits receipt",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli run {{routine_urp}} -p quarter={{quarter}} --out report.json",
+        "$bindings": {
+          "routine_urp": "scenario.routine_urp",
+          "quarter": "scenario.quarter"
+        },
+        "$example": "capcli run cap://report_orders@2 -p quarter=2026Q3 --out report.json"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Payload directed to file via `--out`; stdout emits receipt"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.replay.refusal.missing_from",
-  "target": "_audit",
-  "command": "capcli sys audit replay",
-  "elapsed_ms": 248,
+  "scenario": {
+    "audit": "_audit"
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit replay",
+    "$bindings": {},
+    "$example": "capcli sys audit replay"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 248
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,11 +28,23 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "missing_param",
-    "culprit": "replay anchor omitted: --from <timestamp> or --from <commit> is required",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "replay anchor omitted: --from <timestamp> or --from <commit> is required"
+    },
     "remedy": "re-run as capcli sys audit replay --from 2026-10-03T22:41:07Z",
-    "replay_anchor": "--from <timestamp> or --from <commit> is required",
+    "replay_anchor": {
+      "$slot": "replay_anchor",
+      "$from": "live.replay_anchor",
+      "$example": "--from <timestamp> or --from <commit> is required"
+    },
     "lines": [
-      "FATAL  missing_param.missing_arg"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  missing_param.missing_arg"
+      }
     ]
   }
 }

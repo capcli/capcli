@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.exec.denial.sandbox",
-  "target": "sandbox",
-  "command": "capcli sys exec \"python3 etl.py\" --sandbox",
-  "elapsed_ms": 338,
+  "scenario": {
+    "layer": "sandbox"
+  },
+  "target": {
+    "$slot": "layer",
+    "$from": "scenario.layer",
+    "$example": "sandbox"
+  },
+  "command": {
+    "$interpolate": "capcli sys exec \"python3 etl.py\" --sandbox",
+    "$bindings": {},
+    "$example": "capcli sys exec \"python3 etl.py\" --sandbox"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 338
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,18 +30,52 @@
     "rule": "kernel.sandbox.escape_attempt",
     "domain": "kernel.sandbox",
     "layer": "sandbox",
-    "culprit": "Attempted unconfined escape: bwrap pivot_root remount plus ptrace (syscall 101) outside profile_python",
-    "measured": "2 containment violations (tolerated: 0)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Attempted unconfined escape: bwrap pivot_root remount plus ptrace (syscall 101) outside profile_python"
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "2 containment violations (tolerated: 0)"
+    },
     "remedy": "strip escape attempts from the command; raw host access is never granted inside the jail",
-    "command": "python3 etl.py",
+    "command": {
+      "$slot": "command",
+      "$from": "live.command",
+      "$example": "python3 etl.py"
+    },
     "violation": [
-      "bwrap pivot_root remount from inside the jail",
-      "ptrace (syscall 101) outside profile_python allowlist"
+      {
+        "$slot": "violation_0",
+        "$from": "live.violation[0]",
+        "$example": "bwrap pivot_root remount from inside the jail"
+      },
+      {
+        "$slot": "violation_1",
+        "$from": "live.violation[1]",
+        "$example": "ptrace (syscall 101) outside profile_python allowlist"
+      }
     ],
     "lines": [
-      "Attempted unconfined escape; jail torn down mid-execution.",
-      "layer:          sandbox",
-      "measured:       2 containment violations (tolerated: 0)"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Attempted unconfined escape; jail torn down mid-execution."
+      },
+      {
+        "$interpolate": "layer:          {{layer}}",
+        "$bindings": {
+          "layer": "scenario.layer"
+        },
+        "$example": "layer:          sandbox"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[2]",
+        "$example": "measured:       2 containment violations (tolerated: 0)"
+      }
     ]
   }
 }

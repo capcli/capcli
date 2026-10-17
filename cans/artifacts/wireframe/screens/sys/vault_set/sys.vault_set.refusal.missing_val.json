@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.vault_set.refusal.missing_val",
-  "target": "stripe_secret_key",
-  "command": "capcli sys vault set stripe_secret_key",
-  "elapsed_ms": 27,
+  "scenario": {
+    "stripe_secret_key": "stripe_secret_key"
+  },
+  "target": {
+    "$slot": "stripe_secret_key",
+    "$from": "scenario.stripe_secret_key",
+    "$example": "stripe_secret_key"
+  },
+  "command": {
+    "$interpolate": "capcli sys vault set {{stripe_secret_key}}",
+    "$bindings": {
+      "stripe_secret_key": "scenario.stripe_secret_key"
+    },
+    "$example": "capcli sys vault set stripe_secret_key"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 27
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,11 +30,25 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "missing_param",
-    "culprit": "vault set for key 'stripe_secret_key' received no value (stdin empty)",
+    "culprit": {
+      "$interpolate": "vault set for key '{{stripe_secret_key}}' received no value (stdin empty)",
+      "$bindings": {
+        "stripe_secret_key": "scenario.stripe_secret_key"
+      },
+      "$example": "vault set for key 'stripe_secret_key' received no value (stdin empty)"
+    },
     "remedy": "re-run as capcli sys vault set stripe_secret_key --in @- and pipe the value on stdin",
     "lines": [
-      "FATAL  missing_param.missing_arg",
-      "plaintext values are never read from logs or transcripts"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  missing_param.missing_arg"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "plaintext values are never read from logs or transcripts"
+      }
     ]
   }
 }

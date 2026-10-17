@@ -1,9 +1,33 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.denial.budget",
-  "target": "cap://archive_old_orders@3",
-  "command": "capcli run cap://archive_old_orders@3 -p cutoff=90d -m \"archive stale orders\"",
-  "elapsed_ms": 397,
+  "scenario": {
+    "routine_urp": "cap://archive_old_orders@3",
+    "routine_name": "archive_old_orders",
+    "routine_version": 3,
+    "cutoff": "90d",
+    "intent": "archive stale orders"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://archive_old_orders@3"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p cutoff={{cutoff}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "cutoff": "scenario.cutoff",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://archive_old_orders@3 -p cutoff=90d -m \"archive stale orders\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 397
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,17 +38,61 @@
     "rule": "policy.budget.exhausted",
     "domain": "policy.budget",
     "layer": "budget",
-    "culprit": "Frame fuel exhausted: archive_old_orders@3 (frame_005) hit 20/20 fuel at attempted_op db.exec; the frame aborts with exit 2 and the parent retains its balance.",
-    "measured": "frame fuel 20/20 · session fuel remaining 488",
+    "culprit": {
+      "$interpolate": "Frame fuel exhausted: {{routine_name}}@{{routine_version}} ({{frame_id}}) hit 20/20 fuel at attempted_op db.exec; the frame aborts with exit 2 and the parent retains its balance.",
+      "$bindings": {
+        "routine_name": "scenario.routine_name",
+        "routine_version": "scenario.routine_version",
+        "frame_id": "live.frame_id"
+      },
+      "$example": "Frame fuel exhausted: archive_old_orders@3 (frame_005) hit 20/20 fuel at attempted_op db.exec; the frame aborts with exit 2 and the parent retains its balance."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "frame fuel 20/20 · session fuel remaining 488"
+    },
     "remedy": "split the work into chunked routines, or raise fuel_declared in a new routine version",
-    "attempted_op": "db.exec (attempt 21 crossed the frame fuel ceiling)",
-    "blocking_level": "frame",
-    "remaining": "0 fuel at frame level",
-    "ancestors": "session fuel remaining 488 (frame was the tightest constraint)",
-    "partial_execution": "the routine failed cleanly",
+    "attempted_op": {
+      "$slot": "attempted_op",
+      "$from": "live.attempted_op",
+      "$example": "db.exec (attempt 21 crossed the frame fuel ceiling)"
+    },
+    "blocking_level": {
+      "$slot": "blocking_level",
+      "$from": "live.blocking_level",
+      "$example": "frame"
+    },
+    "remaining": {
+      "$slot": "remaining",
+      "$from": "live.remaining",
+      "$example": "0 fuel at frame level"
+    },
+    "ancestors": {
+      "$slot": "ancestors",
+      "$from": "live.ancestors",
+      "$example": "session fuel remaining 488 (frame was the tightest constraint)"
+    },
+    "partial_execution": {
+      "$slot": "partial_execution",
+      "$from": "live.partial_execution",
+      "$example": "the routine failed cleanly"
+    },
     "lines": [
-      "archive_old_orders@3 (frame_005) exhausted fuel: 20/20",
-      "with zero half-executed side effects."
+      {
+        "$interpolate": "{{routine_name}}@{{routine_version}} ({{frame_id}}) exhausted fuel: 20/20",
+        "$bindings": {
+          "routine_name": "scenario.routine_name",
+          "routine_version": "scenario.routine_version",
+          "frame_id": "live.frame_id"
+        },
+        "$example": "archive_old_orders@3 (frame_005) exhausted fuel: 20/20"
+      },
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[1]",
+        "$example": "with zero half-executed side effects."
+      }
     ]
   }
 }

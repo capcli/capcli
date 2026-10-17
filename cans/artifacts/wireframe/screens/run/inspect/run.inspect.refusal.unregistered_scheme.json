@@ -1,25 +1,65 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "run.inspect.refusal.unregistered_scheme",
+  "scenario": {
+    "tcp_addr": "tcp://100.64.0.1:4040"
+  },
   "archetype": "diagnostic",
-  "command": "capcli inspect tcp://100.64.0.1:4040",
+  "command": {
+    "$interpolate": "capcli inspect {{tcp_addr}}",
+    "$bindings": {
+      "tcp_addr": "scenario.tcp_addr"
+    },
+    "$example": "capcli inspect tcp://100.64.0.1:4040"
+  },
   "component": {
-    "culprit": "Unregistered URP scheme 'tcp://': network transports are not URPs.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Unregistered URP scheme 'tcp://': network transports are not URPs."
+    },
     "domain": "compile",
-    "expected_urp_types": "cap://, ask://, audit://, quota://, vault://, pack://, policy://, ws://, db://, doc://, plugin://",
+    "expected_urp_types": {
+      "$slot": "expected_urp_types",
+      "$from": "live.expected_urp_types",
+      "$example": "cap://, ask://, audit://, quota://, vault://, pack://, policy://, ws://, db://, doc://, plugin://"
+    },
     "layer": "cli",
     "lines": [
-      "FATAL  compile.unregistered_scheme"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  compile.unregistered_scheme"
+      }
     ],
-    "pointer_format": "scheme 'tcp://' not in the 11-scheme registry",
+    "pointer_format": {
+      "$slot": "pointer_format",
+      "$from": "live.pointer_format",
+      "$example": "scheme 'tcp://' not in the 11-scheme registry"
+    },
     "remedy": "run capcli sys swarm list for hub endpoints, or inspect a registered URP",
-    "target": "'tcp://100.64.0.1:4040'"
+    "target": {
+      "$interpolate": "'{{tcp_addr}}'",
+      "$bindings": {
+        "tcp_addr": "scenario.tcp_addr"
+      },
+      "$example": "'tcp://100.64.0.1:4040'"
+    }
   },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "elapsed_ms": 212,
-  "id": "run.inspect.refusal.unregistered_scheme",
-  "target": "tcp://100.64.0.1:4040"
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 212
+  },
+  "target": {
+    "$slot": "tcp_addr",
+    "$from": "scenario.tcp_addr",
+    "$example": "tcp://100.64.0.1:4040"
+  }
 }

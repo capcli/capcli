@@ -1,54 +1,134 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.catalog.success.populated",
-  "target": "stripe",
-  "command": "capcli api catalog stripe --state active --json",
-  "elapsed_ms": 453,
+  "scenario": {
+    "provider": "stripe"
+  },
+  "target": {
+    "$slot": "provider",
+    "$from": "scenario.provider",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli api catalog {{provider}} --state active --json",
+    "$bindings": {
+      "provider": "scenario.provider"
+    },
+    "$example": "capcli api catalog stripe --state active --json"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 453
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "populated",
-    "root": "cap://stripe",
+    "title": {
+      "$slot": "title",
+      "$from": "live.catalog.title",
+      "$example": "populated"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.catalog.root",
+      "$example": "cap://stripe"
+    },
     "nodes": [
       {
-        "label": "refund_charge active draft 214 calls",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.catalog.nodes[0].label",
+          "$example": "refund_charge active draft 214 calls"
+        },
         "children": []
       },
       {
-        "label": "create_payment_intent active draft 89 calls",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.catalog.nodes[1].label",
+          "$example": "create_payment_intent active draft 89 calls"
+        },
         "children": [
           {
-            "label": "last_call op_5a72 (ok)",
+            "label": {
+              "$slot": "n1c0",
+              "$from": "live.catalog.nodes[1].children[0].label",
+              "$example": "last_call op_5a72 (ok)"
+            },
             "children": []
           }
         ]
       },
       {
-        "label": "issue_credit_note active draft 12 calls",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.catalog.nodes[2].label",
+          "$example": "issue_credit_note active draft 12 calls"
+        },
         "children": []
       },
       {
-        "label": "void_invoice active draft 4 calls",
+        "label": {
+          "$slot": "n3",
+          "$from": "live.catalog.nodes[3].label",
+          "$example": "void_invoice active draft 4 calls"
+        },
         "children": []
       }
     ],
     "footer": {
-      "provider": "stripe",
-      "state_filter": "active",
-      "verbs": "418 active of 418 total (4 invoked)"
+      "provider": {
+        "$slot": "provider_2",
+        "$from": "scenario.provider",
+        "$example": "stripe"
+      },
+      "state_filter": {
+        "$slot": "state_filter",
+        "$from": "live.catalog.footer.state_filter",
+        "$example": "active"
+      },
+      "verbs": {
+        "$slot": "verbs",
+        "$from": "live.catalog.footer.verbs",
+        "$example": "418 active of 418 total (4 invoked)"
+      }
     }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api record stripe.charges.create -p charge_id=\"ch_1032ZX\"",
-      "intent": "Live response captured; JSON Schema contract compiled",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api record {{provider}}.charges.create -p charge_id=\"ch_1032ZX\"",
+        "$bindings": {
+          "provider": "scenario.provider"
+        },
+        "$example": "capcli api record stripe.charges.create -p charge_id=\"ch_1032ZX\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Live response captured; JSON Schema contract compiled"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

@@ -40,12 +40,12 @@ async function loadJSON(path){
   return r.json();
 }
 
-// ─── wireframe/v2 component renderers (pure fns, no JSX) ───────
-// v2 fixtures are serialized CliEnvelope payloads plus a layout
+// ─── wireframe/v1 component renderers (pure fns, no JSX) ───────
+// v1 screens are serialized CliEnvelope payloads plus a layout
 // archetype. Each renderer maps (context, component) to the shared
 // {header, sections} view the panel DOM consumes, computing layout
 // procedurally — caret columns, tree glyphs, divider runs — so no
-// fixture ever stores ASCII art, indents, or repeated state fields.
+// screen ever stores ASCII art, indents, or repeated state fields.
 // context is the envelope context {env, tier, trust} enriched by the
 // dispatcher with {id, audit_op, exit}. Exit derives from the screen
 // id's state segment (denial 2, refusal 3, crash 4, panic 5, yield 6,
@@ -68,10 +68,9 @@ function fmtElapsed(ms){
   return parseFloat(s.toFixed(s>=10?1:2))+'s';
 }
 
-function fixtureExitCode(fixture){
-  if(!fixture)return 0;
-  if(fixture.$schema==='wireframe/v2')return exitCodeFromScreenId(fixture.id||fixture.screen_id);
-  return fixture.state?.exit_code??0;
+function screenExitCode(screen){
+  if(!screen)return 0;
+  return exitCodeFromScreenId(screen.id);
 }
 
 function kvValue(v){
@@ -263,35 +262,48 @@ function renderDocument(context,component){
   return{header:{style:'badge',label},sections};
 }
 
-const WIREFRAME_V2_RENDERERS={diagnostic:renderDiagnostic,tree:renderTree,receipt:renderReceipt,document:renderDocument};
+const WIREFRAME_V1_RENDERERS={diagnostic:renderDiagnostic,tree:renderTree,receipt:renderReceipt,document:renderDocument};
 
-// Normalize a wireframe/v2 fixture into the shared view shape. v1
-// fixtures pass through untouched, so the canvas stays playable at
-// every intermediate migration state.
-function normalizeV2Fixture(fixture){
-  const id=fixture.id||fixture.screen_id||'';
+// Instantiate a wireframe/v1 screen: $slot / $interpolate objects resolve
+// to their $example literal, so the canvas renders the authoring-mode bytes.
+function instantiate(value){
+  if(Array.isArray(value))return value.map(instantiate);
+  if(value&&typeof value==='object'){
+    if('$slot' in value)return instantiate(value.$example);
+    if('$interpolate' in value)return instantiate(value.$example);
+    const out={};
+    for(const[k,v]of Object.entries(value))out[k]=instantiate(v);
+    return out;
+  }
+  return value;
+}
+
+function normalizeScreen(screen){
+  const id=screen.id||'';
   const exit=exitCodeFromScreenId(id);
-  const context={env:'dev',tier:'tier_1',trust:'draft',...(fixture.context&&typeof fixture.context==='object'?fixture.context:{}),id,audit_op:fixture.audit_op??null,exit};
-  const renderer=WIREFRAME_V2_RENDERERS[fixture.archetype];
-  const built=renderer?renderer(context,fixture.component||{}):null;
+  const inst=instantiate(screen);
+  const context={env:'dev',tier:'tier_1',trust:'draft',
+                 ...(inst.context&&typeof inst.context==='object'?inst.context:{}),
+                 id, audit_op:inst.audit_op??null, exit};
+  const renderer=WIREFRAME_V1_RENDERERS[inst.archetype];
+  const built=renderer?renderer(context,inst.component||{}):null;
   const header=built?.header||{style:'badge',label:`exit ${exit}`};
   const sections=built?.sections||[];
-  const rawTrailer=fixture.trailer||fixture.next_action;
+  const rawTrailer=inst.trailer||inst.next_action;
   const trailer=(rawTrailer&&typeof rawTrailer==='object')
     ?{prompt:rawTrailer.prompt??rawTrailer.next_prompt,reason:rawTrailer.reason,serve:rawTrailer.serve}
     :undefined;
-  return{
-    ...fixture,
-    state:{exit_code:exit,env:context.env,tier:context.tier,trust:context.trust,state_modified:exit!==0?false:!!fixture.state_modified,domain:(fixture.component&&fixture.component.domain)||null,data_shape:null},
-    render:{header,sections},
-    trailer,
-  };
+  return{ ...inst,
+    state:{exit_code:exit,env:context.env,tier:context.tier,trust:context.trust,
+           state_modified:exit!==0?false:!!inst.state_modified,
+           domain:(inst.component&&inst.component.domain)||null,data_shape:null},
+    render:{header,sections}, trailer };
 }
 
 // ─── Screen Renderer (JSON shape → styled output) ──────────────
 function RenderScreen({fixture}){
   if(!fixture)return null;
-  const view=fixture.$schema==='wireframe/v2'?normalizeV2Fixture(fixture):fixture;
+  const view=normalizeScreen(fixture);
   const{state,render,diagnostic,trailer}=view;
   const env=state?.env||'dev';
   const tier=state?.tier||'tier_1';
@@ -431,7 +443,7 @@ function TerminalPanel({screenId,visible,onClose}){
 
   if(!visible)return null;
 
-  const exit=fixtureExitCode(fixture);
+  const exit=screenExitCode(fixture);
   const exitColors={0:'text-success',2:'text-denial',3:'text-refusal',4:'text-crash',5:'text-panic',6:'text-yield'};
 
   return(

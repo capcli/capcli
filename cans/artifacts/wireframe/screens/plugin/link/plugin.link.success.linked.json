@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "plugin.link.success.linked",
-  "target": "stripe-dev",
-  "command": "capcli plugin link ./packs/stripe-dev",
-  "elapsed_ms": 214,
+  "scenario": {
+    "plugin_id": "stripe-dev"
+  },
+  "target": {
+    "$slot": "plugin_id",
+    "$from": "scenario.plugin_id",
+    "$example": "stripe-dev"
+  },
+  "command": {
+    "$interpolate": "capcli plugin link ./packs/stripe-dev",
+    "$bindings": {},
+    "$example": "capcli plugin link ./packs/stripe-dev"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 214
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,21 +31,59 @@
     "groups": [
       {
         "fields": {
-          "plugin_id": "stripe-dev",
-          "path": "./packs/stripe-dev",
-          "mode": "hot-reload symlink",
-          "env": "dev",
-          "note": "link restricted to dev environment"
+          "plugin_id": {
+            "$slot": "plugin_id_2",
+            "$from": "scenario.plugin_id",
+            "$example": "stripe-dev"
+          },
+          "path": {
+            "$slot": "path",
+            "$from": "live.groups[0].fields.path",
+            "$example": "./packs/stripe-dev"
+          },
+          "mode": {
+            "$slot": "mode",
+            "$from": "live.groups[0].fields.mode",
+            "$example": "hot-reload symlink"
+          },
+          "env": {
+            "$slot": "env",
+            "$from": "live.groups[0].fields.env",
+            "$example": "dev"
+          },
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[0].fields.note",
+            "$example": "link restricted to dev environment"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli plugin inspect stripe-dev",
-      "intent": "Plugin preflight envelope",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli plugin inspect {{plugin_id}}",
+        "$bindings": {
+          "plugin_id": "scenario.plugin_id"
+        },
+        "$example": "capcli plugin inspect stripe-dev"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Plugin preflight envelope"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

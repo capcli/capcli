@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.ask.refusal.missing_intent",
-  "target": "user:root",
-  "command": "capcli ping ask user:root \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
-  "elapsed_ms": 106,
+  "scenario": {
+    "principal": "user:root"
+  },
+  "target": {
+    "$slot": "principal",
+    "$from": "scenario.principal",
+    "$example": "user:root"
+  },
+  "command": {
+    "$interpolate": "capcli ping ask {{principal}} \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
+    "$bindings": {
+      "principal": "scenario.principal"
+    },
+    "$example": "capcli ping ask user:root \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 106
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,11 +31,25 @@
   "component": {
     "rule": "missing_param.no_intent",
     "domain": "missing_param",
-    "culprit": "Missing intent declaration.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Missing intent declaration."
+    },
     "remedy": "re-run with --intent \"<why this question is asked>\"",
-    "intent_policy": "notify.require_intent",
+    "intent_policy": {
+      "$slot": "intent_policy",
+      "$from": "live.intent_policy",
+      "$example": "notify.require_intent"
+    },
     "lines": [
-      "capcli ping ask user:root \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h"
+      {
+        "$interpolate": "capcli ping ask {{principal}} \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h",
+        "$bindings": {
+          "principal": "scenario.principal"
+        },
+        "$example": "capcli ping ask user:root \"Approve refund for order ORD-10?\" --options approve,reject,escalate --timeout 24h"
+      }
     ]
   }
 }

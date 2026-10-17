@@ -1,31 +1,77 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.revoke.success.revoked",
-  "target": "agt_7f3k",
-  "command": "capcli sys agent revoke agt_7f3k",
-  "elapsed_ms": 673,
+  "scenario": {
+    "agent_id": "agt_7f3k"
+  },
+  "target": {
+    "$slot": "agent_id",
+    "$from": "scenario.agent_id",
+    "$example": "agt_7f3k"
+  },
+  "command": {
+    "$interpolate": "capcli sys agent revoke {{agent_id}}",
+    "$bindings": {
+      "agent_id": "scenario.agent_id"
+    },
+    "$example": "capcli sys agent revoke agt_7f3k"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 673
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_r703",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_r703"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "agent_id": "agt_7f3k",
-          "principal": "user:root",
-          "status": "revoked — credentials killed",
-          "sessions": "1 active session terminated instantly (ses_a992f)",
-          "tokens": "capability token invalidated; in-flight op halted at leaf boundary"
+          "agent_id": {
+            "$slot": "agent_id_2",
+            "$from": "scenario.agent_id",
+            "$example": "agt_7f3k"
+          },
+          "principal": {
+            "$slot": "principal",
+            "$from": "live.groups[0].fields.principal",
+            "$example": "user:root"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[0].fields.status",
+            "$example": "revoked — credentials killed"
+          },
+          "sessions": {
+            "$slot": "sessions",
+            "$from": "live.groups[0].fields.sessions",
+            "$example": "1 active session terminated instantly (ses_a992f)"
+          },
+          "tokens": {
+            "$slot": "tokens",
+            "$from": "live.groups[0].fields.tokens",
+            "$example": "capability token invalidated; in-flight op halted at leaf boundary"
+          }
         }
       },
       {
         "fields": {
-          "note": "revoked_agent: deny_all — no grace period, no further dispatch under this identity"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[1].fields.note",
+            "$example": "revoked_agent: deny_all — no grace period, no further dispatch under this identity"
+          }
         }
       }
     ]

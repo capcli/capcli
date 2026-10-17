@@ -1,39 +1,101 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.inbox.success.populated",
-  "target": "webhook",
-  "command": "capcli sys inbox pop --channel webhook",
-  "elapsed_ms": 1004,
+  "scenario": {
+    "channel": "webhook"
+  },
+  "target": {
+    "$slot": "channel",
+    "$from": "scenario.channel",
+    "$example": "webhook"
+  },
+  "command": {
+    "$interpolate": "capcli sys inbox pop --channel {{channel}}",
+    "$bindings": {
+      "channel": "scenario.channel"
+    },
+    "$example": "capcli sys inbox pop --channel webhook"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1004
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "popped",
-    "root": "events:",
+    "title": {
+      "$slot": "title",
+      "$from": "live.inbox.title",
+      "$example": "popped"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.inbox.root",
+      "$example": "events:"
+    },
     "nodes": [
       {
-        "label": "evt_ord_901 2m ago shopify_orders → cap://fulfill_order@4 (60x BEANS-LIGHT-1KG)",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.inbox.nodes[0].label",
+          "$example": "evt_ord_901 2m ago shopify_orders → cap://fulfill_order@4 (60x BEANS-LIGHT-1KG)"
+        },
         "children": []
       },
       {
-        "label": "evt_ord_902 5m ago shopify_orders → cap://fulfill_order@4 (12x ESPRESSO-DARK-250G)",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.inbox.nodes[1].label",
+          "$example": "evt_ord_902 5m ago shopify_orders → cap://fulfill_order@4 (12x ESPRESSO-DARK-250G)"
+        },
         "children": []
       },
       {
-        "label": "evt_ord_903 9m ago shopify_refunds → cap://issue_refund@2 (charge ch_1N2x, ORD-1042)",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.inbox.nodes[2].label",
+          "$example": "evt_ord_903 9m ago shopify_refunds → cap://issue_refund@2 (charge ch_1N2x, ORD-1042)"
+        },
         "children": []
       }
     ],
     "footer": {
-      "channel": "webhook",
-      "source_bindings": "shopify_orders, shopify_refunds (HMAC-verified intake)",
-      "popped": "3 events",
-      "remaining": "0 awaiting pickup on channel",
-      "note": "events delivered to caller exactly once"
+      "channel": {
+        "$slot": "channel_2",
+        "$from": "scenario.channel",
+        "$example": "webhook"
+      },
+      "source_bindings": {
+        "$slot": "source_bindings",
+        "$from": "live.inbox.footer.source_bindings",
+        "$example": "shopify_orders, shopify_refunds (HMAC-verified intake)"
+      },
+      "popped": {
+        "$slot": "popped",
+        "$from": "live.inbox.footer.popped",
+        "$example": "3 events"
+      },
+      "remaining": {
+        "$slot": "remaining",
+        "$from": "live.inbox.footer.remaining",
+        "$example": "0 awaiting pickup on channel"
+      },
+      "note": {
+        "$slot": "note",
+        "$from": "live.inbox.footer.note",
+        "$example": "events delivered to caller exactly once"
+      }
     }
   }
 }

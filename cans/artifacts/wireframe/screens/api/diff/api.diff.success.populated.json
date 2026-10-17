@@ -1,53 +1,145 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.diff.success.populated",
-  "target": "stripe",
-  "command": "capcli api diff stripe",
-  "elapsed_ms": 606,
+  "scenario": {
+    "provider": "stripe"
+  },
+  "target": {
+    "$slot": "provider",
+    "$from": "scenario.provider",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli api diff {{provider}}",
+    "$bindings": {
+      "provider": "scenario.provider"
+    },
+    "$example": "capcli api diff stripe"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 606
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "populated",
-    "root": "stripe.refund_charge",
+    "title": {
+      "$slot": "title",
+      "$from": "live.diff.title",
+      "$example": "populated"
+    },
+    "root": {
+      "$interpolate": "{{provider}}.refund_charge",
+      "$bindings": {
+        "provider": "scenario.provider"
+      },
+      "$example": "stripe.refund_charge"
+    },
     "nodes": [
       {
-        "label": "stripe.issue_credit_note",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.diff.nodes[0].label",
+          "$example": "stripe.issue_credit_note"
+        },
         "children": []
       },
       {
-        "label": "stripe.void_invoice",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.diff.nodes[1].label",
+          "$example": "stripe.void_invoice"
+        },
         "children": []
       },
       {
-        "label": "stripe.create_payment_intent (amount: string → integer)",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.diff.nodes[2].label",
+          "$example": "stripe.create_payment_intent (amount: string → integer)"
+        },
         "children": []
       },
       {
-        "label": "stripe.capture_charge → flagged deprecated (auto_deprecate_removed)",
+        "label": {
+          "$slot": "n3",
+          "$from": "live.diff.nodes[3].label",
+          "$example": "stripe.capture_charge → flagged deprecated (auto_deprecate_removed)"
+        },
         "children": []
       }
     ],
     "footer": {
-      "provider": "stripe",
-      "local_hash": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa",
-      "remote_hash": "sha256:2b7e8f1a4c6d9e3f5a7b1c8d2e4f6a9b3c5d7e1f",
-      "drift": "spec divergence detected",
-      "added_verbs": "3",
-      "changed_verbs": "1",
-      "removed_verbs": "1"
+      "provider": {
+        "$slot": "provider_2",
+        "$from": "scenario.provider",
+        "$example": "stripe"
+      },
+      "local_hash": {
+        "$slot": "local_hash",
+        "$from": "live.diff.footer.local_hash",
+        "$example": "sha256:9d4f2c7b8e1a6f04c3d5b8a9e2f1c7d4b6a3e5fa"
+      },
+      "remote_hash": {
+        "$slot": "remote_hash",
+        "$from": "live.diff.footer.remote_hash",
+        "$example": "sha256:2b7e8f1a4c6d9e3f5a7b1c8d2e4f6a9b3c5d7e1f"
+      },
+      "drift": {
+        "$slot": "drift",
+        "$from": "live.diff.footer.drift",
+        "$example": "spec divergence detected"
+      },
+      "added_verbs": {
+        "$slot": "added_verbs",
+        "$from": "live.diff.footer.added_verbs",
+        "$example": "3"
+      },
+      "changed_verbs": {
+        "$slot": "changed_verbs",
+        "$from": "live.diff.footer.changed_verbs",
+        "$example": "1"
+      },
+      "removed_verbs": {
+        "$slot": "removed_verbs",
+        "$from": "live.diff.footer.removed_verbs",
+        "$example": "1"
+      }
     }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api catalog",
-      "intent": "Zero APIs configured",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api catalog",
+        "$bindings": {},
+        "$example": "capcli api catalog"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Zero APIs configured"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

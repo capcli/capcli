@@ -1,54 +1,152 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.dump.success.truncated",
-  "target": "envs/dev/workspace.db",
-  "command": "capcli db dump",
-  "elapsed_ms": 2211,
+  "scenario": {
+    "db_path": "envs/dev/workspace.db"
+  },
+  "target": {
+    "$slot": "db_path",
+    "$from": "scenario.db_path",
+    "$example": "envs/dev/workspace.db"
+  },
+  "command": {
+    "$interpolate": "capcli db dump",
+    "$bindings": {},
+    "$example": "capcli db dump"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2211
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "truncated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "truncated"
+    }
   },
   "archetype": "document",
   "component": {
-    "header_badge": "truncated",
+    "header_badge": {
+      "$slot": "header_badge",
+      "$from": "live.header_badge",
+      "$example": "truncated"
+    },
     "pagination": {
       "items": [
         {
-          "object": "table",
-          "name": "orders",
-          "ddl": "CREATE TABLE orders (...)"
+          "object": {
+            "$slot": "object",
+            "$from": "live.pagination.items[0].object",
+            "$example": "table"
+          },
+          "name": {
+            "$slot": "name",
+            "$from": "live.pagination.items[0].name",
+            "$example": "orders"
+          },
+          "ddl": {
+            "$slot": "ddl",
+            "$from": "live.pagination.items[0].ddl",
+            "$example": "CREATE TABLE orders (...)"
+          }
         },
         {
-          "object": "table",
-          "name": "order_items",
-          "ddl": "CREATE TABLE order_items (...)"
+          "object": {
+            "$slot": "object_2",
+            "$from": "live.pagination.items[1].object",
+            "$example": "table"
+          },
+          "name": {
+            "$slot": "name_2",
+            "$from": "live.pagination.items[1].name",
+            "$example": "order_items"
+          },
+          "ddl": {
+            "$slot": "ddl_2",
+            "$from": "live.pagination.items[1].ddl",
+            "$example": "CREATE TABLE order_items (...)"
+          }
         }
       ],
       "next_cursor": null,
-      "has_more": false
+      "has_more": {
+        "$slot": "has_more",
+        "$from": "live.pagination.has_more",
+        "$type": "boolean",
+        "$example": false
+      }
     },
     "meta": {
       "next_cursor": null,
-      "has_more": false
+      "has_more": {
+        "$slot": "has_more_2",
+        "$from": "live.meta.has_more",
+        "$type": "boolean",
+        "$example": false
+      }
     },
     "fields": {
-      "database": "envs/dev/workspace.db",
-      "format": "world.sql (deterministic DDL + seed)",
-      "tables": "41",
-      "result_tokens": "500 of 31204 (cap: 500)",
-      "truncated": "true",
-      "note": "stdout preview clips at the 500-token cap; re-run with --out <path> to write the full 31204-token dump to disk"
+      "database": {
+        "$slot": "db_path_2",
+        "$from": "scenario.db_path",
+        "$example": "envs/dev/workspace.db"
+      },
+      "format": {
+        "$slot": "format",
+        "$from": "live.fields.format",
+        "$example": "world.sql (deterministic DDL + seed)"
+      },
+      "tables": {
+        "$slot": "tables",
+        "$from": "live.fields.tables",
+        "$example": "41"
+      },
+      "result_tokens": {
+        "$slot": "result_tokens",
+        "$from": "live.fields.result_tokens",
+        "$example": "500 of 31204 (cap: 500)"
+      },
+      "truncated": {
+        "$slot": "truncated",
+        "$from": "live.fields.truncated",
+        "$example": "true"
+      },
+      "note": {
+        "$slot": "note",
+        "$from": "live.fields.note",
+        "$example": "stdout preview clips at the 500-token cap; re-run with --out <path> to write the full 31204-token dump to disk"
+      }
     },
     "body": []
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli db dump --out out/workspace-dump.sql",
-      "intent": "Write the full dump to disk past the stdout token cap",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli db dump --out out/workspace-dump.sql",
+        "$bindings": {},
+        "$example": "capcli db dump --out out/workspace-dump.sql"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Write the full dump to disk past the stdout token cap"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

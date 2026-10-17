@@ -1,29 +1,73 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.prove.denial.shape",
-  "target": "sync_orders",
-  "command": "capcli routine prove sync_orders --env sim",
-  "elapsed_ms": 58,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine prove sync_orders --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 58
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_prove_04",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_prove_04"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.authorizer.routine.shape_exceeded",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Test pass burned 12 fuel against a declared fuel envelope of 8; execution caps are hard boundaries.",
-    "measured": "12 fuel burned vs 8 declared (fuel_declared; governance ceiling: 50)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Test pass burned 12 fuel against a declared fuel envelope of 8; execution caps are hard boundaries."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "12 fuel burned vs 8 declared (fuel_declared; governance ceiling: 50)"
+    },
     "remedy": "declare fuel_declared=16 in a new version, or replace the carrier loop with ctx.api.poll_until",
     "span": {
-      "source": "@routine(name=\"sync_orders\", trust=\"draft\", fuel_declared=8)",
-      "highlight": "fuel_declared=8"
+      "source": {
+        "$interpolate": "@routine(name=\"{{sync_orders}}\", trust=\"draft\", fuel_declared=8)",
+        "$bindings": {
+          "sync_orders": "scenario.sync_orders"
+        },
+        "$example": "@routine(name=\"sync_orders\", trust=\"draft\", fuel_declared=8)"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "fuel_declared=8"
+      }
     },
     "lines": [
-      "routines/sync_orders.py:12"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "routines/sync_orders.py:12"
+      }
     ]
   }
 }

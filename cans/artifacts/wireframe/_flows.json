@@ -281,6 +281,34 @@
       "entry": "pack.new.success.created",
       "terminal": "routine.prove.success.passed",
       "description": "Blueprint authored via pack new -> bundle lint via rule validate -> bundle compiled via pack bundle -> registry index refreshed via pack sync -> bundle registered via pack import -> draft routine instantiated via pack scaffold -> sim prove via routine prove"
+    },
+    "journey_plugin_lifecycle": {
+      "name": "P0\u2013P6 Plugin Marketplace Lifecycle (stripe pilot)",
+      "color": "#22d3ee",
+      "entry": "plugin.search.success.matched",
+      "terminal": "plugin.disable.success.disabled",
+      "description": "P0 registry search 'payments' matches stripe 2.4.0 -> P1 install mounts the projection with cli_noun api at rung reviewed (gen_03, audit op_pl01) -> P2 inspect the permission envelope (egress api.stripe.com, vault stripe_key read, hooks pre_ship/post_record) -> P3 doctor probes the Tri-Jail (fs/net/ipc) and syscall trapping, verdict healthy -> P4 enable flips the generation (gen_04) -> P5 list shows stripe, ping, stripe-dev (linked, disabled) -> P6 tail the plugin ring buffer -> P7 update 2.4.0 -> 2.5.1 (atomic swap 12ms; running tasks retain gen_03 until lease drop) -> P8 link the stripe-dev hot-reload fork (dev only) -> P9 unlink detaches the symlink -> P10 uninstall drops the dev registration -> P11 disable parks the marketplace plugin pending the payments pilot"
+    },
+    "journey_serve_ops": {
+      "name": "V0\u2013V4 Serve Daemon Ops (http-server)",
+      "color": "#a78bfa",
+      "entry": "run.inspect.success.plugin",
+      "terminal": "serve.stop.success.stopped",
+      "description": "V0 inspect plugin://http-server (cli_noun serve, verbs start/stop/restart/status/export, projection mounted) -> V1 serve start --port 4040 boots the cockpit/endpoint daemon -> V2 status reports the running server -> V3 export openapi for partners while running (beat shared with journey_endpoint_exposure; MCP export continues there) -> V4 restart after a config change, then stop the daemon"
+    },
+    "journey_storage_ops": {
+      "name": "O0\u2013O3 Object Storage Round-trip (reports/)",
+      "color": "#fb923c",
+      "entry": "storage.put.success.put",
+      "terminal": "storage.remove.success.removed",
+      "description": "O0 put ./report.pdf under reports/r1.pdf -> O1 list the reports/ prefix -> O2 get a local copy --out ./r1.pdf -> O3 presign a 1h share URL for the partner -> O4 remove the object after the share window closes"
+    },
+    "journey_ws_federation": {
+      "name": "F0\u2013F7 Federation Onboarding (ws:crm peer)",
+      "color": "#4ade80",
+      "entry": "run.inspect.success.ws",
+      "terminal": "ws.cassettes.success.populated",
+      "description": "F0 inspect ws://tasks/create_todo@v1 -> F1 execute against an unregistered peer denied at the allowlist (E042, exit 2) -> F2 register the peer workspace (sys agent register) and relist: ws peers populated (agt_7f3k, agt_2m8p) -> F3 bind federation siphon refused on the unversioned cap:// target (exit 3), pinned to cap://sync_todos@v2 -> F4 bound (bnd_4f2q) -> F5 dial agt_7f3k (SO_PEERCRED ok, ses_w042) -> F6 status shows 1 active session -> F7 cyclic federated route denied (E041) falls back to cassette replay; unreachable peer crash (E055) resolved by redial; cassettes list the recorded ws://tasks exchanges"
     }
   },
   "transitions": [
@@ -4496,6 +4524,792 @@
       "trigger": "list_federated_peers",
       "label": "capcli ws peers",
       "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_search_to_install",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.search.success.matched"
+      ],
+      "to": [
+        "plugin.install.success.installed"
+      ],
+      "trigger": "install_stripe",
+      "label": "capcli plugin install registry:stripe@2.4.0",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_install_to_inspect",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.install.success.installed"
+      ],
+      "to": [
+        "plugin.inspect.success.inspected"
+      ],
+      "trigger": "inspect_stripe",
+      "label": "capcli plugin inspect stripe",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_inspect_to_doctor",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.inspect.success.inspected"
+      ],
+      "to": [
+        "plugin.doctor.success.healthy"
+      ],
+      "trigger": "doctor_stripe",
+      "label": "capcli plugin doctor stripe",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_doctor_to_enable",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.doctor.success.healthy"
+      ],
+      "to": [
+        "plugin.enable.success.enabled"
+      ],
+      "trigger": "enable_stripe",
+      "label": "capcli plugin enable stripe",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_enable_to_list",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.enable.success.enabled"
+      ],
+      "to": [
+        "plugin.list.success.populated"
+      ],
+      "trigger": "list_plugins",
+      "label": "capcli plugin list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_list_to_logs",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.list.success.populated"
+      ],
+      "to": [
+        "plugin.logs.success.tailed"
+      ],
+      "trigger": "tail_plugin_logs",
+      "label": "capcli plugin logs stripe",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_logs_to_update",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.logs.success.tailed"
+      ],
+      "to": [
+        "plugin.update.success.updated"
+      ],
+      "trigger": "update_stripe",
+      "label": "capcli plugin update stripe",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_update_to_link",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.update.success.updated"
+      ],
+      "to": [
+        "plugin.link.success.linked"
+      ],
+      "trigger": "link_stripe_dev",
+      "label": "capcli plugin link ./packs/stripe-dev",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_link_to_unlink",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.link.success.linked"
+      ],
+      "to": [
+        "plugin.unlink.success.unlinked"
+      ],
+      "trigger": "unlink_stripe_dev",
+      "label": "capcli plugin unlink stripe-dev",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_unlink_to_uninstall",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.unlink.success.unlinked"
+      ],
+      "to": [
+        "plugin.uninstall.success.uninstalled"
+      ],
+      "trigger": "uninstall_stripe_dev",
+      "label": "capcli plugin uninstall stripe-dev",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_plugin_uninstall_to_disable",
+      "journeys": [
+        "journey_plugin_lifecycle"
+      ],
+      "from": [
+        "plugin.uninstall.success.uninstalled"
+      ],
+      "to": [
+        "plugin.disable.success.disabled"
+      ],
+      "trigger": "disable_stripe",
+      "label": "capcli plugin disable stripe",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_plugin_to_serve_start",
+      "journeys": [
+        "journey_serve_ops"
+      ],
+      "from": [
+        "run.inspect.success.plugin"
+      ],
+      "to": [
+        "serve.start.success.started"
+      ],
+      "trigger": "start_http_server",
+      "label": "capcli serve start --port 4040",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_serve_start_to_status",
+      "journeys": [
+        "journey_serve_ops"
+      ],
+      "from": [
+        "serve.start.success.started"
+      ],
+      "to": [
+        "serve.status.success.running"
+      ],
+      "trigger": "serve_status",
+      "label": "capcli serve status",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_serve_status_to_restart",
+      "journeys": [
+        "journey_serve_ops"
+      ],
+      "from": [
+        "serve.status.success.running"
+      ],
+      "to": [
+        "serve.restart.success.restarted"
+      ],
+      "trigger": "serve_restart",
+      "label": "capcli serve restart",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_serve_restart_to_stop",
+      "journeys": [
+        "journey_serve_ops"
+      ],
+      "from": [
+        "serve.restart.success.restarted"
+      ],
+      "to": [
+        "serve.stop.success.stopped"
+      ],
+      "trigger": "serve_stop",
+      "label": "capcli serve stop",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_serve_status_to_export_openapi",
+      "journeys": [
+        "journey_serve_ops",
+        "journey_endpoint_exposure"
+      ],
+      "from": [
+        "serve.status.success.running"
+      ],
+      "to": [
+        "serve.export.success.openapi"
+      ],
+      "trigger": "export_openapi",
+      "label": "capcli serve export openapi --out openapi.json",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_storage_put_to_list",
+      "journeys": [
+        "journey_storage_ops"
+      ],
+      "from": [
+        "storage.put.success.put"
+      ],
+      "to": [
+        "storage.list.success.populated"
+      ],
+      "trigger": "list_objects",
+      "label": "capcli storage list --prefix reports/",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_storage_list_to_get",
+      "journeys": [
+        "journey_storage_ops"
+      ],
+      "from": [
+        "storage.list.success.populated"
+      ],
+      "to": [
+        "storage.get.success.retrieved"
+      ],
+      "trigger": "get_object",
+      "label": "capcli storage get reports/r1.pdf --out ./r1.pdf",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_storage_get_to_url",
+      "journeys": [
+        "journey_storage_ops"
+      ],
+      "from": [
+        "storage.get.success.retrieved"
+      ],
+      "to": [
+        "storage.url.success.presigned"
+      ],
+      "trigger": "presign_share_url",
+      "label": "capcli storage url reports/r1.pdf --ttl 3600",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_storage_url_to_remove",
+      "journeys": [
+        "journey_storage_ops"
+      ],
+      "from": [
+        "storage.url.success.presigned"
+      ],
+      "to": [
+        "storage.remove.success.removed"
+      ],
+      "trigger": "remove_object",
+      "label": "capcli storage remove reports/r1.pdf",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ws_execute_unregistered_peer",
+      "journeys": [
+        "journey_ws_federation",
+        "journey_execution_gates"
+      ],
+      "from": [
+        "run.inspect.success.ws"
+      ],
+      "to": [
+        "run.execute.denial.federation_denied"
+      ],
+      "trigger": "execute_unregistered_peer",
+      "label": "capcli run ws://tasks/create_todo@v1 -p title=\"restock\" --env prod",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ws_register_peer_workspace",
+      "journeys": [
+        "journey_ws_federation"
+      ],
+      "from": [
+        "run.execute.denial.federation_denied"
+      ],
+      "to": [
+        "sys.register.success.registered"
+      ],
+      "trigger": "register_peer_workspace",
+      "label": "capcli sys agent register",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ws_register_to_peers_populated",
+      "journeys": [
+        "journey_ws_federation"
+      ],
+      "from": [
+        "sys.register.success.registered"
+      ],
+      "to": [
+        "ws.peers.success.populated"
+      ],
+      "trigger": "list_federated_peers",
+      "label": "capcli ws peers",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ws_peers_empty_to_populated",
+      "journeys": [
+        "journey_ws_federation",
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "ws.peers.success.empty"
+      ],
+      "to": [
+        "ws.peers.success.populated"
+      ],
+      "trigger": "list_federated_peers",
+      "label": "capcli ws peers",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ws_bind_federation_unversioned",
+      "journeys": [
+        "journey_ws_federation"
+      ],
+      "from": [
+        "ws.peers.success.populated"
+      ],
+      "to": [
+        "bind.federation.refusal.unversioned"
+      ],
+      "trigger": "bind_federation_unversioned",
+      "label": "capcli bind federation crm_todos crm todo.created cap://sync_todos -m \"siphon peer outbox\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ws_bind_federation_pinned",
+      "journeys": [
+        "journey_ws_federation"
+      ],
+      "from": [
+        "bind.federation.refusal.unversioned"
+      ],
+      "to": [
+        "bind.federation.success.bound"
+      ],
+      "trigger": "bind_federation_pinned",
+      "label": "capcli bind federation crm_todos crm todo.created cap://sync_todos@v2 -m \"siphon peer outbox\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_ws_bind_to_dial",
+      "journeys": [
+        "journey_ws_federation"
+      ],
+      "from": [
+        "bind.federation.success.bound"
+      ],
+      "to": [
+        "ws.dial.success.connected"
+      ],
+      "trigger": "dial_peer",
+      "label": "capcli ws dial agt_7f3k",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ws_dial_to_status",
+      "journeys": [
+        "journey_ws_federation"
+      ],
+      "from": [
+        "ws.dial.success.connected"
+      ],
+      "to": [
+        "ws.status.success.running"
+      ],
+      "trigger": "ws_status",
+      "label": "capcli ws status",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ws_execute_cyclic_route",
+      "journeys": [
+        "journey_ws_federation",
+        "journey_execution_gates"
+      ],
+      "from": [
+        "ws.status.success.running"
+      ],
+      "to": [
+        "run.execute.denial.federation_cycle"
+      ],
+      "trigger": "execute_cyclic_route",
+      "label": "capcli run ws://billing/invoice@v2 -p order=8842",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ws_cycle_to_cassettes",
+      "journeys": [
+        "journey_ws_federation"
+      ],
+      "from": [
+        "run.execute.denial.federation_cycle"
+      ],
+      "to": [
+        "ws.cassettes.success.populated"
+      ],
+      "trigger": "fallback_cassette_replay",
+      "label": "capcli ws cassettes",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ws_execute_unreachable_peer",
+      "journeys": [
+        "journey_ws_federation",
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "ws.status.success.running"
+      ],
+      "to": [
+        "run.execute.crash.federation_unreachable"
+      ],
+      "trigger": "execute_unreachable_peer",
+      "label": "capcli run ws://crm/sync@v1 -p since=1h",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_ws_crash_to_redial",
+      "journeys": [
+        "journey_ws_federation",
+        "journey_crash_recovery"
+      ],
+      "from": [
+        "run.execute.crash.federation_unreachable"
+      ],
+      "to": [
+        "ws.dial.success.connected"
+      ],
+      "trigger": "redial_peer_daemon",
+      "label": "capcli ws dial agt_7f3k",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_quota_to_plugin",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.quota"
+      ],
+      "to": [
+        "run.inspect.success.plugin"
+      ],
+      "trigger": "inspect_plugin_projection",
+      "label": "capcli inspect plugin://http-server",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_quota_to_vault",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.quota"
+      ],
+      "to": [
+        "run.inspect.success.vault"
+      ],
+      "trigger": "inspect_vault_handle",
+      "label": "capcli inspect vault://stripe_secret_key",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_quota_to_audit",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.quota"
+      ],
+      "to": [
+        "run.inspect.success.audit"
+      ],
+      "trigger": "inspect_audit_op",
+      "label": "capcli inspect audit://op_9f2e",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_quota_to_db",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.quota"
+      ],
+      "to": [
+        "run.inspect.success.db"
+      ],
+      "trigger": "inspect_db_table",
+      "label": "capcli inspect db://orders",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_quota_to_policy",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.quota"
+      ],
+      "to": [
+        "run.inspect.success.policy"
+      ],
+      "trigger": "inspect_policy_bundle",
+      "label": "capcli inspect policy://budgets",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ask_yield_to_inspect",
+      "journeys": [
+        "journey_human_in_the_loop"
+      ],
+      "from": [
+        "run.execute.yield.ask"
+      ],
+      "to": [
+        "run.inspect.success.ask"
+      ],
+      "trigger": "inspect_pending_ask",
+      "label": "capcli inspect ask://ask_88a",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ask_inspect_to_list",
+      "journeys": [
+        "journey_human_in_the_loop"
+      ],
+      "from": [
+        "run.inspect.success.ask"
+      ],
+      "to": [
+        "ping.list.success.populated"
+      ],
+      "trigger": "view_inquiries",
+      "label": "capcli ping list --pending",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_ask_list_to_rejected",
+      "journeys": [
+        "journey_human_in_the_loop"
+      ],
+      "from": [
+        "ping.list.success.populated"
+      ],
+      "to": [
+        "ping.resolve.success.rejected"
+      ],
+      "trigger": "deny_fraud_dispatch",
+      "label": "capcli ping resolve ask_88a --choice deny",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_update_downgrade_denied",
+      "journeys": [
+        "journey_doctor_boot"
+      ],
+      "from": [
+        "sys.doctor.success.clock_drift"
+      ],
+      "to": [
+        "sys.update.denial.incompatible_downgrade"
+      ],
+      "trigger": "downgrade_attempt",
+      "label": "capcli sys update --to 0.4.9",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_update_stage_unknown",
+      "journeys": [
+        "journey_doctor_boot"
+      ],
+      "from": [
+        "sys.update.denial.incompatible_downgrade"
+      ],
+      "to": [
+        "sys.update.refusal.unknown_stage"
+      ],
+      "trigger": "stage_out_of_range",
+      "label": "capcli sys update --only 9",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_update_completed",
+      "journeys": [
+        "journey_doctor_boot"
+      ],
+      "from": [
+        "sys.update.refusal.unknown_stage"
+      ],
+      "to": [
+        "sys.update.success.completed"
+      ],
+      "trigger": "kernel_update",
+      "label": "capcli sys update --to 0.5.2",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_init_declined",
+      "journeys": [
+        "journey_media_loss_recovery"
+      ],
+      "from": [
+        "sys.doctor.success.recovery"
+      ],
+      "to": [
+        "sys.init.refusal.declined"
+      ],
+      "trigger": "init_declined_confirmation",
+      "label": "capcli sys init --fresh",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_init_genesis",
+      "journeys": [
+        "journey_media_loss_recovery"
+      ],
+      "from": [
+        "sys.init.refusal.declined"
+      ],
+      "to": [
+        "sys.init.success.initialized"
+      ],
+      "trigger": "genesis_init_confirmed",
+      "label": "capcli sys init --fresh",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_init_healthy_ledger_denied",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.doctor.success.nominal"
+      ],
+      "to": [
+        "sys.init.denial.ledger_intact"
+      ],
+      "trigger": "fresh_on_healthy_ledger",
+      "label": "capcli sys init --fresh",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_init_denial_to_recover",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.init.denial.ledger_intact"
+      ],
+      "to": [
+        "sys.recover.success.restored"
+      ],
+      "trigger": "recover_instead_of_reinit",
+      "label": "capcli sys recover 3f9c2ab",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_vault_list_empty",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "run.execute.refusal.missing_secret"
+      ],
+      "to": [
+        "sys.vault_list.success.empty"
+      ],
+      "trigger": "list_vault_keys",
+      "label": "capcli sys vault list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_vault_list_populated",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "sys.vault_import.success.imported"
+      ],
+      "to": [
+        "sys.vault_list.success.populated"
+      ],
+      "trigger": "list_vault_keys",
+      "label": "capcli sys vault list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_audit_sample_capability",
+      "journeys": [
+        "journey_audit_observation"
+      ],
+      "from": [
+        "sys.trace.success.populated"
+      ],
+      "to": [
+        "sys.audit_sample.success.sampled"
+      ],
+      "trigger": "sample_capability_ops",
+      "label": "capcli sys audit sample --capability process_wholesale_order --limit 10",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_recover_list_snapshots",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.backup.success.completed"
+      ],
+      "to": [
+        "sys.recover.success.listed"
+      ],
+      "trigger": "list_snapshots",
+      "label": "capcli sys recover --list",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_recover_listed_to_restored",
+      "journeys": [
+        "journey_backup_recovery"
+      ],
+      "from": [
+        "sys.recover.success.listed"
+      ],
+      "to": [
+        "sys.recover.success.restored"
+      ],
+      "trigger": "recover_snapshot",
+      "label": "capcli sys recover 3f9c2ab",
+      "arrow_type": "success"
     }
   ]
 }

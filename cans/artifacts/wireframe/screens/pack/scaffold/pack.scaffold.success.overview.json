@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.scaffold.success.overview",
-  "target": "overview",
-  "command": "capcli pack scaffold pack://routine/overview overview",
-  "elapsed_ms": 1998,
+  "scenario": {
+    "overview": "overview"
+  },
+  "target": {
+    "$slot": "overview",
+    "$from": "scenario.overview",
+    "$example": "overview"
+  },
+  "command": {
+    "$interpolate": "capcli pack scaffold pack://routine/overview {{overview}}",
+    "$bindings": {
+      "overview": "scenario.overview"
+    },
+    "$example": "capcli pack scaffold pack://routine/overview overview"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1998
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,30 +33,94 @@
     "groups": [
       {
         "fields": {
-          "routine": "overview (routine://overview@1 draft)",
-          "file": "routines/overview.py",
-          "scaffold": "pack.scaffold (pack://routine/overview)",
-          "contract": "mandatory overview routine — grounds future agents in domain state (harness H6 codification)",
-          "trust": "draft (unproven intake floor)",
-          "version": "1",
-          "shape": "780 tokens / 1 param (ceilings: 2000 tokens / 8 params)",
-          "pack.source": "pack://routine/overview"
+          "routine": {
+            "$interpolate": "{{overview}} (routine://overview@1 draft)",
+            "$bindings": {
+              "overview": "scenario.overview"
+            },
+            "$example": "overview (routine://overview@1 draft)"
+          },
+          "file": {
+            "$slot": "file",
+            "$from": "live.groups[0].fields.file",
+            "$example": "routines/overview.py"
+          },
+          "scaffold": {
+            "$slot": "scaffold",
+            "$from": "live.groups[0].fields.scaffold",
+            "$example": "pack.scaffold (pack://routine/overview)"
+          },
+          "contract": {
+            "$interpolate": "mandatory {{overview}} routine — grounds future agents in domain state (harness H6 codification)",
+            "$bindings": {
+              "overview": "scenario.overview"
+            },
+            "$example": "mandatory overview routine — grounds future agents in domain state (harness H6 codification)"
+          },
+          "trust": {
+            "$slot": "trust",
+            "$from": "live.groups[0].fields.trust",
+            "$example": "draft (unproven intake floor)"
+          },
+          "version": {
+            "$slot": "version",
+            "$from": "live.groups[0].fields.version",
+            "$example": "1"
+          },
+          "shape": {
+            "$slot": "shape",
+            "$from": "live.groups[0].fields.shape",
+            "$example": "780 tokens / 1 param (ceilings: 2000 tokens / 8 params)"
+          },
+          "pack.source": {
+            "$slot": "pack_source",
+            "$from": "live.groups[0].fields.pack_source",
+            "$example": "pack://routine/overview"
+          }
         }
       },
       {
         "fields": {
-          "audit": "op_pack_scaffold_03 (routine.draft committed)",
-          "next": "capcli routine prove overview --env sim"
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[1].fields.audit",
+            "$example": "op_pack_scaffold_03 (routine.draft committed)"
+          },
+          "next": {
+            "$interpolate": "capcli routine prove {{overview}} --env sim",
+            "$bindings": {
+              "overview": "scenario.overview"
+            },
+            "$example": "capcli routine prove overview --env sim"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli routine prove overview --env sim",
-      "intent": "Overview routine sim rehearsal passes (harness H7)",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli routine prove {{overview}} --env sim",
+        "$bindings": {
+          "overview": "scenario.overview"
+        },
+        "$example": "capcli routine prove overview --env sim"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Overview routine sim rehearsal passes (harness H7)"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

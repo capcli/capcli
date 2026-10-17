@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.backup.success.completed",
-  "target": "workspace",
-  "command": "capcli sys backup --push",
-  "elapsed_ms": 2365,
+  "scenario": {
+    "workspace": "workspace"
+  },
+  "target": {
+    "$slot": "workspace",
+    "$from": "scenario.workspace",
+    "$example": "workspace"
+  },
+  "command": {
+    "$interpolate": "capcli sys backup --push",
+    "$bindings": {},
+    "$example": "capcli sys backup --push"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2365
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -11,25 +27,73 @@
   },
   "archetype": "receipt",
   "component": {
-    "title": "backup",
+    "title": {
+      "$slot": "title",
+      "$from": "live.title",
+      "$example": "backup"
+    },
     "groups": [
       {
-        "title": "backup",
+        "title": {
+          "$slot": "title_2",
+          "$from": "live.groups[0].title",
+          "$example": "backup"
+        },
         "fields": {
-          "snapshot": "snap_auto_2026-10-04T0300Z",
-          "mechanism": "VACUUM INTO (transactionally clean copy)",
-          "git_commit": "4c89a0b1 (origin accepted)",
-          "s3_object": "s3://capcli-worm/envs-dev/snap_auto_2026-10-04T0300Z.db",
-          "s3_status": "uploaded (Object Lock WORM)",
-          "bytes": "18,442,240",
-          "ledger_anchored": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-          "audit_mirror": "flushed (lag: 0m)",
-          "drift": "0m (cadence: 15m, alarm at 30m)"
+          "snapshot": {
+            "$slot": "snapshot",
+            "$from": "live.groups[0].fields.snapshot",
+            "$example": "snap_auto_2026-10-04T0300Z"
+          },
+          "mechanism": {
+            "$slot": "mechanism",
+            "$from": "live.groups[0].fields.mechanism",
+            "$example": "VACUUM INTO (transactionally clean copy)"
+          },
+          "git_commit": {
+            "$slot": "git_commit",
+            "$from": "live.groups[0].fields.git_commit",
+            "$example": "4c89a0b1 (origin accepted)"
+          },
+          "s3_object": {
+            "$slot": "s3_object",
+            "$from": "live.groups[0].fields.s3_object",
+            "$example": "s3://capcli-worm/envs-dev/snap_auto_2026-10-04T0300Z.db"
+          },
+          "s3_status": {
+            "$slot": "s3_status",
+            "$from": "live.groups[0].fields.s3_status",
+            "$example": "uploaded (Object Lock WORM)"
+          },
+          "bytes": {
+            "$slot": "bytes",
+            "$from": "live.groups[0].fields.bytes",
+            "$example": "18,442,240"
+          },
+          "ledger_anchored": {
+            "$slot": "ledger_anchored",
+            "$from": "live.groups[0].fields.ledger_anchored",
+            "$example": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          "audit_mirror": {
+            "$slot": "audit_mirror",
+            "$from": "live.groups[0].fields.audit_mirror",
+            "$example": "flushed (lag: 0m)"
+          },
+          "drift": {
+            "$slot": "drift",
+            "$from": "live.groups[0].fields.drift",
+            "$example": "0m (cadence: 15m, alarm at 30m)"
+          }
         }
       },
       {
         "lines": [
-          "note:           dual-storage guarantee satisfied (git + object store)"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "note:           dual-storage guarantee satisfied (git + object store)"
+          }
         ]
       }
     ]

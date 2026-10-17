@@ -1,9 +1,29 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.webhook.refusal.missing_ingress",
-  "target": "cap://sync_orders",
-  "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders -m \"process fulfillment on stripe async payment success\"",
-  "elapsed_ms": 46,
+  "scenario": {
+    "routine_urp": "cap://sync_orders",
+    "intent": "process fulfillment on stripe async payment success"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli bind webhook stripe_hook stripe payment_succeeded {{routine_urp}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders -m \"process fulfillment on stripe async payment success\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 46
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +33,21 @@
   "component": {
     "rule": "missing_param.ingress_missing",
     "domain": "missing_param",
-    "culprit": "External webhooks require a public --ingress URL or an active tunnel. Raw 127.0.0.1 is denied.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "External webhooks require a public --ingress URL or an active tunnel. Raw 127.0.0.1 is denied."
+    },
     "remedy": "re-run with --ingress https://<public-host>/<path> or --tunnel",
-    "provider": "stripe (external)",
-    "route": "none declared"
+    "provider": {
+      "$slot": "provider",
+      "$from": "live.provider",
+      "$example": "stripe (external)"
+    },
+    "route": {
+      "$slot": "route",
+      "$from": "live.route",
+      "$example": "none declared"
+    }
   }
 }

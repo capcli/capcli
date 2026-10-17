@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.rollback.refusal.not_found",
-  "target": "sync_orders",
-  "command": "capcli routine rollback sync_orders 7",
-  "elapsed_ms": 36,
+  "scenario": {
+    "routine": "sync_orders"
+  },
+  "target": {
+    "$slot": "routine",
+    "$from": "scenario.routine",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine rollback {{routine}} 7",
+    "$bindings": {
+      "routine": "scenario.routine"
+    },
+    "$example": "capcli routine rollback sync_orders 7"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 36
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,10 +31,26 @@
   "component": {
     "rule": "validation.rollback.version_not_found",
     "domain": "validation",
-    "culprit": "Target version v7 not found in the retained provenance graph (v1..v5).",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Target version v7 not found in the retained provenance graph (v1..v5)."
+    },
     "remedy": "list retained versions via capcli inspect cap://sync_orders, then target one that exists",
-    "routine": "sync_orders",
-    "target": "v7",
-    "history": "v1..v5 retained (cap: 25 versions)"
+    "routine": {
+      "$slot": "routine_2",
+      "$from": "scenario.routine",
+      "$example": "sync_orders"
+    },
+    "target": {
+      "$slot": "target",
+      "$from": "live.target",
+      "$example": "v7"
+    },
+    "history": {
+      "$slot": "history",
+      "$from": "live.history",
+      "$example": "v1..v5 retained (cap: 25 versions)"
+    }
   }
 }

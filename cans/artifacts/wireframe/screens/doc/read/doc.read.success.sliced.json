@@ -1,54 +1,178 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "doc.read.success.sliced",
-  "target": "doc://refund-policy",
-  "command": "capcli doc read doc://refund-policy --max-tokens 100",
-  "elapsed_ms": 1292,
+  "scenario": {
+    "doc_urp": "doc://refund-policy"
+  },
+  "target": {
+    "$slot": "doc_urp",
+    "$from": "scenario.doc_urp",
+    "$example": "doc://refund-policy"
+  },
+  "command": {
+    "$interpolate": "capcli doc read {{doc_urp}} --max-tokens 100",
+    "$bindings": {
+      "doc_urp": "scenario.doc_urp"
+    },
+    "$example": "capcli doc read doc://refund-policy --max-tokens 100"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1292
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "truncated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "truncated"
+    }
   },
   "archetype": "document",
   "component": {
-    "header_badge": "doc://refund-policy (sections 1-2 of 5)",
+    "header_badge": {
+      "$interpolate": "{{doc_urp}} (sections 1-2 of 5)",
+      "$bindings": {
+        "doc_urp": "scenario.doc_urp"
+      },
+      "$example": "doc://refund-policy (sections 1-2 of 5)"
+    },
     "pagination": {
       "items": [
         {
-          "section": 1,
-          "heading": "Scope",
-          "tokens": 22
+          "section": {
+            "$slot": "section",
+            "$from": "live.pagination.items[0].section",
+            "$type": "integer",
+            "$example": 1
+          },
+          "heading": {
+            "$slot": "heading",
+            "$from": "live.pagination.items[0].heading",
+            "$example": "Scope"
+          },
+          "tokens": {
+            "$slot": "tokens",
+            "$from": "live.pagination.items[0].tokens",
+            "$type": "integer",
+            "$example": 22
+          }
         },
         {
-          "section": 2,
-          "heading": "Refund windows",
-          "tokens": 74
+          "section": {
+            "$slot": "section_2",
+            "$from": "live.pagination.items[1].section",
+            "$type": "integer",
+            "$example": 2
+          },
+          "heading": {
+            "$slot": "heading_2",
+            "$from": "live.pagination.items[1].heading",
+            "$example": "Refund windows"
+          },
+          "tokens": {
+            "$slot": "tokens_2",
+            "$from": "live.pagination.items[1].tokens",
+            "$type": "integer",
+            "$example": 74
+          }
         }
       ],
-      "next_cursor": "doc://refund-policy#3",
-      "has_more": true
+      "next_cursor": {
+        "$interpolate": "{{doc_urp}}#3",
+        "$bindings": {
+          "doc_urp": "scenario.doc_urp"
+        },
+        "$example": "doc://refund-policy#3"
+      },
+      "has_more": {
+        "$slot": "has_more",
+        "$from": "live.pagination.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "meta": {
-      "document": "doc://refund-policy",
-      "tokens": "96 (cap: 100)",
-      "has_more": true,
-      "next_cursor": "doc://refund-policy#3"
+      "document": {
+        "$slot": "doc_urp_2",
+        "$from": "scenario.doc_urp",
+        "$example": "doc://refund-policy"
+      },
+      "tokens": {
+        "$slot": "tokens_3",
+        "$from": "live.meta.tokens",
+        "$example": "96 (cap: 100)"
+      },
+      "has_more": {
+        "$slot": "has_more_2",
+        "$from": "live.meta.has_more",
+        "$type": "boolean",
+        "$example": true
+      },
+      "next_cursor": {
+        "$interpolate": "{{doc_urp}}#3",
+        "$bindings": {
+          "doc_urp": "scenario.doc_urp"
+        },
+        "$example": "doc://refund-policy#3"
+      }
     },
     "body": [
-      "1. Scope",
-      "Refund routing and approval rules for the storefront.",
-      "2. Refund windows",
-      "Standard window is 30 days. Extended window is 120 days and requires",
-      "supervisor approval."
+      {
+        "$slot": "body_0",
+        "$from": "live.body[0]",
+        "$example": "1. Scope"
+      },
+      {
+        "$slot": "body_1",
+        "$from": "live.body[1]",
+        "$example": "Refund routing and approval rules for the storefront."
+      },
+      {
+        "$slot": "body_2",
+        "$from": "live.body[2]",
+        "$example": "2. Refund windows"
+      },
+      {
+        "$slot": "body_3",
+        "$from": "live.body[3]",
+        "$example": "Standard window is 30 days. Extended window is 120 days and requires"
+      },
+      {
+        "$slot": "body_4",
+        "$from": "live.body[4]",
+        "$example": "supervisor approval."
+      }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli doc outline doc://refund-policy",
-      "intent": "Outline node tree with section indices",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli doc outline {{doc_urp}}",
+        "$bindings": {
+          "doc_urp": "scenario.doc_urp"
+        },
+        "$example": "capcli doc outline doc://refund-policy"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Outline node tree with section indices"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

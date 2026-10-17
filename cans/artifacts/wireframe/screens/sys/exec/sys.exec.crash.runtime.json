@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.exec.crash.runtime",
-  "target": "sandbox",
-  "command": "capcli sys exec \"python3 etl.py\" --sandbox",
-  "elapsed_ms": 17298,
+  "scenario": {
+    "sandbox": "sandbox"
+  },
+  "target": {
+    "$slot": "sandbox",
+    "$from": "scenario.sandbox",
+    "$example": "sandbox"
+  },
+  "command": {
+    "$interpolate": "capcli sys exec \"python3 etl.py\" --sandbox",
+    "$bindings": {},
+    "$example": "capcli sys exec \"python3 etl.py\" --sandbox"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 17298
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,14 +29,38 @@
   "component": {
     "rule": "routine.runtime.process_crash",
     "domain": "routine.runtime",
-    "culprit": "SIGSEGV at 0x0 in native extension pandas/_libs/scanmap",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "SIGSEGV at 0x0 in native extension pandas/_libs/scanmap"
+    },
     "remedy": "reproduce via 'capcli sys exec \"python3 -X faulthandler etl.py\" --sandbox' and pin the failing native extension",
-    "command": "python3 etl.py",
-    "signal": "SIGSEGV at 0x0 (native extension pandas/_libs/scanmap)",
-    "jail": "torn down; tmpfs scratch wiped",
+    "command": {
+      "$slot": "command",
+      "$from": "live.command",
+      "$example": "python3 etl.py"
+    },
+    "signal": {
+      "$slot": "signal",
+      "$from": "live.signal",
+      "$example": "SIGSEGV at 0x0 (native extension pandas/_libs/scanmap)"
+    },
+    "jail": {
+      "$slot": "jail",
+      "$from": "live.jail",
+      "$example": "torn down; tmpfs scratch wiped"
+    },
     "lines": [
-      "Guest process crashed before returning an audit outcome.",
-      "rollback:       clean"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Guest process crashed before returning an audit outcome."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "rollback:       clean"
+      }
     ]
   }
 }

@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.rollback.success.completed",
-  "target": "sync_orders",
-  "command": "capcli routine rollback sync_orders 3",
-  "elapsed_ms": 366,
+  "scenario": {
+    "routine": "sync_orders"
+  },
+  "target": {
+    "$slot": "routine",
+    "$from": "scenario.routine",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine rollback {{routine}} 3",
+    "$bindings": {
+      "routine": "scenario.routine"
+    },
+    "$example": "capcli routine rollback sync_orders 3"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 366
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,16 +33,40 @@
     "groups": [
       {
         "fields": {
-          "routine": "sync_orders",
-          "pointer": "v5 -> v6",
-          "version": "sync_orders@6 (code_hash sha256:e7a3f1..., manifest_hash sha256:4c6d2b...; revert bundle restoring sync_orders@3 state)",
-          "trust": "draft"
+          "routine": {
+            "$slot": "routine_2",
+            "$from": "scenario.routine",
+            "$example": "sync_orders"
+          },
+          "pointer": {
+            "$slot": "pointer",
+            "$from": "live.groups[0].fields.pointer",
+            "$example": "v5 -> v6"
+          },
+          "version": {
+            "$slot": "version",
+            "$from": "live.groups[0].fields.version",
+            "$example": "sync_orders@6 (code_hash sha256:e7a3f1..., manifest_hash sha256:4c6d2b...; revert bundle restoring sync_orders@3 state)"
+          },
+          "trust": {
+            "$slot": "trust",
+            "$from": "live.groups[0].fields.trust",
+            "$example": "draft"
+          }
         }
       },
       {
         "fields": {
-          "audit": "op_roll_01 (routine.rollback committed as sync_orders@6; v1..v5 intact in provenance graph)",
-          "note": "subsequent edits create v7; in-place modification of any version banned"
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[1].fields.audit",
+            "$example": "op_roll_01 (routine.rollback committed as sync_orders@6; v1..v5 intact in provenance graph)"
+          },
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[1].fields.note",
+            "$example": "subsequent edits create v7; in-place modification of any version banned"
+          }
         }
       }
     ]

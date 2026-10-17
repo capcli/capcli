@@ -1,37 +1,100 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.snapshot.success.created",
-  "target": "db://",
-  "command": "capcli db snapshot -m \"pre-migration safety point\"",
-  "elapsed_ms": 2457,
+  "scenario": {
+    "db_urp": "db://",
+    "intent": "pre-migration safety point"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://"
+  },
+  "command": {
+    "$interpolate": "capcli db snapshot -m \"{{intent}}\"",
+    "$bindings": {
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli db snapshot -m \"pre-migration safety point\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2457
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_51d8",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_51d8"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "snapshot_id": "snap_onboarding_01",
-          "database": "envs/dev/workspace.db",
-          "tables": "6",
-          "rows": "6",
-          "ledger_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-          "method": "VACUUM INTO (clean copy under traffic)"
+          "snapshot_id": {
+            "$slot": "snapshot_id",
+            "$from": "live.groups[0].fields.snapshot_id",
+            "$example": "snap_onboarding_01"
+          },
+          "database": {
+            "$slot": "database",
+            "$from": "live.groups[0].fields.database",
+            "$example": "envs/dev/workspace.db"
+          },
+          "tables": {
+            "$slot": "tables",
+            "$from": "live.groups[0].fields.tables",
+            "$example": "6"
+          },
+          "rows": {
+            "$slot": "rows",
+            "$from": "live.groups[0].fields.rows",
+            "$example": "6"
+          },
+          "ledger_hash": {
+            "$slot": "ledger_hash",
+            "$from": "live.groups[0].fields.ledger_hash",
+            "$example": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          "method": {
+            "$slot": "method",
+            "$from": "live.groups[0].fields.method",
+            "$example": "VACUUM INTO (clean copy under traffic)"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli env merge dev prod -m \"forward DDL\"",
-      "intent": "DDL forwarded to production",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli env merge dev prod -m \"forward DDL\"",
+        "$bindings": {},
+        "$example": "capcli env merge dev prod -m \"forward DDL\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "DDL forwarded to production"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

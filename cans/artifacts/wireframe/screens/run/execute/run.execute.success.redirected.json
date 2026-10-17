@@ -1,24 +1,60 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.success.redirected",
-  "target": "cap://report_orders@2",
-  "command": "capcli run cap://report_orders@2 -p quarter=2026Q3 --out report.json",
-  "elapsed_ms": 1791,
+  "scenario": {
+    "routine_urp": "cap://report_orders@2",
+    "quarter": "2026Q3"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://report_orders@2"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p quarter={{quarter}} --out report.json",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "quarter": "scenario.quarter"
+    },
+    "$example": "capcli run cap://report_orders@2 -p quarter=2026Q3 --out report.json"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1791
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "redirected"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "redirected"
+    }
   },
-  "audit_op": "op_9f31a",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f31a"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "payload": "1.2MB written to report.json",
-          "sha256": "9f3a71c0b8e2d455"
+          "payload": {
+            "$slot": "payload",
+            "$from": "live.groups[0].fields.payload",
+            "$example": "1.2MB written to report.json"
+          },
+          "sha256": {
+            "$slot": "sha256",
+            "$from": "live.groups[0].fields.sha256",
+            "$example": "9f3a71c0b8e2d455"
+          }
         }
       }
     ]

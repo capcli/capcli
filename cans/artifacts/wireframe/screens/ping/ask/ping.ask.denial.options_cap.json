@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.ask.denial.options_cap",
-  "target": "user:root",
-  "command": "capcli ping ask user:root \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
-  "elapsed_ms": 168,
+  "scenario": {
+    "principal": "user:root"
+  },
+  "target": {
+    "$slot": "principal",
+    "$from": "scenario.principal",
+    "$example": "user:root"
+  },
+  "command": {
+    "$interpolate": "capcli ping ask {{principal}} \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\"",
+    "$bindings": {
+      "principal": "scenario.principal"
+    },
+    "$example": "capcli ping ask user:root \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex --timeout 24h --intent \"carrier choice requires human input\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 168
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,12 +32,30 @@
     "rule": "policy.notify.ask_options_cap",
     "domain": "policy.notify",
     "layer": "notify",
-    "culprit": "Exceeds 5 structured choices; cognitive load capped for one-card decisions.",
-    "measured": "options count 6 vs cap 5",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Exceeds 5 structured choices; cognitive load capped for one-card decisions."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "options count 6 vs cap 5"
+    },
     "remedy": "reduce to 5 or fewer structured options, or split into sequential asks",
     "span": {
-      "source": "capcli ping ask user:root \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex",
-      "highlight": "fedex,ups,usps,dhl,royal,aramex"
+      "source": {
+        "$interpolate": "capcli ping ask {{principal}} \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex",
+        "$bindings": {
+          "principal": "scenario.principal"
+        },
+        "$example": "capcli ping ask user:root \"Which carrier should ship order ORD-10?\" --options fedex,ups,usps,dhl,royal,aramex"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "fedex,ups,usps,dhl,royal,aramex"
+      }
     }
   }
 }

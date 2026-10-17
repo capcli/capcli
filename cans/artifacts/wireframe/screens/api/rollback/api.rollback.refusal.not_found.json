@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.rollback.refusal.not_found",
-  "target": "cap://threads.create_media_post",
-  "command": "capcli api rollback threads.create_media_post 12",
-  "elapsed_ms": 201,
+  "scenario": {
+    "routine_urp": "cap://threads.create_media_post"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://threads.create_media_post"
+  },
+  "command": {
+    "$interpolate": "capcli api rollback threads.create_media_post 12",
+    "$bindings": {},
+    "$example": "capcli api rollback threads.create_media_post 12"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 201
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,15 +28,43 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "validation",
-    "culprit": "Target version not found: version 12 (kept versions 1–8).",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Target version not found: version 12 (kept versions 1–8)."
+    },
     "remedy": "choose a version within the kept window, or re-sync the provider spec to rebuild history",
-    "command": "capcli api rollback threads.create_media_post 12",
-    "verb": "cap://threads.create_media_post",
-    "version": "12",
-    "kept_versions": "1–8 (max_versions_kept: 10).",
+    "command": {
+      "$slot": "command",
+      "$from": "live.command",
+      "$example": "capcli api rollback threads.create_media_post 12"
+    },
+    "verb": {
+      "$slot": "api_verb",
+      "$from": "live.api_verb",
+      "$example": "cap://threads.create_media_post"
+    },
+    "version": {
+      "$slot": "version",
+      "$from": "live.version",
+      "$example": "12"
+    },
+    "kept_versions": {
+      "$slot": "kept_versions",
+      "$from": "live.kept_versions",
+      "$example": "1–8 (max_versions_kept: 10)."
+    },
     "lines": [
-      "FATAL  validation.not_found",
-      "Target version not found."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.not_found"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Target version not found."
+      }
     ]
   }
 }

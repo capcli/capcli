@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "plugin.inspect.success.inspected",
-  "target": "stripe",
-  "command": "capcli plugin inspect stripe",
-  "elapsed_ms": 296,
+  "scenario": {
+    "plugin_id": "stripe"
+  },
+  "target": {
+    "$slot": "plugin_id",
+    "$from": "scenario.plugin_id",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli plugin inspect {{plugin_id}}",
+    "$bindings": {
+      "plugin_id": "scenario.plugin_id"
+    },
+    "$example": "capcli plugin inspect stripe"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 296
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,26 +33,88 @@
     "groups": [
       {
         "fields": {
-          "plugin_id": "stripe",
-          "version": "2.4.0",
-          "cli_noun": "api",
-          "ctx_namespace": "stripe",
-          "commands": "sync, diff, catalog, prove, ship, stats, retire, rollback, record",
-          "permissions": "egress: api.stripe.com; vault: stripe_key (read)",
-          "vault_keys": "stripe_key",
-          "egress_domains": "api.stripe.com",
-          "hooks": "pre_ship, post_record",
-          "envelope": "PreflightEnvelope"
+          "plugin_id": {
+            "$slot": "plugin_id_2",
+            "$from": "scenario.plugin_id",
+            "$example": "stripe"
+          },
+          "version": {
+            "$slot": "version",
+            "$from": "live.groups[0].fields.version",
+            "$example": "2.4.0"
+          },
+          "cli_noun": {
+            "$slot": "cli_noun",
+            "$from": "live.groups[0].fields.cli_noun",
+            "$example": "api"
+          },
+          "ctx_namespace": {
+            "$slot": "plugin_id_3",
+            "$from": "scenario.plugin_id",
+            "$example": "stripe"
+          },
+          "commands": {
+            "$slot": "commands",
+            "$from": "live.groups[0].fields.commands",
+            "$example": "sync, diff, catalog, prove, ship, stats, retire, rollback, record"
+          },
+          "permissions": {
+            "$interpolate": "egress: api.{{plugin_id}}.com; vault: stripe_key (read)",
+            "$bindings": {
+              "plugin_id": "scenario.plugin_id"
+            },
+            "$example": "egress: api.stripe.com; vault: stripe_key (read)"
+          },
+          "vault_keys": {
+            "$slot": "vault_keys",
+            "$from": "live.groups[0].fields.vault_keys",
+            "$example": "stripe_key"
+          },
+          "egress_domains": {
+            "$interpolate": "api.{{plugin_id}}.com",
+            "$bindings": {
+              "plugin_id": "scenario.plugin_id"
+            },
+            "$example": "api.stripe.com"
+          },
+          "hooks": {
+            "$slot": "hooks",
+            "$from": "live.groups[0].fields.hooks",
+            "$example": "pre_ship, post_record"
+          },
+          "envelope": {
+            "$slot": "envelope",
+            "$from": "live.groups[0].fields.envelope",
+            "$example": "PreflightEnvelope"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli plugin update stripe --dry-run",
-      "intent": "Preview generation build",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli plugin update {{plugin_id}} --dry-run",
+        "$bindings": {
+          "plugin_id": "scenario.plugin_id"
+        },
+        "$example": "capcli plugin update stripe --dry-run"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Preview generation build"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

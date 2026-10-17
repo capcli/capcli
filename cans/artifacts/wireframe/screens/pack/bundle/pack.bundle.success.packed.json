@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.bundle.success.packed",
-  "target": "pack/webhook_receiver",
-  "command": "capcli pack bundle packs/webhook_receiver",
-  "elapsed_ms": 188,
+  "scenario": {
+    "pack_webhook_receiver": "pack/webhook_receiver"
+  },
+  "target": {
+    "$slot": "pack_webhook_receiver",
+    "$from": "scenario.pack_webhook_receiver",
+    "$example": "pack/webhook_receiver"
+  },
+  "command": {
+    "$interpolate": "capcli pack bundle packs/webhook_receiver",
+    "$bindings": {},
+    "$example": "capcli pack bundle packs/webhook_receiver"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 188
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,22 +31,62 @@
     "groups": [
       {
         "fields": {
-          "pack": "pack://routine/webhook_receiver",
-          "bundle": "webhook_receiver.cap",
-          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-          "size": "1.8MB",
-          "signature": "sha256 signed (kernel keyring)",
-          "files": "4"
+          "pack": {
+            "$slot": "pack",
+            "$from": "live.groups[0].fields.pack",
+            "$example": "pack://routine/webhook_receiver"
+          },
+          "bundle": {
+            "$slot": "bundle",
+            "$from": "live.groups[0].fields.bundle",
+            "$example": "webhook_receiver.cap"
+          },
+          "sha256": {
+            "$slot": "sha256",
+            "$from": "live.groups[0].fields.sha256",
+            "$example": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+          },
+          "size": {
+            "$slot": "size",
+            "$from": "live.groups[0].fields.size",
+            "$example": "1.8MB"
+          },
+          "signature": {
+            "$slot": "signature",
+            "$from": "live.groups[0].fields.signature",
+            "$example": "sha256 signed (kernel keyring)"
+          },
+          "files": {
+            "$slot": "files",
+            "$from": "live.groups[0].fields.files",
+            "$example": "4"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
-      "intent": "Instantiate draft routine sync_orders",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook",
+        "$bindings": {},
+        "$example": "capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://ops.example.com/hook"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Instantiate draft routine sync_orders"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

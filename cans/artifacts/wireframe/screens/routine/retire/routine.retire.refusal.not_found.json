@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.retire.refusal.not_found",
-  "target": "legacy_etl_backup",
-  "command": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\"",
-  "elapsed_ms": 47,
+  "scenario": {
+    "routine": "legacy_etl_backup"
+  },
+  "target": {
+    "$slot": "routine",
+    "$from": "scenario.routine",
+    "$example": "legacy_etl_backup"
+  },
+  "command": {
+    "$interpolate": "capcli routine retire {{routine}} --reason \"cleanup after migration\"",
+    "$bindings": {
+      "routine": "scenario.routine"
+    },
+    "$example": "capcli routine retire legacy_etl_backup --reason \"cleanup after migration\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 47
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +31,23 @@
   "component": {
     "rule": "validation.routine.not_found",
     "domain": "validation",
-    "culprit": "Target routine 'legacy_etl_backup' does not exist in the registry.",
+    "culprit": {
+      "$interpolate": "Target routine '{{routine}}' does not exist in the registry.",
+      "$bindings": {
+        "routine": "scenario.routine"
+      },
+      "$example": "Target routine 'legacy_etl_backup' does not exist in the registry."
+    },
     "remedy": "verify the name via capcli search 'legacy', or inspect the provenance graph with capcli inspect cap://legacy_etl",
-    "routine": "legacy_etl_backup",
-    "nearest": "legacy_etl"
+    "routine": {
+      "$slot": "routine_2",
+      "$from": "scenario.routine",
+      "$example": "legacy_etl_backup"
+    },
+    "nearest": {
+      "$slot": "nearest",
+      "$from": "live.nearest",
+      "$example": "legacy_etl"
+    }
   }
 }

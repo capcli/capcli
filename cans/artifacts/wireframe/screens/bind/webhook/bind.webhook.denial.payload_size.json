@@ -1,9 +1,29 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.webhook.denial.payload_size",
-  "target": "cap://sync_orders",
-  "command": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\"",
-  "elapsed_ms": 188,
+  "scenario": {
+    "routine_urp": "cap://sync_orders",
+    "intent": "process fulfillment on stripe async payment success"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli bind webhook stripe_hook stripe payment_succeeded {{routine_urp}} --ingress https://ops.example.com/hook -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli bind webhook stripe_hook stripe payment_succeeded cap://sync_orders --ingress https://ops.example.com/hook -m \"process fulfillment on stripe async payment success\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 188
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,13 +34,33 @@
     "rule": "policy.authorizer.webhook_payload_ceiling",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Hook payload exceeds 64KB. Oversized deliveries refused at ingress.",
-    "measured": "71334 bytes (cap: 65536)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Hook payload exceeds 64KB. Oversized deliveries refused at ingress."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "71334 bytes (cap: 65536)"
+    },
     "remedy": "trim provider event payloads or split events; ceiling is fixed at 65536 bytes",
     "span": {
-      "source": "FAIL  policy.authorizer.webhook_payload_ceiling",
-      "highlight": "webhook_payload_ceiling"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "FAIL  policy.authorizer.webhook_payload_ceiling"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "webhook_payload_ceiling"
+      }
     },
-    "delivery": "71334 bytes (ceiling: 65536)"
+    "delivery": {
+      "$slot": "delivery",
+      "$from": "live.delivery",
+      "$example": "71334 bytes (ceiling: 65536)"
+    }
   }
 }

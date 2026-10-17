@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.inbox.success.empty",
-  "target": "*",
-  "command": "capcli sys inbox pop",
-  "elapsed_ms": 2287,
+  "scenario": {
+    "k": "*"
+  },
+  "target": {
+    "$slot": "k",
+    "$from": "scenario.k",
+    "$example": "*"
+  },
+  "command": {
+    "$interpolate": "capcli sys inbox pop",
+    "$bindings": {},
+    "$example": "capcli sys inbox pop"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2287
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,28 +36,60 @@
     "groups": [
       {
         "fields": {
-          "channels_scanned": "2 intake channels (cron, webhook)",
-          "popped": "0 events"
+          "channels_scanned": {
+            "$slot": "channels_scanned",
+            "$from": "live.groups[0].fields.channels_scanned",
+            "$example": "2 intake channels (cron, webhook)"
+          },
+          "popped": {
+            "$slot": "popped",
+            "$from": "live.groups[0].fields.popped",
+            "$example": "0 events"
+          }
         }
       },
       {
         "lines": [
-          "Sensory inbox completely drained. Nothing to hand to the caller."
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "Sensory inbox completely drained. Nothing to hand to the caller."
+          }
         ]
       },
       {
         "fields": {
-          "note": "subshell exits clean; the daemon wakes bound routines on the next cron dispatch or verified webhook intake"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[2].fields.note",
+            "$example": "subshell exits clean; the daemon wakes bound routines on the next cron dispatch or verified webhook intake"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli sys inbox pop --channel webhook",
-      "intent": "Sensory events popped from the intake queue (cron/webhook sources; durable store _inbox)",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli sys inbox pop --channel webhook",
+        "$bindings": {},
+        "$example": "capcli sys inbox pop --channel webhook"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Sensory events popped from the intake queue (cron/webhook sources; durable store _inbox)"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

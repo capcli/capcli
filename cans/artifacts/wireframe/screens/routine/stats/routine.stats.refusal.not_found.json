@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.stats.refusal.not_found",
-  "target": "sync_inventory",
-  "command": "capcli routine stats sync_inventory",
-  "elapsed_ms": 261,
+  "scenario": {
+    "routine": "sync_inventory"
+  },
+  "target": {
+    "$slot": "routine",
+    "$from": "scenario.routine",
+    "$example": "sync_inventory"
+  },
+  "command": {
+    "$interpolate": "capcli routine stats {{routine}}",
+    "$bindings": {
+      "routine": "scenario.routine"
+    },
+    "$example": "capcli routine stats sync_inventory"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 261
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +31,23 @@
   "component": {
     "rule": "validation.routine.not_found",
     "domain": "validation",
-    "culprit": "Routine name 'sync_inventory' does not exist in the registry.",
+    "culprit": {
+      "$interpolate": "Routine name '{{routine}}' does not exist in the registry.",
+      "$bindings": {
+        "routine": "scenario.routine"
+      },
+      "$example": "Routine name 'sync_inventory' does not exist in the registry."
+    },
     "remedy": "check the spelling, or discover candidates via capcli search 'sync' --trust draft",
-    "routine": "sync_inventory",
-    "nearest": "sync_orders, dispatch_order"
+    "routine": {
+      "$slot": "routine_2",
+      "$from": "scenario.routine",
+      "$example": "sync_inventory"
+    },
+    "nearest": {
+      "$slot": "nearest",
+      "$from": "live.nearest",
+      "$example": "sync_orders, dispatch_order"
+    }
   }
 }

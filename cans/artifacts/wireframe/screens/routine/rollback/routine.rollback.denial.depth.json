@@ -1,26 +1,66 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.rollback.denial.depth",
-  "target": "order_sync",
-  "command": "capcli routine rollback order_sync 3",
-  "elapsed_ms": 260,
+  "scenario": {
+    "order_sync": "order_sync"
+  },
+  "target": {
+    "$slot": "order_sync",
+    "$from": "scenario.order_sync",
+    "$example": "order_sync"
+  },
+  "command": {
+    "$interpolate": "capcli routine rollback {{order_sync}} 3",
+    "$bindings": {
+      "order_sync": "scenario.order_sync"
+    },
+    "$example": "capcli routine rollback order_sync 3"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 260
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "audit_op": "op_roll_02",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_roll_02"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.governance.rollback.depth_limit",
     "domain": "policy.governance",
     "layer": "governance",
-    "culprit": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5 (versioning cap on the retained history).",
-    "measured": "rollback depth 6 (max: 5)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Target v3 sits 6 versions behind the v9 pointer; exceeds max rollback depth of 5 (versioning cap on the retained history)."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "rollback depth 6 (max: 5)"
+    },
     "remedy": "roll back incrementally to a version within 5 of the pointer, or ship a new version reverting the change",
     "span": {
-      "source": "capcli routine rollback order_sync 3"
+      "source": {
+        "$interpolate": "capcli routine rollback {{order_sync}} 3",
+        "$bindings": {
+          "order_sync": "scenario.order_sync"
+        },
+        "$example": "capcli routine rollback order_sync 3"
+      }
     },
-    "version_history": "v1..v9 retained (cap 25 versions) in routines/ files and Git manifests"
+    "version_history": {
+      "$slot": "version_history",
+      "$from": "live.version_history",
+      "$example": "v1..v9 retained (cap 25 versions) in routines/ files and Git manifests"
+    }
   }
 }

@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.resolve.denial.expired",
-  "target": "ask_77c3",
-  "command": "capcli ping resolve ask_77c3 --choice approve",
-  "elapsed_ms": 275,
+  "scenario": {
+    "ask_id": "ask_77c3"
+  },
+  "target": {
+    "$slot": "ask_id",
+    "$from": "scenario.ask_id",
+    "$example": "ask_77c3"
+  },
+  "command": {
+    "$interpolate": "capcli ping resolve {{ask_id}} --choice approve",
+    "$bindings": {
+      "ask_id": "scenario.ask_id"
+    },
+    "$example": "capcli ping resolve ask_77c3 --choice approve"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 275
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,9 +32,23 @@
     "rule": "policy.notify.ask_expired",
     "domain": "policy.notify",
     "layer": "notify",
-    "culprit": "Timeout elapsed; resolution window closed (fail-closed).",
-    "measured": "ask_77c3 deadline passed 2h 14m ago (timeout: 24h, fail-closed)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Timeout elapsed; resolution window closed (fail-closed)."
+    },
+    "measured": {
+      "$interpolate": "{{ask_id}} deadline passed 2h 14m ago (timeout: 24h, fail-closed)",
+      "$bindings": {
+        "ask_id": "scenario.ask_id"
+      },
+      "$example": "ask_77c3 deadline passed 2h 14m ago (timeout: 24h, fail-closed)"
+    },
     "remedy": "re-issue the ask if still relevant; expired inquiries never assume consent",
-    "ask_id": "ask_77c3"
+    "ask_id": {
+      "$slot": "ask_id_2",
+      "$from": "scenario.ask_id",
+      "$example": "ask_77c3"
+    }
   }
 }

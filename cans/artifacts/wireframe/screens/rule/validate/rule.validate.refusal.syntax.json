@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "rule.validate.refusal.syntax",
-  "target": "schema://orders",
-  "command": "capcli rule validate",
-  "elapsed_ms": 248,
+  "scenario": {
+    "schema_urp": "schema://orders"
+  },
+  "target": {
+    "$slot": "schema_urp",
+    "$from": "scenario.schema_urp",
+    "$example": "schema://orders"
+  },
+  "command": {
+    "$interpolate": "capcli rule validate",
+    "$bindings": {},
+    "$example": "capcli rule validate"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 248
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,20 +29,52 @@
   "component": {
     "rule": "compile.gate_1_bad_syntax",
     "domain": "compile",
-    "culprit": "Duplicate mapping key 'status' already defined at schema.yaml:52:11.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Duplicate mapping key 'status' already defined at schema.yaml:52:11."
+    },
     "remedy": "remove or rename the duplicate 'status' key, then re-run capcli rule validate",
     "status": [
-      "text=pending",
-      "text=shipped"
+      {
+        "$slot": "status_0",
+        "$from": "live.status[0]",
+        "$example": "text=pending"
+      },
+      {
+        "$slot": "status_1",
+        "$from": "live.status[1]",
+        "$example": "text=shipped"
+      }
     ],
     "lines": [
-      "--> schema.yaml:54:7",
-      "columns:"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "--> schema.yaml:54:7"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "columns:"
+      }
     ],
     "span": {
-      "source": "columns:",
-      "highlight": "column",
-      "detail": "schema.yaml:54:7 duplicate_key"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "columns:"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "column"
+      },
+      "detail": {
+        "$slot": "detail",
+        "$from": "live.span.detail",
+        "$example": "schema.yaml:54:7 duplicate_key"
+      }
     }
   }
 }

@@ -1,25 +1,63 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "serve.stop.success.stopped",
-  "target": "http-server",
-  "command": "capcli serve stop",
-  "elapsed_ms": 204,
+  "scenario": {
+    "http_server": "http-server"
+  },
+  "target": {
+    "$slot": "http_server",
+    "$from": "scenario.http_server",
+    "$example": "http-server"
+  },
+  "command": {
+    "$interpolate": "capcli serve stop",
+    "$bindings": {},
+    "$example": "capcli serve stop"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 204
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_9f40",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f40"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "daemon": "http-server pack projection",
-          "pid": "41822 (reaped)",
-          "uptime": "3h 12m",
-          "endpoints": "2 released"
+          "daemon": {
+            "$interpolate": "{{http_server}} pack projection",
+            "$bindings": {
+              "http_server": "scenario.http_server"
+            },
+            "$example": "http-server pack projection"
+          },
+          "pid": {
+            "$slot": "pid",
+            "$from": "live.groups[0].fields.pid",
+            "$example": "41822 (reaped)"
+          },
+          "uptime": {
+            "$slot": "uptime",
+            "$from": "live.groups[0].fields.uptime",
+            "$example": "3h 12m"
+          },
+          "endpoints": {
+            "$slot": "endpoints",
+            "$from": "live.groups[0].fields.endpoints",
+            "$example": "2 released"
+          }
         }
       }
     ]

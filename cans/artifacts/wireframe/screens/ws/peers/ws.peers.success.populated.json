@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ws.peers.success.populated",
-  "target": "peers",
-  "command": "capcli ws peers",
-  "elapsed_ms": 92,
+  "scenario": {
+    "peers": "peers"
+  },
+  "target": {
+    "$slot": "peers",
+    "$from": "scenario.peers",
+    "$example": "peers"
+  },
+  "command": {
+    "$interpolate": "capcli ws {{peers}}",
+    "$bindings": {
+      "peers": "scenario.peers"
+    },
+    "$example": "capcli ws peers"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 92
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,13 +38,27 @@
     "groups": [
       {
         "fields": {
-          "agt_7f3k": "order-filler claude-code (pinned, allowlisted)",
-          "agt_2m8p": "inventory-sync claude-code (reviewed, allowlisted)"
+          "agt_7f3k": {
+            "$slot": "agt_7f3k",
+            "$from": "live.groups[0].fields.agt_7f3k",
+            "$example": "order-filler claude-code (pinned, allowlisted)"
+          },
+          "agt_2m8p": {
+            "$slot": "agt_2m8p",
+            "$from": "live.groups[0].fields.agt_2m8p",
+            "$example": "inventory-sync claude-code (reviewed, allowlisted)"
+          }
         }
       },
       {
         "fields": {
-          "total": "2 federated peers"
+          "total": {
+            "$interpolate": "2 federated {{peers}}",
+            "$bindings": {
+              "peers": "scenario.peers"
+            },
+            "$example": "2 federated peers"
+          }
         }
       }
     ]

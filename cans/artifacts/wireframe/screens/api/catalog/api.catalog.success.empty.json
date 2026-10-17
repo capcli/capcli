@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.catalog.success.empty",
-  "target": "catalog",
-  "command": "capcli api catalog",
-  "elapsed_ms": 1843,
+  "scenario": {
+    "catalog": "catalog"
+  },
+  "target": {
+    "$slot": "catalog",
+    "$from": "scenario.catalog",
+    "$example": "catalog"
+  },
+  "command": {
+    "$interpolate": "capcli api {{catalog}}",
+    "$bindings": {
+      "catalog": "scenario.catalog"
+    },
+    "$example": "capcli api catalog"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1843
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,30 +38,78 @@
     "groups": [
       {
         "fields": {
-          "providers": "0",
-          "verbs": "0"
+          "providers": {
+            "$slot": "providers",
+            "$from": "live.groups[0].fields.providers",
+            "$example": "0"
+          },
+          "verbs": {
+            "$slot": "verbs",
+            "$from": "live.groups[0].fields.verbs",
+            "$example": "0"
+          }
         }
       },
       {
         "lines": [
-          "Zero APIs configured.",
-          "Sync a provider spec to populate the catalog, e.g.",
-          "'capcli api sync stripe https://api.stripe.com/openapi.json'"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "Zero APIs configured."
+          },
+          {
+            "$interpolate": "Sync a provider spec to populate the {{catalog}}, e.g.",
+            "$bindings": {
+              "catalog": "scenario.catalog"
+            },
+            "$example": "Sync a provider spec to populate the catalog, e.g."
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[2]",
+            "$example": "'capcli api sync stripe https://api.stripe.com/openapi.json'"
+          }
         ]
       }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/api/catalog_empty#1",
-    "reason": "no external API catalogs configured",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "no external API catalogs configured"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api catalog",
-      "intent": "Truncated at 500 verbs",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api {{catalog}}",
+        "$bindings": {
+          "catalog": "scenario.catalog"
+        },
+        "$example": "capcli api catalog"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Truncated at 500 verbs"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

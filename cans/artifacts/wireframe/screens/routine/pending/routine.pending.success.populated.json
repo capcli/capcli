@@ -1,13 +1,26 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.pending.success.populated",
-  "command": "capcli routine pending",
-  "elapsed_ms": 1718,
+  "command": {
+    "$interpolate": "capcli routine pending",
+    "$bindings": {},
+    "$example": "capcli routine pending"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1718
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -15,30 +28,70 @@
     "groups": [
       {
         "fields": {
-          "queue": "promotion candidates (3)"
+          "queue": {
+            "$slot": "queue",
+            "$from": "live.groups[0].fields.queue",
+            "$example": "promotion candidates (3)"
+          }
         }
       },
       {
         "lines": [
-          "order_sync@2   reviewed -> pinned  queued 2h ago    success 0.98",
-          "sync_orders@1  draft -> reviewed   queued 31m ago   success 1.00",
-          "label_print@1  draft -> reviewed   queued 5m ago    success 0.97"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "order_sync@2   reviewed -> pinned  queued 2h ago    success 0.98"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "sync_orders@1  draft -> reviewed   queued 31m ago   success 1.00"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[1].lines[2]",
+            "$example": "label_print@1  draft -> reviewed   queued 5m ago    success 0.97"
+          }
         ]
       },
       {
         "fields": {
-          "sla": "oldest entry 2h old (promotion.sla_breached alert at 48h)",
-          "note": "batch approval commits a single audit event per queue"
+          "sla": {
+            "$slot": "sla",
+            "$from": "live.groups[2].fields.sla",
+            "$example": "oldest entry 2h old (promotion.sla_breached alert at 48h)"
+          },
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[2].fields.note",
+            "$example": "batch approval commits a single audit event per queue"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
-      "intent": "Routine promoted to new trust rung",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+        "$bindings": {},
+        "$example": "capcli routine ship order_sync pinned --reason \"30d clean canary\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Routine promoted to new trust rung"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

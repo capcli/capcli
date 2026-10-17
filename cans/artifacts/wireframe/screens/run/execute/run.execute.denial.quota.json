@@ -1,9 +1,33 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.denial.quota",
-  "target": "cap://announce_service_incident@1",
-  "command": "capcli run cap://announce_service_incident@1 -p severity=critical -m \"post the incident notice to the status channel\"",
-  "elapsed_ms": 226,
+  "scenario": {
+    "routine_urp": "cap://announce_service_incident@1",
+    "routine_name": "announce_service_incident",
+    "routine_version": 1,
+    "severity": "critical",
+    "intent": "post the incident notice to the status channel"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://announce_service_incident@1"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p severity={{severity}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "severity": "scenario.severity",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://announce_service_incident@1 -p severity=critical -m \"post the incident notice to the status channel\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 226
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
@@ -14,19 +38,70 @@
     "rule": "policy.api.quota_hard_denied",
     "domain": "api.quota",
     "layer": "quota",
-    "culprit": "Provider quota hard-exhausted: announce_service_incident@1 (Critical) drained the threads pool to 0/50 tokens; Critical tasks drain to 0 and are denied, never yielded.",
-    "measured": "threads pool 0/50 tokens; denied before egress (exit 2, never yield)",
+    "culprit": {
+      "$interpolate": "Provider quota hard-exhausted: {{routine_name}}@{{routine_version}} (Critical) drained the threads pool to 0/50 tokens; Critical tasks drain to 0 and are denied, never yielded.",
+      "$bindings": {
+        "routine_name": "scenario.routine_name",
+        "routine_version": "scenario.routine_version"
+      },
+      "$example": "Provider quota hard-exhausted: announce_service_incident@1 (Critical) drained the threads pool to 0/50 tokens; Critical tasks drain to 0 and are denied, never yielded."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "threads pool 0/50 tokens; denied before egress (exit 2, never yield)"
+    },
     "remedy": "wait for the bucket refill or monthly ceiling reset at 18:00:00 UTC and re-run, or route the notice through a provider with headroom (api catalog --state active)",
-    "provider": "threads",
-    "verb": "threads.create_media_post",
-    "priority_class": "Critical (drains pool to 0; no yield)",
-    "attempted_call": "threads.create_media_post (denied before egress, not 429 after)",
-    "blocking_level": "provider pool (threads)",
-    "remaining": "0 tokens",
-    "ancestors": "session fuel 80400 remaining (quota was the tightest constraint)",
-    "reset_at": "18:00:00 UTC (in 4h 12m)",
+    "provider": {
+      "$slot": "provider",
+      "$from": "live.provider",
+      "$example": "threads"
+    },
+    "verb": {
+      "$slot": "api_verb",
+      "$from": "live.api_verb",
+      "$example": "threads.create_media_post"
+    },
+    "priority_class": {
+      "$slot": "priority_class",
+      "$from": "live.priority_class",
+      "$example": "Critical (drains pool to 0; no yield)"
+    },
+    "attempted_call": {
+      "$slot": "attempted_call",
+      "$from": "live.attempted_call",
+      "$example": "threads.create_media_post (denied before egress, not 429 after)"
+    },
+    "blocking_level": {
+      "$slot": "blocking_level",
+      "$from": "live.blocking_level",
+      "$example": "provider pool (threads)"
+    },
+    "remaining": {
+      "$slot": "remaining",
+      "$from": "live.remaining",
+      "$example": "0 tokens"
+    },
+    "ancestors": {
+      "$slot": "ancestors",
+      "$from": "live.ancestors",
+      "$example": "session fuel 80400 remaining (quota was the tightest constraint)"
+    },
+    "reset_at": {
+      "$slot": "reset_at",
+      "$from": "live.reset_at",
+      "$example": "18:00:00 UTC (in 4h 12m)"
+    },
     "lines": [
-      "announce_service_incident@1 (frame_031) hard-denied: threads 0/50 tokens"
+      {
+        "$interpolate": "{{routine_name}}@{{routine_version}} ({{frame_id}}) hard-denied: threads 0/50 tokens",
+        "$bindings": {
+          "routine_name": "scenario.routine_name",
+          "routine_version": "scenario.routine_version",
+          "frame_id": "live.frame_id"
+        },
+        "$example": "announce_service_incident@1 (frame_031) hard-denied: threads 0/50 tokens"
+      }
     ]
   }
 }

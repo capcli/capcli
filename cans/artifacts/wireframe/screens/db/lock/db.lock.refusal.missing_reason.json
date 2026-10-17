@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.lock.refusal.missing_reason",
-  "target": "orders:ORD-10",
-  "command": "capcli db lock orders:ORD-10 --ttl 300s",
-  "elapsed_ms": 21,
+  "scenario": {
+    "db_key": "orders:ORD-10"
+  },
+  "target": {
+    "$slot": "db_key",
+    "$from": "scenario.db_key",
+    "$example": "orders:ORD-10"
+  },
+  "command": {
+    "$interpolate": "capcli db lock {{db_key}} --ttl 300s",
+    "$bindings": {
+      "db_key": "scenario.db_key"
+    },
+    "$example": "capcli db lock orders:ORD-10 --ttl 300s"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 21
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,13 +31,33 @@
   "component": {
     "rule": "missing_param.lock.reason_required",
     "domain": "missing_param",
-    "culprit": "--reason is required for locking; no causal justification supplied.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "--reason is required for locking; no causal justification supplied."
+    },
     "remedy": "re-run with --reason \"why this lease is needed\"",
-    "target": "orders:ORD-10",
-    "ttl": "300s",
-    "reason": "(absent)",
+    "target": {
+      "$slot": "db_key_2",
+      "$from": "scenario.db_key",
+      "$example": "orders:ORD-10"
+    },
+    "ttl": {
+      "$slot": "ttl",
+      "$from": "live.ttl",
+      "$example": "300s"
+    },
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.reason",
+      "$example": "(absent)"
+    },
     "lines": [
-      "--reason is required for locking; unjustified leases are refused."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "--reason is required for locking; unjustified leases are refused."
+      }
     ]
   }
 }

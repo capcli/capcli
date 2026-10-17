@@ -1,25 +1,61 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.retire.success.completed",
-  "target": "cap://stripe.refund_charge",
-  "command": "capcli api retire stripe.refund_charge --reason \"deprecated upstream\"",
-  "elapsed_ms": 2354,
+  "scenario": {
+    "routine_urp": "cap://stripe.refund_charge"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://stripe.refund_charge"
+  },
+  "command": {
+    "$interpolate": "capcli api retire stripe.refund_charge --reason \"deprecated upstream\"",
+    "$bindings": {},
+    "$example": "capcli api retire stripe.refund_charge --reason \"deprecated upstream\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2354
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_3d8a2",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_3d8a2"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "verb": "cap://stripe.refund_charge",
-          "transition": "active → retired",
-          "reason": "deprecated upstream",
-          "callable": "false (retired verbs are uncallable, preserved for provenance)"
+          "verb": {
+            "$slot": "api_verb",
+            "$from": "live.api_verb",
+            "$example": "cap://stripe.refund_charge"
+          },
+          "transition": {
+            "$slot": "transition",
+            "$from": "live.groups[0].fields.transition",
+            "$example": "active → retired"
+          },
+          "reason": {
+            "$slot": "reason",
+            "$from": "live.groups[0].fields.reason",
+            "$example": "deprecated upstream"
+          },
+          "callable": {
+            "$slot": "callable",
+            "$from": "live.groups[0].fields.callable",
+            "$example": "false (retired verbs are uncallable, preserved for provenance)"
+          }
         }
       }
     ]

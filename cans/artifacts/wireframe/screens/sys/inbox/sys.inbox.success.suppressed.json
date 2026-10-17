@@ -1,33 +1,98 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.inbox.success.suppressed",
-  "target": "webhook",
-  "command": "capcli sys inbox pop --channel webhook",
-  "elapsed_ms": 1004,
+  "scenario": {
+    "channel": "webhook"
+  },
+  "target": {
+    "$slot": "channel",
+    "$from": "scenario.channel",
+    "$example": "webhook"
+  },
+  "command": {
+    "$interpolate": "capcli sys inbox pop --channel {{channel}}",
+    "$bindings": {
+      "channel": "scenario.channel"
+    },
+    "$example": "capcli sys inbox pop --channel webhook"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1004
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "popped",
-    "root": "events:",
+    "title": {
+      "$slot": "title",
+      "$from": "live.inbox.title",
+      "$example": "popped"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.inbox.root",
+      "$example": "events:"
+    },
     "nodes": [],
     "footer": {
-      "channel": "webhook",
-      "popped": "0 events",
-      "remaining": "1 held under active claim",
-      "note": "claim orders:ORD-10 held by agt_9k2w; held rows stay invisible until release"
+      "channel": {
+        "$slot": "channel_2",
+        "$from": "scenario.channel",
+        "$example": "webhook"
+      },
+      "popped": {
+        "$slot": "popped",
+        "$from": "live.inbox.footer.popped",
+        "$example": "0 events"
+      },
+      "remaining": {
+        "$slot": "remaining",
+        "$from": "live.inbox.footer.remaining",
+        "$example": "1 held under active claim"
+      },
+      "note": {
+        "$slot": "note",
+        "$from": "live.inbox.footer.note",
+        "$example": "claim orders:ORD-10 held by agt_9k2w; held rows stay invisible until release"
+      }
     }
   },
   "attention": {
-    "cursor": "att_a992f_043",
+    "cursor": {
+      "$slot": "cursor",
+      "$from": "live.attention.cursor",
+      "$example": "att_a992f_043"
+    },
     "counts": {
-      "critical": 0,
-      "standard": 0,
-      "background": 0
+      "critical": {
+        "$slot": "critical",
+        "$from": "live.attention.counts.critical",
+        "$type": "integer",
+        "$example": 0
+      },
+      "standard": {
+        "$slot": "standard",
+        "$from": "live.attention.counts.standard",
+        "$type": "integer",
+        "$example": 0
+      },
+      "background": {
+        "$slot": "background",
+        "$from": "live.attention.counts.background",
+        "$type": "integer",
+        "$example": 0
+      }
     },
     "top": [],
     "suppressed": [

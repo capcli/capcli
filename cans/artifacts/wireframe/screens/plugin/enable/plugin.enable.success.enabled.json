@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "plugin.enable.success.enabled",
-  "target": "stripe",
-  "command": "capcli plugin enable stripe",
-  "elapsed_ms": 402,
+  "scenario": {
+    "plugin_id": "stripe"
+  },
+  "target": {
+    "$slot": "plugin_id",
+    "$from": "scenario.plugin_id",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli plugin enable {{plugin_id}}",
+    "$bindings": {
+      "plugin_id": "scenario.plugin_id"
+    },
+    "$example": "capcli plugin enable stripe"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 402
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,19 +33,47 @@
     "groups": [
       {
         "fields": {
-          "plugin_id": "stripe",
-          "mount": "projection mounted; cli_noun api live",
-          "generation": "gen_04"
+          "plugin_id": {
+            "$slot": "plugin_id_2",
+            "$from": "scenario.plugin_id",
+            "$example": "stripe"
+          },
+          "mount": {
+            "$slot": "mount",
+            "$from": "live.groups[0].fields.mount",
+            "$example": "projection mounted; cli_noun api live"
+          },
+          "generation": {
+            "$slot": "generation",
+            "$from": "live.groups[0].fields.generation",
+            "$example": "gen_04"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api catalog",
-      "intent": "Provider catalog via mounted noun",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api catalog",
+        "$bindings": {},
+        "$example": "capcli api catalog"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Provider catalog via mounted noun"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

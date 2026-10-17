@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.prompt",
-  "target": "doc://prompts/authoring/overview_absent#1",
-  "command": "capcli inspect doc://prompts/authoring/overview_absent#1",
-  "elapsed_ms": 1132,
+  "scenario": {
+    "doc_urp": "doc://prompts/authoring/overview_absent#1"
+  },
+  "target": {
+    "$slot": "doc_urp",
+    "$from": "scenario.doc_urp",
+    "$example": "doc://prompts/authoring/overview_absent#1"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{doc_urp}}",
+    "$bindings": {
+      "doc_urp": "scenario.doc_urp"
+    },
+    "$example": "capcli inspect doc://prompts/authoring/overview_absent#1"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1132
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,28 +38,76 @@
     "groups": [
       {
         "fields": {
-          "id": "doc://prompts/authoring/overview_absent#1",
-          "bank": "authoring",
-          "version": "1",
-          "status": "served",
-          "tokens": "118"
+          "id": {
+            "$slot": "doc_urp_2",
+            "$from": "scenario.doc_urp",
+            "$example": "doc://prompts/authoring/overview_absent#1"
+          },
+          "bank": {
+            "$slot": "bank",
+            "$from": "live.groups[0].fields.bank",
+            "$example": "authoring"
+          },
+          "version": {
+            "$slot": "version",
+            "$from": "live.groups[0].fields.version",
+            "$example": "1"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[0].fields.status",
+            "$example": "served"
+          },
+          "tokens": {
+            "$slot": "tokens",
+            "$from": "live.groups[0].fields.tokens",
+            "$example": "118"
+          }
         }
       },
       {
         "lines": [
-          "vars:",
-          "env: string (kernel.env)"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "vars:"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "env: string (kernel.env)"
+          }
         ]
       },
       {
         "fields": {
-          "slice_max_tokens": "500"
+          "slice_max_tokens": {
+            "$slot": "slice_max_tokens",
+            "$from": "live.groups[2].fields.slice_max_tokens",
+            "$example": "500"
+          }
         },
         "lines": [
-          "sections:",
-          "stage_1_scaffold (cap 140)",
-          "stage_2_bound (cap 50)",
-          "stage_3_pin (cap 60)"
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "sections:"
+          },
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[2].lines[1]",
+            "$example": "stage_1_scaffold (cap 140)"
+          },
+          {
+            "$slot": "lines_4",
+            "$from": "live.groups[2].lines[2]",
+            "$example": "stage_2_bound (cap 50)"
+          },
+          {
+            "$slot": "lines_5",
+            "$from": "live.groups[2].lines[3]",
+            "$example": "stage_3_pin (cap 60)"
+          }
         ]
       }
     ]

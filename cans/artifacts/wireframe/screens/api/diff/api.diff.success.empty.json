@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.diff.success.empty",
-  "target": "threads",
-  "command": "capcli api diff threads",
-  "elapsed_ms": 1032,
+  "scenario": {
+    "provider": "threads"
+  },
+  "target": {
+    "$slot": "provider",
+    "$from": "scenario.provider",
+    "$example": "threads"
+  },
+  "command": {
+    "$interpolate": "capcli api diff {{provider}}",
+    "$bindings": {
+      "provider": "scenario.provider"
+    },
+    "$example": "capcli api diff threads"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1032
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,32 +38,80 @@
     "groups": [
       {
         "fields": {
-          "provider": "threads",
-          "local_hash": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a",
-          "remote_hash": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a",
-          "drift": "none (spec_hash match)"
+          "provider": {
+            "$slot": "provider_2",
+            "$from": "scenario.provider",
+            "$example": "threads"
+          },
+          "local_hash": {
+            "$slot": "local_hash",
+            "$from": "live.groups[0].fields.local_hash",
+            "$example": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a"
+          },
+          "remote_hash": {
+            "$slot": "remote_hash",
+            "$from": "live.groups[0].fields.remote_hash",
+            "$example": "sha256:5e8a2c4f6b1d9e7a3c5f8b2d4e6a9c1f3b5d7e9a"
+          },
+          "drift": {
+            "$slot": "drift",
+            "$from": "live.groups[0].fields.drift",
+            "$example": "none (spec_hash match)"
+          }
         }
       },
       {
         "fields": {
-          "added_verbs": "0",
-          "changed_verbs": "0",
-          "removed_verbs": "0"
+          "added_verbs": {
+            "$slot": "added_verbs",
+            "$from": "live.groups[1].fields.added_verbs",
+            "$example": "0"
+          },
+          "changed_verbs": {
+            "$slot": "changed_verbs",
+            "$from": "live.groups[1].fields.changed_verbs",
+            "$example": "0"
+          },
+          "removed_verbs": {
+            "$slot": "removed_verbs",
+            "$from": "live.groups[1].fields.removed_verbs",
+            "$example": "0"
+          }
         }
       },
       {
         "lines": [
-          "Zero drift from active catalog."
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "Zero drift from active catalog."
+          }
         ]
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api diff stripe",
-      "intent": "Spec divergence detected",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api diff stripe",
+        "$bindings": {},
+        "$example": "capcli api diff stripe"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Spec divergence detected"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

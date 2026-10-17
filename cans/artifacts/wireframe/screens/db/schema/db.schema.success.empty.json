@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.schema.success.empty",
-  "target": "db://",
-  "command": "capcli db schema",
-  "elapsed_ms": 1156,
+  "scenario": {
+    "db_urp": "db://"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://"
+  },
+  "command": {
+    "$interpolate": "capcli db schema",
+    "$bindings": {},
+    "$example": "capcli db schema"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1156
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,31 +36,79 @@
     "groups": [
       {
         "fields": {
-          "database": "envs/dev/workspace.db",
-          "domain_tables": "0",
-          "system_tables": "13 (kernel-managed, read-only)",
-          "views": "0",
-          "triggers": "0"
+          "database": {
+            "$slot": "database",
+            "$from": "live.groups[0].fields.database",
+            "$example": "envs/dev/workspace.db"
+          },
+          "domain_tables": {
+            "$slot": "domain_tables",
+            "$from": "live.groups[0].fields.domain_tables",
+            "$example": "0"
+          },
+          "system_tables": {
+            "$slot": "system_tables",
+            "$from": "live.groups[0].fields.system_tables",
+            "$example": "13 (kernel-managed, read-only)"
+          },
+          "views": {
+            "$slot": "views",
+            "$from": "live.groups[0].fields.views",
+            "$example": "0"
+          },
+          "triggers": {
+            "$slot": "triggers",
+            "$from": "live.groups[0].fields.triggers",
+            "$example": "0"
+          }
         }
       },
       {
         "fields": {
-          "note": "no domain schema compiled; declare tables in schema.yaml"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[1].fields.note",
+            "$example": "no domain schema compiled; declare tables in schema.yaml"
+          }
         }
       }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/genesis/blank_world#1",
-    "reason": "blank world: 0 domain tables",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "blank world: 0 domain tables"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli db schema --table orders",
-      "intent": "Live DDL schema introspected",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli db schema --table orders",
+        "$bindings": {},
+        "$example": "capcli db schema --table orders"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Live DDL schema introspected"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

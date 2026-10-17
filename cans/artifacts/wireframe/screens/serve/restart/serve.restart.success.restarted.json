@@ -1,26 +1,68 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "serve.restart.success.restarted",
-  "target": "http-server",
-  "command": "capcli serve restart",
-  "elapsed_ms": 890,
+  "scenario": {
+    "http_server": "http-server"
+  },
+  "target": {
+    "$slot": "http_server",
+    "$from": "scenario.http_server",
+    "$example": "http-server"
+  },
+  "command": {
+    "$interpolate": "capcli serve restart",
+    "$bindings": {},
+    "$example": "capcli serve restart"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 890
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_9f41",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f41"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "daemon": "http-server pack projection",
-          "old_pid": "41822 (reaped)",
-          "new_pid": "52107",
-          "port": "4040",
-          "endpoints": "2 rebound (dispatch_order@4, report_summary@3)"
+          "daemon": {
+            "$interpolate": "{{http_server}} pack projection",
+            "$bindings": {
+              "http_server": "scenario.http_server"
+            },
+            "$example": "http-server pack projection"
+          },
+          "old_pid": {
+            "$slot": "old_pid",
+            "$from": "live.groups[0].fields.old_pid",
+            "$example": "41822 (reaped)"
+          },
+          "new_pid": {
+            "$slot": "new_pid",
+            "$from": "live.groups[0].fields.new_pid",
+            "$example": "52107"
+          },
+          "port": {
+            "$slot": "port",
+            "$from": "live.groups[0].fields.port",
+            "$example": "4040"
+          },
+          "endpoints": {
+            "$slot": "endpoints",
+            "$from": "live.groups[0].fields.endpoints",
+            "$example": "2 rebound (dispatch_order@4, report_summary@3)"
+          }
         }
       }
     ]

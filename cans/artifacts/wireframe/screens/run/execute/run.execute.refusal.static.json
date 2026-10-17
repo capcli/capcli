@@ -1,9 +1,31 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.refusal.static",
-  "target": "cap://broken_calc",
-  "command": "capcli run cap://broken_calc -p x=1 -m \"smoke test\"",
-  "elapsed_ms": 41,
+  "scenario": {
+    "routine_urp": "cap://broken_calc",
+    "x": "1",
+    "intent": "smoke test"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://broken_calc"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p x={{x}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "x": "scenario.x",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://broken_calc -p x=1 -m \"smoke test\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 41
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,17 +35,41 @@
   "component": {
     "domain": "compile",
     "layer": "preflight",
-    "culprit": "SyntaxError in routines/broken_calc.py line 12: unterminated string literal.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "SyntaxError in routines/broken_calc.py line 12: unterminated string literal."
+    },
     "lines": [
-      "pre-flight compile check failed before dispatch (exit 3)",
-      "no guest code ran; state untouched"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "pre-flight compile check failed before dispatch (exit 3)"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "no guest code ran; state untouched"
+      }
     ],
     "remedy": "Fix the syntax error and re-dispatch the exact command.",
-    "capability": "cap://broken_calc"
+    "capability": {
+      "$slot": "routine_urp_2",
+      "$from": "scenario.routine_urp",
+      "$example": "cap://broken_calc"
+    }
   },
   "trailer": {
     "prompt": "doc://prompts/authoring/static_refusal#1",
-    "reason": "pre-flight refused dispatch before guest ran",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "pre-flight refused dispatch before guest ran"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }

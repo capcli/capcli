@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.recover.success.restored",
-  "target": "git:3f9c2ab",
-  "command": "capcli sys recover 3f9c2ab",
-  "elapsed_ms": 1205,
+  "scenario": {
+    "git_ref": "git:3f9c2ab"
+  },
+  "target": {
+    "$slot": "git_ref",
+    "$from": "scenario.git_ref",
+    "$example": "git:3f9c2ab"
+  },
+  "command": {
+    "$interpolate": "capcli sys recover 3f9c2ab",
+    "$bindings": {},
+    "$example": "capcli sys recover 3f9c2ab"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1205
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -11,24 +27,68 @@
   },
   "archetype": "receipt",
   "component": {
-    "title": "recover",
+    "title": {
+      "$slot": "title",
+      "$from": "live.title",
+      "$example": "recover"
+    },
     "groups": [
       {
-        "title": "recover",
+        "title": {
+          "$slot": "title_2",
+          "$from": "live.groups[0].title",
+          "$example": "recover"
+        },
         "fields": {
-          "commit": "3f9c2ab",
-          "source": "object store (s3://capcli-worm/envs-dev/)",
-          "workspace": "envs/dev/workspace.db",
-          "schema_version": "3 (system-schema hash verified)",
-          "ledger_root_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-          "events_restored": "14290 rows from _audit mirror",
-          "chain_walk": "passed (0 broken links)",
-          "drift_discarded": "local uncommitted mutations dropped"
+          "commit": {
+            "$slot": "commit",
+            "$from": "live.groups[0].fields.commit",
+            "$example": "3f9c2ab"
+          },
+          "source": {
+            "$slot": "source",
+            "$from": "live.groups[0].fields.source",
+            "$example": "object store (s3://capcli-worm/envs-dev/)"
+          },
+          "workspace": {
+            "$slot": "workspace",
+            "$from": "live.groups[0].fields.workspace",
+            "$example": "envs/dev/workspace.db"
+          },
+          "schema_version": {
+            "$slot": "schema_version",
+            "$from": "live.groups[0].fields.schema_version",
+            "$example": "3 (system-schema hash verified)"
+          },
+          "ledger_root_hash": {
+            "$slot": "ledger_root_hash",
+            "$from": "live.groups[0].fields.ledger_root_hash",
+            "$example": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          "events_restored": {
+            "$slot": "events_restored",
+            "$from": "live.groups[0].fields.events_restored",
+            "$example": "14290 rows from _audit mirror"
+          },
+          "chain_walk": {
+            "$slot": "chain_walk",
+            "$from": "live.groups[0].fields.chain_walk",
+            "$example": "passed (0 broken links)"
+          },
+          "drift_discarded": {
+            "$slot": "drift_discarded",
+            "$from": "live.groups[0].fields.drift_discarded",
+            "$example": "local uncommitted mutations dropped"
+          }
         }
       },
       {
         "lines": [
-          "note:           workspace reconstructed from offsite archive"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "note:           workspace reconstructed from offsite archive"
+          }
         ]
       }
     ]

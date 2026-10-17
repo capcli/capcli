@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.list.success.empty",
-  "target": "_pending_asks",
-  "command": "capcli ping list --pending",
-  "elapsed_ms": 859,
+  "scenario": {
+    "pending_asks": "_pending_asks"
+  },
+  "target": {
+    "$slot": "pending_asks",
+    "$from": "scenario.pending_asks",
+    "$example": "_pending_asks"
+  },
+  "command": {
+    "$interpolate": "capcli ping list --pending",
+    "$bindings": {},
+    "$example": "capcli ping list --pending"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 859
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,8 +36,18 @@
     "groups": [
       {
         "fields": {
-          "pending": "0 inquiries",
-          "note": "no asks parked in _pending_asks; no frames awaiting human input"
+          "pending": {
+            "$slot": "pending",
+            "$from": "live.groups[0].fields.pending",
+            "$example": "0 inquiries"
+          },
+          "note": {
+            "$interpolate": "no asks parked in {{pending_asks}}; no frames awaiting human input",
+            "$bindings": {
+              "pending_asks": "scenario.pending_asks"
+            },
+            "$example": "no asks parked in _pending_asks; no frames awaiting human input"
+          }
         }
       }
     ]

@@ -1,13 +1,26 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.pending.success.empty",
-  "command": "capcli routine pending",
-  "elapsed_ms": 1424,
+  "command": {
+    "$interpolate": "capcli routine pending",
+    "$bindings": {},
+    "$example": "capcli routine pending"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1424
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -15,17 +28,29 @@
     "groups": [
       {
         "fields": {
-          "queue": "promotion candidates (0)"
+          "queue": {
+            "$slot": "queue",
+            "$from": "live.groups[0].fields.queue",
+            "$example": "promotion candidates (0)"
+          }
         }
       },
       {
         "lines": [
-          "no routines pending promotion"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "no routines pending promotion"
+          }
         ]
       },
       {
         "fields": {
-          "note": "enqueue via capcli routine ship <name> reviewed --queue"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[2].fields.note",
+            "$example": "enqueue via capcli routine ship <name> reviewed --queue"
+          }
         }
       }
     ]

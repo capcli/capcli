@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.audit",
-  "target": "audit://op_9f2e",
-  "command": "capcli inspect audit://op_9f2e",
-  "elapsed_ms": 71,
+  "scenario": {
+    "audit_urp": "audit://op_9f2e"
+  },
+  "target": {
+    "$slot": "audit_urp",
+    "$from": "scenario.audit_urp",
+    "$example": "audit://op_9f2e"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{audit_urp}}",
+    "$bindings": {
+      "audit_urp": "scenario.audit_urp"
+    },
+    "$example": "capcli inspect audit://op_9f2e"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 71
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,17 +33,45 @@
     "groups": [
       {
         "fields": {
-          "target": "audit://op_9f2e",
-          "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042",
-          "exit": "0",
-          "causal_depth": "4 leaves",
-          "chain": "prev_hash verified; 0 broken links"
+          "target": {
+            "$slot": "audit_urp_2",
+            "$from": "scenario.audit_urp",
+            "$example": "audit://op_9f2e"
+          },
+          "command": {
+            "$slot": "command",
+            "$from": "live.groups[0].fields.command",
+            "$example": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042"
+          },
+          "exit": {
+            "$slot": "exit",
+            "$from": "live.groups[0].fields.exit",
+            "$example": "0"
+          },
+          "causal_depth": {
+            "$slot": "causal_depth",
+            "$from": "live.groups[0].fields.causal_depth",
+            "$example": "4 leaves"
+          },
+          "chain": {
+            "$slot": "chain",
+            "$from": "live.groups[0].fields.chain",
+            "$example": "prev_hash verified; 0 broken links"
+          }
         }
       },
       {
         "fields": {
-          "preflight": "audit spine readable",
-          "can_invoke_now": "true"
+          "preflight": {
+            "$slot": "preflight",
+            "$from": "live.groups[1].fields.preflight",
+            "$example": "audit spine readable"
+          },
+          "can_invoke_now": {
+            "$slot": "can_invoke_now",
+            "$from": "live.groups[1].fields.can_invoke_now",
+            "$example": "true"
+          }
         }
       }
     ]

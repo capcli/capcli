@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "rule.validate.refusal.bundle_syntax",
-  "target": "pack/broken_hook",
-  "command": "capcli rule validate packs/broken_hook",
-  "elapsed_ms": 257,
+  "scenario": {
+    "pack_broken_hook": "pack/broken_hook"
+  },
+  "target": {
+    "$slot": "pack_broken_hook",
+    "$from": "scenario.pack_broken_hook",
+    "$example": "pack/broken_hook"
+  },
+  "command": {
+    "$interpolate": "capcli rule validate packs/broken_hook",
+    "$bindings": {},
+    "$example": "capcli rule validate packs/broken_hook"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 257
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,14 +29,38 @@
   "component": {
     "rule": "compile.pack.bad_syntax",
     "domain": "compile",
-    "culprit": "Sub-check 1 syntax failure in packs/broken_hook/capcli-pack.yaml:14:3: mapping values are not allowed here.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Sub-check 1 syntax failure in packs/broken_hook/capcli-pack.yaml:14:3: mapping values are not allowed here."
+    },
     "remedy": "fix the YAML or Python syntax at the cited line, then re-run capcli rule validate packs/broken_hook",
-    "file": "pack/broken_hook/capcli-pack.yaml",
-    "error": "mapping values are not allowed here",
+    "file": {
+      "$slot": "file",
+      "$from": "live.file",
+      "$example": "pack/broken_hook/capcli-pack.yaml"
+    },
+    "error": {
+      "$slot": "error",
+      "$from": "live.error",
+      "$example": "mapping values are not allowed here"
+    },
     "lines": [
-      "--> packs/broken_hook/capcli-pack.yaml:14:3",
-      "inputs: endpoint_url: string",
-      "       ^ mapping values are not allowed here"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "--> packs/broken_hook/capcli-pack.yaml:14:3"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "inputs: endpoint_url: string"
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "       ^ mapping values are not allowed here"
+      }
     ]
   }
 }

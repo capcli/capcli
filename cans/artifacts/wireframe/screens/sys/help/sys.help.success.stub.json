@@ -1,8 +1,17 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.help.success.stub",
-  "command": "capcli",
-  "elapsed_ms": 1166,
+  "command": {
+    "$interpolate": "capcli",
+    "$bindings": {},
+    "$example": "capcli"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1166
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -10,28 +19,76 @@
   },
   "archetype": "document",
   "component": {
-    "header_badge": "capcli 0.4.2 — compiled execution firewall for AI agents",
+    "header_badge": {
+      "$slot": "header_badge",
+      "$from": "live.header_badge",
+      "$example": "capcli 0.4.2 — compiled execution firewall for AI agents"
+    },
     "fields": {
-      "Find actions": "capcli search <query>",
-      "Pre-flight": "capcli inspect <urp>",
-      "System status": "capcli sys doctor"
+      "Find actions": {
+        "$slot": "find_actions",
+        "$from": "live.fields.find_actions",
+        "$example": "capcli search <query>"
+      },
+      "Pre-flight": {
+        "$slot": "pre_flight",
+        "$from": "live.fields.pre_flight",
+        "$example": "capcli inspect <urp>"
+      },
+      "System status": {
+        "$slot": "system_status",
+        "$from": "live.fields.system_status",
+        "$example": "capcli sys doctor"
+      }
     },
     "body": [
-      "Usage: capcli <noun> <verb> [target] [flags]",
-      "Capabilities are discovered dynamically, not listed in static help."
+      {
+        "$slot": "body_0",
+        "$from": "live.body[0]",
+        "$example": "Usage: capcli <noun> <verb> [target] [flags]"
+      },
+      {
+        "$slot": "body_1",
+        "$from": "live.body[1]",
+        "$example": "Capabilities are discovered dynamically, not listed in static help."
+      }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/onboarding/human#1",
-    "reason": "human operator requested onboarding tour",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "human operator requested onboarding tour"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli sys doctor --boot-check",
-      "intent": "Host doctor readiness check",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli sys doctor --boot-check",
+        "$bindings": {},
+        "$example": "capcli sys doctor --boot-check"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Host doctor readiness check"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

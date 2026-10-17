@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.recover.denial.active_locks",
-  "target": "git:3f9c2ab",
-  "command": "capcli sys recover 3f9c2ab",
-  "elapsed_ms": 38,
+  "scenario": {
+    "git_ref": "git:3f9c2ab"
+  },
+  "target": {
+    "$slot": "git_ref",
+    "$from": "scenario.git_ref",
+    "$example": "git:3f9c2ab"
+  },
+  "command": {
+    "$interpolate": "capcli sys recover 3f9c2ab",
+    "$bindings": {},
+    "$example": "capcli sys recover 3f9c2ab"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 38
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,18 +30,50 @@
     "rule": "db.claims.active_locks",
     "domain": "db.claims",
     "layer": "claims",
-    "culprit": "Active claim leases prevent state reversal to commit 3f9c2ab (orders:ORD-10, ledger:TXN-WRITE)",
-    "measured": "2 active locks (tolerated for reversal: 0)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Active claim leases prevent state reversal to commit 3f9c2ab (orders:ORD-10, ledger:TXN-WRITE)"
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "2 active locks (tolerated for reversal: 0)"
+    },
     "remedy": "wait for TTL expiry or release via 'capcli db unlock', then retry 'capcli sys recover 3f9c2ab'",
     "lock": [
-      "orders:ORD-10 held by agt_7f3k (ttl: 4m 12s remaining)",
-      "ledger:TXN-WRITE held by daemon (ttl: 55s remaining)"
+      {
+        "$slot": "lock_0",
+        "$from": "live.lock[0]",
+        "$example": "orders:ORD-10 held by agt_7f3k (ttl: 4m 12s remaining)"
+      },
+      {
+        "$slot": "lock_1",
+        "$from": "live.lock[1]",
+        "$example": "ledger:TXN-WRITE held by daemon (ttl: 55s remaining)"
+      }
     ],
     "lines": [
-      "Active claim leases prevent state reversal to commit 3f9c2ab.",
-      "Restoring under live claims would orphan lease holders.",
-      "layer:          claims",
-      "measured:       2 active locks (tolerated for reversal: 0)"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Active claim leases prevent state reversal to commit 3f9c2ab."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Restoring under live claims would orphan lease holders."
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "layer:          claims"
+      },
+      {
+        "$slot": "lines_3",
+        "$from": "live.lines[3]",
+        "$example": "measured:       2 active locks (tolerated for reversal: 0)"
+      }
     ]
   }
 }

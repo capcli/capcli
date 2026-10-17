@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "doc.outline.refusal.not_found",
-  "target": "doc://return-policy",
-  "command": "capcli doc outline doc://return-policy",
-  "elapsed_ms": 229,
+  "scenario": {
+    "doc_urp": "doc://return-policy"
+  },
+  "target": {
+    "$slot": "doc_urp",
+    "$from": "scenario.doc_urp",
+    "$example": "doc://return-policy"
+  },
+  "command": {
+    "$interpolate": "capcli doc outline {{doc_urp}}",
+    "$bindings": {
+      "doc_urp": "scenario.doc_urp"
+    },
+    "$example": "capcli doc outline doc://return-policy"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 229
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,12 +31,24 @@
   "component": {
     "rule": "validation.doc.not_found",
     "domain": "validation",
-    "culprit": "Document URP 'return-policy' has no entry in the document catalog.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Document URP 'return-policy' has no entry in the document catalog."
+    },
     "remedy": "verify the URP; nearest catalog match is doc://refund-policy",
-    "target": "doc://return-policy",
+    "target": {
+      "$slot": "doc_urp_2",
+      "$from": "scenario.doc_urp",
+      "$example": "doc://return-policy"
+    },
     "layer": "catalog",
     "lines": [
-      "Outline is refused before any node is walked."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Outline is refused before any node is walked."
+      }
     ]
   }
 }

@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.doctor.success.recovery",
-  "target": "host",
-  "command": "CAPCLI_RECOVERY=1 capcli sys doctor",
-  "elapsed_ms": 2043,
+  "scenario": {
+    "host": "host"
+  },
+  "target": {
+    "$slot": "host",
+    "$from": "scenario.host",
+    "$example": "host"
+  },
+  "command": {
+    "$interpolate": "CAPCLI_RECOVERY=1 capcli sys doctor",
+    "$bindings": {},
+    "$example": "CAPCLI_RECOVERY=1 capcli sys doctor"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2043
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,32 +31,88 @@
     "groups": [
       {
         "fields": {
-          "break_glass_active": "CAPCLI_RECOVERY=1 — policy disabled, audit sink online"
+          "break_glass_active": {
+            "$slot": "break_glass_active",
+            "$from": "live.groups[0].fields.break_glass_active",
+            "$example": "CAPCLI_RECOVERY=1 — policy disabled, audit sink online"
+          }
         }
       },
       {
-        "title": "recovery_shell",
+        "title": {
+          "$slot": "title",
+          "$from": "live.groups[1].title",
+          "$example": "recovery_shell"
+        },
         "fields": {
-          "mode": "degraded (schema and audit sink loaded only)",
-          "policy_engine": "disabled",
-          "audit_sink": "online",
-          "chain_status": "unverifiable — audit.db ledger root unreadable (I/O error); await object-store restore",
-          "entry_event": "recovery_mode_entered logged on startup",
-          "allowlist": "run sql (read-only), db dump, sys audit tail, sys backup, sys recover",
-          "alias_parser": "alive — capcli sql resolves to run sql before gating"
+          "mode": {
+            "$slot": "mode",
+            "$from": "live.groups[1].fields.mode",
+            "$example": "degraded (schema and audit sink loaded only)"
+          },
+          "policy_engine": {
+            "$slot": "policy_engine",
+            "$from": "live.groups[1].fields.policy_engine",
+            "$example": "disabled"
+          },
+          "audit_sink": {
+            "$slot": "audit_sink",
+            "$from": "live.groups[1].fields.audit_sink",
+            "$example": "online"
+          },
+          "chain_status": {
+            "$slot": "chain_status",
+            "$from": "live.groups[1].fields.chain_status",
+            "$example": "unverifiable — audit.db ledger root unreadable (I/O error); await object-store restore"
+          },
+          "entry_event": {
+            "$slot": "entry_event",
+            "$from": "live.groups[1].fields.entry_event",
+            "$example": "recovery_mode_entered logged on startup"
+          },
+          "allowlist": {
+            "$slot": "allowlist",
+            "$from": "live.groups[1].fields.allowlist",
+            "$example": "run sql (read-only), db dump, sys audit tail, sys backup, sys recover"
+          },
+          "alias_parser": {
+            "$slot": "alias_parser",
+            "$from": "live.groups[1].fields.alias_parser",
+            "$example": "alive — capcli sql resolves to run sql before gating"
+          }
         }
       },
       {
-        "title": "repair",
+        "title": {
+          "$slot": "title_2",
+          "$from": "live.groups[2].title",
+          "$example": "repair"
+        },
         "lines": [
-          "1. capcli sys audit tail --since 1h   inspect events around the break",
-          "2. capcli sys recover 3f9c2ab         reconstruct workspace from object store",
-          "3. capcli sys backup --push           re-anchor ledger root after repair"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "1. capcli sys audit tail --since 1h   inspect events around the break"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[2].lines[1]",
+            "$example": "2. capcli sys recover 3f9c2ab         reconstruct workspace from object store"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[2].lines[2]",
+            "$example": "3. capcli sys backup --push           re-anchor ledger root after repair"
+          }
         ]
       },
       {
         "lines": [
-          "note:           diagnostics only; no writes permitted in recovery mode"
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[3].lines[0]",
+            "$example": "note:           diagnostics only; no writes permitted in recovery mode"
+          }
         ]
       }
     ]

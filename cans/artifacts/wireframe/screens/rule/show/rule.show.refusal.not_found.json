@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "rule.show.refusal.not_found",
-  "target": "schema://invoices",
-  "command": "capcli rule show schema --table invoices",
-  "elapsed_ms": 74,
+  "scenario": {
+    "schema_urp": "schema://invoices"
+  },
+  "target": {
+    "$slot": "schema_urp",
+    "$from": "scenario.schema_urp",
+    "$example": "schema://invoices"
+  },
+  "command": {
+    "$interpolate": "capcli rule show schema --table invoices",
+    "$bindings": {},
+    "$example": "capcli rule show schema --table invoices"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 74
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,9 +29,21 @@
   "component": {
     "rule": "validation.table_not_found",
     "domain": "validation",
-    "culprit": "Table 'invoices' has no compiled declaration in this workspace.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Table 'invoices' has no compiled declaration in this workspace."
+    },
     "remedy": "declare the table in schema.yaml, or list compiled targets via 'capcli rule show schema'",
-    "target": "schema://invoices",
-    "lookup": "compiled schema.yaml v12 (tables: customers, inventory, orders, order_items)"
+    "target": {
+      "$slot": "schema_urp_2",
+      "$from": "scenario.schema_urp",
+      "$example": "schema://invoices"
+    },
+    "lookup": {
+      "$slot": "lookup",
+      "$from": "live.lookup",
+      "$example": "compiled schema.yaml v12 (tables: customers, inventory, orders, order_items)"
+    }
   }
 }

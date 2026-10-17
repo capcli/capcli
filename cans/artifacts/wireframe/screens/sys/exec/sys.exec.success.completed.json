@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.exec.success.completed",
-  "target": "sandbox",
-  "command": "capcli sys exec \"python3 etl.py\" --sandbox",
-  "elapsed_ms": 1455,
+  "scenario": {
+    "sandbox": "sandbox"
+  },
+  "target": {
+    "$slot": "sandbox",
+    "$from": "scenario.sandbox",
+    "$example": "sandbox"
+  },
+  "command": {
+    "$interpolate": "capcli sys exec \"python3 etl.py\" --sandbox",
+    "$bindings": {},
+    "$example": "capcli sys exec \"python3 etl.py\" --sandbox"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1455
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -11,24 +27,68 @@
   },
   "archetype": "receipt",
   "component": {
-    "title": "exec",
+    "title": {
+      "$slot": "title",
+      "$from": "live.title",
+      "$example": "exec"
+    },
     "groups": [
       {
-        "title": "exec",
+        "title": {
+          "$slot": "title_2",
+          "$from": "live.groups[0].title",
+          "$example": "exec"
+        },
         "fields": {
-          "command": "python3 etl.py",
-          "jail": "bwrap (tier_1 unprivileged userns)",
-          "seccomp": "profile_python active (syscall 42 trapped)",
-          "scratch": "tmpfs 64MB (wiped at exit)",
-          "exit_status": "0",
-          "duration": "1,284ms",
-          "stdout": "2 lines (24 tokens)",
-          "side_effects": "1 file under /scratch; audit event committed to _audit"
+          "command": {
+            "$slot": "command",
+            "$from": "live.groups[0].fields.command",
+            "$example": "python3 etl.py"
+          },
+          "jail": {
+            "$slot": "jail",
+            "$from": "live.groups[0].fields.jail",
+            "$example": "bwrap (tier_1 unprivileged userns)"
+          },
+          "seccomp": {
+            "$slot": "seccomp",
+            "$from": "live.groups[0].fields.seccomp",
+            "$example": "profile_python active (syscall 42 trapped)"
+          },
+          "scratch": {
+            "$slot": "scratch",
+            "$from": "live.groups[0].fields.scratch",
+            "$example": "tmpfs 64MB (wiped at exit)"
+          },
+          "exit_status": {
+            "$slot": "exit_status",
+            "$from": "live.groups[0].fields.exit_status",
+            "$example": "0"
+          },
+          "duration": {
+            "$slot": "duration",
+            "$from": "live.groups[0].fields.duration",
+            "$example": "1,284ms"
+          },
+          "stdout": {
+            "$slot": "stdout",
+            "$from": "live.groups[0].fields.stdout",
+            "$example": "2 lines (24 tokens)"
+          },
+          "side_effects": {
+            "$slot": "side_effects",
+            "$from": "live.groups[0].fields.side_effects",
+            "$example": "1 file under /scratch; audit event committed to _audit"
+          }
         }
       },
       {
         "lines": [
-          "note:           containment held; effects recorded on the audit spine"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "note:           containment held; effects recorded on the audit spine"
+          }
         ]
       }
     ]

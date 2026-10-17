@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.dump.success.populated",
-  "target": "envs/dev/workspace.db",
-  "command": "capcli db dump",
-  "elapsed_ms": 577,
+  "scenario": {
+    "db_path": "envs/dev/workspace.db"
+  },
+  "target": {
+    "$slot": "db_path",
+    "$from": "scenario.db_path",
+    "$example": "envs/dev/workspace.db"
+  },
+  "command": {
+    "$interpolate": "capcli db dump",
+    "$bindings": {},
+    "$example": "capcli db dump"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 577
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,28 +36,76 @@
     "groups": [
       {
         "fields": {
-          "database": "envs/dev/workspace.db",
-          "format": "world.sql (deterministic DDL + seed)",
-          "tables": "6",
-          "views": "3",
-          "seed_rows": "6",
-          "bytes": "18432",
-          "sha256": "sha256:1c8b0e3d5a7f294c6e0b8d2a4f6c1e3b5d7a9f0c"
+          "database": {
+            "$slot": "db_path_2",
+            "$from": "scenario.db_path",
+            "$example": "envs/dev/workspace.db"
+          },
+          "format": {
+            "$slot": "format",
+            "$from": "live.groups[0].fields.format",
+            "$example": "world.sql (deterministic DDL + seed)"
+          },
+          "tables": {
+            "$slot": "tables",
+            "$from": "live.groups[0].fields.tables",
+            "$example": "6"
+          },
+          "views": {
+            "$slot": "views",
+            "$from": "live.groups[0].fields.views",
+            "$example": "3"
+          },
+          "seed_rows": {
+            "$slot": "seed_rows",
+            "$from": "live.groups[0].fields.seed_rows",
+            "$example": "6"
+          },
+          "bytes": {
+            "$slot": "bytes",
+            "$from": "live.groups[0].fields.bytes",
+            "$example": "18432"
+          },
+          "sha256": {
+            "$slot": "sha256",
+            "$from": "live.groups[0].fields.sha256",
+            "$example": "sha256:1c8b0e3d5a7f294c6e0b8d2a4f6c1e3b5d7a9f0c"
+          }
         }
       },
       {
         "fields": {
-          "note": "deterministic; identical world yields identical bytes"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[1].fields.note",
+            "$example": "deterministic; identical world yields identical bytes"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli db dump",
-      "intent": "Dump output payload truncated",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli db dump",
+        "$bindings": {},
+        "$example": "capcli db dump"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Dump output payload truncated"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

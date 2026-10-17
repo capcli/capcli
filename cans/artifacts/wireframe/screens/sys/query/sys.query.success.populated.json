@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.query.success.populated",
-  "target": "_audit",
-  "command": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 2 LIMIT 20\"",
-  "elapsed_ms": 1735,
+  "scenario": {
+    "audit": "_audit"
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit query \"SELECT op_id, domain FROM {{audit}} WHERE exit_code = 2 LIMIT 20\"",
+    "$bindings": {
+      "audit": "scenario.audit"
+    },
+    "$example": "capcli sys audit query \"SELECT op_id, domain FROM _audit WHERE exit_code = 2 LIMIT 20\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1735
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,23 +38,63 @@
     "groups": [
       {
         "fields": {
-          "target": "_audit (read-only system table)",
-          "rows": "3 returned (LIMIT 20)",
-          "duration": "2ms"
+          "target": {
+            "$interpolate": "{{audit}} (read-only system table)",
+            "$bindings": {
+              "audit": "scenario.audit"
+            },
+            "$example": "_audit (read-only system table)"
+          },
+          "rows": {
+            "$slot": "rows",
+            "$from": "live.groups[0].fields.rows",
+            "$example": "3 returned (LIMIT 20)"
+          },
+          "duration": {
+            "$slot": "duration",
+            "$from": "live.groups[0].fields.duration",
+            "$example": "2ms"
+          }
         }
       },
       {
         "lines": [
-          "op_id      domain",
-          "──────────────────────",
-          "op_c44d1   policy.ast",
-          "op_31f8    policy.budget",
-          "op_b22e9   policy.trust"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "op_id      domain"
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "──────────────────────"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[1].lines[2]",
+            "$example": "op_c44d1   policy.ast"
+          },
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[1].lines[3]",
+            "$example": "op_31f8    policy.budget"
+          },
+          {
+            "$slot": "lines_4",
+            "$from": "live.groups[1].lines[4]",
+            "$example": "op_b22e9   policy.trust"
+          }
         ]
       },
       {
         "fields": {
-          "note": "writes to _audit are denied; queries served from the SSOT table"
+          "note": {
+            "$interpolate": "writes to {{audit}} are denied; queries served from the SSOT table",
+            "$bindings": {
+              "audit": "scenario.audit"
+            },
+            "$example": "writes to _audit are denied; queries served from the SSOT table"
+          }
         }
       }
     ]

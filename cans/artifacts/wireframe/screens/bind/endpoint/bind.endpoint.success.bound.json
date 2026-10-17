@@ -1,29 +1,86 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.endpoint.success.bound",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
-  "elapsed_ms": 1316,
+  "scenario": {
+    "routine_urp": "cap://dispatch_order@4",
+    "routine_name": "dispatch_order",
+    "routine_version": 4
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
+    "$bindings": {},
+    "$example": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1316
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_3f7k",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_3f7k"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "binding_id": "bnd_2m7p",
-          "endpoint": "dispatch_order@4",
-          "url": "http://127.0.0.1:4040/endpoints/dispatch_order",
-          "auth": "api-key",
-          "rate": "60 req/min",
-          "channel": "all (rest + mcp)",
-          "writes": "denied by default",
-          "trust": "pinned (serve floor)"
+          "binding_id": {
+            "$slot": "binding_id",
+            "$from": "live.groups[0].fields.binding_id",
+            "$example": "bnd_2m7p"
+          },
+          "endpoint": {
+            "$interpolate": "{{routine_name}}@{{routine_version}}",
+            "$bindings": {
+              "routine_name": "scenario.routine_name",
+              "routine_version": "scenario.routine_version"
+            },
+            "$example": "dispatch_order@4"
+          },
+          "url": {
+            "$slot": "url",
+            "$from": "live.groups[0].fields.url",
+            "$example": "http://127.0.0.1:4040/endpoints/dispatch_order"
+          },
+          "auth": {
+            "$slot": "auth",
+            "$from": "live.groups[0].fields.auth",
+            "$example": "api-key"
+          },
+          "rate": {
+            "$slot": "rate",
+            "$from": "live.groups[0].fields.rate",
+            "$example": "60 req/min"
+          },
+          "channel": {
+            "$slot": "channel",
+            "$from": "live.groups[0].fields.channel",
+            "$example": "all (rest + mcp)"
+          },
+          "writes": {
+            "$slot": "writes",
+            "$from": "live.groups[0].fields.writes",
+            "$example": "denied by default"
+          },
+          "trust": {
+            "$slot": "trust",
+            "$from": "live.groups[0].fields.trust",
+            "$example": "pinned (serve floor)"
+          }
         }
       }
     ]

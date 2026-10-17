@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.endpoint.denial.cap",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
-  "elapsed_ms": 333,
+  "scenario": {
+    "routine_urp": "cap://dispatch_order@4"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all",
+    "$bindings": {},
+    "$example": "capcli bind endpoint dispatch_order@4 --auth api-key --rate 60 --channel all"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 333
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,8 +30,16 @@
     "rule": "policy.authorizer.endpoint_cap_exceeded",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Max 10 active endpoints reached. New endpoint binding refused.",
-    "measured": "10 active endpoints (cap: 10)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Max 10 active endpoints reached. New endpoint binding refused."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "10 active endpoints (cap: 10)"
+    },
     "remedy": "retire an unused endpoint first (capcli bind remove); limit: artifacts/governance.yaml#serve.max_endpoints"
   }
 }

@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ws.peers.success.empty",
-  "target": "peers",
-  "command": "capcli ws peers",
-  "elapsed_ms": 88,
+  "scenario": {
+    "peers": "peers"
+  },
+  "target": {
+    "$slot": "peers",
+    "$from": "scenario.peers",
+    "$example": "peers"
+  },
+  "command": {
+    "$interpolate": "capcli ws {{peers}}",
+    "$bindings": {
+      "peers": "scenario.peers"
+    },
+    "$example": "capcli ws peers"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 88
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,19 +38,39 @@
     "groups": [
       {
         "fields": {
-          "peers": "0 active"
+          "peers": {
+            "$slot": "peers_2",
+            "$from": "live.groups[0].fields.peers",
+            "$example": "0 active"
+          }
         }
       },
       {
         "lines": [
-          "No federated peers registered. Register a peer before dialing ws:// targets."
+          {
+            "$interpolate": "No federated {{peers}} registered. Register a peer before dialing ws:// targets.",
+            "$bindings": {
+              "peers": "scenario.peers"
+            },
+            "$example": "No federated peers registered. Register a peer before dialing ws:// targets."
+          }
         ]
       }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/federation/outbound#1",
-    "reason": "no active federated peers registered",
-    "serve": "L1"
+    "reason": {
+      "$interpolate": "no active federated {{peers}} registered",
+      "$bindings": {
+        "peers": "scenario.peers"
+      },
+      "$example": "no active federated peers registered"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }

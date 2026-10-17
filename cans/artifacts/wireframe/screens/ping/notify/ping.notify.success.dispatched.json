@@ -1,26 +1,68 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.notify.success.dispatched",
-  "target": "user:root",
-  "command": "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
-  "elapsed_ms": 2247,
+  "scenario": {
+    "principal": "user:root"
+  },
+  "target": {
+    "$slot": "principal",
+    "$from": "scenario.principal",
+    "$example": "user:root"
+  },
+  "command": {
+    "$interpolate": "capcli ping notify {{principal}} \"Nightly sync finished\" --channel email --intent \"morning briefing\"",
+    "$bindings": {
+      "principal": "scenario.principal"
+    },
+    "$example": "capcli ping notify user:root \"Nightly sync finished\" --channel email --intent \"morning briefing\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2247
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "audit_op": "op_9f31c",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f31c"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "channel": "email",
-          "principal": "user:root",
-          "message": "\"Nightly sync finished\"",
-          "intent": "declared (\"morning briefing\")",
-          "receipt": "ntf_4c1d9e"
+          "channel": {
+            "$slot": "channel",
+            "$from": "live.groups[0].fields.channel",
+            "$example": "email"
+          },
+          "principal": {
+            "$slot": "principal_2",
+            "$from": "scenario.principal",
+            "$example": "user:root"
+          },
+          "message": {
+            "$slot": "message",
+            "$from": "live.groups[0].fields.message",
+            "$example": "\"Nightly sync finished\""
+          },
+          "intent": {
+            "$slot": "intent",
+            "$from": "live.groups[0].fields.intent",
+            "$example": "declared (\"morning briefing\")"
+          },
+          "receipt": {
+            "$slot": "receipt",
+            "$from": "live.groups[0].fields.receipt",
+            "$example": "ntf_4c1d9e"
+          }
         }
       }
     ]

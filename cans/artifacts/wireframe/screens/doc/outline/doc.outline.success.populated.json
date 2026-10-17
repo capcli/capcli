@@ -1,35 +1,115 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "doc.outline.success.populated",
-  "target": "doc://refund-policy",
-  "command": "capcli doc outline doc://refund-policy",
-  "elapsed_ms": 2127,
+  "scenario": {
+    "doc_urp": "doc://refund-policy"
+  },
+  "target": {
+    "$slot": "doc_urp",
+    "$from": "scenario.doc_urp",
+    "$example": "doc://refund-policy"
+  },
+  "command": {
+    "$interpolate": "capcli doc outline {{doc_urp}}",
+    "$bindings": {
+      "doc_urp": "scenario.doc_urp"
+    },
+    "$example": "capcli doc outline doc://refund-policy"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2127
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "document",
   "component": {
-    "header_badge": "outline doc://refund-policy",
+    "header_badge": {
+      "$interpolate": "outline {{doc_urp}}",
+      "$bindings": {
+        "doc_urp": "scenario.doc_urp"
+      },
+      "$example": "outline doc://refund-policy"
+    },
     "body": [
-      "doc://refund-policy (pinned)",
-      "├── 1. Scope",
-      "├── 2. Refund windows",
-      "│     ├── 2.1 Standard window (30 days)",
-      "│     └── 2.2 Extended window (120 days, supervisor approval)",
-      "├── 3. Stripe integration notes",
-      "├── 4. Currency handling",
-      "└── 5. Escalation paths"
+      {
+        "$interpolate": "{{doc_urp}} (pinned)",
+        "$bindings": {
+          "doc_urp": "scenario.doc_urp"
+        },
+        "$example": "doc://refund-policy (pinned)"
+      },
+      {
+        "$slot": "body_0",
+        "$from": "live.body[1]",
+        "$example": "├── 1. Scope"
+      },
+      {
+        "$slot": "body_1",
+        "$from": "live.body[2]",
+        "$example": "├── 2. Refund windows"
+      },
+      {
+        "$slot": "body_2",
+        "$from": "live.body[3]",
+        "$example": "│     ├── 2.1 Standard window (30 days)"
+      },
+      {
+        "$slot": "body_3",
+        "$from": "live.body[4]",
+        "$example": "│     └── 2.2 Extended window (120 days, supervisor approval)"
+      },
+      {
+        "$slot": "body_4",
+        "$from": "live.body[5]",
+        "$example": "├── 3. Stripe integration notes"
+      },
+      {
+        "$slot": "body_5",
+        "$from": "live.body[6]",
+        "$example": "├── 4. Currency handling"
+      },
+      {
+        "$slot": "body_6",
+        "$from": "live.body[7]",
+        "$example": "└── 5. Escalation paths"
+      }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli inspect doc://refund-policy",
-      "intent": "Document metadata, tokens, and node count",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli inspect {{doc_urp}}",
+        "$bindings": {
+          "doc_urp": "scenario.doc_urp"
+        },
+        "$example": "capcli inspect doc://refund-policy"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Document metadata, tokens, and node count"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

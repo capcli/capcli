@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "plugin.disable.success.disabled",
-  "target": "stripe",
-  "command": "capcli plugin disable stripe",
-  "elapsed_ms": 377,
+  "scenario": {
+    "plugin_id": "stripe"
+  },
+  "target": {
+    "$slot": "plugin_id",
+    "$from": "scenario.plugin_id",
+    "$example": "stripe"
+  },
+  "command": {
+    "$interpolate": "capcli plugin disable {{plugin_id}}",
+    "$bindings": {
+      "plugin_id": "scenario.plugin_id"
+    },
+    "$example": "capcli plugin disable stripe"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 377
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,19 +33,47 @@
     "groups": [
       {
         "fields": {
-          "plugin_id": "stripe",
-          "unmount": "projection unmounted; cli_noun api parked",
-          "daemons": "SIGTERM sent to 2 running plugin daemons"
+          "plugin_id": {
+            "$slot": "plugin_id_2",
+            "$from": "scenario.plugin_id",
+            "$example": "stripe"
+          },
+          "unmount": {
+            "$slot": "unmount",
+            "$from": "live.groups[0].fields.unmount",
+            "$example": "projection unmounted; cli_noun api parked"
+          },
+          "daemons": {
+            "$slot": "daemons",
+            "$from": "live.groups[0].fields.daemons",
+            "$example": "SIGTERM sent to 2 running plugin daemons"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli plugin list --enabled-only",
-      "intent": "Enabled plugins only",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli plugin list --enabled-only",
+        "$bindings": {},
+        "$example": "capcli plugin list --enabled-only"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Enabled plugins only"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

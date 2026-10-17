@@ -1,30 +1,84 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.ship.denial.metrics",
-  "target": "order_sync",
-  "command": "capcli routine ship order_sync reviewed",
-  "elapsed_ms": 139,
+  "scenario": {
+    "order_sync": "order_sync"
+  },
+  "target": {
+    "$slot": "order_sync",
+    "$from": "scenario.order_sync",
+    "$example": "order_sync"
+  },
+  "command": {
+    "$interpolate": "capcli routine ship {{order_sync}} reviewed",
+    "$bindings": {
+      "order_sync": "scenario.order_sync"
+    },
+    "$example": "capcli routine ship order_sync reviewed"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 139
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_ship_02",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_ship_02"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.authorizer.promotion.low_success",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Success rate 0.87 falls below the 0.95 promotion floor; conjunction fails.",
-    "measured": "success rate 0.87 vs floor 0.95 (26 runs, 3 failures in sim replay)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Success rate 0.87 falls below the 0.95 promotion floor; conjunction fails."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "success rate 0.87 vs floor 0.95 (26 runs, 3 failures in sim replay)"
+    },
     "remedy": "fix the 3 failing replays, re-run capcli routine prove order_sync --env sim, then re-ship",
     "span": {
-      "source": "FAIL  policy.authorizer.promotion.low_success",
-      "highlight": "promotion.low_success"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "FAIL  policy.authorizer.promotion.low_success"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "promotion.low_success"
+      }
     },
-    "routine": "order_sync@1 (target rung: reviewed)",
-    "source": "routine_stats (last 26 runs)",
-    "success_rate": "0.87",
-    "floor": "0.95"
+    "routine": {
+      "$slot": "routine",
+      "$from": "live.routine",
+      "$example": "order_sync@1 (target rung: reviewed)"
+    },
+    "source": {
+      "$slot": "source_2",
+      "$from": "live.source",
+      "$example": "routine_stats (last 26 runs)"
+    },
+    "success_rate": {
+      "$slot": "success_rate",
+      "$from": "live.success_rate",
+      "$example": "0.87"
+    },
+    "floor": {
+      "$slot": "floor",
+      "$from": "live.floor",
+      "$example": "0.95"
+    }
   }
 }

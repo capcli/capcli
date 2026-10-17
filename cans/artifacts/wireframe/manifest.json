@@ -1,9 +1,9 @@
 {
-  "version": 3,
+  "version": 1,
   "policy_version": 5,
   "governance_version": 8,
   "schema_version": 2,
-  "fixture_schema": "wireframe/v2",
+  "fixture_schema": "wireframe/v1",
   "archetypes": ["diagnostic", "tree", "receipt", "document"],
   "lockfile": "capcli.lock",
   "compiled_at": "2026-10-09T09:28:10Z",
@@ -28,6 +28,24 @@
     "law": "env new provisions arbitrary lowercase namespace slugs; state_axes.env lists the kernel-reserved roots only"
   },
   "output_contract": {
+    "slot": {
+      "schema": "wireframe/v1",
+      "keys": ["$slot", "$interpolate"],
+      "slot_requires": ["$from", "$example"],
+      "slot_optional": ["$kind", "$type", "$pattern", "$enum"],
+      "interpolate_requires": ["$bindings", "$example"],
+      "kind_enum": ["instance"],
+      "binding_prefixes": ["context", "scenario", "world", "live"],
+      "semantic_positions": [
+        "id", "$schema", "archetype", "rule", "domain", "layer",
+        "remedy", "context.env", "context.tier", "context.trust",
+        "trailer.prompt", "attention.top[].class",
+        "isolated", "isolated_reason"
+      ],
+      "volatility": "elapsed_ms and time-like strings (durations, timestamps, windows) are always $slot",
+      "binding_path_grammar": "^(context|scenario|world|live)(\\.[a-z_][a-z0-9_]*|\\[\\d+\\])+$",
+      "banned_substring_in_screens": ["template"]
+    },
     "pointer_schemes": ["cap://", "ask://", "audit://", "quota://", "vault://", "pack://", "policy://", "ws://", "db://", "doc://", "plugin://"],
     "prefix": "[{env}:{tier}]",
     "human_format": "rustc-style diagnostic with atomic blocks, source spans, and indented key-values",

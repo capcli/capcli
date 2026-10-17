@@ -1,41 +1,105 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.keys.success.issued",
-  "target": "partner_hook",
-  "command": "capcli bind keys issue partner_hook --principal partner:acme",
-  "elapsed_ms": 203,
+  "scenario": {
+    "partner_hook": "partner_hook"
+  },
+  "target": {
+    "$slot": "partner_hook",
+    "$from": "scenario.partner_hook",
+    "$example": "partner_hook"
+  },
+  "command": {
+    "$interpolate": "capcli bind keys issue {{partner_hook}} --principal partner:acme",
+    "$bindings": {
+      "partner_hook": "scenario.partner_hook"
+    },
+    "$example": "capcli bind keys issue partner_hook --principal partner:acme"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 203
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_5j8u",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_5j8u"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "key_id": "key_6v2q",
-          "principal": "partner:acme",
-          "endpoint": "partner_hook (report_summary@3)",
-          "issued_at": "2026-10-04T00:00:00Z",
-          "expires_at": "2027-01-02T00:00:00Z (90d rotation)"
+          "key_id": {
+            "$slot": "key_id",
+            "$from": "live.groups[0].fields.key_id",
+            "$example": "key_6v2q"
+          },
+          "principal": {
+            "$slot": "principal",
+            "$from": "live.groups[0].fields.principal",
+            "$example": "partner:acme"
+          },
+          "endpoint": {
+            "$interpolate": "{{partner_hook}} (report_summary@3)",
+            "$bindings": {
+              "partner_hook": "scenario.partner_hook"
+            },
+            "$example": "partner_hook (report_summary@3)"
+          },
+          "issued_at": {
+            "$slot": "issued_at",
+            "$from": "live.groups[0].fields.issued_at",
+            "$example": "2026-10-04T00:00:00Z"
+          },
+          "expires_at": {
+            "$slot": "expires_at",
+            "$from": "live.groups[0].fields.expires_at",
+            "$example": "2027-01-02T00:00:00Z (90d rotation)"
+          }
         }
       },
       {
         "fields": {
-          "note": "key material sealed in vault; no secret printed to stdout"
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[1].fields.note",
+            "$example": "key material sealed in vault; no secret printed to stdout"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli bind export openapi --out openapi.json",
-      "intent": "Bound OpenAPI schema exported",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli bind export openapi --out openapi.json",
+        "$bindings": {},
+        "$example": "capcli bind export openapi --out openapi.json"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Bound OpenAPI schema exported"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

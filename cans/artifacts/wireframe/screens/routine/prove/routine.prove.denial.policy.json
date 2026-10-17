@@ -1,29 +1,71 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.prove.denial.policy",
-  "target": "sync_orders",
-  "command": "capcli routine prove sync_orders --env sim",
-  "elapsed_ms": 153,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine prove sync_orders --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 153
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_prove_05",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_prove_05"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.authorizer.routine.illegal_leaf",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest.",
-    "measured": "1 undeclared leaf (manifest declares 5; DDL not among them)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "ALTER at draft trust is a forbidden leaf op and is undeclared in the manifest."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "1 undeclared leaf (manifest declares 5; DDL not among them)"
+    },
     "remedy": "declare the migration in schema.yaml via capcli rule apply, or drop the DDL from the routine",
     "span": {
-      "source": "ctx.db.execute(\"ALTER TABLE orders ADD COLUMN rush boolean\")",
-      "highlight": "ALTER TABLE orders ADD COLUMN rush boolean"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "ctx.db.execute(\"ALTER TABLE orders ADD COLUMN rush boolean\")"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "ALTER TABLE orders ADD COLUMN rush boolean"
+      }
     },
     "lines": [
-      "routines/sync_orders.py:41 (test pass leaf 6)"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "routines/sync_orders.py:41 (test pass leaf 6)"
+      }
     ]
   }
 }

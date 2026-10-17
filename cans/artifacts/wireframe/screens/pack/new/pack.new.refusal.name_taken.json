@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.new.refusal.name_taken",
-  "target": "webhook_receiver",
-  "command": "capcli pack new webhook_receiver --type routine",
-  "elapsed_ms": 77,
+  "scenario": {
+    "webhook_receiver": "webhook_receiver"
+  },
+  "target": {
+    "$slot": "webhook_receiver",
+    "$from": "scenario.webhook_receiver",
+    "$example": "webhook_receiver"
+  },
+  "command": {
+    "$interpolate": "capcli pack new {{webhook_receiver}} --type routine",
+    "$bindings": {
+      "webhook_receiver": "scenario.webhook_receiver"
+    },
+    "$example": "capcli pack new webhook_receiver --type routine"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 77
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,13 +31,35 @@
   "component": {
     "rule": "validation.pack.name_taken",
     "domain": "validation",
-    "culprit": "Pack name 'webhook_receiver' already registered at pack://routine/webhook_receiver.",
+    "culprit": {
+      "$interpolate": "Pack name '{{webhook_receiver}}' already registered at pack://routine/webhook_receiver.",
+      "$bindings": {
+        "webhook_receiver": "scenario.webhook_receiver"
+      },
+      "$example": "Pack name 'webhook_receiver' already registered at pack://routine/webhook_receiver."
+    },
     "remedy": "pick a distinct name or inspect the existing blueprint via capcli inspect pack://routine/webhook_receiver",
-    "pack": "pack://routine/webhook_receiver",
-    "existing": "pack/webhook_receiver (routine, policy_version 5)",
+    "pack": {
+      "$slot": "pack",
+      "$from": "live.pack",
+      "$example": "pack://routine/webhook_receiver"
+    },
+    "existing": {
+      "$slot": "existing",
+      "$from": "live.existing",
+      "$example": "pack/webhook_receiver (routine, policy_version 5)"
+    },
     "lines": [
-      "FATAL  validation.pack.name_taken",
-      "Pack name already registered."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.pack.name_taken"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Pack name already registered."
+      }
     ]
   }
 }

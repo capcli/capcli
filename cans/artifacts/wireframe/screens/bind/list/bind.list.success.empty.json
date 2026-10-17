@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.list.success.empty",
-  "target": "bindings",
-  "command": "capcli bind list",
-  "elapsed_ms": 1455,
+  "scenario": {
+    "bindings": "bindings"
+  },
+  "target": {
+    "$slot": "bindings",
+    "$from": "scenario.bindings",
+    "$example": "bindings"
+  },
+  "command": {
+    "$interpolate": "capcli bind list",
+    "$bindings": {},
+    "$example": "capcli bind list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1455
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,19 +36,37 @@
     "groups": [
       {
         "fields": {
-          "bindings": "0 active"
+          "bindings": {
+            "$slot": "bindings_2",
+            "$from": "live.groups[0].fields.bindings",
+            "$example": "0 active"
+          }
         }
       },
       {
         "lines": [
-          "No triggers bound. Schedules, hooks, and endpoints will appear here."
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "No triggers bound. Schedules, hooks, and endpoints will appear here."
+          }
         ]
       }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/authoring/binding_setup#1",
-    "reason": "no bindings configured in active environment",
-    "serve": "L1"
+    "reason": {
+      "$interpolate": "no {{bindings}} configured in active environment",
+      "$bindings": {
+        "bindings": "scenario.bindings"
+      },
+      "$example": "no bindings configured in active environment"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }

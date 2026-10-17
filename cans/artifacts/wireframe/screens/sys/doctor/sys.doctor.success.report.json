@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.doctor.success.report",
-  "target": "host",
-  "command": "capcli sys doctor --report",
-  "elapsed_ms": 1647,
+  "scenario": {
+    "host": "host"
+  },
+  "target": {
+    "$slot": "host",
+    "$from": "scenario.host",
+    "$example": "host"
+  },
+  "command": {
+    "$interpolate": "capcli sys doctor --report",
+    "$bindings": {},
+    "$example": "capcli sys doctor --report"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1647
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
@@ -11,25 +27,89 @@
   },
   "archetype": "receipt",
   "component": {
-    "title": "trust_receipt",
+    "title": {
+      "$slot": "title",
+      "$from": "live.title",
+      "$example": "trust_receipt"
+    },
     "groups": [
       {
-        "title": "trust_receipt",
+        "title": {
+          "$slot": "title_2",
+          "$from": "live.groups[0].title",
+          "$example": "trust_receipt"
+        },
         "fields": {
-          "status": "nominal (witness anchoring pending)",
-          "host_tier": "tier_1 (hardened Linux namespaces)",
-   "permitted_envs": "dev, sim, prod",
-          "workspace": "envs/prod/workspace.db",
-          "ledger_root_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
-          "witness_store": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)",
-          "worm_checkpoint": "pending — ledger root is local-only until the first object-store anchor",
-          "audited_events": "14290 committed to _audit",
-          "policy_denials": "18 (intercepted pre-execution; state untouched)",
-          "unaudited_writes": "0",
-          "secret_leaks": "0",
-          "pinned_routines": "32",
-          "active_triggers": "4 crons, 3 webhooks, 1 endpoint",
-          "sleep_score": "100%"
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[0].fields.status",
+            "$example": "nominal (witness anchoring pending)"
+          },
+          "host_tier": {
+            "$slot": "host_tier",
+            "$from": "live.groups[0].fields.host_tier",
+            "$example": "tier_1 (hardened Linux namespaces)"
+          },
+          "permitted_envs": {
+            "$slot": "permitted_envs",
+            "$from": "live.groups[0].fields.permitted_envs",
+            "$example": "dev, sim, prod"
+          },
+          "workspace": {
+            "$slot": "workspace",
+            "$from": "live.groups[0].fields.workspace",
+            "$example": "envs/prod/workspace.db"
+          },
+          "ledger_root_hash": {
+            "$slot": "ledger_root_hash",
+            "$from": "live.groups[0].fields.ledger_root_hash",
+            "$example": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          },
+          "witness_store": {
+            "$slot": "witness_store",
+            "$from": "live.groups[0].fields.witness_store",
+            "$example": "not configured — S3/R2 WORM probe unreachable (credentials absent from vault)"
+          },
+          "worm_checkpoint": {
+            "$slot": "worm_checkpoint",
+            "$from": "live.groups[0].fields.worm_checkpoint",
+            "$example": "pending — ledger root is local-only until the first object-store anchor"
+          },
+          "audited_events": {
+            "$slot": "audited_events",
+            "$from": "live.groups[0].fields.audited_events",
+            "$example": "14290 committed to _audit"
+          },
+          "policy_denials": {
+            "$slot": "policy_denials",
+            "$from": "live.groups[0].fields.policy_denials",
+            "$example": "18 (intercepted pre-execution; state untouched)"
+          },
+          "unaudited_writes": {
+            "$slot": "unaudited_writes",
+            "$from": "live.groups[0].fields.unaudited_writes",
+            "$example": "0"
+          },
+          "secret_leaks": {
+            "$slot": "secret_leaks",
+            "$from": "live.groups[0].fields.secret_leaks",
+            "$example": "0"
+          },
+          "pinned_routines": {
+            "$slot": "pinned_routines",
+            "$from": "live.groups[0].fields.pinned_routines",
+            "$example": "32"
+          },
+          "active_triggers": {
+            "$slot": "active_triggers",
+            "$from": "live.groups[0].fields.active_triggers",
+            "$example": "4 crons, 3 webhooks, 1 endpoint"
+          },
+          "sleep_score": {
+            "$slot": "sleep_score",
+            "$from": "live.groups[0].fields.sleep_score",
+            "$example": "100%"
+          }
         }
       }
     ]

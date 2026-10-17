@@ -1,14 +1,34 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "rule.diff.success.empty",
-  "target": "schema://orders",
-  "command": "capcli rule diff schema --git",
-  "elapsed_ms": 305,
+  "scenario": {
+    "schema_urp": "schema://orders"
+  },
+  "target": {
+    "$slot": "schema_urp",
+    "$from": "scenario.schema_urp",
+    "$example": "schema://orders"
+  },
+  "command": {
+    "$interpolate": "capcli rule diff schema --git",
+    "$bindings": {},
+    "$example": "capcli rule diff schema --git"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 305
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,31 +36,75 @@
     "groups": [
       {
         "fields": {
-          "base": "git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)",
-          "working": "compiled schema.yaml v12 (lockfile verified)",
-          "scope": "4 tables · 22 columns · 7 indexes · 2 triggers"
+          "base": {
+            "$slot": "base",
+            "$from": "live.groups[0].fields.base",
+            "$example": "git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)"
+          },
+          "working": {
+            "$slot": "working",
+            "$from": "live.groups[0].fields.working",
+            "$example": "compiled schema.yaml v12 (lockfile verified)"
+          },
+          "scope": {
+            "$slot": "scope",
+            "$from": "live.groups[0].fields.scope",
+            "$example": "4 tables · 22 columns · 7 indexes · 2 triggers"
+          }
         }
       },
       {
         "fields": {
-          "added": "0",
-          "changed": "0",
-          "removed": "0"
+          "added": {
+            "$slot": "added",
+            "$from": "live.groups[1].fields.added",
+            "$example": "0"
+          },
+          "changed": {
+            "$slot": "changed",
+            "$from": "live.groups[1].fields.changed",
+            "$example": "0"
+          },
+          "removed": {
+            "$slot": "removed",
+            "$from": "live.groups[1].fields.removed",
+            "$example": "0"
+          }
         }
       },
       {
         "lines": [
-          "workspace is in lockstep with declared rules; no drift found."
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "workspace is in lockstep with declared rules; no drift found."
+          }
         ]
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli rule diff schema --git",
-      "intent": "Schema/policy drift detected",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli rule diff schema --git",
+        "$bindings": {},
+        "$example": "capcli rule diff schema --git"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Schema/policy drift detected"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

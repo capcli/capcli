@@ -322,6 +322,7 @@
       - Envelope shape — context, exit_code, state_modified
       - Plus data, diagnostic, audit_op
       - --json returns raw serialized envelope
+      - Concrete layout — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
     - Human archetypes
       - Archetype A — diagnostic, exits 2 through 6
       - Archetype B — tree, hierarchical DAGs
@@ -332,21 +333,25 @@
       - Failing span with caret markers
       - Indented metadata block
       - Remedy line for agent fix
+      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
     - Archetype B structure
       - Unicode branches — ├──, └──, │
       - Nested causal chain
       - Budget frames and call trees
       - Trace traversal to root intent
+      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
     - Archetype C structure
       - Aligned key-value pairs
       - Divider lines ──────────
       - Exit 0 success records
       - Trust receipt rendering
+      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
     - Archetype D structure
       - Divider-separated body slices
       - Pagination cursor state
       - Token-lean summary header
       - Full payload via --out redirection
+      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
     - Typography rules
       - Table pipes banned
       - Tree chars locked to ├── └── │
@@ -369,7 +374,7 @@
       - Cursor table — _attention_cursors, key (session, environment)
       - Cursor advance — on every envelope render
     - Fixture law
-      - Screen is a wireframe/v2 fixture JSON
+      - Screen is a wireframe/v1 fixture JSON
       - Schema — see artifacts/wireframe/wireframe-structure.md
       - Exit code derived from id state segment
       - state_modified derived from exit-0 variant

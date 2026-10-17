@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.retire.refusal.not_found",
-  "target": "cap://stripe.refund_charges",
-  "command": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\"",
-  "elapsed_ms": 271,
+  "scenario": {
+    "routine_urp": "cap://stripe.refund_charges"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://stripe.refund_charges"
+  },
+  "command": {
+    "$interpolate": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\"",
+    "$bindings": {},
+    "$example": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 271
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,14 +28,38 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "validation",
-    "culprit": "Target verb not found: 'stripe.refund_charges'.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Target verb not found: 'stripe.refund_charges'."
+    },
     "remedy": "list provider verbs via 'capcli api catalog stripe' and retry with the exact verb id",
-    "command": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\"",
-    "verb": "cap://stripe.refund_charges",
+    "command": {
+      "$slot": "command",
+      "$from": "live.command",
+      "$example": "capcli api retire stripe.refund_charges --reason \"deprecated upstream\""
+    },
+    "verb": {
+      "$slot": "api_verb",
+      "$from": "live.api_verb",
+      "$example": "cap://stripe.refund_charges"
+    },
     "lines": [
-      "FATAL  validation.not_found",
-      "Target verb not found.",
-      "No verb 'stripe.refund_charges' in provider catalog 'stripe' (verbs: 418)."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.not_found"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Target verb not found."
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "No verb 'stripe.refund_charges' in provider catalog 'stripe' (verbs: 418)."
+      }
     ]
   }
 }

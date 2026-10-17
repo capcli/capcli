@@ -1,31 +1,85 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.prove.refusal.syntax",
-  "target": "sync_orders",
-  "command": "capcli routine prove sync_orders --env sim",
-  "elapsed_ms": 209,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli routine prove {{sync_orders}} --env sim",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli routine prove sync_orders --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 209
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_prove_08",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_prove_08"
+  },
   "archetype": "diagnostic",
   "component": {
     "domain": "compile",
     "layer": "parser",
-    "culprit": "py_compile refuses routines/sync_orders.py: IndentationError at line 23 (expected an indented block after the @routine decorator wrapper at line 19) — malformed guest code never enters the sandbox.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "py_compile refuses routines/sync_orders.py: IndentationError at line 23 (expected an indented block after the @routine decorator wrapper at line 19) — malformed guest code never enters the sandbox."
+    },
     "remedy": "fix the indentation under the @routine decorator wrapper, then re-run prove; scaffolding verification re-checks import line counts and py_compile syntax",
     "span": {
-      "source": "return ctx.db.query(\"SELECT status FROM orders WHERE id = :order_id\")",
-      "highlight": "return"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "return ctx.db.query(\"SELECT status FROM orders WHERE id = :order_id\")"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "return"
+      }
     },
-    "IndentationError": "expected an indented block after the @routine decorator wrapper at line 19; malformed guest code never enters the sandbox",
-    "gate": "py_compile syntax check (scaffolding verification; Sub-check 1)",
-    "sandbox_entry": "refused — compile failure precedes jail entry",
+    "IndentationError": {
+      "$slot": "indentationerror",
+      "$from": "live.indentationerror",
+      "$example": "expected an indented block after the @routine decorator wrapper at line 19; malformed guest code never enters the sandbox"
+    },
+    "gate": {
+      "$slot": "gate",
+      "$from": "live.gate",
+      "$example": "py_compile syntax check (scaffolding verification; Sub-check 1)"
+    },
+    "sandbox_entry": {
+      "$slot": "sandbox_entry",
+      "$from": "live.sandbox_entry",
+      "$example": "refused — compile failure precedes jail entry"
+    },
     "lines": [
-      "FATAL  compile.routine.bad_syntax",
-      "routines/sync_orders.py:23 in dispatch (wrapper at line 19)"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  compile.routine.bad_syntax"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "routines/sync_orders.py:23 in dispatch (wrapper at line 19)"
+      }
     ]
   }
 }

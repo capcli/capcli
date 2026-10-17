@@ -1,26 +1,65 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.sql.denial.authorizer",
-  "target": "db://orders",
-  "command": "capcli sql \"DROP TABLE orders\" -m \"remove stale orders table\"",
-  "elapsed_ms": 134,
+  "scenario": {
+    "db_urp": "db://orders",
+    "intent": "remove stale orders table"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli sql \"DROP TABLE orders\" -m \"{{intent}}\"",
+    "$bindings": {
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli sql \"DROP TABLE orders\" -m \"remove stale orders table\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 134
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_9f2k",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2k"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.authorizer.drop_table",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Table destruction denied at the C authorizer; DDL flows through schema evolution.",
-    "measured": "statement rejected at prepare; 0 rows touched",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Table destruction denied at the C authorizer; DDL flows through schema evolution."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "statement rejected at prepare; 0 rows touched"
+    },
     "remedy": "declare removal in schema.yaml and apply via capcli rule apply schema",
     "span": {
-      "source": "DROP TABLE orders",
-      "highlight": "DROP TABLE"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "DROP TABLE orders"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "DROP TABLE"
+      }
     }
   }
 }

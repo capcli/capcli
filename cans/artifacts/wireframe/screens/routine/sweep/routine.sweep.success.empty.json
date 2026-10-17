@@ -1,13 +1,26 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.sweep.success.empty",
-  "command": "capcli routine sweep",
-  "elapsed_ms": 1229,
+  "command": {
+    "$interpolate": "capcli routine sweep",
+    "$bindings": {},
+    "$example": "capcli routine sweep"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1229
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -15,22 +28,46 @@
     "groups": [
       {
         "fields": {
-          "sweep": "duplicate routine scan (14 routines fingerprinted)"
+          "sweep": {
+            "$slot": "sweep",
+            "$from": "live.groups[0].fields.sweep",
+            "$example": "duplicate routine scan (14 routines fingerprinted)"
+          }
         }
       },
       {
         "lines": [
-          "no duplicate routines detected"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "no duplicate routines detected"
+          }
         ]
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli routine sweep",
-      "intent": "Deduplication proposals generated",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli routine sweep",
+        "$bindings": {},
+        "$example": "capcli routine sweep"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Deduplication proposals generated"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

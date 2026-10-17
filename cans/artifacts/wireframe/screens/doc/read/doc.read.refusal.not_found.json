@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "doc.read.refusal.not_found",
-  "target": "doc://refund-policies",
-  "command": "capcli doc read doc://refund-policies --max-tokens 100",
-  "elapsed_ms": 91,
+  "scenario": {
+    "doc_urp": "doc://refund-policies"
+  },
+  "target": {
+    "$slot": "doc_urp",
+    "$from": "scenario.doc_urp",
+    "$example": "doc://refund-policies"
+  },
+  "command": {
+    "$interpolate": "capcli doc read {{doc_urp}} --max-tokens 100",
+    "$bindings": {
+      "doc_urp": "scenario.doc_urp"
+    },
+    "$example": "capcli doc read doc://refund-policies --max-tokens 100"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 91
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,12 +31,24 @@
   "component": {
     "rule": "validation.doc.not_found",
     "domain": "validation",
-    "culprit": "Document URP 'refund-policies' has no entry in the document catalog.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Document URP 'refund-policies' has no entry in the document catalog."
+    },
     "remedy": "verify the URP; nearest catalog match is doc://refund-policy",
-    "target": "doc://refund-policies",
+    "target": {
+      "$slot": "doc_urp_2",
+      "$from": "scenario.doc_urp",
+      "$example": "doc://refund-policies"
+    },
     "layer": "catalog",
     "lines": [
-      "Reading is refused before any content is fetched."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Reading is refused before any content is fetched."
+      }
     ]
   }
 }

@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "plugin.list.success.populated",
-  "target": "plugins",
-  "command": "capcli plugin list",
-  "elapsed_ms": 342,
+  "scenario": {
+    "root": "plugins"
+  },
+  "target": {
+    "$slot": "root",
+    "$from": "scenario.root",
+    "$example": "plugins"
+  },
+  "command": {
+    "$interpolate": "capcli plugin list",
+    "$bindings": {},
+    "$example": "capcli plugin list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 342
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -11,32 +27,72 @@
   },
   "archetype": "tree",
   "component": {
-    "title": "populated",
-    "root": "plugins",
+    "title": {
+      "$slot": "title",
+      "$from": "live.list.title",
+      "$example": "populated"
+    },
+    "root": {
+      "$slot": "root_2",
+      "$from": "scenario.root",
+      "$example": "plugins"
+    },
     "nodes": [
       {
-        "label": "stripe 2.4.0 rung:reviewed gen:gen_03 enabled aliased_as:api",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.list.nodes[0].label",
+          "$example": "stripe 2.4.0 rung:reviewed gen:gen_03 enabled aliased_as:api"
+        },
         "children": []
       },
       {
-        "label": "ping 1.9.2 rung:pinned gen:gen_07 enabled aliased_as:ping",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.list.nodes[1].label",
+          "$example": "ping 1.9.2 rung:pinned gen:gen_07 enabled aliased_as:ping"
+        },
         "children": []
       },
       {
-        "label": "stripe-dev 0.3.0 rung:draft gen:gen_01 disabled (linked)",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.list.nodes[2].label",
+          "$example": "stripe-dev 0.3.0 rung:draft gen:gen_01 disabled (linked)"
+        },
         "children": []
       }
     ],
     "footer": {
-      "plugins": "3 total (2 enabled, 1 disabled)"
+      "plugins": {
+        "$slot": "plugins",
+        "$from": "live.list.footer.plugins",
+        "$example": "3 total (2 enabled, 1 disabled)"
+      }
     }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli plugin inspect stripe",
-      "intent": "Plugin preflight envelope",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli plugin inspect stripe",
+        "$bindings": {},
+        "$example": "capcli plugin inspect stripe"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Plugin preflight envelope"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

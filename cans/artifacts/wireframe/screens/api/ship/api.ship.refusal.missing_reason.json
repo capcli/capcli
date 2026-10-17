@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.ship.refusal.missing_reason",
-  "target": "cap://threads.create_media_post",
-  "command": "capcli api ship threads.create_media_post reviewed",
-  "elapsed_ms": 179,
+  "scenario": {
+    "routine_urp": "cap://threads.create_media_post"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://threads.create_media_post"
+  },
+  "command": {
+    "$interpolate": "capcli api ship threads.create_media_post reviewed",
+    "$bindings": {},
+    "$example": "capcli api ship threads.create_media_post reviewed"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 179
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,13 +28,33 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "missing_param",
-    "culprit": "Missing elevation justification.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Missing elevation justification."
+    },
     "remedy": "re-run with --reason stating why the verb is ready for the target rung",
-    "command": "capcli api ship threads.create_media_post reviewed",
-    "usage": "capcli api ship <provider.verb> <rung> --reason \"<why>\"",
+    "command": {
+      "$slot": "command",
+      "$from": "live.command",
+      "$example": "capcli api ship threads.create_media_post reviewed"
+    },
+    "usage": {
+      "$slot": "usage",
+      "$from": "live.usage",
+      "$example": "capcli api ship <provider.verb> <rung> --reason \"<why>\""
+    },
     "lines": [
-      "FATAL  missing_param.missing_arg",
-      "Trust elevation requires --reason for the audit trail."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  missing_param.missing_arg"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Trust elevation requires --reason for the audit trail."
+      }
     ]
   }
 }

@@ -1,57 +1,133 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.tail.success.populated",
-  "target": "_audit",
-  "command": "capcli sys audit tail --follow --since 1h",
-  "elapsed_ms": 2212,
+  "scenario": {
+    "audit": "_audit"
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit tail --follow --since 1h",
+    "$bindings": {},
+    "$example": "capcli sys audit tail --follow --since 1h"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2212
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "tailing",
-    "root": "23:41:07Z op_9f2c routine.run dispatch_order@4 allowed 340ms",
+    "title": {
+      "$slot": "title",
+      "$from": "live.tail.title",
+      "$example": "tailing"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.tail.root",
+      "$example": "23:41:07Z op_9f2c routine.run dispatch_order@4 allowed 340ms"
+    },
     "nodes": [
       {
-        "label": "23:41:07Z op_9f2d db.query orders allowed 12ms",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.tail.nodes[0].label",
+          "$example": "23:41:07Z op_9f2d db.query orders allowed 12ms"
+        },
         "children": []
       },
       {
-        "label": "23:41:08Z op_7c4f api.call fedex.ship allowed 340ms",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.tail.nodes[1].label",
+          "$example": "23:41:08Z op_7c4f api.call fedex.ship allowed 340ms"
+        },
         "children": [
           {
-            "label": "tracking 794644790133",
+            "label": {
+              "$slot": "n1c0",
+              "$from": "live.tail.nodes[1].children[0].label",
+              "$example": "tracking 794644790133"
+            },
             "children": []
           }
         ]
       },
       {
-        "label": "23:41:08Z op_9f2f db.execute orders allowed 18ms",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.tail.nodes[2].label",
+          "$example": "23:41:08Z op_9f2f db.execute orders allowed 18ms"
+        },
         "children": []
       },
       {
-        "label": "23:52:30Z op_c44d1 db.execute orders denied 1ms",
+        "label": {
+          "$slot": "n3",
+          "$from": "live.tail.nodes[3].label",
+          "$example": "23:52:30Z op_c44d1 db.execute orders denied 1ms"
+        },
         "children": [
           {
-            "label": "rule policy.query.update_delete.require_limit",
+            "label": {
+              "$slot": "n3c0",
+              "$from": "live.tail.nodes[3].children[0].label",
+              "$example": "rule policy.query.update_delete.require_limit"
+            },
             "children": []
           }
         ]
       },
       {
-        "label": "23:58:44Z op_a11c7 ping.ask user:root allowed 2ms",
+        "label": {
+          "$slot": "n4",
+          "$from": "live.tail.nodes[4].label",
+          "$example": "23:58:44Z op_a11c7 ping.ask user:root allowed 2ms"
+        },
         "children": []
       }
     ],
     "footer": {
-      "mirror": "audit/2026-10-03.jsonl (synced, lag 0s)",
-      "since": "1h window (from 23:04:11Z)",
-      "follow": "live stream active — Ctrl-C to detach",
-      "events": "6 in window",
-      "integrity": "hash chain valid (root sha256:7f9a1b2c...)"
+      "mirror": {
+        "$slot": "mirror",
+        "$from": "live.tail.footer.mirror",
+        "$example": "audit/2026-10-03.jsonl (synced, lag 0s)"
+      },
+      "since": {
+        "$slot": "since",
+        "$from": "live.tail.footer.since",
+        "$example": "1h window (from 23:04:11Z)"
+      },
+      "follow": {
+        "$slot": "follow",
+        "$from": "live.tail.footer.follow",
+        "$example": "live stream active — Ctrl-C to detach"
+      },
+      "events": {
+        "$slot": "events",
+        "$from": "live.tail.footer.events",
+        "$example": "6 in window"
+      },
+      "integrity": {
+        "$slot": "integrity",
+        "$from": "live.tail.footer.integrity",
+        "$example": "hash chain valid (root sha256:7f9a1b2c...)"
+      }
     }
   }
 }

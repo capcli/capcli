@@ -1,26 +1,68 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.lock.success.acquired",
-  "target": "orders:ORD-10",
-  "command": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
-  "elapsed_ms": 1894,
+  "scenario": {
+    "db_key": "orders:ORD-10"
+  },
+  "target": {
+    "$slot": "db_key",
+    "$from": "scenario.db_key",
+    "$example": "orders:ORD-10"
+  },
+  "command": {
+    "$interpolate": "capcli db lock {{db_key}} --ttl 300s --reason \"batch fulfillment\"",
+    "$bindings": {
+      "db_key": "scenario.db_key"
+    },
+    "$example": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1894
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_44c1",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_44c1"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "target": "orders:ORD-10",
-          "ttl": "300s",
-          "lease_id": "claim_9d21 (new lease, acquired after holder release)",
-          "holder": "agt_7f3k",
-          "reason": "batch fulfillment"
+          "target": {
+            "$slot": "db_key_2",
+            "$from": "scenario.db_key",
+            "$example": "orders:ORD-10"
+          },
+          "ttl": {
+            "$slot": "ttl",
+            "$from": "live.groups[0].fields.ttl",
+            "$example": "300s"
+          },
+          "lease_id": {
+            "$slot": "lease_id",
+            "$from": "live.groups[0].fields.lease_id",
+            "$example": "claim_9d21 (new lease, acquired after holder release)"
+          },
+          "holder": {
+            "$slot": "holder",
+            "$from": "live.groups[0].fields.holder",
+            "$example": "agt_7f3k"
+          },
+          "reason": {
+            "$slot": "reason",
+            "$from": "live.groups[0].fields.reason",
+            "$example": "batch fulfillment"
+          }
         }
       }
     ]

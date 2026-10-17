@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.scaffold.refusal.checksum",
-  "target": "pack://registry/routine/webhook_receiver@1",
-  "command": "capcli pack scaffold pack://registry/routine/webhook_receiver@1 sync_orders",
-  "elapsed_ms": 112,
+  "scenario": {
+    "pack_urp": "pack://registry/routine/webhook_receiver@1"
+  },
+  "target": {
+    "$slot": "pack_urp",
+    "$from": "scenario.pack_urp",
+    "$example": "pack://registry/routine/webhook_receiver@1"
+  },
+  "command": {
+    "$interpolate": "capcli pack scaffold {{pack_urp}} sync_orders",
+    "$bindings": {
+      "pack_urp": "scenario.pack_urp"
+    },
+    "$example": "capcli pack scaffold pack://registry/routine/webhook_receiver@1 sync_orders"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 112
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,12 +31,28 @@
   "component": {
     "rule": "policy.pack.checksum_mismatch",
     "domain": "policy.pack",
-    "culprit": "Bundle SHA-256 mismatch: index records sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08, stream hashes to sha256:0000000000000000000000000000000000000000000000000000000000000000.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Bundle SHA-256 mismatch: index records sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08, stream hashes to sha256:0000000000000000000000000000000000000000000000000000000000000000."
+    },
     "remedy": "discard the /scratch stream and re-run capcli pack sync, then retry the scaffold",
-    "pack": "pack://registry/routine/webhook_receiver@1",
+    "pack": {
+      "$slot": "pack_urp_2",
+      "$from": "scenario.pack_urp",
+      "$example": "pack://registry/routine/webhook_receiver@1"
+    },
     "lines": [
-      "FATAL  policy.pack.checksum_mismatch",
-      "Bundle SHA-256 does not match the registry index."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  policy.pack.checksum_mismatch"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Bundle SHA-256 does not match the registry index."
+      }
     ]
   }
 }

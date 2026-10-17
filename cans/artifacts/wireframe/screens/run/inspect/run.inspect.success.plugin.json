@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.inspect.success.plugin",
-  "target": "plugin://http-server",
-  "command": "capcli inspect plugin://http-server",
-  "elapsed_ms": 96,
+  "scenario": {
+    "plugin_urp": "plugin://http-server"
+  },
+  "target": {
+    "$slot": "plugin_urp",
+    "$from": "scenario.plugin_urp",
+    "$example": "plugin://http-server"
+  },
+  "command": {
+    "$interpolate": "capcli inspect {{plugin_urp}}",
+    "$bindings": {
+      "plugin_urp": "scenario.plugin_urp"
+    },
+    "$example": "capcli inspect plugin://http-server"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 96
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,17 +33,45 @@
     "groups": [
       {
         "fields": {
-          "target": "plugin://http-server",
-          "cli_noun": "serve",
-          "verbs": "start, stop, restart, status, export",
-          "trust_floor": "pinned",
-          "generation": "4"
+          "target": {
+            "$slot": "plugin_urp_2",
+            "$from": "scenario.plugin_urp",
+            "$example": "plugin://http-server"
+          },
+          "cli_noun": {
+            "$slot": "cli_noun",
+            "$from": "live.groups[0].fields.cli_noun",
+            "$example": "serve"
+          },
+          "verbs": {
+            "$slot": "verbs",
+            "$from": "live.groups[0].fields.verbs",
+            "$example": "start, stop, restart, status, export"
+          },
+          "trust_floor": {
+            "$slot": "trust_floor",
+            "$from": "live.groups[0].fields.trust_floor",
+            "$example": "pinned"
+          },
+          "generation": {
+            "$slot": "generation",
+            "$from": "live.groups[0].fields.generation",
+            "$example": "4"
+          }
         }
       },
       {
         "fields": {
-          "preflight": "projection mounted; noun live",
-          "can_invoke_now": "true"
+          "preflight": {
+            "$slot": "preflight",
+            "$from": "live.groups[1].fields.preflight",
+            "$example": "projection mounted; noun live"
+          },
+          "can_invoke_now": {
+            "$slot": "can_invoke_now",
+            "$from": "live.groups[1].fields.can_invoke_now",
+            "$example": "true"
+          }
         }
       }
     ]

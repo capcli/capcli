@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.scaffold.refusal.missing_param",
-  "target": "sync_orders",
-  "command": "capcli pack scaffold pack://routine/webhook_receiver sync_orders",
-  "elapsed_ms": 170,
+  "scenario": {
+    "sync_orders": "sync_orders"
+  },
+  "target": {
+    "$slot": "sync_orders",
+    "$from": "scenario.sync_orders",
+    "$example": "sync_orders"
+  },
+  "command": {
+    "$interpolate": "capcli pack scaffold pack://routine/webhook_receiver {{sync_orders}}",
+    "$bindings": {
+      "sync_orders": "scenario.sync_orders"
+    },
+    "$example": "capcli pack scaffold pack://routine/webhook_receiver sync_orders"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 170
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,14 +31,38 @@
   "component": {
     "rule": "missing_param.pack.required_param",
     "domain": "missing_param",
-    "culprit": "Required pack parameter 'endpoint_url' omitted.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Required pack parameter 'endpoint_url' omitted."
+    },
     "remedy": "supply -p endpoint_url=<value>, e.g. capcli pack scaffold pack://routine/webhook_receiver sync_orders -p endpoint_url=https://example.com/hook",
-    "pack": "pack://routine/webhook_receiver",
-    "missing_param": "endpoint_url",
-    "required_params": "endpoint_url: string",
+    "pack": {
+      "$slot": "pack",
+      "$from": "live.pack",
+      "$example": "pack://routine/webhook_receiver"
+    },
+    "missing_param": {
+      "$slot": "missing_param",
+      "$from": "live.missing_param",
+      "$example": "endpoint_url"
+    },
+    "required_params": {
+      "$slot": "required_params",
+      "$from": "live.required_params",
+      "$example": "endpoint_url: string"
+    },
     "lines": [
-      "FATAL  missing_param.pack.required_param",
-      "Required parameter endpoint_url omitted."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  missing_param.pack.required_param"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Required parameter endpoint_url omitted."
+      }
     ]
   }
 }

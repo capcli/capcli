@@ -1,9 +1,26 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.prove.denial.sim_gap",
-  "target": "cap://threads.create_media_post",
-  "command": "capcli api prove threads.create_media_post --env sim",
-  "elapsed_ms": 206,
+  "scenario": {
+    "routine_urp": "cap://threads.create_media_post",
+    "routine_name": "threads.create_media_post"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://threads.create_media_post"
+  },
+  "command": {
+    "$interpolate": "capcli api prove threads.create_media_post --env sim",
+    "$bindings": {},
+    "$example": "capcli api prove threads.create_media_post --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 206
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
@@ -14,15 +31,35 @@
     "rule": "policy.authorizer.sim_gap",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Missing mock fixture in sim for prod-only verb.",
-    "measured": "mock fixtures for provider 'threads': 0 (contract replay requires 1)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Missing mock fixture in sim for prod-only verb."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "mock fixtures for provider 'threads': 0 (contract replay requires 1)"
+    },
     "remedy": "add a schema-validated mock fixture for 'threads.create_media_post' to apis/threads.mock.yaml, then re-run the prove",
     "span": {
-      "source": "capcli api prove threads.create_media_post --env sim",
-      "highlight": "threads.create_media_post"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "capcli api prove threads.create_media_post --env sim"
+      },
+      "highlight": {
+        "$slot": "routine_name",
+        "$from": "scenario.routine_name",
+        "$example": "threads.create_media_post"
+      }
     },
     "lines": [
-      "No entry 'create_media_post' in apis/threads.mock.yaml."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "No entry 'create_media_post' in apis/threads.mock.yaml."
+      }
     ]
   }
 }

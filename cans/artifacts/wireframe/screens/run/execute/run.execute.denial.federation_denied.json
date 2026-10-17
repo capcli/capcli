@@ -1,15 +1,43 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "run.execute.denial.federation_denied",
+  "scenario": {
+    "ws_urp": "ws://tasks/create_todo@v1",
+    "title": "restock"
+  },
   "archetype": "diagnostic",
-  "command": "capcli run ws://tasks/create_todo@v1 -p title=\"restock\" --env prod",
+  "command": {
+    "$interpolate": "capcli run {{ws_urp}} -p title=\"{{title}}\" --env prod",
+    "$bindings": {
+      "ws_urp": "scenario.ws_urp",
+      "title": "scenario.title"
+    },
+    "$example": "capcli run ws://tasks/create_todo@v1 -p title=\"restock\" --env prod"
+  },
   "component": {
-    "culprit": "Workspace ws:crm is not an active federated peer (no agent row with status=active).",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Workspace ws:crm is not an active federated peer (no agent row with status=active)."
+    },
     "domain": "policy.federation",
     "layer": "federation",
     "lines": [
-      "Caller ws:crm failed the peer allowlist check",
-      "E042_FEDERATION_DENIED: register the peer first ('capcli sys agent register')",
-      "Unallowlisted callers are denied before any budget delegation."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Caller ws:crm failed the peer allowlist check"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "E042_FEDERATION_DENIED: register the peer first ('capcli sys agent register')"
+      },
+      {
+        "$slot": "lines_2",
+        "$from": "live.lines[2]",
+        "$example": "Unallowlisted callers are denied before any budget delegation."
+      }
     ],
     "remedy": "register the peer workspace, then retry",
     "rule": "policy.federation.unallowlisted"
@@ -19,12 +47,28 @@
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "elapsed_ms": 96,
-  "id": "run.execute.denial.federation_denied",
-  "target": "ws://tasks/create_todo@v1",
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 96
+  },
+  "target": {
+    "$slot": "ws_urp",
+    "$from": "scenario.ws_urp",
+    "$example": "ws://tasks/create_todo@v1"
+  },
   "trailer": {
     "prompt": "doc://prompts/federation/remediation#1",
-    "reason": "federated call refused: allowlist, cycle, or transport",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "federated call refused: allowlist, cycle, or transport"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }

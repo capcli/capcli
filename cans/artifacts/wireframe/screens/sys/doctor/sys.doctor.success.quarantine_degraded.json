@@ -1,40 +1,104 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "sys.doctor.success.quarantine_degraded",
+  "scenario": {
+    "audit": "_audit"
+  },
   "archetype": "receipt",
-  "command": "capcli sys doctor --boot-check",
+  "command": {
+    "$interpolate": "capcli sys doctor --boot-check",
+    "$bindings": {},
+    "$example": "capcli sys doctor --boot-check"
+  },
   "component": {
     "groups": [
       {
         "fields": {
-          "block": "op_84c1 (_audit row 8,412)",
-          "quarantined_span": "rows 8,412 onward fail-closed in the quarantine branch (audit.quarantine.jsonl); quarantined leaves refused",
-          "reason": "prev_hash mismatch (tamper isolation) \u2014 recomputed SHA-256 of op_84c1 does not match the prev_hash stored on row 8,413",
+          "block": {
+            "$interpolate": "op_84c1 ({{audit}} row 8,412)",
+            "$bindings": {
+              "audit": "scenario.audit"
+            },
+            "$example": "op_84c1 (_audit row 8,412)"
+          },
+          "quarantined_span": {
+            "$slot": "quarantined_span",
+            "$from": "live.groups[0].fields.quarantined_span",
+            "$example": "rows 8,412 onward fail-closed in the quarantine branch (audit.quarantine.jsonl); quarantined leaves refused"
+          },
+          "reason": {
+            "$slot": "reason",
+            "$from": "live.groups[0].fields.reason",
+            "$example": "prev_hash mismatch (tamper isolation) \u2014 recomputed SHA-256 of op_84c1 does not match the prev_hash stored on row 8,413"
+          },
           "rule": "effect.tamper_quarantine",
-          "status": "degraded: tamper_evidence \u2014 kernel serves all tables except quarantined data; tamper alerts repeat until acknowledgement",
-          "valid_history": "rows 1-8,411 verified against root ledger hash"
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[0].fields.status",
+            "$example": "degraded: tamper_evidence \u2014 kernel serves all tables except quarantined data; tamper alerts repeat until acknowledgement"
+          },
+          "valid_history": {
+            "$slot": "valid_history",
+            "$from": "live.groups[0].fields.valid_history",
+            "$example": "rows 1-8,411 verified against root ledger hash"
+          }
         },
         "lines": [
-          "SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch.",
-          "degraded: tamper_evidence \u2014 valid history operable, quarantined leaves fail-closed.",
-          "layer:          kernel"
+          {
+            "$interpolate": "SHA-256 chain broken at {{audit}} row 8,412 (op_84c1); prev_hash mismatch.",
+            "$bindings": {
+              "audit": "scenario.audit"
+            },
+            "$example": "SHA-256 chain broken at _audit row 8,412 (op_84c1); prev_hash mismatch."
+          },
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[0].lines[1]",
+            "$example": "degraded: tamper_evidence \u2014 valid history operable, quarantined leaves fail-closed."
+          },
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[0].lines[2]",
+            "$example": "layer:          kernel"
+          }
         ]
       },
       {
         "fields": {
-          "critical_alert": "security alert emitted on the broken link and the quarantine action",
-          "note": "restore the ledger from the last object-store snapshot via 'capcli sys recover <snapshot-id>', re-verify the restored root hash against the S3 Object Lock (WORM) checkpoint, re-run 'capcli sys doctor --boot-check', then clear the degraded flag with 'capcli sys doctor --ack-tamper'"
+          "critical_alert": {
+            "$slot": "critical_alert",
+            "$from": "live.groups[1].fields.critical_alert",
+            "$example": "security alert emitted on the broken link and the quarantine action"
+          },
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[1].fields.note",
+            "$example": "restore the ledger from the last object-store snapshot via 'capcli sys recover <snapshot-id>', re-verify the restored root hash against the S3 Object Lock (WORM) checkpoint, re-run 'capcli sys doctor --boot-check', then clear the degraded flag with 'capcli sys doctor --ack-tamper'"
+          }
         }
       }
     ],
     "title": null
   },
   "context": {
-    "data_shape": "populated",
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    },
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "elapsed_ms": 1589,
-  "id": "sys.doctor.success.quarantine_degraded",
-  "target": "_audit"
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1589
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  }
 }

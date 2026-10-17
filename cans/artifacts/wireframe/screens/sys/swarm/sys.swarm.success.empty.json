@@ -1,31 +1,69 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.swarm.success.empty",
-  "target": "swarm",
-  "command": "capcli sys swarm list",
-  "elapsed_ms": 323,
+  "scenario": {
+    "swarm": "swarm"
+  },
+  "target": {
+    "$slot": "swarm",
+    "$from": "scenario.swarm",
+    "$example": "swarm"
+  },
+  "command": {
+    "$interpolate": "capcli sys {{swarm}} list",
+    "$bindings": {
+      "swarm": "scenario.swarm"
+    },
+    "$example": "capcli sys swarm list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 323
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "empty"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "empty"
+    }
   },
   "archetype": "receipt",
   "component": {
     "groups": [
       {
         "fields": {
-          "nodes": "0 nodes (cap: 256 spokes)"
+          "nodes": {
+            "$slot": "nodes",
+            "$from": "live.groups[0].fields.nodes",
+            "$example": "0 nodes (cap: 256 spokes)"
+          }
         }
       },
       {
         "lines": [
-          "Zero swarm nodes registered. Hub roster empty."
+          {
+            "$interpolate": "Zero {{swarm}} nodes registered. Hub roster empty.",
+            "$bindings": {
+              "swarm": "scenario.swarm"
+            },
+            "$example": "Zero swarm nodes registered. Hub roster empty."
+          }
         ]
       },
       {
         "fields": {
-          "note": "spokes join via heartbeat to the Hub; roster populates on first swarm.node_join"
+          "note": {
+            "$interpolate": "spokes join via heartbeat to the Hub; roster populates on first {{swarm}}.node_join",
+            "$bindings": {
+              "swarm": "scenario.swarm"
+            },
+            "$example": "spokes join via heartbeat to the Hub; roster populates on first swarm.node_join"
+          }
         }
       }
     ],

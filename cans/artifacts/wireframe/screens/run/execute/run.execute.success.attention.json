@@ -1,76 +1,232 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.success.attention",
-  "target": "cap://dispatch_order@4",
-  "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
-  "elapsed_ms": 361,
+  "scenario": {
+    "routine_urp": "cap://dispatch_order@4",
+    "routine_name": "dispatch_order",
+    "routine_version": 4,
+    "order_id": "ORD-1042",
+    "carrier": "fedex",
+    "intent": "fulfill urgent pending orders"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://dispatch_order@4"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p order_id={{order_id}} -p carrier={{carrier}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "carrier": "scenario.carrier",
+      "order_id": "scenario.order_id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 361
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
-  "audit_op": "op_9f2c",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2c"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "routine": "dispatch_order@4 (pinned)",
-          "session": "ses_a992f",
-          "intent": "\"fulfill urgent pending orders\"",
-          "frame": "frame_021 (3/8 ops · 358ms)"
+          "routine": {
+            "$interpolate": "{{routine_name}}@{{routine_version}} (pinned)",
+            "$bindings": {
+              "routine_name": "scenario.routine_name",
+              "routine_version": "scenario.routine_version"
+            },
+            "$example": "dispatch_order@4 (pinned)"
+          },
+          "session": {
+            "$slot": "session",
+            "$from": "live.groups[0].fields.session",
+            "$example": "ses_a992f"
+          },
+          "intent": {
+            "$interpolate": "\"{{intent}}\"",
+            "$bindings": {
+              "intent": "scenario.intent"
+            },
+            "$example": "\"fulfill urgent pending orders\""
+          },
+          "frame": {
+            "$slot": "frame",
+            "$from": "live.groups[0].fields.frame",
+            "$example": "frame_021 (3/8 ops · 358ms)"
+          }
         }
       },
       {
         "fields": {
-          "order_id": "ORD-1042",
-          "carrier": "fedex",
-          "tracking": "794644790133",
-          "status": "shipped (1 row committed)"
+          "order_id": {
+            "$slot": "order_id",
+            "$from": "scenario.order_id",
+            "$example": "ORD-1042"
+          },
+          "carrier": {
+            "$slot": "carrier",
+            "$from": "scenario.carrier",
+            "$example": "fedex"
+          },
+          "tracking": {
+            "$slot": "tracking",
+            "$from": "live.groups[1].fields.tracking",
+            "$example": "794644790133"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[1].fields.status",
+            "$example": "shipped (1 row committed)"
+          }
         },
         "lines": [
-          "result:"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "result:"
+          }
         ]
       },
       {
         "fields": {
-          "result_hash": "sha256:9c41e7b0d2a8f513c6ee"
+          "result_hash": {
+            "$slot": "result_hash",
+            "$from": "live.groups[2].fields.result_hash",
+            "$example": "sha256:9c41e7b0d2a8f513c6ee"
+          }
         }
       }
     ]
   },
   "attention": {
-    "cursor": "att_a992f_042",
+    "cursor": {
+      "$slot": "cursor",
+      "$from": "live.attention.cursor",
+      "$example": "att_a992f_042"
+    },
     "counts": {
-      "critical": 1,
-      "standard": 1,
-      "background": 0
+      "critical": {
+        "$slot": "critical",
+        "$from": "live.attention.counts.critical",
+        "$type": "integer",
+        "$example": 1
+      },
+      "standard": {
+        "$slot": "standard",
+        "$from": "live.attention.counts.standard",
+        "$type": "integer",
+        "$example": 1
+      },
+      "background": {
+        "$slot": "background",
+        "$from": "live.attention.counts.background",
+        "$type": "integer",
+        "$example": 0
+      }
     },
     "top": [
       {
-        "id": "ask_88a",
+        "id": {
+          "$slot": "ask_id",
+          "$from": "live.attention.top[0].id",
+          "$example": "ask_88a"
+        },
         "class": "critical",
-        "source": "ping.ask",
-        "summary": "Fraud score 0.83 on ORD-1042. Approve dispatch?",
+        "source": {
+          "$slot": "source",
+          "$from": "live.attention.top[0].source",
+          "$example": "ping.ask"
+        },
+        "summary": {
+          "$interpolate": "Fraud score 0.83 on {{order_id}}. Approve dispatch?",
+          "$bindings": {
+            "order_id": "scenario.order_id"
+          },
+          "$example": "Fraud score 0.83 on ORD-1042. Approve dispatch?"
+        },
         "affordance": {
-          "rel": "next",
-          "command": "capcli ping resolve ask_88a --choice approve",
-          "intent": "Resolve the pending approval ask",
-          "risk": "safe"
+          "rel": {
+            "$slot": "rel",
+            "$from": "live.attention.top[0].affordance.rel",
+            "$example": "next"
+          },
+          "command": {
+            "$interpolate": "capcli ping resolve ask_88a --choice approve",
+            "$bindings": {},
+            "$example": "capcli ping resolve ask_88a --choice approve"
+          },
+          "intent": {
+            "$slot": "intent",
+            "$from": "live.attention.top[0].affordance.intent",
+            "$example": "Resolve the pending approval ask"
+          },
+          "risk": {
+            "$slot": "risk",
+            "$from": "live.attention.top[0].affordance.risk",
+            "$example": "safe"
+          }
         }
       },
       {
-        "id": "evt_ord_903",
+        "id": {
+          "$slot": "event_id",
+          "$from": "live.attention.top[1].id",
+          "$example": "evt_ord_903"
+        },
         "class": "standard",
-        "source": "_inbox",
-        "summary": "Refund request queued via shopify_refunds intake",
+        "source": {
+          "$slot": "source_2",
+          "$from": "live.attention.top[1].source",
+          "$example": "_inbox"
+        },
+        "summary": {
+          "$slot": "summary",
+          "$from": "live.attention.top[1].summary",
+          "$example": "Refund request queued via shopify_refunds intake"
+        },
         "affordance": {
-          "rel": "next",
-          "command": "capcli sys inbox pop --channel webhook",
-          "intent": "Drain the queued sensory events",
-          "risk": "safe"
+          "rel": {
+            "$slot": "rel_2",
+            "$from": "live.attention.top[1].affordance.rel",
+            "$example": "next"
+          },
+          "command": {
+            "$interpolate": "capcli sys inbox pop --channel webhook",
+            "$bindings": {},
+            "$example": "capcli sys inbox pop --channel webhook"
+          },
+          "intent": {
+            "$slot": "intent_2",
+            "$from": "live.attention.top[1].affordance.intent",
+            "$example": "Drain the queued sensory events"
+          },
+          "risk": {
+            "$slot": "risk_2",
+            "$from": "live.attention.top[1].affordance.risk",
+            "$example": "safe"
+          }
         }
       }
     ],

@@ -1,18 +1,57 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "run.abort.success.aborted",
+  "scenario": {
+    "frame_id": "frame_026"
+  },
   "archetype": "receipt",
-  "audit_op": "op_9e63",
-  "command": "capcli run abort frame_026",
-  "elapsed_ms": 1360,
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9e63"
+  },
+  "command": {
+    "$interpolate": "capcli run abort {{frame_id}}",
+    "$bindings": {
+      "frame_id": "scenario.frame_id"
+    },
+    "$example": "capcli run abort frame_026"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1360
+  },
   "component": {
     "groups": [
       {
         "fields": {
-          "audit": "frame_aborted event written to _audit",
-          "frame": "frame_026",
-          "state_fence": "OCC state_fence released",
-          "claims_lease": "frame's Layer-1 claims lease released",
-          "suspended_tasks": "resume target purged from _suspended_tasks"
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[0].fields.audit",
+            "$example": "frame_aborted event written to _audit"
+          },
+          "frame": {
+            "$slot": "frame_id_2",
+            "$from": "scenario.frame_id",
+            "$example": "frame_026"
+          },
+          "state_fence": {
+            "$slot": "state_fence",
+            "$from": "live.groups[0].fields.state_fence",
+            "$example": "OCC state_fence released"
+          },
+          "claims_lease": {
+            "$slot": "claims_lease",
+            "$from": "live.groups[0].fields.claims_lease",
+            "$example": "frame's Layer-1 claims lease released"
+          },
+          "suspended_tasks": {
+            "$slot": "suspended_tasks",
+            "$from": "live.groups[0].fields.suspended_tasks",
+            "$example": "resume target purged from _suspended_tasks"
+          }
         }
       }
     ],
@@ -23,14 +62,33 @@
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "id": "run.abort.success.aborted",
-  "target": "frame_026",
+  "target": {
+    "$slot": "frame_id",
+    "$from": "scenario.frame_id",
+    "$example": "frame_026"
+  },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli run overview",
-      "intent": "Reground on situational state after the abort",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli run overview",
+        "$bindings": {},
+        "$example": "capcli run overview"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Reground on situational state after the abort"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

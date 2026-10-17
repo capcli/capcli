@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.resolve.refusal.not_found",
-  "target": "ask_51c7",
-  "command": "capcli ping resolve ask_51c7 --choice approve",
-  "elapsed_ms": 194,
+  "scenario": {
+    "ask_id": "ask_51c7"
+  },
+  "target": {
+    "$slot": "ask_id",
+    "$from": "scenario.ask_id",
+    "$example": "ask_51c7"
+  },
+  "command": {
+    "$interpolate": "capcli ping resolve {{ask_id}} --choice approve",
+    "$bindings": {
+      "ask_id": "scenario.ask_id"
+    },
+    "$example": "capcli ping resolve ask_51c7 --choice approve"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 194
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,8 +31,16 @@
   "component": {
     "rule": "validation.not_found",
     "domain": "validation",
-    "culprit": "Invalid ask ID; no matching inquiry in _pending_asks.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Invalid ask ID; no matching inquiry in _pending_asks."
+    },
     "remedy": "run 'capcli ping list --pending' to list live ask IDs",
-    "ask_id": "ask_51c7"
+    "ask_id": {
+      "$slot": "ask_id_2",
+      "$from": "scenario.ask_id",
+      "$example": "ask_51c7"
+    }
   }
 }

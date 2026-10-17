@@ -1,9 +1,33 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.denial.authorizer",
-  "target": "cap://customer_migrate@2",
-  "command": "capcli run cap://customer_migrate@2 -p customer_id=1 -p new_email=alice+corrected@acme.corp -m \"email correction\"",
-  "elapsed_ms": 46,
+  "scenario": {
+    "routine_urp": "cap://customer_migrate@2",
+    "customer_id": "1",
+    "new_email": "alice+corrected@acme.corp",
+    "intent": "email correction"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://customer_migrate@2"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p customer_id={{customer_id}} -p new_email={{new_email}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "new_email": "scenario.new_email",
+      "customer_id": "scenario.customer_id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://customer_migrate@2 -p customer_id=1 -p new_email=alice+corrected@acme.corp -m \"email correction\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 46
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,16 +38,42 @@
     "rule": "policy.authorizer.deny_columns_write",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Prohibited column mutation: UPDATE on immutable column customers.email denied by the C authorizer.",
-    "measured": "1 column write denied (customers.email)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Prohibited column mutation: UPDATE on immutable column customers.email denied by the C authorizer."
+    },
+    "measured": {
+      "$interpolate": "{{customer_id}} column write denied (customers.email)",
+      "$bindings": {
+        "customer_id": "scenario.customer_id"
+      },
+      "$example": "1 column write denied (customers.email)"
+    },
     "remedy": "insert a corrected row, or amend imm_cols in schema.yaml via a reviewed migration",
     "span": {
-      "source": "UPDATE customers SET email = :new_email WHERE id = :id",
-      "highlight": "email"
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "UPDATE customers SET email = :new_email WHERE id = :id"
+      },
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "email"
+      }
     },
-    "immutable_column": "customers.email (imm_cols: [email])",
+    "immutable_column": {
+      "$slot": "immutable_column",
+      "$from": "live.immutable_column",
+      "$example": "customers.email (imm_cols: [email])"
+    },
     "lines": [
-      "The C authorizer denied the write at prepare time."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "The C authorizer denied the write at prepare time."
+      }
     ]
   }
 }

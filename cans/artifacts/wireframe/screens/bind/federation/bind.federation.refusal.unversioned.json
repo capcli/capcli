@@ -1,17 +1,47 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "bind.federation.refusal.unversioned",
+  "scenario": {
+    "routine_urp": "cap://sync_todos",
+    "intent": "siphon peer outbox"
+  },
   "archetype": "diagnostic",
-  "command": "capcli bind federation crm_todos crm todo.created cap://sync_todos -m \"siphon peer outbox\"",
+  "command": {
+    "$interpolate": "capcli bind federation crm_todos crm todo.created {{routine_urp}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli bind federation crm_todos crm todo.created cap://sync_todos -m \"siphon peer outbox\""
+  },
   "component": {
-    "culprit": "Federated bind target must be a versioned capability (cap://sync_todos@v2). Unversioned targets fail closed.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Federated bind target must be a versioned capability (cap://sync_todos@v2). Unversioned targets fail closed."
+    },
     "domain": "compile",
     "layer": "ast",
-    "measured": "cap://sync_todos (no @version)",
+    "measured": {
+      "$interpolate": "{{routine_urp}} (no @version)",
+      "$bindings": {
+        "routine_urp": "scenario.routine_urp"
+      },
+      "$example": "cap://sync_todos (no @version)"
+    },
     "remedy": "pin the capability version: cap://sync_todos@v2",
     "rule": "compile.unversioned_federation_target",
     "span": {
-      "highlight": "unversioned_federation_target",
-      "source": "FAIL  compile.unversioned_federation_target"
+      "highlight": {
+        "$slot": "highlight",
+        "$from": "live.span.highlight",
+        "$example": "unversioned_federation_target"
+      },
+      "source": {
+        "$slot": "source",
+        "$from": "live.span.source",
+        "$example": "FAIL  compile.unversioned_federation_target"
+      }
     }
   },
   "context": {
@@ -19,7 +49,15 @@
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "elapsed_ms": 96,
-  "id": "bind.federation.refusal.unversioned",
-  "target": "cap://sync_todos"
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 96
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_todos"
+  }
 }

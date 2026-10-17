@@ -1,75 +1,258 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.sql.success.truncated",
-  "target": "db://orders",
-  "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\"",
-  "elapsed_ms": 1752,
+  "scenario": {
+    "db_urp": "db://orders"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\"",
+    "$bindings": {},
+    "$example": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1752
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "truncated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "truncated"
+    }
   },
-  "audit_op": "op_9f2i",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2i"
+  },
   "archetype": "document",
   "component": {
-    "header_badge": "10000 rows (truncated)",
+    "header_badge": {
+      "$slot": "header_badge",
+      "$from": "live.header_badge",
+      "$example": "10000 rows (truncated)"
+    },
     "pagination": {
       "items": [
         [
-          10001,
-          "tomas.novak@example.com",
-          "SKU-7741",
-          3,
-          "processing",
-          129.8
+          {
+            "$slot": "items",
+            "$from": "live.pagination.items[0][0]",
+            "$type": "integer",
+            "$example": 10001
+          },
+          {
+            "$slot": "items_0",
+            "$from": "live.pagination.items[0][1]",
+            "$example": "tomas.novak@example.com"
+          },
+          {
+            "$slot": "items_1",
+            "$from": "live.pagination.items[0][2]",
+            "$example": "SKU-7741"
+          },
+          {
+            "$slot": "items_2",
+            "$from": "live.pagination.items[0][3]",
+            "$type": "integer",
+            "$example": 3
+          },
+          {
+            "$slot": "items_3",
+            "$from": "live.pagination.items[0][4]",
+            "$example": "processing"
+          },
+          {
+            "$slot": "items_4",
+            "$from": "live.pagination.items[0][5]",
+            "$type": "number",
+            "$example": 129.8
+          }
         ],
         [
-          10002,
-          "irene.holt@example.com",
-          "SKU-2318",
-          1,
-          "shipped",
-          45.2
+          {
+            "$slot": "items_5",
+            "$from": "live.pagination.items[1][0]",
+            "$type": "integer",
+            "$example": 10002
+          },
+          {
+            "$slot": "items_6",
+            "$from": "live.pagination.items[1][1]",
+            "$example": "irene.holt@example.com"
+          },
+          {
+            "$slot": "items_7",
+            "$from": "live.pagination.items[1][2]",
+            "$example": "SKU-2318"
+          },
+          {
+            "$slot": "items_8",
+            "$from": "live.pagination.items[1][3]",
+            "$type": "integer",
+            "$example": 1
+          },
+          {
+            "$slot": "items_9",
+            "$from": "live.pagination.items[1][4]",
+            "$example": "shipped"
+          },
+          {
+            "$slot": "items_10",
+            "$from": "live.pagination.items[1][5]",
+            "$type": "number",
+            "$example": 45.2
+          }
         ],
         [
-          10003,
-          "dana.kral@example.com",
-          "SKU-7741",
-          2,
-          "processing",
-          86.4
+          {
+            "$slot": "items_11",
+            "$from": "live.pagination.items[2][0]",
+            "$type": "integer",
+            "$example": 10003
+          },
+          {
+            "$slot": "items_12",
+            "$from": "live.pagination.items[2][1]",
+            "$example": "dana.kral@example.com"
+          },
+          {
+            "$slot": "items_13",
+            "$from": "live.pagination.items[2][2]",
+            "$example": "SKU-7741"
+          },
+          {
+            "$slot": "items_14",
+            "$from": "live.pagination.items[2][3]",
+            "$type": "integer",
+            "$example": 2
+          },
+          {
+            "$slot": "items_15",
+            "$from": "live.pagination.items[2][4]",
+            "$example": "processing"
+          },
+          {
+            "$slot": "items_16",
+            "$from": "live.pagination.items[2][5]",
+            "$type": "number",
+            "$example": 86.4
+          }
         ]
       ],
-      "next_cursor": "10003",
-      "has_more": true
+      "next_cursor": {
+        "$slot": "next_cursor",
+        "$from": "live.pagination.next_cursor",
+        "$example": "10003"
+      },
+      "has_more": {
+        "$slot": "has_more",
+        "$from": "live.pagination.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "meta": {
-      "next_cursor": "10003",
-      "has_more": true
+      "next_cursor": {
+        "$slot": "next_cursor_2",
+        "$from": "live.meta.next_cursor",
+        "$example": "10003"
+      },
+      "has_more": {
+        "$slot": "has_more_2",
+        "$from": "live.meta.has_more",
+        "$type": "boolean",
+        "$example": true
+      }
     },
     "fields": {
-      "columns": "id, customer_email, product_id, quantity, status, total",
-      "returned": "10000",
-      "total_rows": "14290",
-      "row_cap": "10000 (select.max_limit)",
-      "truncated": "true",
-      "resume": "append WHERE id > 10003 to continue past the cap"
+      "columns": {
+        "$slot": "columns",
+        "$from": "live.fields.columns",
+        "$example": "id, customer_email, product_id, quantity, status, total"
+      },
+      "returned": {
+        "$slot": "returned",
+        "$from": "live.fields.returned",
+        "$example": "10000"
+      },
+      "total_rows": {
+        "$slot": "total_rows",
+        "$from": "live.fields.total_rows",
+        "$example": "14290"
+      },
+      "row_cap": {
+        "$slot": "row_cap",
+        "$from": "live.fields.row_cap",
+        "$example": "10000 (select.max_limit)"
+      },
+      "truncated": {
+        "$slot": "truncated",
+        "$from": "live.fields.truncated",
+        "$example": "true"
+      },
+      "resume": {
+        "$slot": "resume",
+        "$from": "live.fields.resume",
+        "$example": "append WHERE id > 10003 to continue past the cap"
+      }
     },
     "body": []
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders WHERE id > 10003\"",
-      "intent": "Resume the capped query from the last returned id",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders WHERE id > 10003\"",
+        "$bindings": {},
+        "$example": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders WHERE id > 10003\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Resume the capped query from the last returned id"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     },
     {
-      "rel": "inspect",
-      "command": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\" --out out/orders_export.json",
-      "intent": "SQL export payload directed to disk via `--out`",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel_2",
+        "$from": "live.affordances[1].rel",
+        "$example": "inspect"
+      },
+      "command": {
+        "$interpolate": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\" --out out/orders_export.json",
+        "$bindings": {},
+        "$example": "capcli sql \"SELECT id, customer_email, product_id, quantity, status, total FROM orders\" --out out/orders_export.json"
+      },
+      "intent": {
+        "$slot": "intent_2",
+        "$from": "live.affordances[1].intent",
+        "$example": "SQL export payload directed to disk via `--out`"
+      },
+      "risk": {
+        "$slot": "risk_2",
+        "$from": "live.affordances[1].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

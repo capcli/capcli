@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "rule.validate.success.valid",
-  "target": "schema://orders",
-  "command": "capcli rule validate",
-  "elapsed_ms": 158,
+  "scenario": {
+    "schema_urp": "schema://orders"
+  },
+  "target": {
+    "$slot": "schema_urp",
+    "$from": "scenario.schema_urp",
+    "$example": "schema://orders"
+  },
+  "command": {
+    "$interpolate": "capcli rule validate",
+    "$bindings": {},
+    "$example": "capcli rule validate"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 158
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -11,22 +27,50 @@
   },
   "archetype": "tree",
   "component": {
-    "title": "valid",
-    "root": "gates:",
+    "title": {
+      "$slot": "title",
+      "$from": "live.validate.title",
+      "$example": "valid"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.validate.root",
+      "$example": "gates:"
+    },
     "nodes": [
       {
-        "label": "Sub-check 1 syntax pass (YAML parsed; shorthands expanded; roots present)",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.validate.nodes[0].label",
+          "$example": "Sub-check 1 syntax pass (YAML parsed; shorthands expanded; roots present)"
+        },
         "children": []
       },
       {
-        "label": "Sub-check 2 semantics pass (relational DAG verified: orders.customer_id -> customers.id)",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.validate.nodes[1].label",
+          "$example": "Sub-check 2 semantics pass (relational DAG verified: orders.customer_id -> customers.id)"
+        },
         "children": []
       }
     ],
     "footer": {
-      "source": "schema.yaml v13",
-      "scope": "4 tables · 23 columns · 8 indexes · 2 triggers",
-      "compiled": "17 DDL statements (deterministic; byte-reproducible)"
+      "source": {
+        "$slot": "source",
+        "$from": "live.validate.footer.source",
+        "$example": "schema.yaml v13"
+      },
+      "scope": {
+        "$slot": "scope",
+        "$from": "live.validate.footer.scope",
+        "$example": "4 tables · 23 columns · 8 indexes · 2 triggers"
+      },
+      "compiled": {
+        "$slot": "compiled",
+        "$from": "live.validate.footer.compiled",
+        "$example": "17 DDL statements (deterministic; byte-reproducible)"
+      }
     }
   }
 }

@@ -1,65 +1,161 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "rule.diff.success.populated",
-  "target": "schema://orders",
-  "command": "capcli rule diff schema --git",
-  "elapsed_ms": 1554,
+  "scenario": {
+    "schema_urp": "schema://orders"
+  },
+  "target": {
+    "$slot": "schema_urp",
+    "$from": "scenario.schema_urp",
+    "$example": "schema://orders"
+  },
+  "command": {
+    "$interpolate": "capcli rule diff schema --git",
+    "$bindings": {},
+    "$example": "capcli rule diff schema --git"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1554
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "drift detected (schema vs HEAD)",
-    "root": "orders",
+    "title": {
+      "$slot": "title",
+      "$from": "live.diff.title",
+      "$example": "drift detected (schema vs HEAD)"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.diff.root",
+      "$example": "orders"
+    },
     "nodes": [
       {
-        "label": "added",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.diff.nodes[0].label",
+          "$example": "added"
+        },
         "children": []
       },
       {
-        "label": "priority (integer default 0)",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.diff.nodes[1].label",
+          "$example": "priority (integer default 0)"
+        },
         "children": []
       },
       {
-        "label": "changed",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.diff.nodes[2].label",
+          "$example": "changed"
+        },
         "children": []
       },
       {
-        "label": "version 12 -> 13",
+        "label": {
+          "$slot": "n3",
+          "$from": "live.diff.nodes[3].label",
+          "$example": "version 12 -> 13"
+        },
         "children": []
       },
       {
-        "label": "removed",
+        "label": {
+          "$slot": "n4",
+          "$from": "live.diff.nodes[4].label",
+          "$example": "removed"
+        },
         "children": [
           {
-            "label": "none",
+            "label": {
+              "$slot": "n4c0",
+              "$from": "live.diff.nodes[4].children[0].label",
+              "$example": "none"
+            },
             "children": []
           }
         ]
       }
     ],
     "footer": {
-      "base": "git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)",
-      "working": "schema.yaml v13 (uncompiled draft)",
-      "scope": "4 tables · 23 columns · 8 indexes",
-      "summary": "1 added · 1 changed · 0 removed",
-      "next": "capcli rule apply schema --dry-run"
+      "base": {
+        "$slot": "base",
+        "$from": "live.diff.footer.base",
+        "$example": "git HEAD (schema.yaml v12 · capcli.lock sha256:4a8f9c2d)"
+      },
+      "working": {
+        "$slot": "working",
+        "$from": "live.diff.footer.working",
+        "$example": "schema.yaml v13 (uncompiled draft)"
+      },
+      "scope": {
+        "$slot": "scope",
+        "$from": "live.diff.footer.scope",
+        "$example": "4 tables · 23 columns · 8 indexes"
+      },
+      "summary": {
+        "$slot": "summary",
+        "$from": "live.diff.footer.summary",
+        "$example": "1 added · 1 changed · 0 removed"
+      },
+      "next": {
+        "$slot": "next",
+        "$from": "live.diff.footer.next",
+        "$example": "capcli rule apply schema --dry-run"
+      }
     }
   },
   "trailer": {
     "prompt": "doc://prompts/evolution/schema_drift#2",
-    "reason": "schema drift requires forward migration plan",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "schema drift requires forward migration plan"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli rule apply schema --dry-run",
-      "intent": "DDL impact preview on snapshot",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli rule apply schema --dry-run",
+        "$bindings": {},
+        "$example": "capcli rule apply schema --dry-run"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "DDL impact preview on snapshot"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

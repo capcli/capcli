@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "pack.import.refusal.checksum",
-  "target": "https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap",
-  "command": "capcli pack import https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap --sha256 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-  "elapsed_ms": 74,
+  "scenario": {
+    "url": "https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap"
+  },
+  "target": {
+    "$slot": "url",
+    "$from": "scenario.url",
+    "$example": "https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap"
+  },
+  "command": {
+    "$interpolate": "capcli pack import {{url}} --sha256 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+    "$bindings": {
+      "url": "scenario.url"
+    },
+    "$example": "capcli pack import https://github.com/capcli/registry/releases/download/v1/webhook_receiver.cap --sha256 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 74
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,12 +31,28 @@
   "component": {
     "rule": "policy.pack.checksum_mismatch",
     "domain": "policy.pack",
-    "culprit": "Bundle SHA-256 mismatch: pinned hash sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08, stream hashes to sha256:1111111111111111111111111111111111111111111111111111111111111111.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Bundle SHA-256 mismatch: pinned hash sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08, stream hashes to sha256:1111111111111111111111111111111111111111111111111111111111111111."
+    },
     "remedy": "discard the /scratch stream and retry with a release-pinned URL and matching --sha256",
-    "source": "/scratch (tmpfs wire sandbox)",
+    "source": {
+      "$slot": "source",
+      "$from": "live.source",
+      "$example": "/scratch (tmpfs wire sandbox)"
+    },
     "lines": [
-      "FATAL  policy.pack.checksum_mismatch",
-      "Bundle SHA-256 does not match the pinned hash."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  policy.pack.checksum_mismatch"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Bundle SHA-256 does not match the pinned hash."
+      }
     ]
   }
 }

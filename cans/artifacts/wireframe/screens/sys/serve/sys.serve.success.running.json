@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.serve.success.running",
-  "target": "daemon",
-  "command": "capcli sys serve --start",
-  "elapsed_ms": 387,
+  "scenario": {
+    "title": "daemon"
+  },
+  "target": {
+    "$slot": "title",
+    "$from": "scenario.title",
+    "$example": "daemon"
+  },
+  "command": {
+    "$interpolate": "capcli sys serve --start",
+    "$bindings": {},
+    "$example": "capcli sys serve --start"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 387
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -11,24 +27,68 @@
   },
   "archetype": "receipt",
   "component": {
-    "title": "daemon",
+    "title": {
+      "$slot": "title_2",
+      "$from": "scenario.title",
+      "$example": "daemon"
+    },
     "groups": [
       {
-        "title": "daemon",
+        "title": {
+          "$slot": "title_3",
+          "$from": "scenario.title",
+          "$example": "daemon"
+        },
         "fields": {
-          "pid": "50211",
-          "status": "listening on 127.0.0.1:4040",
-          "ipc": "/run/capcli/kernel.sock (JSON-Lines streaming)",
-          "rpc": "http://127.0.0.1:4040/rpc (HTTP POST)",
-          "ws": "ws://127.0.0.1:4040/ws/audit (live tail)",
-          "tx_queue": "kernel.tx_queue active (fifo write serialization)",
-          "policy": "inbound requests pass identical authorizer, AST, and budget gates",
-          "audit": "serve.request events streaming to _audit"
+          "pid": {
+            "$slot": "pid",
+            "$from": "live.groups[0].fields.pid",
+            "$example": "50211"
+          },
+          "status": {
+            "$slot": "status",
+            "$from": "live.groups[0].fields.status",
+            "$example": "listening on 127.0.0.1:4040"
+          },
+          "ipc": {
+            "$slot": "ipc",
+            "$from": "live.groups[0].fields.ipc",
+            "$example": "/run/capcli/kernel.sock (JSON-Lines streaming)"
+          },
+          "rpc": {
+            "$slot": "rpc",
+            "$from": "live.groups[0].fields.rpc",
+            "$example": "http://127.0.0.1:4040/rpc (HTTP POST)"
+          },
+          "ws": {
+            "$slot": "ws",
+            "$from": "live.groups[0].fields.ws",
+            "$example": "ws://127.0.0.1:4040/ws/audit (live tail)"
+          },
+          "tx_queue": {
+            "$slot": "tx_queue",
+            "$from": "live.groups[0].fields.tx_queue",
+            "$example": "kernel.tx_queue active (fifo write serialization)"
+          },
+          "policy": {
+            "$slot": "policy",
+            "$from": "live.groups[0].fields.policy",
+            "$example": "inbound requests pass identical authorizer, AST, and budget gates"
+          },
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[0].fields.audit",
+            "$example": "serve.request events streaming to _audit"
+          }
         }
       },
       {
         "lines": [
-          "note:           bind address locked to 127.0.0.1 per governance"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "note:           bind address locked to 127.0.0.1 per governance"
+          }
         ]
       }
     ]

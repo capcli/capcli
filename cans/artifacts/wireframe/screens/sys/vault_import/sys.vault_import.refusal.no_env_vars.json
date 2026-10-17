@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.vault_import.refusal.no_env_vars",
-  "target": "CAPCLI_SECRET_*",
-  "command": "capcli sys vault import-env",
-  "elapsed_ms": 133,
+  "scenario": {
+    "secret_ref": "CAPCLI_SECRET_*"
+  },
+  "target": {
+    "$slot": "secret_ref",
+    "$from": "scenario.secret_ref",
+    "$example": "CAPCLI_SECRET_*"
+  },
+  "command": {
+    "$interpolate": "capcli sys vault import-env",
+    "$bindings": {},
+    "$example": "capcli sys vault import-env"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 133
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,10 +28,20 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "validation",
-    "culprit": "no CAPCLI_SECRET_* environment variables present in process scope",
+    "culprit": {
+      "$interpolate": "no {{secret_ref}} environment variables present in process scope",
+      "$bindings": {
+        "secret_ref": "scenario.secret_ref"
+      },
+      "$example": "no CAPCLI_SECRET_* environment variables present in process scope"
+    },
     "remedy": "Set CAPCLI_SECRET_<NAME> in the harness shell and re-run `capcli sys vault import-env`; or provision the value directly with `capcli sys vault set <key> --in @-` (stdin, never argv). Imported values land in the encrypted vault with SHA-256 fingerprints; plaintext zeroized after ingest.",
     "lines": [
-      "FATAL  validation.not_found"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.not_found"
+      }
     ]
   }
 }

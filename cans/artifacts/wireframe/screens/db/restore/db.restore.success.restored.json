@@ -1,37 +1,97 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.restore.success.restored",
-  "target": "db://",
-  "command": "capcli db restore snap_onboarding_01",
-  "elapsed_ms": 1346,
+  "scenario": {
+    "db_urp": "db://"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://"
+  },
+  "command": {
+    "$interpolate": "capcli db restore snap_onboarding_01",
+    "$bindings": {},
+    "$example": "capcli db restore snap_onboarding_01"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1346
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_8d4a",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_8d4a"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "snapshot_id": "snap_onboarding_01",
-          "database": "envs/dev/workspace.db",
-          "tables": "6",
-          "rows": "6",
-          "reversed_ops": "1 (post-snapshot writes undone)",
-          "ledger_hash": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          "snapshot_id": {
+            "$slot": "snapshot_id",
+            "$from": "live.groups[0].fields.snapshot_id",
+            "$example": "snap_onboarding_01"
+          },
+          "database": {
+            "$slot": "database",
+            "$from": "live.groups[0].fields.database",
+            "$example": "envs/dev/workspace.db"
+          },
+          "tables": {
+            "$slot": "tables",
+            "$from": "live.groups[0].fields.tables",
+            "$example": "6"
+          },
+          "rows": {
+            "$slot": "rows",
+            "$from": "live.groups[0].fields.rows",
+            "$example": "6"
+          },
+          "reversed_ops": {
+            "$slot": "reversed_ops",
+            "$from": "live.groups[0].fields.reversed_ops",
+            "$example": "1 (post-snapshot writes undone)"
+          },
+          "ledger_hash": {
+            "$slot": "ledger_hash",
+            "$from": "live.groups[0].fields.ledger_hash",
+            "$example": "sha256:7f9a1b2c4d8e001fa882bc19488a09b2e4f019c"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli search 'order'",
-      "intent": "Matched capabilities and URP pointers",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli search 'order'",
+        "$bindings": {},
+        "$example": "capcli search 'order'"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Matched capabilities and URP pointers"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

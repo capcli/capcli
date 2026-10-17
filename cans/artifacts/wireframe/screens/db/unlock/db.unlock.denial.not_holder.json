@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.unlock.denial.not_holder",
-  "target": "orders:ORD-10",
-  "command": "capcli db unlock orders:ORD-10",
-  "elapsed_ms": 118,
+  "scenario": {
+    "db_key": "orders:ORD-10"
+  },
+  "target": {
+    "$slot": "db_key",
+    "$from": "scenario.db_key",
+    "$example": "orders:ORD-10"
+  },
+  "command": {
+    "$interpolate": "capcli db unlock {{db_key}}",
+    "$bindings": {
+      "db_key": "scenario.db_key"
+    },
+    "$example": "capcli db unlock orders:ORD-10"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 118
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,13 +32,33 @@
     "rule": "policy.authorizer.claim_not_holder",
     "domain": "policy.authorizer",
     "layer": "authorizer",
-    "culprit": "Caller does not own the claim; lease held by agt_9k2w.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Caller does not own the claim; lease held by agt_9k2w."
+    },
     "remedy": "ask agt_9k2w to run 'capcli db unlock orders:ORD-10', or wait for TTL expiry",
-    "target": "orders:ORD-10",
-    "lease": "claim_c3d4 (holder: agt_9k2w)",
-    "caller": "agt_7f3k",
+    "target": {
+      "$slot": "db_key_2",
+      "$from": "scenario.db_key",
+      "$example": "orders:ORD-10"
+    },
+    "lease": {
+      "$slot": "lease",
+      "$from": "live.lease",
+      "$example": "claim_c3d4 (holder: agt_9k2w)"
+    },
+    "caller": {
+      "$slot": "caller",
+      "$from": "live.caller",
+      "$example": "agt_7f3k"
+    },
     "lines": [
-      "Caller does not own the claim; only the holder may release a lease."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "Caller does not own the claim; only the holder may release a lease."
+      }
     ]
   }
 }

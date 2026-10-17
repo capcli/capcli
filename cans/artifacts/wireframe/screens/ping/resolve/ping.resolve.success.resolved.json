@@ -1,37 +1,99 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.resolve.success.resolved",
-  "target": "ask_88a",
-  "command": "capcli ping resolve ask_88a --choice approve",
-  "elapsed_ms": 2318,
+  "scenario": {
+    "ask_id": "ask_88a"
+  },
+  "target": {
+    "$slot": "ask_id",
+    "$from": "scenario.ask_id",
+    "$example": "ask_88a"
+  },
+  "command": {
+    "$interpolate": "capcli ping resolve {{ask_id}} --choice approve",
+    "$bindings": {
+      "ask_id": "scenario.ask_id"
+    },
+    "$example": "capcli ping resolve ask_88a --choice approve"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2318
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "audit_op": "op_9f34a",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f34a"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "ask_id": "ask_88a",
-          "choice": "approve",
-          "question": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\"",
-          "resolved_by": "user:root",
-          "resumed_task": "dispatch_order@4 (ORD-1042)",
-          "resumed_frame": "frame_026"
+          "ask_id": {
+            "$slot": "ask_id_2",
+            "$from": "scenario.ask_id",
+            "$example": "ask_88a"
+          },
+          "choice": {
+            "$slot": "choice",
+            "$from": "live.groups[0].fields.choice",
+            "$example": "approve"
+          },
+          "question": {
+            "$slot": "question",
+            "$from": "live.groups[0].fields.question",
+            "$example": "\"Fraud score 0.83 on ORD-1042. Approve dispatch?\""
+          },
+          "resolved_by": {
+            "$slot": "resolved_by",
+            "$from": "live.groups[0].fields.resolved_by",
+            "$example": "user:root"
+          },
+          "resumed_task": {
+            "$slot": "resumed_task",
+            "$from": "live.groups[0].fields.resumed_task",
+            "$example": "dispatch_order@4 (ORD-1042)"
+          },
+          "resumed_frame": {
+            "$slot": "resumed_frame",
+            "$from": "live.groups[0].fields.resumed_frame",
+            "$example": "frame_026"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
-      "intent": "Deterministic execution and commit",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+        "$bindings": {},
+        "$example": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Deterministic execution and commit"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

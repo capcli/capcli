@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "routine.ship.success.rolled_back",
-  "target": "order_sync",
-  "command": "capcli routine ship order_sync reviewed",
-  "elapsed_ms": 964,
+  "scenario": {
+    "order_sync": "order_sync"
+  },
+  "target": {
+    "$slot": "order_sync",
+    "$from": "scenario.order_sync",
+    "$example": "order_sync"
+  },
+  "command": {
+    "$interpolate": "capcli routine ship {{order_sync}} reviewed",
+    "$bindings": {
+      "order_sync": "scenario.order_sync"
+    },
+    "$example": "capcli routine ship order_sync reviewed"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 964
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
@@ -15,36 +33,92 @@
     "groups": [
       {
         "fields": {
-          "routine": "order_sync@2",
-          "promoted_to": "reviewed (auto-promotion conjunction met)",
-          "canary": "1h veto window completed with anomalies"
+          "routine": {
+            "$slot": "routine",
+            "$from": "live.groups[0].fields.routine",
+            "$example": "order_sync@2"
+          },
+          "promoted_to": {
+            "$slot": "promoted_to",
+            "$from": "live.groups[0].fields.promoted_to",
+            "$example": "reviewed (auto-promotion conjunction met)"
+          },
+          "canary": {
+            "$slot": "canary",
+            "$from": "live.groups[0].fields.canary",
+            "$example": "1h veto window completed with anomalies"
+          }
         }
       },
       {
         "fields": {
-          "p95_duration": "4120ms vs 890ms baseline (4.6x spike)",
-          "drift_events": "2 fingerprint drift events",
-          "action": "autonomous circuit-breaker rollback"
+          "p95_duration": {
+            "$slot": "p95_duration",
+            "$from": "live.groups[1].fields.p95_duration",
+            "$example": "4120ms vs 890ms baseline (4.6x spike)"
+          },
+          "drift_events": {
+            "$slot": "drift_events",
+            "$from": "live.groups[1].fields.drift_events",
+            "$example": "2 fingerprint drift events"
+          },
+          "action": {
+            "$slot": "action",
+            "$from": "live.groups[1].fields.action",
+            "$example": "autonomous circuit-breaker rollback"
+          }
         },
         "lines": [
-          "canary_verdict:"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "canary_verdict:"
+          }
         ]
       },
       {
         "fields": {
-          "final_rung": "draft (promotion reverted)",
-          "audit": "op_ship_07 (routine.canary_rollback committed)",
-          "note": "re-prove in sim before re-promotion"
+          "final_rung": {
+            "$slot": "final_rung",
+            "$from": "live.groups[2].fields.final_rung",
+            "$example": "draft (promotion reverted)"
+          },
+          "audit": {
+            "$slot": "audit",
+            "$from": "live.groups[2].fields.audit",
+            "$example": "op_ship_07 (routine.canary_rollback committed)"
+          },
+          "note": {
+            "$slot": "note",
+            "$from": "live.groups[2].fields.note",
+            "$example": "re-prove in sim before re-promotion"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli routine pending",
-      "intent": "No routines pending promotion",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli routine pending",
+        "$bindings": {},
+        "$example": "capcli routine pending"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "No routines pending promotion"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

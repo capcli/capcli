@@ -1,14 +1,36 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.vault_list.success.populated",
-  "target": "vault",
-  "command": "capcli sys vault list",
-  "elapsed_ms": 64,
+  "scenario": {
+    "vault": "vault"
+  },
+  "target": {
+    "$slot": "vault",
+    "$from": "scenario.vault",
+    "$example": "vault"
+  },
+  "command": {
+    "$interpolate": "capcli sys {{vault}} list",
+    "$bindings": {
+      "vault": "scenario.vault"
+    },
+    "$example": "capcli sys vault list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 64
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "receipt",
   "component": {
@@ -16,14 +38,30 @@
     "groups": [
       {
         "fields": {
-          "stripe_secret_key": "masked — plaintext never echoed to any output stream",
-          "github_token": "masked — plaintext never echoed to any output stream",
-          "anthropic_key": "masked — plaintext never echoed to any output stream"
+          "stripe_secret_key": {
+            "$slot": "stripe_secret_key",
+            "$from": "live.groups[0].fields.stripe_secret_key",
+            "$example": "masked — plaintext never echoed to any output stream"
+          },
+          "github_token": {
+            "$slot": "github_token",
+            "$from": "live.groups[0].fields.github_token",
+            "$example": "masked — plaintext never echoed to any output stream"
+          },
+          "anthropic_key": {
+            "$slot": "anthropic_key",
+            "$from": "live.groups[0].fields.anthropic_key",
+            "$example": "masked — plaintext never echoed to any output stream"
+          }
         }
       },
       {
         "fields": {
-          "total": "3 names (values never listed)"
+          "total": {
+            "$slot": "total",
+            "$from": "live.groups[1].fields.total",
+            "$example": "3 names (values never listed)"
+          }
         }
       }
     ]

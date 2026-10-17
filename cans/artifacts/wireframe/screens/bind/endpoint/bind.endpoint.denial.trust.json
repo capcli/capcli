@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "bind.endpoint.denial.trust",
-  "target": "cap://inventory_report@1",
-  "command": "capcli bind endpoint inventory_report@1 --auth api-key --rate 60 --channel all",
-  "elapsed_ms": 119,
+  "scenario": {
+    "routine_urp": "cap://inventory_report@1",
+    "routine_name": "inventory_report",
+    "routine_version": 1
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://inventory_report@1"
+  },
+  "command": {
+    "$interpolate": "capcli bind endpoint inventory_report@1 --auth api-key --rate 60 --channel all",
+    "$bindings": {},
+    "$example": "capcli bind endpoint inventory_report@1 --auth api-key --rate 60 --channel all"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 119
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -14,10 +32,29 @@
     "rule": "policy.trust.serve_requires_pinned",
     "domain": "policy.trust",
     "layer": "trust",
-    "culprit": "Endpoint requires pinned trust. Unpinned routines cannot be exposed as endpoints.",
-    "measured": "routine trust: draft (floor: pinned)",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Endpoint requires pinned trust. Unpinned routines cannot be exposed as endpoints."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "routine trust: draft (floor: pinned)"
+    },
     "remedy": "promote the routine first: capcli routine ship inventory_report pinned --reason \"expose to partners\"",
-    "routine": "inventory_report@1",
-    "trust": "draft"
+    "routine": {
+      "$interpolate": "{{routine_name}}@{{routine_version}}",
+      "$bindings": {
+        "routine_name": "scenario.routine_name",
+        "routine_version": "scenario.routine_version"
+      },
+      "$example": "inventory_report@1"
+    },
+    "trust": {
+      "$slot": "trust",
+      "$from": "live.trust",
+      "$example": "draft"
+    }
   }
 }

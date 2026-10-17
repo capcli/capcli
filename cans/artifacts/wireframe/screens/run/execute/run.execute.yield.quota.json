@@ -1,9 +1,33 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.yield.quota",
-  "target": "cap://broadcast_newsletter@2",
-  "command": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\"",
-  "elapsed_ms": 651,
+  "scenario": {
+    "routine_urp": "cap://broadcast_newsletter@2",
+    "routine_name": "broadcast_newsletter",
+    "routine_version": 2,
+    "audience": "followers",
+    "intent": "daily digest broadcast"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://broadcast_newsletter@2"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p audience={{audience}} -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "audience": "scenario.audience",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://broadcast_newsletter@2 -p audience=followers -m \"daily digest broadcast\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 651
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
@@ -13,16 +37,48 @@
   "component": {
     "rule": "policy.api.quota_exhausted",
     "domain": "api.quota",
-    "culprit": "Provider quota exhausted: threads has 0/50 tokens left in the 24h rolling window.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Provider quota exhausted: threads has 0/50 tokens left in the 24h rolling window."
+    },
     "remedy": "task safely yielded; daemon will auto-resume at reset_at",
-    "tokens_left": "0 / 50",
-    "reset_at": "18:00:00 UTC (in 4h 12m)",
-    "suspended_frame": "task_99a8b1",
-    "provider": "threads",
-    "verb": "threads.create_media_post",
+    "tokens_left": {
+      "$slot": "tokens_left",
+      "$from": "live.tokens_left",
+      "$example": "0 / 50"
+    },
+    "reset_at": {
+      "$slot": "reset_at",
+      "$from": "live.reset_at",
+      "$example": "18:00:00 UTC (in 4h 12m)"
+    },
+    "suspended_frame": {
+      "$slot": "frame_id",
+      "$from": "live.frame_id",
+      "$example": "task_99a8b1"
+    },
+    "provider": {
+      "$slot": "provider",
+      "$from": "live.provider",
+      "$example": "threads"
+    },
+    "verb": {
+      "$slot": "api_verb",
+      "$from": "live.api_verb",
+      "$example": "threads.create_media_post"
+    },
     "layer": "quota",
     "lines": [
-      "routine broadcast_newsletter@2 (frame_018)"
+      {
+        "$interpolate": "routine {{routine_name}}@{{routine_version}} ({{frame_id}})",
+        "$bindings": {
+          "routine_name": "scenario.routine_name",
+          "routine_version": "scenario.routine_version",
+          "frame_id": "live.frame_id"
+        },
+        "$example": "routine broadcast_newsletter@2 (frame_018)"
+      }
     ]
   }
 }

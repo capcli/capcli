@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.recover.refusal.not_found",
-  "target": "git:1a2b3c4",
-  "command": "capcli sys recover 1a2b3c4",
-  "elapsed_ms": 135,
+  "scenario": {
+    "git_ref": "git:1a2b3c4"
+  },
+  "target": {
+    "$slot": "git_ref",
+    "$from": "scenario.git_ref",
+    "$example": "git:1a2b3c4"
+  },
+  "command": {
+    "$interpolate": "capcli sys recover 1a2b3c4",
+    "$bindings": {},
+    "$example": "capcli sys recover 1a2b3c4"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 135
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,11 +29,23 @@
   "component": {
     "rule": "validation.recovery_point_not_found",
     "domain": "validation",
-    "culprit": "commit 1a2b3c4 not found in local catalog or object store",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "commit 1a2b3c4 not found in local catalog or object store"
+    },
     "remedy": "list recovery points with 'capcli sys recover --list', then target an existing commit",
-    "catalog": "7 recovery points indexed (newest: snap_auto_2026-10-04T0300Z)",
+    "catalog": {
+      "$slot": "catalog",
+      "$from": "live.catalog",
+      "$example": "7 recovery points indexed (newest: snap_auto_2026-10-04T0300Z)"
+    },
     "lines": [
-      "commit 1a2b3c4 not found in local catalog or object store."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "commit 1a2b3c4 not found in local catalog or object store."
+      }
     ]
   }
 }

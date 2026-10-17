@@ -1,47 +1,132 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.sql.success.populated",
-  "target": "db://orders",
-  "command": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\"",
-  "elapsed_ms": 1759,
+  "scenario": {
+    "db_urp": "db://orders",
+    "id": "4127",
+    "intent": "mark order 4127 shipped after carrier pickup"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id={{id}} -m \"{{intent}}\"",
+    "$bindings": {
+      "id": "scenario.id",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4127 -m \"mark order 4127 shipped after carrier pickup\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1759
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
-  "audit_op": "op_9f2g",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2g"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "statement": "UPDATE orders SET status = 'shipped' WHERE id = :id",
-          "bound_params": "{\"id\": \"4127\"}",
-          "ast_check": "pass (WHERE targets primary key, blast radius 1)",
-          "authorizer": "pass (update on orders allowed in dev)",
-          "intent": "declared (\"mark order 4127 shipped after carrier pickup\")",
-          "rows_affected": "1",
-          "txn": "committed"
+          "statement": {
+            "$slot": "statement",
+            "$from": "live.groups[0].fields.statement",
+            "$example": "UPDATE orders SET status = 'shipped' WHERE id = :id"
+          },
+          "bound_params": {
+            "$interpolate": "{\"id\": \"{{id}}\"}",
+            "$bindings": {
+              "id": "scenario.id"
+            },
+            "$example": "{\"id\": \"4127\"}"
+          },
+          "ast_check": {
+            "$slot": "ast_check",
+            "$from": "live.groups[0].fields.ast_check",
+            "$example": "pass (WHERE targets primary key, blast radius 1)"
+          },
+          "authorizer": {
+            "$slot": "authorizer",
+            "$from": "live.groups[0].fields.authorizer",
+            "$example": "pass (update on orders allowed in dev)"
+          },
+          "intent": {
+            "$interpolate": "declared (\"{{intent}}\")",
+            "$bindings": {
+              "intent": "scenario.intent"
+            },
+            "$example": "declared (\"mark order 4127 shipped after carrier pickup\")"
+          },
+          "rows_affected": {
+            "$slot": "rows_affected",
+            "$from": "live.groups[0].fields.rows_affected",
+            "$example": "1"
+          },
+          "txn": {
+            "$slot": "txn",
+            "$from": "live.groups[0].fields.txn",
+            "$example": "committed"
+          }
         }
       },
       {
         "fields": {
-          "result_hash": "sha256:3d91c4e7a8b2f0c5d9e6a1b7f834c2ad"
+          "result_hash": {
+            "$slot": "result_hash",
+            "$from": "live.groups[1].fields.result_hash",
+            "$example": "sha256:3d91c4e7a8b2f0c5d9e6a1b7f834c2ad"
+          }
         },
         "lines": [
-          "────────────────────────────────────────────────────────────────────────────"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "────────────────────────────────────────────────────────────────────────────"
+          }
         ]
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli db snapshot -m \"pre-migration safety point\"",
-      "intent": "Point-in-time snapshot committed",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli db snapshot -m \"pre-migration safety point\"",
+        "$bindings": {},
+        "$example": "capcli db snapshot -m \"pre-migration safety point\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Point-in-time snapshot committed"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

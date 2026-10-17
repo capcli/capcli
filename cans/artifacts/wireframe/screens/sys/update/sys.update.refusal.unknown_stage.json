@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.update.refusal.unknown_stage",
-  "target": "kernel",
-  "command": "capcli sys update --only 9",
-  "elapsed_ms": 12,
+  "scenario": {
+    "kernel": "kernel"
+  },
+  "target": {
+    "$slot": "kernel",
+    "$from": "scenario.kernel",
+    "$example": "kernel"
+  },
+  "command": {
+    "$interpolate": "capcli sys update --only 9",
+    "$bindings": {},
+    "$example": "capcli sys update --only 9"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 12
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -12,11 +28,23 @@
   "archetype": "diagnostic",
   "component": {
     "domain": "validation",
-    "culprit": "Stage 9 is not a pipeline stage; the update pipeline runs exactly stages 1-6.",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Stage 9 is not a pipeline stage; the update pipeline runs exactly stages 1-6."
+    },
     "remedy": "re-run with --only 1..6 (1 kernel binary, 2 artifacts, 3 plugins, 4 packs, 5 api catalogs, 6 schema migrations)",
     "lines": [
-      "FATAL  validation.unknown_stage",
-      "Stage 9 is not a pipeline stage."
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "FATAL  validation.unknown_stage"
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[1]",
+        "$example": "Stage 9 is not a pipeline stage."
+      }
     ]
   }
 }

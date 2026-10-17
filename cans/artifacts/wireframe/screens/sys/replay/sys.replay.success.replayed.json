@@ -1,31 +1,77 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.replay.success.replayed",
-  "target": "_audit",
-  "command": "capcli sys audit replay --from 2026-10-03T23:52:31Z",
-  "elapsed_ms": 1923,
+  "scenario": {
+    "audit": "_audit"
+  },
+  "target": {
+    "$slot": "audit",
+    "$from": "scenario.audit",
+    "$example": "_audit"
+  },
+  "command": {
+    "$interpolate": "capcli sys audit replay --from 2026-10-03T23:52:31Z",
+    "$bindings": {},
+    "$example": "capcli sys audit replay --from 2026-10-03T23:52:31Z"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1923
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_r701",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_r701"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "from": "2026-10-03T23:52:31Z",
-          "window": "16 ops (all local)",
-          "re-executed": "16 ops under current policy (v5)",
-          "divergences": "0 — 16/16 result_hash identical to original ledger entries",
-          "external": "0 HTTP calls in window"
+          "from": {
+            "$slot": "from",
+            "$from": "live.groups[0].fields.from",
+            "$example": "2026-10-03T23:52:31Z"
+          },
+          "window": {
+            "$slot": "window",
+            "$from": "live.groups[0].fields.window",
+            "$example": "16 ops (all local)"
+          },
+          "re-executed": {
+            "$slot": "re_executed",
+            "$from": "live.groups[0].fields.re_executed",
+            "$example": "16 ops under current policy (v5)"
+          },
+          "divergences": {
+            "$slot": "divergences",
+            "$from": "live.groups[0].fields.divergences",
+            "$example": "0 — 16/16 result_hash identical to original ledger entries"
+          },
+          "external": {
+            "$slot": "external",
+            "$from": "live.groups[0].fields.external",
+            "$example": "0 HTTP calls in window"
+          }
         }
       },
       {
         "fields": {
-          "note": "idempotency keys suppressed duplicate side-effects; replay committed to _audit as new causal branch"
+          "note": {
+            "$interpolate": "idempotency keys suppressed duplicate side-effects; replay committed to {{audit}} as new causal branch",
+            "$bindings": {
+              "audit": "scenario.audit"
+            },
+            "$example": "idempotency keys suppressed duplicate side-effects; replay committed to _audit as new causal branch"
+          }
         }
       }
     ]

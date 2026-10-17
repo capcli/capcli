@@ -1,24 +1,62 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.lock.denial.claim_held",
-  "target": "orders:ORD-10",
-  "command": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
-  "elapsed_ms": 360,
+  "scenario": {
+    "db_key": "orders:ORD-10"
+  },
+  "target": {
+    "$slot": "db_key",
+    "$from": "scenario.db_key",
+    "$example": "orders:ORD-10"
+  },
+  "command": {
+    "$interpolate": "capcli db lock {{db_key}} --ttl 300s --reason \"batch fulfillment\"",
+    "$bindings": {
+      "db_key": "scenario.db_key"
+    },
+    "$example": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 360
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_5c18",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_5c18"
+  },
   "archetype": "diagnostic",
   "component": {
     "rule": "db.claims.held",
     "domain": "db.claims",
     "layer": "claims",
-    "culprit": "Target resource currently claimed; exclusive lease is active.",
-    "measured": "TTL remaining 187s of 300s; holder agt_9k2w",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Target resource currently claimed; exclusive lease is active."
+    },
+    "measured": {
+      "$slot": "measured",
+      "$from": "live.measured",
+      "$example": "TTL remaining 187s of 300s; holder agt_9k2w"
+    },
     "remedy": "wait for lease expiry or holder release, then retry; inspect via 'capcli inspect db://orders'",
-    "target": "orders:ORD-10",
-    "lease": "claim_c3d4 (holder: agt_9k2w, op_8e07)"
+    "target": {
+      "$slot": "db_key_2",
+      "$from": "scenario.db_key",
+      "$example": "orders:ORD-10"
+    },
+    "lease": {
+      "$slot": "lease",
+      "$from": "live.lease",
+      "$example": "claim_c3d4 (holder: agt_9k2w, op_8e07)"
+    }
   }
 }

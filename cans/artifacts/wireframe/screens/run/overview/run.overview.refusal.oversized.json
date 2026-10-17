@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.overview.refusal.oversized",
-  "target": "cap://overview@2",
-  "command": "capcli run overview",
-  "elapsed_ms": 270,
+  "scenario": {
+    "routine_urp": "cap://overview@2",
+    "routine_name": "overview",
+    "routine_version": 2
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://overview@2"
+  },
+  "command": {
+    "$interpolate": "capcli run overview",
+    "$bindings": {},
+    "$example": "capcli run overview"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 270
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -13,15 +31,49 @@
   "component": {
     "rule": "validation.overview.oversized",
     "domain": "validation",
-    "culprit": "Overview payload exceeded the 500-token aggregate ceiling: overview@2 renders 612 tokens (cap: 500). A single-shot KPI aggregate has no item stream, so count-capped pagination is inapplicable; raw string slicing of the aggregate is banned, and the aggregate is refused instead of clipped.",
+    "culprit": {
+      "$interpolate": "Overview payload exceeded the 500-token aggregate ceiling: {{routine_name}}@{{routine_version}} renders 612 tokens (cap: 500). A single-shot KPI aggregate has no item stream, so count-capped pagination is inapplicable; raw string slicing of the aggregate is banned, and the aggregate is refused instead of clipped.",
+      "$bindings": {
+        "routine_name": "scenario.routine_name",
+        "routine_version": "scenario.routine_version"
+      },
+      "$example": "Overview payload exceeded the 500-token aggregate ceiling: overview@2 renders 612 tokens (cap: 500). A single-shot KPI aggregate has no item stream, so count-capped pagination is inapplicable; raw string slicing of the aggregate is banned, and the aggregate is refused instead of clipped."
+    },
     "remedy": "overview@2 refused at the result gate (612 > 500 tokens, exit 3). Ground this turn with scoped queries: capcli sql for domain KPI read views, capcli ping list --pending for open asks, capcli sys doctor for health, capcli run inspect cap://<capability> for session fuel headroom. Durable fix: ship overview@3 with a condensed aggregate under 500 tokens",
-    "routine": "overview@2 (draft)",
-    "sections": "9 (v1 shipped 5)",
-    "aggregate": "single-shot KPI briefing (not a collection)",
-    "keyset_pagination": "inapplicable (no item stream to cursor)",
-    "clipping": "banned for non-paginable aggregates (raw string slicing prohibited); item listings use count-capped truncation with next_cursor",
+    "routine": {
+      "$interpolate": "{{routine_name}}@{{routine_version}} (draft)",
+      "$bindings": {
+        "routine_name": "scenario.routine_name",
+        "routine_version": "scenario.routine_version"
+      },
+      "$example": "overview@2 (draft)"
+    },
+    "sections": {
+      "$slot": "sections",
+      "$from": "live.sections",
+      "$example": "9 (v1 shipped 5)"
+    },
+    "aggregate": {
+      "$slot": "aggregate",
+      "$from": "live.aggregate",
+      "$example": "single-shot KPI briefing (not a collection)"
+    },
+    "keyset_pagination": {
+      "$slot": "keyset_pagination",
+      "$from": "live.keyset_pagination",
+      "$example": "inapplicable (no item stream to cursor)"
+    },
+    "clipping": {
+      "$slot": "clipping",
+      "$from": "live.clipping",
+      "$example": "banned for non-paginable aggregates (raw string slicing prohibited); item listings use count-capped truncation with next_cursor"
+    },
     "lines": [
-      "result gate: aggregate payload measured at 612 tokens (cap: 500)"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "result gate: aggregate payload measured at 612 tokens (cap: 500)"
+      }
     ]
   }
 }

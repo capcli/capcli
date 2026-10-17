@@ -1,25 +1,63 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "ping.expire.success.completed",
-  "target": "ask_77c3",
-  "command": "capcli ping expire ask_77c3",
-  "elapsed_ms": 2056,
+  "scenario": {
+    "ask_id": "ask_77c3"
+  },
+  "target": {
+    "$slot": "ask_id",
+    "$from": "scenario.ask_id",
+    "$example": "ask_77c3"
+  },
+  "command": {
+    "$interpolate": "capcli ping expire {{ask_id}}",
+    "$bindings": {
+      "ask_id": "scenario.ask_id"
+    },
+    "$example": "capcli ping expire ask_77c3"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2056
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "audit_op": "op_9f35b",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f35b"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "ask_id": "ask_77c3",
-          "principal": "user:root",
-          "action": "explicit expiration",
-          "outcome": "inquiry closed; fail-closed (expired asks never assume consent)"
+          "ask_id": {
+            "$slot": "ask_id_2",
+            "$from": "scenario.ask_id",
+            "$example": "ask_77c3"
+          },
+          "principal": {
+            "$slot": "principal",
+            "$from": "live.groups[0].fields.principal",
+            "$example": "user:root"
+          },
+          "action": {
+            "$slot": "action",
+            "$from": "live.groups[0].fields.action",
+            "$example": "explicit expiration"
+          },
+          "outcome": {
+            "$slot": "outcome",
+            "$from": "live.groups[0].fields.outcome",
+            "$example": "inquiry closed; fail-closed (expired asks never assume consent)"
+          }
         }
       }
     ]

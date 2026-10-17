@@ -1,9 +1,25 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.prove.crash.runtime",
-  "target": "cap://stripe.issue_credit_note",
-  "command": "capcli api prove stripe.issue_credit_note --env sim",
-  "elapsed_ms": 6295,
+  "scenario": {
+    "routine_urp": "cap://stripe.issue_credit_note"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://stripe.issue_credit_note"
+  },
+  "command": {
+    "$interpolate": "capcli api prove stripe.issue_credit_note --env sim",
+    "$bindings": {},
+    "$example": "capcli api prove stripe.issue_credit_note --env sim"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 6295
+  },
   "context": {
     "env": "sim",
     "tier": "tier_1",
@@ -13,15 +29,43 @@
   "component": {
     "rule": "routine.runtime.exception",
     "domain": "routine.runtime",
-    "culprit": "Upstream contract format failure: response schema 'credit_note.amount' declares union type [integer, string].",
+    "culprit": {
+      "$slot": "culprit",
+      "$from": "live.culprit",
+      "$example": "Upstream contract format failure: response schema 'credit_note.amount' declares union type [integer, string]."
+    },
     "remedy": "re-sync the provider spec once upstream fixes the schema, then re-run the prove",
-    "verb": "cap://stripe.issue_credit_note",
-    "stage": "contract replay (sim)",
-    "error": "upstream contract format failure",
-    "detail": "response schema 'credit_note.amount' declares union type",
-    "rollback": "clean",
+    "verb": {
+      "$slot": "api_verb",
+      "$from": "live.api_verb",
+      "$example": "cap://stripe.issue_credit_note"
+    },
+    "stage": {
+      "$slot": "stage",
+      "$from": "live.stage",
+      "$example": "contract replay (sim)"
+    },
+    "error": {
+      "$slot": "error",
+      "$from": "live.error",
+      "$example": "upstream contract format failure"
+    },
+    "detail": {
+      "$slot": "detail",
+      "$from": "live.detail",
+      "$example": "response schema 'credit_note.amount' declares union type"
+    },
+    "rollback": {
+      "$slot": "rollback",
+      "$from": "live.rollback",
+      "$example": "clean"
+    },
     "lines": [
-      "[integer, string]; kernel contract compiler accepts a single primitive type"
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[0]",
+        "$example": "[integer, string]; kernel contract compiler accepts a single primitive type"
+      }
     ]
   }
 }

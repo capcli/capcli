@@ -1,9 +1,27 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "storage.url.success.presigned",
-  "target": "reports/r1.pdf",
-  "command": "capcli storage url reports/r1.pdf --ttl 3600",
-  "elapsed_ms": 88,
+  "scenario": {
+    "key": "reports/r1.pdf"
+  },
+  "target": {
+    "$slot": "key",
+    "$from": "scenario.key",
+    "$example": "reports/r1.pdf"
+  },
+  "command": {
+    "$interpolate": "capcli storage url {{key}} --ttl 3600",
+    "$bindings": {
+      "key": "scenario.key"
+    },
+    "$example": "capcli storage url reports/r1.pdf --ttl 3600"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 88
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
@@ -15,9 +33,21 @@
     "groups": [
       {
         "fields": {
-          "key": "reports/r1.pdf",
-          "url": "https://objects.capcli.local/reports/r1.pdf?expires=3600&sig=<signature>",
-          "expires_in": "3600s"
+          "key": {
+            "$slot": "key_2",
+            "$from": "scenario.key",
+            "$example": "reports/r1.pdf"
+          },
+          "url": {
+            "$slot": "url",
+            "$from": "live.groups[0].fields.url",
+            "$example": "https://objects.capcli.local/reports/r1.pdf?expires=3600&sig=<signature>"
+          },
+          "expires_in": {
+            "$slot": "expires_in",
+            "$from": "live.groups[0].fields.expires_in",
+            "$example": "3600s"
+          }
         }
       }
     ]

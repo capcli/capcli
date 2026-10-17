@@ -1,15 +1,46 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "run.abort.refusal.unknown_frame",
+  "scenario": {
+    "frame_id": "frame_999"
+  },
   "archetype": "diagnostic",
-  "command": "capcli run abort frame_999",
-  "elapsed_ms": 281,
+  "command": {
+    "$interpolate": "capcli run abort {{frame_id}}",
+    "$bindings": {
+      "frame_id": "scenario.frame_id"
+    },
+    "$example": "capcli run abort frame_999"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 281
+  },
   "component": {
-    "culprit": "No suspended frame 'frame_999' exists in _suspended_tasks.",
+    "culprit": {
+      "$interpolate": "No suspended frame '{{{{frame_id}}}}' exists in _suspended_tasks.",
+      "$bindings": {
+        "frame_id": "live.frame_id"
+      },
+      "$example": "No suspended frame 'frame_999' exists in _suspended_tasks."
+    },
     "domain": "missing_param",
-    "frame": "frame_999",
+    "frame": {
+      "$slot": "frame_id_2",
+      "$from": "scenario.frame_id",
+      "$example": "frame_999"
+    },
     "layer": "cli",
     "lines": [
-      "capcli run abort frame_999"
+      {
+        "$interpolate": "capcli run abort {{{{frame_id}}}}",
+        "$bindings": {
+          "frame_id": "live.frame_id"
+        },
+        "$example": "capcli run abort frame_999"
+      }
     ],
     "remedy": "inspect suspended frames via 'capcli run overview', then re-run with a listed frame id",
     "rule": "missing_param.unknown_frame"
@@ -19,6 +50,9 @@
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "id": "run.abort.refusal.unknown_frame",
-  "target": "frame_999"
+  "target": {
+    "$slot": "frame_id",
+    "$from": "scenario.frame_id",
+    "$example": "frame_999"
+  }
 }

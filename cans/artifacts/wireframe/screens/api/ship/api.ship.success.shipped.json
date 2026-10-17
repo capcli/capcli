@@ -1,37 +1,97 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "api.ship.success.shipped",
-  "target": "cap://threads.create_media_post",
-  "command": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
-  "elapsed_ms": 2193,
+  "scenario": {
+    "routine_urp": "cap://threads.create_media_post"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://threads.create_media_post"
+  },
+  "command": {
+    "$interpolate": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\"",
+    "$bindings": {},
+    "$example": "capcli api ship threads.create_media_post reviewed --reason \"3 clean sim replays\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2193
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "reviewed"
   },
-  "audit_op": "op_6f3b",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_6f3b"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "verb": "cap://threads.create_media_post",
-          "rung": "draft → reviewed",
-          "evidence": "synthetic contract replay 3/3 passed",
-          "sim success rate 1.00 (floor": "0.90)",
-          "policy_denials": "0",
-          "promoted_by": "agt_7f3k"
+          "verb": {
+            "$slot": "api_verb",
+            "$from": "live.api_verb",
+            "$example": "cap://threads.create_media_post"
+          },
+          "rung": {
+            "$slot": "rung",
+            "$from": "live.groups[0].fields.rung",
+            "$example": "draft → reviewed"
+          },
+          "evidence": {
+            "$slot": "evidence",
+            "$from": "live.groups[0].fields.evidence",
+            "$example": "synthetic contract replay 3/3 passed"
+          },
+          "sim success rate 1.00 (floor": {
+            "$slot": "sim_success_rate_1_00_floor",
+            "$from": "live.groups[0].fields.sim_success_rate_1_00_floor",
+            "$example": "0.90)"
+          },
+          "policy_denials": {
+            "$slot": "policy_denials",
+            "$from": "live.groups[0].fields.policy_denials",
+            "$example": "0"
+          },
+          "promoted_by": {
+            "$slot": "promoted_by",
+            "$from": "live.groups[0].fields.promoted_by",
+            "$example": "agt_7f3k"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\"",
-      "intent": "100% schema match & shadow canary passed",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\"",
+        "$bindings": {},
+        "$example": "capcli api ship threads.create_media_post reviewed --reason \"call 4 reached; training wheels cleared\""
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "100% schema match & shadow canary passed"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }

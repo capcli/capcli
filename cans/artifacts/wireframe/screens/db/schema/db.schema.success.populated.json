@@ -1,89 +1,201 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "db.schema.success.populated",
-  "target": "db://orders",
-  "command": "capcli db schema --table orders",
-  "elapsed_ms": 2266,
+  "scenario": {
+    "db_urp": "db://orders"
+  },
+  "target": {
+    "$slot": "db_urp",
+    "$from": "scenario.db_urp",
+    "$example": "db://orders"
+  },
+  "command": {
+    "$interpolate": "capcli db schema --table orders",
+    "$bindings": {},
+    "$example": "capcli db schema --table orders"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2266
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "populated",
-    "root": "orders",
+    "title": {
+      "$slot": "title",
+      "$from": "live.schema.title",
+      "$example": "populated"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.schema.root",
+      "$example": "orders"
+    },
     "nodes": [
       {
-        "label": "id pk",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.schema.nodes[0].label",
+          "$example": "id pk"
+        },
         "children": []
       },
       {
-        "label": "ref text!",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.schema.nodes[1].label",
+          "$example": "ref text!"
+        },
         "children": []
       },
       {
-        "label": "customer_id int ref=customers.id",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.schema.nodes[2].label",
+          "$example": "customer_id int ref=customers.id"
+        },
         "children": []
       },
       {
-        "label": "total_cents int=0",
+        "label": {
+          "$slot": "n3",
+          "$from": "live.schema.nodes[3].label",
+          "$example": "total_cents int=0"
+        },
         "children": []
       },
       {
-        "label": "discount_cents int=0",
+        "label": {
+          "$slot": "n4",
+          "$from": "live.schema.nodes[4].label",
+          "$example": "discount_cents int=0"
+        },
         "children": []
       },
       {
-        "label": "status text=pending",
+        "label": {
+          "$slot": "n5",
+          "$from": "live.schema.nodes[5].label",
+          "$example": "status text=pending"
+        },
         "children": []
       },
       {
-        "label": "receipt blob ref=storage",
+        "label": {
+          "$slot": "n6",
+          "$from": "live.schema.nodes[6].label",
+          "$example": "receipt blob ref=storage"
+        },
         "children": []
       },
       {
-        "label": "created_by text (prov)",
+        "label": {
+          "$slot": "n7",
+          "$from": "live.schema.nodes[7].label",
+          "$example": "created_by text (prov)"
+        },
         "children": []
       },
       {
-        "label": "modified_by text (prov)",
+        "label": {
+          "$slot": "n8",
+          "$from": "live.schema.nodes[8].label",
+          "$example": "modified_by text (prov)"
+        },
         "children": []
       },
       {
-        "label": "indexes",
+        "label": {
+          "$slot": "n9",
+          "$from": "live.schema.nodes[9].label",
+          "$example": "indexes"
+        },
         "children": []
       },
       {
-        "label": "idx_orders_ref (ref)",
+        "label": {
+          "$slot": "n10",
+          "$from": "live.schema.nodes[10].label",
+          "$example": "idx_orders_ref (ref)"
+        },
         "children": []
       },
       {
-        "label": "idx_orders_customer_id_status (customer_id, status)",
+        "label": {
+          "$slot": "n11",
+          "$from": "live.schema.nodes[11].label",
+          "$example": "idx_orders_customer_id_status (customer_id, status)"
+        },
         "children": []
       },
       {
-        "label": "checks",
+        "label": {
+          "$slot": "n12",
+          "$from": "live.schema.nodes[12].label",
+          "$example": "checks"
+        },
         "children": [
           {
-            "label": "discount_cents <= total_cents",
+            "label": {
+              "$slot": "n12c0",
+              "$from": "live.schema.nodes[12].children[0].label",
+              "$example": "discount_cents <= total_cents"
+            },
             "children": []
           },
           {
-            "label": "status IN ('pending', 'processing', 'completed', 'cancelled')",
+            "label": {
+              "$slot": "n12c1",
+              "$from": "live.schema.nodes[12].children[1].label",
+              "$example": "status IN ('pending', 'processing', 'completed', 'cancelled')"
+            },
             "children": []
           }
         ]
       }
     ],
     "footer": {
-      "database": "envs/dev/workspace.db",
-      "table": "orders",
-      "columns": "9",
-      "indexes": "2",
-      "checks": "2",
-      "triggers": "1 (validate_total, BEFORE INSERT)"
+      "database": {
+        "$slot": "database",
+        "$from": "live.schema.footer.database",
+        "$example": "envs/dev/workspace.db"
+      },
+      "table": {
+        "$slot": "table",
+        "$from": "live.schema.footer.table",
+        "$example": "orders"
+      },
+      "columns": {
+        "$slot": "columns",
+        "$from": "live.schema.footer.columns",
+        "$example": "9"
+      },
+      "indexes": {
+        "$slot": "indexes",
+        "$from": "live.schema.footer.indexes",
+        "$example": "2"
+      },
+      "checks": {
+        "$slot": "checks",
+        "$from": "live.schema.footer.checks",
+        "$example": "2"
+      },
+      "triggers": {
+        "$slot": "triggers",
+        "$from": "live.schema.footer.triggers",
+        "$example": "1 (validate_total, BEFORE INSERT)"
+      }
     }
   }
 }

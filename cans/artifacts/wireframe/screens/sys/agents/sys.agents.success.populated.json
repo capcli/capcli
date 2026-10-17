@@ -1,36 +1,86 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.agents.success.populated",
-  "target": "agents",
-  "command": "capcli sys agent list",
-  "elapsed_ms": 1422,
+  "scenario": {
+    "agents": "agents"
+  },
+  "target": {
+    "$slot": "agents",
+    "$from": "scenario.agents",
+    "$example": "agents"
+  },
+  "command": {
+    "$interpolate": "capcli sys agent list",
+    "$bindings": {},
+    "$example": "capcli sys agent list"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 1422
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
   "archetype": "tree",
   "component": {
-    "title": "listed",
-    "root": "agt_7f3k order-filler claude-code user:root active",
+    "title": {
+      "$slot": "title",
+      "$from": "live.agents.title",
+      "$example": "listed"
+    },
+    "root": {
+      "$slot": "root",
+      "$from": "live.agents.root",
+      "$example": "agt_7f3k order-filler claude-code user:root active"
+    },
     "nodes": [
       {
-        "label": "agt_2m8p inventory-sync claude-code user:root active",
+        "label": {
+          "$slot": "n0",
+          "$from": "live.agents.nodes[0].label",
+          "$example": "agt_2m8p inventory-sync claude-code user:root active"
+        },
         "children": []
       },
       {
-        "label": "agt_9q4w capcli-cron kernel scheduler active",
+        "label": {
+          "$slot": "n1",
+          "$from": "live.agents.nodes[1].label",
+          "$example": "agt_9q4w capcli-cron kernel scheduler active"
+        },
         "children": []
       },
       {
-        "label": "agt_4t6r capcli-watch kernel partner:idp revoked",
+        "label": {
+          "$slot": "n2",
+          "$from": "live.agents.nodes[2].label",
+          "$example": "agt_4t6r capcli-watch kernel partner:idp revoked"
+        },
         "children": []
       }
     ],
     "footer": {
-      "registered": "4 agents (cap: 8)",
-      "active": "3 · revoked: 1"
+      "registered": {
+        "$interpolate": "4 {{agents}} (cap: 8)",
+        "$bindings": {
+          "agents": "scenario.agents"
+        },
+        "$example": "4 agents (cap: 8)"
+      },
+      "active": {
+        "$slot": "active",
+        "$from": "live.agents.footer.active",
+        "$example": "3 · revoked: 1"
+      }
     }
   }
 }

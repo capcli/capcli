@@ -1,70 +1,176 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.search.success.populated",
-  "target": "order",
-  "command": "capcli search 'order'",
-  "elapsed_ms": 2044,
+  "scenario": {
+    "order": "order"
+  },
+  "target": {
+    "$slot": "order",
+    "$from": "scenario.order",
+    "$example": "order"
+  },
+  "command": {
+    "$interpolate": "capcli search 'order'",
+    "$bindings": {},
+    "$example": "capcli search 'order'"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2044
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft",
-    "data_shape": "populated"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "populated"
+    }
   },
-  "audit_op": "op_9f2r",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f2r"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "next": "capcli inspect cap://dispatch_order@4"
+          "next": {
+            "$slot": "next",
+            "$from": "live.groups[0].fields.next",
+            "$example": "capcli inspect cap://dispatch_order@4"
+          }
         },
         "lines": [
-          "cap://dispatch_order@4              routine  pinned",
-          "Dispatch paid order to carrier and update status"
+          {
+            "$slot": "lines_0",
+            "$from": "live.groups[0].lines[0]",
+            "$example": "cap://dispatch_order@4              routine  pinned"
+          },
+          {
+            "$interpolate": "Dispatch paid {{order}} to carrier and update status",
+            "$bindings": {
+              "order": "scenario.order"
+            },
+            "$example": "Dispatch paid order to carrier and update status"
+          }
         ]
       },
       {
         "fields": {
-          "next": "capcli api prove stripe.payment_intents.create --env sim"
+          "next": {
+            "$slot": "next_2",
+            "$from": "live.groups[1].fields.next",
+            "$example": "capcli api prove stripe.payment_intents.create --env sim"
+          }
         },
         "lines": [
-          "cap://stripe/payment_intents.create api      active",
-          "Creates PaymentIntent for card/invoice capture"
+          {
+            "$slot": "lines_1",
+            "$from": "live.groups[1].lines[0]",
+            "$example": "cap://stripe/payment_intents.create api      active"
+          },
+          {
+            "$slot": "lines_2",
+            "$from": "live.groups[1].lines[1]",
+            "$example": "Creates PaymentIntent for card/invoice capture"
+          }
         ]
       },
       {
         "fields": {
-          "next": "capcli sql \"SELECT id FROM orders LIMIT 5\""
+          "next": {
+            "$slot": "next_3",
+            "$from": "live.groups[2].fields.next",
+            "$example": "capcli sql \"SELECT id FROM orders LIMIT 5\""
+          }
         },
         "lines": [
-          "db://orders                         view     read",
-          "Order rows with customer and fulfillment status"
+          {
+            "$slot": "lines_3",
+            "$from": "live.groups[2].lines[0]",
+            "$example": "db://orders                         view     read"
+          },
+          {
+            "$slot": "lines_4",
+            "$from": "live.groups[2].lines[1]",
+            "$example": "Order rows with customer and fulfillment status"
+          }
         ]
       },
       {
         "fields": {
-          "next": "capcli doc read doc://refund-policy"
+          "next": {
+            "$slot": "next_4",
+            "$from": "live.groups[3].fields.next",
+            "$example": "capcli doc read doc://refund-policy"
+          }
         },
         "lines": [
-          "doc://refund-policy                 doc      readable",
-          "Refund routing rules and 120-day delegation boundary"
+          {
+            "$slot": "lines_5",
+            "$from": "live.groups[3].lines[0]",
+            "$example": "doc://refund-policy                 doc      readable"
+          },
+          {
+            "$slot": "lines_6",
+            "$from": "live.groups[3].lines[1]",
+            "$example": "Refund routing rules and 120-day delegation boundary"
+          }
         ]
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli inspect cap://dispatch_order@4",
-      "intent": "Pre-flight envelope with `can_invoke_now`",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli inspect cap://dispatch_order@4",
+        "$bindings": {},
+        "$example": "capcli inspect cap://dispatch_order@4"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Pre-flight envelope with `can_invoke_now`"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     },
     {
-      "rel": "inspect",
-      "command": "capcli search 'stripe'",
-      "intent": "Search results capped at 20",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel_2",
+        "$from": "live.affordances[1].rel",
+        "$example": "inspect"
+      },
+      "command": {
+        "$interpolate": "capcli search 'stripe'",
+        "$bindings": {},
+        "$example": "capcli search 'stripe'"
+      },
+      "intent": {
+        "$slot": "intent_2",
+        "$from": "live.affordances[1].intent",
+        "$example": "Search results capped at 20"
+      },
+      "risk": {
+        "$slot": "risk_2",
+        "$from": "live.affordances[1].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

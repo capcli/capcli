@@ -1,19 +1,65 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
+  "id": "api.record.success.recorded",
+  "scenario": {
+    "routine_urp": "cap://stripe.charges.create",
+    "charge_id": "ch_1032ZX"
+  },
   "archetype": "receipt",
-  "audit_op": "op_6b34",
-  "command": "capcli api record stripe.charges.create -p charge_id=\"ch_1032ZX\"",
-  "elapsed_ms": 600,
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_6b34"
+  },
+  "command": {
+    "$interpolate": "capcli api record stripe.charges.create -p charge_id=\"{{charge_id}}\"",
+    "$bindings": {
+      "charge_id": "scenario.charge_id"
+    },
+    "$example": "capcli api record stripe.charges.create -p charge_id=\"ch_1032ZX\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 600
+  },
   "component": {
     "groups": [
       {
         "fields": {
-          "assertions": "14 generated",
-          "cassette": "apis/stripe.cassette.jsonl",
-          "contract": "strict JSON Schema compiled from live response",
-          "live_response": "200 (captured)",
-          "request": "charge_id: ch_1032ZX",
-          "verb": "cap://stripe.charges.create"
+          "assertions": {
+            "$slot": "assertions",
+            "$from": "live.groups[0].fields.assertions",
+            "$example": "14 generated"
+          },
+          "cassette": {
+            "$slot": "cassette",
+            "$from": "live.groups[0].fields.cassette",
+            "$example": "apis/stripe.cassette.jsonl"
+          },
+          "contract": {
+            "$slot": "contract",
+            "$from": "live.groups[0].fields.contract",
+            "$example": "strict JSON Schema compiled from live response"
+          },
+          "live_response": {
+            "$slot": "live_response",
+            "$from": "live.groups[0].fields.live_response",
+            "$example": "200 (captured)"
+          },
+          "request": {
+            "$interpolate": "charge_id: {{charge_id}}",
+            "$bindings": {
+              "charge_id": "scenario.charge_id"
+            },
+            "$example": "charge_id: ch_1032ZX"
+          },
+          "verb": {
+            "$slot": "api_verb",
+            "$from": "live.api_verb",
+            "$example": "cap://stripe.charges.create"
+          }
         }
       }
     ],
@@ -24,14 +70,33 @@
     "tier": "tier_1",
     "trust": "draft"
   },
-  "id": "api.record.success.recorded",
-  "target": "cap://stripe.charges.create",
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://stripe.charges.create"
+  },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api catalog stripe --state active --json",
-      "intent": "Confirm the recorded contract sits in the catalog",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api catalog stripe --state active --json",
+        "$bindings": {},
+        "$example": "capcli api catalog stripe --state active --json"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Confirm the recorded contract sits in the catalog"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

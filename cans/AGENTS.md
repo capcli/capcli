@@ -36,12 +36,17 @@ Pointers flow leaf → branch → root only. Root anchors never point down.
 
 - Root anchors — overview.md, kernel.md, AGENTS.md, _rules.yaml
 - Branch files — plugins, sandbox, egress, governor, routines, world,
-  effect, governance, identity, lifecycle, marketplace, interface
+  effect, governance, identity, lifecycle, marketplace, interface,
+  artifacts/wireframe/wireframe-structure
 - Leaf file — assembly.md (points to everything, nothing points to it)
+- Shape exception — root anchors may cite artifacts/wireframe/screens/
+  and artifacts/wireframe/wireframe-structure.md for CLI output shape
+  per _rules.yaml#shape_exception; no other downward pointer is legal
 
 Violations to reject:
 - Root file with `see <branch>.md` — wrong direction
 - Any chain: `A → B → C`. Collapse to `A → C`.
+- Root file citing artifacts/wireframe outside _rules.yaml#shape_exception
 
 ## Vocabulary law
 

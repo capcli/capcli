@@ -1,31 +1,83 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.update.success.completed",
-  "target": "kernel",
-  "command": "capcli sys update --to 0.5.2",
-  "elapsed_ms": 48210,
+  "scenario": {
+    "kernel": "kernel"
+  },
+  "target": {
+    "$slot": "kernel",
+    "$from": "scenario.kernel",
+    "$example": "kernel"
+  },
+  "command": {
+    "$interpolate": "capcli sys update --to 0.5.2",
+    "$bindings": {},
+    "$example": "capcli sys update --to 0.5.2"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 48210
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned"
   },
-  "audit_op": "op_9f3d",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_9f3d"
+  },
   "archetype": "receipt",
   "component": {
-    "title": "update",
+    "title": {
+      "$slot": "title",
+      "$from": "live.title",
+      "$example": "update"
+    },
     "groups": [
       {
         "fields": {
-          "target": "0.5.2 (installed: 0.5.1)",
-          "stages": "6/6 committed (kernel binary, artifacts, plugins, packs, api catalogs, schema migrations)",
-          "audit_leaves": "6 — one per stage, chain advanced each",
-          "trust_rungs": "unchanged by update",
-          "partial": "none — per-component atomic, never partial across components"
+          "target": {
+            "$slot": "target",
+            "$from": "live.groups[0].fields.target",
+            "$example": "0.5.2 (installed: 0.5.1)"
+          },
+          "stages": {
+            "$interpolate": "6/6 committed ({{kernel}} binary, artifacts, plugins, packs, api catalogs, schema migrations)",
+            "$bindings": {
+              "kernel": "scenario.kernel"
+            },
+            "$example": "6/6 committed (kernel binary, artifacts, plugins, packs, api catalogs, schema migrations)"
+          },
+          "audit_leaves": {
+            "$slot": "audit_leaves",
+            "$from": "live.groups[0].fields.audit_leaves",
+            "$example": "6 — one per stage, chain advanced each"
+          },
+          "trust_rungs": {
+            "$slot": "trust_rungs",
+            "$from": "live.groups[0].fields.trust_rungs",
+            "$example": "unchanged by update"
+          },
+          "partial": {
+            "$slot": "partial",
+            "$from": "live.groups[0].fields.partial",
+            "$example": "none — per-component atomic, never partial across components"
+          }
         }
       },
       {
         "lines": [
-          "kernel binary self-update verified against release signature"
+          {
+            "$interpolate": "{{kernel}} binary self-update verified against release signature",
+            "$bindings": {
+              "kernel": "scenario.kernel"
+            },
+            "$example": "kernel binary self-update verified against release signature"
+          }
         ]
       }
     ]

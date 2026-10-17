@@ -1,41 +1,103 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "sys.vault_set.success.vaulted",
-  "target": "stripe_secret_key",
-  "command": "capcli sys vault set stripe_secret_key --in @-",
-  "elapsed_ms": 2291,
+  "scenario": {
+    "key": "stripe_secret_key"
+  },
+  "target": {
+    "$slot": "key",
+    "$from": "scenario.key",
+    "$example": "stripe_secret_key"
+  },
+  "command": {
+    "$interpolate": "capcli sys vault set {{key}} --in @-",
+    "$bindings": {
+      "key": "scenario.key"
+    },
+    "$example": "capcli sys vault set stripe_secret_key --in @-"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2291
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "draft"
   },
-  "audit_op": "op_r704",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_r704"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "key": "stripe_secret_key",
-          "cipher": "aes-256-gcm",
-          "fingerprint": "sha256:4c1b8e93a7d2f0065be34c881a9d20f7e5c3b6a8",
-          "scope": "workspace root secret (envs/dev/workspace.db secrets table)",
-          "value": "masked — plaintext never echoed to any output stream"
+          "key": {
+            "$slot": "key_2",
+            "$from": "scenario.key",
+            "$example": "stripe_secret_key"
+          },
+          "cipher": {
+            "$slot": "cipher",
+            "$from": "live.groups[0].fields.cipher",
+            "$example": "aes-256-gcm"
+          },
+          "fingerprint": {
+            "$slot": "fingerprint",
+            "$from": "live.groups[0].fields.fingerprint",
+            "$example": "sha256:4c1b8e93a7d2f0065be34c881a9d20f7e5c3b6a8"
+          },
+          "scope": {
+            "$slot": "scope",
+            "$from": "live.groups[0].fields.scope",
+            "$example": "workspace root secret (envs/dev/workspace.db secrets table)"
+          },
+          "value": {
+            "$slot": "value",
+            "$from": "live.groups[0].fields.value",
+            "$example": "masked — plaintext never echoed to any output stream"
+          }
         }
       },
       {
         "fields": {
-          "event": "vault.set committed to _audit with SHA-256 fingerprint"
+          "event": {
+            "$slot": "event",
+            "$from": "live.groups[1].fields.event",
+            "$example": "vault.set committed to _audit with SHA-256 fingerprint"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli api prove stripe.refund_charge --env sim",
-      "intent": "Rehearsal in sim verified",
-      "risk": "safe"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli api prove stripe.refund_charge --env sim",
+        "$bindings": {},
+        "$example": "capcli api prove stripe.refund_charge --env sim"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Rehearsal in sim verified"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "safe"
+      }
     }
   ]
 }

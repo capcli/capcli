@@ -1,9 +1,33 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "run.execute.denial.trust",
-  "target": "cap://sync_inventory@3",
-  "command": "capcli run cap://sync_inventory@3 -p warehouse=west --env prod -m \"nightly inventory sync\"",
-  "elapsed_ms": 278,
+  "scenario": {
+    "routine_urp": "cap://sync_inventory@3",
+    "routine_name": "sync_inventory",
+    "routine_version": 3,
+    "warehouse": "west",
+    "intent": "nightly inventory sync"
+  },
+  "target": {
+    "$slot": "routine_urp",
+    "$from": "scenario.routine_urp",
+    "$example": "cap://sync_inventory@3"
+  },
+  "command": {
+    "$interpolate": "capcli run {{routine_urp}} -p warehouse={{warehouse}} --env prod -m \"{{intent}}\"",
+    "$bindings": {
+      "routine_urp": "scenario.routine_urp",
+      "warehouse": "scenario.warehouse",
+      "intent": "scenario.intent"
+    },
+    "$example": "capcli run cap://sync_inventory@3 -p warehouse=west --env prod -m \"nightly inventory sync\""
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 278
+  },
   "context": {
     "env": "prod",
     "tier": "tier_1",
@@ -12,21 +36,59 @@
   "archetype": "diagnostic",
   "component": {
     "rule": "policy.trust.unproven",
-    "code": "E046_TRUST_VIOLATION",
+    "code": {
+      "$slot": "code",
+      "$from": "live.code",
+      "$example": "E046_TRUST_VIOLATION"
+    },
     "domain": "policy.trust",
     "layer": "trust",
-    "culprit": "Draft routine sync_inventory@3 invoked in prod; the production floor requires the pinned rung (E046_TRUST_VIOLATION).",
+    "culprit": {
+      "$interpolate": "Draft routine {{routine_name}}@{{routine_version}} invoked in prod; the production floor requires the pinned rung (E046_TRUST_VIOLATION).",
+      "$bindings": {
+        "routine_name": "scenario.routine_name",
+        "routine_version": "scenario.routine_version"
+      },
+      "$example": "Draft routine sync_inventory@3 invoked in prod; the production floor requires the pinned rung (E046_TRUST_VIOLATION)."
+    },
     "remedy": "prove in sim ('capcli routine prove sync_inventory --env sim'), then ship to pinned (via reviewed)",
-    "target_env": "prod (floor: pinned)",
+    "target_env": {
+      "$slot": "target_env",
+      "$from": "live.target_env",
+      "$example": "prod (floor: pinned)"
+    },
     "lines": [
-      "routine sync_inventory@3 holds draft trust",
-      "Draft routines cannot execute in production.",
-      "Prove in sim first, then ship to pinned."
+      {
+        "$interpolate": "routine {{routine_name}}@{{routine_version}} holds draft trust",
+        "$bindings": {
+          "routine_name": "scenario.routine_name",
+          "routine_version": "scenario.routine_version"
+        },
+        "$example": "routine sync_inventory@3 holds draft trust"
+      },
+      {
+        "$slot": "lines_0",
+        "$from": "live.lines[1]",
+        "$example": "Draft routines cannot execute in production."
+      },
+      {
+        "$slot": "lines_1",
+        "$from": "live.lines[2]",
+        "$example": "Prove in sim first, then ship to pinned."
+      }
     ]
   },
   "trailer": {
     "prompt": "doc://prompts/authoring/trust_floor#1",
-    "reason": "trust floor breached: platform tier or composition rung",
-    "serve": "L1"
+    "reason": {
+      "$slot": "reason",
+      "$from": "live.trailer.reason",
+      "$example": "trust floor breached: platform tier or composition rung"
+    },
+    "serve": {
+      "$slot": "serve",
+      "$from": "live.trailer.serve",
+      "$example": "L1"
+    }
   }
 }

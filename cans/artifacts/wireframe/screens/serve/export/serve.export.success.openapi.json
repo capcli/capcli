@@ -1,37 +1,97 @@
 {
-  "$schema": "wireframe/v2",
+  "$schema": "wireframe/v1",
   "id": "serve.export.success.openapi",
-  "target": "bindings",
-  "command": "capcli serve export openapi --out openapi.json",
-  "elapsed_ms": 2304,
+  "scenario": {
+    "bindings": "bindings"
+  },
+  "target": {
+    "$slot": "bindings",
+    "$from": "scenario.bindings",
+    "$example": "bindings"
+  },
+  "command": {
+    "$interpolate": "capcli serve export openapi --out openapi.json",
+    "$bindings": {},
+    "$example": "capcli serve export openapi --out openapi.json"
+  },
+  "elapsed_ms": {
+    "$slot": "elapsed_ms",
+    "$from": "live.elapsed_ms",
+    "$type": "integer",
+    "$example": 2304
+  },
   "context": {
     "env": "dev",
     "tier": "tier_1",
     "trust": "pinned",
-    "data_shape": "redirected"
+    "data_shape": {
+      "$slot": "data_shape",
+      "$from": "context.data_shape",
+      "$example": "redirected"
+    }
   },
-  "audit_op": "op_8m3v",
+  "audit_op": {
+    "$slot": "audit_op",
+    "$from": "live.audit_op",
+    "$example": "op_8m3v"
+  },
   "archetype": "receipt",
   "component": {
     "title": null,
     "groups": [
       {
         "fields": {
-          "artifact": "openapi.json",
-          "format": "openapi 3.1",
-          "endpoints": "2 (dispatch_order@4, report_summary@3)",
-          "bytes": "2418",
-          "sha256": "4f9a1b2c7d3e5f60"
+          "artifact": {
+            "$slot": "artifact",
+            "$from": "live.groups[0].fields.artifact",
+            "$example": "openapi.json"
+          },
+          "format": {
+            "$slot": "format",
+            "$from": "live.groups[0].fields.format",
+            "$example": "openapi 3.1"
+          },
+          "endpoints": {
+            "$slot": "endpoints",
+            "$from": "live.groups[0].fields.endpoints",
+            "$example": "2 (dispatch_order@4, report_summary@3)"
+          },
+          "bytes": {
+            "$slot": "bytes",
+            "$from": "live.groups[0].fields.bytes",
+            "$example": "2418"
+          },
+          "sha256": {
+            "$slot": "sha256",
+            "$from": "live.groups[0].fields.sha256",
+            "$example": "4f9a1b2c7d3e5f60"
+          }
         }
       }
     ]
   },
   "affordances": [
     {
-      "rel": "next",
-      "command": "capcli serve export mcp --out tools.json",
-      "intent": "Bound MCP tool definition exported",
-      "risk": "mutating"
+      "rel": {
+        "$slot": "rel",
+        "$from": "live.affordances[0].rel",
+        "$example": "next"
+      },
+      "command": {
+        "$interpolate": "capcli serve export mcp --out tools.json",
+        "$bindings": {},
+        "$example": "capcli serve export mcp --out tools.json"
+      },
+      "intent": {
+        "$slot": "intent",
+        "$from": "live.affordances[0].intent",
+        "$example": "Bound MCP tool definition exported"
+      },
+      "risk": {
+        "$slot": "risk",
+        "$from": "live.affordances[0].risk",
+        "$example": "mutating"
+      }
     }
   ]
 }
