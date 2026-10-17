@@ -1,0 +1,89 @@
+# ───────────────────────────────────────────────────────────────
+# transport.yaml — transport law: RPC/WS endpoints, deployment topology, network transports, IPC/mTLS/mesh sockets, dial budgets
+# Owns:     RPC endpoint, WS audit tail, hub/spoke/ephemeral deployment topology & transport behavior, unix IPC sockets, mTLS listener, WireGuard mesh, federation roster, dial budgets
+# Not:      fuel budgets & cascade → see budget.yaml
+# Not:      rate limits & header calibration → see rate-limits.yaml
+# Not:      white-label branding → see contracts/branding.yaml
+# Compiled: yes → capcli.lock root hash
+# ───────────────────────────────────────────────────────────────
+version: 1
+
+rpc_endpoint: "http://127.0.0.1:4040/rpc"
+ws_tail: "ws://127.0.0.1:4040/ws/audit"
+
+# Two deployment profiles, no cluster orchestrator: see cans/physics.md#Deployment-topology.
+topology:
+  default_mode: local                 # local | hub | spoke_thin | spoke_fat | spoke_ephemeral | replica
+  allowed_modes: [local, hub, spoke_thin, spoke_fat, spoke_ephemeral, replica]
+  transports: [unix_socket, wireguard_mesh, mtls]
+  hub:                                # default profile — single-host Hub, local spokes over unix:// IPC: see cans/physics.md#Deployment-topology
+    enforce_remote_authorizer: true    # Hub evaluates Layer 1 authorizer on inbound RPC
+    client_auth: mandatory             # anonymous spokes rejected at TLS handshake
+    max_concurrent_spokes: 256
+    idle_timeout_seconds: 60
+    busy_timeout_ms: 5000             # SQLite BEGIN IMMEDIATE queue ceiling
+    # mesh bind — remote profile: swarm RPC listen endpoint declared at artifacts/policy.yaml#network.transports; admin/cockpit surface binds loopback per serve.bind: see cans/physics.md#Deployment-topology
+  spoke:                              # remote profile — WireGuard + mTLS opt-in: see cans/physics.md#Deployment-topology
+    rpc_pool_size: 16
+    connect_timeout_ms: 2000
+    keepalive_interval_seconds: 10
+  spoke_thin:
+    local_compute: deny                # thin spoke sends execution AST to Hub
+    direct_db_access: deny             # all DB ops forward over RPC
+  spoke_fat:
+    local_compute: allow               # runs sandboxed Python/TS locally
+    direct_db_access: deny             # ctx.db calls proxy to Hub C-authorizer
+  spoke_ephemeral:
+    stateless_disk: enforce            # local disk persistence strictly denied
+    quarantine_spool_local: deny       # dropped RPC halts worker (exit 5); no local write
+    on_disconnect: auto_reap           # instantly reap agent identity and leases
+  ephemeral:                          # remote profile only — heartbeat/reaper mechanics are remote-profile invariants: see cans/agent.md#Ephemeral-swarm-identity
+    max_concurrent_nodes: 1000        # auto-scaling dynamic container ceiling
+    default_ttl_seconds: 300          # dead worker reap window
+    heartbeat_interval_seconds: 5
+    missed_heartbeats_to_reap: 3
+    force_sync_audit_ack: true        # no exit 0 without central audit receipt; spoke-side extension of the fail-closed sink law: see cans/effect.md#Audit-spine
+    memory_buffer_mb: 16              # RAM buffer for spoke→hub audit replication only; distinct from the 5-minute local fail-closed stall buffer: see cans/effect.md#Event-integrity
+  preemption:
+    trap_sigterm: true                 # intercepts container preemption signals
+    yield_on_sigterm: true             # writes exit 6 checkpoint to Hub _suspended_tasks
+    max_evacuation_ms: 2000            # flush window before hard abort
+
+# hub and mesh roles are network configuration, not resource pointers.
+# they never enter the URP taxonomy (see cans/action.md#Pointer-taxonomy).
+network:
+  transports:
+    hub:
+      rpc_listen: "tcp://100.64.0.1:4040"       # hub daemon RPC listen endpoint
+      ipc_socket: "unix:///run/capcli/hub.sock" # same-host spoke IPC
+      client_auth: mtls                          # client certificates mandatory at handshake
+    mesh:
+      mode: wireguard                           # mesh role rides an encrypted peer overlay
+      peer_template: "tcp://<peer>:51820"       # per-peer socket template
+    max_evacuation_ms: 2000            # flush window before hard abort
+  dial:
+    total_ms: 10000                # default dial budget covering peer cold start; fail-closed is invariant, the budget is policy: see cans/physics.md#Federation-invariants
+    tick_interval_ms: 500          # socket poll tick
+    backoff: 2.0                   # exponential backoff multiplier per tick
+
+transport:
+  ipc:
+    socket_dir: "/run/capcli"
+    socket_mask: "0660"
+    peer_cred_auth: true                # Linux SO_PEERCRED enforcement
+  mtls:
+    listen_port: 4040
+    cert_file: "vault://tls/cert"
+    key_file: "vault://tls/key"
+    ca_bundle: "vault://tls/ca"
+    min_tls_version: "1.3"
+  mesh:
+    interface: "wg0"
+    port: 51820
+    endpoint: see artifacts/policy.yaml#network.transports   # mesh rides the WireGuard overlay; per-peer socket tcp://<peer>:51820
+    rekey_after_seconds: 3600
+  federation_roster:
+    pointer: "ws://roster"
+    default_trust_floor: "pinned"
+    max_hops: 2
+    peer_socket_template: "/run/capcli/{target_ws}.sock"
