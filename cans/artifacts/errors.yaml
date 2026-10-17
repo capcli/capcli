@@ -1,0 +1,35 @@
+# ───────────────────────────────────────────────────────────────
+# errors.yaml — E-code taxonomy and exit mapping
+# Owns:     E-code registry (urp + desc per code), exit-code → E-code mapping (exit_2 … exit_6)
+# Not:      exit-code law (fail-closed semantics per physical law) → see kernel.md#Exit-code-law
+# Not:      seccomp enforcement (trapped/denied syscalls behind E030) → see syscalls.yaml
+# Compiled: yes → capcli.lock root hash
+# ───────────────────────────────────────────────────────────────
+version: 1
+errors:
+  exit_2:                                # Governance & invariant blocks
+    E005_FILE_LOCKED_BY_KERNEL: { urp: "policy://errors/E005", desc: "Direct host file mutation bypassed kernel authorizer" }
+    E012_REQUIRE_WHERE_LIMIT: { urp: "policy://errors/E012", desc: "Unbounded mutation without WHERE/LIMIT" }
+    E020_CHECK_FAILED: { urp: "policy://errors/E020", desc: "Check constraint violation; mutation rolled back" }
+    E030_SYS_CONNECT_BLOCKED: { urp: "policy://errors/E030", desc: "seccomp trap: raw socket connect denied" }
+    E040_PROMOTION_UNPROVEN: { urp: "policy://errors/E040", desc: "Promotion requirements unmet" }
+    E041_FEDERATION_CYCLE: { urp: "policy://errors/E041", desc: "Detected cycle in ws:// call chain" }
+    E042_FEDERATION_DENIED: { urp: "policy://errors/E042", desc: "Caller ws identity not on active allowlist" }
+    E045_PROD_TIER1_MANDATE: { urp: "policy://errors/E045", desc: "--env prod invoked on Tier 2 host; fails closed, exit 2" }
+    E046_TRUST_VIOLATION: { urp: "policy://errors/E046", desc: "draft/reviewed routine invoked in prod" }
+    E047_SECRET_TRUST_FLOOR: { urp: "policy://errors/E047", desc: "draft routine resolving vault:// handles; fails closed at pre-flight, exit 2" }
+    E050_RUNTIME_DISALLOWED: { urp: "policy://errors/E050", desc: "Runtime engine disallowed by governance/policy" }
+    E060_MIGRATION_REJECTED: { urp: "policy://errors/E060", desc: "State migration invariant violated" }
+    E061_OCC_DRIFT: { urp: "policy://errors/E061", desc: "OCC state_fence drift detected on frame resume" }
+  exit_3:                                # Compile-time refusals
+    E033_TOKEN_OVERFLOW: { urp: "policy://errors/E033", desc: "Token envelope exceeded 2000 tokens" }
+    E031_COMPLEXITY_HIGH: { urp: "policy://errors/E031", desc: "Cyclomatic complexity exceeds 10 branches" }
+    E032_STRING_INTERPOLATION: { urp: "policy://errors/E032", desc: "Raw SQL string interpolation detected" }
+    E034_TXN_EXTERNAL_CALL: { urp: "policy://errors/E034", desc: "External call inside a ctx.db.txn block" }
+    E035_LOCK_FENCE_BREACH: { urp: "policy://errors/E035", desc: "Outbound ws:// call while holding Layer 1 claims" }
+  exit_4:                                # Runtime faults
+    E055_FEDERATION_UNREACHABLE: { urp: "policy://errors/E055", desc: "Peer workspace socket timed out (1500ms)" }
+  exit_5:                                # Kernel panics
+    E001_SECRET_LEAK_PANIC: { urp: "policy://errors/E001", desc: "Plaintext credential escape in output" }
+    E002_SINK_CORRUPTION: { urp: "policy://errors/E002", desc: "Audit trail pipeline undrainable" }
+  exit_6: {}                             # Quota / preemption yield — checkpoint, not an error; no E-code assigned
