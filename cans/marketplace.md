@@ -77,7 +77,7 @@
     - Network transports
       - Socket endpoints are not URPs
       - ws://host:port is transport, not pointer
-      - Config — see artifacts/policy.yaml
+      - Config — see artifacts/transport.yaml
       - Definition — see interface.md#Universal-flags
   - Registry site
     - Identity
@@ -142,7 +142,7 @@
       - Format — signed archive
       - Manifest — capcli-pack.yaml at root
       - Hash — SHA-256 computed on write
-      - Shape — see artifacts/capcli-pack.yaml
+      - Shape — see artifacts/templates/pack.yaml
     - Manifest shape
       - Core fields — see plugins.md#Manifest
       - Pack-specific — pack_tier, layer fields
