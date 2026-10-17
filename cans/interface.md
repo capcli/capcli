@@ -444,7 +444,7 @@
         - L2 envelope capped at 150 tokens
         - L3 leaf capped at 500 tokens
         - Breach aborts with exit 3
-        - Config — see artifacts/cicd.yaml
+        - Config — see artifacts/contracts/cicd.yaml
       - Campaign envelope
         - inspect doc://prompts/<campaign>
         - Returns vars, sections, caps
@@ -544,7 +544,7 @@
       - --workspace accepts remote endpoint
       - Example — tcp://100.64.0.1:4040
       - Overrides workspace env var — see identity.md#Environment-variables
-      - Config — see artifacts/policy.yaml
+      - Config — see artifacts/transport.yaml
       - Socket endpoints are not URPs
       - Definition — see marketplace.md#Registry
       - Distribution — see marketplace.md#Distribution-channels
