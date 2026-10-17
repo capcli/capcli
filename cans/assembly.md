@@ -305,11 +305,11 @@
       - Doc URI resolution to markdown
       - Anchor slug verification
       - Token estimation via 3.5 char ratio
-      - Config — see artifacts/cicd.yaml
+      - Config — see artifacts/contracts/cicd.yaml
     - Local developer loop
       - Local tasks mirror CI PR gate
       - Inner loop target under 15 seconds
-      - Config — see artifacts/cicd.yaml
+      - Config — see artifacts/contracts/cicd.yaml
       - Fast targets
         - check — fmt, clippy, trinity, pwa
         - check-trinity — pointer validation
@@ -324,7 +324,7 @@
         - check then validate then docs
         - Fail-closed on any subtask
         - Full run under 45 seconds
-        - Config — see artifacts/cicd.yaml
+        - Config — see artifacts/contracts/cicd.yaml
       - Hygiene checks
         - cargo fmt --all --check
         - clippy -D warnings workspace-wide
@@ -349,35 +349,35 @@
       - Workflow — .github/workflows/pr-gate.yml
       - SLA — under 4 minutes, fail-closed
       - Jobs — PWA, Astro, Trinity, Rust, TS, Python, Cans
-      - Config — see artifacts/cicd.yaml
+      - Config — see artifacts/contracts/cicd.yaml
       - Concurrency — cancel-in-progress per ref
       - Cans check
         - Tool — cans-spec 0.5.1 via bunx
         - Trigger — cans/** changes only
         - Pass — 0 errors, 0 broken refs
-        - Config — see artifacts/cicd.yaml
+        - Config — see artifacts/contracts/cicd.yaml
       - PR compute containment
         - dorny/paths-filter gates execution
         - Docs-only edits bypass Rust matrix
         - Cost bounds on GitHub Actions
-        - Config — see artifacts/cicd.yaml
+        - Config — see artifacts/contracts/cicd.yaml
       - Package boundaries
         - packages/pwa changes trigger build-pwa
         - packages/registry-web triggers astro build
         - packages/py triggers maturin and pytest
         - packages/ts triggers bun test
-        - Config — see artifacts/cicd.yaml
+        - Config — see artifacts/contracts/cicd.yaml
       - Core boundaries
         - crates changes trigger clippy and tests
         - artifacts and lock changes trigger Trinity
         - docs changes trigger Astro build
-        - Config — see artifacts/cicd.yaml
+        - Config — see artifacts/contracts/cicd.yaml
     - Deep test
       - Workflow — .github/workflows/deep-test.yml
       - Trigger — push to main, SLA under 20 min
       - Matrix — Ubuntu, macOS, Windows
       - Supply chain — cargo-deny, RustSec audit — license policy enforced
-      - Config — see artifacts/cicd.yaml
+      - Config — see artifacts/contracts/cicd.yaml
       - Tiers — see sandbox.md#Platform-tiers
     - Release pipeline
       - Workflow — .github/workflows/release.yml
@@ -397,4 +397,4 @@
       - 3 Integrity — lockfile, Trinity, UI assets
       - 4 Runtime — sandbox, binary, polyglot
       - Token ceilings — see routines.md#Shape-constraints
-      - Config — see artifacts/cicd.yaml
+      - Config — see artifacts/contracts/cicd.yaml
