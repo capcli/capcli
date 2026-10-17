@@ -210,7 +210,7 @@
       - Providers without headers use sliding window
       - Kernel-counted, no upstream signal
       - Conservative defaults apply
-      - Config — see artifacts/policy.yaml
+      - Config — see artifacts/rate-limits.yaml
     - Live quota read
       - ctx.quota.inspect(verb) returns snapshot
       - Total, available, priority floors, reset_at
