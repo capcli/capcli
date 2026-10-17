@@ -188,15 +188,15 @@
       - Break replay determinism
       - Break causal chain integrity
       - Causal DAG — see effect.md#Causal-DAG
-    - Invariants and anti-decisions
-      - No YAML procedures
-      - No module imports for authority
-      - No self-promotion
-      - No silent edits
-      - No deletion
-      - Pre-execution validation
-      - Sandbox isolation
-      - Hash-pinned versions
+    - Design invariants
+      - Procedures are code, never YAML
+      - Authority comes from registry, never imports
+      - Promotion crosses gates, never self-issued
+      - Edits increment version, never in place
+      - Deletion is retirement, never erasure
+      - Pre-execution validation on every call
+      - Sandbox isolation at the OS boundary
+      - Hash-pinned versions at every promotion
     - Bulk operations
       - Chunking model
         - Agent loops bounded chunks via ctx.db.execute

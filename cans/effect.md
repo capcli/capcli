@@ -147,13 +147,11 @@
           - Second — sql query on empty world
           - Third — sql write deny (probe)
           - Fourth — sql write ok (bootstrap)
-        - Re-init sequence
-          - Re-init ledger opens with kernel.genesis.data_loss
-          - Loss event carries prior root when known
-          - Re-init authority — operator signature plus reason
+        - Re-initialization
+          - Trigger — total media loss
+          - Opens with kernel.genesis.data_loss
           - Only kernel daemon writes genesis
           - Definition — see world.md#Ledger-re-initialization
-          - Event shape — see #Kernel-event-payloads
         - Genesis invariants
           - Sequence is deterministic
           - Never skipped on first boot

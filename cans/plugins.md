@@ -155,14 +155,14 @@
       - Completion — generated from merged tree
       - Error archetype — see kernel.md#Diagnostic-output-law
     - Generation-aware swap
-      - Running invocation — retains old CLI
-      - New invocation — resolves to new CLI
-      - Lease — .in-use flock governs retention
+      - Invocation binds one generation at start
+      - Lease held for the invocation lifetime
+      - New generation activates for new invocations
       - No special case — same as code generations
-    - Canonical fallback
+    - Fallback form
       - Form — capcli plugin <id> <verb>
-      - Always available — projection failure escape
-      - Correctness — fallback is never a compromise
+      - Always available on projection failure
+      - Gate semantics identical to projected form
       - Documentation — help lists both forms
     - Introspection
       - Commands — see interface.md#Plugin-noun

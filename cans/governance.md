@@ -78,10 +78,10 @@
         - Canonical composition — see plugins.md#Composition
         - Federation floors — see plugins.md#Federation-transport
       - Demotion priority
-        - Demotion executes without gate resistance
+        - Demotion bypasses gates
         - Automatic demotion is one rung
-        - Multi-rung demotion denied
-        - Every automatic demotion emits alert
+        - Multi-rung automatic demotion denied
+        - Every demotion emits alert
         - Reference — see lifecycle.md#Decay
       - Plugin rung
         - Plugin declares target rung on install
@@ -394,9 +394,9 @@
       - Emits routine.auto_promoted event
       - Records 5-point metric
       - Event — see effect.md#Kernel-event-payloads
-    - Retroactive control
-      - Human veto via rollback --to-trust
-      - Veto is privileged operation
+    - Human veto
+      - rollback --to-trust via human operator
+      - Privileged operation
       - Logs to audit ledger
       - Reference — see #Demotion-priority
     - Pinned promotion
@@ -405,13 +405,12 @@
       - Schema migrations governed by caps
       - Caps — see artifacts/budget.yaml
     - Canary veto window
-      - Newly pinned face 1-hour observation
+      - Newly pinned observe for 1 hour
       - Error rate over 1% demotes to reviewed
       - Exactly one rung, never multi
       - Kernel freezes traffic on demotion
       - Cockpit alert fires and operator paged
       - Re-promotion requires explicit action
-      - Autonomous re-promotion during freeze denied
     - Established pinned scope
       - 30% failure over 20 runs circuit breaker
       - Demotes pinned to reviewed

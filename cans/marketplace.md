@@ -258,10 +258,10 @@
       - Rollback via new version, no retag
     - Immutable versioning
       - Tag write-once per version
-      - Retagging requires new version
+      - New version supersedes, never retags
       - Bundle hash published with tag
-      - Old bundles remain downloadable
-      - Index retains historical entries
+      - Every historical bundle remains downloadable
+      - Index carries one entry per version
     - Provenance
       - author_agent — publishing harness
       - author_principal — human approver
@@ -438,7 +438,7 @@
       - Migration — see world.md#Migration
     - Rollback flow
       - Forward-only via revert bundles
-      - Never delete historical generations
+      - Historical generations retained
       - Versioning — see lifecycle.md#Versioning
       - Rollback authority
         - Operator-initiated only
@@ -446,15 +446,16 @@
         - Reason recorded on install event
         - Envelope — see interface.md#CLI-surface
     - Deprecation handling
-      - Upstream flag renders warning
-      - No auto-uninstall on deprecate
-      - Operator action required
+      - Upstream signals deprecation on the entry
+      - Install renders a warning, proceeds
+      - No automatic uninstall
+      - Operator action required to act
       - Envelope — see interface.md#CLI-surface
     - Retirement handling
-      - Uncallable marker on entry
-      - Retired entry stays in index
-      - Install refused with clear remedy
-      - Historical provenance retained
+      - Entry marked retired, uncallable
+      - Entry remains in index
+      - Install refused with remedy
+      - Provenance retained on chain
       - Decay — see lifecycle.md#Decay
     - Audit trail
       - Every lifecycle step emits event

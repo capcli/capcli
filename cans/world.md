@@ -180,7 +180,7 @@
       - Table lifecycle
         - Added via system-schema.yaml version bump
         - Migrated via migration pipeline
-        - Never dropped in place
+        - Retired in place, never dropped
         - Definition — see #Migration
     - Plugin schema namespace <!-- ref-by: marketplace.md -->
       - Prefix — plugin_<id>_

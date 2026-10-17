@@ -80,10 +80,10 @@
     - Entry rungs — reviewed, draft, draft
     - Install experience
       - plugin install capcli.pack.api
-      - Restores old muscle memory
-      - capcli api sync works again
-      - ctx.api.call works again
-      - Zero migration for user
+      - Kernel mounts the noun and ctx namespace
+      - capcli api sync is the surface
+      - ctx.api.call is the namespace
+      - Zero manual wiring required
     - Trust inheritance
       - Import floor — see marketplace.md#Iron-law-2
       - Promotion — see governance.md#Promotion-gates
@@ -212,11 +212,11 @@
       - Pinning — see lifecycle.md#Versioning
       - Drift — see lifecycle.md#Drift
       - Fail-closed — see kernel.md#Fail-closed-stance
-    - Refusals
-      - No ORMs or query builders
-      - No runtime policy mutation
-      - Audit table strictly append-only
-      - Zero LLM runtimes in kernel
+    - Invariants
+      - SQL is the only query surface
+      - Policy mutates only via proposal lifecycle
+      - Audit table is append-only
+      - Kernel contains zero LLM inference
     - Neutrality law
       - Kernel matches, dispatches, delivers
       - Kernel logs, never interprets domain

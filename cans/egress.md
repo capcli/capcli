@@ -258,9 +258,9 @@
       - Resolution precedes suspension
       - Ask resolves via Cockpit card
     - First prod call
-      - Requires contract proof hash
-      - Counts call_number and remaining
-      - Graduation to standard governance on call 4
+      - Runs under pinned rung
+      - Call_number and remaining surface in the envelope
+      - Governance is uniform from call 1
       - Emits api.first_prod_call event
       - Promotion gate — see governance.md#Promotion-gates
     - Provider drift

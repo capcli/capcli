@@ -48,8 +48,8 @@
       - Machine field in --json envelope
       - Platform — see sandbox.md#Platform-tiers
     - Projection failure handling
-      - Canonical fallback — capcli plugin <id> <verb>
-      - Manifest malformed — fallback
+      - Fallback form — capcli plugin <id> <verb>
+      - Manifest malformed — fallback used
       - Collision — auto-scope to plugin <id>
       - Never a hard install failure
       - Full rules — see plugins.md#CLI-projection
@@ -127,7 +127,7 @@
           - ws://workspace/routine@version — federated
           - db://table — DB entity inspection
           - doc://path — document reading
-          - Bare plugin:// is escape hatch, not daily
+          - plugin://<id>/<verb> is a first-class URP
         - Executable resolver fields
           - fuel_declared — integer
           - session_fuel_remaining — integer
@@ -519,11 +519,11 @@
         - plugin inspect <id> shows noun
         - help stub lists kernel nouns only
         - Full noun list via plugin list
-      - Muscle memory preservation
-        - capcli api sync works after install
-        - capcli bind cron works after install
-        - capcli ping notify works after install
-        - Zero user migration required
+      - Surface continuity
+        - capcli api sync is the surface after install
+        - capcli bind cron is the surface after install
+        - capcli ping notify is the surface after install
+        - Zero manual wiring required
   - Universal flags <!-- ref-by: marketplace.md -->
     - Global flags
       - --json — machine-readable output
@@ -590,22 +590,21 @@
     - Pointer grammar
       - Only scheme://namespace/resource parses
       - Bare filesystem paths fail exit 3
-      - Removed schemes — hub, prompt, mesh
-      - Removed schemes — apis, sink, snap
+      - Active schemes — cap, db, doc, env, pack, plugin, policy, vault, ws
       - Grammar — see routines.md#The-ctx-contract
-    - Unified verb aliases
-      - Queries — capcli sql banned in db
-      - Locks — db lock bans claim noun
-      - Sandbox — sys exec bans jail noun
-      - Explain — sys audit trace bans policy
-      - Egress — run bans api call noun
-      - Budget — inspect quota:// bans budget noun
-      - Authoring — direct write bans routine new
-      - Blueprints — inspect pack:// bans pack apply
+    - One canonical home per capability
+      - Queries live in run sql
+      - Locks live in db lock
+      - Sandbox exec lives in sys exec
+      - Egress lives in run
+      - Budget inspection lives in inspect quota://
+      - Authoring lives at routines/<name>.py
+      - Blueprints live at inspect pack://
+      - Aliases are sugar, never a second home
     - Alias precedence
       - Aliases resolve before handler gate
-      - Recovery mode names canonical paths
-      - Alias never bypasses authorization
+      - Handler gate is identical for both forms
+      - Alias never widens authorization
       - Definition — see world.md#Ledger-re-initialization
   - Client RPC contract <!-- ref-by: governance.md, identity.md -->
     - Instantiation
@@ -739,11 +738,11 @@
       - Pedagogical denials — see effect.md#Denials
       - Pack install — see marketplace.md#Pack-taxonomy
       - Receipt verification — sys doctor --report
-    - Anti-decisions
-      - No blank packs or static tours
-      - No kernel-generated schemas
-      - No synthetic onboarding events
-      - No direct prod writes during onboarding
+    - Design invariants
+      - Packs ship as declared, never generated
+      - Schema is authored, never inferred
+      - Onboarding events trace real operations
+      - Prod writes cross the trust gate
       - Integrity — see effect.md#Event-integrity
     - Produced via sys doctor --report
     - Provenance — see effect.md#Trust-receipt

@@ -388,9 +388,9 @@
         - Definition — see plugins.md#Composition
       - Retirement semantics <!-- ref-by: overview.md -->
         - Routine becomes uncallable
-        - Historical provenance preserved
-        - Rollback un-retires via pointer reinstatement
-        - DAG retains retired pointers
+        - Provenance preserved on chain
+        - Reinstatement via version pointer
+        - Ledger resolves retired pointers to last-active version
         - Definition — see effect.md#Causal-DAG
   - Learning loop <!-- ref-by: marketplace.md, overview.md -->
     - Discovery arc
@@ -520,7 +520,7 @@
       - Per-component only via --to target
       - Kernel binary needs schema hash match at boot
       - Plugins flip generation pointer backwards
-      - Packs re-import old version — see marketplace.md#Immutable-versioning
+      - Packs re-import historical version — see marketplace.md#Immutable-versioning
       - Schema migrations never downgrade — see world.md#Migration
       - Incompatible targets exit 2 policy.update.incompatible_downgrade
     - Attention
