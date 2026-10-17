@@ -7,6 +7,7 @@
 # Not:      deployment topology & network transports → see artifacts/transport.yaml
 # Not:      fuel budgets & exhaustion behavior → see artifacts/budget.yaml
 # Not:      rate limits & header calibration → see artifacts/rate-limits.yaml
+# Not:      audit redaction & mask rules → see artifacts/masking.yaml
 # ═══════════════════════════════════════════════════════════════
 version: 5
 lockfile: capcli.lock                 # compiled root hash SSOT
@@ -255,10 +256,7 @@ audit:
     - fixture_used                           # true if mock fixture served
     - http_called                            # false for dry-run and mock
     - triggered_by_skill
-  redact:
-    columns: [secrets.value]
-    params_matching: ["*token*", "*password*", "*secret*"]
-    auth_headers: always
+  redact: see artifacts/masking.yaml
   retention_days: 90
   mirror_lag_alert_minutes: 5
   unauditable_write: deny                      # if the audit sink fails, nothing runs
