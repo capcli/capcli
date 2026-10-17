@@ -35,7 +35,7 @@
   //    "cans/artifacts/governance.yaml",
   //    "cans/artifacts/capcli.landing-copy.md"
         
-     "!cans/artifacts/*.yaml"
+    // "!cans/artifacts/*.yaml"
   ],
   "ignore": {
     "useGitignore": true,
@@ -51,7 +51,7 @@
 "cans/artifacts/*.lock",
 "cans/artifacts/SKILL.md",
 "cans/artifacts/test-plan/",
-"cans/artifacts/wireframe/",
+"!cans/artifacts/wireframe/",
 "cans/artifacts/prompt/"
 		]
   },
