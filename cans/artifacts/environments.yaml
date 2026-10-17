@@ -31,3 +31,31 @@ environments:
     audit_db: "envs/prod/audit.db"
     trust_floor: pinned
     destructive_operations: cryptographic_challenge
+
+env:
+  prod:
+    draft_writes: deny                         # unproven code cannot touch prod
+    intent: required                           # reads too? no — writes; reads stay free
+    confirm_above: { rows: 10 }                # tighter thresholds
+    vacuum: deny
+    api: { fuel: { per_session_fuel: 500000 } }
+    allowed_runtimes: [python, javascript, typescript] # ranked: python 1st, js 2nd, ts 3rd
+    serve: { bind: "127.0.0.1" }               # public lives behind a proxy
+  sim:
+    bulk: { require_pre_count: false }
+    api:
+      base_url_overrides_from: apis/*.sim.yaml
+      mock_fixtures_from: apis/*.mock.yaml
+      deny_sim_mode: [prod-only]           # prod-only verbs physically denied in sim
+    notify: { route_to: "file://envs/sim/telemetry/notifications.jsonl" } # mock file sink; sinks configured in artifacts/governance.yaml#telemetry
+    allowed_runtimes: [python, javascript, typescript]
+  dev:
+    bulk: { require_pre_count: false }
+    allowed_runtimes: [python, javascript, typescript] # permissive exploration
+    confirm_above: { rows: 1000 }              # looser: dev is cheap
+    trust_overlay:                               # draft relaxation for onboarding seeding
+      draft:
+        max_rows_affected: 100                   # 10× looser than prod draft (10)
+        max_insert_per_statement: 200            # seed-sized inserts allowed
+        # UPDATE/DELETE still require a bounded WHERE — physics unchanged
+        # prod draft stays at 10. this overlay is dev-only.
