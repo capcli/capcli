@@ -3,52 +3,17 @@
 # Behavioral permission: what capabilities may do.
 # Structure lives in governance.yaml. Zero overlap.
 # Two enforcement layers: authorizer (C-level floor) + AST (semantic ceiling)
+# Not:      environment partitions & per-world overlays → see artifacts/environments.yaml
+# Not:      deployment topology & network transports → see artifacts/transport.yaml
+# Not:      fuel budgets & exhaustion behavior → see artifacts/budget.yaml
+# Not:      rate limits & header calibration → see artifacts/rate-limits.yaml
 # ═══════════════════════════════════════════════════════════════
 version: 5
 lockfile: capcli.lock                 # compiled root hash SSOT
 default: deny                         # THE anchor. everything below carves exceptions
 
-# ───────────────────────────────────────────────────────────────
-# 0. TOPOLOGY & TRANSPORT BEHAVIOR
-# ───────────────────────────────────────────────────────────────
-topology:
-  hub:
-    enforce_remote_authorizer: true    # Hub evaluates Layer 1 authorizer on inbound RPC
-    client_auth: mandatory             # anonymous spokes rejected at TLS handshake
-  spoke_thin:
-    local_compute: deny                # thin spoke sends execution AST to Hub
-    direct_db_access: deny             # all DB ops forward over RPC
-  spoke_fat:
-    local_compute: allow               # runs sandboxed Python/TS locally
-    direct_db_access: deny             # ctx.db calls proxy to Hub C-authorizer
-  spoke_ephemeral:
-    stateless_disk: enforce            # local disk persistence strictly denied
-    quarantine_spool_local: deny       # dropped RPC halts worker (exit 5); no local write
-    on_disconnect: auto_reap           # instantly reap agent identity and leases
-  preemption:
-    trap_sigterm: true                 # intercepts container preemption signals
-    yield_on_sigterm: true             # writes exit 6 checkpoint to Hub _suspended_tasks
-    max_evacuation_ms: 2000            # flush window before hard abort
-
-# ───────────────────────────────────────────────────────────────
-# 0.5 NETWORK TRANSPORTS — socket endpoints, never URPs
-# ───────────────────────────────────────────────────────────────
-# hub and mesh roles are network configuration, not resource pointers.
-# they never enter the URP taxonomy (see cans/action.md#Pointer-taxonomy).
-network:
-  transports:
-    hub:
-      rpc_listen: "tcp://100.64.0.1:4040"       # hub daemon RPC listen endpoint
-      ipc_socket: "unix:///run/capcli/hub.sock" # same-host spoke IPC
-      client_auth: mtls                          # client certificates mandatory at handshake
-    mesh:
-      mode: wireguard                           # mesh role rides an encrypted peer overlay
-      peer_template: "tcp://<peer>:51820"       # per-peer socket template
-    max_evacuation_ms: 2000            # flush window before hard abort
-  dial:
-    total_ms: 10000                # default dial budget covering peer cold start; fail-closed is invariant, the budget is policy: see cans/physics.md#Federation-invariants
-    tick_interval_ms: 500          # socket poll tick
-    backoff: 2.0                   # exponential backoff multiplier per tick
+topology: see artifacts/transport.yaml
+network: see artifacts/transport.yaml
 
 # ───────────────────────────────────────────────────────────────
 # 1. LAYER 1 — compiled to sqlite3_set_authorizer
@@ -153,24 +118,8 @@ trust:
     audit: summary
     may_run_unattended: true                   # schedules in prod
 
-# ───────────────────────────────────────────────────────────────
-# 4. RATE & BUDGET — frequency is behavior
-# ───────────────────────────────────────────────────────────────
-rate:
-  pack_imports_per_day: 10                 # anti-flood intake rate ceiling
-  denials_alert_threshold: 20                  # sustained denial = agent thrashing, surface it
-
-# ───────────────────────────────────────────────────────────────
-# 4.5 BUDGET — behavior on exhaustion (structure lives in governance)
-# ───────────────────────────────────────────────────────────────
-budget:
-  overage_behavior: deny               # behavior: what happens at exhaustion
-  partial_result_on_exhaustion: false  # behavior: no half-execution
-  budget_frame_audit: true             # behavior: every frame is an audit event
-  denial_cites_level: true             # behavior: exit 2 names the frame
-  denial_cites_remaining: true         # behavior: shows remaining
-  denial_cites_ancestors: true         # behavior: shows parent/session context
-  # Structure (cascade, inheritance, scopes) → governance.yaml routine_shape.composition
+rate: see artifacts/rate-limits.yaml
+budget: see artifacts/budget.yaml
 
 # ───────────────────────────────────────────────────────────────
 # 5. API — external effects gated STRICTER (pre-call only, no rollback)
@@ -195,27 +144,8 @@ api:
     mock_fixture_required: true          # mock verbs must have apis/<provider>.mock.yaml
     dry_run_returns_simulated: true      # dry-run verbs return { simulated: true }
     skip_reports_gap: true               # skipped verbs produce manifest gap warning
-  fuel:
-    per_session_fuel: 100000             # integer fuel allocation per session
-    max_call_egress_bytes: 5242880       # 5MB physical wire limit per egress dispatch
-    confirm_above_fuel: 50000            # gate reserved for high wire/compute impact
-  rate_limit:                                    # live quota from provider responses; Dial 1 cadence + Dial 2 ceilings
-    model: leaky_token_bucket                    # client-side leaky bucket slaved to upstream headers
-    default_capacity: 60                         # burst ceiling
-    refill_rate_per_sec: 1.0                     # steady-state token drip
-    monthly_spend_ceiling: 0                     # Dial 2 volume ceiling, provider currency units; 0 = unbounded
-    monthly_call_ceiling: 0                      # Dial 2 volume ceiling in calls; 0 = unbounded
-    pre_call_gate: true                          # socket-edge gate: tokens < 1 → kernel sleeps (<2s) or yields exit 6 (>2s); exit 2 reserved for Dial 2 ceiling breach
-    priority_floors:                             # simple preemption floors for scarce APIs
-      background_yield_tokens: 15                # background yields (exit 6) if tokens < 15
-      standard_yield_tokens: 5                   # standard yields (exit 6) if tokens < 5
-      critical_floor_tokens: 0                   # critical tasks can drain pool to 0
-    header_calibration:                          # reactive headers used ONLY to recalibrate bucket
-      reconcile_on_response: true                # sync local bucket down if provider reports lower
-      on_unexpected_429: zero_bucket_and_yield   # remote 429 instantly drains local bucket to 0 and parks frames (exit 6)
-      parser_engine: dynamic                     # dynamic resolution slaved to doc://specs/<provider>#rate_limit
-      default_reset_header: "RateLimit-Reset"     # IETF RFC standard fallback
-      default_remaining_header: "RateLimit-Remaining"
+  fuel: see artifacts/budget.yaml
+  rate_limit: see artifacts/rate-limits.yaml
   in_flight_polling:
     allow_transient: true                        # permits short-interval status polling in routines
     max_poll_duration_seconds: 30                # hard ceiling for async container/job verification
@@ -297,36 +227,7 @@ identity:
     on_invalid: strip_and_warn                 # malformed → drop field, log warning, don't deny
     # Skills cannot grant authority. This is metadata only — trust still comes from principal + agent.
 
-# ───────────────────────────────────────────────────────────────
-# 8. ENV OVERLAYS — same engine, parameterized per world
-# ───────────────────────────────────────────────────────────────
-env:
-  prod:
-    draft_writes: deny                         # unproven code cannot touch prod
-    intent: required                           # reads too? no — writes; reads stay free
-    confirm_above: { rows: 10 }                # tighter thresholds
-    vacuum: deny
-    api: { fuel: { per_session_fuel: 500000 } }
-    allowed_runtimes: [python, javascript, typescript] # ranked: python 1st, js 2nd, ts 3rd
-    serve: { bind: "127.0.0.1" }               # public lives behind a proxy
-  sim:
-    bulk: { require_pre_count: false }
-    api:
-      base_url_overrides_from: apis/*.sim.yaml
-      mock_fixtures_from: apis/*.mock.yaml
-      deny_sim_mode: [prod-only]           # prod-only verbs physically denied in sim
-    notify: { route_to: "file://envs/sim/telemetry/notifications.jsonl" } # mock file sink; sinks configured in artifacts/governance.yaml#telemetry
-    allowed_runtimes: [python, javascript, typescript]
-  dev:
-    bulk: { require_pre_count: false }
-    allowed_runtimes: [python, javascript, typescript] # permissive exploration
-    confirm_above: { rows: 1000 }              # looser: dev is cheap
-    trust_overlay:                               # draft relaxation for onboarding seeding
-      draft:
-        max_rows_affected: 100                   # 10× looser than prod draft (10)
-        max_insert_per_statement: 200            # seed-sized inserts allowed
-        # UPDATE/DELETE still require a bounded WHERE — physics unchanged
-        # prod draft stays at 10. this overlay is dev-only.
+env: see artifacts/environments.yaml
 
 # ───────────────────────────────────────────────────────────────
 # 9. AUDIT — what gets recorded (the effect's spine)
