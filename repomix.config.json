@@ -36,6 +36,8 @@
   //    "cans/artifacts/capcli.landing-copy.md"
         
     // "!cans/artifacts/*.yaml"
+      //  "!cans/*.md",
+        "!cans/artifacts/wireframe/screens/",
   ],
   "ignore": {
     "useGitignore": true,
@@ -47,11 +49,11 @@
 	"repomix.md",
 	"cans/_adr",
 	"cans/_collab",
-            "cans/artifacts/*.md",
-"cans/artifacts/*.lock",
+    "cans/artifacts/*.md",
+   "cans/artifacts/*.lock",
 "cans/artifacts/SKILL.md",
 "cans/artifacts/test-plan/",
-"!cans/artifacts/wireframe/",
+//"cans/artifacts/wireframe/",
 "cans/artifacts/prompt/"
 		]
   },
