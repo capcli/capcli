@@ -21,7 +21,7 @@
       - cargo build --release --target aarch64-linux-android — Termux
     - Declarative artifacts
       - Path — artifacts/
-      - schema.yaml — domain model
+      - templates/world-schema.yaml — domain model
       - system-schema.yaml — kernel tables
       - policy.yaml — behavioral rules
       - governance.yaml — structural limits
