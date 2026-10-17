@@ -1,7 +1,0 @@
-# ═══════════════════════════════════════════════════════════════
-# client.yaml — RPC transport & white-label specification
-# Pointers: rpc://kernel
-# ═══════════════════════════════════════════════════════════════
-version: 1
-rpc_endpoint: "http://127.0.0.1:4040/rpc"
-ws_tail: "ws://127.0.0.1:4040/ws/audit"
