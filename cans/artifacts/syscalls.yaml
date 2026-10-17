@@ -1,0 +1,25 @@
+# ───────────────────────────────────────────────────────────────
+# syscalls.yaml — seccomp syscall profiles per runtime
+# Owns:     per-runtime seccomp allow/deny profiles (python, javascript, binary) + trap syscall
+# Not:      platform tier classification → see sandbox.md#Platform-tiers
+# Not:      error & exit-code taxonomy (E030, E050) → see errors.yaml
+# Not:      wire/mesh transport & IPC → see transport.yaml
+# Compiled: yes → capcli.lock root hash
+# ───────────────────────────────────────────────────────────────
+version: 1
+
+syscalls:
+  trap_syscall: 42                       # sys_connect trapped to enforce kernel egress proxy
+  profiles:
+    python:
+      pointer: "policy://platform/syscalls/python"
+      allow: [clone, futex, rt_sigreturn, rt_sigaction, mprotect, brk, read, write, close, fstat]
+      deny: [socket, connect, bind, listen, accept]
+    javascript:
+      pointer: "policy://platform/syscalls/javascript"
+      allow: [epoll_create1, epoll_ctl, epoll_wait, eventfd2, io_uring_setup, clone, futex]
+      deny: [socket, connect, bind, listen]
+    binary:
+      pointer: "policy://platform/syscalls/binary"
+      allow: [clone3, futex, rseq, rt_sigreturn, read, write, exit_group]
+      deny: [socket, connect, bind]
