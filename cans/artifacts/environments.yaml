@@ -1,0 +1,33 @@
+# ───────────────────────────────────────────────────────────────
+# environments.yaml — environment partitions, per-world overlays, environment ceilings
+# Owns:     environment partitions (env://dev, env://sim, env://prod), per-world overlays, environment ceilings
+# Not:      verb trust rules & audit log → see policy.yaml
+# Not:      telemetry sinks → see governance.yaml#telemetry
+# Not:      backup & snapshot policy → see storage.yaml
+# Not:      fuel budgets & rate ceilings → see budget.yaml, rate-limits.yaml
+# Not:      masking rules → see masking.yaml
+# Compiled: yes → capcli.lock root hash
+# ───────────────────────────────────────────────────────────────
+version: 1
+
+environments:
+  dev:
+    urp: "env://dev"
+    directory: "envs/dev"
+    database: "envs/dev/workspace.db"
+    audit_db: "envs/dev/audit.db"
+    trust_floor: draft
+  sim:
+    urp: "env://sim"
+    directory: "envs/sim"
+    database: "envs/sim/workspace.db"
+    audit_db: "envs/sim/audit.db"
+    trust_floor: reviewed
+    seed_masking: strict
+  prod:
+    urp: "env://prod"
+    directory: "envs/prod"
+    database: "envs/prod/workspace.db"
+    audit_db: "envs/prod/audit.db"
+    trust_floor: pinned
+    destructive_operations: cryptographic_challenge
