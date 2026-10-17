@@ -332,3 +332,34 @@ tables:
     chk:
       - "status IN ('pending', 'in_flight', 'completed', 'failed', 'dead_letter')"
 
+  _attention_cursors:
+    description: "Per-session attention cursor advanced on every envelope render"
+    sys: true
+    columns:
+      id: pk
+      session: text!                   # kernel session id
+      env: text!                       # world scope
+      cursor: text                     # opaque cursor token over rendered items
+      updated_at: int!                 # last envelope render timestamp
+    idx:
+      - [[session, env]]
+
+  _plugin_attention:
+    description: "Plugin-emitted attention items rendered in the envelope attention block"
+    sys: true
+    columns:
+      id: pk
+      plugin_id: text!                 # emitting plugin id
+      source_name: text!               # source name within the plugin
+      item_id: text!                   # unique within (plugin_id, source_name)
+      class: text=background           # kernel-forced; plugin-supplied class ignored
+      summary: text!                   # rendered summary line
+      affordance_json: json!           # AST-validated affordance command
+      created_at: int!                 # emit timestamp
+      expires_at: int!                 # TTL expiry; renewed by re-emit
+    chk:
+      - "class = 'background'"         # plugin items are always background class
+    idx:
+      - [[plugin_id, source_name, item_id]]
+      - [[expires_at]]
+

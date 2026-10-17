@@ -51,6 +51,14 @@ authorizer:
       allow: [read]
     _outbox_events:
       allow: [read]
+    _bindings:
+      allow: [read]
+    _inbox:
+      allow: [read]
+    _attention_cursors:
+      allow: [read]
+    _plugin_attention:
+      allow: [read]
 
   # Domain views are declared dynamically in schema.yaml and compiled into workspace.db
 
@@ -99,7 +107,7 @@ query:
     confirm_above: { rows: 50000 }             # macro blast-radius floor — operations below this execute fully autonomously; measures aggregate pre-count across chunks, not per-statement rows
 
   system_tables:
-    deny_write: [_audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, routine_stats, _suspended_tasks, _packs, _outbox_events]
+    deny_write: [_audit, _api_quota, _api_catalog, _budget_frames, secrets, agents, claims, _pending_asks, _watch_cursors, routine_stats, _suspended_tasks, _packs, _outbox_events, _bindings, _inbox, _attention_cursors, _plugin_attention]
     deny_read: []                              # reads allowed; writes are kernel-internal
 
 # ───────────────────────────────────────────────────────────────
