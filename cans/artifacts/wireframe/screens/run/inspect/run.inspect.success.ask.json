@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.ask",
+  "target": "ask://ask_88a",
+  "command": "capcli inspect ask://ask_88a",
+  "elapsed_ms": 63,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "target": "ask://ask_88a",
+          "question": "Flag transfer TXN-9918 as fraud?",
+          "options": "approve, deny, escalate",
+          "status": "pending",
+          "frame": "frame_026 (suspended, exits 6 until resolved)"
+        }
+      },
+      {
+        "fields": {
+          "preflight": "ask exists and is unresolved",
+          "can_invoke_now": "true"
+        }
+      }
+    ]
+  }
+}

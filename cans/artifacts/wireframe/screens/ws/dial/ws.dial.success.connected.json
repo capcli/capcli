@@ -1,0 +1,28 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "ws.dial.success.connected",
+  "target": "agt_7f3k",
+  "command": "capcli ws dial agt_7f3k",
+  "elapsed_ms": 412,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "audit_op": "op_9f44",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "peer": "agt_7f3k",
+          "session": "ses_w042",
+          "socket": "/run/capcli/tasks.sock (SO_PEERCRED ok)",
+          "trust_floor": "pinned",
+          "call_chain": "[]"
+        }
+      }
+    ]
+  }
+}

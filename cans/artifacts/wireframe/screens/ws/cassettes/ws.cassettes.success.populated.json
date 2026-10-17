@@ -1,0 +1,30 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "ws.cassettes.success.populated",
+  "target": "cassettes",
+  "command": "capcli ws cassettes",
+  "elapsed_ms": 84,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "dial_create_todo.jsonl": "ws://tasks/create_todo@v1 (recorded 2026-10-12, 14 frames)",
+          "dial_ship_status.jsonl": "ws://tasks/ship_status@v2 (recorded 2026-10-14, 9 frames)"
+        }
+      },
+      {
+        "fields": {
+          "total": "2 recorded cassettes"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "serve.stop.success.stopped",
+  "target": "http-server",
+  "command": "capcli serve stop",
+  "elapsed_ms": 204,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "audit_op": "op_9f40",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "daemon": "http-server pack projection",
+          "pid": "41822 (reaped)",
+          "uptime": "3h 12m",
+          "endpoints": "2 released"
+        }
+      }
+    ]
+  }
+}

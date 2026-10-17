@@ -1,0 +1,31 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.vault_list.success.populated",
+  "target": "vault",
+  "command": "capcli sys vault list",
+  "elapsed_ms": 64,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "stripe_secret_key": "masked — plaintext never echoed to any output stream",
+          "github_token": "masked — plaintext never echoed to any output stream",
+          "anthropic_key": "masked — plaintext never echoed to any output stream"
+        }
+      },
+      {
+        "fields": {
+          "total": "3 names (values never listed)"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.vault_list.success.empty",
+  "target": "vault",
+  "command": "capcli sys vault list",
+  "elapsed_ms": 41,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "draft",
+    "data_shape": "empty"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "total": "0 names"
+        }
+      },
+      {
+        "lines": [
+          "No secrets vaulted. Add one with 'capcli sys vault set <name> --in @-'."
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "ws.status.success.running",
+  "target": "sessions",
+  "command": "capcli ws status",
+  "elapsed_ms": 61,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "ses_w042": "agt_7f3k (unix_socket, pinned, idle 12s)",
+          "transport": "unix_socket"
+        }
+      },
+      {
+        "fields": {
+          "total": "1 active session"
+        }
+      }
+    ]
+  }
+}

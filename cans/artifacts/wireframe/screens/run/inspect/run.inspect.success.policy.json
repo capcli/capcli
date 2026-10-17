@@ -1,0 +1,32 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.policy",
+  "target": "policy://budgets",
+  "command": "capcli inspect policy://budgets",
+  "elapsed_ms": 54,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "target": "policy://budgets",
+          "artifact": "policy.yaml",
+          "keys": "frame_ops_ceiling, monthly_egress_ceiling, per_verb_fuel",
+          "digest": "sha256:1b8e93a7d2f0065be34c881a9d20f7e5c3b6a84c"
+        }
+      },
+      {
+        "fields": {
+          "preflight": "policy bundle pinned; no drift from registry",
+          "can_invoke_now": "true"
+        }
+      }
+    ]
+  }
+}

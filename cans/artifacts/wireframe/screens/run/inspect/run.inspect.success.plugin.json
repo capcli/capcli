@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.plugin",
+  "target": "plugin://http-server",
+  "command": "capcli inspect plugin://http-server",
+  "elapsed_ms": 96,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "target": "plugin://http-server",
+          "cli_noun": "serve",
+          "verbs": "start, stop, restart, status, export",
+          "trust_floor": "pinned",
+          "generation": "4"
+        }
+      },
+      {
+        "fields": {
+          "preflight": "projection mounted; noun live",
+          "can_invoke_now": "true"
+        }
+      }
+    ]
+  }
+}

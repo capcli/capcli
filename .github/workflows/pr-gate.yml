@@ -67,7 +67,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - name: Verify cans spec (0 errors, 0 broken refs)
-        run: bunx -y cans-spec@0.5.1 check cans
+        run: bunx -y cans-spec@0.5.1 check
 
   build-pwa:
     needs: changes

@@ -1,0 +1,29 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "serve.status.success.running",
+  "target": "http-server",
+  "command": "capcli serve status",
+  "elapsed_ms": 73,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "daemon": "http-server pack projection",
+          "state": "running",
+          "pid": "52107",
+          "port": "4040",
+          "uptime": "42m",
+          "sessions": "2 active"
+        }
+      }
+    ]
+  }
+}

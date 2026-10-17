@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.audit",
+  "target": "audit://op_9f2e",
+  "command": "capcli inspect audit://op_9f2e",
+  "elapsed_ms": 71,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "target": "audit://op_9f2e",
+          "command": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042",
+          "exit": "0",
+          "causal_depth": "4 leaves",
+          "chain": "prev_hash verified; 0 broken links"
+        }
+      },
+      {
+        "fields": {
+          "preflight": "audit spine readable",
+          "can_invoke_now": "true"
+        }
+      }
+    ]
+  }
+}

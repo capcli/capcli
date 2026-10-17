@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.update.success.completed",
+  "target": "kernel",
+  "command": "capcli sys update --to 0.5.2",
+  "elapsed_ms": 48210,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "audit_op": "op_9f3d",
+  "archetype": "receipt",
+  "component": {
+    "title": "update",
+    "groups": [
+      {
+        "fields": {
+          "target": "0.5.2 (installed: 0.5.1)",
+          "stages": "6/6 committed (kernel binary, artifacts, plugins, packs, api catalogs, schema migrations)",
+          "audit_leaves": "6 — one per stage, chain advanced each",
+          "trust_rungs": "unchanged by update",
+          "partial": "none — per-component atomic, never partial across components"
+        }
+      },
+      {
+        "lines": [
+          "kernel binary self-update verified against release signature"
+        ]
+      }
+    ]
+  }
+}

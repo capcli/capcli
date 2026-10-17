@@ -1,0 +1,24 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.update.denial.incompatible_downgrade",
+  "target": "kernel",
+  "command": "capcli sys update --to 0.4.9",
+  "elapsed_ms": 41,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "diagnostic",
+  "component": {
+    "rule": "policy.update.incompatible_downgrade",
+    "domain": "policy.update",
+    "layer": "preflight",
+    "culprit": "Target 0.4.9 is incompatible with the current schema generation; schema migrations never downgrade.",
+    "measured": "installed schema gen 12 > target schema gen 9",
+    "remedy": "target a version at or above the current schema generation, or restore from a pre-migration snapshot",
+    "lines": [
+      "Target 0.4.9 rejected: incompatible downgrade."
+    ]
+  }
+}

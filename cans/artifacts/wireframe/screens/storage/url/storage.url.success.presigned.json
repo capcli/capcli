@@ -1,0 +1,25 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "storage.url.success.presigned",
+  "target": "reports/r1.pdf",
+  "command": "capcli storage url reports/r1.pdf --ttl 3600",
+  "elapsed_ms": 88,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "key": "reports/r1.pdf",
+          "url": "https://objects.capcli.local/reports/r1.pdf?expires=3600&sig=<signature>",
+          "expires_in": "3600s"
+        }
+      }
+    ]
+  }
+}

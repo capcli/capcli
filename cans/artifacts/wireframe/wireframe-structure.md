@@ -86,18 +86,22 @@ cans/artifacts/wireframe/
     sys/
       help/
       inbox/
+      init/
       tail/
       trace/
       query/
       replay/
+      audit_sample/
       register/
       agents/
       revoke/
       vault_set/
       vault_import/
+      vault_list/
       doctor/
       backup/
       recover/
+      update/
       exec/
       serve/
       swarm/
@@ -114,6 +118,16 @@ cans/artifacts/wireframe/
       sync/
     serve/
       export/
+      start/
+      stop/
+      restart/
+      status/
+    storage/
+      put/
+      get/
+      url/
+      list/
+      remove/
     plugin/
       install/
       link/
@@ -127,6 +141,11 @@ cans/artifacts/wireframe/
       search/
       logs/
       doctor/
+    ws/
+      peers/
+      dial/
+      status/
+      cassettes/
 ```
 
 ### 1.1 Structural Invariants
@@ -181,7 +200,7 @@ resolves to one fixture shape and every fixture shape has one row —
 the validator enforces closure, and in any conflict the fixture wins.
 
 
-### 4.1 `run/` (6 verbs → 53 screens)
+### 4.1 `run/` (6 verbs → 58 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -234,11 +253,16 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.inspect.success.pack` | success | 0 | — | populated | pack:// blueprint pre-flight envelope via capcli inspect |
 | `run.inspect.refusal.unregistered_scheme` | refusal | 3 | missing_param | unregistered_scheme | tcp:// transport endpoint refused: not a registered URP scheme; remedy capcli sys swarm list |
 | `run.inspect.success.ws` | success | 0 | — | populated | ws:// federated routine pre-flight envelope via capcli inspect |
-| `ws.peers.success.empty` | success | 0 | — | empty | Zero federated peers registered |
 | `run.inspect.refusal.not_found` | refusal | 3 | validation | not_found | Pack URP does not resolve |
 | `run.inspect.refusal.missing_ptr` | refusal | 3 | missing_param | missing_arg | Unrecognized target pointer format |
 | `run.inspect.refusal.removed_scheme` | refusal | 3 | missing_param | removed_scheme | hub:// removed scheme refused at parse with exit 3 |
 | `run.inspect.success.masked` | success | 0 | — | redacted | Secret references rendered as [REDACTED_VAULT_TOKEN]; inspect exits 0 on all rungs |
+| `run.inspect.success.plugin` | success | 0 | — | populated | Plugin CLI noun envelope: cli_noun, verbs, rung, generation for plugin:// id |
+| `run.inspect.success.vault` | success | 0 | — | populated | Vault secret metadata envelope; value masked for vault:// name |
+| `run.inspect.success.audit` | success | 0 | — | populated | Audit op causal summary for audit:// op id |
+| `run.inspect.success.ask` | success | 0 | — | populated | Pending ask question, options, and frame for ask:// id |
+| `run.inspect.success.policy` | success | 0 | — | populated | Policy bundle keys and digest for policy:// node |
+| `run.inspect.success.db` | success | 0 | — | populated | DB entity inspection: columns, rows, write grants for db:// table |
 | `run.abort.success.aborted` | success | 0 | — | aborted | Suspended frame purged; OCC fence released |
 | `run.execute.success.attention` | success | 0 | — | attention | Commit landed with nonzero attention; `top` carries the pending ask and inbox rows |
 | `run.abort.refusal.unknown_frame` | refusal | 3 | missing_param | unknown_frame | Abort target frame not suspended |
@@ -425,7 +449,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `env.remove.denial.crypto_sig` | denial | 2 | policy.authorizer | confirmation | Prod requires out-of-band challenge signature |
 | `env.remove.refusal.not_found` | refusal | 3 | validation | not_found | Target environment not found |
 
-### 4.9 `sys/` (18 verbs → 54 screens)
+### 4.9 `sys/` (22 verbs → 64 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
@@ -474,6 +498,16 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.recover.success.restored` | success | 0 | — | restored | Reconstructed from object store |
 | `sys.recover.refusal.not_found` | refusal | 3 | validation | not_found | Recovery snapshot missing |
 | `sys.recover.denial.active_locks`| denial | 2 | db.claims | active_locks | Active locks prevent state reversal |
+| `sys.update.success.completed` | success | 0 | — | completed | Governed update to target; all 6 stages committed, trust rungs unchanged |
+| `sys.update.denial.incompatible_downgrade` | denial | 2 | policy.update | incompatible_downgrade | Target below current schema generation; schema migrations never downgrade |
+| `sys.update.refusal.unknown_stage` | refusal | 3 | validation | unknown_stage | Stage outside the 1-6 pipeline |
+| `sys.init.success.initialized` | success | 0 | — | initialized | Ledger re-initialized after total media loss; dual confirmation completed |
+| `sys.init.refusal.declined` | refusal | 3 | validation | declined | Operator declined the second confirmation; no state modified |
+| `sys.init.denial.ledger_intact` | denial | 2 | policy.authorizer | ledger_intact | Healthy ledger refuses destructive --fresh re-init |
+| `sys.vault_list.success.populated` | success | 0 | — | populated | Secret names listed; values never echoed |
+| `sys.vault_list.success.empty` | success | 0 | — | empty | No secrets vaulted |
+| `sys.audit_sample.success.sampled` | success | 0 | — | sampled | Cost evidence sampled from _audit; synthetic fixtures banned |
+| `sys.recover.success.listed` | success | 0 | — | listed | Snapshot catalog points displayed |
 | `sys.exec.success.completed` | success | 0 | — | completed | Isolated command executed in jail |
 | `sys.exec.denial.sandbox` | denial | 2 | kernel.sandbox | violation | Attempted unconfined escape |
 | `sys.exec.crash.runtime` | crash | 4 | routine.runtime | crash | Executable process crash |
@@ -514,12 +548,16 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `pack.scaffold.denial.target_exists` | denial | 2 | policy.authoring | target_exists | Target file or environment already exists |
 
 
-### 4.12 `serve/` (1 verb → 2 screens)
+### 4.12 `serve/` (5 verbs → 6 screens)
 
 | Screen ID | State | Exit | Domain | Condition | Description |
 |---|---|---|---|---|---|
 | `serve.export.success.openapi` | success | 0 | — | exported | OpenAPI schema exported via serve export |
 | `serve.export.success.mcp` | success | 0 | — | exported | MCP tool definition exported via serve export |
+| `serve.start.success.started` | success | 0 | — | started | Daemon started on port 4040 |
+| `serve.stop.success.stopped` | success | 0 | — | stopped | Daemon stopped; endpoints released |
+| `serve.restart.success.restarted` | success | 0 | — | restarted | Daemon rebound on a new pid |
+| `serve.status.success.running` | success | 0 | — | running | Daemon health, sessions, uptime |
 
 ### 4.13 `plugin/` (12 verbs → 12 screens)
 
@@ -537,6 +575,28 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `plugin.search.success.matched` | success | 0 | — | matched | Registry search returned ranked matches |
 | `plugin.logs.success.tailed` | success | 0 | — | tailed | Plugin ring-buffer logs tailed |
 | `plugin.doctor.success.healthy` | success | 0 | — | healthy | Tri-Jail probes pass; syscall 42 trapping asserted |
+---
+
+### 4.14 `ws/` (4 verbs → 5 screens)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `ws.peers.success.empty` | success | 0 | — | empty | Zero federated peers registered |
+| `ws.peers.success.populated` | success | 0 | — | populated | Federated peers listed with rung and allowlist state |
+| `ws.dial.success.connected` | success | 0 | — | connected | Federation session opened to peer |
+| `ws.status.success.running` | success | 0 | — | running | Active federation sessions and transports |
+| `ws.cassettes.success.populated` | success | 0 | — | populated | Recorded peer replay cassettes listed |
+---
+
+### 4.15 `storage/` (5 verbs → 5 screens)
+
+| Screen ID | State | Exit | Domain | Condition | Description |
+|---|---|---|---|---|---|
+| `storage.put.success.put` | success | 0 | — | put | Object stored; sha256 recorded |
+| `storage.get.success.retrieved` | success | 0 | — | retrieved | Object fetched to disk via --out |
+| `storage.url.success.presigned` | success | 0 | — | presigned | Time-boxed presigned URL issued |
+| `storage.list.success.populated` | success | 0 | — | populated | Objects listed under prefix |
+| `storage.remove.success.removed` | success | 0 | — | removed | Object tombstoned; prior versions retained |
 ---
 
 ## 5. Canonical Screen Fixtures

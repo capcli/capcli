@@ -1,0 +1,26 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "storage.remove.success.removed",
+  "target": "reports/r1.pdf",
+  "command": "capcli storage remove reports/r1.pdf",
+  "elapsed_ms": 129,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed"
+  },
+  "audit_op": "op_9f43",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "key": "reports/r1.pdf",
+          "removed": "v1 tombstoned; prior versions retained",
+          "bytes_reclaimed": "241802"
+        }
+      }
+    ]
+  }
+}

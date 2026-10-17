@@ -1,0 +1,33 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "run.inspect.success.db",
+  "target": "db://orders",
+  "command": "capcli inspect db://orders",
+  "elapsed_ms": 67,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "target": "db://orders",
+          "kind": "domain table (kernel system schema)",
+          "columns": "id, status, carrier, tracking, created_at",
+          "rows": "12,408",
+          "writes": "authorizer-gated"
+        }
+      },
+      {
+        "fields": {
+          "preflight": "table exists; caller holds read grant",
+          "can_invoke_now": "true"
+        }
+      }
+    ]
+  }
+}

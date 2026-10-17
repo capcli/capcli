@@ -1,0 +1,27 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "storage.put.success.put",
+  "target": "reports/r1.pdf",
+  "command": "capcli storage put ./report.pdf --key reports/r1.pdf",
+  "elapsed_ms": 342,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed"
+  },
+  "audit_op": "op_9f42",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "key": "reports/r1.pdf",
+          "bytes": "241802",
+          "sha256": "7f9a1b2c4d8e001fa882bc19488a09b2e4f019c",
+          "version": "v1"
+        }
+      }
+    ]
+  }
+}

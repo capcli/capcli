@@ -1,0 +1,27 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "serve.start.success.started",
+  "target": "http-server",
+  "command": "capcli serve start --port 4040",
+  "elapsed_ms": 612,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "audit_op": "op_9f3f",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "daemon": "http-server pack projection",
+          "pid": "41822",
+          "port": "4040",
+          "endpoints": "2 bound (dispatch_order@4, report_summary@3)"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.audit_sample.success.sampled",
+  "target": "_audit",
+  "command": "capcli sys audit sample --capability process_wholesale_order --limit 10",
+  "elapsed_ms": 187,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "capability": "process_wholesale_order",
+          "window": "last 30 days",
+          "rows_scanned": "1,204",
+          "sampled": "10 (limit 10)",
+          "fuel_total": "3,412 integer compute",
+          "wire_bytes_total": "88,104",
+          "provenance": "real historical values — synthetic fixtures banned for evidence"
+        }
+      },
+      {
+        "lines": [
+          "evidence source: _audit mirror; config per artifacts/governance.yaml"
+        ]
+      }
+    ]
+  }
+}

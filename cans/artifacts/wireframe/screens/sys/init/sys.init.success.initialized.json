@@ -1,0 +1,32 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "sys.init.success.initialized",
+  "target": "ledger",
+  "command": "capcli sys init --fresh",
+  "elapsed_ms": 3110,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "audit_op": "op_9f3e",
+  "archetype": "receipt",
+  "component": {
+    "title": "init",
+    "groups": [
+      {
+        "fields": {
+          "event": "kernel.genesis.data_loss opened the new ledger",
+          "confirmations": "2/2 — typed reason recorded, operator key signature verified",
+          "schema_version": "genesis (system-schema hash verified)",
+          "ledger_root_hash": "sha256:9d2c4e1a7b5f0836c1d9e4a2f7b60583d1c9e4a7"
+        }
+      },
+      {
+        "lines": [
+          "note: sole write path out of total media loss; prior ledger archived to WORM"
+        ]
+      }
+    ]
+  }
+}

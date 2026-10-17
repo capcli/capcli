@@ -1,0 +1,28 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "serve.restart.success.restarted",
+  "target": "http-server",
+  "command": "capcli serve restart",
+  "elapsed_ms": 890,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "pinned"
+  },
+  "audit_op": "op_9f41",
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "daemon": "http-server pack projection",
+          "old_pid": "41822 (reaped)",
+          "new_pid": "52107",
+          "port": "4040",
+          "endpoints": "2 rebound (dispatch_order@4, report_summary@3)"
+        }
+      }
+    ]
+  }
+}

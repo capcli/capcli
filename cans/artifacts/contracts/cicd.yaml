@@ -112,7 +112,7 @@ gates:
     job: check-cans
     trigger:
       - 'cans/**'
-    command: bunx -y cans-spec@0.5.1 check cans
+    command: bunx -y cans-spec@0.5.1 check
     pass_criteria:
       errors: 0
       broken_refs: 0

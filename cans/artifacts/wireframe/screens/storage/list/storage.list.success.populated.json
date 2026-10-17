@@ -1,0 +1,31 @@
+{
+  "$schema": "wireframe/v2",
+  "id": "storage.list.success.populated",
+  "target": "objects",
+  "command": "capcli storage list --prefix reports/",
+  "elapsed_ms": 96,
+  "context": {
+    "env": "dev",
+    "tier": "tier_1",
+    "trust": "reviewed",
+    "data_shape": "populated"
+  },
+  "archetype": "receipt",
+  "component": {
+    "title": null,
+    "groups": [
+      {
+        "fields": {
+          "reports/r1.pdf": "241802 bytes (v1)",
+          "reports/r2.pdf": "118044 bytes (v3)",
+          "reports/summary.md": "2048 bytes (v1)"
+        }
+      },
+      {
+        "fields": {
+          "total": "3 objects"
+        }
+      }
+    ]
+  }
+}
