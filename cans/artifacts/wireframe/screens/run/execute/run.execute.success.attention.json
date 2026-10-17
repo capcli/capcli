@@ -53,7 +53,7 @@
         "id": "ask_88a",
         "class": "critical",
         "source": "ping.ask",
-        "summary": "Human approval requested: refund ORD-1042 (charge ch_1N2x)",
+        "summary": "Fraud score 0.83 on ORD-1042. Approve dispatch?",
         "affordance": {
           "rel": "next",
           "command": "capcli ping resolve ask_88a --choice approve",

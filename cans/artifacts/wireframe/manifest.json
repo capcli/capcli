@@ -20,7 +20,7 @@
     "env": ["dev", "sim", "prod"],
     "tier": ["tier_1", "tier_2"],
     "budget": ["active", "exhausted", "yielded"],
-    "data": ["populated", "empty", "truncated", "redirected", "dry_run"]
+    "data": ["populated", "empty", "truncated", "redirected", "dry_run", "masked"]
   },
   "env_policy": {
     "reserved": ["dev", "sim", "prod"],
@@ -34,7 +34,7 @@
     "machine_format": "--json structured envelope",
     "archetype_dispatch": "exits [2, 3, 4, 5, 6] → diagnostic; exit 0 → receipt|tree|document resolved by component",
     "divider_character": "─",
-    "denial_keys": ["domain", "culprit", "remedy", "layer"],
+    "denial_keys": ["domain", "culprit", "remedy"],
     "pagination": {
       "max_result_tokens": 500,
       "mandate": "keyset_schema",

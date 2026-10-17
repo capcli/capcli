@@ -4,7 +4,7 @@
   "command": "capcli sys doctor --boot-check",
   "component": {
     "culprit": "no isolation provider available on tier_1: bwrap absent from PATH, automatic fallback to container (rootless OCI: crun/podman) failed, fallback to microvm (gVisor) failed",
-    "domain": "compile",
+    "domain": "kernel.boot",
     "lines": [
       "FATAL  kernel.boot.missing_dependency",
       "Isolation probe failed on tier_1 (linux x86_64): bwrap absent, container fallback failed, microvm fallback failed.",

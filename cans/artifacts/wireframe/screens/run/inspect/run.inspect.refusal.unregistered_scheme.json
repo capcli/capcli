@@ -1,13 +1,5 @@
 {
   "$schema": "wireframe/v2",
-  "affordances": [
-    {
-      "command": "capcli sys swarm list",
-      "intent": "List swarm nodes connected to the Hub endpoint",
-      "rel": "next",
-      "risk": "safe"
-    }
-  ],
   "archetype": "diagnostic",
   "command": "capcli inspect tcp://100.64.0.1:4040",
   "component": {

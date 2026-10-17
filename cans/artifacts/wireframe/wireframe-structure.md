@@ -189,6 +189,8 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `run.execute.success.redirected` | success | 0 | — | redirected | Payload directed to file via `--out`; stdout emits receipt |
 | `run.execute.success.truncated` | success | 0 | — | truncated | Result >500 tokens; returns `next_cursor` |
 | `run.execute.success.echo_scrubbed` | success | 0 | — | echo_scrubbed | Upstream 400 echoed a credential; wire filter scrubbed to `[REDACTED_VAULT_TOKEN]` before sandbox |
+| `run.execute.success.resumed_ask` | success | 0 | — | resumed_ask | Ask-resolved resume; frame_026 continues after human approval |
+| `run.execute.success.announced` | success | 0 | — | announced | Service incident notice posted after quota window reset |
 | `run.execute.denial.budget` | denial | 2 | policy.budget | exhausted | Frame ops/duration ceiling exhausted |
 | `run.execute.denial.budget_cascade` | denial | 2 | policy.budget | starved | Pre-flight call-tree analysis detects starved child branch; invocation blocked |
 | `run.execute.denial.trust` | denial | 2 | policy.trust | unproven | Draft routine executed in prod |
@@ -275,8 +277,11 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `routine.prove.denial.sandbox` | denial | 2 | kernel.sandbox | breach | Jail containment boundary violation |
 | `routine.prove.crash.runtime` | crash | 4 | routine.runtime | exception | Uncaught exception in test pass |
 | `routine.ship.success.shipped` | success | 0 | — | shipped | Routine promoted to new trust rung |
+| `routine.ship.success.shipped_overview` | success | 0 | — | shipped_overview | Overview routine promoted after sim prove and human sign-off |
+| `routine.ship.success.shipped_sync_orders` | success | 0 | — | shipped_sync_orders | sync_orders pinned on clean sim replay and batch sign-off |
 | `routine.ship.success.rolled_back` | success | 0 | — | rolled_back | Canary telemetry trips auto-rollback |
 | `routine.ship.success.queued` | success | 0 | — | queued | Enqueued for human review; zero code shipped |
+| `routine.ship.success.queued_overview` | success | 0 | — | queued_overview | Overview enqueued for human review; zero code shipped |
 | `routine.ship.denial.metrics` | denial | 2 | policy.authorizer | low_success | Success rate falls below 0.95 |
 | `routine.ship.refusal.missing_reason`| refusal | 3 | missing_param | missing_arg | Elevation to pinned requires reason |
 | `routine.ship.denial.trust` | denial | 2 | policy.trust | promotion_signoff | Pinned promotion denied without human or Tier-1 CI sign-off |
@@ -456,7 +461,7 @@ the validator enforces closure, and in any conflict the fixture wins.
 | `sys.doctor.success.nominal` | success | 0 | — | nominal | Host doctor readiness check |
 | `sys.doctor.success.report` | success | 0 | — | report | Full YAML Trust Receipt |
 | `sys.doctor.denial.drift` | denial | 2 | policy.authorizer | drift | Live DB differs from declaration |
-| `sys.doctor.refusal.boot` | refusal | 3 | compile | missing_dep | All isolation providers failed on tier_1 (bwrap absent; container and microvm fallbacks exhausted) |
+| `sys.doctor.refusal.boot` | refusal | 3 | kernel.boot | missing_dep | All isolation providers failed on tier_1 (bwrap absent; container and microvm fallbacks exhausted) |
 | `sys.doctor.success.clock_drift`| success| 0 | — | clock_skew | Host clock delta >500ms vs NTP (warning only) |
 | `sys.doctor.panic.tamper` | panic | 5 | kernel.panic | tampered | Total media loss: ledger root + WORM checkpoint unreadable; kill_and_alert |
 | `sys.doctor.success.recovery` | success | 0 | — | recovery | Break-glass recovery mode |
@@ -881,29 +886,26 @@ Fixture (`wireframe/v2`):
   "$schema": "wireframe/v2",
   "id": "run.sql.denial.authorizer_reviewed",
   "target": "db://orders",
-  "command": "capcli sql \"ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0\" -m \"add priority flag for rush shipping\"",
+  "command": "capcli sql \"ALTER TABLE orders ADD COLUMN rush boolean\" --dry-run",
   "context": {
     "env": "dev",
     "tier": "tier_1",
-    "trust": "reviewed",
-    "data_shape": "dry_run"
+    "trust": "reviewed"
   },
   "archetype": "diagnostic",
+  "audit_op": "op_9f2m",
   "component": {
     "domain": "policy.authorizer",
-    "layer": "kernel",
-    "culprit": "raw DDL (ALTER TABLE orders) issued via capcli sql by a reviewed principal",
-    "measured": "trust: reviewed",
-    "remedy": "raw ALTER/DROP/CREATE TABLE is denied for draft and reviewed principals, exit 2; the kernel 4-phase migration pipeline (rule plan -> rule rehearse in sim -> rule apply) is the sole legal DDL path"
-  },
-  "affordances": [
-    {
-      "rel": "next",
-      "command": "capcli rule plan --name \"add_order_priority\" -m \"rush shipping priority flag\"",
-      "intent": "Start the kernel migration pipeline instead of raw DDL",
-      "risk": "safe"
+    "layer": "authorizer",
+    "culprit": "Raw DDL denied at the C authorizer for reviewed principals; raw DDL is denied for draft and reviewed alike.",
+    "measured": "statement rejected at prepare; 0 rows touched",
+    "remedy": "declare the column in schema.yaml and ship it via the 4-phase migration pipeline (rule plan -> rule rehearse in sim -> rule apply schema)",
+    "rule": "policy.authorizer.alter_table",
+    "span": {
+      "highlight": "ALTER TABLE",
+      "source": "ALTER TABLE orders ADD COLUMN rush boolean"
     }
-  ]
+  }
 }
 ```
 
@@ -913,13 +915,12 @@ Rendered output:
 [dev:tier_1]  denial  exit 2
 
   error[policy.authorizer]: raw DDL denied
-   --> statement: ALTER TABLE orders ADD COLUMN priority integer DEFAULT 0
+   --> statement: ALTER TABLE orders ADD COLUMN rush boolean
     |
-  culprit:  raw DDL (ALTER TABLE orders) issued via capcli sql by a reviewed principal
-  measured: trust: reviewed
-  remedy:   raw ALTER/DROP/CREATE TABLE is denied for draft and reviewed principals, exit 2;
-            the kernel 4-phase migration pipeline (rule plan -> rule rehearse in sim -> rule apply)
-            is the sole legal DDL path
+  culprit:  Raw DDL denied at the C authorizer for reviewed principals; raw DDL is denied for draft and reviewed alike.
+  measured: statement rejected at prepare; 0 rows touched
+  remedy:   declare the column in schema.yaml and ship it via the 4-phase migration pipeline
+            (rule plan -> rule rehearse in sim -> rule apply schema)
 
   state_modified: false
 ```
@@ -1393,7 +1394,7 @@ Fixture (`wireframe/v2`):
         "id": "ask_88a",
         "class": "critical",
         "source": "ping.ask",
-        "summary": "Human approval requested: refund ORD-1042 (charge ch_1N2x)",
+        "summary": "Fraud score 0.83 on ORD-1042. Approve dispatch?",
         "affordance": {
           "rel": "next",
           "command": "capcli ping resolve ask_88a --choice approve",
@@ -1561,7 +1562,7 @@ Root field law:
 Derived-state law:
 
 - The exit code derives from the `id` state segment: `success` 0, `denial` 2, `refusal` 3, `crash` 4, `panic` 5, `yield` 6. Fixtures carry no `exit_code`; state and domain legality lives in `_states.json`.
-- Fixtures carry no `state_modified`. A non-zero exit carries `state_modified: false` as a kernel invariant (kernel.md#Exit-code-law). Success screens take `state_modified` from the exit-0 variants in `_states.json` (`committed`, `dry_run`, `suspended`, `resumed`). A renderer emits a `state_modified` row from the derived value only; the fixture never stores it.
+- Fixtures carry no `state_modified`. A non-zero exit carries `state_modified: false` as a kernel invariant (kernel.md#Exit-code-law). Success screens take `state_modified` from the exit-0 variants in `_states.json` (`committed`, `dry_run`, `resumed`). A renderer emits a `state_modified` row from the derived value only; the fixture never stores it.
 - A stored `state_modified` key at envelope root, inside `component.groups[].fields`, inside `component.footer`, or inside `component.fields` carries the same ban at every depth; `_states.json` and the exit are the single home of the value.
 - A diagnostic component carries `domain` once, in the component. Success components carry no `domain`.
 - Archetype dispatch is deterministic: states `denial`, `refusal`, `crash`, `panic`, `yield` are `diagnostic`; `success` resolves to `receipt`, `tree`, or `document` by content (key-value summary, hierarchy, prose slice or help). Archetype law — cans/kernel.md#Diagnostic-output-law.

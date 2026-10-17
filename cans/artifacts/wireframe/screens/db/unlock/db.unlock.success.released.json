@@ -17,8 +17,8 @@
       {
         "fields": {
           "target": "orders:ORD-10",
-          "lease_id": "claim_9d21",
-          "holder": "agt_7f3k",
+          "lease_id": "claim_c3d4",
+          "holder": "agt_9k2w",
           "ttl_remaining": "187s (released ahead of TTL)"
         }
       }

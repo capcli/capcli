@@ -18,7 +18,7 @@
         "fields": {
           "target": "orders:ORD-10",
           "ttl": "300s",
-          "lease_id": "claim_9d21",
+          "lease_id": "claim_9d21 (new lease, acquired after holder release)",
           "holder": "agt_7f3k",
           "reason": "batch fulfillment"
         }

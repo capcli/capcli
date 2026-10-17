@@ -154,7 +154,7 @@
       "color": "#c026d3",
       "entry": "api.sync.refusal.missing_url",
       "terminal": "api.retire.success.completed",
-      "description": "Sync gates (spec url required, rate ceiling) -> stripe spec synced -> drift diff (threads clean, stripe populated) -> catalog shapes (empty, truncated, populated) -> prove gates (sim gap, policy) -> stripe.refund_charge passes in sim -> ship ladder (reason required, replay metrics, shipped, graduated) -> stats -> rollback gauntlet (depth, unknown version, restored) -> retirement"
+      "description": "Cross-provider API-verb tour across stripe, threads, and shopify: sync gates (spec url required, rate ceiling) -> stripe spec synced -> drift diff, threads clean vs stripe populated -> catalog shapes (empty, truncated, populated) -> prove gates (threads sim gap, stripe policy) -> stripe.refund_charge passes in sim -> ship ladder (reason required, replay metrics, shipped, graduated) -> stats, shopify not found vs stripe populated -> rollback gauntlet (depth, unknown version, restored) -> stripe retirement"
     },
     "journey_routine_lifecycle": {
       "name": "Routine Lifecycle: Author, Prove, Ship, Queue",
@@ -347,7 +347,7 @@
       ],
       "trigger": "inspect_trace",
       "label": "capcli sys audit trace op_9f2e --explain",
-      "arrow_type": "denial",
+      "arrow_type": "progress",
       "ui": {
         "button_text": "Diagnose Cause (--explain)",
         "hotkey": "d"
@@ -401,8 +401,7 @@
     {
       "id": "t_promotion_queue_to_ship",
       "journeys": [
-        "journey_trust_promotion",
-        "journey_human_onboarding"
+        "journey_trust_promotion"
       ],
       "from": [
         "routine.pending.success.populated"
@@ -412,6 +411,21 @@
       ],
       "trigger": "commit_ship",
       "label": "capcli routine ship order_sync pinned --reason \"30d clean canary\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_promotion_queue_to_ship_sync_orders",
+      "journeys": [
+        "journey_human_onboarding"
+      ],
+      "from": [
+        "routine.pending.success.populated"
+      ],
+      "to": [
+        "routine.ship.success.shipped_sync_orders"
+      ],
+      "trigger": "commit_ship",
+      "label": "capcli routine ship sync_orders pinned --reason \"sim replay clean, human batch sign-off\"",
       "arrow_type": "success"
     },
     {
@@ -454,7 +468,7 @@
         "run.execute.denial.quota"
       ],
       "to": [
-        "run.execute.success.populated"
+        "run.execute.success.announced"
       ],
       "trigger": "retry_after_window_reset",
       "label": "capcli run cap://announce_service_incident@1 -p severity=critical -m \"post the incident notice to the status channel\" (after 18:00 UTC reset)",
@@ -589,7 +603,7 @@
         "ping.resolve.success.resolved"
       ],
       "to": [
-        "run.execute.success.populated"
+        "run.execute.success.resumed_ask"
       ],
       "trigger": "resume_routine",
       "label": "Routine frame auto-resumes",
@@ -3565,7 +3579,7 @@
       ],
       "trigger": "inspect_draft_ptr",
       "label": "capcli inspect cap://refund_and_archive@1",
-      "arrow_type": "denial"
+      "arrow_type": "progress"
     },
     {
       "id": "t_inspect_trust_to_pack",
@@ -3610,7 +3624,7 @@
       ],
       "trigger": "inspect_hub_endpoint",
       "label": "capcli inspect tcp://100.64.0.1:4040",
-      "arrow_type": "progress"
+      "arrow_type": "denial"
     },
     {
       "id": "t_inspect_hub_to_routine",
@@ -3798,7 +3812,7 @@
         "journey_human_onboarding"
       ],
       "from": [
-        "routine.ship.success.shipped"
+        "routine.ship.success.shipped_sync_orders"
       ],
       "to": [
         "sys.doctor.success.report"
@@ -3865,7 +3879,7 @@
       ],
       "trigger": "h5_denial_rules",
       "label": "capcli sys audit trace op_9f2e --explain --json",
-      "arrow_type": "denial"
+      "arrow_type": "progress"
     },
     {
       "id": "t_harness_overview_prove_to_ship",
@@ -3876,7 +3890,7 @@
         "routine.prove.success.overview"
       ],
       "to": [
-        "routine.ship.success.queued"
+        "routine.ship.success.queued_overview"
       ],
       "trigger": "ship_reviewed_queue",
       "label": "capcli routine ship overview reviewed --queue --reason \"sim prove passed\"",
@@ -3888,7 +3902,7 @@
         "journey_harness_onboarding"
       ],
       "from": [
-        "routine.ship.success.queued"
+        "routine.ship.success.queued_overview"
       ],
       "to": [
         "routine.pending.success.populated"
@@ -3906,10 +3920,10 @@
         "routine.pending.success.populated"
       ],
       "to": [
-        "routine.ship.success.shipped"
+        "routine.ship.success.shipped_overview"
       ],
       "trigger": "human_batch_signoff",
-      "label": "capcli routine ship overview reviewed",
+      "label": "capcli routine ship overview reviewed --reason \"sim prove passed, human sign-off\"",
       "arrow_type": "success"
     },
     {
@@ -3918,7 +3932,7 @@
         "journey_harness_onboarding"
       ],
       "from": [
-        "routine.ship.success.shipped"
+        "routine.ship.success.shipped_overview"
       ],
       "to": [
         "run.overview.success.populated"
@@ -4287,6 +4301,201 @@
       "trigger": "scaffold_checksum_mismatch",
       "label": "capcli pack scaffold pack://registry/routine/webhook_receiver@1 sync_orders",
       "arrow_type": "denial"
+    },
+    {
+      "id": "t_sql_bounded_write_to_audit_sink",
+      "journeys": [
+        "journey_sql_gatekeeper"
+      ],
+      "from": [
+        "run.sql.success.populated"
+      ],
+      "to": [
+        "run.sql.denial.audit_sink"
+      ],
+      "trigger": "bounded_write_stalled_sink",
+      "label": "capcli sql \"UPDATE orders SET status = 'shipped' WHERE id = :id\" -p id=4128 -m \"ship next order after carrier pickup\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_vault_refusal_to_trust_floor",
+      "journeys": [
+        "journey_vault_secret_provisioning"
+      ],
+      "from": [
+        "run.execute.refusal.missing_secret"
+      ],
+      "to": [
+        "run.execute.denial.secrets_unproven"
+      ],
+      "trigger": "run_draft_with_vault_refs",
+      "label": "capcli run cap://stripe.refund@2 -p charge_id=ch_9d21K -m \"refund failed delivery\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_quota_resume_to_occ_drift",
+      "journeys": [
+        "journey_quota_preemption"
+      ],
+      "from": [
+        "run.execute.yield.quota"
+      ],
+      "to": [
+        "run.execute.denial.occ_drift"
+      ],
+      "trigger": "daemon_resume_verification_failed",
+      "label": "Daemon resume tick: frame_024 read set drifted (recorded v88, live v91)",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_occ_drift_to_abort",
+      "journeys": [
+        "journey_quota_preemption"
+      ],
+      "from": [
+        "run.execute.denial.occ_drift"
+      ],
+      "to": [
+        "run.abort.success.aborted"
+      ],
+      "trigger": "abort_drifted_frame",
+      "label": "capcli run abort frame_024",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_gates_static_to_authorizer",
+      "journeys": [
+        "journey_execution_gates"
+      ],
+      "from": [
+        "run.execute.refusal.static"
+      ],
+      "to": [
+        "run.execute.denial.authorizer"
+      ],
+      "trigger": "run_broken_routine",
+      "label": "capcli run cap://broken_calc -p x=1 -m \"smoke test\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_gates_success_to_attention",
+      "journeys": [
+        "journey_execution_gates"
+      ],
+      "from": [
+        "run.execute.success.populated"
+      ],
+      "to": [
+        "run.execute.success.attention"
+      ],
+      "trigger": "inspect_attention_envelope",
+      "label": "capcli run cap://dispatch_order@4 -p order_id=ORD-1042 -p carrier=fedex -m \"fulfill urgent pending orders\"",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_leak_reprove_to_scrubbed",
+      "journeys": [
+        "journey_secret_leak_containment"
+      ],
+      "from": [
+        "api.prove.success.passed"
+      ],
+      "to": [
+        "run.execute.success.echo_scrubbed"
+      ],
+      "trigger": "run_after_rotation",
+      "label": "capcli run cap://stripe.refund@2 -p charge_id=ch_9d21K -m \"refund failed delivery\"",
+      "arrow_type": "success"
+    },
+    {
+      "id": "t_claims_exec_to_suppressed",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "run.execute.denial.claim_held"
+      ],
+      "to": [
+        "sys.inbox.success.suppressed"
+      ],
+      "trigger": "pop_inbox_while_held",
+      "label": "capcli sys inbox pop --channel webhook",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_claims_suppressed_to_lock_probe",
+      "journeys": [
+        "journey_claims_contention"
+      ],
+      "from": [
+        "sys.inbox.success.suppressed"
+      ],
+      "to": [
+        "db.lock.denial.claim_held"
+      ],
+      "trigger": "probe_claim_after_pop",
+      "label": "capcli db lock orders:ORD-10 --ttl 300s --reason \"batch fulfillment\"",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_inspect_quota_to_removed_scheme",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.quota"
+      ],
+      "to": [
+        "run.inspect.refusal.removed_scheme"
+      ],
+      "trigger": "inspect_removed_scheme",
+      "label": "capcli inspect hub://100.64.0.1:4040",
+      "arrow_type": "denial"
+    },
+    {
+      "id": "t_inspect_removed_scheme_to_routine",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.refusal.removed_scheme"
+      ],
+      "to": [
+        "run.inspect.success.routine"
+      ],
+      "trigger": "inspect_routine",
+      "label": "capcli inspect cap://dispatch_order@4",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_routine_to_ws",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.routine"
+      ],
+      "to": [
+        "run.inspect.success.ws"
+      ],
+      "trigger": "inspect_federated_envelope",
+      "label": "capcli inspect ws://tasks/create_todo@v1",
+      "arrow_type": "progress"
+    },
+    {
+      "id": "t_inspect_ws_to_peers_empty",
+      "journeys": [
+        "journey_inspect_preflight"
+      ],
+      "from": [
+        "run.inspect.success.ws"
+      ],
+      "to": [
+        "ws.peers.success.empty"
+      ],
+      "trigger": "list_federated_peers",
+      "label": "capcli ws peers",
+      "arrow_type": "progress"
     }
   ]
 }

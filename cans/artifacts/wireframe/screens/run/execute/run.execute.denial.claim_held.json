@@ -11,14 +11,14 @@
   },
   "archetype": "diagnostic",
   "component": {
-    "rule": "db.claims.locked",
+    "rule": "db.claims.held",
     "domain": "db.claims",
     "layer": "claims",
-    "culprit": "Exclusive --lock ref 'orders:ORD-10' already held by session ses_b4410 (14m 22s remaining).",
+    "culprit": "Exclusive --lock ref 'orders:ORD-10' already held by agt_9k2w (14m 22s remaining; lease claim_c3d4).",
     "measured": "1 active lease on orders:ORD-10 (expires in 14m 22s)",
     "remedy": "wait for lease expiry, or ask the holder to release via 'capcli db unlock orders:ORD-10'",
-    "holder": "ses_b4410 (nightly reorder batch)",
-    "lease": "14m 22s remaining (ttl 30m)",
+    "holder": "agt_9k2w (nightly reorder batch)",
+    "lease": "claim_c3d4 (14m 22s remaining, ttl 30m)",
     "lines": [
       "exclusive claim 'orders:ORD-10' already held",
       "Exclusive --lock refs serialize mutations per target;",
