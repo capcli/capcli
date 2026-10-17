@@ -188,7 +188,7 @@ serve:
   min_trust: pinned                   # non-negotiable floor
   require_version_pin: true           # serve order_status@12, never a moving target
   allow_writes_default: false         # inbound writes cost explicit opt-in
-  bind: "127.0.0.1"                   # internal-first; public lives behind a proxy; admin/serve surface only — swarm RPC binds the mesh endpoint declared at artifacts/policy.yaml#network.transports
+  bind: "127.0.0.1"                   # internal-first; public lives behind a proxy; admin/serve surface only — swarm RPC binds the mesh endpoint declared at artifacts/transport.yaml#network.transports
   key_rotation_days: 90               # keys expire; re-issue is a human act
   response:
     max_body_bytes: 65536
