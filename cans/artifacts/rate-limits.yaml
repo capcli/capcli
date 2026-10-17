@@ -1,0 +1,43 @@
+# ───────────────────────────────────────────────────────────────
+# rate-limits.yaml — API rate-limit law: live provider quota, intake cadence, ceilings, floors, header calibration
+# Owns:     cadence, ceilings, floors, header calibration (Dial 1 live token-bucket quota + Dial 2 volume ceilings)
+# Not:      fuel, budget frames & exhaustion behavior → see budget.yaml
+# Not:      retry, idempotency, in-flight polling & audit behavior → see policy.yaml
+# Not:      API catalog shape, token refresh, sim & sync behavior → see governance.yaml
+# Compiled: yes → capcli.lock root hash
+# ───────────────────────────────────────────────────────────────
+version: 1
+
+# ───────────────────────────────────────────────────────────────
+# rate — frequency is behavior
+# ───────────────────────────────────────────────────────────────
+rate:
+  pack_imports_per_day: 10                 # anti-flood intake rate ceiling
+  denials_alert_threshold: 20              # sustained denial = agent thrashing, surface it
+
+# ───────────────────────────────────────────────────────────────
+# api — catalog scale bounds + live provider quota
+# ───────────────────────────────────────────────────────────────
+api:
+  max_providers: 10
+  max_verbs_per_provider: 300              # full catalog fits
+  sync:
+    min_interval_hours: 24                 # no hourly hammering of provider URLs
+    max_catalog_size_mb: 10                # compiled catalog stays lean
+  rate_limit:                              # live quota from provider responses; Dial 1 cadence + Dial 2 ceilings
+    model: leaky_token_bucket              # client-side leaky bucket slaved to upstream headers
+    default_capacity: 60                   # burst ceiling
+    refill_rate_per_sec: 1.0               # steady-state token drip
+    monthly_spend_ceiling: 0               # Dial 2 volume ceiling, provider currency units; 0 = unbounded
+    monthly_call_ceiling: 0                # Dial 2 volume ceiling in calls; 0 = unbounded
+    pre_call_gate: true                    # socket-edge gate: tokens < 1 → kernel sleeps (<2s) or yields exit 6 (>2s); exit 2 reserved for Dial 2 ceiling breach
+    priority_floors:                       # simple preemption floors for scarce APIs
+      background_yield_tokens: 15          # background yields (exit 6) if tokens < 15
+      standard_yield_tokens: 5             # standard yields (exit 6) if tokens < 5
+      critical_floor_tokens: 0             # critical tasks can drain pool to 0
+    header_calibration:                    # reactive headers used ONLY to recalibrate bucket
+      reconcile_on_response: true          # sync local bucket down if provider reports lower
+      on_unexpected_429: zero_bucket_and_yield  # remote 429 instantly drains local bucket to 0 and parks frames (exit 6)
+      parser_engine: dynamic               # dynamic resolution slaved to doc://specs/<provider>#rate_limit
+      default_reset_header: "RateLimit-Reset"   # IETF RFC standard fallback
+      default_remaining_header: "RateLimit-Remaining"
