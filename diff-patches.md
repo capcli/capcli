@@ -40,7 +40,7 @@ No other keys change.
 
 ---
 
-## 2. `cans/artifacts/wireframe/screens/**/*.json` (all 260 fixtures)
+## 2. `cans/artifacts/wireframe/screens/**/*.json` (all 320 fixtures)
 
 Three mechanical transformations, one rule:
 
@@ -75,19 +75,19 @@ Semantic literals (never a slot): `id`, `archetype`, `rule`, `domain`, `layer`, 
    "component": {
      "rule": "policy.api.quota_exhausted",
      "domain": "api.quota",
--    "culprit": "Provider quota exhausted: threads has 0/50 tokens left in the 24h window.",
+-    "culprit": "Provider quota exhausted: threads has 0/50 tokens left in the 24h rolling window.",
 +    "layer": "quota",
 +    "culprit": { "$slot": "culprit", "$from": "live.culprit",
-+                 "$example": "Provider quota exhausted: threads has 0/50 tokens left in the 24h window." },
++                 "$example": "Provider quota exhausted: threads has 0/50 tokens left in the 24h rolling window." },
      "remedy": "task safely yielded; daemon will auto-resume at reset_at",
--    "tokens_left": "0 / 50 (24h window)",
+-    "tokens_left": "0 / 50",
 -    "reset_at": "18:00:00 UTC (in 4h 12m)",
 -    "suspended_frame": "task_99a8b1",
 -    "provider": "threads",
 -    "verb": "threads.create_media_post",
 -    "layer": "quota",
 -    "lines": ["routine broadcast_newsletter@2 (frame_018)"]
-+    "tokens_left":     { "$slot": "tokens_left",     "$from": "live.tokens_left",     "$example": "0 / 50 (24h window)" },
++    "tokens_left":     { "$slot": "tokens_left",     "$from": "live.tokens_left",     "$example": "0 / 50" },
 +    "reset_at":        { "$slot": "reset_at",        "$from": "live.reset_at",        "$example": "18:00:00 UTC (in 4h 12m)" },
 +    "suspended_frame": { "$slot": "frame_id",        "$from": "live.frame_id",        "$example": "task_99a8b1" },
 +    "provider":        { "$slot": "provider",        "$from": "live.provider",        "$example": "threads" },
@@ -138,7 +138,7 @@ Semantic literals (never a slot): `id`, `archetype`, `rule`, `domain`, `layer`, 
      }]
 ```
 
-The remaining 258 fixtures apply the same three transformations. Every `$slot`/`$interpolate` carries `$example: <current literal>`.
+The remaining 318 fixtures apply the same three transformations. Every `$slot`/`$interpolate` carries `$example: <current literal>`.
 
 ---
 
@@ -349,11 +349,11 @@ A plugin author writes one `screens:` map per verb (`defineVerb({ screens: {…}
    wireframe: interface.md#Surface-conformance
    wireframe_contract: kernel.md#Diagnostic-output-law
    wireframe_runner: assembly.md#Test-architecture
-+  output_shape: artifacts/wireframe/wireframe-structure.md#61-screen-shape
++  output_shape: artifacts/wireframe/wireframe-structure.md#Screen-Shape
 +  output_shape_instances: artifacts/wireframe/screens/
 +  output_shape_grammar: artifacts/wireframe/manifest.json#output_contract.slot
-+  surface_generation: artifacts/wireframe/wireframe-structure.md#8-codegen-contract
-+  plugin_screens: artifacts/wireframe/wireframe-structure.md#9-plugin-screens
++  surface_generation: artifacts/wireframe/wireframe-structure.md#Codegen-Contract
++  plugin_screens: artifacts/wireframe/wireframe-structure.md#Plugin-Screens
 @@
  overflow:
    max_node_chars: 95
@@ -405,7 +405,7 @@ No `wireframe:` / `wireframe_contract:` / `wireframe_runner:` keys are removed �
 -        - Never a source of truth, only a mirror
 -        - Canonical homes — kernel.md, effect.md, this file
 +        - Executable IDL of the CLI surface
-+        - Canonical home for shape — wireframe-structure.md#61-screen-shape
++        - Canonical home for shape — wireframe-structure.md#Screen-Shape
 +        - This node consumes shape; it does not own it
 +        - Generated clap trees, envelope structs, renderers
          - Runner mechanics — see assembly.md#Test-architecture
@@ -417,7 +417,7 @@ No `wireframe:` / `wireframe_contract:` / `wireframe_runner:` keys are removed �
          - Path depth exactly three under screens/
 -        - Root shape — wireframe/v2 CliEnvelope
 +        - Root shape — wireframe/v1 CliEnvelope with $slot / $interpolate
-+        - Shape grammar — wireframe-structure.md#61-screen-shape
++        - Shape grammar — wireframe-structure.md#Screen-Shape
        - Fixture derivation
 -        - Command string carries the invocation verbatim
 +        - command carries the invocation as literal or $interpolate
@@ -471,23 +471,23 @@ No `wireframe:` / `wireframe_contract:` / `wireframe_runner:` keys are removed �
        - Envelope shape — context, exit_code, state_modified
        - Plus data, diagnostic, audit_op
        - --json returns raw serialized envelope
-+      - Concrete layout — see artifacts/wireframe/wireframe-structure.md#61-screen-shape
++      - Concrete layout — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
      …
      - Archetype A structure
        - Header line with exit domain
        - Failing span with caret markers
        - Indented metadata block
        - Remedy line for agent fix
-+      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#61-screen-shape
++      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
      - Archetype B structure
        …
-+      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#61-screen-shape
++      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
      - Archetype C structure
        …
-+      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#61-screen-shape
++      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
      - Archetype D structure
        …
-+      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#61-screen-shape
++      - Layout grammar — see artifacts/wireframe/wireframe-structure.md#Screen-Shape
 @@
      - Fixture law
 -      - Screen is a wireframe/v2 fixture JSON
@@ -515,7 +515,7 @@ Semantics (exit derivation, archetype presence, trailer/attention/affordance law
        - fuel_declared — per-verb fuel envelope
        - attends — attention source names
 +      - screens — per-verb screen map, one screen per exit state
-+      - Screen shape — see artifacts/wireframe/wireframe-structure.md#9-plugin-screens
++      - Screen shape — see artifacts/wireframe/wireframe-structure.md#Plugin-Screens
        - Frame fields — see governance.md#Budget-frames
 ```
 
@@ -532,7 +532,7 @@ Semantics (exit derivation, archetype presence, trailer/attention/affordance law
 +      - Screen map — one screen per state, generated by the SDK
 +      - SDK surface — defineVerb({ screens: { … } })
 +      - Screen files emitted at plugin build
-+      - Screen shape — see artifacts/wireframe/wireframe-structure.md#9-plugin-screens
++      - Screen shape — see artifacts/wireframe/wireframe-structure.md#Plugin-Screens
 ```
 
 ### `#CLI-projection`
@@ -553,7 +553,7 @@ Semantics (exit derivation, archetype presence, trailer/attention/affordance law
 +      - Boot — mount generated subcommands
 +      - Update — new generation carries new screens
 +      - Disable — projection unmounts immediately
-+      - Screen shape — see artifacts/wireframe/wireframe-structure.md#9-plugin-screens
++      - Screen shape — see artifacts/wireframe/wireframe-structure.md#Plugin-Screens
 ```
 
 ### `#Installation-lifecycle`
@@ -584,14 +584,14 @@ Semantics (exit derivation, archetype presence, trailer/attention/affordance law
 -      - 9 — Register into dev worktree
 +      - 9 — Verify every cli.surface[].screens[] entry resolves to a wireframe/v1 screen
 +      - 10 — Register into dev worktree
-+      - Screen shape — see artifacts/wireframe/wireframe-structure.md#9-plugin-screens
++      - Screen shape — see artifacts/wireframe/wireframe-structure.md#Plugin-Screens
 ```
 
 ---
 
 ## 11. `cans/assembly.md`
 
-### 11.1 `## Monorepo layout` — declarative artifacts
+### 11.1 `Monorepo layout` — declarative artifacts
 
 ```diff
      - Declarative artifacts
@@ -608,7 +608,7 @@ Semantics (exit derivation, archetype presence, trailer/attention/affordance law
        - Definition — see world.md#Dual-schema
 ```
 
-### 11.2 `## Rust workspace crates` — cli description
+### 11.2 `Rust workspace crates` — cli description
 
 ```diff
      - Crates
@@ -619,9 +619,9 @@ Semantics (exit derivation, archetype presence, trailer/attention/affordance law
        - capcli-daemon — daemon (server, hub_rpc, ipc, cron, webhook, reaper, registry)
 ```
 
-### 11.3 `## Core subsystems` — new top-level `Surface` category
+### 11.3 `Core subsystems` — new top-level `Surface` category
 
-Insert after `## Core subsystems` intro bullets, before `- Kernel`:
+Insert under the `Core subsystems` node, before `    - Kernel`:
 
 ```diff
    - Core subsystems
@@ -630,12 +630,12 @@ Insert after `## Core subsystems` intro bullets, before `- Kernel`:
 +      - codegen — reads wireframe/v1 screens, emits generated modules
 +      - codegen — binary wireframe-codegen, `--check` diffs generated output
 +      - codegen — lives in capcli-cli, not core
-+      - Contract — see artifacts/wireframe/wireframe-structure.md#8-codegen-contract
++      - Contract — see artifacts/wireframe/wireframe-structure.md#Codegen-Contract
      - Kernel
        - db — connection.rs, authorizer.rs, migrate.rs, bytecode.rs
 ```
 
-### 11.4 `## Test architecture` — fixture law
+### 11.4 `Test architecture` — fixture law
 
 ```diff
        - Fixture law
@@ -645,7 +645,7 @@ Insert after `## Core subsystems` intro bullets, before `- Kernel`:
 -        - Fixture runner asserts banned tokens absent
 -        - Cross-layer — every trigger entry resolves to fixture
 +        - Fixture mechanism — see interface.md#Surface-conformance
-+        - Fixture runner asserts structural match (wireframe-structure.md#62-runner-contract)
++        - Fixture runner asserts structural match (wireframe-structure.md#Runner-Contract)
 +        - Fixture runner asserts derived exit and state_modified
 +        - Fixture runner asserts banned tokens absent, no `template` substring
 +        - Cross-layer — every trigger entry resolves to a screen
@@ -653,7 +653,7 @@ Insert after `## Core subsystems` intro bullets, before `- Kernel`:
        - Onboarding — see interface.md#Onboarding
 ```
 
-### 11.5 `## Build outputs` — rendering line and generated dirs
+### 11.5 `Build outputs` — rendering line and generated dirs
 
 ```diff
      - Binary composition
@@ -669,10 +669,10 @@ Insert after `## Core subsystems` intro bullets, before `- Kernel`:
 +      - Emitted by wireframe-codegen, checked in
 +      - Regenerated on every `cargo build` via build.rs hook
 +      - --check-gated in CI; hand-edits fail the PR
-+      - Contract — see artifacts/wireframe/wireframe-structure.md#8-codegen-contract
++      - Contract — see artifacts/wireframe/wireframe-structure.md#Codegen-Contract
 ```
 
-### 11.6 `## CICD pipeline` — PR gate jobs, codegen job, checker tool
+### 11.6 `CICD pipeline` — PR gate jobs, codegen job, checker tool
 
 ```diff
      - PR gate
@@ -686,12 +686,12 @@ Insert after `## Core subsystems` intro bullets, before `- Kernel`:
 +        - Runs wireframe-codegen --check
 +        - Fails on any diff against checked-in generated modules
 +        - Deterministic: sorted iteration, no timestamps
-+        - Contract — see artifacts/wireframe/wireframe-structure.md#8-codegen-contract
++        - Contract — see artifacts/wireframe/wireframe-structure.md#Codegen-Contract
        - Cans check
          - Tool — cans-spec 0.5.1 via bunx
          - Trigger — cans/** changes only
          - Pass — 0 errors, 0 broken refs
-+        - Pass — 0 occurrences of `template` in cans/** prose
++        - Pass — 0 bare `template` in cans/** prose (`vocabulary.required_qualifiers`)
 +        - Pass — 0 occurrences of `template` in artifacts/wireframe/screens/**
          - Config — see artifacts/contracts/cicd.yaml
 ```
@@ -712,7 +712,7 @@ Insert after `## Core subsystems` intro bullets, before `- Kernel`:
        - Config — see artifacts/contracts/cicd.yaml
 ```
 
-### 11.7 `## Verification checklist`
+### 11.7 `Verification checklist`
 
 ```diff
      - Verification checklist
@@ -770,7 +770,7 @@ Insert after `## Core subsystems` intro bullets, before `- Kernel`:
 
 ## 13. `cans/artifacts/templates/plugin.yaml`
 
-Add the `screens[]` field to the `verbs[]` example under `## 2. CAPABILITY DECLARATIONS`:
+Add the `screens[]` field to the `verbs[]` example under `# 2. CAPABILITY DECLARATIONS`:
 
 ```diff
  verbs:
@@ -788,7 +788,7 @@ Add the `screens[]` field to the `verbs[]` example under `## 2. CAPABILITY DECLA
    - name: refund
 ```
 
-And under `## 2. CAPABILITY DECLARATIONS` preamble comments:
+And under `# 2. CAPABILITY DECLARATIONS` preamble comments:
 
 ```diff
  # Verbs — callable operations with params
@@ -807,7 +807,7 @@ And under `## 2. CAPABILITY DECLARATIONS` preamble comments:
 | Kind | Count | Files |
 |---|---|---|
 | Config/prose edits | 12 | `manifest.json`, `wireframe.html`, `wireframe-structure.md`, `_rules.yaml`, `AGENTS.md`, `interface.md`, `kernel.md`, `plugins.md`, `marketplace.md`, `assembly.md`, `cicd.yaml`, `templates/plugin.yaml` |
-| Screen rewrites | 260 | `screens/**/*.json` — three mechanical transformations per file |
+| Screen rewrites | 320 | `screens/**/*.json` — three mechanical transformations per file |
 | **New files** | **0** | — |
 | **New crates** | **0** | codegen is a module in `capcli-cli`, described in `assembly.md` |
 

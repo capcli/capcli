@@ -82,11 +82,11 @@ Four prefixes, declared once, no new file:
 | Prefix | Source | Where declared |
 |---|---|---|
 | `context.*` | the screen's own `context` block (`env`, `tier`, `trust`, `data_shape`) | per-screen (already exists) |
-| `scenario.*` | the journey's data — one journey is one scenario | `_flows.json#journeys[*].scenario` |
-| `world.*` | the seeded workspace state for that journey | `_flows.json#journeys[*].world` |
+| `scenario.*` | the screen's `scenario` block — the per-screen data referenced by `$from: "scenario.*"` | per-screen (added by the conversion) |
+| `world.*` | the screen's optional `world` block — seeded workspace state | per-screen (opt-in) |
 | `live.*` | extracted from the actual envelope at assertion time | `wireframe-structure.md#Binding-Sources` |
 
-`_flows.json` gains two optional blocks per journey (`scenario`, `world`). Journeys already declare `entry`/`terminal` and carry command strings in transitions; adding scenario data here is the minimal non-redundant extension. No `_scenarios/` directory.
+Scenario and world data live on the screen itself, next to the `$slot`s that reference them — the screen is the standalone unit the runner dispatches, so it carries its own bindings. `_flows.json` is untouched. No `_scenarios/` directory.
 
 ---
 
@@ -112,7 +112,7 @@ Strict instantiation (substitute `$example`, byte-compare against the historical
 
 ## 7. Codegen — screens → Rust
 
-`wireframe-codegen` is a single binary at `crates/capcli-cli/src/bin/wireframe-codegen.rs`. Deterministic (sorted iteration, no timestamps). It reads every `wireframe/v1` screen — kernel and plugin — and emits:
+`wireframe-codegen` is a module in the existing `capcli-cli` crate — `crates/capcli-cli/src/codegen/` (`mod.rs`, `screens.rs`, `emit_types.rs`, `emit_cli.rs`) — exposing the `wireframe-codegen` binary. Deterministic (sorted iteration, no timestamps). It reads every `wireframe/v1` screen — kernel and plugin — and emits:
 
 ```
 crates/capcli-types/src/generated/
@@ -180,7 +180,7 @@ defineVerb({
 |---|---|---|
 | `output_shape` | `wireframe-structure.md#Screen-Shape` | The `wireframe/v1` grammar; unchanged file, new section |
 | `output_shape_instances` | `wireframe/screens/` | The data |
-| `scenario_binding` | `wireframe/_flows.json#journeys` | Scenario + world data per journey |
+| `scenario_binding` | `wireframe/screens/` | Per-screen `scenario` (+ optional `world`) blocks; `_flows.json` untouched |
 | `surface_generation` | `assembly.md#CICD-pipeline` | The codegen mechanism |
 | `surface_conformance` | `interface.md#Surface-conformance` | Re-framed: consumes shape; no longer owns it |
 | `wireframe_contract` | `kernel.md#Diagnostic-output-law` | Narrowed: laws only, not layout |
@@ -195,7 +195,7 @@ Pointer topology (`AGENTS.md`): wireframe moves leaf → **branch**. `_rules.yam
 
 - `wireframe/manifest.json` — `$schema` is `wireframe/v1`; `output_contract.slot` block describes the DSL
 - `wireframe/_states.json` — structurally unchanged; a `cans check` assertion derives `domain_fields` from `live.*` slots in v1 screens
-- `wireframe/_flows.json` — journeys gain `scenario` and `world` blocks
+- `wireframe/_flows.json` — untouched
 - `wireframe/screens/**/*.json` — every fixture is `wireframe/v1`
 - `wireframe/wireframe.html` — renders `v1`; slot hover + `$example` preview
 - `wireframe/wireframe-structure.md` — new sections `## Screen Shape (v1)`, `## Binding Sources`, `## Plugin Screens`
@@ -211,7 +211,7 @@ Pointer topology (`AGENTS.md`): wireframe moves leaf → **branch**. `_rules.yam
 
 **New, single-purpose:**
 
-- `crates/capcli-cli/src/bin/wireframe-codegen.rs` — the generator
+- `crates/capcli-cli/src/codegen/` — the generator module (`mod.rs`, `screens.rs`, `emit_types.rs`, `emit_cli.rs`) plus the `wireframe-codegen` binary
 - `crates/capcli-types/src/generated/**` — generated (checked in, `--check`-gated)
 - `crates/capcli-cli/src/generated/**` — generated (checked in, `--check`-gated)
 
@@ -242,8 +242,8 @@ No `_scenarios/`, no `_bindings.schema.json`, no `*.v2.json` twins, no `phases/`
 | Does the wireframe own behavior? | No. `kernel.md` owns exit codes; `effect.md` owns domains; wireframe owns shape. |
 | Can a plugin invent a domain or archetype? | No. `defineVerb`'s `domain` type is restricted to the union from `effect.md#Denials`. New archetypes go through kernel PR. `custom` is the only extension, and it's sandboxed. |
 | What breaks on `pack`? | Nothing. `pack scaffold`, `pack bundle`, `pack import` are untouched. A pack may contain screens; a screen is never a pack. |
-| Do we need `_scenarios/` or `_bindings.schema.json`? | No. Scenario + world data live inside `_flows.json` journeys. Binding sources are declared once in `wireframe-structure.md`. |
+| Do we need `_scenarios/` or `_bindings.schema.json`? | No. Scenario + world data live on the screen itself. Binding sources are declared once in `wireframe-structure.md`. |
 
 ---
 
-**Ready to produce `diff-patches.md`.**
+**Companion:** `diff-patches.md` — the thirteen-file edit spec.
